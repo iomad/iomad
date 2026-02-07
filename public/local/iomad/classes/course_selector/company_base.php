@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD bas company course selector class
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -27,25 +29,55 @@ use context_course;
 use local_iomad\company;
 
 /**
- * base class for selecting courses of a company
+ * Local IOMAD bas company course selector class
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class company_base extends base {
 
+    /** @var int company id */
     protected $companyid;
+
+    /** @var bool has enrolments */
     protected $hasenrollments = false;
+
+    /** @var int department id */
     protected $departmentid;
+
+    /** @var array licenses */
     protected $licenses;
+
+    /** @var bool shared */
     protected $shared = false;
+
+    /** @var bool show open shared courses  */
     protected $showopenshared;
+
+    /** @var bool show closed shared courses */
     protected $partialshared;
+
+    /** @var object user */
     protected $user;
+
+    /** @var int license id */
     protected $licenseid;
+
+    /** @var int company parent id */
     protected $parentid;
 
 
-    //overridden to include the sortorder field
-    protected $requiredfields = array('id', 'fullname', 'sortorder');
+    /** @var array required fields */
+    protected $requiredfields = ['id', 'fullname', 'sortorder'];
 
+    /**
+     * Constructor function
+     *
+     * @param string $name
+     * @param array $options
+     */
     public function __construct($name, $options) {
         $this->companyid = $options['companyid'];
         $this->hasenrollments = !empty($options['hasenrolments']) ? $options['hasenrolments'] : false;
@@ -61,6 +93,11 @@ abstract class company_base extends base {
         parent::__construct($name, $options);
     }
 
+    /**
+     * Get selector options
+     *
+     * @return array
+     */
     protected function get_options() {
         $options = parent::get_options();
         $options['companyid'] = $this->companyid;
@@ -78,6 +115,12 @@ abstract class company_base extends base {
         return $options;
     }
 
+    /**
+     * Process enrolments
+     *
+     * @param array $courselist
+     * @return void
+     */
     protected function process_enrollments(&$courselist) {
         global $CFG, $DB;
         // Locate and annotate any courses that have existing.
@@ -91,8 +134,8 @@ abstract class company_base extends base {
                                      AND shared = 0")) {  // Deal with own courses.
                 $context = context_course::instance($id);
                 if (count_enrolled_users($context) > 0) {
-                    $courselist[ $id ]->hasenrollments = true;
-                    $courselist[ $id ]->fullname = $course->fullname . "(" . $strhasenrollments .")";
+                    $courselist[$id]->hasenrollments = true;
+                    $courselist[$id]->fullname = $course->fullname . "(" . $strhasenrollments .")";
                     $this->hasenrollments = true;
                 }
             }
@@ -101,9 +144,9 @@ abstract class company_base extends base {
                                      WHERE courseid=$id
                                      AND shared = 2")) {  // Deal with closed shared courses.
                 if ($companygroup = company::get_company_group($this->companyid, $id)) {
-                    if ($DB->get_records('groups_members', array('groupid' => $companygroup->id))) {
-                        $courselist[ $id ]->hasenrollments = true;
-                        $courselist[ $id ]->fullname = $course->fullname . "(" . $strsharedhasenrollments .")";
+                    if ($DB->get_records('groups_members', ['groupid' => $companygroup->id])) {
+                        $courselist[$id]->hasenrollments = true;
+                        $courselist[$id]->fullname = $course->fullname . "(" . $strsharedhasenrollments .")";
                         $this->hasenrollments = true;
                     }
                 }
@@ -111,6 +154,13 @@ abstract class company_base extends base {
         }
     }
 
+    /**
+     * Mark hidden courses if required
+     *
+     * @param array $allcourses
+     * @param boolean $licenserecord
+     * @return void
+     */
     protected function process_hidden_courses(&$allcourses, $licenserecord = false) {
         global $CFG, $DB;
 
@@ -125,6 +175,13 @@ abstract class company_base extends base {
         }
     }
 
+    /**
+     * Process license allocations
+     *
+     * @param array $licensecourses
+     * @param int $userid
+     * @return void
+     */
     protected function process_license_allocations(&$licensecourses, $userid) {
         global $CFG, $DB;
         foreach ($licensecourses as $id => $course) {
@@ -135,8 +192,9 @@ abstract class company_base extends base {
                                      AND clu.licensecourseid = :licensecourseid
                                      AND clu.timecompleted IS NULL
                                      AND clu.isusing = 1
-                                     AND cl.type = 0", array('userid' => $userid,
-                                                              'licensecourseid' => $course->id))) {
+                                     AND cl.type = 0",
+                                     ['userid' => $userid,
+                                      'licensecourseid' => $course->id])) {
                 $licensecourses[$id]->fullname = $course->fullname . '*';
             }
         }

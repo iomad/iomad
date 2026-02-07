@@ -37,9 +37,19 @@ use moodleform;
  */
 class company_templateset_save_form extends moodleform {
 
+    /** @var int template set id */
     protected $templatesetid;
+
+    /** @var int company id */
     protected $companyid;
 
+    /**
+     * Cunstructor function
+     *
+     * @param moodle_url $actionurl
+     * @param int $companyid
+     * @param int $templatesetid
+     */
     public function __construct($actionurl,
                                 $companyid,
                                 $templatesetid) {
@@ -50,15 +60,18 @@ class company_templateset_save_form extends moodleform {
         parent::__construct($actionurl);
     }
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
-        $this->_form->addElement('hidden', 'companyid', $this->companyid);
-        $this->_form->setType('companyid', PARAM_INT);
-    }
 
-    public function definition_after_data() {
-
+        // Set up the form.
         $mform =& $this->_form;
 
+        $mform->addElement('hidden', 'companyid', $this->companyid);
+        $mform->setType('companyid', PARAM_INT);
         $mform->addElement('hidden', 'templatesetid', $this->templatesetid);
         $mform->setType('templatesetid', PARAM_INT);
 
@@ -71,14 +84,25 @@ class company_templateset_save_form extends moodleform {
         $this->add_action_buttons(true, get_string('savetemplateset', 'local_iomad'));
     }
 
+    /**
+     * Form validation
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
     public function validation($data, $files) {
         global $DB;
 
         $errors = [];
 
-        if ($DB->get_record_sql("SELECT id FROM {email_templateset}
-                                 where " . $DB->sql_compare_text('templatesetname') ." = :templatesetname",
-                                 array('templatesetname' => $data['templatesetname']))) {
+        // Check if the name is already in use.
+        if ($DB->get_record_select(
+            'email_templateset',
+            $DB->sql_compare_text('templatesetname') .
+            " = " .
+            $DB->sql_compare_text(':templatesetname'),
+            ['templatesetname' => $data['templatesetname']])) {
             $errors['templatesetname'] = get_string('templatesetnamealreadyinuse', 'local_iomad');
         }
 

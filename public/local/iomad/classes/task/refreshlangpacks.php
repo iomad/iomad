@@ -22,6 +22,7 @@
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 namespace local_iomad\task;
 
 defined('MOODLE_INTERNAL') || die();
@@ -31,6 +32,14 @@ use tool_customlang_utils;
 
 require_once($CFG->dirroot . '/admin/tool/customlang/locallib.php');
 
+/**
+ * An adhoc task for local Iomad to refresh the installed language packs
+ *
+ * @package    local_iomad
+ * @copyright  2020 E-Learn Design https://www.e-learndesign.co.uk
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class refreshlangpacks extends scheduled_task {
     /**
      * Get a descriptive name for this task (shown to admins).

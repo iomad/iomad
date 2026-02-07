@@ -37,8 +37,14 @@ use core_privacy\local\request\writer;
 use context_system;
 use context_user;
 
-defined('MOODLE_INTERNAL') || die();
-
+/**
+ * Privacy Subsystem implementation for local_iomad.
+ *
+ * @package    local_iomad
+ * @copyright  2021 Derick Turner
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class provider implements
         \core_privacy\local\metadata\provider,
         \core_privacy\local\request\core_userlist_provider,
@@ -121,14 +127,14 @@ class provider implements
         $context = context_system::instance();
 
         // Get the company information.
-        if ($companies = $DB->get_records('company_users', array('userid' => $user->id))) {
+        if ($companies = $DB->get_records('company_users', ['userid' => $user->id])) {
             $companiesout = (object) [];
             $companiesout->companies = $companies;
-            writer::with_context($context)->export_data(array(get_string('companyusers', 'block_iomad_company_admin')), $companiesout);
+            writer::with_context($context)->export_data([get_string('companyusers', 'block_iomad_company_admin')], $companiesout);
         }
 
         // Get the license allocation information.
-        if ($licenses = $DB->get_records('companylicense_users', array('userid' => $user->id))) {
+        if ($licenses = $DB->get_records('companylicense_users', ['userid' => $user->id])) {
             $licensesout = (object) [];
             foreach ($licenses as $id => $license) {
                 if (!empty($license->issuedate)) {
@@ -139,7 +145,7 @@ class provider implements
                 }
             }
             $licensesout->licenses = $licenses;
-            writer::with_context($context)->export_data(array(get_string('licenseusers', 'block_iomad_company_admin')), $licensesout);
+            writer::with_context($context)->export_data([get_string('licenseusers', 'block_iomad_company_admin')], $licensesout);
         }
     }
 
@@ -171,9 +177,9 @@ class provider implements
         }
 
         $userid = $contextlist->get_user()->id;
-        $DB->delete_records('company_users', array('userid' => $userid));
+        $DB->delete_records('company_users', ['userid' => $userid]);
         $DB->execute("UPDATE {companylicense_users} SET userid = -1 WHERE userid = :userid",
-                      array('userid' => $userid));
+                      ['userid' => $userid]);
     }
 
     /**
@@ -214,9 +220,9 @@ class provider implements
         $context = $userlist->get_context();
 
         if ($context instanceof context_user) {
-            $DB->delete_records('company_users', array('userid' => $context->id));
+            $DB->delete_records('company_users', ['userid' => $context->id]);
             $DB->execute("UPDATE {companylicense_users} SET userid = -1 WHERE userid = :userid",
-                          array('userid' => $userid));
+                          ['userid' => $userid]);
         }
     }
 }

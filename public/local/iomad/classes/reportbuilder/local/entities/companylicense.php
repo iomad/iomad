@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Company licenses entity
+ *
+ * @package     local_iomad
+ * @copyright   2024 Derick Turner e-Learn Design
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 declare(strict_types=1);
 
 namespace local_iomad\reportbuilder\local\entities;
@@ -29,8 +37,6 @@ use html_writer;
 use lang_string;
 use moodle_url;
 use stdClass;
-
-defined('MOODLE_INTERNAL') or die;
 
 /**
  * Company licenses entity
@@ -106,7 +112,7 @@ class companylicense extends base {
             ->add_field("{$companylicensealias}.name")
             ->set_is_sortable(true);
 
-        // humanallocation.
+        // Humanallocation.
         $columns[] = (new column(
             'humanallocation',
             new lang_string('humanallocation', 'block_iomad_company_admin'),
@@ -128,7 +134,7 @@ class companylicense extends base {
             ->add_field("{$companylicensealias}.companyid")
             ->set_is_sortable(false);
 
-        // validlength.
+        // Validlength.
         $columns[] = (new column(
             'validlength',
             new lang_string('validlength', 'block_iomad_company_admin'),
@@ -139,7 +145,7 @@ class companylicense extends base {
             ->add_field("{$companylicensealias}.validlength")
             ->set_is_sortable(false);
 
-        // startdate.
+        // Startdate.
         $columns[] = (new column(
             'startdate',
             new lang_string('startdate', 'block_iomad_company_admin'),
@@ -151,7 +157,7 @@ class companylicense extends base {
             ->set_is_sortable(true)
             ->add_callback([format::class, 'userdate']);
 
-        // expirydate.
+        // Expirydate.
         $columns[] = (new column(
             'expirydate',
             new lang_string('expirydate', 'block_iomad_company_admin'),
@@ -163,7 +169,7 @@ class companylicense extends base {
             ->set_is_sortable(true)
             ->add_callback([format::class, 'userdate']);
 
-        // used.
+        // Used.
         $columns[] = (new column(
             'used',
             new lang_string('used', 'block_iomad_company_admin'),
@@ -174,7 +180,7 @@ class companylicense extends base {
             ->add_field("{$companylicensealias}.used")
             ->set_is_sortable(false);
 
-        // parentid.
+        // Parentid.
         $columns[] = (new column(
             'parentid',
             new lang_string('parentid', 'block_iomad_company_admin'),
@@ -185,7 +191,7 @@ class companylicense extends base {
             ->add_field("{$companylicensealias}.parentid")
             ->set_is_sortable(false);
 
-        // type.
+        // Type.
         $columns[] = (new column(
             'type',
             new lang_string('type', 'block_iomad_company_admin'),
@@ -203,9 +209,9 @@ class companylicense extends base {
                                  4 => get_string('blanket', 'block_iomad_company_admin')];
 
                 return $licensetypes[$type];
-                });
+            });
 
-        // program.
+        // Program.
         $columns[] = (new column(
             'program',
             new lang_string('program', 'block_iomad_company_admin'),
@@ -221,9 +227,9 @@ class companylicense extends base {
                 } else {
                     return get_string('no');
                 }
-                });
+            });
 
-        // instant.
+        // Instant.
         $columns[] = (new column(
             'instant',
             new lang_string('instant', 'block_iomad_company_admin'),
@@ -239,9 +245,9 @@ class companylicense extends base {
                 } else {
                     return get_string('no');
                 }
-                });
+            });
 
-        // cutoffdate.
+        // Cutoffdate.
         $columns[] = (new column(
             'cutoffdate',
             new lang_string('cutoffdate', 'block_iomad_company_admin'),
@@ -253,7 +259,7 @@ class companylicense extends base {
             ->set_is_sortable(true)
             ->add_callback([format::class, 'userdate']);
 
-        // clearonexpire.
+        // Clearonexpire.
         $columns[] = (new column(
             'clearonexpire',
             new lang_string('clearonexpire', 'block_iomad_company_admin'),
@@ -269,9 +275,9 @@ class companylicense extends base {
                 } else {
                     return get_string('no');
                 }
-                });
+            });
 
-        // reference.
+        // Reference.
         $columns[] = (new column(
             'reference',
             new lang_string('reference', 'block_iomad_company_admin'),
@@ -303,7 +309,7 @@ class companylicense extends base {
         ))
             ->add_joins($this->get_joins());
 
-        // humanallocation.
+        // Humanallocation.
         $filters[] = (new filter(
             select::class,
             'humanallocation',
@@ -315,7 +321,7 @@ class companylicense extends base {
             ->set_options([
             ]);
 
-        // startdate.
+        // Startdate.
         $filters[] = (new filter(
             select::class,
             'startdate',
@@ -327,7 +333,7 @@ class companylicense extends base {
             ->set_options([
             ]);
 
-        // expirydate.
+        // Expirydate.
         $filters[] = (new filter(
             select::class,
             'expirydate',
@@ -339,7 +345,7 @@ class companylicense extends base {
             ->set_options([
             ]);
 
-        // reference.
+        // Reference.
         $filters[] = (new filter(
             select::class,
             'reference',
@@ -351,7 +357,7 @@ class companylicense extends base {
             ->set_options([
             ]);
 
-        // cutoffdate.
+        // Cutoffdate.
         $filters[] = (new filter(
             select::class,
             'cutoffdate',
@@ -363,7 +369,7 @@ class companylicense extends base {
             ->set_options([
             ]);
 
-        // used.
+        // Used.
         $filters[] = (new filter(
             select::class,
             'used',
@@ -375,7 +381,7 @@ class companylicense extends base {
             ->set_options([
             ]);
 
-        // type.
+        // Type.
         $filters[] = (new filter(
             select::class,
             'type',
@@ -387,7 +393,7 @@ class companylicense extends base {
             ->set_options([
             ]);
 
-        // program.
+        // Program.
         $filters[] = (new filter(
             select::class,
             'program',

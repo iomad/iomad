@@ -14,6 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Local IOMAD email template apply form
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
@@ -25,16 +34,16 @@ require_login();
 
 $systemcontext = context_system::instance();
 
-// Set the companyid
+// Set the companyid.
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
-$templatesetinfo = $DB->get_record('email_templateset', array('id' => $templatesetid));
+$templatesetinfo = $DB->get_record('email_templateset', ['id' => $templatesetid]);
 
 // Correct the navbar.
 // Set the name for the page.
-$linktext = get_string('applytemplateset', 'local_iomad', $templatesetinfo ->templatesetname);
+$linktext = get_string('applytemplateset', 'local_iomad', $templatesetinfo->templatesetname);
 
 // Set the url.
 $linkurl = new moodle_url('/local/iomad/template_apply_form.php');
@@ -53,7 +62,7 @@ block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->ur
 
 // Only display if you have the correct capability, or you are not in more than one company.
 // Just display name of current company if no choice.
-if (!iomad::has_capability('block/iomad_company_admin:company_view_all',$systemcontext)) {
+if (!iomad::has_capability('block/iomad_company_admin:company_view_all', $systemcontext)) {
     $companies = $DB->get_records_sql_menu("SELECT c.id, c.name
                                             FROM {company} c
                                             JOIN {company_user} cu
@@ -61,15 +70,15 @@ if (!iomad::has_capability('block/iomad_company_admin:company_view_all',$systemc
                                             WHERE c.suspended = 0
                                             AND cu.userid = :userid
                                             ORDER BY name",
-                                            array('userid' => $USER->id));
+                                           ['userid' => $USER->id]);
 } else {
-    $companies = $DB->get_records_menu('company', array('suspended' => 0), 'name', 'id,name');
+    $companies = $DB->get_records_menu('company', ['suspended' => 0], 'name', 'id,name');
 }
+$menucompanies = ['-1' => get_string('all')] + $companies;
 
-$menucompanies = array('-1' => get_string('all')) + $companies;
 // Set up the form.
 $mform = new local_iomad\forms\template_apply_form($PAGE->url, $templatesetid, $menucompanies);
-$templatelist = new moodle_url('/local/iomad/template_list.php', array('manage' => 1));
+$templatelist = new moodle_url('/local/iomad/template_list.php', ['manage' => 1]);
 
 if ($mform->is_cancelled()) {
     redirect($templatelist);
@@ -82,8 +91,8 @@ if ($mform->is_cancelled()) {
     }
 
     $table = new html_table();
-    $table->head = array(get_string('company', 'block_iomad_company_admin'),
-                         get_string('result', 'cache'));
+    $table->head = [get_string('company', 'block_iomad_company_admin'),
+                    get_string('result', 'cache')];
     foreach ($selectedcompanies as $companyid) {
         $company = new company($companyid);
         if ($company->apply_email_templates($templatesetid)) {
@@ -91,13 +100,13 @@ if ($mform->is_cancelled()) {
         } else {
             $result = get_string('error');
         }
-        $table->data[] = array ($company->get_name(), $result);
+        $table->data[] = [$company->get_name(), $result];
     }
     echo $OUTPUT->header();
     echo "<h2>" . get_string('result', 'cache') . "</h2>";
     echo html_writer::table($table);
     echo '<a class="btn btn-primary" href="'.$templatelist.'">' .
-                                           get_string('back') . '</a>';
+         get_string('back') . '</a>';
     echo $OUTPUT->footer();
     die;
 }

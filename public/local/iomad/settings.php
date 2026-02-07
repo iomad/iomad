@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD settings
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -24,9 +26,6 @@
 defined('MOODLE_INTERNAL') || die;
 
 if ($hassiteconfig) {
-
-    // Basic navigation settings
-//    $local_iomad_folder = new admin_category('local_iomad', get_string('pluginname', 'local_iomad'));
 
     // Set up the config array.
     $companyconfigs = [];

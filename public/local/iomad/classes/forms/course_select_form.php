@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD course select form
+ *
  * @package   local_iomad
  * @copyright 2023 Derick Turner
  * @author    Derick Turner
@@ -23,24 +25,34 @@
 
 namespace local_iomad\forms;
 
-defined('MOODLE_INTERNAL') || die;
-
 use moodleform;
 use moodle_url;
 
 /**
- * Course search/select form used on the IOMAD pages.
+ * Local IOMAD course select form class
  *
+ * @package   local_iomad
+ * @copyright 2023 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class course_select_form extends moodleform {
-    protected $params = array();
 
+    /** @var array params */
+    protected $params = [];
+
+    /**
+     * Constuctor function
+     */
     public function __construct($url, $params) {
         $this->params = $params;
 
         parent::__construct();
     }
 
+    /**
+     * Form defintition
+     */
     public function definition() {
         global $CFG, $DB, $USER, $SESSION, $company;
 
@@ -54,10 +66,16 @@ class course_select_form extends moodleform {
         }
 
         $courses = $company->get_menu_courses(true, false, false, false, false);
-        $autooptions = array('multiple' => true);
-        $sarcharray = array();
-        $searcharray[] = $mform->createElement('autocomplete', 'courses', get_string('selectlicensecourse', 'block_iomad_company_admin'), $courses, $autooptions);
-        $searcharray[] = $mform->createElement('submit', 'searchbutton', get_string('coursenamesearch', 'block_iomad_company_admin'));
+        $autooptions = ['multiple' => true];
+        $searcharray = [];
+        $searcharray[] = $mform->createElement('autocomplete',
+                                               'courses',
+                                               get_string('selectlicensecourse', 'block_iomad_company_admin'),
+                                               $courses,
+                                               $autooptions);
+        $searcharray[] = $mform->createElement('submit',
+                                               'searchbutton',
+                                               get_string('coursenamesearch', 'block_iomad_company_admin'));
         $mform->addGroup($searcharray, 'searcharray', '', ' ', false);
         $mform->setType('coursesearch', PARAM_CLEAN);
     }

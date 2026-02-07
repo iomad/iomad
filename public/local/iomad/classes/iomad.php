@@ -29,8 +29,6 @@ use cache;
 use context;
 use context_system;
 use moodle_url;
-use moodleform;
-use local_iomad\custom_context\context_company;
 use required_capability_exception;
 
 /**
@@ -2268,13 +2266,14 @@ class iomad {
     }
 
     /**
-     * Wrapper function for
+     * Wrapper function for core Moodle get_config()
      *
      * @param string $plugin
      * @param string $name
+     * @param int $companyid
      * @return boolean|object|string
      */
-    public static function get_config($plugin, $name = null) {
+    public static function get_config($plugin, $name = null, $companyid = 0) {
 
         // Did we get passed an item?
         if (empty($name)) {
@@ -2283,7 +2282,9 @@ class iomad {
         }
 
         // Get my companyid.
-        $companyid = self::get_my_companyid(context_system::instance(), false);
+        if (empty($companyid)) {
+            $companyid = self::get_my_companyid(context_system::instance(), false);
+        }
         if ($companyid > 0) {
             $companyname = $name . "_" . $companyid;
         } else {
@@ -2298,34 +2299,5 @@ class iomad {
             // Use the site setting.
             return get_config($plugin, $name);
         }
-    }
-}
-
-global $CFG;
-require_once($CFG->libdir.'/formslib.php');
-
-/**
- * Company Filter form used on the Iomad pages.
- *
- */
-class iomad_company_filter_form extends \moodleform {
-    protected $companyid;
-
-    public function definition() {
-        global $CFG, $DB, $USER, $SESSION;
-
-        $mform = &$this->_form;
-        $filtergroup = [];
-        $mform->addElement('header', '', format_string(get_string('companysearchfields', 'local_iomad')));
-        $mform->addElement('text', 'name', get_string('companynamefilter', 'local_iomad'), 'size="20"');
-        $mform->addElement('text', 'city', get_string('companycityfilter', 'local_iomad'), 'size="20"');
-        $mform->addElement('text', 'country', get_string('companycountryfilter', 'local_iomad'), 'size="20"');
-        $mform->setType('name', PARAM_CLEAN);
-        $mform->setType('city', PARAM_CLEAN);
-        $mform->setType('country', PARAM_CLEAN);
-        $mform->addElement('checkbox', 'showsuspended', get_string('show_suspended_companies', 'local_iomad'));
-        $mform->setType('showsuspended', PARAM_INT);
-
-        $this->add_action_buttons(false, get_string('companyfilter', 'local_iomad'));
     }
 }

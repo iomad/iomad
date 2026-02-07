@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD scheduled tasks
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -113,7 +115,7 @@ $tasks = [
         'hour' => '*',
         'day' => '*',
         'month' => '*',
-        'dayofweek' => '*'
+        'dayofweek' => '*',
     ],
     [
         'classname' => 'local_iomad\task\refreshlangpacks',
@@ -122,6 +124,6 @@ $tasks = [
         'hour' => 'R',
         'day' => '1',
         'month' => '*',
-        'dayofweek' => '*'
+        'dayofweek' => '*',
     ],
 ];

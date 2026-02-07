@@ -15,7 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_iomad_track
+ * Local IOMAD import report completion data from csv
+ *
+ * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -48,14 +50,14 @@ require_login();
 
 $systemcontext = context_system::instance();
 
-// Set the companyid
+// Set the companyid.
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
 iomad::require_capability('local/iomad:importtrackfrommoodle', $companycontext);
 
-$urlparams = array();
+$urlparams = [];
 if ($returnurl) {
     $urlparams['returnurl'] = $returnurl;
 }
@@ -74,12 +76,41 @@ $PAGE->set_title($linktext);
 block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Array of all valid fields for validation.
-$stdfields = array('username', 'userid', 'courseid', 'coursename', 'coursecode', 'timeenrolled', 'timestarted', 'timecompleted',
-        'timeexpires', 'finalscore', 'licensename', 'licenseallocated', 'licenseid', 'companyid', 'company', 'departmentid', 'department');
+$stdfields = [
+    'username',
+    'userid',
+    'courseid',
+    'coursename',
+    'coursecode',
+    'timeenrolled',
+    'timestarted',
+    'timecompleted',
+    'timeexpires',
+    'finalscore',
+    'licensename',
+    'licenseallocated',
+    'licenseid',
+    'companyid',
+    'company',
+    'departmentid',
+    'department',
+];
 
 // Check if there are any potential errors.
-$courseswithoutcompletionenabled = $DB->get_records_sql("SELECT * FROM {course} WHERE enablecompletion = 0 AND id != :siteid", ['siteid' => SITEID]);
-$courseswithoutcompletioncriteria = $DB->get_records_sql("SELECT * FROM {course} WHERE id != :siteid AND id NOT IN (SELECT course FROM {course_completion_criteria})", ['siteid' => SITEID]);
+$courseswithoutcompletionenabled = $DB->get_records_select(
+    'course',
+    "enablecompletion = 0
+     AND id != :siteid",
+    ['siteid' => SITEID]);
+$courseswithoutcompletioncriteria = $DB->get_records_sql(
+    "SELECT *
+     FROM {course}
+     WHERE id != :siteid
+     AND id NOT IN (
+         SELECT course
+         FROM {course_completion_criteria}
+     )",
+    ['siteid' => SITEID]);
 $courseswithoutcompletionenabledcount = count($courseswithoutcompletionenabled);
 $courseswithoutcompletioncriteriacount = count($courseswithoutcompletioncriteria);
 
@@ -91,7 +122,7 @@ if (!empty($completions)) {
         redirect($linkurl);
     } else {
         echo $OUTPUT->header();
-        $optionsyes = array('completions' => $completions, 'confirm' => md5($completions), 'sesskey' => sesskey());
+        $optionsyes = ['completions' => $completions, 'confirm' => md5($completions), 'sesskey' => sesskey()];
         if (empty($courseswithoutcompletionenabledcount) && empty($courseswithoutcompletioncriteriacount)) {
             echo $OUTPUT->confirm(get_string('importcompletionsfrommoodlefull', 'local_iomad'),
                                   new moodle_url('/local/iomad/track_import.php', $optionsyes), $linkurl);
@@ -113,7 +144,7 @@ if (!empty($fileimport)) {
         if ($importdata = $mform->get_data()) {
             // Verification moved to two places: after upload and into form2.
             $userserrors  = 0;
-            $erroredusers = array();
+            $erroredusers = [];
             $errorstr = get_string('error');
 
 
@@ -127,7 +158,7 @@ if (!empty($fileimport)) {
                                                 'validate_uploadcompletion_columns');
 
             if (!$columns = $cir->get_columns()) {
-               throw new moodle_exception('cannotreadtmpfile', 'error', $returnurl);
+                throw new moodle_exception('cannotreadtmpfile', 'error', $returnurl);
             }
 
             unset($content);
@@ -153,7 +184,7 @@ if (!empty($fileimport)) {
                         $key = $columns[$key];
 
                         if (strpos($key, 'username') !== false) {
-                            if (!$userrec = $DB->get_record('user', array('username' => $value))) {
+                            if (!$userrec = $DB->get_record('user', ['username' => $value])) {
                                 $upt->track('status', get_string('missingfield', 'error', 'username'), 'error');
                                 $upt->track('username', $errorstr, 'error');
                                 $line[] = get_string('missingfield', 'error', 'username');
@@ -166,7 +197,7 @@ if (!empty($fileimport)) {
                             $upt->track($key, $userrec->username);
 
                         } else if (strpos($key, 'userid') !== false) {
-                            if (!$userrec = $DB->get_record('user', array('id' => $value))) {
+                            if (!$userrec = $DB->get_record('user', ['id' => $value])) {
                                 $upt->track('status', get_string('missingfield', 'error', 'userid'), 'error');
                                 $upt->track('username', $errorstr, 'error');
                                 $line[] = get_string('missingfield', 'error', 'userid');
@@ -178,7 +209,7 @@ if (!empty($fileimport)) {
                             $completionrec->userid = $userrec->id;
                             $upt->track('username', $userrec->username);
                         } else if (strpos($key, 'coursename') !== false) {
-                            if (!$courserec = $DB->get_record('course', array('shortname' => $value))) {
+                            if (!$courserec = $DB->get_record('course', ['shortname' => $value])) {
                                 $upt->track('status', get_string('missingfield', 'error', 'coursename'), 'error');
                                 $upt->track('course', $errorstr, 'error');
                                 $line[] = get_string('missingfield', 'error', 'coursename');
@@ -191,7 +222,7 @@ if (!empty($fileimport)) {
                             $completionrec->coursename = $courserec->fullname;
                             $upt->track('course', $courserec->fullname);
                         } else if (strpos($key, 'coursecode') !== false) {
-                            if (!$courserec = $DB->get_record('course', array('idnumber' => $value))) {
+                            if (!$courserec = $DB->get_record('course', ['idnumber' => $value])) {
                                 $upt->track('status', get_string('missingfield', 'error', 'coursename'), 'error');
                                 $upt->track('course', $errorstr, 'error');
                                 $line[] = get_string('missingfield', 'error', 'coursename');
@@ -204,7 +235,7 @@ if (!empty($fileimport)) {
                             $completionrec->coursename = $courserec->fullname;
                             $upt->track('course', $courserec->fullname);
                         } else if (strpos($key, 'courseid') !== false) {
-                            if (!$courserec = $DB->get_record('course', array('id' => $value))) {
+                            if (!$courserec = $DB->get_record('course', ['id' => $value])) {
                                 $upt->track('status', get_string('missingfield', 'error', 'courseid'), 'error');
                                 $upt->track('course', $errorstr, 'error');
                                 $line[] = get_string('missingfield', 'error', 'courseid');
@@ -245,7 +276,7 @@ if (!empty($fileimport)) {
                     $completionrec->companyid = $company->id;
                     $upt->track('company', $company->get_name());
                 } else {
-                    if (!$usercompany = $DB->get_record('company', array('id' => $completionrec->companyid))) {
+                    if (!$usercompany = $DB->get_record('company', ['id' => $completionrec->companyid])) {
                         $upt->track('status', get_string('missingfield', 'error', 'companyid'), 'error');
                         $upt->track('company', $errorstr, 'error');
                         $line[] = get_string('missingfield', 'error', 'companyid');
@@ -276,13 +307,15 @@ if (!empty($fileimport)) {
                 }
                 if (empty($completionrec->timeenrolled)) {
                     $completionrec->timeenrolled = $completionrec->timecompleted;
-                    $upt->track('timeenrolled', userdate($completionrec->timeenrolled, get_config('local_iomad', 'date_format')));
+                    $upt->track(
+                        'timeenrolled',
+                        userdate($completionrec->timeenrolled, get_config('local_iomad', 'date_format')));
                 }
                 if (empty($completionrec->timestarted)) {
                     $completionrec->timestarted = $completionrec->timecompleted;
                     $upt->track('timestarted', userdate($completionrec->timestarted, get_config('local_iomad', 'date_format')));
                 }
-                if ($DB->get_record('iomad_courses', array('courseid' => $courserec->id, 'licensed' => 1))) {
+                if ($DB->get_record('iomad_courses', ['courseid' => $courserec->id, 'licensed' => 1])) {
                     if (empty($completionrec->licensename)) {
                         $upt->track('status', get_string('missingfield', 'error', 'licensename'), 'error');
                         $upt->track('licensename', $errorstr, 'error');
@@ -295,7 +328,9 @@ if (!empty($fileimport)) {
                 }
                 if (empty($completionrec->licenseallocated) && !empty($completionrec->licensename)) {
                     $completionrec->licenseallocated = $completionrec->timecompleted;
-                    $upt->track('licenseallocated', userdate($completionrec->timeenrolled, get_config('local_iomad', 'date_format')));
+                    $upt->track(
+                        'licenseallocated',
+                        userdate($completionrec->timeenrolled, get_config('local_iomad', 'date_format')));
                 }
                 $completionrec->modifiedtime = $runtime;
                 $completionrec->coursecleared = 1;
@@ -326,13 +361,13 @@ if (!empty($fileimport)) {
             }
                 echo html_writer::tag('a',
                                       get_string('continue'),
-                                      array('class' => 'btn-primary',
-                                      'href' => $linkurl));
+                                      ['class' => 'btn-primary',
+                                      'href' => $linkurl]);
 
             echo $OUTPUT->footer();
             die;
         } else {
-            $mform->set_data(array('fileimport' => $fileimport));
+            $mform->set_data(['fileimport' => $fileimport]);
             echo $OUTPUT->header();
             $mform->display();
             echo $OUTPUT->footer();
@@ -347,20 +382,31 @@ echo $OUTPUT->header();
 echo html_writer::start_tag('p');
 echo html_writer::tag('a',
                       get_string('checkcoursestatusmoodle', 'local_iomad'),
-                      array('href' => new moodle_url('/local/iomad/track_import.php',
-                                                     array('checkcourses' => true,
-                                                           'sesskey' => sesskey()))));
+                      ['href' => new moodle_url('/local/iomad/track_import.php',
+                                                     ['checkcourses' => true,
+                                                           'sesskey' => sesskey()])]);
 
 if ($checkcourses) {
     echo html_writer::start_tag('p');
     echo get_string('courseswithoutcompletionenabledcouunt', 'local_iomad', $courseswithoutcompletionenabledcount) . '&nbsp';
-    echo html_writer::tag('a', get_string('view'), ['href' => new moodle_url('/local/iomad/track_import.php', ['checkcourses' => 1, 'viewenabled' => 1])]);
+    echo html_writer::tag(
+        'a',
+        get_string('view'),
+        [
+            'href' => new moodle_url('/local/iomad/track_import.php', ['checkcourses' => 1, 'viewenabled' => 1]),
+        ]);
     if ($viewenabled) {
         echo html_writer::start_tag('table');
         foreach ($courseswithoutcompletionenabled as $course) {
             echo html_writer::start_tag('tr');
             echo html_writer::start_tag('td');
-            echo html_writer::tag('a', format_string($course->fullname), ['href' => new moodle_url('/course/edit.php', ['id' => $course->id]), 'target' => 'new']);
+            echo html_writer::tag(
+                'a',
+                format_string($course->fullname),
+                [
+                    'href' => new moodle_url('/course/edit.php', ['id' => $course->id]),
+                    'target' => 'new',
+                ]);
             echo html_writer::end_tag('td');
             echo html_writer::end_tag('tr');
         }
@@ -369,13 +415,24 @@ if ($checkcourses) {
     echo html_writer::end_tag('p');
     echo html_writer::start_tag('p');
     echo get_string('courseswithoutcompletioncriteriacouunt', 'local_iomad', $courseswithoutcompletioncriteriacount) . '&nbsp';
-    echo html_writer::tag('a', get_string('view'), ['href' => new moodle_url('/local/iomad/track_import.php', ['checkcourses' => 1, 'viewcriteria' => 1])]);
+    echo html_writer::tag(
+        'a',
+        get_string('view'),
+        [
+            'href' => new moodle_url('/local/iomad/track_import.php', ['checkcourses' => 1, 'viewcriteria' => 1]),
+        ]);
     if ($viewcriteria) {
         echo html_writer::start_tag('table');
         foreach ($courseswithoutcompletioncriteria as $course) {
             echo html_writer::start_tag('tr');
             echo html_writer::start_tag('td');
-            echo html_writer::tag('a', format_string($course->fullname), ['href' => new moodle_url('/course/completion.php', ['id' => $course->id]), 'target' => 'new']);
+            echo html_writer::tag(
+                'a',
+                format_string($course->fullname),
+                [
+                    'href' => new moodle_url('/course/completion.php', ['id' => $course->id]),
+                    'target' => 'new',
+                ]);
             echo html_writer::end_tag('td');
             echo html_writer::end_tag('tr');
         }
@@ -389,17 +446,17 @@ echo html_writer::end_tag('p');
 echo html_writer::start_tag('p');
 echo html_writer::tag('a',
                       get_string('importcompletionsfrommoodle', 'local_iomad'),
-                      array('href' => new moodle_url('/local/iomad/track_import.php',
-                                                     array('completions' => true,
-                                                           'sesskey' => sesskey()))));
+                      ['href' => new moodle_url('/local/iomad/track_import.php',
+                                                     ['completions' => true,
+                                                           'sesskey' => sesskey()])]);
 
 echo html_writer::end_tag('p');
 echo html_writer::start_tag('p');
 echo html_writer::tag('a',
                       get_string('importcompletionsfromfile', 'local_iomad'),
-                      array('href' => new moodle_url('/local/iomad/track_import.php',
-                                                     array('fileimport' => true,
-                                                           'sesskey' => sesskey()))));
+                      ['href' => new moodle_url('/local/iomad/track_import.php',
+                                                     ['fileimport' => true,
+                                                           'sesskey' => sesskey()])]);
 echo html_writer::end_tag('p');
 
 echo $OUTPUT->footer();
@@ -408,26 +465,43 @@ echo $OUTPUT->footer();
 * Utility functions and classes
 */
 
+/**
+ * Upload progress tracker helper class
+ */
 class upload_progress_tracker {
-    public $_row;
-    public $columns = array('status',
-                            'line',
-                            'id',
-                            'username',
-                            'company',
-                            'department',
-                            'course',
-                            'timeenrolled',
-                            'timestarted',
-                            'timecompleted',
-                            'timeexpires',
-                            'finalscore',
-                            'licensename',
-                            'licenseallocated');
 
+    /** @var object current row */
+    public $_row;
+
+    /** @var array list of columns */
+    public $columns = [
+        'status',
+        'line',
+        'id',
+        'username',
+        'company',
+        'department',
+        'course',
+        'timeenrolled',
+        'timestarted',
+        'timecompleted',
+        'timeexpires',
+        'finalscore',
+        'licensename',
+        'licenseallocated',
+    ];
+
+    /**
+     * constructor function
+     */
     public function __construct() {
     }
 
+    /**
+     * Initialisation function
+     *
+     * @return void
+     */
     public function init() {
         $ci = 0;
         echo '<table id="uploadresults" class="generaltable boxaligncenter flexible-wrap" summary="'.
@@ -451,11 +525,16 @@ class upload_progress_tracker {
         $this->_row = null;
     }
 
+    /**
+     * Set up the tracked row output
+     *
+     * @return void
+     */
     public function flush() {
-        if (empty($this->_row) or empty($this->_row['line']['normal'])) {
-            $this->_row = array();
+        if (empty($this->_row) || empty($this->_row['line']['normal'])) {
+            $this->_row = [];
             foreach ($this->columns as $col) {
-                $this->_row[$col] = array('normal' => '', 'info' => '', 'warning' => '', 'error' => '');
+                $this->_row[$col] = ['normal' => '', 'info' => '', 'warning' => '', 'error' => ''];
             }
             return;
         }
@@ -480,10 +559,19 @@ class upload_progress_tracker {
         }
         echo '</tr>';
         foreach ($this->columns as $col) {
-            $this->_row[$col] = array('normal' => '', 'info' => '', 'warning' => '', 'error' => '');
+            $this->_row[$col] = ['normal' => '', 'info' => '', 'warning' => '', 'error' => ''];
         }
     }
 
+    /**
+     * Add tracking information to the tracking row
+     *
+     * @param string $col
+     * @param string $msg
+     * @param string $level
+     * @param boolean $merge
+     * @return void
+     */
     public function track($col, $msg, $level= 'normal', $merge=true) {
         if (empty($this->_row)) {
             $this->flush(); // Init arrays.
@@ -502,6 +590,11 @@ class upload_progress_tracker {
         }
     }
 
+    /**
+     * output the end of the table
+     *
+     * @return void
+     */
     public function close() {
         echo '</table>';
     }
@@ -518,7 +611,7 @@ function validate_uploadcompletion_columns(&$columns) {
         return get_string('csvfewcolumns', 'error');
     }
     // Test columns.
-    $processed = array();
+    $processed = [];
     foreach ($columns as $key => $unused) {
         $field = $columns[$key];
         if (!in_array($field, $stdfields)) {

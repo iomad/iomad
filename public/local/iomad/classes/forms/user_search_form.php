@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD user search form class
+ *
  * @package   local_iomad
  * @copyright 2024 Derick Turner
  * @author    Derick Turner
@@ -23,33 +25,66 @@
 
 namespace local_iomad\forms;
 
-defined('MOODLE_INTERNAL') || die;
-
 use context_system;
 use local_iomad\{company, iomad};
 use moodle_url;
 use moodleform;
 
 /**
- * User search form used on the IOMAD pages.
+ * Local IOMAD user search form class
  *
+ * @package   local_iomad
+ * @copyright 2024 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class user_search_form extends moodleform {
+
+    /** @var int companyid */
     protected $companyid;
+
+    /** @var bool do we show all */
     protected $useshowall;
+
+    /** @var bool do we show historic */
     protected $showhistoric;
+
+    /** @var bool do we add a from field */
     protected $addfrom;
+
+    /** @var bool do we add to from field */
     protected $addto;
+
+    /** @var bool do we add license status */
     protected $addlicensestatus;
+
+    /** @var string name for from search */
     protected $fromname;
+
+    /** @var string name for to search */
     protected $toname;
+
+    /** @var bool do we add user type */
     protected $useusertype;
+
+    /** @var bool do we add valid only */
     protected $validonly;
+
+    /** @var bool do we add a second from */
     protected $addfromb;
+
+    /** @var bool do we add a second to */
     protected $addtob;
+
+    /** @var string name for second from */
     protected $fromnameb;
+
+    /** @var string name for second to */
     protected $tonameb;
 
+    /**
+     * Form definition
+     */
     public function definition() {
         global $CFG, $DB, $USER, $SESSION, $companycontext;
 
@@ -118,7 +153,7 @@ class user_search_form extends moodleform {
         }
 
         $mform =& $this->_form;
-        $filtergroup = array();
+        $filtergroup = [];
         $mform->addElement('header', 'usersearchfields', get_string('usersearchfields', 'local_iomad'));
         $mform->addElement('text', 'firstname', get_string('firstnamefilter', 'local_iomad'), 'size="20"');
         $mform->addElement('text', 'lastname', get_string('lastnamefilter', 'local_iomad'), 'size="20"');
@@ -147,16 +182,19 @@ class user_search_form extends moodleform {
         $mform->setExpanded('usersearchfields', false);
 
         // Get company category.
-        if ($category = $DB->get_record_sql('SELECT uic.id, uic.name
-                                             FROM {user_info_category} uic, {company} c
-                                             WHERE c.id = '.$this->_customdata['companyid'].'
-                                             AND c.profileid=uic.id')) {
+        if ($category = $DB->get_record_sql(
+            "SELECT uic.id, uic.name
+             FROM {user_info_category} uic
+             JOIN {company} c ON (uic.id = c.profileid)
+             WHERE c.id = :companyid",
+            ['companyid' => $this->_customdata['companyid']])) {
+
             // Get fields from company category.
-            if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->id))) {
+            if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
                 // Display the header and the fields.
                 foreach ($fields as $field) {
                     $field->datatype = ($field->datatype == 'textarea') ? 'text' : $field->datatype;
-                    require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
+                    require_once($CFG->dirroot . '/user/profile/field/' . $field->datatype . '/field.class.php');
                     $newfield = 'profile_field_'.$field->datatype;
                     $formfield = new $newfield($field->id);
                     if ($field->datatype == 'datetime') {
@@ -168,17 +206,18 @@ class user_search_form extends moodleform {
         }
 
         // Deal with non company categories.
-        if ($categories = $DB->get_records_sql("SELECT id FROM {user_info_category}
+        if ($categories = $DB->get_records_sql("SELECT id
+                                                FROM {user_info_category}
                                                 WHERE id NOT IN (
-                                                 SELECT profileid FROM {company})")) {
+                                                    SELECT profileid FROM {company})")) {
             foreach ($categories as $category) {
                 // Get fields from company category.
-                if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->id))) {
+                if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
                     // Display the header and the fields.
                     foreach ($fields as $field) {
                         $field->datatype = ($field->datatype == 'textarea') ? 'text' : $field->datatype;
-                        require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
-                        $newfield = 'profile_field_'.$field->datatype;
+                        require_once($CFG->dirroot . '/user/profile/field/' . $field->datatype . '/field.class.php');
+                        $newfield = 'profile_field_' . $field->datatype;
                         $formfield = new $newfield($field->id);
                         if ($field->datatype == 'datetime') {
                             $formfield->field->required = false;
@@ -192,10 +231,12 @@ class user_search_form extends moodleform {
         }
 
         if ($useusertype) {
-            $usertypearray = array ('a' => get_string('any'),
-                                    '0' => get_string('user', 'block_iomad_company_admin'),
-                                    '1' => get_string('companymanager', 'block_iomad_company_admin'),
-                                    '2' => get_string('departmentmanager', 'block_iomad_company_admin'));
+            $usertypearray = [
+                'a' => get_string('any'),
+                '0' => get_string('user', 'block_iomad_company_admin'),
+                '1' => get_string('companymanager', 'block_iomad_company_admin'),
+                '2' => get_string('departmentmanager', 'block_iomad_company_admin'),
+            ];
             $mform->addElement('select', 'usertype', get_string('usertype', 'block_iomad_company_admin'), $usertypearray);
         }
 
@@ -225,47 +266,76 @@ class user_search_form extends moodleform {
         }
 
         if ($this->addfrom) {
-            $mform->addElement('date_selector', $this->fromname, get_string($this->fromname, 'block_iomad_company_admin'), array('optional' => 'yes'));
+            $mform->addElement('date_selector',
+                               $this->fromname,
+                               get_string($this->fromname, 'block_iomad_company_admin'),
+                               ['optional' => 'yes']);
         }
 
         if ($this->addto) {
-            $mform->addElement('date_selector', $this->toname, get_string($this->toname, 'block_iomad_company_admin'), array('optional' => 'yes'));
+            $mform->addElement('date_selector',
+                               $this->toname,
+                               get_string($this->toname, 'block_iomad_company_admin'),
+                               ['optional' => 'yes']);
         }
 
         if ($this->addfromb) {
-            $mform->addElement('date_selector', $this->fromnameb, get_string($this->fromnameb, 'block_iomad_company_admin'), array('optional' => 'yes'));
+            $mform->addElement('date_selector',
+                               $this->fromnameb,
+                               get_string($this->fromnameb, 'block_iomad_company_admin'),
+                               ['optional' => 'yes']);
         }
 
         if ($this->addtob) {
-            $mform->addElement('date_selector', $this->tonameb, get_string($this->tonameb, 'block_iomad_company_admin'), array('optional' => 'yes'));
+            $mform->addElement('date_selector',
+                               $this->tonameb,
+                               get_string($this->tonameb, 'block_iomad_company_admin'),
+                               ['optional' => 'yes']);
         }
 
         if ($addlicensestatus) {
-            $licensestatusarray = array ('0' => get_string('any'),
-                                      '1' => get_string('notinuse', 'block_iomad_company_admin'),
-                                      '2' => get_string('inuse', 'block_iomad_company_admin'));
-            $mform->addElement('select', 'licensestatus', get_string('licensestatus', 'block_iomad_company_admin'), $licensestatusarray);
+            $licensestatusarray = [
+                '0' => get_string('any'),
+                '1' => get_string('notinuse', 'block_iomad_company_admin'),
+                '2' => get_string('inuse', 'block_iomad_company_admin'),
+            ];
+            $mform->addElement('select',
+                               'licensestatus',
+                               get_string('licensestatus', 'block_iomad_company_admin'),
+                               $licensestatusarray);
         }
 
         if ($addlicenseusage) {
-            $licenseusagearray = array ('0' => get_string('any'),
-                                        '1' => get_string('notallocated', 'block_iomad_company_admin'),
-                                        '2' => get_string('allocated', 'block_iomad_company_admin'));
-            $mform->addElement('select', 'licenseusage', get_string('licenseuseage', 'block_iomad_company_admin'), $licenseusagearray);
+            $licenseusagearray = [
+                '0' => get_string('any'),
+                '1' => get_string('notallocated', 'block_iomad_company_admin'),
+                '2' => get_string('allocated', 'block_iomad_company_admin'),
+            ];
+            $mform->addElement('select',
+                               'licenseusage',
+                               get_string('licenseuseage', 'block_iomad_company_admin'),
+                               $licenseusagearray);
         }
 
         // Add the button(s).
-        $buttonarray=[];
-        $buttonarray[] = $mform->createElement('submit', 'submitbutton', get_string('userfilter', 'local_iomad'));
+        $buttonarray = [];
+        $buttonarray[] = $mform->createElement('submit',
+                                               'submitbutton',
+                                               get_string('userfilter', 'local_iomad'));
         if (!empty($this->_customdata['adddodownload'])) {
-            $buttonarray[] = $mform->createElement('submit', 'dodownload', get_string("downloadcsv", 'local_report_completion'));
+            $buttonarray[] = $mform->createElement('submit',
+                                                   'dodownload',
+                                                   get_string("downloadcsv", 'local_report_completion'));
         }
         $mform->addGroup($buttonarray, 'buttonar', '', ' ', false);
     }
 
+    /**
+     * Form validation function
+     */
     public function validation($data, $files) {
 
-        $errors = array();
+        $errors = [];
         if (!empty($this->fromname) && !empty($this->toname)) {
             if (!empty($data[$this->fromname]) && !empty($data[$this->toname])) {
                 if ($data[$this->fromname] > $data[$this->toname]) {

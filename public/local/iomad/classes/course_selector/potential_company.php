@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD potential company course selector
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -25,18 +27,31 @@ namespace local_iomad\course_selector;
 
 use local_iomad\{company, iomad};
 
+/**
+ * Local IOMAD potential company course selector
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class potential_company extends company_base {
 
+    /**
+     * Get selector options
+     *
+     * @return array
+     */
     protected function get_options() {
         $options = parent::get_options();
-        $options['file']    = 'local/iomad/classes/course_selector/potential_company.php';
+        $options['file'] = 'local/iomad/classes/course_selector/potential_company.php';
 
         return $options;
     }
 
     /**
      * Potential company manager courses
-     * @param <type> $search
+     * @param string $search
      * @return array
      */
     public function find_courses($search) {
@@ -46,58 +61,84 @@ class potential_company extends company_base {
         $params['companyid'] = $this->companyid;
         $params['siteid'] = $SITE->id;
 
+        $departmentcondition = "";
         if ($this->departmentid != 0) {
-            // Eemove courses for the current department.
+            // Remove courses for the current department.
             $departmentcondition = " AND c.id NOT IN (
-                                                      SELECT courseid FROM {company_course}
-                                                      WHERE departmentid = ($this->departmentid)) ";
-        } else {
-            $departmentcondition = "";
+                                        SELECT courseid FROM {company_course}
+                                        WHERE departmentid = :departmentid)";
+            $params['departmentid'] = $this->departmentid;
         }
 
         // Deal with shared courses.  Cannot be added to a company in this manner.
         $sharedsql = "";
         if ($this->shared) {  // Show the shared courses.
             if (iomad::has_capability('block/iomad_company_admin:viewallsharedcourses', $companycontext)) {
-                $sharedsql .= " AND c.id NOT IN (SELECT mcc.courseid FROM {company_course} mcc
-                                                 LEFT JOIN {iomad_courses} mic
-                                                 ON (mcc.courseid = mic.courseid)
-                                                 WHERE mic.shared=0 ) ";
+                $sharedsql .= " AND c.id NOT IN (
+                                    SELECT mcc.courseid
+                                    FROM {company_course} mcc
+                                    LEFT JOIN {iomad_courses} mic ON (mcc.courseid = mic.courseid)
+                                    WHERE mic.shared = 0
+                                ) ";
             } else {
                 $company = new company($this->companyid);
                 $params['parentid'] = $company->get_parentid();
-                $sharedsql .= " AND c.id NOT IN (SELECT mcc.courseid FROM {company_course} mcc
-                                                 LEFT JOIN {iomad_courses} mic
-                                                 ON (mcc.courseid = mic.courseid)
-                                                 WHERE mic.shared=0 )
-                                AND c.id IN (SELECT courseid FROM {company_course}
-                                             WHERE companyid = :parentid) ";
+                $sharedsql .= " AND c.id NOT IN (
+                                    SELECT mcc.courseid
+                                    FROM {company_course} mcc
+                                    LEFT JOIN {iomad_courses} mic ON (mcc.courseid = mic.courseid)
+                                    WHERE mic.shared = 0
+                                )
+                                AND c.id IN (
+                                    SELECT courseid
+                                    FROM {company_course}
+                                    WHERE companyid = :parentid
+                                ) ";
             }
         } else if ($this->partialshared) {
             if (iomad::has_capability('block/iomad_company_admin:viewallsharedcourses', $companycontext)) {
-                $sharedsql .= " AND c.id NOT IN (SELECT mcc.courseid FROM {company_course} mcc
-                                                 LEFT JOIN {iomad_courses} mic
-                                                 ON (mcc.courseid = mic.courseid)
-                                                 WHERE mic.shared!=2 AND mcc.companyid != :companyid) ";
+                $sharedsql .= " AND c.id NOT IN (
+                                    SELECT mcc.courseid
+                                    FROM {company_course} mcc
+                                    LEFT JOIN {iomad_courses} mic ON (mcc.courseid = mic.courseid)
+                                    WHERE mic.shared!=2
+                                    AND mcc.companyid != :companyid
+                                ) ";
             } else {
                 $company = new company($this->companyid);
                 $params['parentid'] = $company->get_parentid();
-                $sharedsql .= " AND c.id NOT IN (SELECT mcc.courseid FROM {company_course} mcc
-                                                 LEFT JOIN {iomad_courses} mic
-                                                 ON (mcc.courseid = mic.courseid)
-                                                 WHERE mic.shared!=2 AND mcc.companyid != :companyid)
-                                AND c.id IN (SELECT courseid FROM {company_course}
-                                             WHERE companyid = :parentid) ";
+                $sharedsql .= " AND c.id NOT IN (
+                                    SELECT mcc.courseid
+                                    FROM {company_course} mcc
+                                    LEFT JOIN {iomad_courses} mic ON (mcc.courseid = mic.courseid)
+                                    WHERE mic.shared!=2
+                                    AND mcc.companyid != :companyid
+                                )
+                                AND c.id IN (
+                                    SELECT courseid
+                                    FROM {company_course}
+                                    WHERE companyid = :parentid
+                                ) ";
             }
         } else {
             if (iomad::has_capability('block/iomad_company_admin:viewallsharedcourses', $companycontext)) {
-                $sharedsql .= " AND NOT EXISTS ( SELECT NULL FROM {company_course} WHERE courseid = c.id ) ";
+                $sharedsql .= " AND NOT EXISTS (
+                                    SELECT NULL FROM {company_course}
+                                    WHERE courseid = c.id
+                                ) ";
             } else {
                 $company = new company($this->companyid);
                 $params['parentid'] = $company->get_parentid();
-                $sharedsql .= " AND NOT EXISTS ( SELECT NULL FROM {company_course} WHERE courseid = c.id )
-                                AND c.id IN (SELECT courseid FROM {company_course}
-                                             WHERE companyid = :parentid) ";
+                $sharedsql .= " AND NOT EXISTS (
+                                    SELECT NULL
+                                    FROM {company_course}
+                                    WHERE courseid = c.id
+                                )
+                                AND c.id IN (
+                                    SELECT courseid
+                                    FROM {company_course}
+                                    WHERE companyid = :parentid
+                                ) ";
             }
         }
 
@@ -114,8 +155,8 @@ class potential_company extends company_base {
 
         $sql = " FROM {course} c
                 WHERE $wherecondition
-                      AND c.id != :siteid
-                      $departmentcondition $sharedsql";
+                AND c.id != :siteid
+                $departmentcondition $sharedsql";
 
         $order = ' ORDER BY c.fullname ASC';
         if (!$this->is_validating()) {
@@ -129,14 +170,14 @@ class potential_company extends company_base {
         $allcourses = $DB->get_records_sql($fields . $sql . $order, $params) +
         $DB->get_records_sql($distinctfields . $sqldistinct . $order, $params);
 
-        // Only show one list of courses
-        $availablecourses = array();
+        // Only show one list of courses.
+        $availablecourses = [];
         foreach ($allcourses as $course) {
             $availablecourses[$course->id] = $course;
         }
 
         if (empty($availablecourses)) {
-            return array();
+            return [];
         }
 
         // Have any of the courses got enrollments?
@@ -149,6 +190,6 @@ class potential_company extends company_base {
             $groupname = get_string('potcourses', 'block_iomad_company_admin');
         }
 
-        return array($groupname => $availablecourses);
+        return [$groupname => $availablecourses];
     }
 }

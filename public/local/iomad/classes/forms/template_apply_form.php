@@ -36,9 +36,20 @@ use moodleform;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class template_apply_form extends moodleform {
+
+    /** @var array list of companies */
     protected $companies;
+
+    /** @var int templateset id */
     protected $templatesetid;
 
+    /**
+     * Constructor function
+     *
+     * @param moodle_url $actionurl
+     * @param int $templatesetid
+     * @param array $companies
+     */
     public function __construct($actionurl, $templatesetid, $companies) {
         $this->templatesetid = $templatesetid;
         $this->companies = $companies;
@@ -46,12 +57,17 @@ class template_apply_form extends moodleform {
         parent::__construct($actionurl);
     }
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
 
         $mform =& $this->_form;
 
         $mform->addElement('header', '', get_string('selectacompany', 'block_iomad_company_admin'));
-        $mform->addElement('autocomplete', 'companies', '', $this->companies, array('multiple' => true));
+        $mform->addElement('autocomplete', 'companies', '', $this->companies, ['multiple' => true]);
         $mform->addElement('hidden', 'templatesetid', $this->templatesetid);
         $mform->setType('templatesetid', PARAM_INT);
 

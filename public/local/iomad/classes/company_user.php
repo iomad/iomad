@@ -30,12 +30,13 @@ use context_course;
 use moodle_url;
 use cache;
 use core\event\user_enrolment_created;
-use block_iomad_company_admin\event\user_license_assigned;
 use course_enrolment_manager;
+use block_iomad_company_admin\event\user_license_assigned;
 use local_iomad\custom_context\context_company;
 
-require_once($CFG->libdir.'/formslib.php');
-require_once($CFG->dirroot.'/enrol/locallib.php');
+defined('MOODLE_INTERNAL') || die();
+
+require_once(__DIR__.'/../../../enrol/locallib.php');
 
 /**
  * Local IOMAD company user class definition

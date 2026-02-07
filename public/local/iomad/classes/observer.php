@@ -25,8 +25,6 @@
 
 namespace local_iomad;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Event observer class for local iomad plugin.
  *
@@ -44,7 +42,7 @@ class observer {
      *
      * @var bool
      */
-    public static $disable_handler = false;
+    public static $disablehandler = false;
 
     /**
      * Triggered via block_iomad_company_admin::company_course_updated event.
@@ -279,8 +277,8 @@ class observer {
      */
     public static function user_created($event) {
         // Do the sign up part - as this is part of this plugin too.
-        // Check if the handler has been temporarily disabled
-        if (!self::$disable_handler) {
+        // Check if the handler has been temporarily disabled.
+        if (!self::$disablehandler) {
             company::signup_user_created($event->objectid);
         }
 

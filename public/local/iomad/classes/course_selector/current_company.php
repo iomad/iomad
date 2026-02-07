@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD current company course selector class
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -25,8 +27,20 @@ namespace local_iomad\course_selector;
 
 use local_iomad\company;
 
+/**
+ * Local IOMAD current company course selector class
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class current_company extends company_base {
-
+    /**
+     * Get selector options
+     *
+     * @return array
+     */
     protected function get_options() {
         $options = parent::get_options();
         $options['file']    = 'local/iomad/classes/course_selector/current_company.php';
@@ -36,7 +50,8 @@ class current_company extends company_base {
 
     /**
      * Company courses
-     * @param <type> $search
+     *
+     * @param string $search
      * @return array
      */
     public function find_courses($search) {
@@ -46,25 +61,31 @@ class current_company extends company_base {
         $params['companyid'] = $this->companyid;
         $params['departmentid'] = $this->departmentid;
         if (!empty($this->departmentid)) {
-            $departmentlist = array($this->departmentid => $this->departmentid) +
+            $departmentlist = [$this->departmentid => $this->departmentid] +
                               company::get_department_parentnodes($this->departmentid);
         } else {
-            $departmentlist = array($this->departmentid => $this->departmentid);
+            $departmentlist = [$this->departmentid => $this->departmentid];
         }
-        $departmentsql = "";
-        $departmentsql = "AND cc.departmentid in (".implode(',', array_keys($departmentlist)).") ";
-        $fields      = 'SELECT DISTINCT ' . $this->required_fields_sql('c');
+        [$insql, $inparams] = $DB->get_in_or_equal(array_keys($departmentlist),
+                                                   SQL_PARAMS_NAMED,
+                                                   'deptids');
+        $departmentsql = "AND cc.departmentid {$insql}";
+        $params = $params + $inparams;
+
+        $fields = 'SELECT DISTINCT ' . $this->required_fields_sql('c');
         $countfields = 'SELECT COUNT(1)';
 
         // Deal with licensed courses.
+        $licensesql = "";
         if (!$this->licenses) {
-            if ($licensecourses = $DB->get_records('iomad_courses', array('licensed' => 1), null, 'courseid')) {
-                $licensesql = " AND c.id not in (".implode(',', array_keys($licensecourses)).")";
-            } else {
-                $licensesql = "";
+            if ($licensecourses = $DB->get_records('iomad_courses', ['licensed' => 1], null, 'courseid')) {
+                [$notinsql, $notinparams] = $DB->get_in_or_equal(array_keys($licensecourses),
+                                                                 SQL_PARAMS_NAMED,
+                                                                 'licids',
+                                                                 false);
+                $licensesql = "AND c.id {$notinsql}";
+                $params = $params + $notinparams;
             }
-        } else {
-            $licensesql = "";
         }
 
         // Deal with shared courses.
@@ -130,9 +151,8 @@ class current_company extends company_base {
                             $DB->get_records_sql($fields . $sharedsql . $order, $params) +
                             $DB->get_records_sql($fields . $partialsharedsql . $order, $params);
 
-
         if (empty($availablecourses)) {
-            return array();
+            return [];
         }
 
         // Have any of the courses got enrollments?
@@ -140,7 +160,7 @@ class current_company extends company_base {
         $this->process_hidden_courses($availablecourses);
 
         // Set up empty return.
-        $coursearray = array();
+        $coursearray = [];
         if (!empty($availablecourses)) {
             if ($search) {
                 $groupname = get_string('companycoursesmatching', 'block_iomad_company_admin', $search);

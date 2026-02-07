@@ -25,13 +25,12 @@
 
 namespace local_iomad\task;
 
-require_once($CFG->dirroot.'/admin/tool/redocerts/lib.php');
+use core\task\adhoc_task;
+use core\task\manager;
 
 defined('MOODLE_INTERNAL') || die();
 
-use core\task\adhoc_task;
-use core\task\manager;
-use do_redocerts;
+require_once($CFG->dirroot.'/admin/tool/redocerts/lib.php');
 
 /**
  * An adhoc import user task for local iomad
@@ -95,7 +94,7 @@ class importusertask extends adhoc_task {
             $DB->insert_record('local_iomad_track', $comprecord);
         }
 
-        do_redocerts($this->importuser, 0, $customdata->companyid);
+        \do_redocerts($this->importuser, 0, $customdata->companyid);
     }
 
     /**

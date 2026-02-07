@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD language strings
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -69,7 +71,7 @@ $string['courseselectorautoselectunique'] = 'If only one course matches the sear
 $string['courseselectorpreserveselected'] = 'Keep selected courses, even if they no longer match the search';
 $string['courseselectorsearchanywhere'] = 'Match the search text anywhere in the course\'s name';
 $string['courseselectortoomany'] = 'course_selector got more than one selected course, even though multi-select is false';
-$string['courseswithoutcompletioncriteriacouunt'] ='Number of courses which have no completion criteria = {$a}';
+$string['courseswithoutcompletioncriteriacouunt'] = 'Number of courses which have no completion criteria = {$a}';
 $string['courseswithoutcompletionenabledcouunt'] = 'Number of courses which do not have completion enabled = {$a}';
 $string['crontask'] = 'IOMAD Cron';
 $string['emailcrontask'] = 'IOMAD email processing';
@@ -124,7 +126,6 @@ $string['fixcertificatetask'] = 'Change certificate context to user context';
 $string['fixcourseclearedtask'] = 'Ad-hoc task to update the \'coursecleared\' field in the stored completion records';
 $string['fixduplicatetemplatesadhoc'] = 'Ad-hoc task to remove duplicate company email templates.';
 $string['fixenrolleddatetask'] = 'Ad-hoc task to update the stored completion information to use the enrolment \'timecreated\' timestamp where this is not already set.';
-$string['fixtracklicensetask'] = 'IOMAD track fix license tracking details ad-hoc task';
 $string['fixtracklicensetask'] = 'Ad-hoc task to fix stored records license information';
 $string['fortnightly'] = 'Fortnightly';
 $string['frameworkselectorautoselectunique'] = 'If only one framework matches the search, select it automatically';

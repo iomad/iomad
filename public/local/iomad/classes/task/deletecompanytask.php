@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * An adhoc delete company task for local iomad
+ * Local iomad delete company adhoc task
  *
  * @package    local_iomad
  * @copyright  2024 E-Learn Design https://www.e-learndesign.co.uk
@@ -25,14 +25,12 @@
 
 namespace local_iomad\task;
 
-defined('MOODLE_INTERNAL') || die();
-
 use core\task\adhoc_task;
 use core\task\manager;
 use local_iomad\{company_user, track};
 
 /**
- * An adhoc delete company task for local iomad
+ * Local iomad delete company adhoc task
  *
  * @package    local_iomad
  * @copyright  2024 E-Learn Design https://www.e-learndesign.co.uk
@@ -65,7 +63,7 @@ class deletecompanytask extends adhoc_task {
 
         mtrace("deleting company $companyrec->name");
 
-        // Delete the certificates
+        // Delete the certificates.
         mtrace("deleting all stored certificates");
         $tracrecs = $DB->get_records_sql("SELECT DISTINCT lit.id
                                           FROM {local_iomad_track} lit
@@ -144,7 +142,7 @@ class deletecompanytask extends adhoc_task {
         $DB->delete_records('company_created_courses', ['companyid' => $companyrec->id]);
         $DB->delete_records('company_shared_courses', ['companyid' => $companyrec->id]);
 
-        // Deal with company course category
+        // Deal with company course category.
         mtrace("deleting company course category");
         if ($DB->get_record('course_categories', ['id' => $companyrec->category])) {
             $category = core_course_category::get($companyrec->category);
@@ -155,7 +153,7 @@ class deletecompanytask extends adhoc_task {
             }
         }
 
-        // Deal with company profile fields
+        // Deal with company profile fields.
         mtrace("deleting company profile field category");
         $profilefields = $DB->get_records('user_info_field', ['categoryid' => $companyrec->profileid]);
         foreach ($profilefields as $profilefield) {
@@ -177,15 +175,29 @@ class deletecompanytask extends adhoc_task {
         $DB->delete_records('company', ['id' => $companyrec->id]);
 
         mtrace("clearing up any config");
-        $DB->delete_records_select('config', $DB->sql_like('name', ":name"), ['name' => '%' . $DB->sql_like_escape($companyrec->id)]);
-        $DB->delete_records_select('config_plugins', $DB->sql_like('name', ":name"), ['name' => '%' . $DB->sql_like_escape($companyrec->id)]);
+        $DB->delete_records_select(
+            'config',
+            $DB->sql_like('name', ":name"),
+            ['name' => '%' . $DB->sql_like_escape($companyrec->id)]);
+        $DB->delete_records_select(
+            'config_plugins',
+            $DB->sql_like('name', ":name"),
+            ['name' => '%' . $DB->sql_like_escape($companyrec->id)]);
 
-        if ($files = $DB->get_records_select('files',
-                                             "component = 'core_admin' AND " . $DB->sql_like('filearea', ':filearea') . " AND filename !='.'",
-                                             ['filearea' => "%" .  $DB->sql_like_escape($companyrec->id)])) {
-            $fs =   get_file_storage();
+        if ($files = $DB->get_records_select(
+            'files',
+            "component = 'core_admin'
+             AND " . $DB->sql_like('filearea', ':filearea') . "
+             AND filename !='.'",
+            ['filearea' => "%" .  $DB->sql_like_escape($companyrec->id)])) {
+            $fs = get_file_storage();
             foreach ($files as $filerec) {
-                $file = $fs->get_file($filerec->contextid, $filerec->component, $filerec->filearea, $filerec->itemid, $filerec->filepath, $filerec->filename);
+                $file = $fs->get_file($filerec->contextid,
+                                      $filerec->component,
+                                      $filerec->filearea,
+                                      $filerec->itemid,
+                                      $filerec->filepath,
+                                      $filerec->filename);
                 $file->delete();
             }
         }

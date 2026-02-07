@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Company license users entity
+ *
+ * @package     local_iomad
+ * @copyright   2024 Derick Turner e-Learn Design
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 declare(strict_types=1);
 
 namespace local_iomad\reportbuilder\local\entities;
@@ -29,8 +37,6 @@ use core_reportbuilder\local\entities\base;
 use core_reportbuilder\local\helpers\format;
 use core_reportbuilder\local\filters\{select, text};
 use core_reportbuilder\local\report\{column, filter};
-
-defined('MOODLE_INTERNAL') or die;
 
 /**
  * Company license users entity
@@ -95,7 +101,7 @@ class companylicenseusers extends base {
         $companylicenseusersalias = $this->get_table_alias('companylicenseusers');
         $contextalias = $this->get_table_alias('context');
 
-        // licenseid.
+        // Licenseid.
         $columns[] = (new column(
             'licenseid',
             new lang_string('licenseid', 'block_iomad_company_admin'),
@@ -106,7 +112,7 @@ class companylicenseusers extends base {
             ->add_field("{$companylicenseusersalias}.licenseid")
             ->set_is_sortable(true);
 
-        // userid.
+        // Userid.
         $columns[] = (new column(
             'userid',
             new lang_string('userid', 'block_iomad_company_admin'),
@@ -117,7 +123,7 @@ class companylicenseusers extends base {
             ->add_field("{$companylicenseusersalias}.userid")
             ->set_is_sortable(false);
 
-        // licensecourseid.
+        // Licensecourseid.
         $columns[] = (new column(
             'licensecourseid',
             new lang_string('licensecourseid', 'block_iomad_company_admin'),
@@ -128,7 +134,7 @@ class companylicenseusers extends base {
             ->add_field("{$companylicenseusersalias}.licensecourseid")
             ->set_is_sortable(false);
 
-        // issuedate.
+        // Issuedate.
         $columns[] = (new column(
             'issuedate',
             new lang_string('issuedate', 'block_iomad_company_admin'),
@@ -140,7 +146,7 @@ class companylicenseusers extends base {
             ->set_is_sortable(true)
             ->add_callback([format::class, 'userdate']);
 
-        // isusing.
+        // Isusing.
         $columns[] = (new column(
             'isusing',
             new lang_string('isusing', 'block_iomad_company_admin'),
@@ -156,9 +162,9 @@ class companylicenseusers extends base {
                 } else {
                     return get_string('no');
                 }
-                });
+            });
 
-        // timecompleted.
+        // Timecompleted.
         $columns[] = (new column(
             'timecompleted',
             new lang_string('timecompleted', 'block_iomad_company_admin'),
@@ -181,7 +187,7 @@ class companylicenseusers extends base {
     protected function get_all_filters(): array {
         $companylicenseusersalias = $this->get_table_alias('companylicenseusers');
 
-        // issuedate.
+        // Issuedate.
         $filters[] = (new filter(
             select::class,
             'issuedate',
@@ -193,7 +199,7 @@ class companylicenseusers extends base {
             ->set_options([
             ]);
 
-        // name.
+        // Name.
         $filters[] = (new filter(
             select::class,
             'name',
@@ -205,7 +211,7 @@ class companylicenseusers extends base {
             ->set_options([
             ]);
 
-        // isusing.
+        // Isusing.
         $filters[] = (new filter(
             select::class,
             'isusing',
@@ -218,6 +224,5 @@ class companylicenseusers extends base {
             ]);
 
         return $filters;
-
     }
 }

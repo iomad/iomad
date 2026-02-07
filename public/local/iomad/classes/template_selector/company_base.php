@@ -15,7 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   block_iomad_company_admin
+ * Local IOMAD company base template selector class
+ *
+ * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -24,17 +26,33 @@
 namespace local_iomad\template_selector;
 
 /**
- * base class for selecting templates of a company
+ * Local IOMAD company base template selector class
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class company_base extends base {
 
+    /** @var int company id */
     protected $companyid;
+
+    /** @var bool show shared */
     protected $shared;
+
+    /** @var bool show partially shared */
     protected $partialshared = false;
 
-    //overridden to include the sortorder field
-    protected $requiredfields = array('id', 'shortname');
+    /** @var array required fields */
+    protected $requiredfields = ['id', 'shortname'];
 
+    /**
+     * Constructor function
+     *
+     * @param string $name
+     * @param array $options
+     */
     public function __construct($name, $options) {
         $this->companyid  = $options['companyid'];
         $this->shared  = $options['shared'];
@@ -42,11 +60,16 @@ abstract class company_base extends base {
         parent::__construct($name, $options);
     }
 
+    /**
+     * Get selector options
+     *
+     * @return array
+     */
     protected function get_options() {
         $options = parent::get_options();
         $options['companyid'] = $this->companyid;
         $options['shared'] = $this->shared;
-        $options['file']    = 'local/iomad/classes/template_selector/company_base.php';
+        $options['file'] = 'local/iomad/classes/template_selector/company_base.php';
 
         return $options;
     }

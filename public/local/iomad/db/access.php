@@ -15,11 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD capabilities
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+defined('MOODLE_INTERNAL') || die();
 
 $capabilities = [
     'local/iomad:importtrackfrommoodle' => [
@@ -28,7 +32,7 @@ $capabilities = [
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
         'archetypes' => [
-            'manager' => CAP_ALLOW
+            'manager' => CAP_ALLOW,
         ],
     ],
 
@@ -37,7 +41,7 @@ $capabilities = [
         'contextlevel' => CONTEXT_COMPANY,
         'archetypes' => [
             'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
+            'clientadministrator' => CAP_ALLOW,
         ],
     ],
 
@@ -46,7 +50,7 @@ $capabilities = [
         'contextlevel' => CONTEXT_COMPANY,
         'archetypes' => [
             'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
+            'clientadministrator' => CAP_ALLOW,
         ],
     ],
 
@@ -54,7 +58,7 @@ $capabilities = [
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
         'archetypes' => [
-            'clientadministrator' => CAP_ALLOW
+            'clientadministrator' => CAP_ALLOW,
         ],
     ],
 
@@ -62,7 +66,7 @@ $capabilities = [
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
         'archetypes' => [
-            'clientadministrator' => CAP_ALLOW
+            'clientadministrator' => CAP_ALLOW,
         ],
     ],
 
@@ -70,7 +74,7 @@ $capabilities = [
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
         'archetypes' => [
-            'clientadministrator' => CAP_ALLOW
+            'clientadministrator' => CAP_ALLOW,
         ],
     ],
 
@@ -78,7 +82,7 @@ $capabilities = [
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
         'archetypes' => [
-            'clientadministrator' => CAP_ALLOW
+            'clientadministrator' => CAP_ALLOW,
         ],
     ],
 ];

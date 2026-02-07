@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD company search form class
+ *
  * @package   local_iomad
  * @copyright 2024 Derick Turner
  * @author    Derick Turner
@@ -23,16 +25,23 @@
 
 namespace local_iomad\forms;
 
-defined('MOODLE_INTERNAL') || die;
-
 use moodleform;
 
 /**
- * local IOMAD company search form class
+ * Local IOMAD company search form class
+ *
+ * @package   local_iomad
+ * @copyright 2024 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class company_search_form extends moodleform {
-    protected $params = array();
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
         global $CFG, $DB, $USER, $SESSION;
 

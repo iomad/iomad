@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD training event not selected email task
+ *
  * @package    local_iomad
  * @copyright  2022 Derick Turner
  * @author    Derick Turner
@@ -23,12 +25,18 @@
 
 namespace local_iomad\task;
 
+use core\task\scheduled_task;
 use local_iomad\{company, emailtemplate};
 
 /**
- * Training event not selected email scheduled task
+ * Local IOMAD training event not selected email task
+ *
+ * @package    local_iomad
+ * @copyright  2022 Derick Turner
+ * @author    Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class trainingevent_not_selected_task extends \core\task\scheduled_task {
+class trainingevent_not_selected_task extends scheduled_task {
 
     /**
      * Get a descriptive name for this task (shown to admins).
@@ -97,7 +105,7 @@ class trainingevent_not_selected_task extends \core\task\scheduled_task {
                         if ($templateinfo->repeatperiod == 0) {
                             $notifyperiod = "";
                             if (!empty($course->notifyperiod)) {
-                                // use the default notify period.
+                                // Use the default notify period.
                                 $notifytime = $runtime - $course->notifyperiod * 86400;
                                 $notifyperiod = " AND sent < $notifytime";
                             }
@@ -108,7 +116,7 @@ class trainingevent_not_selected_task extends \core\task\scheduled_task {
                             $notifyperiod = " AND sent <  $notifytime";
                         }
                     } else {
-                        // use the default notify period.
+                        // Use the default notify period.
                         $notifytime = $runtime - $course->notifyperiod * 86400;
                         $notifyperiod = " AND sent < $notifytime";
                     }

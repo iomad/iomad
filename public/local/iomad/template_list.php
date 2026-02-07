@@ -26,7 +26,8 @@
 use local_iomad\{company, email, iomad};
 use local_iomad\custom_context\context_company;
 
-require_once(dirname(__FILE__) . '/../../config.php');
+require_once(__DIR__ . '/../../config.php');
+require_once($CFG->libdir . '/formslib.php');
 
 $delete       = optional_param('delete', 0, PARAM_INT);
 $confirm      = optional_param('confirm', '', PARAM_ALPHANUM);
@@ -95,7 +96,7 @@ $finishedurl = new moodle_url('/local/iomad/template_list.php', ['manage' => 1, 
 $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
-$PAGE->requires->jquery();
+$PAGE->requires->js_call_amd('local_iomad/template_sliders', 'init', [$companyid, $page, $perpage, $lang]);
 
 // Get output renderer.
 $output = $PAGE->get_renderer('local_iomad');
@@ -521,24 +522,21 @@ if ($manage) {
     if (empty($supenabledcounts["e"])) {
         $supenabledcounts["e"] = 0;
     }
-    if ($enabledcounts["d"] < $enabledcounts["d"] + $enabledcounts["e"]) {
-        $echecked = '';
-    } else {
+    $echecked = '';
+    $emchecked = '';
+    $eschecked = '';
+    if ($enabledcounts["d"] >= $enabledcounts["d"] + $enabledcounts["e"]) {
         $echecked = 'checked';
     }
-    if ($manenabledcounts["d"] < $manenabledcounts["d"] + $manenabledcounts["e"]) {
-        $emchecked = "";
-    } else {
-        $emchecked = "checked";
+    if ($manenabledcounts["d"] >= $manenabledcounts["d"] + $manenabledcounts["e"]) {
+        $emchecked = 'checked';
     }
-    if ($supenabledcounts["d"] < $supenabledcounts["d"] + $supenabledcounts["e"]) {
-        $eschecked = "";
-    } else {
-        $eschecked = "checked";
+    if ($supenabledcounts["d"] >= $supenabledcounts["d"] + $supenabledcounts["e"]) {
+        $eschecked = 'checked';
     }
 
     $headers = [get_string('emailtemplatename', 'local_iomad'),
-                get_string('enable') .
+                get_string('enable') . "<br>" .
                 html_writer::start_tag('label', ['class' => 'switch']) .
                 html_writer::empty_tag('input', ['class' => 'checkbox enableallall',
                                                  'type' => 'checkbox',
@@ -546,7 +544,7 @@ if ($manage) {
                                                  'value' => "{$prefix}.e.{$page}"]) .
                 html_writer::empty_tag('span', ['class' => 'slider round']) .
                 html_writer::end_tag('label'),
-                get_string('enable_manager', 'local_iomad') .
+                get_string('enable_manager', 'local_iomad') . "<br>" .
                 html_writer::start_tag('label', ['class' => 'switch']) .
                 html_writer::empty_tag('input', ['class' => 'checkbox enableallmanager',
                                                  'type' => 'checkbox',
@@ -554,7 +552,7 @@ if ($manage) {
                                                  'value' => "{$prefix}.em.{$page}"]) .
                 html_writer::empty_tag('span', ['class' => 'slider round']) .
                 html_writer::end_tag('label'),
-                get_string('enable_supervisor', 'local_iomad') .
+                get_string('enable_supervisor', 'local_iomad') . "<br>" .
                 html_writer::start_tag('label', ['class' => 'switch']) .
                 html_writer::empty_tag('input', ['class' => 'checkbox enableallsupervisor',
                                                  'type' => 'checkbox',
@@ -589,81 +587,5 @@ if ($manage) {
     $table->out($perpage, true);
 
 }
-
-?>
-<script>
-$(".checkbox").change(function() {
-    var inputElems = document.getElementsByTagName("input")
-    $.post("<?php echo $linkurl; ?>", {
-        ajaxtemplate:this.value,
-        ajaxvalue:this.checked
-    });
-    var matched = this.value;
-    if(this.checked) {
-        if(this.classList.contains("enableall")) {
-            $(".enableallall").prop("checked", this.checked);
-        }
-        if(this.classList.contains("enablemanager")) {
-            $(".enableallmanager").prop("checked", this.checked);
-        }
-        if(this.classList.contains("enablesupervisor")) {
-            $(".enableallsupervisor").prop("checked", this.checked);
-        }
-    } else {
-        if(this.classList.contains("enableall")) {
-            var checked = 0;
-            for (var i=0; i<inputElems.length; i++) {
-                if (inputElems[i].type === "checkbox" && inputElems[i].classList.contains('enableall')) {
-                    if (inputElems[i].checked) {
-                        checked++;
-                    }
-                }
-            }
-            if (checked == 0) {
-                 $(".enableallall").prop("checked", "");
-            }
-        }
-        if(this.classList.contains("enablemanager")) {
-            var checked = 0;
-            for (var i=0; i<inputElems.length; i++) {
-                if (inputElems[i].type === "checkbox" && inputElems[i].classList.contains('enablemanager')) {
-                    if (inputElems[i].checked) {
-                        checked++;
-                    }
-                }
-            }
-            if (checked == 0) {
-                 $(".enableallmanager").prop("checked", "");
-            }
-        }
-        if(this.classList.contains("enablesupervisor")) {
-            var checked = 0;
-            for (var i=0; i<inputElems.length; i++) {
-                if (inputElems[i].type === "checkbox" && inputElems[i].classList.contains('enablesupervisor')) {
-                    if (inputElems[i].checked) {
-                        checked++;
-                    }
-                }
-            }
-            if (checked == 0) {
-                 $(".enablesupervisorall").prop("checked", "");
-            }
-        }
-    }
-    if (matched.match(/\.e\.\d+$/) != null) {
-        // Get all of the entries and change them.
-        $(".enableall").prop("checked", this.checked);
-    }
-    if (matched.match(/\.em\.\d+$/) != null) {
-        // Get all of the entries and change them.
-        $(".enablemanager").prop("checked", this.checked);
-    }
-    if (matched.match(/\.es\.\d+$/) != null) {
-        // Get all of the entries and change them.
-        $(".enablesupervisor").prop("checked", this.checked);
-    }
-});
-</script>
-<?php
 
 echo $output->footer();

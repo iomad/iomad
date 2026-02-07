@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_iomadiomad
+ * Local IOMAD OUTPUT renderer class
+ * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -33,36 +34,64 @@ use local_iomad\forms\email_template_edit_form;
 use moodle_url;
 use plugin_renderer_base;
 
+/**
+ * Local IOMAD OUTPUT renderer class
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class renderer extends plugin_renderer_base {
 
     /**
      * Back to list of roles button
      */
     public function roles_button($link) {
-        $out = '<p><a class="btn btn-primary" href="'.$link.'">' .
-               get_string('listroles', 'block_iomad_company_admin') .
-               '</a></p>';
-
-        return $out;
+        return html_writer::tag(
+            'p',
+            html_writer::tag(
+                'a',
+                get_string('listroles', 'block_iomad_company_admin'),
+                [
+                    'class' => 'btn btn-primary',
+                    'href' => $link,
+                ]
+            ));
     }
 
     /**
      * Back to list of roles button
      */
     public function templateset_buttons($savelink, $managelink, $backlink) {
+        $out = html_writer::start_tag('p');
         if (!empty($backlink)) {
-            $out = ' <a class="btn btn-primary" href="'.$backlink.'">' .
-                   get_string('backtocompanytemplates', 'local_iomad') .
-                   '</a>';
+            $out .= html_writer::tag(
+                'a',
+                get_string('backtocompanytemplates', 'local_iomad'),
+                [
+                    'class' => 'btn btn-primary',
+                    'href' => $backlink,
+                ]
+            );
         } else {
-            $out = '<p><a class="btn btn-primary" href="'.$savelink.'">' .
-                   get_string('savetemplateset', 'local_iomad') .
-                   '</a> ';
-            $out .= ' <a class="btn btn-primary" href="'.$managelink.'">' .
-                    get_string('managetemplatesets', 'local_iomad') .
-                    '</a>';
-}
-        $out .= '</p>';
+            $out .= html_writer::tag(
+                'a',
+                get_string('savetemplateset', 'local_iomad'),
+                [
+                    'class' => 'btn btn-primary',
+                    'href' => $savelink,
+                ]
+            );
+            $out .= html_writer::tag(
+                'a',
+                get_string('managetemplatesets', 'local_iomad'),
+                [
+                    'class' => 'btn btn-primary',
+                    'href' => $managelink,
+                ]
+            );
+        }
+        $out .= html_writer::end_tag('p');
 
         return $out;
     }
@@ -77,11 +106,11 @@ class renderer extends plugin_renderer_base {
                                     $templatesetid,
                                     $page = 0,
                                     $perpage = 30) {
-        global $company;
+        global $companyid;
 
         $ntemplates = count($configtemplates);
         $companycontext = context_company::instance($companyid);
-        $out ="";
+        $out = "";
 
         if (iomad::has_capability('local/iomad:email_edit', $companycontext)) {
             $enable = true;
@@ -91,12 +120,12 @@ class renderer extends plugin_renderer_base {
 
         // Deal with header sliders.
         $sliced = array_slice($configtemplates, $page * $perpage, $perpage, true);
-        $echecked = " checked ";
-        $eschecked = " checked ";
-        $emchecked = " checked ";
+        $echecked = "checked";
+        $eschecked = "checked";
+        $emchecked = "checked";
         $ecount = 0;
         $emcount = 0;
-        $escount =0;
+        $escount = 0;
 
         foreach ($sliced as $test) {
             foreach ($templates as $templateid => $template) {
@@ -127,20 +156,68 @@ class renderer extends plugin_renderer_base {
         $head = [];
         $head[] = get_string('emailtemplatename', 'local_iomad');
         $head[] = get_string('enable') .
-                  '<br><label class="switch">
-                   <input class="checkbox enableallall" type="checkbox" ' . $echecked .
-                  ' value="' . "{$prefix}.e.{$page}" . '" />' .
-                  "<span class='slider round'></span></label>";
+                  html_writer::tag(
+                    'label',
+                    html_writer::tag(
+                        'input',
+                        html_writer::empty_tag(
+                            'span',
+                            [
+                                'class' => 'slider round',
+                            ]
+                        ),
+                        [
+                            'class' => 'checkbox enableallall',
+                            'type' => 'checkbox',
+                            $echecked => true,
+                            'value' => "{$prefix}.e.{$page}",
+                        ]
+                    ),
+                    [
+                        'class' => 'switch',
+                    ]);
         $head[] = get_string('enable_manager', 'local_iomad') .
-                  '<br><label class="switch">
-                   <input class="checkbox enableallmanager" type="checkbox" ' . $emchecked .
-                  ' value="' . "{$prefix}.em.{$page}" . '" />' .
-                  "<span class='slider round'></span></label>";
+                  html_writer::tag(
+                    'label',
+                    html_writer::tag(
+                        'input',
+                        html_writer::empty_tag(
+                            'span',
+                            [
+                                'class' => 'slider round',
+                            ]
+                        ),
+                        [
+                            'class' => 'checkbox enableallmanager',
+                            'type' => 'checkbox',
+                            $emchecked => true,
+                            'value' => "{$prefix}.em.{$page}",
+                        ]
+                    ),
+                    [
+                        'class' => 'switch',
+                    ]);
         $head[] = get_string('enable_supervisor', 'local_iomad') .
-                  '<br><label class="switch">
-                   <input class="checkbox enableallsupervisor" type="checkbox" ' . $eschecked .
-                  ' value="' . "{$prefix}.es.{$page}" . '" />' .
-                  "<span class='slider round'></span></label>";
+                  html_writer::tag(
+                    'label',
+                    html_writer::tag(
+                        'input',
+                        html_writer::empty_tag(
+                            'span',
+                            [
+                                'class' => 'slider round',
+                            ]
+                        ),
+                        [
+                            'class' => 'checkbox enableallsupervisor',
+                            'type' => 'checkbox',
+                            $eschecked => true,
+                            'value' => "{$prefix}.es.{$page}",
+                        ]
+                    ),
+                    [
+                        'class' => 'switch',
+                    ]);
         $head[] = get_string('controls', 'local_iomad');
         $table->head = $head;
         $table->align = ["left",
@@ -181,10 +258,26 @@ class renderer extends plugin_renderer_base {
                     } else {
                         $checked = "checked";
                     }
-                    $value ="{$prefix}.e.{$templatename}";
-                    $enablebutton = '<label class="switch">
-                                     <input class="checkbox enableall" type="checkbox" ' . $checked. ' value="' . $value . '" />' .
-                                    "<span class='slider round'></span></label>";
+                    $enablebutton = html_writer::tag(
+                    'label',
+                    html_writer::tag(
+                        'input',
+                        html_writer::empty_tag(
+                            'span',
+                            [
+                                'class' => 'slider round',
+                            ]
+                        ),
+                        [
+                            'class' => 'checkbox enableallall',
+                            'type' => 'checkbox',
+                            $checked => true,
+                            'value' => "{$prefix}.e.{$templatename}",
+                        ]
+                    ),
+                    [
+                        'class' => 'switch',
+                    ]);
                     $cell = new html_table_cell($enablebutton);
                     $row->cells[] = $cell;
                     if ($template->disabledmanager) {
@@ -192,10 +285,26 @@ class renderer extends plugin_renderer_base {
                     } else {
                         $checked = 'checked';
                     }
-                    $value ="{$prefix}.em.{$templatename}";
-                    $enablemanagerbutton = '<label class="switch">
-                                            <input class="checkbox enablemanager" type="checkbox" ' . $checked. ' value="' . $value . '" />' .
-                                           "<span class='slider round'></span></label>";
+                    $enablemanagerbutton = html_writer::tag(
+                    'label',
+                    html_writer::tag(
+                        'input',
+                        html_writer::empty_tag(
+                            'span',
+                            [
+                                'class' => 'slider round',
+                            ]
+                        ),
+                        [
+                            'class' => 'checkbox enablemanager',
+                            'type' => 'checkbox',
+                            $checked => true,
+                            'value' => "{$prefix}.em.{$templatename}",
+                        ]
+                    ),
+                    [
+                        'class' => 'switch',
+                    ]);
                     $cell = new html_table_cell($enablemanagerbutton);
                     $row->cells[] = $cell;
                     if ($template->disabledsupervisor) {
@@ -203,10 +312,26 @@ class renderer extends plugin_renderer_base {
                     } else {
                         $checked = 'checked';
                     }
-                    $value ="{$prefix}.es.{$templatename}";
-                    $enablesupervisorbutton = '<label class="switch">
-                                               <input class="checkbox enablesupervisor" type="checkbox" ' . $checked. ' value="' . $value . '" />' .
-                                              "<span class='slider round'></span></label>";
+                    $enablesupervisorbutton = html_writer::tag(
+                    'label',
+                    html_writer::tag(
+                        'input',
+                        html_writer::empty_tag(
+                            'span',
+                            [
+                                'class' => 'slider round',
+                            ]
+                        ),
+                        [
+                            'class' => 'checkbox enablesupervisor',
+                            'type' => 'checkbox',
+                            $checked => true,
+                            'value' => "{$prefix}.es.{$templatename}",
+                        ]
+                    ),
+                    [
+                        'class' => 'switch',
+                    ]);
                     $cell = new html_table_cell($enablesupervisorbutton);
                     $row->cells[] = $cell;
                 }
@@ -235,8 +360,7 @@ class renderer extends plugin_renderer_base {
      */
     public function email_templatesets($templates, $backlink) {
 
-        $out = '<a class="btn btn-primary" href="'.$backlink.'">' .
-               get_string('back') . '</a>';
+        $out = html_writer::tag('a', get_string('back'), ['class' => 'btn btn-primary', 'href' => $backlink]);
         $table = new html_table();
         foreach ($templates as $template) {
             $deletelink = new moodle_url('/local/iomad/template_list.php',
@@ -247,13 +371,30 @@ class renderer extends plugin_renderer_base {
                                         ['templatesetid' => $template->id, 'action' => 'edit']);
             $applylink = new moodle_url('/local/iomad/template_apply_form.php',
                                         ['templatesetid' => $template->id, 'action' => 'apply']);
-            $row = [$template->templatesetname,
-                    '<a class="btn btn-primary" href="'.$deletelink.'">' .
-                    get_string('deletetemplateset', 'local_iomad') . '</a> ' .
-                    '<a class="btn btn-primary" href="'.$editlink.'">' .
-                    get_string('edittemplateset', 'local_iomad') . '</a> ' .
-                    '<a class="btn btn-primary" href="'.$applylink.'">' .
-                    get_string('applytemplateset', 'local_iomad', $template->templatesetname) . '</a>'];
+            $row = [
+                $template->templatesetname,
+                html_writer::tag(
+                    'a',
+                    get_string('deletetemplateset', 'local_iomad'),
+                    [
+                        'class' => 'btn btn-primary',
+                        'href' => $deletelink,
+                    ]) .
+                html_writer::tag(
+                    'a',
+                    get_string('edittemplateset', 'local_iomad'),
+                    [
+                        'class' => 'btn btn-primary',
+                        'href' => $editlink,
+                    ]) .
+                html_writer::tag(
+                    'a',
+                    get_string('applytemplateset', 'local_iomad', $template->templatesetname),
+                    [
+                        'class' => 'btn btn-primary',
+                        'href' => $applylink,
+                    ]),
+            ];
 
             $table->data[] = $row;
         }

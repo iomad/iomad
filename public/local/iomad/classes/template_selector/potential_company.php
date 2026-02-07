@@ -15,7 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   block_iomad_company_admin
+ * Local IOMAD potential company template selector class
+ *
+ * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,9 +25,23 @@
 
 namespace local_iomad\template_selector;
 
+/**
+ * Local IOMAD potential company template selector class
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class potential_company extends company_base {
 
-        public function __construct($name, $options) {
+    /**
+     * Constructor function
+     *
+     * @param string $name
+     * @param array $options
+     */
+    public function __construct($name, $options) {
         // Shared default is false.
         if (empty($options['shared'])) {
             $this->shared = false;
@@ -36,34 +52,42 @@ class potential_company extends company_base {
         parent::__construct($name, $options);
     }
 
+    /**
+     * Get selector options
+     *
+     * @return array
+     */
     protected function get_options() {
         $options = parent::get_options();
-        $options['file']    = 'local/iomad/classes/template_selector/potential_company.php';
+        $options['file'] = 'local/iomad/classes/template_selector/potential_company.php';
 
         return $options;
     }
 
     /**
      * Potential company manager templates
-     * @param <type> $search
+     * @param string $search
      * @return array
      */
     public function find_templates($search) {
-        global $CFG, $DB, $SITE;
+        global $DB;
+
         // By default wherecondition retrieves all templates except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'ct');
         $params['companyid'] = $this->companyid;
 
         // Deal with shared templates.  Cannot be added to a company in this manner.
-        $sharedsql = " AND ct.id NOT IN (SELECT cct.templateid FROM {company_comp_templates} cct
-                                         LEFT JOIN {iomad_templates} it
-                                         ON (cct.templateid = it.templateid)
-                                         WHERE it.shared=1 ) ";
+        $sharedsql = " AND ct.id NOT IN (
+                           SELECT cct.templateid
+                           FROM {company_comp_templates} cct
+                           LEFT JOIN {iomad_templates} it ON (cct.templateid = it.templateid)
+                           WHERE it.shared = 1
+                       ) ";
 
-        $fields      = 'SELECT ' . $this->required_fields_sql('ct');
+        $fields = 'SELECT ' . $this->required_fields_sql('ct');
         $countfields = 'SELECT COUNT(1)';
 
-        $distinctfields      = 'SELECT DISTINCT ct.id,' . $this->required_fields_sql('ct');
+        $distinctfields = 'SELECT DISTINCT ct.id,' . $this->required_fields_sql('ct');
         $distinctcountfields = 'SELECT COUNT(DISTINCT ct.id) ';
 
         $sqldistinct = " FROM {competency_template} ct
@@ -75,33 +99,38 @@ class potential_company extends company_base {
                  $sharedsql";
 
         $order = ' ORDER BY ct.shortname ASC';
+
+        // Are we getting back too many entries?
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params) +
-            $DB->count_records_sql($distinctcountfields . $sqldistinct, $params);
-            if ($potentialmemberscount >  get_config('local_iomad', 'max_select_templates')) {
+                                     $DB->count_records_sql($distinctcountfields . $sqldistinct, $params);
+            if ($potentialmemberscount > get_config('local_iomad', 'max_select_templates')) {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }
 
+        // Get the potential template records.
         $alltemplates = $DB->get_records_sql($fields . $sql . $order, $params) +
-        $DB->get_records_sql($distinctfields . $sqldistinct . $order, $params);
+                        $DB->get_records_sql($distinctfields . $sqldistinct . $order, $params);
 
-        // Only show one list of templates
-        $availabletemplates = array();
+        // Deduplicate this list.
+        $availabletemplates = [];
         foreach ($alltemplates as $template) {
             $availabletemplates[$template->id] = $template;
         }
 
+        // Do we have anything?
         if (empty($availabletemplates)) {
-            return array();
+            return [];
         }
 
+        // Set up the search text reference.
         if ($search) {
             $groupname = get_string('pottemplatesmatching', 'block_iomad_company_admin', $search);
         } else {
             $groupname = get_string('pottemplates', 'block_iomad_company_admin');
         }
 
-        return array($groupname => $availabletemplates);
+        return [$groupname => $availabletemplates];
     }
 }

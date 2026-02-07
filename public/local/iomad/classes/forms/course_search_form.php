@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD course search form
+ *
  * @package   local_iomad
  * @copyright 2024 Derick Turner
  * @author    Derick Turner
@@ -23,37 +25,55 @@
 
 namespace local_iomad\forms;
 
-defined('MOODLE_INTERNAL') || die;
-
 use moodleform;
 use moodle_url;
 
 /**
- * Course search form used on the IOMAD pages.
+ * Local IOMAD course search form
  *
+ * @package   local_iomad
+ * @copyright 2024 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class course_search_form extends moodleform {
+
+    /** @var array params */
     protected $params = [];
+
+    /** @var array customfields */
     protected $customfields = [];
 
+    /** @var string title */
     protected $title;
-    public function __construct($url, $params, $title = "") {
+
+    /**
+     * Constuctor function
+     */
+    public function __construct(object $url, array $params, string $title = "") {
         global $DB;
         $this->params = $params;
 
-        $this->customfields = $DB->get_records_sql("SELECT cff.* FROM
-                                                    {customfield_field} cff 
-                                                    JOIN {customfield_category} cfc ON (cff.categoryid = cfc.id)
-                                                    WHERE cfc.area = 'course'
-                                                    AND cfc.component = 'core_course'
-                                                    ORDER BY cfc.sortorder, cff.sortorder");
+        $this->customfields = $DB->get_records_sql(
+            "SELECT cff.*
+             FROM {customfield_field} cff
+             JOIN {customfield_category} cfc ON (cff.categoryid = cfc.id)
+             WHERE cfc.area = 'course'
+             AND cfc.component = 'core_course'
+             ORDER BY cfc.sortorder, cff.sortorder");
+
         $this->title = get_string("coursesearchfields", 'local_iomad');
+
         if ($title != "") {
             $this->title = $title;
         }
+
         parent::__construct();
     }
 
+    /**
+     * Form definition
+     */
     public function definition() {
         global $CFG, $DB, $USER, $SESSION;
 
@@ -78,32 +98,48 @@ class course_search_form extends moodleform {
             $attributes['required'] = false;
             switch ($field->type) {
                 case "text":
-                    $mform->addElement($field->type, 'customfield_' . $field->shortname, format_text($field->name));
+                    $mform->addElement($field->type,
+                                       'customfield_' . $field->shortname,
+                                       format_text($field->name));
                     $mform->setType('customfield_' . $field->shortname, PARAM_CLEAN);
                     break;
                 case "textarea":
-                    $mform->addElement('text', 'customfield_' . $field->shortname, format_text($field->name));
+                    $mform->addElement('text',
+                                       'customfield_' . $field->shortname,
+                                       format_text($field->name));
                     $mform->setType('customfield_' . $field->shortname, PARAM_CLEAN);
                     break;
                 case "checkbox":
-                    $mform->addElement('advcheckbox', 'customfield_' . $field->shortname, format_text($field->name));
+                    $mform->addElement('advcheckbox',
+                                       'customfield_' . $field->shortname,
+                                       format_text($field->name));
                     break;
                 case "date":
                     if ($attributes['includetime']) {
-                        $mform->addElement('date_time_selector', 'customfield_' . $field->shortname, format_text($field->name), ['optional' => true]);
+                        $mform->addElement('date_time_selector',
+                                           'customfield_' . $field->shortname,
+                                           format_text($field->name),
+                                           ['optional' => true]);
                     } else {
-                        $mform->addElement('date_selector', 'customfield_' . $field->shortname, format_text($field->name), ['optional' => true]);
+                        $mform->addElement('date_selector',
+                                           'customfield_' . $field->shortname,
+                                           format_text($field->name),
+                                           ['optional' => true]);
                     }
                     break;
                 case "select":
                     $options = [0 => ''] + explode("\r\n", $attributes['options']);
-                    $mform->addElement('select', 'customfield_' . $field->shortname, format_text($field->name), $options, $attributes);
+                    $mform->addElement('select',
+                                       'customfield_' . $field->shortname,
+                                       format_text($field->name),
+                                       $options,
+                                       $attributes);
                     break;
             }
         }
 
         // Add the button(s).
-        $buttonarray=[];
+        $buttonarray = [];
         $buttonarray[] = $mform->createElement('submit', 'submitbutton', get_string('userfilter', 'local_iomad'));
         $mform->addGroup($buttonarray, 'buttonar', '', ' ', false);
     }

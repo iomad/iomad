@@ -52,7 +52,7 @@ class companylicenses extends datasource {
 
         $this->add_entity($companyentity);
 
-        // Get the tables and aliases
+        // Get the tables and aliases.
         $companylicenseentity = new companylicense();
         $companylicensealias = $companylicenseentity->get_table_alias('companylicense');
 

@@ -23,8 +23,6 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Local IOMAD admins settings page tabs class
  *
@@ -36,7 +34,7 @@ defined('MOODLE_INTERNAL') || die();
 class local_iomad_admin_settingspage_tabs extends admin_settingpage {
 
     /** @var The tabs */
-    protected $tabs = array();
+    protected $tabs = [];
 
     /**
      * Add a tab.
@@ -51,6 +49,12 @@ class local_iomad_admin_settingspage_tabs extends admin_settingpage {
         return true;
     }
 
+    /**
+     * Add tab function
+     *
+     * @param object $tab
+     * @return bool
+     */
     public function add($tab) {
         return $this->add_tab($tab);
     }
@@ -73,7 +77,7 @@ class local_iomad_admin_settingspage_tabs extends admin_settingpage {
         global $OUTPUT;
 
         $activetab = optional_param('activetab', '', PARAM_TEXT);
-        $context = array('tabs' => array());
+        $context = ['tabs' => []];
         $havesetactive = false;
 
         foreach ($this->get_tabs() as $tab) {
@@ -87,12 +91,12 @@ class local_iomad_admin_settingspage_tabs extends admin_settingpage {
                 $active = true;
             }
 
-            $context['tabs'][] = array(
+            $context['tabs'][] = [
                 'name' => $tab->name,
                 'displayname' => $tab->visiblename,
                 'html' => $tab->output_html(),
                 'active' => $active,
-            );
+            ];
         }
 
         if (empty($context['tabs'])) {

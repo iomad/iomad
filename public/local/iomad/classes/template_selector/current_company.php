@@ -15,7 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   block_iomad_company_admin
+ * Local IOMAD current company template selector class
+ *
+ * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,8 +25,22 @@
 
 namespace local_iomad\template_selector;
 
+/**
+ * Local IOMAD current company template selector class
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class current_company extends company_base {
 
+    /**
+     * Constructor function
+     *
+     * @param string $name
+     * @param array $options
+     */
     public function __construct($name, $options) {
         // Shared default is true.
         if (empty($options['shared'])) {
@@ -36,26 +52,32 @@ class current_company extends company_base {
         parent::__construct($name, $options);
     }
 
+    /**
+     * Get selector options
+     *
+     * @return array
+     */
     protected function get_options() {
         $options = parent::get_options();
-        $options['file']    = 'local/iomad/classes/template_selector/current_company.php';
+        $options['file'] = 'local/iomad/classes/template_selector/current_company.php';
 
         return $options;
     }
 
     /**
-     * Company templates
-     * @param <type> $search
+     * Find company templates
+     *
+     * @param string $search
      * @return array
      */
     public function find_templates($search) {
-        global $CFG, $DB;
+        global $DB;
+
         // By default wherecondition retrieves all templates except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'ct');
         $params['companyid'] = $this->companyid;
-        $fields      = 'SELECT DISTINCT ' . $this->required_fields_sql('ct');
+        $fields = 'SELECT DISTINCT ' . $this->required_fields_sql('ct');
         $countfields = 'SELECT COUNT(1)';
-
 
         // Deal with shared templates.
         if ($this->shared) {
@@ -68,37 +90,38 @@ class current_company extends company_base {
         }
 
         $sql = " FROM {competency_template} ct
-                INNER JOIN {company_comp_templates} cct ON (ct.id = cct.templateid AND cct.companyid = :companyid)
+                INNER JOIN {company_comp_templates} cct ON (
+                    ct.id = cct.templateid
+                    AND cct.companyid = :companyid
+                )
                 WHERE $wherecondition";
 
         $order = ' ORDER BY ct.shortname ASC';
 
+        // Are we getting back too many results?
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params) +
                                      $DB->count_records_sql($countfields . $sharedsql, $params);
-            if ($potentialmemberscount >  get_config('local_iomad', 'max_select_templates')) {
+            if ($potentialmemberscount > get_config('local_iomad', 'max_select_templates')) {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }
 
+        // Get the available templates.
         $availabletemplates = $DB->get_records_sql($fields . $sql . $order, $params) +
-                            $DB->get_records_sql($fields . $sharedsql . $order, $params);
+                              $DB->get_records_sql($fields . $sharedsql . $order, $params);
 
         if (empty($availabletemplates)) {
-            return array();
+            return [];
         }
 
-        // Set up empty return.
-        $templatearray = array();
-        if (!empty($availabletemplates)) {
-            if ($search) {
-                $groupname = get_string('currcompanytemplatesmatching', 'block_iomad_company_admin', $search);
-            } else {
-                $groupname = get_string('currcompanytemplates', 'block_iomad_company_admin');
-            }
-            $templatearray[$groupname] = $availabletemplates;
+        // Set up the search group text.
+        if ($search) {
+            $groupname = get_string('currcompanytemplatesmatching', 'block_iomad_company_admin', $search);
+        } else {
+            $groupname = get_string('currcompanytemplates', 'block_iomad_company_admin');
         }
 
-        return $templatearray;
+        return [$groupname => availabletemplates];
     }
 }

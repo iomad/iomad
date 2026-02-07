@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD company base user selector class
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,43 +25,79 @@
 
 namespace local_iomad\user_selector;
 
-use context_course;
+use html_writer;
 use local_iomad\company;
-use user_selector_base;
+
+defined('MOODLE_INTERNAL') || die();
+
+require_once(__DIR__ . '/../../../../user/selector/lib.php');
 
 /**
- * base class for selecting courses of a company
+ * Local IOMAD company base user selector class
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-/**
- * base class for selecting users of a company
- */
-abstract class company_base extends user_selector_base {
+abstract class company_base extends \user_selector_base {
 
+    /** @var bool is this all user? */
     protected $allusers = false;
+
+    /** @var object company */
     protected $company;
+
+    /** @var int company id */
     protected $companyid;
+
+    /** @var int course id */
     protected $courseid;
+
+    /** @var array list of courses  */
     protected $courses;
+
+    /** @var int department id */
     protected $departmentid;
+
+    /** @var object license */
     protected $license;
+
+    /** @var int license id */
     protected $licenseid;
+
+    /** @var object parent department */
     protected $parentdepartment;
+
+    /** @var int profile field id */
     protected $profilefieldid = 0;
+
+    /** @var object program */
     protected $program;
+
+    /** @var array selected courses */
     protected $selectedcourses;
+
+    /** @var array sub departments */
     protected $subdepartments;
 
     /** @var array JavaScript YUI3 Module definition */
-    protected static $jsmodule = array(
+    protected static $jsmodule = [
                 'name' => 'user_selector',
                 'fullpath' => '/local/iomad/classes/user_selector/module.js',
-                'requires'  => array('node', 'event-custom', 'datasource', 'json', 'moodle-core-notification'),
-                'strings' => array(
-                    array('previouslyselectedusers', 'moodle', '%%SEARCHTERM%%'),
-                    array('nomatchingusers', 'moodle', '%%SEARCHTERM%%'),
-                    array('none', 'moodle')
-                ));
+                'requires'  => ['node', 'event-custom', 'datasource', 'json', 'moodle-core-notification'],
+                'strings' => [
+                    ['previouslyselectedusers', 'moodle', '%%SEARCHTERM%%'],
+                    ['nomatchingusers', 'moodle', '%%SEARCHTERM%%'],
+                    ['none', 'moodle'],
+                ]];
 
+    /**
+     * Constructor function
+     *
+     * @param string $name
+     * @param array $options
+     */
     public function __construct($name, $options) {
 
         $this->allusers = !empty($options['allusers']) ? $options['allusers'] : false;
@@ -88,6 +126,11 @@ abstract class company_base extends user_selector_base {
         parent::__construct($name, $options);
     }
 
+    /**
+     * Get selector options
+     *
+     * @return array
+     */
     protected function get_options() {
         $options = parent::get_options();
         $options['file']    = 'local/iomad/classes/user_selector/company_base.php';
@@ -107,15 +150,20 @@ abstract class company_base extends user_selector_base {
         return $options;
     }
 
+    /**
+     * Get the list of users in a course
+     *
+     * @return array
+     */
     protected function get_course_user_ids() {
         global $DB, $PAGE;
         if (!isset( $this->courseid) ) {
-            return array();
+            return [];
         } else {
-            $course = $DB->get_record('course', array('id' => $this->courseid));
+            $course = $DB->get_record('course', ['id' => $this->courseid]);
             $courseenrolmentmanager = new courseenrolmentmanager($PAGE, $course);
 
-            $users = $courseenrolmentmanager->get_users('lastname', $sort = 'ASC', $page = 0, $perpage = 0);
+            $users = $courseenrolmentmanager->get_users('lastname');
 
             // Only return the keys (user ids).
             return array_keys($users);
@@ -139,10 +187,12 @@ abstract class company_base extends user_selector_base {
             return users_search_sql($search, $u, $this->searchtype, $this->extrafields,
                     $this->exclude, $this->validatinguserids);
         } else {
-            $wheresqsl = "ui.fieldid = :profilefieldid AND " . $DB->sql_like('ui.data', ":profilesearch", false, false) . " AND ui.data!=''";
-            $params = array('profilefieldid' => $this->profilefieldid,
-                            'profilesearch' => "%".$search."%");
-            return array($wheresqsl, $params);
+            $wheresqsl = "ui.fieldid = :profilefieldid
+                          AND " . $DB->sql_like('ui.data', ":profilesearch", false, false) .
+                         " AND ui.data != ''";
+            $params = ['profilefieldid' => $this->profilefieldid,
+                       'profilesearch' => "%".$search."%"];
+            return [$wheresqsl, $params];
         }
     }
 
@@ -164,7 +214,7 @@ abstract class company_base extends user_selector_base {
         // Initialise the selector.
         $PAGE->requires->js_init_call(
             'M.core_user.init_user_selector',
-            array($this->name, $hash, $this->extrafields, $search),
+            [$this->name, $hash, $this->extrafields, $search],
             false,
             self::$jsmodule
         );
@@ -195,52 +245,102 @@ abstract class company_base extends user_selector_base {
                                                               WHERE id != :companyid
                                                           )
                                                           ORDER BY uif.name DESC",
-                                                          array('companyid' => $this->companyid));
+                                                          ['companyid' => $this->companyid]);
 
         // Output the select.
         $name = $this->name;
         $multiselect = '';
         if ($this->multiselect) {
             $name .= '[]';
-            $multiselect = 'multiple="multiple" ';
+            $multiselect = "multiple";
         }
 
         // Create the profile field selectors.
-        $profilesearch = "<select name = '" . $this->name . "_profilefieldid'
-                           class=\"form-control custom_srch d-block col-12 my-2\"
-                           id=\"" .$this->name ."_custom_srch\">
-                          <option value=0>" . get_string('user') . "</option>";
+        $profilesearch = html_writer::empty_tag(
+            'select',
+            [
+                'name' => $this->name . '_profilefieldid',
+                'class' => 'form-control custom_srch d-block col-12 my-2',
+                'id' => $this->name . '_custom_srch',
+
+            ]) .
+            html_writer::tag('option', get_string('user'), ['value' => 0]);
         foreach ($companyprofilecategories as $companyprofilecategory) {
-            if (!empty($profileid) && $profileid == $companyprofilecategory->id) {
-                $profilesearch .= "<option value=" . $companyprofilecategory->id . " selected>" .
-                                  format_string($companyprofilecategory->name) .
-                                  "</option>";
+            if (!empty($profileid) &&
+                $profileid == $companyprofilecategory->id) {
+                $profilesearch .= html_writer::tag(
+                    'option',
+                    format_string($companyprofilecategory->name),
+                    [
+                        'value' => $companyprofilecategory->id,
+                        'selected' => true,
+                    ]);
             } else {
-                $profilesearch .= "<option value=" . $companyprofilecategory->id .">" .
-                                  format_string($companyprofilecategory->name) .
-                                  "</option>";
+                $profilesearch .= html_writer::tag(
+                    'option',
+                    format_string($companyprofilecategory->name),
+                    [
+                        'value' => $companyprofilecategory->id,
+                    ]);
             }
         }
-        $profilesearch .= "</select>";
+        $profilesearch .= html_writer::end_tag('select');
 
-        $output = '<div class="userselector" id="' . $this->name . '_wrapper">' . "\n" .
-                '<select name="' . $name . '" id="' . $this->name . '" ' .
-                $multiselect . 'size="' . $this->rows . '" class="form-control no-overflow">' . "\n";
+        $output = html_writer::start_tag(
+            'div',
+            [
+                'class' => 'userselector',
+                'id' => $this->name . '_wrapper',
+            ]
+        ) .
+            html_writer::empty_tag(
+                'select',
+                [
+                    'name' => $name,
+                    'id' => $this->name,
+                    'multiple' => $multiselect,
+                    'size' => $this->rows,
+                    'class' => "form-control no-overflow",
+                ]
+            );
 
         // Populate the select.
         $output .= $this->output_options($groupedusers, $search);
 
         // Output the search controls.
-        $output .= "</select>\n<div class=\"form-inline\">\n";
+        $output .= html_writer::end_tag('select') .
+                   html_writer::start_tag('div', ['class' => "form-inline"]);
         $output .= $profilesearch;
-        $output .= '<input type="text" name="' . $this->name . '_searchtext" id="' .
-                $this->name . '_searchtext" size="15" value="' . $search . '" class="form-control"/>';
-        $output .= '<input type="submit" name="' . $this->name . '_searchbutton" id="' .
-                $this->name . '_searchbutton" value="' . $this->search_button_caption() . '" class="btn btn-secondary"/>';
-        $output .= '<input type="submit" name="' . $this->name . '_clearbutton" id="' .
-                $this->name . '_clearbutton" value="' . get_string('clear') . '" class="btn btn-secondary"/>';
-
-        $output .= "</div>\n</div>\n\n";
+        $output .= html_writer::empty_tag(
+            'input',
+            [
+                'type' => "text",
+                'name' => $this->name . '_searchtext',
+                'id' => $this->name . '_searchtext',
+                'size' => "15",
+                'value' => $search,
+                'class' => "form-control",
+            ]);
+        $output .= html_writer::empty_tag(
+            'input',
+            [
+                'type' => "submit",
+                'name' => $this->name . '_searchbutton',
+                'id' => $this->name . '_searchbutton',
+                'value' => $this->search_button_caption(),
+                'class' => "btn btn-secondary",
+            ]);
+        $output .= html_writer::empty_tag(
+            'input',
+            [
+                'type' => "submit",
+                'name' => $this->name . '_clearbutton',
+                'id' => $this->name . '_clearbutton',
+                'value' => get_string('clear'),
+                'class' => "btn btn-secondary",
+            ]);
+        $output .= html_writer::end_tag('div') .
+                   html_writer::end_tag('div');
 
         // Initialise the ajax functionality.
         $output .= $this->initialise_javascript($search);

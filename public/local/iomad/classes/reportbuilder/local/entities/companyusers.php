@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Company users entity
+ *
+ * @package     local_iomad
+ * @copyright   2024 Derick Turner e-Learn Design
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 declare(strict_types=1);
 
 namespace local_iomad\reportbuilder\local\entities;
@@ -28,10 +36,6 @@ use stdClass;
 use core_reportbuilder\local\entities\base;
 use core_reportbuilder\local\filters\{select, text};
 use core_reportbuilder\local\report\{column, filter};
-
-defined('MOODLE_INTERNAL') or die;
-
-global $CFG;
 
 /**
  * Company users entity
@@ -96,7 +100,7 @@ class companyusers extends base {
         $companyusersalias = $this->get_table_alias('companyusers');
         $contextalias = $this->get_table_alias('context');
 
-        // companyid.
+        // Companyid.
         $columns[] = (new column(
             'companyid',
             new lang_string('companyid', 'block_iomad_company_admin'),
@@ -107,7 +111,7 @@ class companyusers extends base {
             ->add_field("{$companyusersalias}.companyid")
             ->set_is_sortable(false);
 
-        // userid
+        // Userid.
         $columns[] = (new column(
             'userid',
             new lang_string('userid', 'block_iomad_company_admin'),
@@ -118,7 +122,7 @@ class companyusers extends base {
             ->add_field("{$companyusersalias}.userid")
             ->set_is_sortable(true);
 
-        // managertype.
+        // Managertype.
         $columns[] = (new column(
             'managertype',
             new lang_string('managertype', 'block_iomad_company_admin'),
@@ -129,7 +133,7 @@ class companyusers extends base {
             ->add_field("{$companyusersalias}.managertype")
             ->set_is_sortable(false);
 
-        // departmentid.
+        // Departmentid.
         $columns[] = (new column(
             'departmentid',
             new lang_string('departmentid', 'block_iomad_company_admin'),
@@ -140,7 +144,7 @@ class companyusers extends base {
             ->add_field("{$companyusersalias}.departmentid")
             ->set_is_sortable(false);
 
-        // educator.
+        // Educator.
         $columns[] = (new column(
             'educator',
             new lang_string('educator', 'block_iomad_company_admin'),

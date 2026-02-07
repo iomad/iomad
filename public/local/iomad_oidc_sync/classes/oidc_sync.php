@@ -44,7 +44,7 @@ class oidc_sync {
 
         // Disable the signup handler to prevent it from interfering with company assignments.
         // OIDC sync handles company assignment explicitly via company_user::create().
-        observer::$disable_handler = true;
+        observer::$disablehandler = true;
 
         try {
             // Get the list of configured companies.
@@ -92,7 +92,7 @@ class oidc_sync {
             }
         } finally {
             // Always re-enable the signup handler, even if an exception occurs.
-            observer::$disable_handler = false;
+            observer::$disablehandler = false;
         }
     }
 

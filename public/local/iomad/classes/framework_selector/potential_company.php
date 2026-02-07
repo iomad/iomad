@@ -15,7 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   block_iomad_company_admin
+ * Local IOMAD potential company framework selector class
+ *
+ * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,37 +25,55 @@
 
 namespace local_iomad\framework_selector;
 
+/**
+ * Local IOMAD potential company framework selector class
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class potential_company extends company_base {
 
+    /**
+     * Get selector options
+     *
+     * @return array
+     */
     protected function get_options() {
         $options = parent::get_options();
-        $options['file']    = 'local/iomad/classes/framework_selector/potential_company.php';
+        $options['file'] = 'local/iomad/classes/framework_selector/potential_company.php';
         return $options;
     }
 
     /**
-     * Potential company manager frameworks
-     * @param <type> $search
+     * Search for potential company frameworks
+     * @param atring $search
      * @return array
      */
     public function find_frameworks($search) {
-        global $CFG, $DB, $SITE;
+        global $DB;
+
         // By default wherecondition retrieves all frameworks except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'cf');
         $params['companyid'] = $this->companyid;
 
         // Deal with shared frameworks.  Cannot be added to a company in this manner.
         $sharedsql = " AND cf.id NOT IN (
-                         SELECT frameworkid FROM {iomad_frameworks}
-                         WHERE shared = 1 )
-                        AND cf.id NOT IN (
-                         SELECT frameworkid FROM {company_comp_frameworks}
-                         WHERE companyid = :companyid)";
+                           SELECT frameworkid
+                           FROM {iomad_frameworks}
+                           WHERE shared = 1
+                       )
+                       AND cf.id NOT IN (
+                           SELECT frameworkid
+                           FROM {company_comp_frameworks}
+                           WHERE companyid = :companyid
+                       )";
 
-        $fields      = 'SELECT ' . $this->required_fields_sql('cf');
+        $fields = 'SELECT ' . $this->required_fields_sql('cf');
         $countfields = 'SELECT COUNT(1)';
 
-        $distinctfields      = 'SELECT DISTINCT cf.id,' . $this->required_fields_sql('cf');
+        $distinctfields = 'SELECT DISTINCT cf.id,' . $this->required_fields_sql('cf');
         $distinctcountfields = 'SELECT COUNT(DISTINCT cf.id) ';
 
         $sqldistinct = " FROM {competency_framework} cf
@@ -65,33 +85,38 @@ class potential_company extends company_base {
                  $sharedsql";
 
         $order = ' ORDER BY cf.shortname ASC';
+
+        // Check if we got too many results.
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params) +
-            $DB->count_records_sql($distinctcountfields . $sqldistinct, $params);
+                                     $DB->count_records_sql($distinctcountfields . $sqldistinct, $params);
             if ($potentialmemberscount > get_config('local_iomad', 'max_select_frameworks')) {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }
 
+        // Get all of the frameworks.
         $allframeworks = $DB->get_records_sql($fields . $sql . $order, $params) +
-        $DB->get_records_sql($distinctfields . $sqldistinct . $order, $params);
+                         $DB->get_records_sql($distinctfields . $sqldistinct . $order, $params);
 
-        // Only show one list of frameworks
-        $availableframeworks = array();
+        // Deduplicate this.
+        $availableframeworks = [];
         foreach ($allframeworks as $framework) {
             $availableframeworks[$framework->id] = $framework;
         }
 
+        // If we have nothing, return an empty array.
         if (empty($availableframeworks)) {
-            return array();
+            return [];
         }
 
+        // Deal with any search groupings.
         if ($search) {
             $groupname = get_string('potframeworksmatching', 'block_iomad_company_admin', $search);
         } else {
             $groupname = get_string('potframeworks', 'block_iomad_company_admin');
         }
 
-        return array($groupname => $availableframeworks);
+        return [$groupname => $availableframeworks];
     }
 }

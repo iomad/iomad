@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Course completions entity
+ *
+ * @package     local_iomad
+ * @copyright   2024 Derick Turner e-Learn Design
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 declare(strict_types=1);
 
 namespace local_iomad\reportbuilder\local\entities;
@@ -29,8 +37,6 @@ use html_writer;
 use lang_string;
 use moodle_url;
 use stdClass;
-
-defined('MOODLE_INTERNAL') or die;
 
 /**
  * Course completions entity
@@ -95,7 +101,7 @@ class coursecompletions extends base {
         $coursecompletionsalias = $this->get_table_alias('coursecompletions');
         $contextalias = $this->get_table_alias('context');
 
-        // userid.
+        // Userid.
         $columns[] = (new column(
             'userid',
             new lang_string('userid', 'block_iomad_company_admin'),
@@ -106,7 +112,7 @@ class coursecompletions extends base {
             ->add_field("{$coursecompletionsalias}.userid")
             ->set_is_sortable(false);
 
-        // courseid.
+        // Courseid.
         $columns[] = (new column(
             'courseid',
             new lang_string('courseid', 'block_iomad_company_admin'),
@@ -117,7 +123,7 @@ class coursecompletions extends base {
             ->add_field("{$coursecompletionsalias}.courseid")
             ->set_is_sortable(false);
 
-        // coursename.
+        // Coursename.
         $columns[] = (new column(
             'coursename',
             new lang_string('coursename', 'block_iomad_company_admin'),
@@ -128,7 +134,7 @@ class coursecompletions extends base {
             ->add_field("{$coursecompletionsalias}.coursename")
             ->set_is_sortable(false);
 
-        // timecompleted.
+        // Timecompleted.
         $columns[] = (new column(
             'timecompleted',
             new lang_string('timecompleted', 'block_iomad_company_admin'),
@@ -140,7 +146,7 @@ class coursecompletions extends base {
             ->set_is_sortable(true)
             ->add_callback([format::class, 'userdate']);
 
-        // timestarted.
+        // Timestarted.
         $columns[] = (new column(
             'timestarted',
             new lang_string('timestarted', 'block_iomad_company_admin'),
@@ -152,7 +158,7 @@ class coursecompletions extends base {
             ->set_is_sortable(true)
             ->add_callback([format::class, 'userdate']);
 
-        // timeenrolled.
+        // Timeenrolled.
         $columns[] = (new column(
             'timeenrolled',
             new lang_string('timeenrolled', 'block_iomad_company_admin'),
@@ -164,7 +170,7 @@ class coursecompletions extends base {
             ->set_is_sortable(true)
             ->add_callback([format::class, 'userdate']);
 
-        // finalscore.
+        // Finalscore.
         $columns[] = (new column(
             'finalscore',
             new lang_string('finalscore', 'block_iomad_company_admin'),
@@ -175,7 +181,7 @@ class coursecompletions extends base {
             ->add_field("{$coursecompletionsalias}.finalscore")
             ->set_is_sortable(false);
 
-        // companyid.
+        // Companyid.
         $columns[] = (new column(
             'companyid',
             new lang_string('companyid', 'block_iomad_company_admin'),
@@ -186,7 +192,7 @@ class coursecompletions extends base {
             ->add_field("{$coursecompletionsalias}.companyid")
             ->set_is_sortable(false);
 
-        // licenseid.
+        // Licenseid.
         $columns[] = (new column(
             'licenseid',
             new lang_string('licenseid', 'block_iomad_company_admin'),
@@ -197,7 +203,7 @@ class coursecompletions extends base {
             ->add_field("{$coursecompletionsalias}.licenseid")
             ->set_is_sortable(false);
 
-        // licensename.
+        // Licensename.
         $columns[] = (new column(
             'licensename',
             new lang_string('licensename', 'block_iomad_company_admin'),
@@ -208,7 +214,7 @@ class coursecompletions extends base {
             ->add_field("{$coursecompletionsalias}.licensename")
             ->set_is_sortable(false);
 
-        // licenseallocated.
+        // Licenseallocated.
         $columns[] = (new column(
             'licenseallocated',
             new lang_string('licenseallocated', 'block_iomad_company_admin'),
@@ -220,7 +226,7 @@ class coursecompletions extends base {
             ->set_is_sortable(true)
             ->add_callback([format::class, 'userdate']);
 
-        // coursecleared.
+        // Coursecleared.
         $columns[] = (new column(
             'coursecleared',
             new lang_string('coursecleared', 'block_iomad_company_admin'),
@@ -242,7 +248,7 @@ class coursecompletions extends base {
     protected function get_all_filters(): array {
         $coursecompletionsalias = $this->get_table_alias('coursecompletions');
 
-        // coursename.
+        // Coursename.
         $filters[] = (new filter(
             select::class,
             'coursename',
@@ -254,7 +260,7 @@ class coursecompletions extends base {
             ->set_options([
             ]);
 
-        // timeenrolled.
+        // Timeenrolled.
         $filters[] = (new filter(
             select::class,
             'timeenrolled',
@@ -266,7 +272,7 @@ class coursecompletions extends base {
             ->set_options([
             ]);
 
-        // timestarted.
+        // Timestarted.
         $filters[] = (new filter(
             select::class,
             'timestarted',
@@ -278,7 +284,7 @@ class coursecompletions extends base {
             ->set_options([
             ]);
 
-        // timecompleted.
+        // Timecompleted.
         $filters[] = (new filter(
             select::class,
             'timecompleted',
@@ -290,7 +296,7 @@ class coursecompletions extends base {
             ->set_options([
             ]);
 
-        // timeexpires.
+        // Timeexpires.
         $filters[] = (new filter(
             select::class,
             'timeexpires',
@@ -302,7 +308,7 @@ class coursecompletions extends base {
             ->set_options([
             ]);
 
-        // finalscore.
+        // Finalscore.
         $filters[] = (new filter(
             select::class,
             'finalscore',
@@ -314,7 +320,7 @@ class coursecompletions extends base {
             ->set_options([
             ]);
 
-        // licensename.
+        // Licensename.
         $filters[] = (new filter(
             select::class,
             'licensename',
@@ -326,7 +332,7 @@ class coursecompletions extends base {
             ->set_options([
             ]);
 
-        // licenseallocated.
+        // Licenseallocated.
         $filters[] = (new filter(
             select::class,
             'licenseallocated',

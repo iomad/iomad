@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD email template test script
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -26,28 +28,32 @@ define('CLI_SCRIPT', true);
 require(__DIR__.'/../../../config.php');
 require_once($CFG->libdir.'/clilib.php');
 
-
+/**
+ * Test function
+ *
+ * @return void
+ */
 function test() {
     echo "<hr /><b>Fake user object</b>";
-    $user = (object) array('firstname' => 'User', 'lastname' => 'Test',
+    $user = (object) ['firstname' => 'User', 'lastname' => 'Test',
                            'email' => 'testuser@somewhere.com',
-                           'username' => 'testuser', 'newpassword' => 'somenewpassword');
-    $sender = (object) array('firstname' => 'Test', 'Lastname' => 'User');
-    echo local_iomad\emailtemplate::send('user_create', array('user' => $user, 'course' => 2,
-                             'sender' => $sender));
+                           'username' => 'testuser', 'newpassword' => 'somenewpassword'];
+    $sender = (object) ['firstname' => 'Test', 'Lastname' => 'User'];
+    echo local_iomad\emailtemplate::send('user_create', ['user' => $user, 'course' => 2,
+                             'sender' => $sender]);
 
-    echo local_iomad\emailtemplate::send('user_added_to_course', array('course' => 2),
-      array(array('user' => 3), array('user' => 56), array('user' => $user)));
+    echo local_iomad\emailtemplate::send('user_added_to_course', ['course' => 2],
+      [['user' => 3], ['user' => 56], ['user' => $user]]);
 
     echo "<hr /><b>Email template from database</b>";
-    echo local_iomad\emailtemplate::send('user_added_to_course', array('user' => 3, 'course' => 2));
+    echo local_iomad\emailtemplate::send('user_added_to_course', ['user' => 3, 'course' => 2]);
 
     echo "<hr /><b>Email to current user about current course</b>";
     echo local_iomad\emailtemplate::send('user_added_to_course');
 
     echo "<hr/><b>Email all users in a department</b>";
     echo local_iomad\emailtemplate::send_to_all_users_in_department(3, 'user_added_to_course',
-                                                        array('course' => 2));
+                                                        ['course' => 2]);
 }
 
 test();

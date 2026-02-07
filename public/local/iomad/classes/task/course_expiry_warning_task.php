@@ -1,6 +1,6 @@
 <?php
-//
 // This file is part of Moodle - http://moodle.org/
+//
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD course expiry warning email schedule task
+ *
  * @package    local_iomad
  * @copyright  2022 Derick Turner
  * @author    Derick Turner
@@ -23,13 +25,20 @@
 
 namespace local_iomad\task;
 
+use block_iomad_company_admin\event\user_course_expired;
 use context_course;
+use core\task\scheduled_task;
 use local_iomad\{company, emailtemplate};
 
 /**
- * Course expiry warning email schedule task
+ * Local IOMAD course expiry warning email schedule task
+ *
+ * @package    local_iomad
+ * @copyright  2022 Derick Turner
+ * @author    Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class course_expiry_warning_task extends \core\task\scheduled_task {
+class course_expiry_warning_task extends scheduled_task {
 
     /**
      * Get a descriptive name for this task (shown to admins).
@@ -80,7 +89,7 @@ class course_expiry_warning_task extends \core\task\scheduled_task {
                                AND companyid = c.id
                            GROUP BY userid,courseid)";
 
-            // Email all of the users
+            // Email all of the users.
             mtrace("getting expired users");
             $allusers = $DB->get_records_sql($expiredsql, ['expirycourseid' => $expirycourse->courseid,
                                                            'targettime' => $targettime,
@@ -104,24 +113,30 @@ class course_expiry_warning_task extends \core\task\scheduled_task {
                 // Deal with parent companies as we only want users in this company.
                 $companyobj = new company($company->id);
                 if ($parentslist = $companyobj->get_parent_companies_recursive()) {
+                    [$insql, $inparams] = $DB->get_in_or_equal(array_keys($parentslist),
+                                                               SQL_PARAMS_NAMED,
+                                                               'pids');
+                    $inparams['userid'] = $compuser->userid;
 
                     // Is this a parent company manager?
                     if ($DB->get_records_sql("SELECT userid FROM {company_users}
                                               WHERE managertype = 1
-                                              AND companyid IN (" . implode(',', array_keys($parentslist)) .")
+                                              AND companyid {$insql}
                                               AND userid = :userid",
-                                              ['userid' => $compuser->userid])) {
+                                             $inparams)) {
                         continue;
                     }
                 }
 
                 // Expire the user from the course.
                 mtrace("Expiring $user->id from course id $course->id as a student");
-                $event = \block_iomad_company_admin\event\user_course_expired::create(['context' => context_course::instance($course->id),
-                                                                                       'courseid' => $course->id,
-                                                                                       'objectid' => $course->id,
-                                                                                       'companyid' => $company->id,
-                                                                                       'userid' => $user->id]);
+                $event = user_course_expired::create([
+                    'context' => context_course::instance($course->id),
+                    'courseid' => $course->id,
+                    'objectid' => $course->id,
+                    'companyid' => $company->id,
+                    'userid' => $user->id,
+                ]);
                 $event->trigger();
                 $compuser->coursecleared = true;
 
@@ -130,10 +145,13 @@ class course_expiry_warning_task extends \core\task\scheduled_task {
 
                 // Get the company template info.
                 // Check against per company template repeat instead.
-                if ($templateinfo = $DB->get_record('email_template', ['companyid' => $company->id, 'name' => 'expiry_warn_user'])) {
+                if ($templateinfo = $DB->get_record('email_template', ['companyid' => $company->id,
+                                                                       'name' => 'expiry_warn_user'])) {
 
                     // Check if its the correct day, if not continue.
-                    if (!empty($templateinfo->repeatday) && $templateinfo->repeatday != 99 && $templateinfo->repeatday != $dayofweek - 1) {
+                    if (!empty($templateinfo->repeatday) &&
+                        $templateinfo->repeatday != 99 &&
+                        $templateinfo->repeatday != $dayofweek - 1) {
                         continue;
                     }
 
@@ -218,27 +236,43 @@ class course_expiry_warning_task extends \core\task\scheduled_task {
         foreach ($completionexpirycourses as $completionexpirecourse) {
             // Get all of the users who have a time completed time > this time.
             $expiretime = 24 * 60 * 60 * $completionexpirecourse->expireafter;
-            $userlist = $DB->get_records_sql("SELECT lit.* FROM
-                                              {local_iomad_track} lit
-                                              JOIN {user_enrolments} ue ON (lit.userid = ue.userid AND lit.timestarted = ue.timestart)
-                                              JOIN {enrol} e ON (lit.courseid = e.courseid AND ue.enrolid = e.id)
-                                              JOIN {course} co ON (lit.courseid = co.id AND e.courseid = co.id)
-                                              WHERE co.visible = 1
-                                              AND lit.courseid = :courseid
-                                              AND lit.timecompleted + :expiretime < :runtime",
-                                              ['courseid' => $completionexpirecourse->courseid,
-                                               'expiretime' => $expiretime,
-                                               'runtime' => $runtime]);
+            $userlist = $DB->get_records_sql(
+                "SELECT lit.*
+                 FROM {local_iomad_track} lit
+                 JOIN {user_enrolments} ue ON (
+                     lit.userid = ue.userid
+                     AND lit.timestarted = ue.timestart
+                 )
+                 JOIN {enrol} e ON (
+                     lit.courseid = e.courseid
+                     AND ue.enrolid = e.id
+                 )
+                 JOIN {course} co ON (
+                     lit.courseid = co.id
+                     AND e.courseid = co.id
+                 )
+                 WHERE co.visible = 1
+                 AND lit.courseid = :courseid
+                 AND lit.timecompleted + :expiretime < :runtime",
+                ['courseid' => $completionexpirecourse->courseid,
+                 'expiretime' => $expiretime,
+                 'runtime' => $runtime]);
 
-            //  Cycle through any found users.
+            // Cycle through any found users.
             foreach ($userlist as $founduser) {
-                if (!$DB->get_records('local_iomad_track', array('userid' => $founduser->userid, 'courseid' => $founduser->courseid, 'timecompleted' => null))) {
+                if (!$DB->get_records('local_iomad_track', ['userid' => $founduser->userid,
+                                                            'courseid' => $founduser->courseid,
+                                                            'timecompleted' => null])) {
                     // Expire the user from the course.
                     mtrace("expiring user $founduser->userid from course $founduser->courseid");
-                    $event = \block_iomad_company_admin\event\user_course_expired::create(['context' => context_course::instance($founduser->courseid),
-                                                                                           'courseid' => $founduser->courseid,
-                                                                                           'objectid' => $founduser->courseid,
-                                                                                           'userid' => $founduser->userid]);
+                    $event = user_course_expired::create(
+                        [
+                            'context' => context_course::instance($founduser->courseid),
+                            'courseid' => $founduser->courseid,
+                            'objectid' => $founduser->courseid,
+                            'userid' => $founduser->userid,
+                        ]
+                    );
                     $event->trigger();
                 }
             }

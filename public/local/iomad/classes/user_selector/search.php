@@ -17,7 +17,7 @@
 /**
  * Code to search for users in response to an ajax call from a user selector.
  *
- * @package core_user
+ * @package local_iomad
  * @copyright 1999 Martin Dougiamas  http://dougiamas.com
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -39,9 +39,6 @@ require_sesskey();
 // Get the search parameter.
 $search = required_param('search', PARAM_RAW);
 $profilefieldid = optional_param('profilefieldid', 0, PARAM_INT);
-
-error_log("Search = $search");
-error_log("Profilefieldid = $profilefieldid");
 
 // Get and validate the selectorid parameter.
 $selectorhash = required_param('selectorid', PARAM_ALPHANUM);
@@ -66,9 +63,9 @@ $userselector = new $classname($name, $options);
 
 // Do the search and output the results.
 $results = $userselector->find_users($search);
-$jsonresults = array();
+$jsonresults = [];
 foreach ($results as $groupname => $users) {
-    $groupdata = array('name' => $groupname, 'users' => array());
+    $groupdata = ['name' => $groupname, 'users' => []];
     foreach ($users as $user) {
         $output = new stdClass;
         $output->id = $user->id;
@@ -84,10 +81,10 @@ foreach ($results as $groupname => $users) {
     $jsonresults[] = $groupdata;
 }
 
-$json = array('results' => $jsonresults);
+$json = ['results' => $jsonresults];
 
 // Also add users' group membership summaries, if possible.
-if (is_callable(array($userselector, 'get_user_summaries')) && isset($options['courseid'])) {
+if (is_callable([$userselector, 'get_user_summaries']) && isset($options['courseid'])) {
     $json['userSummaries'] = $userselector->get_user_summaries($options['courseid']);
 }
 

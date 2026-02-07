@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD current department user selector class
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,17 +25,27 @@
 
 namespace local_iomad\user_selector;
 
-use local_iomad\company;
-
+/**
+ * Local IOMAD current department user selector class
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class current_department extends company_base {
 
+    /** @var int roletype */
     protected $roletype;
+
+    /** @var bool show external managers */
     protected $showothermanagers;
 
     /**
-     * Company users enrolled into the selected company course
-     * @param <type> $search
-     * @return array
+     * Constructor function
+     *
+     * @param string $name
+     * @param array $options
      */
     public function __construct($name, $options) {
         $this->roletype = !empty($options['roletype']) ? $options['roletype'] : 0;
@@ -42,53 +54,78 @@ class current_department extends company_base {
         parent::__construct($name, $options);
     }
 
+    /**
+     * Get selector options
+     *
+     * @return array
+     */
     protected function get_options() {
         $options = parent::get_options();
         $options['roletype'] = $this->roletype;
         $options['showothermanagers'] = $this->showothermanagers;
-        $options['file']    = 'local/iomad/classes/user_selector/current_department.php';
+        $options['file'] = 'local/iomad/classes/user_selector/current_department.php';
 
         return $options;
     }
 
+    /**
+     * Get department user ids
+     *
+     * @return array
+     */
     protected function get_department_user_ids() {
         global $DB;
         if (!isset( $this->departmentid) ) {
-            return array();
+            return [];
         } else {
-            if ($users = $DB->get_records('company_users', array('departmentid' => $this->departmentid, 'suspended' => 0), null, 'userid')) {
+            if ($users = $DB->get_records(
+                'company_users',
+                [
+                    'departmentid' => $this->departmentid,
+                    'suspended' => 0,
+                    ],
+                    null,
+                    'userid')) {
                 // Only return the keys (user ids).
                 return array_values($users);
             } else {
-                return array();
+                return [];
             }
         }
     }
 
+    /**
+     * Search for users
+     *
+     * @param string $search
+     * @return array
+     */
     public function find_users($search) {
-        global $CFG, $DB, $USER;
+        global $DB, $USER;
 
-        $company = new company($this->companyid);
-
-        // Get the full company tree as we may need it.
-        $topcompanyid = $company->get_topcompanyid();
-        $parentcompanies = $company->get_parent_companies_recursive();
+        // Get any parent companies.
+        $parentcompanies = $this->company->get_parent_companies_recursive();
 
         // By default wherecondition retrieves all users except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'u');
         $params['companyid'] = $this->companyid;
         $params['thiscompanyid'] = $this->companyid;
 
-        $fields      = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
+        $fields = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
         $countfields = 'SELECT COUNT(1)';
 
+        // Deal with external managers.
+        $othermanagersql = "";
         if ($this->roletype == 1 && !empty($parentcompanies)) {
+            [$insql, $inparams] = $DB->get_in_or_equal(array_keys($parentcompanies),
+                                                       SQL_PARAMS_NAMED,
+                                                       'pcids');
             $othermanagersql = " AND cu.userid NOT IN (
-                                   SELECT userid FROM {company_users}
-                                   WHERE managertype = 1
-                                   AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
-        } else {
-            $othermanagersql = "";
+                                     SELECT userid FROM {company_users}
+                                     WHERE managertype = 1
+                                     AND companyid IN {$insql}
+                                 )";
+            $params = $params + $inparams;
         }
         if ($this->roletype != 3) {
             $rolesql = "AND cu.managertype = ($this->roletype)";
@@ -98,30 +135,35 @@ class current_department extends company_base {
 
         $sql = " FROM {user} u
                  JOIN {company_users} cu ON cu.userid = u.id
-                 LEFT JOIN {user_info_data} ui ON (ui.userid = u.id AND ui.userid = cu.userid)
-
-                 WHERE $wherecondition $othermanagersql AND u.suspended = 0
-                 $rolesql
+                 LEFT JOIN {user_info_data} ui ON (
+                     ui.userid = u.id
+                     AND ui.userid = cu.userid
+                 )
+                 WHERE
+                 $wherecondition
+                 AND u.suspended = 0
                  AND  u.id != :userid
-                 AND cu.departmentid = :departmentid";
+                 AND cu.departmentid = :departmentid
+                 $othermanagersql
+                 $rolesql";
 
         $order = ' ORDER BY u.firstname ASC, u.lastname ASC';
 
         $params['userid'] = $USER->id;
         $params['departmentid'] = $this->departmentid;
 
+        // Do we get too many results?
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
             if ($potentialmemberscount > get_config('local_iomad', 'max_select_users')) {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }
+
+        // Get the list of users.
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
 
-        if (empty($availableusers)) {
-            return array();
-        }
-
+        // Set up ant search info text.
         if ($search) {
             if ($this->roletype == 2) {
                 $groupname = get_string('departmentmanagersmatching', 'block_iomad_company_admin', $search);
@@ -146,6 +188,6 @@ class current_department extends company_base {
             }
         }
 
-        return array($groupname => $availableusers);
+        return [$groupname => $availableusers];
     }
 }
