@@ -15,19 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * An adhoc task for local Iomad
+ * Local IOMAD reset rols adhoc task
  *
  * @package    local_iomad
  * @copyright  2024 E-Learn Design https://www.e-learndesign.co.uk
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 namespace local_iomad\task;
 
-defined('MOODLE_INTERNAL') || die();
-
 use core\task\adhoc_task;
+use core\task\manager;
 
+/**
+ * Local IOMAD reset rols adhoc task
+ *
+ * @package    local_iomad
+ * @copyright  2024 E-Learn Design https://www.e-learndesign.co.uk
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class resetrolestask extends adhoc_task {
 
     /**
@@ -54,7 +62,7 @@ class resetrolestask extends adhoc_task {
 
         // Get the roles and reset them.
         foreach ($allroles as $role) {
-            if ($rolerec = $DB->get_record('role', array('shortname' => $role))) {
+            if ($rolerec = $DB->get_record('role', ['shortname' => $role])) {
                 reset_role_capabilities($rolerec->id);
             }
         }
@@ -67,7 +75,7 @@ class resetrolestask extends adhoc_task {
     public static function queue_task() {
 
         // Let's set up the adhoc task.
-        $task = new \local_iomad\task\resetrolestask();
-        \core\task\manager::queue_adhoc_task($task, true);
+        $task = new resetrolestask();
+        manager::queue_adhoc_task($task, true);
     }
 }

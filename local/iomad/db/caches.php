@@ -15,46 +15,48 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD cache definitions
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') or die("Direct access to this location is not allowed.");
+defined('MOODLE_INTERNAL') || die("Direct access to this location is not allowed.");
 
-$definitions = array(
+$definitions = [
 
     // Used to store results of course categories which all companies can see.
-    'allcompanycategories' => array(
+    'allcompanycategories' => [
         'mode' => cache_store::MODE_APPLICATION,
         'simplekeys' => true,
         'simpledata' => true,
         'staticacceleration' => true,
-        'invalidationevents' => array(
+        'invalidationevents' => [
             'changesincompanycourses',
-        )
-    ),
+        ],
+    ],
 
     // Used to store results of course categories which the company can see.
-    'companycategories' => array(
+    'companycategories' => [
         'mode' => cache_store::MODE_APPLICATION,
         'simplekeys' => true,
         'simpledata' => true,
         'staticacceleration' => true,
-        'invalidationevents' => array(
+        'invalidationevents' => [
             'changesincompanycourses',
-        )
-    ),
+        ],
+    ],
 
     // Used to store results of course categories which the company can see.
-    'companycoursecategories' => array(
+    'companycoursecategories' => [
         'mode' => cache_store::MODE_APPLICATION,
         'simplekeys' => true,
         'simpledata' => true,
         'staticacceleration' => true,
-        'invalidationevents' => array(
+        'invalidationevents' => [
             'changesincompanycourses',
-        )
-    ),
-);
+        ],
+    ],
+];

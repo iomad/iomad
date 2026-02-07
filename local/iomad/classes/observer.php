@@ -27,6 +27,14 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/local/iomad/lib/company.php');
 
+/**
+ * Event observer for local iomad plugin.
+ *
+ * @package    local_iomad
+ * @copyright  2016 E-Learn Design Ltd. (http://www.e-learndesign.co.uk)
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class local_iomad_observer {
 
     /**

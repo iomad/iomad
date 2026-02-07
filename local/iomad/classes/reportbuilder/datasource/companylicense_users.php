@@ -46,7 +46,7 @@ class companylicense_users extends datasource {
      */
     protected function initialise(): void {
 
-        // Get the tables and aliases
+        // Get the tables and aliases.
         $companylicenseusersentity = new companylicenseusers();
         $companylicenseusersalias = $companylicenseusersentity->get_table_alias('companylicenseusers');
         $companyusersentity = new companyusers();

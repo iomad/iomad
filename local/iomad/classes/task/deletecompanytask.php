@@ -15,23 +15,31 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * An adhoc task for local Iomad
+ * Local iomad delete company adhoc task
  *
  * @package    local_iomad
  * @copyright  2024 E-Learn Design https://www.e-learndesign.co.uk
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 namespace local_iomad\task;
 
-defined('MOODLE_INTERNAL') || die();
-
 use core\task\adhoc_task;
+use core\task\manager;
 use company;
 use company_user;
 use iomad;
 use core_course_category;
 
+/**
+ * Local iomad delete company adhoc task
+ *
+ * @package    local_iomad
+ * @copyright  2024 E-Learn Design https://www.e-learndesign.co.uk
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class deletecompanytask extends adhoc_task {
 
     /**
@@ -58,7 +66,7 @@ class deletecompanytask extends adhoc_task {
 
         mtrace("deleting company $companyrec->name");
 
-        // Delete the certificates
+        // Delete the certificates.
         mtrace("deleting all stored certificates");
         $tracrecs = $DB->get_records_sql("SELECT DISTINCT lit.id
                                           FROM {local_iomad_track} lit
@@ -132,12 +140,12 @@ class deletecompanytask extends adhoc_task {
         foreach ($companycourses as $companycourse) {
             mtrace("deleting course ID $companycourse->courseid");
             delete_course($companycourse->courseid, false);
-        }                                                
+        }
         $DB->delete_records('company_course', ['companyid' => $companyrec->id]);
         $DB->delete_records('company_created_courses', ['companyid' => $companyrec->id]);
         $DB->delete_records('company_shared_courses', ['companyid' => $companyrec->id]);
 
-        // Deal with company course category
+        // Deal with company course category.
         mtrace("deleting company course category");
         if ($DB->get_record('course_categories', ['id' => $companyrec->category])) {
             $category = core_course_category::get($companyrec->category);
@@ -148,7 +156,7 @@ class deletecompanytask extends adhoc_task {
             }
         }
 
-        // Deal with company profile fields
+        // Deal with company profile fields.
         mtrace("deleting company profile field category");
         $profilefields = $DB->get_records('user_info_field', ['categoryid' => $companyrec->profileid]);
         foreach ($profilefields as $profilefield) {
@@ -170,17 +178,31 @@ class deletecompanytask extends adhoc_task {
         $DB->delete_records('company', ['id' => $companyrec->id]);
 
         mtrace("clearing up any config");
-        $DB->delete_records_select('config', $DB->sql_like('name', ":name"), ['name' => '%' . $DB->sql_like_escape($companyrec->id)]);
-        $DB->delete_records_select('config_plugins', $DB->sql_like('name', ":name"), ['name' => '%' . $DB->sql_like_escape($companyrec->id)]);
-        
-        if ($files = $DB->get_records_select('files',
-                                             "component = 'core_admin' AND " . $DB->sql_like('filearea', ':filearea') . " AND filename !='.'",
-                                             ['filearea' => "%" .  $DB->sql_like_escape($companyrec->id)])) {
-            $fs =   get_file_storage();
+        $DB->delete_records_select(
+            'config',
+            $DB->sql_like('name', ":name"),
+            ['name' => '%' . $DB->sql_like_escape($companyrec->id)]);
+        $DB->delete_records_select(
+            'config_plugins',
+            $DB->sql_like('name', ":name"),
+            ['name' => '%' . $DB->sql_like_escape($companyrec->id)]);
+
+        if ($files = $DB->get_records_select(
+            'files',
+            "component = 'core_admin'
+             AND " . $DB->sql_like('filearea', ':filearea') . "
+             AND filename !='.'",
+            ['filearea' => "%" .  $DB->sql_like_escape($companyrec->id)])) {
+            $fs = get_file_storage();
             foreach ($files as $filerec) {
-                $file = $fs->get_file($filerec->contextid, $filerec->component, $filerec->filearea, $filerec->itemid, $filerec->filepath, $filerec->filename);
+                $file = $fs->get_file($filerec->contextid,
+                                      $filerec->component,
+                                      $filerec->filearea,
+                                      $filerec->itemid,
+                                      $filerec->filepath,
+                                      $filerec->filename);
                 $file->delete();
-            } 
+            }
         }
     }
 
@@ -191,7 +213,7 @@ class deletecompanytask extends adhoc_task {
     public static function queue_task() {
 
         // Let's set up the adhoc task.
-        $task = new \local_iomad\task\deletecompanytask();
-        \core\task\manager::queue_adhoc_task($task, true);
+        $task = new deletecompanytask();
+        manager::queue_adhoc_task($task, true);
     }
 }

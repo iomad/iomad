@@ -48,8 +48,7 @@ class company_users_course_completions extends datasource {
         $companyentity = new company();
         $companyalias = $companyentity->get_table_alias('company');
 
-
-        // Get the tables and aliases
+        // Get the tables and aliases.
         $companyusersentity = new companyusers();
         $companyusersalias = $companyusersentity->get_table_alias('companyusers');
         $departmententity = new department();
