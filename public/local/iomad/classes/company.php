@@ -3636,7 +3636,7 @@ class company {
      * Returns int;
      *
      **/
-    public static function create_company_course_group(int $companyid, int $courseid, object $groupdata = null ): int {
+    public static function create_company_course_group(int $companyid, int $courseid, $groupdata = null ): int {
         global $CFG, $DB;
         require_once($CFG->dirroot.'/group/lib.php');
 
@@ -4251,7 +4251,7 @@ class company {
         if (empty($this->companyrecord->maxusers)) {
             $result = true;
         } else {
-        // Get the current number of users.
+            // Get the current number of users.
             // Deal with any parent companies.
             // all companies?
             $companysql = "";
