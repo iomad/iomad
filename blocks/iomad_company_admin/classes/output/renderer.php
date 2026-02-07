@@ -213,15 +213,20 @@ class renderer extends plugin_renderer_base {
         $checkboxcommand .= "        document.getElementById('".$id."_'.concat(dmy[i])).setAttribute('disabled', 'disabled');";
         $checkboxcommand .= "        if (i == dmy.length-1) {";
         $checkboxcommand .= "            document.getElementById('id_".$id."_calender_enabled').removeAttribute('checked');";
+        $checkboxcommand .= "            var rowId = '".$id."'.replace('timecompleted_', '');";
+        $checkboxcommand .= "            var gradeField = document.getElementById('id_finalscore_' + rowId);";
+        $checkboxcommand .= "            if (gradeField) { gradeField.setAttribute('disabled', 'disabled'); }";
         $checkboxcommand .= "        }";
         $checkboxcommand .= "    } else {"; // Checkbox *was*n't checked, and now needs to be checked
         $checkboxcommand .= "        document.getElementById('".$id."_'.concat(dmy[i])).removeAttribute('disabled');";
         $checkboxcommand .= "        if (i == dmy.length-1) {";
         $checkboxcommand .= "            document.getElementById('id_".$id."_calender_enabled').setAttribute('checked', 'checked');";
+        $checkboxcommand .= "            var rowId = '".$id."'.replace('timecompleted_', '');";
+        $checkboxcommand .= "            var gradeField = document.getElementById('id_finalscore_' + rowId);";
+        $checkboxcommand .= "            if (gradeField) { gradeField.removeAttribute('disabled'); }";
         $checkboxcommand .= "        }";
         $checkboxcommand .= "    }";
         $checkboxcommand .= "}";
-        //$checkboxcommand .= "this.form.submit()";
 
         if (!empty($timestamp)) {
             $dayvalue = date('d', $timestamp);

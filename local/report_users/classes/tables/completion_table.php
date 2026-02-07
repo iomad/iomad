@@ -171,16 +171,26 @@ class completion_table extends table_sql {
                     return;
                 }
             } else {
-                $return = html_writer::tag('input',
-                                           '',
-                                           ['name' => 'finalscore[' . $row->id . ']',
-                                            'type' => 'number',
-                                            'value' => round($row->finalscore, $CFG->iomad_report_grade_places),
-                                            'min' => 0,
-                                            'max' => 100,
-                                            'step' => '0.01',
-                                            'onchange' => 'iomad_report_user_userdisplay_values.submit()',
-                                            'id' => 'id_finalscore_' . $row->id]);
+                // Build input attributes for the grade field.
+                $inputattributes = [
+                    'name' => 'finalscore[' . $row->id . ']',
+                    'type' => 'number',
+                    'value' => round($row->finalscore, $CFG->iomad_report_grade_places),
+                    'min' => 0,
+                    'max' => 100,
+                    'step' => '0.01',
+                    'onchange' => 'iomad_report_user_userdisplay_values.submit()',
+                    'id' => 'id_finalscore_' . $row->id
+                ];
+
+                // Disable the grade field if completion date is not set.
+                // This links the grade field to the completion date checkbox - when the checkbox
+                // is unchecked (no completion date), the grade field is automatically disabled.
+                if (empty($row->timecompleted)) {
+                    $inputattributes['disabled'] = 'disabled';
+                }
+
+                $return = html_writer::tag('input', '', $inputattributes);
                 $return .= html_writer::tag('input',
                                             '',
                                             ['name' => 'origfinalscore[' . $row->id . ']',

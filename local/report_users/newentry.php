@@ -24,6 +24,8 @@
  */
 
 require_once(dirname(__FILE__).'/../../config.php');
+require_once($CFG->libdir.'/completionlib.php');
+require_once($CFG->libdir.'/gradelib.php');
 require_once($CFG->dirroot.'/local/iomad_track/lib.php');
 require_once($CFG->dirroot.'/local/iomad_track/db/install.php');
 
@@ -82,7 +84,74 @@ if ($mform->is_cancelled()) {
 }
 
 if ($data = $mform->get_data()) {
-    // Process it.
+    // Synchronize final score with Moodle's gradebook (grade_grades table).
+    // This ensures that manually added completion records are reflected in the core gradebook,
+    // maintaining consistency between IOMAD tracking and Moodle's native grade system.
+    if (!empty($data->finalscore)) {
+        // Fetch the course-level grade item (represents overall course grade).
+        $gradeitem = grade_item::fetch(['courseid' => $data->courseid, 'itemtype' => 'course']);
+        if ($gradeitem) {
+            // Check if a grade record already exists for this user and course.
+            // Using fetch() prevents duplicate key errors when a grade already exists.
+            $grade = grade_grade::fetch(['itemid' => $gradeitem->id, 'userid' => $userid]);
+            if (!$grade) {
+                // Create new grade object if none exists.
+                // The 'false' parameter prevents automatic database insertion.
+                $grade = new grade_grade(['itemid' => $gradeitem->id, 'userid' => $userid], false);
+                $grade->itemid = $gradeitem->id;
+                $grade->userid = $userid;
+            }
+            // Set grade values (both raw and final grades).
+            $grade->rawgrade = $data->finalscore;
+            $grade->finalgrade = $data->finalscore;
+            $grade->rawgrademax = 100;
+            $grade->rawgrademin = 0;
+            $grade->timemodified = time();
+            // Update existing record or insert new one.
+            if ($grade->id) {
+                $grade->update('local_report_users');
+            } else {
+                $grade->insert('local_report_users');
+            }
+        }
+    }
+
+    // Synchronize completion with Moodle's course_completions table.
+    // This ensures that manually added completion records trigger all Moodle completion-related
+    // functionality (reports, badges, course dependencies, etc.) and IOMAD observers.
+    $params = ['userid' => $userid, 'course' => $data->courseid];
+    $ccompletion = new completion_completion($params);
+
+    // If this is a new completion record, mark the user as enrolled and set start time.
+    if (empty($ccompletion->id)) {
+        $ccompletion->mark_enrolled($data->timeenrolled);
+        $ccompletion->timestarted = $data->timeenrolled;
+    }
+
+    // Set completion timestamp and mark as not requiring reaggregation.
+    $ccompletion->timecompleted = $data->timecompleted;
+    $ccompletion->timemodified = time();
+    $ccompletion->reaggregate = 0;
+
+    // Update or insert the completion record.
+    if ($ccompletion->id) {
+        $DB->update_record('course_completions', $ccompletion);
+    } else {
+        $ccompletion->id = $DB->insert_record('course_completions', $ccompletion);
+    }
+
+    // Trigger the course_completed event.
+    // This event is observed by IOMAD's local_iomad_track observer, which handles:
+    // - Additional track table updates
+    // - Certificate generation
+    // - Email notifications
+    // - Other completion-related actions
+    $completiondata = $DB->get_record('course_completions', ['id' => $ccompletion->id]);
+    \core\event\course_completed::create_from_completion($completiondata)->trigger();
+
+    // Create IOMAD track record.
+    // This direct insertion ensures data is recorded in IOMAD's tracking table
+    // even if event observers fail or are disabled.
     $newentry = new stdclass();
     $newentry->userid = $userid;
     $newentry->courseid = $data->courseid;
@@ -112,10 +181,8 @@ if ($data = $mform->get_data()) {
     $newentry->coursecleared = 1;
     $trackid = $DB->insert_record('local_iomad_track', $newentry);
 
-    // Create a certificate, if required.
     xmldb_local_iomad_track_record_certificates($newentry->courseid, $newentry->userid, $trackid, false, false);
 
-    // Return success.
     redirect($returnurl,
              get_string("newentry_successful", 'local_report_users'),
              null,
