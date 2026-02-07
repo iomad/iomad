@@ -332,10 +332,13 @@ class iomad {
      **/
     public static function join_company_user($alias = "{user}") {
         if ($companyshortname = self::companyshortname()) {
-            return " INNER JOIN {user_info_data} ON {user_info_data}.userid = $alias.id AND
-                     {user_info_data}.data = '" . str_replace("'", "''", $companyshortname) . "'
-                     INNER JOIN {user_info_field} ON {user_info_field}.id = {user_info_data}.fieldid
-                     AND {user_info_field}.shortname = 'company' ";
+            return " INNER JOIN {user_info_data} uid ON (
+                        uid.userid = $alias.id
+                        AND uid.data = '" . str_replace("'", "''", $companyshortname) . "')
+                     INNER JOIN {user_info_field} uif ON (
+                        uif.id = uid.fieldid
+                        AND uif.shortname = 'company'
+                     )";
         } else {
             return "";
         }
@@ -350,12 +353,15 @@ class iomad {
     public static function iomad_add_license_courses(&$mycourses) {
         global $DB, $CFG, $USER;
         // Get the list of courses the user has a valid license for but not already enroled in.
-        $currentcourses = $DB->get_records_select('course', 'id IN (
-                                                     SELECT clu.licensecourseid
-                                                     FROM {companylicense_users} clu
-                                                     WHERE clu.userid = :userid
-                                                     AND clu.isusing = 0
-                                                    )', array('userid' => $USER->id));
+        $currentcourses = $DB->get_records_select(
+            'course',
+            "id IN (
+                 SELECT clu.licensecourseid
+                 FROM {companylicense_users} clu
+                 WHERE clu.userid = :userid
+                 AND clu.isusing = 0
+             )",
+             ['userid' => $USER->id]);
         if ($licensecourses = $currentcourses) {
             $mycourses = $mycourses + $licensecourses;
         }
@@ -373,27 +379,30 @@ class iomad {
 
         if (!empty($USER->profile['company'])) {
             $company = company::get_company_byuserid($USER->id);
-            $sharedcourses = $DB->get_records_select("course",
-                                                  "WHERE id IN (
-                                                    SELECT courseid FROM {iomad_courses}
-                                                    WHERE shared=1
-                                                    AND licensed = 0
-                                                   ) OR id IN (
-                                                    SELECT pc.courseid FROM
-                                                    {iomad_courses} pc
-                                                    JOIN {company_shared_courses} csc
-                                                    ON
-                                                    csc.courseid=pc.courseid
-                                                    AND csc.companyid = :companyid
-                                                    AND pc.licensed = 0
-                                                   )",
-                                                  ['companyid' => $company->id]);
+            $sharedcourses = $DB->get_records_select(
+                'course',
+                "id IN (
+                     SELECT courseid FROM {iomad_courses}
+                     WHERE shared=1
+                     AND licensed = 0
+                 ) OR id IN (
+                     SELECT pc.courseid FROM
+                     {iomad_courses} pc
+                     JOIN {company_shared_courses} csc
+                     ON (
+                         csc.courseid=pc.courseid
+                         AND csc.companyid = :companyid
+                         AND pc.licensed = 0
+                     )
+                 )",
+                ['companyid' => $company->id]);
         } else {
-            $sharedcourses = $DB->get_records_select("course",
-                                                   "id IN (
-                                                    SELECT courseid FROM {iomad_courses}
-                                                    WHERE shared=1
-                                                   )");
+            $sharedcourses = $DB->get_records_select(
+                'course',
+                "id IN (
+                     SELECT courseid FROM {iomad_courses}
+                     WHERE shared=1
+                 )");
         }
         if (!empty($sharedcourses) && !empty($courses)) {
             foreach ($courses as $course) {
@@ -486,11 +495,11 @@ class iomad {
             $companyroots = $DB->get_records('company', [], 'category', 'category');
             foreach ($companyroots as $companyroot) {
                 $allcompanycategories[$companyroot->category] = $companyroot->category;
-                $children = $DB->get_records_select("course_categories",
-                                                  $DB->sql_like("path", ":parentpath"),
-                          ['parentpath' => "/" . $companyroot->category . "/%"],
-                                          '',
-                                          "DISTINCT id");
+                $children = $DB->get_records_sql(
+                    "SELECT DISTINCT id
+                     FROM {course_categories}
+                     WHERE " . $DB->sql_like("path", ":parentpath"),
+                    ['parentpath' => "/" . $companyroot->category . "/%"]);
                 foreach ($children as $child) {
                     $allcompanycategories[$child->id] = $child->id;
                 }
@@ -501,11 +510,11 @@ class iomad {
         // Get the current company course categories.
         if (!empty($company->category)) {
             if (!$mycompanycategories = $companycategoriescache->get($company->id)) {
-        $mycompanycategories = $DB->get_records_select("course_categories",
-                                                             $DB->sql_like('path', ':companycategorysearch'),
-                                 ['companycategorysearch' => '/' . $company->category . '%'],
-                                 '',
-                                 "DISTINCT id");
+                $mycompanycategories = $DB->get_records_sql(
+                    "SELECT DISTINCT id
+                     FROM {course_categories}
+                     WHERE " . $DB->sql_like('path', ':companycategorysearch'),
+                    ['companycategorysearch' => '/' . $company->category . '%']);
                 $companycategoriescache->set($company->id, $mycompanycategories);
             }
         } else {
@@ -702,13 +711,17 @@ class iomad {
             }
 
             // Check if there are any courses from 'blanket' licenses.
-            if ($blanketlicenses = $DB->get_records_select("companylicense",
-                                                        "companyid = :companyid
-                                                         AND type = :type
-                                                         AND startdate < :startdate
-                                                         AND expirydate > :expirydate",
-                                                        ['companyid' => $companyid, 'type' => 4, 'startdate' => time(), 'expirydate' => time()]))
-                    {
+            if ($blanketlicenses = $DB->get_records_select(
+                'companylicense',
+                "companyid = :companyid
+                 AND type = :type
+                 AND startdate < :startdate
+                 AND expirydate > :expirydate",
+                ['companyid' => $companyid,
+                 'type' => 4,
+                 'startdate' => time(),
+                 'expirydate' => time(),
+                 ])) {
                 $blanketcourses = [];
                 foreach ($blanketlicenses as $blanketlicense) {
                     $licensecourses = $DB->get_records_sql(
@@ -980,14 +993,14 @@ class iomad {
     public static function add_user_filter_params(&$params, $companyid) {
         global $DB, $CFG;
 
-        $firstname       = optional_param('firstname', 0, PARAM_CLEAN);
-        $lastname      = optional_param('lastname', '', PARAM_CLEAN);   // Md5 confirmation hash.
-        $email  = optional_param('email', 0, PARAM_CLEAN);
-        $sort         = optional_param('sort', 'name', PARAM_ALPHA);
-        $dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
-        $page         = optional_param('page', 0, PARAM_INT);
-        $perpage      = optional_param('perpage', 30, PARAM_INT);        // How many per page?
-        $search      = optional_param('search', '', PARAM_CLEAN); // Search string.
+        $firstname = optional_param('firstname', 0, PARAM_CLEAN);
+        $lastname = optional_param('lastname', '', PARAM_CLEAN);
+        $email = optional_param('email', 0, PARAM_CLEAN);
+        $sort = optional_param('sort', 'name', PARAM_ALPHA);
+        $dir = optional_param('dir', 'ASC', PARAM_ALPHA);
+        $page = optional_param('page', 0, PARAM_INT);
+        $perpage = optional_param('perpage', 30, PARAM_INT);
+        $search = optional_param('search', '', PARAM_CLEAN);
         $departmentid = optional_param('departmentid', 0, PARAM_INTEGER);
         $compfrom = optional_param_array('compfromraw', null, PARAM_INT);
         $compto = optional_param_array('comptoraw', null, PARAM_INT);
@@ -1030,11 +1043,12 @@ class iomad {
             }
         }
 
-        //  Get the global optional user parameter names.
-        if ($globalfields = $DB->get_records_select("user_info_field",
-                                                 "categoryid NOT IN (
-                                                    SELECT profileid FROM {company}
-                                                  )")) {
+        // Get the global optional user parameter names.
+        if ($globalfields = $DB->get_records_select(
+            'user_info_field',
+            "categoryid NOT IN (
+                 SELECT profileid FROM {company}
+             )")) {
             foreach ($globalfields as $field) {
                 if ($field->shortname != 'company') {
                     if ($field->shortname == 'VANTAGE') {
@@ -1064,8 +1078,12 @@ class iomad {
                 }
                 if (!empty(${$fieldname})) {
                     $idlist[0] = "We found no one";
-                    $fieldsql = $DB->sql_like('data', ':fieldname')." AND fieldid = :fieldid";
-                    if ($idfields = $DB->get_records_select("user_info_data", "$fieldsql", ['fieldname' => '%'.${$fieldname} . '%', 'fieldid' => $id], '', "userid")) {
+                    $fieldsql = $DB->sql_like('data', ':fieldname') . " AND fieldid = :fieldid";
+                    if ($idfields = $DB->get_records_select(
+                        'user_info_data',
+                        $fieldsql,
+                        ['fieldname' => '%' . ${$fieldname} . '%',
+                         'fieldid' => $id], '', "userid")) {
                         $fieldids[] = $idfields;
                     }
                     if (!empty($paramarray)) {
@@ -1136,39 +1154,64 @@ class iomad {
         // Deal with search strings.
         $searchparams = [];
         if (!empty($idlist)) {
-            $sqlsearch .= " AND u.id IN (" . implode(',', array_keys($idlist)) . ") ";
+            [$insql, $searchparams] = $DB->get_in_or_equal(array_keys($idlist),
+                                                           SQL_PARAMS_NAMED,
+                                                           'uids');
+
+            $sqlsearch .= " AND u.id {$insql}";
         }
         if (!empty($params['firstname'])) {
-            $sqlsearch .= " AND u.firstname LIKE :firstname ";
+            $sqlsearch .= " AND " . $DB->sql_like('u.firstname', ':firstname');
             $searchparams['firstname'] = '%' . $params['firstname'] . '%';
         }
 
         if (!empty($params['lastname'])) {
-            $sqlsearch .= " AND u.lastname LIKE :lastname ";
+            $sqlsearch .= " AND " . $DB->sql_like('u.lastname', ':lastname');
             $searchparams['lastname'] = '%' . $params['lastname'] . '%';
         }
 
         if (!empty($params['email'])) {
-            $sqlsearch .= " AND u.email LIKE :email ";
+            $sqlsearch .= " AND " . $DB->sql_like('u.email', ':email');
             $searchparams['email'] = '%' . $params['email'] . '%';
         }
         if (!empty($params['compfrom'])) {
             $params['courseid2'] = $params['courseid'];
-            if ($compfromids = $DB->get_records_select("local_iomad_track",
-                                                    "(courseid = :courseid
-                                                     AND timecompleted < :compfrom
-                                                     AND timecompleted IS NOT NULL)
-                                                     OR (
-                                                        courseid = :courseid2
-                                                        AND timecompleted IS NULL)", $params)) {
-                $sqlsearch .= " AND lit.id NOT IN (" . implode(',', array_keys($compfromids)) . ") ";
+            if ($compfromids = $DB->get_records_select(
+                'local_iomad_track',
+                "(
+                     courseid = :courseid
+                     AND timecompleted < :compfrom
+                     AND timecompleted IS NOT NULL
+                 ) OR (
+                     courseid = :courseid2
+                     AND timecompleted IS NULL
+                 )",
+                $params)) {
+                [$notinsql, $notinparams] = $DB->get_in_or_equal(array_keys($compfromids),
+                                                                 SQL_PARAMS_NAMED,
+                                                                 'cflitids',
+                                                                 false);
+
+                $sqlsearch .= " AND lit.id {$notinsql} ";
+                $searchparams = $searchparams + $notinparams;
             }
         }
 
         if (!empty($params['compto'])) {
-            if ($comptoids = $DB->get_records_select("local_iomad_track",
-                                                   "courseid = :courseid AND timecompleted > :compto", $params, '', "id")) {
-                $sqlsearch .= " AND lit.id NOT IN (".implode(',', array_keys($comptoids)).") ";
+            if ($comptoids = $DB->get_records_select(
+                'local_iomad_track',
+                "courseid = :courseid
+                 AND timecompleted > :compto",
+                $params,
+                '',
+                "id")) {
+                [$notinsql, $notinparams] = $DB->get_in_or_equal(array_keys($comptoids),
+                                                                 SQL_PARAMS_NAMED,
+                                                                 'ctlitids',
+                                                                 false);
+
+                $sqlsearch .= " AND lit.id {$notinsql} ";
+                $searchparams = $searchparams + $notinparams;
             }
         }
 
@@ -1193,44 +1236,68 @@ class iomad {
         }
 
         if (!empty($params['licenseallocatedfrom'])) {
-            if ($licallocfromids = $DB->get_records_select("local_report_user_lic_allocs",
-                                                    "issuedate > :licenseallocatedfrom
-                                                     AND action = 1
-                                                     ", $params)) {
-                $sqlsearch .= " AND urla.id IN (" . implode(',', array_keys($licallocfromids)) . ") ";
+            if ($licallocfromids = $DB->get_records_select(
+                'local_report_user_lic_allocs',
+                "issuedate > :licenseallocatedfrom
+                 AND action = 1",
+                $params)) {
+                [$insql, $inparams] = $DB->get_in_or_equal(array_keys($licallocfromids),
+                                                           SQL_PARAMS_NAMED,
+                                                           'lafids');
+
+                $sqlsearch .= " AND urla.id {$insql} ";
+                $searchparams = $searchparams + $inparams;
             } else {
                 $sqlsearch .= " AND 1 = 2 ";
             }
         }
 
         if (!empty($params['licenseallocatedto'])) {
-            if ($licalloctoids = $DB->get_records_select("local_report_user_lic_allocs",
-                                                    "WHERE issuedate < :licenseallocatedto
-                                                     AND action = 1
-                                                     ", $params)) {
-                $sqlsearch .= " AND urla.id IN (" . implode(',', array_keys($licalloctoids)) . ") ";
+            if ($licalloctoids = $DB->get_records_select(
+                'local_report_user_lic_allocs',
+                "issuedate < :licenseallocatedto
+                 AND action = 1",
+                $params)) {
+                [$insql, $inparams] = $DB->get_in_or_equal(array_keys($licalloctoids),
+                                                           SQL_PARAMS_NAMED,
+                                                           'latids');
+
+                $sqlsearch .= " AND urla.id {$insql} ";
+                $searchparams = $searchparams + $inparams;
             } else {
                 $sqlsearch .= " AND 1 = 2 ";
             }
         }
 
         if (!empty($params['licenseunallocatedfrom'])) {
-            if ($licunallocfromids = $DB->get_records_select("local_report_user_lic_allocs",
-                                                    "WHERE issuedate > :licenseunallocatedfrom
-                                                     AND action = 0
-                                                     ", $params)) {
-                $sqlsearch .= " AND urla.id IN (" . implode(',', array_keys($licunallocfromids)) . ") ";
+            if ($licunallocfromids = $DB->get_records_select(
+                'local_report_user_lic_allocs',
+                "issuedate > :licenseunallocatedfrom
+                 AND action = 0",
+                $params)) {
+                [$insql, $inparams] = $DB->get_in_or_equal(array_keys($licunallocfromids),
+                                                           SQL_PARAMS_NAMED,
+                                                           'lufids');
+
+                $sqlsearch .= " AND urla.id {$insql} ";
+                $searchparams = $searchparams + $inparams;
             } else {
                 $sqlsearch .= " AND 1 = 2 ";
             }
         }
 
         if (!empty($params['licenseunallocatedto'])) {
-            if ($licunalloctoids = $DB->get_records_select("local_report_user_lic_allocs",
-                                                    "WHERE issuedate < :licenseunallocatedto
-                                                     AND action = 0
-                                                     ", $params)) {
-                $sqlsearch .= " AND urla.id IN (" . implode(',', array_keys($licunalloctoids)) . ") ";
+            if ($licunalloctoids = $DB->get_records_select(
+                'local_report_user_lic_allocs',
+                "issuedate < :licenseunallocatedto
+                 AND action = 0",
+                $params)) {
+                [$insql, $inparams] = $DB->get_in_or_equal(array_keys($licunalloctoids),
+                                                           SQL_PARAMS_NAMED,
+                                                           'lutids');
+
+                $sqlsearch .= " AND urla.id {$insql} ";
+                $searchparams = $searchparams + $inparams;
             } else {
                 $sqlsearch .= " AND 1 = 2 ";
             }
@@ -1238,10 +1305,18 @@ class iomad {
 
         if (!empty($params['licenseusage'])) {
             $params['licenseusage']--;
-            if ($licunalloctoids = $DB->get_records_select("local_report_user_lic_allocs",
-                                                     "action = :licenseusage",
-                                                     $params, '', "id")) {
-                $sqlsearch .= " AND urla.id IN (" . implode(',', array_keys($licunalloctoids)) . ") ";
+            if ($licunalloctoids = $DB->get_records_select(
+                'local_report_user_lic_allocs',
+                "action = :licenseusage",
+                $params,
+                '',
+                'id')) {
+                [$insql, $inparams] = $DB->get_in_or_equal(array_keys($licunalloctoids),
+                                                           SQL_PARAMS_NAMED,
+                                                           'luids');
+
+                $sqlsearch .= " AND urla.id {$insql} ";
+                $searchparams = $searchparams + $inparams;
             } else {
                 $sqlsearch .= " AND 1 = 2 ";
             }
@@ -1613,20 +1688,23 @@ class iomad {
         // Deal with search strings.
         $searchparams = [];
         if (!empty($idlist)) {
-            $sqlsearch .= " AND u.id IN (" . implode(',', array_keys($idlist)) . ") ";
+            [$insql, $searchparams] = $DB->get_in_or_equal(array_keys($idlist),
+                                                           SQL_PARAMS_NAMED,
+                                                           'uids');
+            $sqlsearch .= " AND u.id $insql ";
         }
         if (!empty($params['firstname'])) {
-            $sqlsearch .= " AND u.firstname LIKE :firstname ";
+            $sqlsearch .= " AND " . $DB->sql_like('u.firstname', ':firstname');
             $searchparams['firstname'] = '%' . $params['firstname'] . '%';
         }
 
         if (!empty($params['lastname'])) {
-            $sqlsearch .= " AND u.lastname LIKE :lastname ";
+            $sqlsearch .= " AND " . $DB->sql_like('u.lastname', ':lastname');
             $searchparams['lastname'] = '%' . $params['lastname'] . '%';
         }
 
         if (!empty($params['email'])) {
-            $sqlsearch .= " AND u.email LIKE :email ";
+            $sqlsearch .= " AND " . $DB->sql_like('u.email', ':email');
             $searchparams['email'] = '%' . $params['email'] . '%';
         }
 
