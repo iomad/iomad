@@ -32,8 +32,6 @@ use core\lang_string;
 use core_user;
 use context_system;
 
-require_once(dirname(__FILE__) . '/../../../user/profile/lib.php');
-
 /**
  * Local IOMAD emailtemplate class
  *
@@ -43,25 +41,65 @@ require_once(dirname(__FILE__) . '/../../../user/profile/lib.php');
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class emailtemplate {
+
+    /** @var object user  */
     protected $user = null;
+
+    /** @var object course  */
     protected $course = null;
+
+    /** @var object email template  */
     protected $template = null;
+
+    /** @var string template name  */
     protected $templatename = null;
+
+    /** @var object company  */
     protected $company = null;
+
+    /** @var object invoice  */
     protected $invoice = null;
+
+    /** @var object classroom  */
     protected $classroom = null;
+
+    /** @var object sender  */
     protected $sender = null;
+
+    /** @var array headers  */
     protected $headers = null;
+
+    /** @var object approval user  */
     protected $approveuser = null;
+
+    /** @var object training event  */
     protected $event = null;
+
+    /** @var object activity  */
     protected $activity = null;
+
+    /** @var int due timestamp */
     protected $due = null;
+
+    /** @var object microlearning nugger  */
     protected $nugget = null;
+
+    /** @var object attachement file  */
     protected $attachment = null;
+
+    /** @var object license  */
     protected $license = null;
+
+    /** @var object system context  */
     protected $contextsystem;
 
-    public function __construct($templatename, $options = []) {
+    /**
+     * Constructor function
+     *
+     * @param string $templatename
+     * @param array $options
+     */
+    public function __construct(string $templatename, array $options = []) {
         global $USER, $SESSION, $COURSE, $DB, $CFG;
 
         $user = array_key_exists('user', $options) ? $options['user'] : null;
@@ -144,10 +182,13 @@ class emailtemplate {
                                                     'itemid' => $this->template->id])) {
                 foreach ($files as $file) {
                     if ($file->filename != '.') {
-                        $filedir1 = substr($file->contenthash,0,2);
-                        $filedir2 = substr($file->contenthash,2,2);
+                        $filedir1 = substr($file->contenthash, 0, 2);
+                        $filedir2 = substr($file->contenthash, 2, 2);
                         $this->attachment = (object) [];
-                        $this->attachment->filepath = $CFG->dataroot . '/filedir/' . $filedir1 . '/' . $filedir2 . '/' . $file->contenthash;
+                        $this->attachment->filepath = $CFG->dataroot . '/filedir/' .
+                                                      $filedir1 . '/' .
+                                                      $filedir2 . '/' .
+                                                      $file->contenthash;
                         $this->attachment->filename = $file->filename;
                     }
                 }
@@ -179,7 +220,7 @@ class emailtemplate {
      *              returns number of successes (ie. count of $loopoptions)
      *              or if there was an error, those $loopoptions for which there was an error
      */
-    public static function send($templatename, $options = [], $loopoptions = []) {
+    public static function send(string $templatename, array $options = [], array $loopoptions = []) {
 
         if (count($loopoptions)) {
             $results = [];
@@ -189,7 +230,7 @@ class emailtemplate {
                 try {
                     $ok = self::send($templatename, $combinedoptions);
                 } catch (Exception $e) {
-                    // Something to go here.
+                    $ok = false;
                 }
                 if (!$ok) {
                     $results[] = $loptions;
@@ -208,7 +249,7 @@ class emailtemplate {
             if (empty($emailtemplate->company)) {
                 return true;
             }
-            //Is the template enabled for the company?
+            // Is the template enabled for the company?
             $company = new company($emailtemplate->company->id);
             $managertype = 0;
             if (strpos($templatename, 'manager')) {
@@ -330,10 +371,10 @@ class emailtemplate {
 
             // Deal with any attachment.
             if (!empty($this->attachment)) {
-                // add in the attachment to the body.
+                // Add in the attachment to the body.
                 $email->customheaders['attachment'] = $this->attachment;
             }
-            // Deal with To users
+            // Deal with To users.
             if (!empty($this->template->emailto)) {
                 $tousers = explode(',', $this->template->emailto);
                 foreach ($tousers as $touser) {
@@ -357,7 +398,7 @@ class emailtemplate {
                 $this->template->emailtoother = '';
             }
 
-            // Deal with CC users
+            // Deal with CC users.
             if (!empty($this->template->emailcc)) {
                 $ccusers = explode(',', $this->template->emailcc);
                 foreach ($ccusers as $ccuser) {
@@ -381,7 +422,7 @@ class emailtemplate {
                 $this->template->emailccother = '';
             }
 
-            // Deal with reply user
+            // Deal with reply user.
             if (!empty($this->template->emailreplyto)) {
                 if ($replytouserrec = $DB->get_record('user', ['id' => $this->template->emailreplyto,
                                                                'deleted' => 0,
@@ -465,7 +506,7 @@ class emailtemplate {
      * Parameters - $email = stdclass();
      *
      **/
-    static public function send_to_user($email) {
+    public static function send_to_user($email) {
         global $USER, $CFG, $DB;
 
         $supportuser = (object) [];
@@ -635,7 +676,7 @@ class emailtemplate {
                 }
             }
 
-            // is this a user template?
+            // Is this a user template?
             if (self::is_user_template($email->templatename)) {
                 // Do we send to managers as well?
                 if (empty($template->disabledmanager)) {
@@ -738,7 +779,7 @@ class emailtemplate {
             }
         }
 
-        // Deal with To users
+        // Deal with To users.
         if (!empty($this->emailto)) {
             $tousers = explode(',', $this->emailto);
             foreach ($tousers as $touser) {
@@ -758,7 +799,7 @@ class emailtemplate {
             }
         }
 
-        // Deal with CC users
+        // Deal with CC users.
         if (!empty($this->emailcc)) {
             $ccusers = explode(',', $this->emailcc);
             foreach ($ccusers as $ccuser) {
@@ -778,7 +819,7 @@ class emailtemplate {
             }
         }
 
-        // Deal with reply user
+        // Deal with reply user.
         if (!empty($this->emailreplyto)) {
             if ($replytouserrec = $DB->get_record('user', ['id' => $this->emailreplyto,
                                                            'deleted' => 0,
@@ -858,7 +899,7 @@ class emailtemplate {
 
                 // Set word wrap.
                 $mail->WordWrap = 79;
-                $mail->Body =  "\n$body\n";
+                $mail->Body = "\n$body\n";
                 // Do we have an attachment.
                 if (!empty($this->attachment)) {
                     require_once($CFG->libdir.'/filelib.php');
@@ -866,7 +907,7 @@ class emailtemplate {
                     $mail->addAttachment($this->attachment->filepath, $this->attachment->filename, 'base64', $mimetype);
                 }
                 if (empty($CFG->noemailever)) {
-                    if(!$mail->send()) {
+                    if (!$mail->send()) {
                         mtrace( 'Message could not be sent.');
                         mtrace( 'Mailer Error: ' . $mail->ErrorInfo);
                     }
@@ -926,11 +967,11 @@ class emailtemplate {
             // Don't ever send HTML to users who don't want it.
             $mail->isHTML(true);
             $mail->Encoding = 'quoted-printable';
-            $mail->Body    =  $messagehtml;
-            $mail->AltBody =  "\n$messagetext\n";
+            $mail->Body = $messagehtml;
+            $mail->AltBody = "\n$messagetext\n";
         } else {
             $mail->IsHTML(false);
-            $mail->Body =  "\n$messagetext\n";
+            $mail->Body = "\n$messagetext\n";
         }
 
         // Do we have an attachment.
@@ -940,7 +981,7 @@ class emailtemplate {
             $mail->addAttachment($attachment->filepath, $attachment->filename, 'base64', $mimetype);
         }
         if (empty($CFG->noemailever)) {
-            if(!$mail->send()) {
+            if (!$mail->send()) {
                 mtrace( 'Message could not be sent.');
                 mtrace( 'Mailer Error: ' . $mail->ErrorInfo);
                 return false;
@@ -964,29 +1005,26 @@ class emailtemplate {
             if (is_int($user) || is_string($user)) {
                 if ($user = $DB->get_record('user', ['id' => $user], '*')) {
                     return $user;
-                } else {
-                    return false;
                 }
             } else {
                 if (!empty($user->id)) {
                     if ($user->id > 0) {
                         if ($user = $DB->get_record('user', ['id' => $user->id], '*')) {
                             return $user;
-                        } else {
-                            return false;
                         }
                     } else {
                         if (!empty($user->email) && !empty($user->firstname) && !empty($user->lastname)) {
                             return $user;
                         } else if ($user == core_user::get_support_user()) {
                             return $user;
-                        } else {
-                            return false;
                         }
                     }
                 }
             }
         }
+
+        // Didn't pass anything so...
+        return false;
     }
 
     /**
@@ -1033,26 +1071,27 @@ class emailtemplate {
         }
 
         // Try to get it out of the database, otherwise get it from config file.
-        if (!isset($companyid) || !$template = $DB->get_record_sql("SELECT et.*, ets.lang, ets.subject, ets.body, ets.signature
-                                                                    FROM {email_template} et
-                                                                    JOIN {email_template_strings} ets
-                                                                    ON (et.id = ets.templateid)
-                                                                    WHERE et.companyid = :companyid
-                                                                    AND et.name = :name
-                                                                    AND ets.lang = :lang",
-                                                                   ['name' => $templatename,
-                                                                    'companyid' => $companyid,
-                                                                    'lang' => $this->user->lang])) {
-            if (!$template = $DB->get_record_sql("SELECT et.*, ets.lang, ets.subject, ets.body, ets.signature
-                                                  FROM {email_template} et
-                                                  JOIN {email_template_strings} ets
-                                                  ON (et.id = ets.templateid)
-                                                  WHERE et.companyid = :companyid
-                                                  AND et.name = :name
-                                                  AND ets.lang = :lang",
-                                                 ['name' => $templatename,
-                                                  'companyid' => $companyid,
-                                                  'lang' => 'en'])) {
+        if (!isset($companyid) ||
+            !$template = $DB->get_record_sql(
+                "SELECT et.*, ets.lang, ets.subject, ets.body, ets.signature
+                 FROM {email_template} et
+                 JOIN {email_template_strings} ets ON (et.id = ets.templateid)
+                 WHERE et.companyid = :companyid
+                 AND et.name = :name
+                 AND ets.lang = :lang",
+                ['name' => $templatename,
+                 'companyid' => $companyid,
+                 'lang' => $this->user->lang])) {
+            if (!$template = $DB->get_record_sql(
+                "SELECT et.*, ets.lang, ets.subject, ets.body, ets.signature
+                 FROM {email_template} et
+                 JOIN {email_template_strings} ets ON (et.id = ets.templateid)
+                 WHERE et.companyid = :companyid
+                 AND et.name = :name
+                 AND ets.lang = :lang",
+                ['name' => $templatename,
+                 'companyid' => $companyid,
+                 'lang' => 'en'])) {
                 if (isset($email[$templatename])) {
                     $template = (object) $email[$templatename];
                 } else {
@@ -1140,7 +1179,7 @@ class emailtemplate {
         // Is this template enabled for the company.
         if ($DB->get_records('email_template', ['name' => $this->templatename,
                                                 'companyid' => $this->company->id,
-                                                'disabled' =>1])) {
+                                                'disabled' => 1])) {
             return false;
         }
 
@@ -1148,7 +1187,7 @@ class emailtemplate {
             // Is this template enabled for the supervisor.
             if ($DB->get_records('email_template', ['name' => $this->templatename,
                                                     'companyid' => $this->company->id,
-                                                    'disabledsupervisor' =>1])) {
+                                                    'disabledsupervisor' => 1])) {
                 return false;
             }
         }
@@ -1157,12 +1196,12 @@ class emailtemplate {
             // Is this template enabled for the supervisor.
             if ($DB->get_records('email_template', ['name' => $this->templatename,
                                                     'companyid' => $this->company->id,
-                                                    'disabledmanager' =>1])) {
+                                                    'disabledmanager' => 1])) {
                 return false;
             }
         }
 
-        // Default return true.
+        // Didn't fail anything so return true.
         return true;
     }
 
@@ -1170,7 +1209,7 @@ class emailtemplate {
      * Checks if this is a user template or not.
      *
      **/
-    private static function is_user_template($templatename) {
+    private static function is_user_template(string $templatename): bool {
 
         $usertemplates = [
             'completion_course_user' => 'completion_course_user',
@@ -1211,7 +1250,7 @@ class emailtemplate {
      * @param boolean $preservehtml
      * @return string
      */
-    private function apply_moodle_filters($text, $userlang, $preservehtml = false) {
+    private function apply_moodle_filters(string $text, string $userlang, bool $preservehtml = false): string {
 
         // Did we get passed anything?
         if (empty($text)) {
@@ -1310,10 +1349,10 @@ class emailtemplate {
 
         $oldlang = $event->other['langcode'];
 
-        // Delete for templatesets
+        // Delete for templatesets.
         $DB->delete_records('email_templateset_templates_strings', ['lang' => $oldlang]);
 
-        // Delete for companies
+        // Delete for companies.
         $DB->delete_records('email_template_strings', ['lang' => $oldlang]);
 
         return true;

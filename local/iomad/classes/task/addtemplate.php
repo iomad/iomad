@@ -32,6 +32,14 @@ use tool_customlang_utils;
 
 require_once($CFG->dirroot . '/admin/tool/customlang/locallib.php');
 
+/**
+ * An adhoc task for local IOMAD when a new email template is added.
+ *
+ * @package    local_iomad
+ * @copyright  2020 E-Learn Design https://www.e-learndesign.co.uk
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class addtemplate extends adhoc_task {
 
     /**

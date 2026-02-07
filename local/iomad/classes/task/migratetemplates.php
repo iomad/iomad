@@ -22,14 +22,21 @@
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-namespace local_iomad\task;
 
-defined('MOODLE_INTERNAL') || die();
+namespace local_iomad\task;
 
 use core\task\adhoc_task;
 use core\task\manager;
 use local_iomad\email;
 
+/**
+ * An adhoc task for local IOMAD to migrate email templates to new structure.
+ *
+ * @package    local_iomad
+ * @copyright  2020 E-Learn Design https://www.e-learndesign.co.uk
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class migratetemplates extends adhoc_task {
 
     /**
@@ -66,17 +73,17 @@ class migratetemplates extends adhoc_task {
                     $templaterec->templateset = $templateset->id;
                     $templaterec->name = $template;
                     $DB->execute(
-                        "INSERT INTO {email_templateset_templates} (templateset,name)
-                                      SELECT :templateset, :name
+                        "INSERT INTO {email_templateset_templates} (templateset, name)
+                                      SELECT :templateset, :templatename
                                       WHERE NOT EXISTS (
                                         SELECT * FROM {email_templateset_templates}
                                         WHERE templateset = :templateset2
-                                        AND name = :name2)",
+                                        AND name = :templatename2)",
                         [
                             'templateset' => $templateset->id,
                             'templateset2' => $templateset->id,
-                            'name' => $template,
-                            'name2' => $template
+                            'templatename' => $template,
+                            'templatename2' => $template,
                         ]
                     );
                 }
@@ -94,17 +101,17 @@ class migratetemplates extends adhoc_task {
                     $templaterec->name = $template;
                     $templaterec->lang = $lang;
                     $DB->execute(
-                        "INSERT INTO {email_template} (companyid,name)
-                                      SELECT :companyid, :name
+                        "INSERT INTO {email_template} (companyid, name)
+                                      SELECT :companyid, :templatename
                                       WHERE NOT EXISTS (
                                         SELECT * FROM {email_template}
                                         WHERE companyid = :companyid2
-                                        AND name = :name2)",
+                                        AND name = :templatename2)",
                         [
                             'companyid' => $company->id,
                             'companyid2' => $company->id,
-                            'name' => $template,
-                            'name2' => $template
+                            'templatename' => $template,
+                            'templatename2' => $template,
                         ]
                     );
                 }

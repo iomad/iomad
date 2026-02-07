@@ -16,7 +16,7 @@
 
 /**
  * An adhoc task to import course completion information to
- * the traacking tables for local iomad
+ * the tracking tables for local iomad
  *
  * @package    local_iomad
  * @copyright  2020 E-Learn Design https://www.e-learndesign.co.uk
@@ -26,15 +26,13 @@
 
 namespace local_iomad\task;
 
-defined('MOODLE_INTERNAL') || die();
-
 use core\task\adhoc_task;
 use core\task\manager;
 use local_iomad\{company, track};
 
 /**
  * An adhoc task to import course completion information to
- * the traacking tables for local iomad
+ * the tracking tables for local iomad
  *
  * @package    local_iomad
  * @copyright  2020 E-Learn Design https://www.e-learndesign.co.uk
@@ -58,7 +56,6 @@ class importmoodlecompletioninformation extends adhoc_task {
     public function execute() {
         global $DB, $CFG;
 
-
         // Get all of the missing records.
         $comprecords = $DB->get_records_sql("SELECT DISTINCT cc.* FROM {course_completions} cc
                                              JOIN {company_users} cu
@@ -69,7 +66,7 @@ class importmoodlecompletioninformation extends adhoc_task {
 
             // Does this course have a valid length?
             $offset = 0;
-            if ($iomadrec = $DB->get_record('iomad_courses', array('courseid' => $courseid))) {
+            if ($iomadrec = $DB->get_record('iomad_courses', ['courseid' => $courseid])) {
                 if ($iomadrec->validlength > 0) {
                     $offset = $iomadrec->validlength * 24 * 60 * 60;
                 }
@@ -77,12 +74,12 @@ class importmoodlecompletioninformation extends adhoc_task {
 
             // Get the enrolment record as sometime the completion record isn't fully formed after a completion reset.
             if (!$enrolrec = $DB->get_record_sql("SELECT ue.* FROM {user_enrolments} ue
-                                             JOIN {enrol} e ON (ue.enrolid = e.id)
-                                             WHERE ue.userid = :userid
-                                             AND e.courseid = :courseid
-                                             AND e.status = 0",
-                                             array('userid' => $userid,
-                                                   'courseid' => $courseid))) {
+                                                  JOIN {enrol} e ON (ue.enrolid = e.id)
+                                                  WHERE ue.userid = :userid
+                                                  AND e.courseid = :courseid
+                                                  AND e.status = 0",
+                                                 ['userid' => $userid,
+                                                  'courseid' => $courseid])) {
                 // User isn't enrolled. Not sure why we got this.
                 return true;
             }
@@ -90,13 +87,13 @@ class importmoodlecompletioninformation extends adhoc_task {
             // Is this a duplicate event?
             if (!empty($enrolrec->timecreated) &&
                  $DB->get_record_sql("SELECT id FROM {local_iomad_track}
-                                     WHERE userid = :userid
-                                     AND courseid = :courseid
-                                     AND timeenrolled = :timeenrolled
-                                     AND timecompleted IS NOT NULL",
-                                    ['userid' => $userid,
-                                     'courseid' => $courseid,
-                                     'timeenrolled' => $enrolrec->timecreated])) {
+                                      WHERE userid = :userid
+                                      AND courseid = :courseid
+                                      AND timeenrolled = :timeenrolled
+                                      AND timecompleted IS NOT NULL",
+                                     ['userid' => $userid,
+                                      'courseid' => $courseid,
+                                      'timeenrolled' => $enrolrec->timecreated])) {
 
                 // It is so we don't record it.
                 return true;
@@ -137,14 +134,14 @@ class importmoodlecompletioninformation extends adhoc_task {
                                                                           'userid' => $userid,
                                                                           'timecompleted' => null])) {
                 // For some reason we don't already have a record.
-                // Get all of the user's companies
+                // Get all of the user's companies.
                 $mycompanies = company::get_companies_select(false, false, false);
                 foreach ($mycompanies as $mycompanyid => $dump) {
                     // Get the rest of the data.
                     $usercompany = new company($mycompanyid);
-                    $companyrec = $DB->get_record('company', array('id' => $usercompany->id));
-                    $courserec = $DB->get_record('course', array('id' => $courseid));
-                    if ($DB->get_record('iomad_courses', array('courseid' => $courseid, 'licensed' => 1))) {
+                    $companyrec = $DB->get_record('company', ['id' => $usercompany->id]);
+                    $courserec = $DB->get_record('course', ['id' => $courseid]);
+                    if ($DB->get_record('iomad_courses', ['courseid' => $courseid, 'licensed' => 1])) {
                         // Its a licensed course, get the last license.
                         $licenserecs = $DB->get_records_sql("SELECT * FROM {companylicense_users}
                                                              WHERE userid = :userid
@@ -195,7 +192,7 @@ class importmoodlecompletioninformation extends adhoc_task {
 
                     $trackid = $DB->insert_record('local_iomad_track', $completion);
 
-                    // generate any certificate
+                    // Generate any certificates.
                     track::record_certificates($courseid, $userid, $trackid);
                 }
             } else {

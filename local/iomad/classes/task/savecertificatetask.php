@@ -22,14 +22,21 @@
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-namespace local_iomad\task;
 
-defined('MOODLE_INTERNAL') || die();
+namespace local_iomad\task;
 
 use core\task\adhoc_task;
 use core\task\manager;
 use local_iomad\track;
 
+/**
+ * An adhoc task to save certificate files for local iomad
+ *
+ * @package    local_iomad
+ * @copyright  2025 E-Learn Design https://www.e-learndesign.co.uk
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class savecertificatetask extends adhoc_task {
 
     /**

@@ -39,17 +39,21 @@ use core_text;
  */
 class completion_import_form extends moodleform {
 
-    function definition() {
-        global $CFG;
+    /**
+     * Form definition
+     *
+     * @return void
+     */
+    public function definition() {
 
         // Set up the form.
         $mform =& $this->_form;
 
         // Add the header.
-        $mform->addElement( 'header', 'general', get_string('completionimportfromfile','local_iomad'));
+        $mform->addElement( 'header', 'general', get_string('completionimportfromfile', 'local_iomad'));
 
         // Add the file picker.
-        $mform->addElement('filepicker', 'importfile', get_string('file'), null, array( 'accepted_types'=>'csv'));
+        $mform->addElement('filepicker', 'importfile', get_string('file'), null, ['accepted_types' => 'csv']);
         $mform->addRule('importfile', null, 'required');
 
         $mform->addElement('hidden', 'fileimport');

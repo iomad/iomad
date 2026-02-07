@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Default library file for local IOMAD
+ * Local IOMAD local library functions
  *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
@@ -34,31 +34,31 @@ function local_iomad_pre_course_delete($course) {
     global $DB, $OUTPUT;
 
     // Clear everything from the iomad_courses table.
-    $DB->delete_records('iomad_courses', array('courseid' => $course->id));
+    $DB->delete_records('iomad_courses', ['courseid' => $course->id]);
 
     // Remove the course from company allocation tables.
-    $DB->delete_records('company_course', array('courseid' => $course->id));
+    $DB->delete_records('company_course', ['courseid' => $course->id]);
 
     // Remove the course from company created course tables.
-    $DB->delete_records('company_created_courses', array('courseid' => $course->id));
+    $DB->delete_records('company_created_courses', ['courseid' => $course->id]);
 
     // Remove the course from company shared courses tables.
-    $DB->delete_records('company_shared_courses', array('courseid' => $course->id));
+    $DB->delete_records('company_shared_courses', ['courseid' => $course->id]);
 
     // Deal with licenses allocations.
-    $DB->delete_records('companylicense_users', array('licensecourseid' => $course->id));
+    $DB->delete_records('companylicense_users', ['licensecourseid' => $course->id]);
 
-    $courselicenses = $DB->get_records('companylicense_courses', array('courseid' => $course->id));
+    $courselicenses = $DB->get_records('companylicense_courses', ['courseid' => $course->id]);
 
     foreach ($courselicenses as $courselicense) {
         // Delete the course from the license.
-        $DB->delete_records('companylicense_courses', array('id' => $courselicense->id));
+        $DB->delete_records('companylicense_courses', ['id' => $courselicense->id]);
         // Does the license have any courses left?
-        if ($DB->get_records('companylicense_courses', array('licenseid' => $courselicense->licenseid))) {
+        if ($DB->get_records('companylicense_courses', ['licenseid' => $courselicense->licenseid])) {
             company::update_license_usage($courselicense->licenseid);
         } else {
             // Delete the license.  It no longer is valid.
-            $DB->delete_records('companylicense', array('id' => $courselicense->licenseid));
+            $DB->delete_records('companylicense', ['id' => $courselicense->licenseid]);
         }
     }
 
@@ -69,7 +69,7 @@ function local_iomad_pre_course_delete($course) {
  * File handler for local IOMAD
  *
  * @param stdClass $course course object
- * @param stdClass $birecord_or_cm block instance record
+ * @param stdClass $birecordorcm block instance record
  * @param stdClass $context context object
  * @param string $filearea file area
  * @param array $args extra arguments
@@ -77,7 +77,7 @@ function local_iomad_pre_course_delete($course) {
  * @param array $options additional options affecting the file serving
  * @return bool
  */
-function local_iomad_pluginfile($course, $birecord_or_cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
+function local_iomad_pluginfile($course, $birecordorcm, $context, $filearea, $args, $forcedownload, array $options = []) {
 
     // Context will always be user context.
     if ($context->contextlevel != CONTEXT_USER) {
@@ -97,7 +97,8 @@ function local_iomad_pluginfile($course, $birecord_or_cm, $context, $filearea, $
     $itemid = array_shift($args);
     $filename = array_pop($args);
     $filepath = $args ? '/'.implode('/', $args).'/' : '/';
-    if (!$file = $fs->get_file($context->id, 'local_iomad', 'issue', $itemid, $filepath, $filename) or $file->is_directory()) {
+    if (!$file = $fs->get_file($context->id, 'local_iomad', 'issue', $itemid, $filepath, $filename) ||
+        $file->is_directory()) {
         send_file_not_found();
     }
 

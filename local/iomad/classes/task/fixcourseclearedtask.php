@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * An adhoc fix course cleared task for local iomad
+ * Local IOMAD fix course cleared adhoc task
  *
  * @package    local_iomad
  * @copyright  2020 E-Learn Design https://www.e-learndesign.co.uk
@@ -24,13 +24,11 @@
  */
 namespace local_iomad\task;
 
-defined('MOODLE_INTERNAL') || die();
-
 use core\task\adhoc_task;
 use core\task\manager;
 
 /**
- * An adhoc fix course cleared task for local iomad
+ * Local IOMAD fix course cleared adhoc task
  *
  * @package    local_iomad
  * @copyright  2020 E-Learn Design https://www.e-learndesign.co.uk
@@ -54,7 +52,7 @@ class fixcourseclearedtask extends adhoc_task {
     public function execute() {
         global $DB;
 
-        // Deal with the local_iomad_track entries
+        // Deal with the local_iomad_track entries.
         $allentries = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
                                             WHERE timecompleted > 0
                                             AND coursecleared = 0");
@@ -69,8 +67,9 @@ class fixcourseclearedtask extends adhoc_task {
                                        ['userid' => $entry->userid,
                                         'courseid' => $entry->courseid,
                                         'timecompleted' => $entry->timecompleted]) > 0) {
-                $DB->set_field('local_iomad_track', 'coursecleared', 1, array('id' => $entry->id));
-                $DB->set_field('local_iomad_track', 'modifiedtime', time(), array('id' => $entry->id));
+
+                $DB->set_field('local_iomad_track', 'coursecleared', 1, ['id' => $entry->id]);
+                $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $entry->id]);
             } else if (!empty($entry->licenseid) && !empty($entry->licenseallocated)) {
                 if ($DB->get_record_sql("SELECT id FROM {companylicense_users}
                                          WHERE licenseid = :licenseid
@@ -80,8 +79,9 @@ class fixcourseclearedtask extends adhoc_task {
                                         ['licenseid' => $entry->licenseid,
                                          'courseid' => $entry->courseid,
                                          'licenseallocated' => $entry->licenseallocated])) {
-                    $DB->set_field('local_iomad_track', 'coursecleared', 1, array('id' => $entry->id));
-                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), array('id' => $entry->id));
+
+                    $DB->set_field('local_iomad_track', 'coursecleared', 1, ['id' => $entry->id]);
+                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $entry->id]);
                 } else if ($licenserec = $DB->get_record_sql("SELECT id FROM {companylicense_users}
                                                               WHERE id = :licenseid
                                                               AND licensecourseid = :courseid
@@ -90,9 +90,10 @@ class fixcourseclearedtask extends adhoc_task {
                                                             ['licenseid' => $entry->licenseid,
                                                              'courseid' => $entry->courseid,
                                                              'licenseallocated' => $entry->licenseallocated])) {
-                    $DB->set_field('local_iomad_track', 'coursecleared', 1, array('id' => $entry->id));
-                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), array('id' => $entry->id));
-                    $DB->set_field('local_iomad_track', 'licenseid', $licenserec->licenseid, array('id' => $entry->id));
+
+                    $DB->set_field('local_iomad_track', 'coursecleared', 1, ['id' => $entry->id]);
+                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $entry->id]);
+                    $DB->set_field('local_iomad_track', 'licenseid', $licenserec->licenseid, ['id' => $entry->id]);
                 }
             }
         }

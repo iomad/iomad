@@ -28,6 +28,7 @@ namespace local_iomad;
 use moodle_url;
 use html_table_row;
 use html_table_cell;
+use html_writer;
 use local_iomad\forms\email_template_edit_form;
 
 /**
@@ -58,7 +59,7 @@ class email {
      * @param string $lang
      * @param string $prefix
      * @param integer $templatesetid
-     * @return string
+     * @return object
      */
     public static function create_default_template_row($templatename,
                                                        $enable,
@@ -69,20 +70,27 @@ class email {
 
         // Set up the control switches.
         if ($enable) {
-            $value = "{$prefix}.e.{$templatename}";
-            $enablebutton = '<label class="switch">
-                             <input class="checkbox enableall" type="checkbox" checked value="' . $value . '" />' .
-                            "<span class='slider round'></span>
-                            </label>";
-            $value = "{$prefix}.em.{$templatename}";
-            $enablemanagerbutton = '<label class="switch">
-                                    <input class="checkbox enablemanager" type="checkbox" checked value="' . $value . '" />' .
-                                   "<span class='slider round'></span>
-                                   </label";
-            $value = "{$prefix}.es.{$templatename}";
-            $enablesupervisorbutton = '<label class="switch">
-                                       <input class="checkbox enablesupervisor" type="checkbox" checked value="' . $value . '" />' .
-                                      "<span class='slider round'></span></label>";
+            $enablebutton = html_writer::start_tag('label', ['class' => 'switch']) .
+                            html_writer::empty_tag('input', ['class' => 'checkbox enableall',
+                                                             'type' => 'checkbox',
+                                                             'checked' => true,
+                                                             'value' => "{$prefix}.e.{$templatename}"]) .
+                            html_writer::tag('span', '', ['class' => 'slider round']) .
+                            html_writer::end_tag('label');
+            $enablemanagerbutton = html_writer::start_tag('label', ['class' => 'switch']) .
+                                   html_writer::empty_tag('input', ['class' => 'checkbox enablemanager',
+                                                                    'type' => 'checkbox',
+                                                                    'checked' => true,
+                                                                    'value' => "{$prefix}.em.{$templatename}"]) .
+                                  html_writer::tag('span', '', ['class' => 'slider round']) .
+                                  html_writer::end_tag('label');
+            $enablesupervisorbutton = html_writer::start_tag('label', ['class' => 'switch']) .
+                                      html_writer::empty_tag('input', ['class' => 'checkbox enablesupervisor',
+                                                                       'type' => 'checkbox',
+                                                                       'checked' => true,
+                                                                       'value' => "{$prefix}.es.{$templatename}"]) .
+                                      html_writer::tag('span', '', ['class' => 'slider round']) .
+                                      html_writer::end_tag('label');
         } else {
             $enablebutton = "";
             $enablemanagerbutton = "";
@@ -115,7 +123,7 @@ class email {
      *
      * @return array
      */
-    public static function get_templates() {
+    public static function get_templates(): array {
         $email = [];
 
         // Add emails with subject and body strings from lang/??/local_iomad.php.
@@ -188,8 +196,7 @@ class email {
      * @param boolean $getfull
      * @return array
      */
-    public static function get_user_templates($getfull = true)
-    {
+    public static function get_user_templates(bool $getfull = true): array {
         $email = [];
 
         // Add emails with subject and body strings from lang/??/local_iomad.php.

@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Base class for the table used by a {@link quiz_attempts_report}.
+ * Class for local IOMAD template sets table
  *
- * @package   local_report_user_license_allocations
+ * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -36,7 +36,7 @@ require_once($CFG->libdir.'/tablelib.php');
 /**
  * Class for local IOMAD template sets table
  *
- * @package   local_report_user_license_allocations
+ * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -64,69 +64,109 @@ class templatesets_table extends table_sql {
      */
     public function col_actions($row) {
 
-            $deletelink = new moodle_url('/local/iomad/template_list.php',
-                                          ['templatesetid' => $row->id,
-                                           'action' => 'delete',
-                                           'sesskey' => sesskey()]);
-            $editlink = new moodle_url('/local/iomad/template_list.php',
-                                        ['templatesetid' => $row->id,
-                                         'action' => 'edit']);
-            $applylink = new moodle_url('/local/iomad/template_apply_form.php',
-                                        ['templatesetid' => $row->id,
-                                         'action' => 'apply']);
-            $defaultlink = new moodle_url('/local/iomad/template_list.php',
-                                          ['templatesetid' => $row->id,
-                                           'action' => 'setdefault',
-                                           'sesskey' => sesskey()]);
-            $unsetdefaultlink = new moodle_url('/local/iomad/template_list.php',
-                                              ['templatesetid' => $row->id,
-                                               'action' => 'unsetdefault',
-                                               'sesskey' => sesskey()]);
+        $deletelink = new moodle_url(
+            '/local/iomad/template_list.php',
+            [
+                'templatesetid' => $row->id,
+                'action' => 'delete',
+                'sesskey' => sesskey(),
+            ]
+        );
+        $editlink = new moodle_url(
+            '/local/iomad/template_list.php',
+            [
+                'templatesetid' => $row->id,
+                'action' => 'edit',
+            ]
+        );
+        $applylink = new moodle_url(
+            '/local/iomad/template_apply_form.php',
+            [
+                'templatesetid' => $row->id,
+                'action' => 'apply',
+            ]
+        );
+        $defaultlink = new moodle_url(
+            '/local/iomad/template_list.php',
+            [
+                'templatesetid' => $row->id,
+                'action' => 'setdefault',
+                'sesskey' => sesskey(),
+            ]
+        );
+        $unsetdefaultlink = new moodle_url(
+            '/local/iomad/template_list.php',
+            [
+                'templatesetid' => $row->id,
+                'action' => 'unsetdefault',
+                'sesskey' => sesskey(),
+            ]
+        );
 
-            $return = html_writer::start_tag('a', ['href' => $deletelink]);
-            $return .= html_writer::tag('i',
-                                        '',
-                                        ['class' => 'icon fa fa-trash fa-fw ',
-                                         'title' => get_string('deletetemplateset', 'local_iomad'),
-                                         'role' => 'img',
-                                         'aria-label' => get_string('deletetemplateset', 'local_iomad')]);
+        $return = html_writer::start_tag('a', ['href' => $deletelink]);
+        $return .= html_writer::tag(
+            'i',
+            '',
+            [
+                'class' => 'icon fa fa-trash fa-fw ',
+                'title' => get_string('deletetemplateset', 'local_iomad'),
+                'role' => 'img',
+                'aria-label' => get_string('deletetemplateset', 'local_iomad'),
+            ]
+        );
+        $return .= html_writer::end_tag('a');
+        $return .= html_writer::start_tag('a', ['href' => $editlink]);
+        $return .= html_writer::tag(
+            'i',
+            '',
+            [
+                'class' => 'icon fa fa-cog fa-fw ',
+                'title' => get_string('edittemplateset', 'local_iomad'),
+                'role' => 'img',
+                'aria-label' => get_string('edittemplateset', 'local_iomad'),
+            ]
+        );
+        $return .= html_writer::end_tag('a');
+        if (empty($row->isdefault)) {
+            $return .= html_writer::start_tag('a', ['href' => $defaultlink]);
+            $return .= html_writer::tag(
+                'i',
+                '',
+                [
+                    'class' => 'icon fa fa-toggle-off fa-fw ',
+                    'title' => get_string('setdefault', 'local_iomad'),
+                    'role' => 'img',
+                    'aria-label' => get_string('setdefault', 'local_iomad'),
+                ]
+            );
             $return .= html_writer::end_tag('a');
-            $return .= html_writer::start_tag('a', ['href' => $editlink]);
-            $return .= html_writer::tag('i',
-                                        '',
-                                        ['class' => 'icon fa fa-cog fa-fw ',
-                                         'title' => get_string('edittemplateset', 'local_iomad'),
-                                         'role' => 'img',
-                                         'aria-label' => get_string('edittemplateset', 'local_iomad')]);
+        } else {
+            $return .= html_writer::start_tag('a', ['href' => $unsetdefaultlink]);
+            $return .= html_writer::tag(
+                'i',
+                '',
+                [
+                    'class' => 'icon fa fa-toggle-on fa-fw ',
+                    'title' => get_string('unsetdefault', 'local_iomad'),
+                    'role' => 'img',
+                    'aria-label' => get_string('unsetdefault', 'local_iomad'),
+                ]
+            );
             $return .= html_writer::end_tag('a');
-            if (empty($row->isdefault)) {
-                $return .= html_writer::start_tag('a', ['href' => $defaultlink]);
-                $return .= html_writer::tag('i',
-                                            '',
-                                            ['class' => 'icon fa fa-toggle-off fa-fw ',
-                                             'title' => get_string('setdefault', 'local_iomad'),
-                                             'role' => 'img',
-                                             'aria-label' => get_string('setdefault', 'local_iomad')]);
-                $return .= html_writer::end_tag('a');
-            } else {
-                $return .= html_writer::start_tag('a', ['href' => $unsetdefaultlink]);
-                $return .= html_writer::tag('i',
-                                            '',
-                                            ['class' => 'icon fa fa-toggle-on fa-fw ',
-                                             'title' => get_string('unsetdefault', 'local_iomad'),
-                                             'role' => 'img',
-                                             'aria-label' => get_string('unsetdefault', 'local_iomad')]);
-                $return .= html_writer::end_tag('a');
-            }
+        }
 
-            $return .= html_writer::start_tag('a', ['href' => $applylink]);
-            $return .= html_writer::tag('i',
-                                        '',
-                                        ['class' => 'icon fa fa-share fa-fw ',
-                                         'title' => get_string('applytemplateset', 'local_iomad', $row->templatesetname),
-                                         'role' => 'img',
-                                         'aria-label' => get_string('applytemplateset', 'local_iomad', $row->templatesetname)]);
-            $return .= html_writer::end_tag('a');
+        $return .= html_writer::start_tag('a', ['href' => $applylink]);
+        $return .= html_writer::tag(
+            'i',
+            '',
+            [
+                'class' => 'icon fa fa-share fa-fw ',
+                'title' => get_string('applytemplateset', 'local_iomad', $row->templatesetname),
+                'role' => 'img',
+                'aria-label' => get_string('applytemplateset', 'local_iomad', $row->templatesetname),
+            ]
+        );
+        $return .= html_writer::end_tag('a');
 
         return $return;
     }

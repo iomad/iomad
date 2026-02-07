@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Base class for the table used by a {@link quiz_attempts_report}.
+ * Local IOMAD templates table class
  *
- * @package   local_report_user_license_allocations
+ * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -34,6 +34,14 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/tablelib.php');
 
+/**
+ * Local IOMAD templates table class
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class templates_table extends table_sql {
 
     /**
@@ -44,7 +52,9 @@ class templates_table extends table_sql {
     public function col_templatename($row) {
         global $output;
 
-        return format_string($row->templatename) . $output->help_icon($row->name.'_name', 'local_iomad') ."<br>(" . $row->name . ")";
+        return format_string($row->templatename) .
+               $output->help_icon($row->name.'_name', 'local_iomad') .
+               "<br>(" . $row->name . ")";
     }
 
     /**
@@ -54,13 +64,22 @@ class templates_table extends table_sql {
      */
     public function col_enableuser($row) {
 
-        $value ="{$row->prefix}.e.{$row->name}";
-        $returnhtml = html_writer::start_tag('label', ['class'=> "switch"]);
-        if ($row->disabled) {
-        $returnhtml .= html_writer::tag('input', '', ['class' => "checkbox enableall", 'type'=> "checkbox", 'value'=> $value]);
-        } else {
-        $returnhtml .= html_writer::tag('input', '', ['class' => "checkbox enableall", 'type'=> "checkbox", 'checked' => '', 'value'=> $value]);
+        // Set up the control.
+        $checked = '';
+        if (!$row->disabled) {
+            $checked = 'checked';
         }
+        $returnhtml = html_writer::start_tag('label', ['class' => "switch"]);
+        $returnhtml .= html_writer::tag(
+            'input',
+            '',
+            [
+                'class' => "checkbox enableall",
+                'type' => "checkbox",
+                'value' => "{$row->prefix}.e.{$row->name}",
+                $checked => true,
+            ]
+        );
         $returnhtml .= html_writer::tag('span', '', ['class' => 'slider round']);
         $returnhtml .= html_writer::end_tag('label');
 
@@ -80,14 +99,22 @@ class templates_table extends table_sql {
             return;
         }
 
-        // Set up the control
-        $value ="{$row->prefix}.em.{$row->name}";
-        $returnhtml = html_writer::start_tag('label', ['class'=> "switch"]);
-        if ($row->disabledmanager) {
-            $returnhtml .= html_writer::tag('input', '', ['class' => "checkbox enablemanager", 'type'=> "checkbox", 'value'=> $value]);
-        } else {
-            $returnhtml .= html_writer::tag('input', '', ['class' => "checkbox enablemanager", 'type'=> "checkbox", 'checked' => '', 'value'=> $value]);
+        // Set up the control.
+        $checked = '';
+        if (!$row->disabledmanager) {
+            $checked = 'checked';
         }
+        $returnhtml = html_writer::start_tag('label', ['class' => "switch"]);
+        $returnhtml .= html_writer::tag(
+            'input',
+            '',
+            [
+                'class' => "checkbox enablemanager",
+                'type' => "checkbox",
+                'value' => "{$row->prefix}.em.{$row->name}",
+                $checked => true,
+            ]
+        );
         $returnhtml .= html_writer::tag('span', '', ['class' => 'slider round']);
         $returnhtml .= html_writer::end_tag('label');
 
@@ -107,14 +134,22 @@ class templates_table extends table_sql {
             return;
         }
 
-        // Set up the control
-        $value ="{$row->prefix}.es.{$row->name}";
-        $returnhtml = html_writer::start_tag('label', ['class'=> "switch"]);
-        if ($row->disabledsupervisor) {
-            $returnhtml .= html_writer::tag('input', '', ['class' => "checkbox enablesupervisor", 'type'=> "checkbox", 'value'=> $value]);
-        } else {
-            $returnhtml .= html_writer::tag('input', '', ['class' => "checkbox enablesupervisor", 'type'=> "checkbox", 'checked' => '', 'value'=> $value]);
+        // Set up the control.
+        $checked = '';
+        if (!$row->disabledsupervisor) {
+            $checked = 'checked';
         }
+        $returnhtml = html_writer::start_tag('label', ['class' => "switch"]);
+        $returnhtml .= html_writer::tag(
+            'input',
+            '',
+            [
+                'class' => "checkbox enablesupervisor",
+                'type' => "checkbox",
+                'value' => "{$row->prefix}.es.{$row->name}",
+                $checked => true,
+            ]
+        );
         $returnhtml .= html_writer::tag('span', '', ['class' => 'slider round']);
         $returnhtml .= html_writer::end_tag('label');
 

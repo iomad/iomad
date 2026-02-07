@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD company license expiring task
+ *
  * @package    local_iomad
  * @copyright  2022 Derick Turner
  * @author    Derick Turner
@@ -26,7 +28,12 @@ namespace local_iomad\task;
 use local_iomad\{company, emailtemplate};
 
 /**
- * Company license expiring scheduled task
+ * Local IOMAD company license expiring task
+ *
+ * @package    local_iomad
+ * @copyright  2022 Derick Turner
+ * @author    Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class company_license_expiring_task extends \core\task\scheduled_task {
 
@@ -61,26 +68,31 @@ class company_license_expiring_task extends \core\task\scheduled_task {
         foreach ($licenses as $license) {
             $company = new company($license->companyid);
             $companysql = "";
+            $sqlparams = [];
 
             // Only want company managers not parent company managers.
             if ($parentslist = $company->get_parent_companies_recursive()) {
+                [$insql, $sqlparams] = $DB->get_in_or_equal(array_keys($parentslist),
+                                                            SQL_PARAMS_NAMED,
+                                                            'cids');
                 $companysql = " AND userid NOT IN (
                                 SELECT userid FROM {company_users}
                                 WHERE managertype = 1
-                                AND companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+                                AND companyid {$insql}";
             }
+            $sqlparams['companyid'] = $company->id;
 
             $managers = $DB->get_records_sql("SELECT * FROM {company_users}
                                               WHERE companyid = :companyid
                                               AND managertype = 1
                                               $companysql",
-                                              ['companyid' => $company->id]);
+                                              $sqlparams);
             foreach ($managers as $manager) {
                 if ($user = $DB->get_record('user', ['id' => $manager->userid, 'deleted' => 0, 'suspended' => 0])) {
 
-                    // Format copy only to retain original value
+                    // Format copy only to retain original value.
                     $licenseemail = clone $license;
-                    $licenseemail->expirydate =  userdate($license->expirydate, get_config('local_iomad', 'date_format'));
+                    $licenseemail->expirydate = userdate($license->expirydate, get_config('local_iomad', 'date_format'));
 
                     // Passed all checks, send the email.
                     mtrace("Sending license pool expiring email to $user->email");

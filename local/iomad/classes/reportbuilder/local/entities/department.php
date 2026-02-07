@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Company department entity
+ *
+ * @package     local_iomad
+ * @copyright   2024 Derick Turner e-Learn Design
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 declare(strict_types=1);
 
 namespace local_iomad\reportbuilder\local\entities;
@@ -28,8 +36,6 @@ use html_writer;
 use lang_string;
 use moodle_url;
 use stdClass;
-
-defined('MOODLE_INTERNAL') or die;
 
 /**
  * Company department entity
@@ -127,7 +133,7 @@ class department extends base {
             ->add_field("{$departmentalias}.company")
             ->set_is_sortable(false);
 
-        // parentid.
+        // Parentid.
         $columns[] = (new column(
             'parentid',
             new lang_string('parent', 'block_iomad_company_admin'),

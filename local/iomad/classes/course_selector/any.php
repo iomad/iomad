@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD any course selector class
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -24,13 +26,23 @@
 namespace local_iomad\course_selector;
 
 /**
- * Selector for any course
+ * Local IOMAD any course selector class
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class any extends company_base {
 
+    /**
+     * Get class options
+     *
+     * @return void
+     */
     protected function get_options() {
         $options = parent::get_options();
-        $options['file']    = 'local/iomad/classes/course_selector/any.php';
+        $options['file'] = 'local/iomad/classes/course_selector/any.php';
 
         return $options;
     }
@@ -45,7 +57,7 @@ class any extends company_base {
         // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'c');
 
-        $fields      = 'SELECT ' . $this->required_fields_sql('c');
+        $fields = 'SELECT ' . $this->required_fields_sql('c');
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM {course} c
@@ -63,7 +75,7 @@ class any extends company_base {
         $availablecourses = $DB->get_records_sql($fields . $sql . $order, $params);
 
         if (empty($availablecourses)) {
-            return array();
+            return [];
         }
         $this->process_hidden_courses($availablecourses);
 
@@ -73,6 +85,6 @@ class any extends company_base {
             $groupname = get_string('courses', 'block_iomad_company_admin');
         }
 
-        return array($groupname => $availablecourses);
+        return [$groupname => $availablecourses];
     }
 }

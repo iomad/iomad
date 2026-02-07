@@ -15,23 +15,32 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * An adhoc task for local IOMAD run after a new language pack is imported.
+ * Local IOMAD adhoc task that is run after a new language pack is imported.
  *
  * @package    local_iomad
  * @copyright  2020 E-Learn Design https://www.e-learndesign.co.uk
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-namespace local_iomad\task;
 
-defined('MOODLE_INTERNAL') || die();
+namespace local_iomad\task;
 
 use core\task\adhoc_task;
 use core\task\manager;
 use tool_customlang_utils;
 
+defined('MOODLE_INTERNAL') || die();
+
 require_once($CFG->dirroot . '/admin/tool/customlang/locallib.php');
 
+/**
+ * Local IOMAD adhoc task that is run after a new language pack is imported.
+ *
+ * @package    local_iomad
+ * @copyright  2020 E-Learn Design https://www.e-learndesign.co.uk
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class importlangpack extends adhoc_task {
 
     /**
@@ -74,7 +83,6 @@ class importlangpack extends adhoc_task {
 
         // Reload the custom lang table.
         tool_customlang_utils::checkout($newlang);
-
 
         // Mark that we are done.
         unset_config('local_iomad_email_templates_migrating', '');

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD current user course selector class
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,18 +25,31 @@
 
 namespace local_iomad\course_selector;
 
+/**
+ * Local IOMAD current user course selector class
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class current_user extends company_base {
 
+    /**
+     * Get selector options
+     *
+     * @return array
+     */
     protected function get_options() {
         $options = parent::get_options();
-        $options['file']    = 'local/iomad/classes/course_selector/current_user.php';
+        $options['file'] = 'local/iomad/classes/course_selector/current_user.php';
 
         return $options;
     }
 
     /**
      * Company courses
-     * @param <type> $search
+     * @param string $search
      * @return array
      */
     public function find_courses($search) {

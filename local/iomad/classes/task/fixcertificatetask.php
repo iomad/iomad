@@ -25,8 +25,6 @@
 
 namespace local_iomad\task;
 
-defined('MOODLE_INTERNAL') || die();
-
 use core\task\adhoc_task;
 use core\task\manager;
 use context_user;

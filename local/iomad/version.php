@@ -15,17 +15,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD version info
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @push date 2025/11/28
+ * @since     2025/11/28
  */
 
-$plugin->release  = '4.5.8 (Build: 20251208)'; // Human-friendly version name
+defined('MOODLE_INTERNAL') || die();
+
+$plugin->release  = '4.5.8 (Build: 20251208)'; // Human-friendly version name.
 $plugin->component  = 'local_iomad';
 $plugin->requires = 2019052000;   // Requires this Moodle version.
-$plugin->version  = 2026010645;   // The (date) version of this plugin.
+$plugin->version  = 2026020845;   // The (date) version of this plugin.
 $plugin->dependencies = [
         'tool_checklearningrecords' => 2024100700,
         'tool_iomadmerge' => 2024100700,

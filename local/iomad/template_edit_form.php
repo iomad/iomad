@@ -29,6 +29,7 @@
 
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
+use local_iomad\forms\template_edit_form;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 
@@ -61,7 +62,7 @@ if (empty($lang)) {
     }
 }
 
-$urlparams = array('templateid' => $templateid, 'templatename' => $templatename);
+$urlparams = ['templateid' => $templateid, 'templatename' => $templatename];
 if ($returnurl) {
     $urlparams['returnurl'] = $returnurl;
 }
@@ -70,7 +71,7 @@ require_login();
 
 $systemcontext = context_system::instance();
 
-// Set the companyid
+// Set the companyid.
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
@@ -78,25 +79,35 @@ $company = new company($companyid);
 iomad::require_capability('local/iomad:email_edit', $companycontext);
 
 if (empty($templatesetid)) {
-    if (!$templaterecord = $DB->get_record_sql("SELECT et.*, ets.id AS templatestringid, ets.subject,ets.body, ets.signature, ets.lang
-                                                FROM {email_template} et
-                                                JOIN {email_template_strings} ets
-                                                ON (et.id = ets.templateid)
-                                                WHERE et.id = :id
-                                                AND ets.lang = :lang",
-                                               ['id' => $templateid,
-                                                'lang' => $lang])) {
+    if (!$templaterecord = $DB->get_record_sql(
+        "SELECT et.*,
+         ets.id AS templatestringid,
+         ets.subject,
+         ets.body,
+         ets.signature,
+         ets.lang
+         FROM {email_template} et
+         JOIN {email_template_strings} ets ON (et.id = ets.templateid)
+         WHERE et.id = :id
+         AND ets.lang = :lang",
+        ['id' => $templateid,
+         'lang' => $lang])) {
         throw new moodle_exception('templatenotfound', 'local_iomad', new moodle_url('/local/iomad/template_list.php'));
     }
 } else {
-    if (!$templaterecord = $DB->get_record_sql("SELECT et.*, ets.id AS templatestringid, ets.subject,ets.body, ets.signature, ets.lang
-                                                FROM {email_templateset_templates} et
-                                                JOIN {email_templateset_template_strings} ets
-                                                ON (et.id = ets.templatesetid)
-                                                WHERE et.id = :id
-                                                AND ets.lang = :lang",
-                                               ['id' => $templateid,
-                                               'lang' => $lang])) {
+    if (!$templaterecord = $DB->get_record_sql(
+        "SELECT et.*,
+         ets.id AS templatestringid,
+         ets.subject,
+         ets.body,
+         ets.signature,
+         ets.lang
+         FROM {email_templateset_templates} et
+         JOIN {email_templateset_template_strings} ets ON (et.id = ets.templatesetid)
+         WHERE et.id = :id
+         AND ets.lang = :lang",
+        ['id' => $templateid,
+         'lang' => $lang])) {
         throw new moodle_exception('templatenotfound', 'local_iomad', new moodle_url('/local/iomad/template_list.php'));
     }
 }
@@ -129,7 +140,7 @@ $PAGE->requires->js_call_amd('local_iomad/local_email', 'init');
 block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Are we dealing with a reset?
-//  Deal with any deletes.
+// Deal with any deletes.
 if ((!empty($reset) ||
      !empty($resetall)) &&
     confirm_sesskey()) {
@@ -145,9 +156,15 @@ if ((!empty($reset) ||
                        'reset' => $reset,
                        'resetall' => $resetall];
         if (!empty($reset)) {
-            $resetstring = get_string('resettemplatefull', 'local_iomad', "'" . get_string($templaterecord->name . "_name", 'local_iomad') ."'");
+            $resetstring = get_string(
+                'resettemplatefull',
+                'local_iomad',
+                get_string($templaterecord->name . "_name", 'local_iomad'));
         } else {
-            $resetstring = get_string('resettemplatefulllangs', 'local_iomad', "'" . get_string($templaterecord->name . "_name", 'local_iomad') ."'");
+            $resetstring = get_string(
+                'resettemplatefulllangs',
+                'local_iomad',
+                get_string($templaterecord->name . "_name", 'local_iomad'));
         }
         echo $OUTPUT->confirm($resetstring,
                               new moodle_url('/local/iomad/template_edit_form.php', $optionsyes),
@@ -189,7 +206,7 @@ if ((!empty($reset) ||
         }
 
         redirect(new moodle_url('/local/iomad/template_list.php', ['templatesetid' => $templatesetid]),
-                 get_string('templateresetok', 'local_iomad', "'" . get_string($templaterecord->name . "_name", 'local_iomad') ."'"),
+                 get_string('templateresetok', 'local_iomad', get_string($templaterecord->name . "_name", 'local_iomad')),
                  null,
                  core\output\notification::NOTIFY_SUCCESS);
         die;
@@ -198,7 +215,7 @@ if ((!empty($reset) ||
 
 // Set the name for the page.
 if (!empty($templatesetid)) {
-    $templatesetrec = $DB->get_record('email_templateset', array('id' => $templatesetid));
+    $templatesetrec = $DB->get_record('email_templateset', ['id' => $templatesetid]);
     $linktextextra = (object) ['name' => get_string($templatename .'_name', 'local_iomad'),
                                'companyname' => format_string($templatesetrec->templatesetname)];
 } else {
@@ -214,23 +231,23 @@ $PAGE->set_heading($linktext);
 $templatelist = new moodle_url('/local/iomad/template_list.php', $urlparams);
 
 // Set up the form.
-$mform = new local_iomad\forms\template_edit_form($PAGE->url, $isadding, $isediting, $companyid, $templateid, $templaterecord, $templatesetid);
-$templaterecord->body_editor = array('text' => $templaterecord->body, 'format' => 1);
-$templaterecord->signature_editor = array('text' => $templaterecord->signature, 'format' => 1);
-$emailtoarr = array();
-// In case the data is null make it an empty string
+$mform = new template_edit_form($PAGE->url, $isadding, $isediting, $companyid, $templateid, $templaterecord, $templatesetid);
+$templaterecord->body_editor = ['text' => $templaterecord->body, 'format' => 1];
+$templaterecord->signature_editor = ['text' => $templaterecord->signature, 'format' => 1];
+$emailtoarr = [];
+// In case the data is null make it an empty string.
 if (empty($templaterecord->emailto)) {
     $templaterecord->emailto = '';
 }
 if (empty($templaterecord->emailcc)) {
     $templaterecord->emailcc = '';
 }
-foreach(explode(',', $templaterecord->emailto) as $emailto) {
+foreach (explode(',', $templaterecord->emailto) as $emailto) {
     $emailtoarr[$emailto] = $emailto;
 }
 $templaterecord->emailto = $emailtoarr;
-$emailccarr = array();
-foreach(explode(',', $templaterecord->emailcc) as $emailcc) {
+$emailccarr = [];
+foreach (explode(',', $templaterecord->emailcc) as $emailcc) {
     $emailccarr[$emailcc] = $emailcc;
 }
 $templaterecord->emailcc = $emailccarr;

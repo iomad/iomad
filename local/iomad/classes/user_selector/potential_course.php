@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD potential course user selector class
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -25,67 +27,100 @@ namespace local_iomad\user_selector;
 
 use local_iomad\company;
 
+/**
+ * Local IOMAD potential course user selector class
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class potential_course extends company_base {
 
+    /**
+     * Get selector options
+     *
+     * @return array
+     */
     protected function get_options() {
         $options = parent::get_options();
-        $options['file']    = 'local/iomad/classes/user_selector/potential_course.php';
+        $options['file'] = 'local/iomad/classes/user_selector/potential_course.php';
 
         return $options;
     }
 
+    /**
+     * Get the course user ids
+     *
+     * @return array
+     */
     protected function get_courses_user_ids() {
-        global $CFG, $DB;
+        global $DB;
 
+        // If we don't have any courses set, we can't return any users.
+        if (!isset( $this->selectedcourses) ) {
+            return [];
+        }
+
+        // De we have the "all courses" option selected?
         if (in_array(0, $this->selectedcourses)) {
             $selectedcourses = $this->company->get_menu_courses(true, true);
             unset ($selectedcourses[0]);
             $countsql = "";
             $coursesql = " 1 = 2";
             if (!empty($companycourses)) {
-                $coursesql = "e.courseid IN (" . implode(',', array_keys($selectedcourses)) . ") ";
+                [$insql, $sqlparams] = $DB->get_in_or_equal(array_keys($selectedcourses),
+                                                            SQL_PARAMS_NAMED,
+                                                            'ecids');
+
+                $coursesql = "e.courseid {$insql} ";
                 $countsql = " HAVING count(ue.enrolid) = " . count($selectedcourses);
             }
         } else {
             $selectedcourses = $this->selectedcourses;
-            $coursesql = "e.courseid IN (" . implode(',', array_values($selectedcourses)) . ") ";
+            [$insql, $sqlparams] = $DB->get_in_or_equal(array_values($selectedcourses),
+                                                        SQL_PARAMS_NAMED,
+                                                        'ecids');
+            $coursesql = "e.courseid {$insql} ";
             $countsql = " HAVING count(ue.enrolid) = " . count($selectedcourses);
         }
-        if (!isset( $this->selectedcourses) ) {
-            return array();
+        $sqlparams['companyid'] = $this->companyid;
+        $usersql = "SELECT ue.userid,
+                           count(ue.enrolid) AS enrolcount
+                    FROM {user_enrolments} ue
+                    JOIN {enrol} e ON (
+                        ue.enrolid = e.id
+                        AND e.status = 0
+                    )
+                    JOIN {local_iomad_track} lit ON (
+                        e.courseid = lit.courseid
+                        AND ue.userid=lit.userid
+                        AND ue.timestart = lit.timeenrolled
+                    )
+                    WHERE $coursesql
+                    AND lit.companyid = :companyid
+                    GROUP BY ue.userid
+                    $countsql";
+
+        // Get the records.
+        if ($users = $DB->get_records_sql($usersql, $sqlparams)) {
+            // Only return the keys (user ids).
+            return array_keys($users);
         } else {
-            $usersql = "SELECT ue.userid,count(ue.enrolid) AS enrolcount FROM {user_enrolments} ue
-                        JOIN {enrol} e ON (ue.enrolid = e.id AND e.status = 0)
-                        JOIN {local_iomad_track} lit ON (e.courseid = lit.courseid AND ue.userid=lit.userid AND ue.timestart = lit.timeenrolled)
-                        WHERE $coursesql
-                        AND lit.companyid = :companyid
-                        GROUP BY ue.userid
-                        $countsql";
-            if ($users = $DB->get_records_sql($usersql, ['companyid' => $this->companyid])) {
-                // Only return the keys (user ids).
-                return array_keys($users);
-            } else {
-                return array();
-            }
+            return [];
         }
     }
 
     /**
-     * Company users enrolled into the selected company course
-     * @param <type> $search
+     * Search for company users enrolled into the selected company course
+     * @param string $search
      * @return array
      */
     public function find_users($search, $all = false) {
-        global $CFG, $DB;
+        global $DB;
 
-        $companyrec = $DB->get_record('company', array('id' => $this->companyid));
-        $company = new company($this->companyid);
-
-        // Get the full company tree as we may need it.
-        $topcompanyid = $company->get_topcompanyid();
-        $topcompany = new company($topcompanyid);
-        $companytree = $topcompany->get_child_companies_recursive();
-        $parentcompanies = $company->get_parent_companies_recursive();
+        // Get any parent companies.
+        $parentcompanies = $this->company->get_parent_companies_recursive();
 
         // By default wherecondition retrieves all users except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'u');
@@ -97,40 +132,56 @@ class potential_course extends company_base {
         $departmentlist = company::get_all_subdepartments($this->departmentid);
         $departmentsql = "";
         if (!empty($departmentlist)) {
-            $departmentsql = " AND cu.departmentid IN (".implode(',', array_keys($departmentlist)).")";
-        } else {
-            $departmentsql = "";
+            [$insql, $inparams] = $DB->get_in_or_equal(array_keys($departmentlist),
+                                                       SQL_PARAMS_NAMED,
+                                                       'deptids');
+            $departmentsql = " AND cu.departmentid {$insql}";
+            $params = $params + $inparams;
         }
 
-        // Deal with parent company managers
+        // Deal with parent company managers.
+        $userfilter = "";
         if (!empty($parentcompanies)) {
+            [$insql, $inparams] = $DB->get_in_or_equal(array_keys($parentcompanies),
+                                                       SQL_PARAMS_NAMED,
+                                                       'pcids');
             $userfilter = " AND u.id NOT IN (
                              SELECT userid FROM {company_users}
                              WHERE managertype = 1
-                             AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
-        } else {
-            $userfilter = "";
+                             AND companyid {$pcids}";
+            $params = $params + $inparams;
         }
 
         // Get the current enrolled users.
         $enrolledusers = $this->get_courses_user_ids();
         if (count($enrolledusers) > 0) {
-            $userfilter .= " AND u.id NOT IN (" . implode(',', $enrolledusers) . ") ";
+            [$notinsql, $notinparams] = $DB->get_in_or_equal($enrolledusers,
+                                                             SQL_PARAMS_NAMED,
+                                                             'euids',
+                                                             false);
+            $userfilter .= " AND u.id {$notinsql} ";
+            $params = $params + $notinparams;
         }
 
-        $fields      = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
+        // Build the SQL.
+        $fields = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM {user} u
                  JOIN {company_users} cu ON cu.userid = u.id
-                 LEFT JOIN {user_info_data} ui ON (ui.userid = u.id AND ui.userid = cu.userid)
-
-                 WHERE $wherecondition  AND u.suspended = 0 $departmentsql
+                 LEFT JOIN {user_info_data} ui ON (
+                     ui.userid = u.id
+                     AND ui.userid = cu.userid
+                 )
+                 WHERE $wherecondition
+                 AND u.suspended = 0
                  AND cu.companyid = :companyid
+                 $departmentsql
                  $userfilter";
 
         $order = ' ORDER BY u.firstname ASC, u.lastname ASC';
 
+        // Do we get too many results?
         if (!$this->is_validating() && !$all) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
             if ($potentialmemberscount > get_config('local_iomad', 'max_select_users')) {
@@ -138,18 +189,16 @@ class potential_course extends company_base {
             }
         }
 
+        // Get the list of users.
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
 
-        if (empty($availableusers)) {
-            return array();
-        }
-
+        // Add any search text.
         if ($search) {
             $groupname = get_string('potentialcourseusersmatching', 'block_iomad_company_admin', $search);
         } else {
             $groupname = get_string('potentialcourseusers', 'block_iomad_company_admin');
         }
 
-        return array($groupname => $availableusers);
+        return [$groupname => $availableusers];
     }
 }

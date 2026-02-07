@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD course not started task
+ *
  * @package    local_iomad
  * @copyright  2022 Derick Turner
  * @author    Derick Turner
@@ -23,12 +25,18 @@
 
 namespace local_iomad\task;
 
+use core\task\scheduled_task;
 use local_iomad\{company, emailtemplate};
 
 /**
- * Course not started email scheduled task
+ * Local IOMAD course not started task
+ *
+ * @package    local_iomad
+ * @copyright  2022 Derick Turner
+ * @author    Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class course_not_started_task extends \core\task\scheduled_task {
+class course_not_started_task extends scheduled_task {
 
     /**
      * Get a descriptive name for this task (shown to admins).
@@ -58,7 +66,7 @@ class course_not_started_task extends \core\task\scheduled_task {
                                                        AND co.visible = 1");
         // Process all of the found courses.
         foreach ($warnnotstartedcourses as $warnnotstartedcourse) {
-            $checktime = time() - $warnnotstartedcourse->warnnotstarted * 60 * 60 *24;
+            $checktime = time() - $warnnotstartedcourse->warnnotstarted * 60 * 60 * 24;
 
             // Get all of the users for this course.
             $warnnotstartedusers = $DB->get_records_sql("SELECT * FROM {local_iomad_track}

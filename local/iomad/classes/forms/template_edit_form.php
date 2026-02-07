@@ -25,7 +25,7 @@
 
 namespace local_iomad\forms;
 
-use context_system;
+use html_writer;
 use local_iomad\{company, emailvars};
 use moodleform;
 
@@ -38,16 +38,45 @@ use moodleform;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class template_edit_form extends moodleform {
+
+    /** @var bool are we adding a template */
     protected $isadding;
+
+    /** @var bool are we editing a template */
     protected $isediting;
+
+    /** @var int template id */
     protected $templateid;
+
+    /** @var object template record*/
     protected $templaterecord;
+
+    /** @var int company id */
     protected $companyid;
+
+    /** @var object company record */
     protected $company;
+
+    /** @var int templateset id */
     protected $templatesetid;
+
+    /** @var array list of company managers */
     protected $companymanagers;
+
+    /** @var array list of company managers */
     protected $multiplecompanymanagers;
 
+    /**
+     * Constructor function
+     *
+     * @param moodle_url $actionurl
+     * @param bool $isadding
+     * @param bool $isediting
+     * @param int $companyid
+     * @param int $templateid
+     * @param object $templaterecord
+     * @param int $templatesetid
+     */
     public function __construct($actionurl, $isadding, $isediting, $companyid, $templateid, $templaterecord, $templatesetid) {
         $this->isadding = $isadding;
         $this->isediting = $isediting;
@@ -65,9 +94,15 @@ class template_edit_form extends moodleform {
         parent::__construct($actionurl);
     }
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
         global $DB;
 
+        // Set up the form.
         $mform =& $this->_form;
 
         $strrequired = get_string('required');
@@ -77,19 +112,34 @@ class template_edit_form extends moodleform {
         }
 
         $buttonarr = [];
-        $buttonarr[] = &$mform->createElement('html', '<span data-fieldtype="button">
-            <button class="btn btn-secondary emailclicktoedit" name="edit" id="id_edit" type="button">' .
-                get_string('edit') . '</button></span>');
+        $buttonarr[] = &$mform->createElement(
+            'html',
+            html_writer::tag(
+                'span',
+                html_writer::tag(
+                    'button',
+                    get_string('edit'),
+                    [
+                        'class' => 'btn btn-secondary emailclicktoedit',
+                        'name' => 'edit',
+                        'id' => 'id_edit',
+                        'type' => 'button',
+                    ]
+                ),
+                [
+                    'data-fieldtype' => 'button',
+                ]
+            ));
         $buttonarr[] = &$mform->createElement('submit', 'save', $submitlabel);
         $buttonarr[] = &$mform->createElement('cancel', 'cancel', get_string('cancel'));
-        $mform->addGroup($buttonarr, 'buttonar', '', array(' '), false);
+        $mform->addGroup($buttonarr, 'buttonar', '', [' '], false);
 
         $mform->addElement('hidden', 'templateid', $this->templateid);
         $mform->addElement('hidden', 'templatename', $this->templaterecord->name);
         $mform->addElement('hidden', 'companyid', $this->companyid);
         $mform->addElement('hidden', 'templatesetid', $this->templatesetid);
         $mform->addElement('hidden', 'templatestringid', $this->templatesetid);
-        $mform->addElement('hidden', 'isediting', $this->isediting, array('id' => 'isediting'));
+        $mform->addElement('hidden', 'isediting', $this->isediting, ['id' => 'isediting']);
         $mform->setType('isediting', PARAM_INT);
         $mform->setType('templateid', PARAM_INT);
         $mform->setType('templatestringid', PARAM_INT);
@@ -101,64 +151,88 @@ class template_edit_form extends moodleform {
             $mform->addElement('hidden', 'lang', $this->templaterecord->lang);
             $mform->setType('lang', PARAM_LANG);
         } else {
+            // We only want the languages where there isn't already a definition.
             $langs = get_string_manager()->get_list_of_translations();
-            $languages = $DB->get_records_sql("SELECT DISTINCT ets.lang FROM {email_template} et
-                                               JOIN {email_template_strings} ets ON (et.id = ets.templateid)
-                                               WHERE et.companyid = :companyid
-                                               AND et.name = :name",
-                                              ['companyid' => $this->companyid,
-                                               'name' => $this->templaterecord->name]);
+            $languages = $DB->get_records_sql(
+                "SELECT DISTINCT ets.lang
+                 FROM {email_template} et
+                 JOIN {email_template_strings} ets ON (et.id = ets.templateid)
+                 WHERE et.companyid = :companyid
+                 AND et.name = :name",
+                ['companyid' => $this->companyid,
+                 'name' => $this->templaterecord->name]);
             unset($langs['en']);
             foreach ($languages as $language) {
                 unset($langs[$language->lang]);
             }
+
+            // Add the select.
             $mform->addElement('select', 'lang', get_string('language'), $langs);
         }
 
-        $mform->addElement('autocomplete', 'emailto', get_string('to', 'local_iomad'), $this->multiplecompanymanagers, array('multiple' => true));
+        // Set up some default arrays.
+        $arrayauto = ['multiple' => true];
+        $arraytext = ['size' => 100];
+
+        $mform->addElement('autocomplete',
+                           'emailto',
+                           get_string('to', 'local_iomad'),
+                           $this->multiplecompanymanagers,
+                           $arrayauto);
 
         $mform->addElement('text', 'emailtoother', get_string('toother', 'local_iomad'),
-                            array('size' => 100));
+                            $arraytext);
         $mform->setType('emailtoother', PARAM_EMAIL);
 
-        $mform->addElement('autocomplete', 'emailfrom', get_string('from', 'local_iomad'), $this->companymanagers);
+        $mform->addElement('autocomplete',
+                           'emailfrom',
+                           get_string('from', 'local_iomad'),
+                           $this->companymanagers);
 
-        $mform->addElement('text', 'emailfromother', get_string('fromother', 'local_iomad'),
-                            array('size' => 100));
+        $mform->addElement('text', 'emailfromother', get_string('fromother', 'local_iomad'), $arraytext);
         $mform->setType('emailfromother', PARAM_EMAIL);
 
-        $mform->addElement('text', 'emailfromothername', get_string('fromothername', 'local_iomad'),
-                            array('size' => 100));
+        $mform->addElement('text', 'emailfromothername', get_string('fromothername', 'local_iomad'), $arraytext);
         $mform->setType('emailfromothername', PARAM_TEXT);
         $mform->setDefault('emailfromothername', '{Company_Name}');
 
-        $mform->addElement('autocomplete', 'emailcc', get_string('cc', 'local_iomad'), $this->multiplecompanymanagers, array('multiple' => true));
+        $mform->addElement('autocomplete',
+                           'emailcc',
+                           get_string('cc', 'local_iomad'),
+                           $this->multiplecompanymanagers,
+                           $arrayauto);
 
-        $mform->addElement('text', 'emailccother', get_string('ccother', 'local_iomad'),
-                            array('size' => 100));
+        $mform->addElement('text', 'emailccother', get_string('ccother', 'local_iomad'), $arraytext);
         $mform->setType('emailccother', PARAM_EMAIL);
 
-        $mform->addElement('autocomplete', 'emailreplyto', get_string('replyto', 'local_iomad'), $this->companymanagers);
+        $mform->addElement('autocomplete',
+                           'emailreplyto',
+                           get_string('replyto', 'local_iomad'),
+                           $this->companymanagers);
 
-        $mform->addElement('text', 'emailreplytoother', get_string('replytoother', 'local_iomad'),
-                            array('size' => 100));
+        $mform->addElement('text', 'emailreplytoother', get_string('replytoother', 'local_iomad'), $arraytext);
         $mform->setType('emailreplytoother', PARAM_EMAIL);
 
-        $mform->addElement('text', 'subject', get_string('subject', 'local_iomad'),
-                            array('size' => 100, 'class' => 'inputholder'));
+        $mform->addElement('text',
+                           'subject',
+                           get_string('subject', 'local_iomad'),
+                           ['size' => 100,
+                            'class' => 'inputholder']);
         $mform->setType('subject', PARAM_NOTAGS);
         $mform->addRule('subject', $strrequired, 'required');
 
-        $mform->addElement('editor', 'body_editor', get_string('body', 'local_iomad'),
-                           array('enable_filemanagement' => false,
-                                 'changeformat' => false,
-                                 'class' => 'fitem_id_body_editor'));
+        $mform->addElement('editor',
+                           'body_editor',
+                           get_string('body', 'local_iomad'),
+                           ['enable_filemanagement' => false,
+                            'changeformat' => false,
+                            'class' => 'fitem_id_body_editor']);
         $mform->setType('body_editor', PARAM_RAW);
         $mform->addRule('body_editor', $strrequired, 'required');
         $mform->setType('body_editor', PARAM_RAW);
 
         $vars = emailvars::vars();
-        $mform->addElement('html', "<div class='emailvars'>");
+        $mform->addElement('html', html_writer::start_tag('div', ['class' => 'emailvars']));
         $optioncount = 0;
         foreach ($vars as $option) {
             if ($optioncount > 10) {
@@ -167,17 +241,29 @@ class template_edit_form extends moodleform {
             } else {
                 $break = "&nbsp";
             }
-            $mform->addElement('html', "<a href='# data-text='$option' class='clickforword'>$option</a>$break");
+            $mform->addElement(
+                'html',
+                html_writer::tag(
+                    'a',
+                    $option,
+                    [
+                        'href' => '#',
+                        'data-text' => $option,
+                        'class' => 'clickforword',
+                        ]
+                    ) . $break);
             $optioncount++;
         }
-        $mform->addElement('html', "</div>");
+        $mform->addElement('html', html_writer::end_tag('div'));
 
-        $mform->addElement('editor', 'signature_editor', get_string('signature', 'local_iomad'),
-                           array('enable_filemanagement' => false,
-                                 'changeformat' => false,
-                                 'class' => 'fitem_id_signature_editor'));
+        $mform->addElement('editor',
+                           'signature_editor',
+                           get_string('signature', 'local_iomad'),
+                           ['enable_filemanagement' => false,
+                            'changeformat' => false,
+                            'class' => 'fitem_id_signature_editor']);
         $mform->setType('signature_editor', PARAM_RAW);
-        $mform->addElement('html', "<div class='emailvars'>");
+        $mform->addElement('html', html_writer::start_tag('div', ['class' => 'emailvars']));
         $optioncount = 0;
         foreach ($vars as $option) {
             if ($optioncount > 10) {
@@ -186,44 +272,69 @@ class template_edit_form extends moodleform {
             } else {
                 $break = "&nbsp";
             }
-            $mform->addElement('html', "<a href='# data-text='$option' class='clickforword'>$option</a>$break");
+            $mform->addElement(
+                'html',
+                html_writer::tag(
+                    'a',
+                    $option,
+                    [
+                        'href' => '#',
+                        'data-text' => $option,
+                        'class' => 'clickforword',
+                        ]
+                    ) . $break);
             $optioncount++;
         }
-        $mform->addElement('html', "</div>");
+        $mform->addElement('html', html_writer::end_tag('div'));
 
         // Add in repeation parts.
-        $repeatperiods = array('99' => get_string('always'),
-                               '0' => get_string('never'),
-                               '1' => get_string('daily', 'local_iomad'),
-                               '2' => get_string('weekly', 'local_iomad'),
-                               '3' => get_string('fortnightly', 'local_iomad'),
-                               '4' => get_string('monthly', 'local_iomad'));
+        $repeatperiods = [
+            '99' => get_string('always'),
+            '0' => get_string('never'),
+            '1' => get_string('daily', 'local_iomad'),
+            '2' => get_string('weekly', 'local_iomad'),
+            '3' => get_string('fortnightly', 'local_iomad'),
+            '4' => get_string('monthly', 'local_iomad'),
+        ];
 
-        $repeatdays = array('99' => get_string('any'),
-                            '0' => get_string('sunday', 'calendar'),
-                            '1' => get_string('monday', 'calendar'),
-                            '2' => get_string('tuesday', 'calendar'),
-                            '3' => get_string('wednesday', 'calendar'),
-                            '4' => get_string('thursday', 'calendar'),
-                            '5' => get_string('friday', 'calendar'),
-                            '6' => get_string('saturday', 'calendar'));
+        $repeatdays = [
+            '99' => get_string('any'),
+            '0' => get_string('sunday', 'calendar'),
+            '1' => get_string('monday', 'calendar'),
+            '2' => get_string('tuesday', 'calendar'),
+            '3' => get_string('wednesday', 'calendar'),
+            '4' => get_string('thursday', 'calendar'),
+            '5' => get_string('friday', 'calendar'),
+            '6' => get_string('saturday', 'calendar'),
+        ];
 
-        $repeatselect = $mform->addElement('select', 'repeatperiod', get_string('emailrepeatperiod', 'local_iomad'), $repeatperiods);
+        $repeatselect = $mform->addElement('select',
+                                           'repeatperiod',
+                                           get_string('emailrepeatperiod', 'local_iomad'),
+                                           $repeatperiods);
         $repeatselect->setSelected($this->templaterecord->repeatperiod);
+
         $mform->addElement('text', 'repeatvalue', get_string('emailrepeatvalue', 'local_iomad'));
         $mform->setType('repeatvalue', PARAM_INT);
-        $repeatdayselect = $mform->addElement('select', 'repeatday', get_string('emailrepeatday', 'local_iomad'), $repeatdays);
+
+        $repeatdayselect = $mform->addElement('select',
+                                              'repeatday',
+                                              get_string('emailrepeatday', 'local_iomad'),
+                                              $repeatdays);
         $repeatdayselect->setSelected($this->templaterecord->repeatday - 1);
+
         $mform->addHelpButton('repeatperiod', 'emailrepeatperiod', 'local_iomad');
         $mform->addHelpButton('repeatvalue', 'emailrepeatvalue', 'local_iomad');
         $mform->addHelpButton('repeatday', 'emailrepeatday', 'local_iomad');
 
-        $mform->addElement('html', '<div class="fdescription required">' . get_string('emailrepeatinfo', 'local_iomad').'</div>');
+        $mform->addElement('html', html_writer::tag('div',
+                                                    get_string('emailrepeatinfo', 'local_iomad'),
+                                                    ['class' => 'fdescription required']));
 
-        // Disable everything unless isediting = 1;
+        // Disable everything unless isediting = 1.
         $mform->disabledIf('emailto', 'isediting', 'neq', 1);
         $mform->disabledIf('emailtoother', 'isediting', 'neq', 1);
-        $mform->disabledIf('emailfrom', 'isediting','neq', 1);
+        $mform->disabledIf('emailfrom', 'isediting', 'neq', 1);
         $mform->disabledIf('emailfromother', 'isediting', 'neq', 1);
         $mform->disabledIf('emailfromothername', 'isediting', 'neq', 1);
         $mform->disabledIf('emailcc', 'isediting', 'neq', 1);
@@ -245,12 +356,16 @@ class template_edit_form extends moodleform {
         if ($this->isadding) {
             $mform->addElement('hidden', 'createnew', 1);
             $mform->setType('createnew', PARAM_INT);
-
         }
 
-        $mform->addGroup($buttonarr, 'buttonar', '', array(' '), false);
+        $mform->addGroup($buttonarr, 'buttonar', '', [' '], false);
     }
 
+    /**
+     * Get the form data
+     *
+     * @return object
+     */
     public function get_data() {
         $data = parent::get_data();
         if ($data) {
@@ -262,10 +377,17 @@ class template_edit_form extends moodleform {
         return $data;
     }
 
+    /**
+     * Form validation
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
     public function validation($data, $files) {
-        $errors = array();
+        $errors = [];
         if (!empty($data['emailfromother']) && empty($data['emailfromothername'])) {
-            $errors['emilfromother'] = get_string('required');
+            $errors['emailfromother'] = get_string('required');
         }
 
         return $errors;

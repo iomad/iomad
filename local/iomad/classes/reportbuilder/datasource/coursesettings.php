@@ -52,7 +52,7 @@ class coursesettings extends datasource {
 
         $this->add_entity($iomadcoursesentity);
 
-        // Get the tables and aliases
+        // Get the tables and aliases.
         $courseentity = new course();
         $coursealias = $courseentity->get_table_alias('course');
 

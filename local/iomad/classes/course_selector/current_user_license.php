@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD current user license course selector
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -28,18 +30,31 @@ use context_system;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
+/**
+ * Local IOMAD current user license course selector
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class current_user_license extends company_base {
 
+    /**
+     * Get selector options
+     *
+     * @return array
+     */
     protected function get_options() {
         $options = parent::get_options();
-        $options['file']    = 'local/iomad/classes/course_selector/current_user_license.php';
+        $options['file'] = 'local/iomad/classes/course_selector/current_user_license.php';
 
         return $options;
     }
 
     /**
      * Company courses
-     * @param <type> $search
+     * @param string $search
      * @return array
      */
     public function find_courses($search) {
@@ -77,7 +92,7 @@ class current_user_license extends company_base {
         $availablecourses = $DB->get_records_sql($fields . $sql . $order, $params);
 
         if (empty($availablecourses)) {
-            return array();
+            return [];
         }
         $this->process_license_allocations($availablecourses, $this->user->id);
         $this->process_hidden_courses($availablecourses, true);
@@ -87,7 +102,7 @@ class current_user_license extends company_base {
         } else {
             $groupname = get_string('curlicensecourses', 'block_iomad_company_admin');
         }
-        return array($groupname => $availablecourses);
+        return [$groupname => $availablecourses];
     }
 
     /**
@@ -103,14 +118,14 @@ class current_user_license extends company_base {
         if (!$this->multiselect) {
             $courseids = optional_param($this->name, null, PARAM_INTEGER);
             if (empty($courseids)) {
-                return array();
+                return [];
             } else {
-                $courseids = array($courseids);
+                $courseids = [$courseids];
             }
         } else {
-            $courseids = optional_param_array($this->name, array(), PARAM_INTEGER);
+            $courseids = optional_param_array($this->name, [], PARAM_INTEGER);
             if (empty($courseids)) {
-                return array();
+                return [];
             }
         }
 
@@ -120,7 +135,7 @@ class current_user_license extends company_base {
         $this->validatingcourseids = null;
 
         // Aggregate the resulting list back into a single one.
-        $courses = array();
+        $courses = [];
         foreach ($groupedcourses as $group) {
             foreach ($group as $course) {
                 if (!isset($courses[$course->id]) && empty($course->disabled)
@@ -139,6 +154,8 @@ class current_user_license extends company_base {
     }
 
     /**
+     * Perform a SQL search for courses
+     *
      * @param string $search the text to search for.
      * @param string $u the table alias for the course table in the query being
      *      built. May be ''.
@@ -147,9 +164,9 @@ class current_user_license extends company_base {
      *      this uses ? style placeholders.
      */
     protected function search_sql($search, $u) {
-        global $DB, $CFG;
-        $params = array();
-        $tests = array();
+        global $DB;
+        $params = [];
+        $tests = [];
 
         if ($u) {
             $u .= '.';
@@ -157,9 +174,9 @@ class current_user_license extends company_base {
 
         // If we have a $search string, put a field LIKE '$search%' condition on each field.
         if ($search) {
-            $conditions = array(
-                $conditions[] = $u . 'fullname'
-            );
+            $conditions = [
+                $conditions[] = $u . 'fullname',
+            ];
             foreach ($this->extrafields as $field) {
                 $conditions[] = $u . $field;
             }
@@ -174,8 +191,15 @@ class current_user_license extends company_base {
         }
 
         // Add some additional sensible conditions.
-        if (!iomad::has_capability('moodle/course:viewhiddencourses', context_system::instance()) &&
-            !iomad::has_capability('moodle/course:viewhiddencourses', context_company::instance(iomad::get_my_companyid(context_system::instance())))) {
+        if (
+            !iomad::has_capability('moodle/course:viewhiddencourses', context_system::instance()) &&
+            !iomad::has_capability(
+                'moodle/course:viewhiddencourses',
+                context_company::instance(
+                    iomad::get_my_companyid(context_system::instance())
+                )
+            )
+        ) {
             $tests[] = $u . 'visible = 1';
         }
 
@@ -191,7 +215,7 @@ class current_user_license extends company_base {
         if (!empty($this->validatingcourseids)) {
             list($coursetest, $courseparams) = $DB->get_in_or_equal($this->validatingcourseids,
                                                SQL_PARAMS_NAMED, 'val000');
-            $tests[] =  'clu.id ' . $coursetest;
+            $tests[] = 'clu.id ' . $coursetest;
             $params = array_merge($params, $courseparams);
         }
 
@@ -200,6 +224,6 @@ class current_user_license extends company_base {
         }
 
         // Combing the conditions and return.
-        return array(implode(' AND ', $tests), $params);
+        return [implode(' AND ', $tests), $params];
     }
 }

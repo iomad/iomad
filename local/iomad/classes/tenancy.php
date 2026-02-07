@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Event observer for local iomad plugin.
+ * Local IOMAD tenancy class
  *
  * @package    local_iomad
  * @copyright  2025 E-Learn Design Ltd. (http://www.e-learndesign.co.uk)
@@ -25,11 +25,17 @@
 
 namespace local_iomad;
 
-defined('MOODLE_INTERNAL') || die();
-
+/**
+ * Local IOMAD tenancy class
+ *
+ * @package    local_iomad
+ * @copyright  2025 E-Learn Design Ltd. (http://www.e-learndesign.co.uk)
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class tenancy {
 
-    /*
+    /**
      * Function to generate the SQL to filter the users to only those in
      * the current tenant.
      */
@@ -51,7 +57,7 @@ class tenancy {
         return $return;
     }
 
-    /*
+    /**
      * Function to generate the SQL to filter the courses to only those available
      * to the current tenant.
      */
@@ -73,7 +79,7 @@ class tenancy {
         return $return;
     }
 
-    /*
+    /**
      * Function to generate the SQL to filter the courses to only those available
      * to the current tenant.
      */
@@ -95,7 +101,7 @@ class tenancy {
         return $return;
     }
 
-    /*
+    /**
      * Function to generate the SQL to filter the courses to only those available
      * to the current tenant.
      */
@@ -110,8 +116,10 @@ class tenancy {
         if ($company = company::by_userid($USER->id)) {
             $mycourses = $company->get_menu_courses(true);
             if (!empty($mycourses)) {
-                $myenrolments = $DB->get_records_sql("SELECT id FROM {enrol}
-                                                  WHERE courseid IN (" . join(',', array_keys($mycourses)) . ")");
+                $myenrolments = $DB->get_records_sql(
+                    "SELECT id
+                     FROM {enrol}
+                     WHERE courseid IN (" . join(',', array_keys($mycourses)) . ")");
                 if (!empty($myenrolments)) {
                     $return = " AND $sqlname IN (" . join (',', array_keys($myenrolments)) . ")";
                 }

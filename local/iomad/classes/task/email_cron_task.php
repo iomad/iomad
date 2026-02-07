@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * IOMAD email processessing scheduled task.
+ * Local IOMAD email processessing scheduled task.
  *
  * @package    local_iomad
  * @copyright  2014 E-Learn Design
@@ -29,7 +29,7 @@ use core\task\scheduled_task;
 use local_iomad\{company, emailtemplate};
 
 /**
- * IOMAD email processessing scheduled task.
+ * Local IOMAD email processessing scheduled task.
  *
  * @package    local_iomad
  * @copyright  2014 E-Learn Design
@@ -60,12 +60,13 @@ class email_cron_task extends scheduled_task {
 
         // Send emails.
         mtrace("Processing IOMAD email cron");
-        if ($emails = $DB->get_records_sql("SELECT e.* from {email} e
-                                        JOIN {user} u ON (e.userid = u.id)
-                                        WHERE e.sent IS NULL
-                                        AND e.due < :now
-                                        AND u.deleted = 0
-                                        AND u.suspended = 0", array('now' => $now))) {
+        if ($emails = $DB->get_records_sql("SELECT e.* FROM {email} e
+                                            JOIN {user} u ON (e.userid = u.id)
+                                            WHERE e.sent IS NULL
+                                            AND e.due < :timenow
+                                            AND u.deleted = 0
+                                            AND u.suspended = 0",
+                                           ['timenow' => $now])) {
             // Deal with any we have to send.
             foreach ($emails as $email) {
                 // Get the company object.
@@ -84,10 +85,10 @@ class email_cron_task extends scheduled_task {
                 if (!$company->email_template_is_enabled($email->templatename, $managertype)) {
 
                     // It's not - so we delete it.
-                    $DB->delete_records('email', array('id' => $email->id));
+                    $DB->delete_records('email', ['id' => $email->id]);
                     continue;
                 } else {
-                    //  Send the email.
+                    // Send the email.
                     emailtemplate::send_to_user($email);
 
                     // Mark it as sent.
@@ -99,12 +100,12 @@ class email_cron_task extends scheduled_task {
         }
 
         // Deal with special destination users like shop admin.
-        if ($emails = $DB->get_records_sql("SELECT e.* from {email} e
+        if ($emails = $DB->get_records_sql("SELECT e.* FROM {email} e
                                             WHERE e.sent IS NULL
-                                            AND e.due < :now
+                                            AND e.due < :timenow
                                             AND e.userid IN (:specialusers)",
-                                           ['now' => $now,
-                                            'specialusers' => join(',', ['-999'])])) {
+                                           ['timenow' => $now,
+                                            'specialusers' => implode(',', ['-999'])])) {
 
             // Process any found.
             foreach ($emails as $email) {
@@ -122,7 +123,7 @@ class email_cron_task extends scheduled_task {
                 if (!$company->email_template_is_enabled($email->templatename, $managertype)) {
 
                     // It's not, so remove the email from the queue.
-                    $DB->delete_records('email', array('id' => $email->id));
+                    $DB->delete_records('email', ['id' => $email->id]);
                     continue;
                 } else {
                     // Process the email.
@@ -141,10 +142,10 @@ class email_cron_task extends scheduled_task {
         if ($emails = $DB->get_records_sql("SELECT e.* from {email} e
                                             JOIN {user} u ON (e.userid = u.id)
                                             WHERE e.sent IS NULL
-                                            AND e.due < :now
+                                            AND e.due < :timenow
                                             AND e.templatename = :templatename
                                             AND u.deleted = 0",
-                                           ['now' => $now,
+                                           ['timenow' => $now,
                                             'templatename' => 'company_suspended'])) {
 
             // Process any found.
@@ -165,7 +166,7 @@ class email_cron_task extends scheduled_task {
                 if (!$company->email_template_is_enabled($email->templatename, $managertype)) {
 
                     // It's not, so remove it from the queue.
-                    $DB->delete_records('email', array('id' => $email->id));
+                    $DB->delete_records('email', ['id' => $email->id]);
                     continue;
                 } else {
                     // Process the email.

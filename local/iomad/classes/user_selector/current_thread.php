@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD current thread user selector class
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -25,10 +27,28 @@ namespace local_iomad\user_selector;
 
 use local_iomad\company;
 
+/**
+ * Local IOMAD current thread user selector class
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class current_thread extends company_base {
+
+    /** @var int thread id */
     protected $threadid;
+
+    /** @var int group id */
     protected $groupid;
 
+    /**
+     * Constructor function
+     *
+     * @param string $name
+     * @param array $options
+     */
     public function __construct($name, $options) {
         $this->threadid = !empty($options['threadid']) ? $options['threadid'] : 0;
         $this->groupid = !empty($options['groupid']) ? $options['groupid'] : 0;
@@ -36,22 +56,27 @@ class current_thread extends company_base {
         parent::__construct($name, $options);
     }
 
+    /**
+     * Get selector options
+     *
+     * @return array
+     */
     protected function get_options() {
         $options = parent::get_options();
         $options['threadid'] = $this->threadid;
         $options['groupid'] = $this->groupid;
-        $options['file']    = 'local/iomad/classes/user_selector/current_thread.php';
+        $options['file'] = 'local/iomad/classes/user_selector/current_thread.php';
 
         return $options;
     }
 
     /**
-     * Company users enrolled into the selected company course
-     * @param <type> $search
+     * Find company users assigned to microlearning thread
+     * @param string $search
      * @return array
      */
     public function find_users($search, $all = false) {
-        global $CFG, $DB;
+        global $DB;
 
         // By default wherecondition retrieves all users except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'u');
@@ -63,7 +88,11 @@ class current_thread extends company_base {
         $departmentlist = company::get_all_subdepartments($this->departmentid);
         $departmentsql = "";
         if (!empty($departmentlist)) {
-            $departmentsql = " AND cu.departmentid in (".implode(',', array_keys($departmentlist)).")";
+            [$insql, $inparams] = $DB->get_in_or_equal(array_keys($departmentlist),
+                                                       SQL_PARAMS_NAMED,
+                                                       'deptids');
+            $departmentsql = " AND cu.departmentid {$insql}";
+            $params = $params + $inparams;
         }
 
         $groupsql = "";
@@ -71,24 +100,29 @@ class current_thread extends company_base {
             $groupsql = " AND groupid = :groupid ";
         }
 
-        $fields      = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
+        $fields = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM {user} u
-                 JOIN {company_users} cu ON (cu.userid = u.id $departmentsql)
-                 LEFT JOIN {user_info_data} ui ON (ui.userid = u.id AND ui.userid = cu.userid)
-
-                 WHERE $wherecondition AND u.suspended = 0
+                 JOIN {company_users} cu ON (cu.userid = u.id)
+                 LEFT JOIN {user_info_data} ui ON (
+                     ui.userid = u.id
+                     AND ui.userid = cu.userid
+                 )
+                 WHERE $wherecondition
+                 AND u.suspended = 0
                  AND cu.companyid = :companyid
+                 $departmentsql
                  AND cu.userid IN (
                    SELECT DISTINCT userid
                    FROM {microlearning_thread_user}
-                   WHERE threadid=:threadid
+                   WHERE threadid = :threadid
                    $groupsql
                  )";
 
         $order = ' ORDER BY u.lastname ASC, u.firstname ASC';
 
+        // Do we get too many results?
         if (!$this->is_validating() && !$all) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
             if ($potentialmemberscount > get_config('local_iomad', 'max_select_users')) {
@@ -96,13 +130,10 @@ class current_thread extends company_base {
             }
         }
 
+        // Get the list of users.
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
 
-        if (empty($availableusers)) {
-            return array();
-        }
-
-        //  Add the group details.
+        // Add the group details.
         foreach ($availableusers as $id => $user) {
             if ($threadgroup = $DB->get_record_sql("
                 SELECT DISTINCT tg.name
@@ -116,12 +147,13 @@ class current_thread extends company_base {
             }
         }
 
+        // Deal with any search text.
         if ($search) {
             $groupname = get_string('currentlyenrolledusersmatching', 'block_iomad_company_admin', $search);
         } else {
             $groupname = get_string('currentlyenrolledusers', 'block_iomad_company_admin');
         }
 
-        return array($groupname => $availableusers);
+        return [$groupname => $availableusers];
     }
 }

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD emailvars class definition
+ *
  * @package    local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -26,23 +28,54 @@ namespace local_iomad;
 use moodle_url;
 use ReflectionClass;
 
-require_once(dirname(__FILE__) . '/../../../user/profile/lib.php');
-
+/**
+ * Local IOMAD emailvars class definition
+ *
+ * @package    local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class emailvars {
-    // Objects the vars refer to.
+
+    /** @var object user */
     protected $user = null;
+
+    /** @var object course */
     protected $course = null;
+
+    /** @var object site */
     protected $site = null;
+
+    /** @var object company */
     protected $company = null;
+
+    /** @var object invoice */
     protected $invoice = null;
+
+    /** @var object classroom */
     protected $classroom = null;
+
+    /** @var object license */
     protected $license = null;
+
+    /** @var object url */
     protected $url = null;
+
+    /** @var object sender */
     protected $sender = null;
+
+    /** @var object approved user */
     protected $approveuser = null;
+
+    /** @var object microlearning nugget */
     protected $nugget = null;
+
+    /** @var object training event */
     protected $event = null;
 
+
+    /** @var string text to be used for blank */
     protected $blank = "[blank]";
 
     /**
@@ -70,10 +103,10 @@ class emailvars {
 
         $this->course =& $course;
         if (!empty($course->id)) {
-            $this->course->url = new moodle_url($this->company->get_wwwroot() .'/course/view.php', array('id' => $this->course->id));
+            $this->course->url = new moodle_url($this->company->get_wwwroot() .'/course/view.php', ['id' => $this->course->id]);
         }
         if (!empty($user->id)) {
-            $this->url = new moodle_url($this->company->get_wwwroot() .'/user/profile.php', array('id' => $this->user->id));
+            $this->url = new moodle_url($this->company->get_wwwroot() .'/user/profile.php', ['id' => $this->user->id]);
         }
         $this->site = get_site();
     }
@@ -93,7 +126,7 @@ class emailvars {
     /**
      * Set up all the methods that can be called and used for substitution var in email templates.
      *
-     * Returns array();
+     * Returns array
      *
      **/
     public static function vars() {
@@ -101,7 +134,7 @@ class emailvars {
         $amethods = $reflection->getMethods();
 
         // These fields refer to the objects declared at the top of this class. User_ -> $this->user, etc.
-        $result = array(
+        $result = [
             // User fields.
                         'User_FirstName', 'User_LastName', 'User_Email', 'User_Username', 'User_Newpassword',
                         'User_ICQ', 'User_Skype', 'User_Yahoo', 'User_AIM', 'User_MSN', 'User_Phone1', 'User_Phone2',
@@ -129,8 +162,8 @@ class emailvars {
             // Miscellaneouss fields.
                         'LinkURL', 'SiteURL', 'Event_Name',
             // Microlearning fields.
-                        'Nugget_Name', 'Nugget_URL'
-        );
+                        'Nugget_Name', 'Nugget_URL',
+        ];
 
         // Add all methods of this class that are ok2call to the $result array as well.
         // This means you can add extra methods to this class to cope with values that don't fit in objects mentioned above.
@@ -170,6 +203,8 @@ class emailvars {
                     return $this->blank;
                 }
             } else if (self::ok2call($name)) {
+                // Function names need to be lower case for standards.
+                $name = strtolower($name);
                 return $this->$name();
             }
         }
@@ -181,14 +216,14 @@ class emailvars {
      * returns text;
      *
      **/
-    function CourseURL() {
+    public function courseurl() {
         global $CFG;
 
         if (empty($CFG->allowthemechangeonurl)) {
             return $this->course->url;
         } else {
             // Get the company theme.
-            if (method_exists($this->company,'get_theme')) {
+            if (method_exists($this->company, 'get_theme')) {
                 $theme = $this->company->get_theme();
                 $this->course->url->param('theme', $theme);
                 return $this->course->url;
@@ -204,7 +239,7 @@ class emailvars {
      * returns text;
      *
      **/
-    function SiteURL() {
+    public function siteurl() {
         global $CFG;
 
         // Get the company wwwroot.
@@ -215,9 +250,9 @@ class emailvars {
             return $wwwroot;
         } else {
             // Get the company theme.
-            if (method_exists($this->company,'get_theme')) {
+            if (method_exists($this->company, 'get_theme')) {
                 $theme = $this->company->get_theme();
-                return new moodle_url($wwwroot, array('theme' => $theme));
+                return new moodle_url($wwwroot, ['theme' => $theme]);
             } else {
                 return new moodle_url($wwwroot);
             }
@@ -230,8 +265,7 @@ class emailvars {
      * returns text;
      *
      **/
-    function LinkURL() {
-        global $CFG;
+    public function linkurl() {
 
         $returnurl = new moodle_url($this->url);
         if (!empty($this->company->companyrecord->hostname)) {

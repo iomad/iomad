@@ -218,7 +218,7 @@ class company {
             $returnarray['2'] = get_string('departmentmanager', 'block_iomad_company_admin');
         }
         if ($full ||
-            (!$CFG->iomad_autoenrol_managers &&
+            (!get_config('local_iomad', 'iomad_autoenrol_managers') &&
              iomad::has_capability('block/iomad_company_admin:assign_educator', $companycontext))) {
             $returnarray['3'] = get_string('educator', 'block_iomad_company_admin');
         }
@@ -5155,7 +5155,7 @@ class company {
 
         // Check if user is already in a company.
         // E.g. if this has already been handled.
-        if (!$company = company::by_userid($user->id, true)) {
+        if (!$company = self::by_userid($user->id, true)) {
 
             // Get context.
             $context = context_system::instance();
@@ -6323,9 +6323,9 @@ class company {
                 $subject = $user->email . ": " . $template->subject();
                 $messagetext = $template->body();
 
-                $mail->Sender = $CFG->noreplyaddress;
+                $mail->Sender = iomad::get_config('', 'noreplyaddress', $company->id);
                 $mail->FromName = $supportuser->firstname;
-                $mail->From     = $CFG->noreplyaddress;
+                $mail->From     = iomad::get_config('', 'noreplyaddress', $company->id);
                 if (empty($CFG->divertallemailsto)) {
                     $mail->Subject = substr($subject, 0, 900);
                 } else {

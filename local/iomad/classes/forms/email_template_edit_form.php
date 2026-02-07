@@ -31,13 +31,32 @@ namespace local_iomad\forms;
 
 use moodleform;
 
-// Set up the template edit control form.
+/**
+ * Email template edit form definition
+ *
+ * @package   local_iomad
+ * @copyright 2023 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class email_template_edit_form extends moodleform {
 
+    /** @var array languages */
     protected $langs = [];
+
+    /** @var int template set id */
     protected $templatesetid = 0;
+
+    /** @var bool is modified */
     protected $ismodified = false;
 
+    /**
+     * Constructor function
+     *
+     * @param moodle_url $actionurl
+     * @param int $templatesetid
+     * @param boolean $ismodified
+     */
     public function __construct($actionurl, $templatesetid, $ismodified = false) {
 
         $this->langs = get_string_manager()->get_list_of_translations(true);
@@ -47,9 +66,15 @@ class email_template_edit_form extends moodleform {
         parent::__construct($actionurl);
     }
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
         global $USER;
 
+        // Set up the form.
         $mform =& $this->_form;
 
         $mform->addElement('hidden', 'templateid');
@@ -60,14 +85,14 @@ class email_template_edit_form extends moodleform {
         $mform->setType('templateid', PARAM_INT);
         $mform->addElement('select', 'lang', '', $this->langs);
         $mform->setDefault('lang', $USER->lang);
-        $buttonarr = array();
+        $buttonarr = [];
         $buttonarr[] = &$mform->createElement('submit', 'edit', get_string('edit'));
         $buttonarr[] = &$mform->createElement('submit', 'view', get_string('view'));
         if (!empty($this->ismodified)) {
             $buttonarr[] = &$mform->createElement('submit', 'reset', get_string('reset'));
             $buttonarr[] = &$mform->createElement('submit', 'resetall', get_string('resetall', 'reportbuilder'));
         }
-        $mform->addGroup($buttonarr, 'buttonar', '', array(' '), false);
+        $mform->addGroup($buttonarr, 'buttonar', '', [' '], false);
 
     }
 }

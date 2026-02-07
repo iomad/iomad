@@ -78,8 +78,8 @@ class track {
 
         // Some name changes (as used in cert template).
         $certuser = $user;
-        $certificate_name = CERTIFICATE;
-        $$certificate_name = $certificate;
+        $certificatename = CERTIFICATE;
+        $$certificatename = $certificate;
         $certrecord = $certissue;
 
         // Load certificate template (magically creates $pdf variable. Grrrrrr).
@@ -87,7 +87,7 @@ class track {
         $typefield = CERTIFICATE . 'type';
         require("$CFG->dirroot/mod/" . CERTIFICATE . "/type/{$certificate->$typefield}/certificate.php");
 
-        // Create the certificate content. 'S' means return as string
+        // Create the certificate content. 'S' means return as string.
         return $pdf->Output('', 'S');
     }
 
@@ -106,7 +106,7 @@ class track {
         // Get the file storage object.
         $fs = get_file_storage();
 
-        // Prepare file record object
+        // Prepare file record object.
         $component = 'local_iomad';
         $filearea = 'issue';
         $filepath = '/';
@@ -132,7 +132,7 @@ class track {
     private static function save_certificate($trackid, $filename) {
         global $DB;
 
-        // Set some variables.
+        // Set some variables..
         $trackcert = (object) [];
         $trackcert->trackid = $trackid;
         $trackcert->filename = $filename;
@@ -174,7 +174,7 @@ class track {
         $trackinfo = $DB->get_record_sql("SELECT * FROM {local_iomad_track}
                                           WHERE id = :id
                                           AND timecompleted > 0",
-                                          array('id' => $trackid));
+                                          ['id' => $trackid]);
 
         // Iterate over to find certs for given user.
         foreach ($certificates as $certificate) {
@@ -191,8 +191,8 @@ class track {
             }
 
             // Find certificate issue record or create it (in cert lib.php).
-            $certissue_function = CERTIFICATE . '_get_issue';
-            $certissue = $certissue_function($course, $user, $certificate, $cm);
+            $certissuefunction = CERTIFICATE . '_get_issue';
+            $certissue = $certissuefunction($course, $user, $certificate, $cm);
 
             // Potentially fix the issue date.
             if (!empty($trackinfo->timecompleted)) {
@@ -217,7 +217,11 @@ class track {
 
             // Debugging?
             if ($showdebug) {
-                mtrace('local_iomad: certificate recorded for ' . $user->username . ' in course ' . $courseid . ' filename "' . $filename . '"');
+                mtrace('local_iomad: certificate recorded for ' .
+                       $user->username .
+                       ' in course ' .
+                       $courseid .
+                       ' filename "' . $filename . '"');
             }
 
             // We did something!
@@ -279,7 +283,8 @@ class track {
                                                    'timehigh' => $enrolrec->timestart + 10])) {
                 foreach ($trackrecs as $trackrec) {
                     // Is this a duplicate event?
-                    if ($trackrec->timecompleted !=null && (round($trackrec->timecompleted  / 10 ) * 10) != (round($comprec->timecompleted /10) *10)) {
+                    if ($trackrec->timecompleted != null &&
+                        (round($trackrec->timecompleted / 10 ) * 10) != (round($comprec->timecompleted / 10) * 10)) {
                         continue;
                     }
 
@@ -627,7 +632,7 @@ class track {
             $timeenrolled = $enrolrec->timecreated;
         }
 
-        // If the enrolment method is enabled and isn't license then proceed with the rest of the method
+        // If the enrolment method is enabled and isn't license then proceed with the rest of the method.
         if (!$DB->get_record_sql('SELECT * FROM {enrol} e
                                   JOIN {course} c ON e.courseid = c.id
                                   WHERE e.courseid = :courseid
@@ -654,11 +659,11 @@ class track {
 
         // Process self enrolment callbacks.
         if ($enrol->enrol == 'self') {
-            // If this is an unassigned course or an open shared course -
+            // If this is an unassigned course or an open shared course...
             if ($DB->get_record('iomad_courses', ['courseid' => $courseid, 'shared' => 1]) ||
                 !$DB->get_record('iomad_courses', ['courseid' => $courseid])) {
-              // Then it's evey company the user is assigned to.
-              $companies = array_keys(company::get_companies_select(false, false, false));
+                // Then it's every company the user is assigned to.
+                $companies = array_keys(company::get_companies_select(false, false, false));
             } else {
                 // We only want the companies which the course is assigned to and the user belongs to.
                 $companies = $DB->get_records_sql("SELECT DISTINCT cu.companyid AS id
@@ -760,7 +765,7 @@ class track {
 
                 // Process the entries.
                 foreach ($entries as $entry) {
-                    // Sanitising
+                    // Sanitising.
                     if (empty($enrolrec->timestart)) {
                         $enrolrec->timestart = $enrolrec->timecreated;
                     }
@@ -854,7 +859,7 @@ class track {
             // check for max grade = 0.
             $mygrade = 0;
             if ($graderec->rawgrademax > 0) {
-                $mygrade = $graderec->finalgrade/$graderec->rawgrademax * 100;
+                $mygrade = $graderec->finalgrade / $graderec->rawgrademax * 100;
             }
 
             // Record the grade.
@@ -876,7 +881,14 @@ class track {
 
         // Check if there are any courses recorded for this user where the companyid == 0.
         if ($DB->get_records('local_iomad_track', ['userid' => $event->relateduserid, 'companyid' => 0])) {
-            $DB->set_field('local_iomad_track', 'companyid', $event->objectid, ['userid' => $event->relateduserid, 'companyid' => 0]);
+            $DB->set_field(
+                'local_iomad_track',
+                'companyid',
+                $event->objectid,
+                [
+                    'userid' => $event->relateduserid,
+                    'companyid' => 0,
+                ]);
         }
 
         return true;
@@ -896,7 +908,7 @@ class track {
         // Check if the validlength has changed.
         if ($current = $DB->get_record('iomad_courses', ['courseid' => $courseid])) {
             if ($current->validlength != $original['validlength']) {
-                $offset = $current->validlength * 24 *60 * 60;
+                $offset = $current->validlength * 24 * 60 * 60;
 
                 // Hacky way of doing this, but quickest.
                 $DB->execute("UPDATE {local_iomad_track}
@@ -911,7 +923,7 @@ class track {
         return true;
     }
 
-    /*
+    /**
      * Function to remove entries from the local_iomad_track table.
      *
      * @param boolean $full remove just the saved certificate or everything.
@@ -920,9 +932,9 @@ class track {
         global $DB, $CFG;
 
         // Do we have a recorded certificate?
-        if ($certs = $DB->get_records('local_iomad_track_certs', array('trackid' => $trackid))) {
+        if ($certs = $DB->get_records('local_iomad_track_certs', ['trackid' => $trackid])) {
             foreach ($certs as $cert) {
-                $DB->delete_records('local_iomad_track_certs', array('id' => $cert->id));
+                $DB->delete_records('local_iomad_track_certs', ['id' => $cert->id]);
             }
         }
 
@@ -948,18 +960,18 @@ class track {
 
         // Are we getting rid of the full record?
         if ($full) {
-            $DB->delete_records('local_iomad_track', array('id' => $trackid));
+            $DB->delete_records('local_iomad_track', ['id' => $trackid]);
         }
     }
 
-    /*
+    /**
      * Function to download a number of certificates in a zip file
      * and pass it to the browser.
      */
     public static function download_certs($companyid = 0, $courses = [], $users = []) {
         global $DB, $CFG, $USER;
 
-        // Set the companyid
+        // Set the companyid.
         if (empty($companyid)) {
             $companyid = iomad::get_my_companyid(context_system::instance());
         }
@@ -991,18 +1003,18 @@ class track {
         $realfilename = "certificates.zip";
 
         // Make sure we can create that file.
-        if ($zipfile->open($tempfilename, ZipArchive::CREATE) === TRUE) {
+        if ($zipfile->open($tempfilename, ZipArchive::CREATE) === true) {
             foreach ($allcourses as $course) {
                 // Get the completed records for that course.
                 $comprecords = $DB->get_records_select('local_iomad_track',
                                                        $sqlselect,
                                                        [
                                                         'courseid' => $course,
-                                                        'companyid' => $company->id
+                                                        'companyid' => $company->id,
                                                        ]);
                 // Did we get anything?
                 if (count($comprecords) > 0) {
-                    // For all of the track saved files
+                    // For all of the track saved files.
                     foreach ($comprecords as $comprecord) {
                         if ($filerec = $DB->get_record_select('files',
                                                               "component =:component
@@ -1013,7 +1025,7 @@ class track {
                                                               [
                                                                'component' => 'local_iomad',
                                                                'filearea' => 'issue',
-                                                               'itemid' => $comprecord->id
+                                                               'itemid' => $comprecord->id,
                                                               ])) {
 
                             // Check the user is valid.
@@ -1046,7 +1058,7 @@ class track {
             // Finished adding certificates.
             $zipfile->close();
 
-            // Send the headers to force download the zip file
+            // Send the headers to force download the zip file.
             header("Content-type: application/zip");
             header("Content-Disposition: attachment; filename=$realfilename");
             header("Content-length: " . filesize($tempfilename));

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD potential company user selector class
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -25,18 +27,32 @@ namespace local_iomad\user_selector;
 
 use context_system;
 
+/**
+ * Local IOMAD potential company user selector class
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class potential_company extends company_base {
 
+    /**
+     * Get selector options
+     *
+     * @return array
+     */
     protected function get_options() {
         $options = parent::get_options();
-        $options['file']    = 'local/iomad/classes/user_selector/current_company.php';
+        $options['file'] = 'local/iomad/classes/user_selector/current_company.php';
 
         return $options;
     }
 
     /**
-     * Potential company users - only shows those users that aren't already assigned to a company
-     * @param <type> $search
+     * Search for potential company users
+     *
+     * @param string $search
      * @return array
      */
     public function find_users($search) {
@@ -53,25 +69,35 @@ class potential_company extends company_base {
             $adminsql = " AND u.id NOT IN (" . $CFG->siteadmins . ")";
         }
 
-        // Is it all users?
-        if (has_capability('block/iomad_company_admin:company_add', context_system::instance()) &&
-            $this->allusers) {
-            $usersql = "AND u.id NOT IN (SELECT userid FROM {company_users} WHERE companyid = :companyid)";
-        } else {
-            $usersql = "AND u.id NOT IN (SELECT userid FROM {company_users})";
+        // By Default we only want users who are not in any company.
+        $usersql = "AND u.id NOT IN (
+                        SELECT userid FROM {company_users}
+                    )";
+
+        // Unless we are searching for any user and have the capability to do so.
+        if ($this->allusers &&
+            has_capability('block/iomad_company_admin:company_add', context_system::instance())) {
+            $usersql = "AND u.id NOT IN (
+                            SELECT userid
+                            FROM {company_users}
+                            WHERE companyid = :companyid
+                        )";
         }
-        $fields      = 'SELECT DISTINCT ' . $this->required_fields_sql('u') . ',u.institution';
+
+        // Set up the SQL.
+        $fields = 'SELECT DISTINCT ' . $this->required_fields_sql('u') . ',u.institution';
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM {user} u
                  LEFT JOIN {user_info_data} ui ON ui.userid = u.id
-
-                 WHERE $wherecondition AND u.suspended = 0
+                 WHERE $wherecondition
+                 AND u.suspended = 0
                  $adminsql
                  $usersql";
 
         $order = ' ORDER BY u.firstname ASC, u.lastname ASC';
 
+        // Do we get too many results?
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
             if ($potentialmemberscount > get_config('local_iomad', 'max_select_users')) {
@@ -79,22 +105,21 @@ class potential_company extends company_base {
             }
         }
 
+        // Get the list of users.
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
 
-        if (empty($availableusers)) {
-            return array();
-        }
-
+        // Perform some post processing on the list.
         foreach ($availableusers as $id => $user) {
             $availableusers[$id]->email = $user->email . " - " . $user->institution;
         }
 
+        // Add in any search text.
         if ($search) {
             $groupname = get_string('potusersmatching', 'block_iomad_company_admin', $search);
         } else {
             $groupname = get_string('potusers', 'block_iomad_company_admin');
         }
 
-        return array($groupname => $availableusers);
+        return [$groupname => $availableusers];
     }
 }

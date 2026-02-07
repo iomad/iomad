@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD current company user selector class
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,37 +25,59 @@
 
 namespace local_iomad\user_selector;
 
+/**
+ * Local IOMAD current company user selector class
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class current_company extends company_base {
 
+    /**
+     * Get selector options
+     *
+     * @return array
+     */
     protected function get_options() {
         $options = parent::get_options();
-        $options['file']    = 'local/iomad/classes/user_selector/current_company.php';
+        $options['file'] = 'local/iomad/classes/user_selector/current_company.php';
 
         return $options;
     }
 
     /**
-     * Company users
-     * @param <type> $search
+     * Search for the current company users
+     *
+     * @param string $search
      * @return array
      */
     public function find_users($search) {
-        global $CFG, $DB;
+        global $DB;
+
         // By default wherecondition retrieves all users except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'u');
         $params['companyid'] = $this->companyid;
 
-        $fields      = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
+        $fields = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM {user} u
-                 JOIN {company_users} cu ON (cu.companyid = :companyid AND cu.userid = u.id )
-                 LEFT JOIN {user_info_data} ui ON (ui.userid = u.id AND ui.userid = cu.userid)
-
-                 WHERE $wherecondition AND u.suspended = 0 ";
+                 JOIN {company_users} cu ON (
+                     cu.companyid = :companyid
+                     AND cu.userid = u.id
+                 )
+                 LEFT JOIN {user_info_data} ui ON (
+                     ui.userid = u.id
+                     AND ui.userid = cu.userid
+                 )
+                 WHERE $wherecondition
+                 AND u.suspended = 0 ";
 
         $order = ' ORDER BY u.firstname ASC, u.lastname ASC';
 
+        // Do we get too many results?
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
             if ($potentialmemberscount > get_config('local_iomad', 'max_select_users')) {
@@ -61,18 +85,16 @@ class current_company extends company_base {
             }
         }
 
+        // Get the list of users.
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
 
-        if (empty($availableusers)) {
-            return array();
-        }
-
+        // Add any search text.
         if ($search) {
             $groupname = get_string('companyusersmatching', 'block_iomad_company_admin', $search);
         } else {
             $groupname = get_string('companyusers', 'block_iomad_company_admin');
         }
 
-        return array($groupname => $availableusers);
+        return [$groupname => $availableusers];
     }
 }

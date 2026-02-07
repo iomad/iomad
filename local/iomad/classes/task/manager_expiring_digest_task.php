@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD manager course expiring digest email task
+ *
  * @package    local_iomad
  * @copyright  2022 Derick Turner
  * @author    Derick Turner
@@ -23,12 +25,19 @@
 
 namespace local_iomad\task;
 
+use core\task\scheduled_task;
 use local_iomad\{company, emailtemplate};
+use html_writer;
 
 /**
- * Manager user course expiring digest email scheduled task
+ * Local IOMAD manager course expiring digest email task
+ *
+ * @package    local_iomad
+ * @copyright  2022 Derick Turner
+ * @author    Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class manager_expiring_digest_task extends \core\task\scheduled_task {
+class manager_expiring_digest_task extends scheduled_task {
 
     /**
      * Get a descriptive name for this task (shown to admins).
@@ -54,7 +63,7 @@ class manager_expiring_digest_task extends \core\task\scheduled_task {
         // Course expiry warning digest.
         // Getting courses which have expiry settings.
         if ($expirycourses = $DB->get_records_sql("SELECT courseid FROM {iomad_courses}
-                                               WHERE validlength > 0")) {
+                                                   WHERE validlength > 0")) {
             // Create the course filter.
             $expirysql = " AND lit.courseid IN (" . implode(',', array_keys($expirycourses)) . ")";
 
@@ -69,26 +78,30 @@ class manager_expiring_digest_task extends \core\task\scheduled_task {
                 mtrace("dealing with company ID $company->id");
                 // Deal with parent companies as we only want manager of this company.
                 $companyobj = new company($company->id);
+                $companyusql = "";
+                $companysql = "";
+                $sqlparams = [];
                 if ($parentslist = $companyobj->get_parent_companies_recursive()) {
+                    [$insql, $sqlparams] = $DB->get_in_or_equal(array_keys($parentslist),
+                                                                SQL_PARAMS_NAMED,
+                                                                'pcids');
                     $companyusql = " AND u.id NOT IN (
                                     SELECT userid FROM {company_users}
                                     WHERE managertype = 1
-                                    AND companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+                                    AND companyid {$insql})";
                     $companysql = " AND userid NOT IN (
                                     SELECT userid FROM {company_users}
                                     WHERE managertype = 1
-                                    AND companyid IN (" . implode(',', array_keys($parentslist)) ."))";
-                } else {
-                    $companyusql = "";
-                    $companysql = "";
+                                    AND companyid IN {$insql})";
                 }
 
                 // Get the managers for this company.
+                $sqlparams['companyid'] = $company->id;
                 $managers = $DB->get_records_sql("SELECT * FROM {company_users}
                                                   WHERE companyid = :companyid
                                                   AND managertype != 0
                                                   $companysql",
-                                                 ['companyid' => $company->id]);
+                                                 $sqlparams);
 
                 // Process each one.
                 foreach ($managers as $manager) {
@@ -100,29 +113,42 @@ class manager_expiring_digest_task extends \core\task\scheduled_task {
                     }
 
                     // If this is a manager of a parent company - skip them.
+                    $sqlparams['userid'] = $manager->userid;
                     if (!empty($parentslist) &&
                         $DB->get_records_sql("SELECT id FROM {company_users}
                                               WHERE userid = :userid
                                               AND userid IN (
                                               SELECT userid FROM {company_users}
                                               WHERE managertype = 1
-                                              AND companyid IN (" . implode(',', array_keys($parentslist)) ."))",
-                                             ['userid' => $manager->userid])) {
+                                              AND companyid {$insql})",
+                                             $sqlparams)) {
                         continue;
                     }
 
                     // Get their users.
                     $departmentusers = company::get_recursive_department_users($manager->departmentid);
-                    $departmentids = "";
+                    $departmentids = [];
+                    $departmentsql = "";
+                    $departmentparams = [];
                     foreach ($departmentusers as $departmentuser) {
-                        if (!empty($departmentids)) {
-                            $departmentids .= ",".$departmentuser->userid;
-                        } else {
-                            $departmentids .= $departmentuser->userid;
-                        }
+                        $departmentids[$departmentuser->userid] = $departmentuser->userid;
+                    }
+                    if (!empty($departmentids)) {
+                        [$depinsql, $departmentparams] = $DB->get_in_or_equal(array_keys($departmentids),
+                                                                              SQL_PARAMS_NAMED,
+                                                                              'depids');
+                        $departmentsql = " AND lit.userid {$depinsql}";
                     }
 
-                    $manageruserssql = "SELECT lit.*, c.name AS companyname, ic.notifyperiod, u.firstname,u.lastname,u.username,u.email,u.lang,lit.timeexpires
+                    $manageruserssql = "SELECT lit.*,
+                                        c.name AS companyname,
+                                        ic.notifyperiod,
+                                        u.firstname,
+                                        u.lastname,
+                                        u.username,
+                                        u.email,
+                                        u.lang,
+                                        lit.timeexpires
                                         FROM {local_iomad_track} lit
                                         JOIN {company} c ON (lit.companyid = c.id)
                                         JOIN {iomad_courses} ic ON (lit.courseid = ic.courseid)
@@ -135,7 +161,7 @@ class manager_expiring_digest_task extends \core\task\scheduled_task {
                                         AND lit.companyid = :companyid
                                         $companyusql
                                         $expirysql
-                                        AND lit.userid IN (" . $departmentids . ")
+                                        $departmentsql
                                         AND lit.timeexpires < (:runtime + 604800)
                                         AND lit.timeexpires > :runtime2
                                         AND lit.id IN (
@@ -144,19 +170,22 @@ class manager_expiring_digest_task extends \core\task\scheduled_task {
                                             WHERE courseid = co.id
                                             AND companyid = c.id
                                         GROUP BY userid,courseid)";
-
-                    $managerusers = $DB->get_records_sql($manageruserssql, ['companyid' => $company->id,
-                                                                            'runtime' => $runtime,
-                                                                            'runtime2' => $runtime]);
+                    $departmentparams['companyid'] = $company->id;
+                    $departmentparams['runtime'] = $runtime;
+                    $departmentparams['runtime2'] = $runtime;
+                    $managerusers = $DB->get_records_sql($manageruserssql, $departmentparams);
 
                     // Set up the email payload.
-                    $summary = "<table><tr><th>" . get_string('firstname') . "</th>" .
-                               "<th>" . get_string('lastname') . "</th>" .
-                               "<th>" . get_string('email') . "</th>" .
-                               "<th>" . get_string('department', 'block_iomad_company_admin') ."</th>" .
-                               "<th>" . get_string('course') . "</th>" .
-                               "<th>" . get_string('timecompleted', 'local_report_completion') ."</th>" .
-                               "<th>" . get_string('timeexpires', 'local_report_completion') ."</th></tr>";
+                    $summary = html_writer::start_tag('table') .
+                               html_writer::start_tag('tr') .
+                               html_writer::tag('th', get_string('firstname')) .
+                               html_writer::tag('th', get_string('lastname')) .
+                               html_writer::tag('th', get_string('email')) .
+                               html_writer::tag('th', get_string('department', 'block_iomad_company_admin')) .
+                               html_writer::tag('th', get_string('course')) .
+                               html_writer::tag('th', get_string('timecompleted', 'local_report_completion')) .
+                               html_writer::tag('th', get_string('timeexpires', 'local_report_completion')) .
+                               html_writer::end_tag('tr');
 
                     // Process the users.
                     $foundusers = false;
@@ -175,22 +204,27 @@ class manager_expiring_digest_task extends \core\task\scheduled_task {
                         // Get the user's departments.
                         $userdepartments = $DB->get_records_sql("SELECT DISTINCT d.name
                                                                  FROM {department} d
-                                                                 JOIN {company_users} cu ON (d.id = cu.departmentid AND d.company = cu.companyid)
+                                                                 JOIN {company_users} cu ON (
+                                                                     d.id = cu.departmentid
+                                                                     AND d.company = cu.companyid
+                                                                 )
                                                                  WHERE cu.userid = :userid
                                                                  AND cu.companyid = :companyid",
-                                                                 ['userid' => $manageruser->userid,
-                                                                  'companyid' => $company->id]);
+                                                                ['userid' => $manageruser->userid,
+                                                                 'companyid' => $company->id]);
                         $userdepartmentstext = implode(',<br>', array_keys($userdepartments));
 
-                        $summary .= "<tr><td>" . $manageruser->firstname . "</td>" .
-                                    "<td>" . $manageruser->lastname . "</td>" .
-                                    "<td>" . $manageruser->email . "</td>" .
-                                    "<td>" . $userdepartmentstext . "</td>" .
-                                    "<td>" . $manageruser->coursename . "</td>" .
-                                    "<td>" . $completddate . "</td>" .
-                                    "<td>" . $expiresdate . "</td></tr>";
+                        $summary .= html_writer::start_tag('tr') .
+                                    html_writer::tag('td', $manageruser->firstname) .
+                                    html_writer::tag('td', $manageruser->lastname) .
+                                    html_writer::tag('td', $manageruser->email) .
+                                    html_writer::tag('td', $userdepartmentstext) .
+                                    html_writer::tag('td', $manageruser->coursename) .
+                                    html_writer::tag('td', $completddate) .
+                                    html_writer::tag('td', $expiresdate) .
+                                    html_writer::end_tag('tr');
                     }
-                    $summary .= "</table>";
+                    $summary .= html_writer::end_tag('table');
 
                     if ($foundusers && $user = $DB->get_record('user', ['id' => $manager->userid])) {
                         $course = (object) [];
