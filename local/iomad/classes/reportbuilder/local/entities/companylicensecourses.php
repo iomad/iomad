@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Company license courses entity
+ *
+ * @package     local_iomad
+ * @copyright   2024 Derick Turner e-Learn Design
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 declare(strict_types=1);
 
 namespace local_iomad\reportbuilder\local\entities;
@@ -29,7 +37,7 @@ use core_reportbuilder\local\entities\base;
 use core_reportbuilder\local\filters\{select, text};
 use core_reportbuilder\local\report\{column, filter};
 
-defined('MOODLE_INTERNAL') or die;
+defined('MOODLE_INTERNAL') || die;
 
 global $CFG;
 require_once("{$CFG->dirroot}/local/iomad/lib/iomad.php");
@@ -97,7 +105,7 @@ class companylicensecourses extends base {
         $companylicensecoursesalias = $this->get_table_alias('companylicensecourses');
         $contextalias = $this->get_table_alias('context');
 
-        // licenseid.
+        // Licenseid.
         $columns[] = (new column(
             'licenseid',
             new lang_string('licenseid'),
@@ -108,7 +116,7 @@ class companylicensecourses extends base {
             ->add_field("{$companylicensecoursesalias}.licenseid")
             ->set_is_sortable(true);
 
-        // courseid.
+        // Courseid.
         $columns[] = (new column(
             'courseid',
             new lang_string('courseid', 'block_iomad_company_admin'),

@@ -15,12 +15,25 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD install functions
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\task\resetrolestask;
+use core\task\manager;
+
+/**
+ * Local IOMAD install functions
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 function xmldb_local_iomad_install() {
     global $CFG, $DB;
 
@@ -44,7 +57,7 @@ function xmldb_local_iomad_install() {
 
     // Set up the new roles for IOMAD.
     // Create the Company Manager role.
-    if (!$companymanager = $DB->get_record('role', array('shortname' => 'companymanager'))) {
+    if (!$companymanager = $DB->get_record('role', ['shortname' => 'companymanager'])) {
         $companymanagerid = create_role('Company Manager',
                                         'companymanager',
                                         '(IOMAD) Manages individual companies - can upload users etc.',
@@ -57,13 +70,13 @@ function xmldb_local_iomad_install() {
             $level = (object) [];
             $level->roleid = $companymanagerid;
             $level->contextlevel = CONTEXT_COMPANY;
-            $DB->insert_record( 'role_context_levels', $level );
+            $DB->insert_record('role_context_levels', $level);
         }
     }
 
     // Create new Company Department Manager role.
     if (!$companydepartmentmanager = $DB->get_record('role',
-                                     array('shortname' => 'companydepartmentmanager'))) {
+                                     ['shortname' => 'companydepartmentmanager'])) {
         $companydepartmentmanagerid = create_role('Company Department Manager',
                                                   'companydepartmentmanager',
                                                   '(IOMAD) Manages departments within companies - can upload users etc.',
@@ -76,18 +89,19 @@ function xmldb_local_iomad_install() {
             $level = (object) [];
             $level->roleid = $companydepartmentmanagerid;
             $level->contextlevel = CONTEXT_COMPANY;
-            $DB->insert_record( 'role_context_levels', $level );
+            $DB->insert_record('role_context_levels', $level);
         }
     }
 
     // Create the Company Course Editor.
     if (!$companycourseeditor = $DB->get_record('role',
-                                                array('shortname' => 'companycourseeditor'))) {
-        $companycourseeditorid = create_role('Company Course Editor',
-                                             'companycourseeditor',
-                                             '(IOMAD) Teacher style role for Company manager provided to them when they create their own course.',
-                                             'companycourseeditor'
-                                             );
+                                                ['shortname' => 'companycourseeditor'])) {
+        $companycourseeditorid = create_role(
+            'Company Course Editor',
+            'companycourseeditor',
+            '(IOMAD) Teacher style role for Company manager provided to them when they create their own course.',
+            'companycourseeditor'
+        );
 
         // If not done already, allow assignment at system context.
         $levels = get_role_contextlevels( $companycourseeditorid );
@@ -95,13 +109,13 @@ function xmldb_local_iomad_install() {
             $level = (object) [];
             $level->roleid = $companycourseeditorid;
             $level->contextlevel = CONTEXT_COURSE;
-            $DB->insert_record( 'role_context_levels', $level );
+            $DB->insert_record('role_context_levels', $level );
         }
     }
 
     // Create new Company Course Non Editor role.
     if (!$companycoursenoneditor = $DB->get_record('role',
-                                        array('shortname' => 'companycoursenoneditor'))) {
+                                        ['shortname' => 'companycoursenoneditor'])) {
         $companycoursenoneditorid = create_role('Company Course Non Editor',
                                                 'companycoursenoneditor',
                                                 '(IOMAD) Non editing teacher style role form Company and department managers',
@@ -114,12 +128,12 @@ function xmldb_local_iomad_install() {
             $level = (object) [];
             $level->roleid = $companycoursenoneditorid;
             $level->contextlevel = CONTEXT_COURSE;
-            $DB->insert_record( 'role_context_levels', $level );
+            $DB->insert_record('role_context_levels', $level);
         }
     }
 
     // Create new Company reporter role.
-    if (!$companyreporter = $DB->get_record( 'role', array( 'shortname' => 'companyreporter') )) {
+    if (!$companyreporter = $DB->get_record('role', ['shortname' => 'companyreporter'])) {
         $companyreporterid = create_role('Company Report Only',
                                          'companyreporter',
                                          '(IOMAD) Access to company reports only..',
@@ -132,12 +146,12 @@ function xmldb_local_iomad_install() {
             $level = (object) [];
             $level->roleid = $companyreporterid;
             $level->contextlevel = CONTEXT_COMPANY;
-            $DB->insert_record( 'role_context_levels', $level );
+            $DB->insert_record('role_context_levels', $level);
         }
     }
 
     // Create new Client administrator role.
-    if (!$clientadministrator = $DB->get_record( 'role', array( 'shortname' => 'clientadministrator') )) {
+    if (!$clientadministrator = $DB->get_record('role', ['shortname' => 'clientadministrator'])) {
         $clientadministratorid = create_role('Client Administrator',
                                         'clientadministrator',
                                         '(IOMAD) Client access to all companies..',
@@ -150,12 +164,12 @@ function xmldb_local_iomad_install() {
             $level = (object) [];
             $level->roleid = $clientadministratorid;
             $level->contextlevel = CONTEXT_SYSTEM;
-            $DB->insert_record( 'role_context_levels', $level );
+            $DB->insert_record('role_context_levels', $level);
         }
     }
 
     // Create new Client reporter role.
-    if (!$clientreporter = $DB->get_record( 'role', array( 'shortname' => 'clientreporter') )) {
+    if (!$clientreporter = $DB->get_record('role', ['shortname' => 'clientreporter'])) {
         $clientreporterid = create_role('Client Report Only',
                                         'clientreporter',
                                         '(IOMAD) Client access to all company reports only..',
@@ -168,13 +182,13 @@ function xmldb_local_iomad_install() {
             $level = (object) [];
             $level->roleid = $clientreporterid;
             $level->contextlevel = CONTEXT_SYSTEM;
-            $DB->insert_record( 'role_context_levels', $level );
+            $DB->insert_record('role_context_levels', $level );
         }
     }
 
     // Create an adhoctask to set up these roles once cron runs again.
-    $roleresettask = new \local_iomad\task\resetrolestask();
+    $roleresettask = new resetrolestask();
     // Queue the task.
-    \core\task\manager::queue_adhoc_task($roleresettask);
+    manager::queue_adhoc_task($roleresettask);
 
 }

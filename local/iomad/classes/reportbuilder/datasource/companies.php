@@ -52,7 +52,7 @@ class companies extends datasource {
 
         $this->add_entity($companyentity);
 
-        // Get the tables and aliases
+        // Get the tables and aliases.
 
         // Add report elements from each of the entities we added to the report.
         $this->add_all_from_entities();

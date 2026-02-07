@@ -52,7 +52,7 @@ class company_users extends datasource {
 
         $this->add_entity($companyentity);
 
-        // Get the tables and aliases
+        // Get the tables and aliases.
         $companyusersentity = new companyusers();
         $companyusersalias = $companyusersentity->get_table_alias('companyusers');
         $departmententity = new department();

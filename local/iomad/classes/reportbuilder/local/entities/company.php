@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Company entity
+ *
+ * @package     local_iomad
+ * @copyright   2024 Derick Turner e-Learn Design
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 declare(strict_types=1);
 
 namespace local_iomad\reportbuilder\local\entities;
@@ -29,7 +37,7 @@ use core_reportbuilder\local\entities\base;
 use core_reportbuilder\local\filters\{select, text};
 use core_reportbuilder\local\report\{column, filter};
 
-defined('MOODLE_INTERNAL') or die;
+defined('MOODLE_INTERNAL') || die;
 
 global $CFG;
 require_once("{$CFG->dirroot}/local/iomad/lib/iomad.php");
@@ -108,7 +116,7 @@ class company extends base {
             ->add_field("{$companyalias}.name")
             ->set_is_sortable(true);
 
-        // shortname.
+        // Shortname.
         $columns[] = (new column(
             'shortname',
             new lang_string('shortname'),
@@ -119,7 +127,7 @@ class company extends base {
             ->add_field("{$companyalias}.shortname")
             ->set_is_sortable(true);
 
-        // code.
+        // Code.
         $columns[] = (new column(
             'code',
             new lang_string('code', 'block_iomad_company_admin'),
@@ -130,7 +138,7 @@ class company extends base {
             ->add_field("{$companyalias}.code")
             ->set_is_sortable(true);
 
-        // address.
+        // Address.
         $columns[] = (new column(
             'address',
             new lang_string('address'),
@@ -141,7 +149,7 @@ class company extends base {
             ->add_field("{$companyalias}.address")
             ->set_is_sortable(true);
 
-        // city.
+        // City.
         $columns[] = (new column(
             'city',
             new lang_string('city'),
@@ -152,7 +160,7 @@ class company extends base {
             ->add_field("{$companyalias}.city")
             ->set_is_sortable(true);
 
-        // region.
+        // Region.
         $columns[] = (new column(
             'region',
             new lang_string('region', 'block_iomad_company_admin'),
@@ -163,7 +171,7 @@ class company extends base {
             ->add_field("{$companyalias}.region")
             ->set_is_sortable(true);
 
-        // postcode.
+        // Postcode.
         $columns[] = (new column(
             'postcode',
             new lang_string('postcode', 'block_iomad_company_admin'),
@@ -174,7 +182,7 @@ class company extends base {
             ->add_field("{$companyalias}.postcode")
             ->set_is_sortable(true);
 
-        // country.
+        // Country.
         $columns[] = (new column(
             'country',
             new lang_string('country'),
@@ -185,7 +193,7 @@ class company extends base {
             ->add_field("{$companyalias}.country")
             ->set_is_sortable(true);
 
-        // suspended.
+        // Suspended.
         $columns[] = (new column(
             'suspended',
             new lang_string('suspended'),
@@ -196,7 +204,7 @@ class company extends base {
             ->add_field("{$companyalias}.suspended")
             ->set_is_sortable(true);
 
-        // parentid.
+        // Parentid.
         $columns[] = (new column(
             'parentid',
             new lang_string('parentid', 'block_iomad_company_admin'),
@@ -207,7 +215,7 @@ class company extends base {
             ->add_field("{$companyalias}.parentid")
             ->set_is_sortable(true);
 
-        // eccommerce.
+        // Eccommerce.
         $columns[] = (new column(
             'eccommerce',
             new lang_string('eccommerce', 'block_iomad_company_admin'),
@@ -218,7 +226,7 @@ class company extends base {
             ->add_field("{$companyalias}.eccommerce")
             ->set_is_sortable(true);
 
-        // hostname.
+        // Hostname.
         $columns[] = (new column(
             'hostname',
             new lang_string('hostname', 'block_iomad_company_admin'),
@@ -229,7 +237,7 @@ class company extends base {
             ->add_field("{$companyalias}.hostname")
             ->set_is_sortable(true);
 
-        // maxusers.
+        // Maxusers.
         $columns[] = (new column(
             'maxusers',
             new lang_string('maxusers', 'block_iomad_company_admin'),
@@ -240,7 +248,7 @@ class company extends base {
             ->add_field("{$companyalias}.maxusers")
             ->set_is_sortable(true);
 
-        // validto.
+        // Validto.
         $columns[] = (new column(
             'validto',
             new lang_string('validto', 'block_iomad_company_admin'),
@@ -251,7 +259,7 @@ class company extends base {
             ->add_field("{$companyalias}.validto")
             ->set_is_sortable(true);
 
-        // suspendafter.
+        // Suspendafter.
         $columns[] = (new column(
             'suspendafter',
             new lang_string('suspendafter', 'block_iomad_company_admin'),
@@ -262,7 +270,7 @@ class company extends base {
             ->add_field("{$companyalias}.suspendafter")
             ->set_is_sortable(true);
 
-        // companyterminated.
+        // Companyterminated.
         $columns[] = (new column(
             'companyterminated',
             new lang_string('companyterminated', 'block_iomad_company_admin'),

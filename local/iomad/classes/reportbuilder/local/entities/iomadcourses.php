@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * IOMAD courses entity
+ *
+ * @package     local_iomad
+ * @copyright   2024 Derick Turner e-Learn Design
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 declare(strict_types=1);
 
 namespace local_iomad\reportbuilder\local\entities;
@@ -29,7 +37,7 @@ use core_reportbuilder\local\entities\base;
 use core_reportbuilder\local\filters\{select, text};
 use core_reportbuilder\local\report\{column, filter};
 
-defined('MOODLE_INTERNAL') or die;
+defined('MOODLE_INTERNAL') || die;
 
 global $CFG;
 require_once("{$CFG->dirroot}/local/iomad/lib/iomad.php");
@@ -97,7 +105,7 @@ class iomadcourses extends base {
         $iomadcoursesalias = $this->get_table_alias('iomadcourses');
         $contextalias = $this->get_table_alias('context');
 
-        // courseid.
+        // Courseid.
         $columns[] = (new column(
             'courseid',
             new lang_string('courseid', 'block_iomad_company_admin'),
@@ -108,7 +116,7 @@ class iomadcourses extends base {
             ->add_field("{$iomadcoursesalias}.courseid")
             ->set_is_sortable(true);
 
-        // licensed.
+        // Licensed.
         $columns[] = (new column(
             'licensed',
             new lang_string('licensed', 'block_iomad_company_admin'),
@@ -124,9 +132,9 @@ class iomadcourses extends base {
                 } else {
                     return get_string('no');
                 }
-                });
+            });
 
-        // shared.
+        // Shared.
         $columns[] = (new column(
             'shared',
             new lang_string('shared', 'block_iomad_company_admin'),
@@ -137,13 +145,15 @@ class iomadcourses extends base {
             ->add_field("{$iomadcoursesalias}.shared")
             ->set_is_sortable(true)
             ->add_callback(static function($shared) {
-                $sharedselectoptions = array('0' => get_string('no'),
-                                             '1' => get_string('open', 'block_iomad_company_admin'),
-                                             '2' => get_string('closed', 'block_iomad_company_admin'));
+            $sharedselectoptions = [
+                '0' => get_string('no'),
+                '1' => get_string('open', 'block_iomad_company_admin'),
+                '2' => get_string('closed', 'block_iomad_company_admin'),
+            ];
                 return $sharedselectoptions[$shared];
-                });
+            });
 
-        // validlength.
+        // Validlength.
         $columns[] = (new column(
             'validlength',
             new lang_string('validlength', 'block_iomad_company_admin'),
@@ -154,7 +164,7 @@ class iomadcourses extends base {
             ->add_field("{$iomadcoursesalias}.validlength")
             ->set_is_sortable(false);
 
-        // warnexpire.
+        // Warnexpire.
         $columns[] = (new column(
             'warnexpire',
             new lang_string('warnexpire', 'block_iomad_company_admin'),
@@ -165,7 +175,7 @@ class iomadcourses extends base {
             ->add_field("{$iomadcoursesalias}.warnexpire")
             ->set_is_sortable(true);
 
-        // warncompletion.
+        // Warncompletion.
         $columns[] = (new column(
             'warncompletion',
             new lang_string('warncompletion', 'block_iomad_company_admin'),
@@ -176,7 +186,7 @@ class iomadcourses extends base {
             ->add_field("{$iomadcoursesalias}.warncompletion")
             ->set_is_sortable(true);
 
-        // notifyperiod.
+        // Notifyperiod.
         $columns[] = (new column(
             'notifyperiod',
             new lang_string('notifyperiod', 'block_iomad_company_admin'),
@@ -187,7 +197,7 @@ class iomadcourses extends base {
             ->add_field("{$iomadcoursesalias}.notifyperiod")
             ->set_is_sortable(false);
 
-        // expireafter.
+        // Expireafter.
         $columns[] = (new column(
             'expireafter',
             new lang_string('expireafter', 'block_iomad_company_admin'),
@@ -198,7 +208,7 @@ class iomadcourses extends base {
             ->add_field("{$iomadcoursesalias}.expireafter")
             ->set_is_sortable(false);
 
-        // warnnotstarted.
+        // Warnnotstarted.
         $columns[] = (new column(
             'warnnotstarted',
             new lang_string('warnnotstarted', 'block_iomad_company_admin'),
@@ -209,7 +219,7 @@ class iomadcourses extends base {
             ->add_field("{$iomadcoursesalias}.warnnotstarted")
             ->set_is_sortable(true);
 
-        // hasgrade.
+        // Hasgrade.
         $columns[] = (new column(
             'hasgrade',
             new lang_string('hasgrade', 'block_iomad_company_admin'),
@@ -225,7 +235,7 @@ class iomadcourses extends base {
                 } else {
                     return get_string('no');
                 }
-                });
+            });
 
         return $columns;
     }
@@ -238,7 +248,7 @@ class iomadcourses extends base {
     protected function get_all_filters(): array {
         $iomadcoursesalias = $this->get_table_alias('iomadcourses');
 
-        // licensed.
+        // Licensed.
         $filters[] = (new filter(
             select::class,
             'licensed',
@@ -250,7 +260,7 @@ class iomadcourses extends base {
             ->set_options([
             ]);
 
-        // shared.
+        // Shared.
         $filters[] = (new filter(
             select::class,
             'shared',
@@ -262,7 +272,7 @@ class iomadcourses extends base {
             ->set_options([
             ]);
 
-        // validlength.
+        // Validlength.
         $filters[] = (new filter(
             select::class,
             'validlength',
@@ -274,7 +284,7 @@ class iomadcourses extends base {
             ->set_options([
             ]);
 
-        // warnexpire.
+        // Warnexpire.
         $filters[] = (new filter(
             select::class,
             'warnexpire',
@@ -286,7 +296,7 @@ class iomadcourses extends base {
             ->set_options([
             ]);
 
-        // expireafter.
+        // Expireafter.
         $filters[] = (new filter(
             select::class,
             'expireafter',
@@ -298,7 +308,7 @@ class iomadcourses extends base {
             ->set_options([
             ]);
 
-        // warncompletion.
+        // Warncompletion.
         $filters[] = (new filter(
             select::class,
             'warncompletion',
@@ -310,7 +320,7 @@ class iomadcourses extends base {
             ->set_options([
             ]);
 
-        // hasgrade.
+        // Hasgrade.
         $filters[] = (new filter(
             select::class,
             'hasgrade',

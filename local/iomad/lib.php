@@ -15,13 +15,13 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD local library functions
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Hook called by delete_course to remove iomad table references before course is deleted
@@ -32,31 +32,31 @@ function local_iomad_pre_course_delete($course) {
     global $DB, $OUTPUT;
 
     // Clear everything from the iomad_courses table.
-    $DB->delete_records('iomad_courses', array('courseid' => $course->id));
+    $DB->delete_records('iomad_courses', ['courseid' => $course->id]);
 
     // Remove the course from company allocation tables.
-    $DB->delete_records('company_course', array('courseid' => $course->id));
+    $DB->delete_records('company_course', ['courseid' => $course->id]);
 
     // Remove the course from company created course tables.
-    $DB->delete_records('company_created_courses', array('courseid' => $course->id));
+    $DB->delete_records('company_created_courses', ['courseid' => $course->id]);
 
     // Remove the course from company shared courses tables.
-    $DB->delete_records('company_shared_courses', array('courseid' => $course->id));
+    $DB->delete_records('company_shared_courses', ['courseid' => $course->id]);
 
     // Deal with licenses allocations.
-    $DB->delete_records('companylicense_users', array('licensecourseid' => $course->id));
+    $DB->delete_records('companylicense_users', ['licensecourseid' => $course->id]);
 
-    $courselicenses = $DB->get_records('companylicense_courses', array('courseid' => $course->id));
+    $courselicenses = $DB->get_records('companylicense_courses', ['courseid' => $course->id]);
 
     foreach ($courselicenses as $courselicense) {
         // Delete the course from the license.
-        $DB->delete_records('companylicense_courses', array('id' => $courselicense->id));
+        $DB->delete_records('companylicense_courses', ['id' => $courselicense->id]);
         // Does the license have any courses left?
-        if ($DB->get_records('companylicense_courses', array('licenseid' => $courselicense->licenseid))) {
+        if ($DB->get_records('companylicense_courses', ['licenseid' => $courselicense->licenseid])) {
             company::update_license_usage($courselicense->licenseid);
         } else {
             // Delete the license.  It no longer is valid.
-            $DB->delete_records('companylicense', array('id' => $courselicense->licenseid));
+            $DB->delete_records('companylicense', ['id' => $courselicense->licenseid]);
         }
     }
 

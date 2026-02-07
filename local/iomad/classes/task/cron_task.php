@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD cron task
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -27,6 +29,14 @@ use core\task\scheduled_task;
 use block_iomad_company_admin\event\user_license_unassigned;
 use context_course;
 
+/**
+ * Local IOMAD cron task
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class cron_task extends scheduled_task {
 
     /**
@@ -51,7 +61,7 @@ class cron_task extends scheduled_task {
         // Are we copying Company to institution?
         if (!empty($CFG->iomad_sync_institution)) {
 
-            // Get the users in multiple companies
+            // Get the users in multiple companies.
             $multiusers = $DB->get_records_sql("SELECT userid
                                                 FROM {company_users}
                                                 GROUP BY userid
@@ -175,7 +185,7 @@ class cron_task extends scheduled_task {
             }
         }
 
-        // Clear users from courses where the license has expired and the option is chosen
+        // Clear users from courses where the license has expired and the option is chosen.
         mtrace ("Clear users from courses where the license has expired and the option is chosen");
         if ($licenses = $DB->get_records_sql("SELECT DISTINCT cl.*  FROM {companylicense} cl
                                               JOIN {local_iomad_track} lit ON (cl.id = lit.licenseid)
@@ -204,7 +214,8 @@ class cron_task extends scheduled_task {
                                 // Already been re-enrolled - so mark it as dealt with.
                                 $DB->set_field('local_iomad_track', 'coursecleared', 1, ['id' => $litrec->id]);
                             } else {
-                                mtrace("Auto clearing userid $litrec->userid from courseid $litrec->courseid with record id $litrec->id");
+                                mtrace("Auto clearing userid $litrec->userid " .
+                                       "from courseid $litrec->courseid with record id $litrec->id");
                                 \company_user::delete_user_course($litrec->userid, $litrec->courseid, 'autodelete', $litrec->id);
                             }
                         } else {
@@ -225,7 +236,7 @@ class cron_task extends scheduled_task {
                         }
                     }
                     // If this is a re-usable license we want to dump the allocation record too.
-                    if ($license->type == 1 || $license->type ==3) {
+                    if ($license->type == 1 || $license->type == 3) {
                         $DB->delete_records('companylicense_users', ['licenseid' => $license->id]);
                     }
                 }
