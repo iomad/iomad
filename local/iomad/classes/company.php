@@ -191,7 +191,7 @@ class company {
      *
      * Returns PARAM_URL.
      */
-    public function get_dashboard_url(): moodle_url {
+    public function get_dashboard_url() {
         global $CFG, $DB;
         if ($url = $DB->get_record('company_pages', ['companyid' => $this->id, 'type' => 'dashboard'])) {
             return new moodle_url($CFG->wwwroot . "/local/iomadcustompage/view.php", ['id' => $url->pageid, 'useasmy' => true]);
