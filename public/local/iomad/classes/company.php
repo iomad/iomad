@@ -112,7 +112,7 @@ class company {
      * @param mixed fields string or array
      * @return mixed string or object (if array)
      */
-    public function get($fields) {
+    public function get($fields): string|object {
         if (is_string($fields)) {
             if (isset($this->companyrecord->$fields)) {
                 return $this->companyrecord->$fields;
@@ -141,7 +141,7 @@ class company {
      * Returns class object or false
      *
      **/
-    public static function by_userid(int $userid, bool $login = false) {
+    public static function by_userid(int $userid, bool $login = false): company|bool {
         global $DB, $SESSION;
 
         if (!$login && !empty($SESSION->currenteditingcompany)) {
@@ -189,21 +189,22 @@ class company {
     /**
      * Gets the company dashboard page from the list of company pages.
      *
-     * Returns PARAM_URL.
+     * @return moodle_url|bool
      */
-    public function get_dashboard_url() {
+    public function get_dashboard_url(): moodle_url|bool {
         global $CFG, $DB;
         if ($url = $DB->get_record('company_pages', ['companyid' => $this->id, 'type' => 'dashboard'])) {
             return new moodle_url($CFG->wwwroot . "/local/iomadcustompage/view.php", ['id' => $url->pageid, 'useasmy' => true]);
         }
+        return false;
     }
 
     /**
      * Gets the types of managers available to the class
      *
-     * Returns [];
-     *
-     **/
+     * @param bool $full
+     * @return array
+     */
     public function get_managertypes(bool $full = false): array {
         global $CFG;
 
@@ -252,10 +253,10 @@ class company {
     /**
      * Gets the company parentid name for the current instance
      *
-     * @return mixed
+     * @return int|bool
      *
      **/
-    public function get_parentid(): int {
+    public function get_parentid(): int|bool {
         if (!empty($this->companyrecord->parentid)) {
             return $this->companyrecord->parentid;
         } else {
@@ -332,7 +333,7 @@ class company {
      * @return moodle_url or false
      *
      */
-    public static function get_logo_url(int $companyid, $maxwidth = null, $maxheight = 200) {
+    public static function get_logo_url(int $companyid, $maxwidth = null, $maxheight = 200): string|bool {
 
         // Get the company logo config settings.
         $logo = get_config('core_admin', 'logo'.$companyid);
@@ -486,7 +487,7 @@ class company {
      * Get child companies in a formatted manner
      *
      * @param int $companyid
-     * @param boolean $useprepend
+     * @param bool $useprepend
      * @param array $companyarray
      * @param string $prepend
      * @return array
@@ -636,7 +637,7 @@ class company {
      * Returns stdclass() or false;
      *
      **/
-    public static function get_category(int $companyid) {
+    public static function get_category(int $companyid): object|false {
         global $DB;
         if ($category = $DB->get_record_sql(
             "SELECT uic.id, uic.name FROM
@@ -687,7 +688,9 @@ class company {
     /**
      * Apply company role templates
      *
-     **/
+     * @param integer $templateid
+     * @return void
+     */
     public function apply_role_templates(int $templateid = 0) {
         global $DB;
 
@@ -718,7 +721,10 @@ class company {
     /**
      * Assign company role templates
      *
-     **/
+     * @param array $templates
+     * @param bool $clear
+     * @return void
+     */
     public function assign_role_templates(array $templates = [], bool $clear = false) {
         global $DB;
 
@@ -741,7 +747,9 @@ class company {
     /**
      * Get company email templates
      *
-     **/
+     * @param integer $companyid
+     * @return array
+     */
     public static function get_email_templates(int $companyid = 0): array {
         global $DB;
 
@@ -756,7 +764,9 @@ class company {
     /**
      * Apply company email templates
      *
-     **/
+     * @param integer $templatesetid
+     * @return bool
+     */
     public function apply_email_templates(int $templatesetid = 0): bool {
         global $DB;
 
@@ -798,12 +808,12 @@ class company {
     /**
      * Associates a course to a company
      *
-     * Parameters -
-     *              $course = stdclass();
-     *              $departmentid = int;
-     *              $own = boolean;
-     *
-     **/
+     * @param object $course
+     * @param integer $departmentid
+     * @param bool $own
+     * @param bool $licensed
+     * @return bool
+     */
     public function add_course(object $course, int $departmentid=0, bool $own=false, bool $licensed=false): bool {
         global $DB, $CFG;
 
@@ -934,12 +944,11 @@ class company {
     }
 
     /**
-     * removes control of a course froma company
+     * Removes control of a course from a company
      *
-     * Parameters -
-     *              $courseid = int;
-     *
-     **/
+     * @param integer $courseid
+     * @return bool
+     */
     public function remove_control_of_course(int $courseid): bool {
         global $DB, $CFG;
 
@@ -1011,12 +1020,11 @@ class company {
     /**
      * Removes a course from a company
      *
-     * Parameters -
-     *              $course = stdclass();
-     *              $companyid = int;
-     *              $departmentid = int;
-     *
-     **/
+     * @param object $course
+     * @param integer $companyid
+     * @param integer $departmentid
+     * @return bool
+     */
     public static function remove_course(object $course, int $companyid, int $departmentid=0): bool {
         global $DB, $PAGE;
 
@@ -1170,12 +1178,11 @@ class company {
     /**
      * Deletes a course from a company
      *
-     * Parameters -
-     *              $companyid = stdclass();
-     *              $courseid = int;
-     *              $destroy = boolean; True removes all entries from the {local_iomad_track} table
-     *
-     **/
+     * @param integer $companyid
+     * @param integer $courseid
+     * @param bool $destroy
+     * @return bool
+     */
     public static function delete_course(int $companyid, int $courseid, bool $destroy = false): bool {
         global $DB, $USER, $CFG;
 
@@ -1266,11 +1273,10 @@ class company {
     }
 
     /**
-     * Gets the copmpany defined user account default variables
+     * Gets the company defined user account default variables
      *
-     * Returns stdclass();
-     *
-     **/
+     * @return object
+     */
     public function get_user_defaults(): object {
         global $DB;
 
@@ -1292,9 +1298,8 @@ class company {
      * Get the user ids associated to a company
      * does not pass back any managers
      *
-     * returns stdclass();
-     *
-     **/
+     * @return array
+     */
     public function get_user_ids(): array {
         global $DB;
 
@@ -1319,9 +1324,8 @@ class company {
     /**
      * Get all the user ids associated to a company
      *
-     * returns stdclass();
-     *
-     **/
+     * @return array
+     */
     public function get_all_user_ids(): array {
         global $DB;
 
@@ -1346,12 +1350,13 @@ class company {
     /**
      * Associates a user to a company
      *
-     * Parameters -
-     *              $userid = int;
-     *              $departmentid = int;
-     *              $managertype = int;
-     *
-     **/
+     * @param integer $userid
+     * @param integer $departmentid
+     * @param integer $managertype
+     * @param bool $ws
+     * @param bool $import
+     * @return bool
+     */
     public function assign_user_to_company(int $userid,
                                            int $departmentid = 0,
                                            int $managertype = 0,
@@ -1453,9 +1458,9 @@ class company {
      * @param int $companyid
      * @param int $departmentid
      * @param int $managertype
-     * @param boolean $educator
-     * @param boolean $ws
-     * @param boolean $move
+     * @param bool $educator
+     * @param bool $ws
+     * @param bool $move
      * @return bool
      */
     public static function upsert_company_user(int $userid,
@@ -1992,10 +1997,10 @@ class company {
     /**
      * Removes a user from a company
      *
-     * Parameters -
-     *              $userid = int;
-     *
-     **/
+     * @param integer $userid
+     * @param bool $ws
+     * @return bool
+     */
     public function unassign_user_from_company(int $userid, bool $ws = false): bool {
         global $CFG, $DB;
 
@@ -2252,10 +2257,9 @@ class company {
     /**
      * Set up default company department.
      *
-     * Parameters -
-     *              $companyid = int;
-     *
-     **/
+     * @param integer $companyid
+     * @return void
+     */
     public static function initialise_departments(int $companyid) {
         global $DB;
         $company = $DB->get_record('company', ['id' => $companyid]);
@@ -2282,12 +2286,12 @@ class company {
     }
 
     /**
-     * Set up default company department.
+     * Import company departments
      *
      * @param int $companyid
      * @param object $currentdepartment
      * @param object $importtree
-     * @param boolean $toplevel
+     * @param bool $toplevel
      * @return void
      */
     public static function import_departments(int $companyid,
@@ -2322,12 +2326,9 @@ class company {
     /**
      * Get the department a user is associated to.
      *
-     * Parameters -
-     *              $user = stdclass();
-     *
-     * Returns stdclass();
-     *
-     **/
+     * @param object $user
+     * @return array
+     */
     public function get_userlevel(object $user): array {
 
         global $DB;
@@ -2361,15 +2362,12 @@ class company {
     }
 
     /**
-     * Get the department a user is associated to.
+     * Get the list of user supervisors
      *
-     * Parameters -
-     *              $user = stdclass();
-     *
-     * Returns array or false;
-     *
-     **/
-    public static function get_usersupervisor(int $userid) {
+     * @param integer $userid
+     * @return array|bool
+     */
+    public static function get_usersupervisor(int $userid): array|bool {
         global $DB, $CFG;
 
         // Get the company info.
@@ -2413,12 +2411,9 @@ class company {
     /**
      * Get the department details given an id.
      *
-     * Parameters -
-     *              $departmentid = int;
-     *
-     * Returns stdclass();
-     *
-     **/
+     * @param integer $departmentid
+     * @return object
+     */
     public static function get_departmentbyid(int $departmentid): object {
         global $DB;
         return $DB->get_record('department', ['id' => $departmentid]);
@@ -2451,14 +2446,12 @@ class company {
     }
 
     /**
-     * Get list of departments which are below this on on the tree.
+     * Get list of departments which are below this on on the tree
      *
-     * Parameters -
-     *              $parent = stdclass();
-     *
-     * Returns [];
-     *
-     **/
+     * @param object $parent
+     * @param bool $ignorecurrentbranch
+     * @return object
+     */
     public static function get_subdepartments(object $parent, bool $ignorecurrentbranch = false): object {
         global $DB;
 
@@ -2481,14 +2474,11 @@ class company {
     }
 
     /**
-     * Get an array of all subdepartments to be used in a select.
+     * Get an array of all subdepartments to be used in a select
      *
-     * Parameters -
-     *              $parent = stdclass();
-     *
-     * Returns [];
-     *
-     **/
+     * @param object $parent
+     * @return array
+     */
     public static function get_subdepartments_list(object $parent): array {
         $subdepartmentstree = self::get_subdepartments($parent);
         $subdepartmentslist = self::get_department_list($subdepartmentstree);
@@ -2500,13 +2490,10 @@ class company {
     /**
      * Get a list of all departments
      *
-     * Parameters -
-     *              $tree = stdclass();
-     *              $path = text;
-     *
-     * Returns [];
-     *
-     **/
+     * @param object $tree
+     * @param string $path
+     * @return array
+     */
     public static function get_department_list(object $tree, string $path=''): array {
 
         $flatlist = [];
@@ -2532,15 +2519,12 @@ class company {
     }
 
     /**
-     * Get a list of all departments
+     * Get a list of all parent departments
      *
-     * Parameters -
-     *              $tree = stdclass();
-     *              $path = text;
-     *
-     * Returns [];
-     *
-     **/
+     * @param object $tree
+     * @param array $return
+     * @return void
+     */
     public static function get_parents_list(object $tree, array &$return = []) {
 
         if (isset($tree->id)) {
@@ -2557,12 +2541,9 @@ class company {
     /**
      * The top level department given a companyid
      *
-     * Parameters -
-     *              $companyid = int;
-     *
-     * Returns stdclass() || false;
-     *
-     **/
+     * @param integer $companyid
+     * @return object
+     */
     public static function get_company_parentnode(int $companyid): object {
         global $DB;
         if (!$parentnode = $DB->get_record('department', ['company' => $companyid,
@@ -2577,13 +2558,10 @@ class company {
     /**
      * The parent department given a departmentid
      *
-     * Parameters -
-     *              $departmentid = int;
-     *
-     * Returns object || false;
-     *
-     **/
-    public static function get_department_parentnode(int $departmentid) {
+     * @param integer $departmentid
+     * @return object|bool
+     */
+    public static function get_department_parentnode(int $departmentid): object|bool {
         global $DB;
         if ($department = $DB->get_record('department', ['id' => $departmentid])) {
             $parent = $DB->get_record('department', ['id' => $department->parent]);
@@ -2596,12 +2574,9 @@ class company {
     /**
      * All parent departments given a departmentid
      *
-     * Parameters -
-     *              $departmentid = int;
-     *
-     * Returns stdclass() || false;
-     *
-     **/
+     * @param integer $departmentid
+     * @return array
+     */
     public static function get_department_parentnodes(int $departmentid): array {
         global $DB;
 
@@ -2614,14 +2589,11 @@ class company {
     }
 
     /**
-     * The top level department given a departmentid
+     * The top level department id given a department id
      *
-     * Parameters -
-     *              $departmentid = int;
-     *
-     * Returns int;
-     *
-     **/
+     * @param integer $departmentid
+     * @return integer
+     */
     public static function get_top_department(int $departmentid): int {
         global $DB;
         $department = $DB->get_record('department', ['id' => $departmentid]);
@@ -2630,14 +2602,11 @@ class company {
     }
 
     /**
-     * Gets a department tree list given a company id.
+     * Get a full department tree listing given a company id
      *
-     * Parameters -
-     *              $companyid = int;
-     *
-     * Returns []
-     *
-     **/
+     * @param integer $companyid
+     * @return array
+     */
     public static function get_all_departments(int $companyid): array {
 
         $parentlist = [];
@@ -2652,6 +2621,7 @@ class company {
     /**
      * Get array of all departments given companyid
      * Used to display select tree
+     *
      * @param int companyid
      * @return object
      */
@@ -2667,15 +2637,15 @@ class company {
      * Get array of all departments given companyid
      * Used to display select tree
      * @param int companyid
-     * @return object or null
+     * @return object|null
      */
     public static function get_all_subdepartments_raw(int $departmentid,
                                                       bool $ignorecurrentbranch = false,
-                                                      bool $addchildcompanies = false) {
+                                                      bool $addchildcompanies = false): object|null {
 
         // Are we trimming a current branch?
         if ($departmentid == $ignorecurrentbranch) {
-            return;
+            return null;
         }
 
         $departmentnode = self::get_departmentbyid($departmentid);
@@ -2696,16 +2666,13 @@ class company {
     }
 
     /**
-     * function to flatten a multi-dimension array to a single dimension array.
+     * function to flatten a multi-dimension array to a single dimension array
      *
-     * Parameters -
-     *              $array = [];
-     *              &$result = [];
-     *
-     * Returns [];
-     *
-     **/
-    public static function array_flatten(array $array, &$result = null) {
+     * @param array $array
+     * @param array $result
+     * @return array|null
+     */
+    public static function array_flatten(array $array, &$result = null): array|null {
 
         $r = null === $result;
         $i = 0;
@@ -2720,19 +2687,17 @@ class company {
         if ($r) {
             return $result;
         }
+        return null;
     }
 
     /**
      * function to flatten a multi-dimension array to a single dimension array.
      *
-     * Parameters -
-     *              $array = [];
-     *              &$result = [];
-     *
-     * Returns [];
-     *
-     **/
-    public static function array_flatten_children(array $array, &$result = null) {
+     * @param array $array
+     * @param [type] $result
+     * @return array|null
+     */
+    public static function array_flatten_children(array $array, &$result = null): array|null {
 
         $r = null === $result;
         $i = 0;
@@ -2746,18 +2711,18 @@ class company {
         if ($r) {
             return $result;
         }
+
+        return null;
     }
 
     /**
      * Gets a list of the sub department tree list given a department id
      * including the passed department.
      *
-     * Parameters -
-     *              $parentnodeid = int;
-     *
-     * Returns []
-     *
-     **/
+     * @param integer $parentnodeid
+     * @param bool $addchildcompanies
+     * @return array
+     */
     public static function get_all_subdepartments(int $parentnodeid, bool $addchildcompanies = false): array {
         global $PAGE;
 
@@ -2794,12 +2759,10 @@ class company {
      * Gets a list of all users from this department down
      * including the passed department.
      *
-     * Parameters -
-     *              $departmentid = int;
-     *
-     * Returns []
-     *
-     **/
+     * @param integer $departmentid
+     * @param bool $addchildcompanies
+     * @return array
+     */
     public static function get_recursive_department_users(int $departmentid, bool $addchildcompanies = false): array {
         global $DB;
 
@@ -2817,13 +2780,10 @@ class company {
     /**
      * Gets all of the users that manager is responsible for
      *
-     * Parameters -
-     *             $companyid = int;
-     *             $departmentid = int;
-     *
-     * Returns []
-     *
-     **/
+     * @param integer $companyid
+     * @param integer $departmentid
+     * @return array
+     */
     public static function get_my_users(int $companyid=0, int $departmentid=0): array {
         global $USER;
 
@@ -2850,9 +2810,8 @@ class company {
     /**
      * Gets a list of the company managers for the company
      *
-     * Returns array of objects
-     *
-     **/
+     * @return array
+     */
     public function get_managers(): array {
         global $DB;
 
@@ -2881,11 +2840,11 @@ class company {
     }
 
     /**
-     * Gets a list of the company managers for the company
+     * Gets a list of the company managers for the company that
+     * can be used in a form select
      *
-     * Returns an array to be used by a form select.
-     *
-     **/
+     * @return array
+     */
     public function get_managers_select(): array {
 
         // Set up the initial array.
@@ -2902,15 +2861,12 @@ class company {
     }
 
     /**
-     * Gets a list of the managers for that user
+     * Gets a list of the managers for the passed userid
      *
-     * Parameters -
-     *             $userid = int;
-     *             $managertype = int;
-     *
-     * Returns string
-     *
-     **/
+     * @param integer $userid
+     * @param integer $managertype
+     * @return array
+     */
     public function get_my_managers(int $userid, int $managertype): array {
         global $DB, $USER;
 
@@ -2951,13 +2907,10 @@ class company {
     /**
      * Gets a list of the users that manager is responsible for
      *
-     * Parameters -
-     *             $companyid = int;
-     *             $departmentid = int;
-     *
-     * Returns string
-     *
-     **/
+     * @param integer $companyid
+     * @param integer $departmentid
+     * @return string
+     */
     public static function get_my_users_list(int $companyid=0, int $departmentid=0): string {
         global $USER;
 
@@ -2975,12 +2928,9 @@ class company {
     /**
      * Gets a list of the users at this department id
      *
-     * Parameters -
-     *              $departmentid = int;
-     *
-     * Returns []
-     *
-     **/
+     * @param integer $departmentid
+     * @return array
+     */
     public static function get_department_users(int $departmentid): array {
         global $DB;
         return $DB->get_records('company_users',
@@ -2992,11 +2942,12 @@ class company {
     /**
      * Assign a user to a department.
      *
-     * Parameters -
-     *              $departmentid = int;
-     *              $userid = int;
-     *
-     **/
+     * @param integer $departmentid
+     * @param integer $userid
+     * @param integer $managertype
+     * @param bool $ws
+     * @return bool
+     */
     public static function assign_user_to_department(int $departmentid,
                                                      int $userid,
                                                      int $managertype = 0,
@@ -3030,14 +2981,13 @@ class company {
     /**
      * Creates a new department
      *
-     * Parameters -
-     *              $departmentid = int;
-     *              $companyid = int;
-     *              $fullname = string;
-     *              $shortname = string;
-     *              $parentid = int;
-     *
-     **/
+     * @param integer $departmentid
+     * @param integer $companyid
+     * @param string $fullname
+     * @param string $shortname
+     * @param integer $parentid
+     * @return bool
+     */
     public static function create_department(int $departmentid,
                                              int $companyid,
                                              string $fullname,
@@ -3075,10 +3025,9 @@ class company {
     /**
      * Delete a department.
      *
-     * Parameters -
-     *              $departmentid = int;
-     *
-     **/
+     * @param integer $departmentid
+     * @return bool
+     */
     public static function delete_department(int $departmentid): bool {
         global $DB;
         if (!$DB->delete_records('department', ['id' => $departmentid])) {
@@ -3088,13 +3037,12 @@ class company {
     }
 
     /**
-     * Delete all departments from this point down moving all the associated things to targetid
+     * Delete the passed department and all of it's children
      *
-     * Parameters -
-     *              $departmentid = int;
-     *              $targetid = int;
-     *
-     **/
+     * @param integer $departmentid
+     * @param integer $targetdepartment
+     * @return void
+     */
     public static function delete_department_recursive(int $departmentid, int $targetdepartment=0) {
         // Get all the users from here and below.
         $userlist = self::get_recursive_department_users($departmentid);
@@ -3116,11 +3064,9 @@ class company {
     /**
      * Check if a user is a manger of this department.
      *
-     * Parameters -
-     *              $departmentid = int;
-     *
-     * Return boolean;
-     **/
+     * @param integer $departmentid
+     * @return bool
+     */
     public static function can_manage_department(int $departmentid): bool {
         global $DB, $USER;
 
@@ -3155,15 +3101,11 @@ class company {
     }
 
     /**
-     * Gets a list of all courses from this department down
-     * including the passed department.
+     * Get a list of all courses in this department and it's children
      *
-     * Parameters -
-     *              $departmentid = int;
-     *
-     * Returns []
-     *
-     **/
+     * @param integer $departmentid
+     * @return array
+     */
     public static function get_recursive_department_courses(int $departmentid): array {
         global $DB;
 
@@ -3187,12 +3129,9 @@ class company {
     /**
      * Gets a list of all courses in this department
      *
-     * Parameters -
-     *              $departmentid = int;
-     *
-     * Returns []
-     *
-     **/
+     * @param integer $departmentid
+     * @return array
+     */
     public static function get_department_courses(int $departmentid): array {
         global $DB;
         return $DB->get_records('company_course', ['departmentid' => $departmentid]);
@@ -3201,12 +3140,11 @@ class company {
     /**
      * Assign a course to this department
      *
-     * Parameters -
-     *              $departmentid = int;
-     *              $courseid = int;
-     *              $companyid = int;
-     *
-     **/
+     * @param integer $departmentid
+     * @param integer $courseid
+     * @param integer $companyid
+     * @return bool
+     */
     public static function assign_course_to_department(int $departmentid, int $courseid, int $companyid): bool {
         global $DB;
 
@@ -3258,11 +3196,9 @@ class company {
     /**
      * Get a list of departments a course is associated to
      *
-     * Parameters -
-     *              $courseid = int;
-     *
-     *  Return [];
-     **/
+     * @param integer $courseid
+     * @return array
+     */
     public static function get_departments_by_course(int $courseid): array {
         global $DB;
         if ($depts = $DB->get_records('company_course', ['courseid' => $courseid],
@@ -3277,15 +3213,11 @@ class company {
     // Licenses stuff.
 
     /**
-     * Gets a list of all licenses from this department down
-     * including the passed department.
+     * Gets a list of all licenses in this department and it's children
      *
-     * Parameters -
-     *              $departmentid = int;
-     *
-     * Returns []
-     *
-     **/
+     * @param integer $departmentid
+     * @return array
+     */
     public static function get_recursive_departments_licenses(int $departmentid): array {
 
         // Get all the courses for this department down.
@@ -3299,28 +3231,23 @@ class company {
     }
 
     /**
-     * Gets a list of all licenses for this course
+     * Gets a list of all licenses for this course id
      *
-     * Parameters -
-     *              $courseid = int;
-     *
-     * Returns []
-     *
-     **/
+     * @param integer $courseid
+     * @return array
+     */
     public static function get_course_licenses(int $courseid): array {
         global $DB;
         return $DB->get_records('companylicense_courses', ['courseid' => $courseid], null, 'licenseid');
     }
 
     /**
-     * Gets a list of all courses for this license
+     * Gets a list of all courses for this license id
      *
-     * Parameters -
-     *              $licenseid = int;
-     *
-     * Returns []
-     *
-     **/
+     * @param integer $licenseid
+     * @param bool $visible
+     * @return array
+     */
     public static function get_courses_by_license(int $licenseid, bool $visible = true): array {
         global $DB;
 
@@ -3352,12 +3279,12 @@ class company {
         return [];
     }
 
-    /** Update license usage.
+    /**
+     * Update license usage.
      *
-     * Parameters -
-     *              $licenseid = int;
-     *
-     **/
+     * @param integer $licenseid
+     * @return void
+     */
     public static function update_license_usage(int $licenseid) {
         global $DB;
 
@@ -3382,14 +3309,12 @@ class company {
         }
     }
 
-    /** Check if a license is in a child company.
+    /**
+     * Check if a license is assigned to a child company.
      *
-     * Parameters -
-     *              $licenseid = int;
-     *
-     * Returns Boolean
-     *
-     **/
+     * @param integer $licenseid
+     * @return bool
+     */
     public function is_child_license(int $licenseid): bool {
         global $DB;
 
@@ -3414,13 +3339,13 @@ class company {
     /**
      * Get a menu list of courses based on the parameters passed.
      *
-     * @param boolean $shared include shared courses
-     * @param boolean $unlicensed include only unlicensed courses
-     * @param boolean $groups include courses without groups enabled
-     * @param boolean $default include a default menu item
-     * @param boolean $licenseonly include only licensed courses
-     * @param boolean $noncompany include courses that are unassigned to a tenant
-     * @param boolean $includehidden include courses which are hidde
+     * @param bool $shared include shared courses
+     * @param bool $unlicensed include only unlicensed courses
+     * @param bool $groups include courses without groups enabled
+     * @param bool $default include a default menu item
+     * @param bool $licenseonly include only licensed courses
+     * @param bool $noncompany include courses that are unassigned to a tenant
+     * @param bool $includehidden include courses which are hidde
      * @return array
      */
     public function get_menu_courses(bool $shared = false,
@@ -3561,14 +3486,13 @@ class company {
     }
 
     /**
-     * Check if a user can use a license to access a course..
+     * Check if a user can use this license to access a course..
      *
-     * Parameters -
-     *              $licenseid = int;
-     *              $courseid = int;
-     *              $userid = int;
-     *
-     **/
+     * @param integer $licenseid
+     * @param integer $courseid
+     * @param integer $userid
+     * @return bool
+     */
     public static function license_ok_to_use(int $licenseid, int $courseid, int $userid): bool {
         global $DB, $CFG;
 
@@ -3627,15 +3551,13 @@ class company {
     // Shared course stuff.
 
     /**
-     * Create a company group for the passed course
+     * Create a company group for this course id
      *
-     * Parameters -
-     *              $companyid = int;
-     *              $courseid = int;
-     *
-     * Returns int;
-     *
-     **/
+     * @param integer $companyid
+     * @param integer $courseid
+     * @param [type] $groupdata
+     * @return integer
+     */
     public static function create_company_course_group(int $companyid, int $courseid, $groupdata = null ): int {
         global $CFG, $DB;
         require_once($CFG->dirroot.'/group/lib.php');
@@ -3680,15 +3602,12 @@ class company {
     }
 
     /**
-     * Get the course group name for the company for the passed course
+     * Get the course group name for the company in this course id
      *
-     * Parameters -
-     *              $companyid = int;
-     *              $courseid = int;
-     *
-     * Returns string;
-     *
-     **/
+     * @param integer $companyid
+     * @param integer $courseid
+     * @return string
+     */
     public static function get_company_groupname(int $companyid, int $courseid): string {
         global $DB;
         // Gets the company course groupname.
@@ -3705,15 +3624,12 @@ class company {
     }
 
     /**
-     * Get the course group for the company for the passed course
+     * Get the course group for the company for the course id
      *
-     * Parameters -
-     *              $companyid = int;
-     *              $courseid = int;
-     *
-     * Returns stdclass();
-     *
-     **/
+     * @param integer $companyid
+     * @param integer $courseid
+     * @return object
+     */
     public static function get_company_group(int $companyid, int $courseid): object {
         global $DB;
 
@@ -3741,14 +3657,15 @@ class company {
     }
 
     /**
-     * Add a company user to a shared course company group.
+     * Add a company user to a shared course company group
      *
-     * Parameters -
-     *              $courseid = int;
-     *              $userid = int;
-     *              $companyid = int;
-     *
-     **/
+     * @param integer $courseid
+     * @param integer $userid
+     * @param integer $companyid
+     * @param integer $groupid
+     * @param bool $clear
+     * @return void
+     */
     public static function add_user_to_shared_course(int $courseid,
                                                      int $userid,
                                                      int $companyid,
@@ -3788,14 +3705,13 @@ class company {
     }
 
     /**
-     * Remove a company user to a shared course company group.
+     * Remove a company user from a shared course company group
      *
-     * Parameters -
-     *              $courseid = int;
-     *              $userid = int;
-     *              $companyid = int;
-     *
-     **/
+     * @param integer $courseid
+     * @param integer $userid
+     * @param integer $companyid
+     * @return void
+     */
     public static function remove_user_from_shared_course(int $courseid, int $userid, int $companyid) {
         global $DB, $CFG;
         require_once($CFG->dirroot.'/group/lib.php');
@@ -3823,16 +3739,16 @@ class company {
     /**
      * Delete a shared course company group.
      *
-     * Parameters -
-     *              $companyid = int;
-     *              $course = stdclass();
-     *              $oktounenroll = boolean;
-     *
-     **/
+     * @param integer $companyid
+     * @param object $course
+     * @param bool $oktounenroll
+     * @param integer $groupid
+     * @return string|bool
+     */
     public static function delete_company_course_group(int $companyid,
                                                        object $course,
                                                        bool $oktounenroll=false,
-                                                       int $groupid = 0) {
+                                                       int $groupid = 0): string|bool {
         global $DB;
         // Removes a company group within a shared course.
         // Get the group.
@@ -3866,13 +3782,12 @@ class company {
     }
 
     /**
-     * Adds all company users to a shared course company group.
+     * Add all company users to a shared course company group
      *
-     * Parameters -
-     *              $companyid = int;
-     *              $courseid = int;
-     *
-     **/
+     * @param integer $companyid
+     * @param integer $courseid
+     * @return void
+     */
     public static function company_users_to_company_course_group(int $companyid, int $courseid) {
         global $DB, $CFG;
         // Adds all the users to a company group within a shared course.
@@ -3899,13 +3814,12 @@ class company {
     }
 
     /**
-     * Removes all company users and group from a course.
+     * Remove all company users and groups from a course
      *
-     * Parameters -
-     *              $companyid = int;
-     *              $courseid = int;
-     *
-     **/
+     * @param integer $companyid
+     * @param integer $courseid
+     * @return void
+     */
     public static function unenrol_company_from_course(int $companyid, int $courseid) {
         global $DB;
 
@@ -3949,12 +3863,11 @@ class company {
     }
 
     /**
-     * Updates the theme reference for all the users in the company
+     * Set the company user theme
      *
-     * Parameters -
-     *              $theme = string;
-     *
-     **/
+     * @param string $theme
+     * @return void
+     */
     public function update_theme(string $theme) {
         global $DB;
 
@@ -3971,12 +3884,11 @@ class company {
     }
 
     /**
-     * Suspends or Unsuspends a company and all of their users.
+     * Suspend or Unsuspend a company and all of it's users
      *
-     * Parameters -
-     *              $theme = string;
-     *
-     **/
+     * @param bool $suspend
+     * @return void
+     */
     public function suspend(bool $suspend = true) {
         global $DB;
 
@@ -4018,11 +3930,11 @@ class company {
     }
 
     /**
-     * Terminates a company's contract,
-     * removing all course access and licenses for
-     * all of their users.
+     * Terminates a company, removing all course access and licenses for
+     * all of it's users
      *
-     **/
+     * @return bool
+     */
     public function terminate(): bool {
         global $DB;
 
@@ -4105,12 +4017,11 @@ class company {
     }
 
     /**
-     * Enables or disables ecommerce for a company.
+     * Enable or disable ecommerce access for a company
      *
-     * Parameters -
-     *              $ecommerce = booloean;
-     *
-     **/
+     * @param bool $ecommerce
+     * @return void
+     */
     public function ecommerce(bool $ecommerce) {
         global $CFG, $DB;
 
@@ -4126,15 +4037,12 @@ class company {
     }
 
     /**
-     * Checks that a passed department id is valid for the companyid.
+     * Checks the passed department id is valid for the company id
      *
-     * Parameters -
-     *              $companyid = int;
-     *              $departmentid = int;
-     *
-     * Returns boolean.
-     *
-     **/
+     * @param integer $companyid
+     * @param integer $departmentid
+     * @return bool
+     */
     public static function check_valid_department(int $companyid, int $departmentid): bool {
         global $DB;
 
@@ -4159,16 +4067,13 @@ class company {
     }
 
     /**
-     * Checks that a userid and department id is valid for the companyid.
+     * Check that a userid and department id is valid for the companyid
      *
-     * Parameters -
-     *              $companyid = int;
-     *              $departmentid = int;
-     *              $userid = int;
-     *
-     * Returns boolean.
-     *
-     **/
+     * @param integer $companyid
+     * @param integer $userid
+     * @param integer $deparmentid
+     * @return bool
+     */
     public static function check_valid_user(int $companyid, int $userid, int $deparmentid=0): bool {
         global $DB, $USER;
 
@@ -4211,15 +4116,12 @@ class company {
     }
 
     /**
-     * Checks that a userid is suspended the companyid.
+     * Check if a userid is suspended the companyid
      *
-     * Parameters -
-     *              $companyid = int;
-     *              $userid = int;
-     *
-     * Returns boolean.
-     *
-     **/
+     * @param integer $companyid
+     * @param integer $userid
+     * @return bool
+     */
     public static function check_user_suspended(int $companyid, int $userid): bool {
         global $DB;
 
@@ -4233,14 +4135,11 @@ class company {
     }
 
     /**
-     * Checks number of new users to be added to the company won't bring it about the maximum.
+     * Check if the number of new users to be added to the company brings it above the maximum
      *
-     * Parameters -
-     *              $new = int;
-     *
-     * Returns boolean.
-     *
-     **/
+     * @param integer $new
+     * @return bool
+     */
     public function check_usercount(int $new = 0): bool {
         global $DB, $USER;
 
@@ -4285,15 +4184,12 @@ class company {
     }
 
     /**
-     * Checks that the USER can edit a userid in a companyid.
+     * Checks that the current USER can edit a user id in company id
      *
-     * Parameters -
-     *              $companyid = int;
-     *              $userid = int;
-     *
-     * Returns boolean.
-     *
-     **/
+     * @param integer $companyid
+     * @param integer $userid
+     * @return bool
+     */
     public static function check_canedit_user(int $companyid, int $userid): bool {
         global $DB, $USER;
 
@@ -4338,15 +4234,12 @@ class company {
     }
 
     /**
-     * Checks that a licenseid is valid for the companyid.
+     * Check that a license id is valid for the company id
      *
-     * Parameters -
-     *              $companyid = int;
-     *              $licenseid = int;
-     *
-     * Returns boolean.
-     *
-     **/
+     * @param integer $companyid
+     * @param integer $licenseid
+     * @return bool
+     */
     public static function check_valid_company_license(int $companyid, int $licenseid): bool {
         global $DB;
 
@@ -4363,14 +4256,11 @@ class company {
     }
 
     /**
-     * Checks that a two user id's are in the same company.
+     * Check if the current USER can manage a passed user id
      *
-     * Parameters -
-     *              $userid = int;
-     *
-     * Returns boolean.
-     *
-     **/
+     * @param integer $userid
+     * @return bool
+     */
     public static function check_can_manage(int $userid): bool {
         global $DB, $USER;
 
@@ -4403,14 +4293,11 @@ class company {
     }
 
     /**
-     * Gets the department ID on user creation.
+     * Get any auto assigned department ID used on user creation
      *
-     * Parameters -
-     *              $user = object;
-     *
-     * Returns int.
-     *
-     **/
+     * @param object $user
+     * @return integer
+     */
     public function get_auto_department(object $user): int {
         global $DB;
 
@@ -4436,12 +4323,12 @@ class company {
     }
 
     /**
-     * Automatically enrols a users on un-licensed courses if its set in the config.
+     * Automatically enrol users on defined auto enrolment courses
      *
-     * Parameters -
-     *              $user = stdclass();
-     *
-     **/
+     * @param object $user
+     * @param integer $due
+     * @return void
+     */
     public function autoenrol(object $user, int $due = 0) {
         global $DB, $CFG, $SESSION, $SITE, $OUTPUT;
 
@@ -4538,12 +4425,12 @@ class company {
     // Competencies stuff.
 
     /**
-     * Associates a ccompetency framework to a company
+     * Associates a competency framework to a company
      *
-     * Parameters -
-     *              $framework = stdclass();
-     *
-     **/
+     * @param integer $companyid
+     * @param integer $frameworkid
+     * @return void
+     */
     public static function add_competency_framework(int $companyid, int $frameworkid) {
         global $DB;
 
@@ -4555,14 +4442,12 @@ class company {
     }
 
     /**
-     * Removes a course from a company
+     * Remove a competency framework from a company
      *
-     * Parameters -
-     *              $course = stdclass();
-     *              $companyid = int;
-     *              $departmentid = int;
-     *
-     **/
+     * @param integer $companyid
+     * @param integer $frameworkid
+     * @return void
+     */
     public static function remove_competency_framework(int $companyid, int $frameworkid) {
         global $DB;
 
@@ -4571,12 +4456,12 @@ class company {
     }
 
     /**
-     * Associates a ccompetency framework to a company
+     * Associates a competency template to a company
      *
-     * Parameters -
-     *              $template = stdclass();
-     *
-     **/
+     * @param integer $companyid
+     * @param integer $templateid
+     * @return void
+     */
     public static function add_competency_template(int $companyid, int $templateid) {
         global $DB;
 
@@ -4588,12 +4473,12 @@ class company {
     }
 
     /**
-     * Removes a course from a company
+     * Remove a competency template from a company
      *
-     * Parameters -
-     *              $template = stdclass();
-     *
-     **/
+     * @param integer $companyid
+     * @param integer $templateid
+     * @return void
+     */
     public static function remove_competency_template(int $companyid, int $templateid) {
         global $DB;
 
@@ -4602,9 +4487,12 @@ class company {
     }
 
     /**
-     * checks if it is OK use an email template.
+     * Check if this email template is available for use
      *
-     **/
+     * @param string $templatename
+     * @param integer $managertype
+     * @return bool
+     */
     public function email_template_is_enabled(string $templatename, int $managertype = 0): bool {
         global $DB;
 
@@ -4660,9 +4548,10 @@ class company {
 
     /**
      * Set the company SMTP settings.
-     * @param mailer moodle_php_mailer object
      *
-     * Returns the same.
+     * @param object $mailer
+     * @param integer $companyid
+     * @return object
      */
     public static function set_company_mailer(object $mailer, int $companyid = 0): object {
         global $CFG;
@@ -4729,9 +4618,10 @@ class company {
      * Update plugin settings for given plugin and postfix.
      *
      * @param pluginname
-     * @param postfic
+     * @param postfix
+     * @return bool
      */
-    public static function update_plugin(string $pluginname, string $postfix) {
+    public static function update_plugin(string $pluginname, string $postfix): bool {
         if (empty($pluginname) || empty ($postfix)) {
             return false;
         }
@@ -4756,6 +4646,8 @@ class company {
         foreach ($settings as $setting => $value) {
             set_config($setting . $postfix, $value, $pluginname);
         }
+
+        return true;
     }
 
     /***  Event Handlers  ***/
