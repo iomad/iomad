@@ -95,16 +95,16 @@ if (empty($templatesetid)) {
                                                 WHERE et.id = :id
                                                 AND ets.lang = :lang",
                                                ['id' => $templateid,
-                                               'lang' => $lang])) {
+                                                'lang' => $lang])) {
         throw new \moodle_exception('templatenotfound', 'local_email', new moodle_url('/local/email/template_list.php'));
     }
 }
 
 if (empty($templaterecord->subject)) {
-    $templaterecord->subject = get_string($templatename . '_subject', 'local_email', $lang);
+    $templaterecord->subject = get_string_manager()->get_string($templatename . '_subject', 'local_email', null, $lang);
 }
 if (empty($templaterecord->body)) {
-    $templaterecord->body = get_string($templatename . '_body', 'local_email', $lang);
+    $templaterecord->body = get_string_manager()->get_string($templatename . '_body', 'local_email', null, $lang);
 }
 
 // Correct the navbar.
