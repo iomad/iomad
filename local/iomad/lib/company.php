@@ -185,7 +185,7 @@ class company {
     /**
      * Gets the company dashboard page from the list of company pages.
      *
-     * @return moodle_url|boolean
+     * @return moodle_url|bool
      */
     public function get_dashboard_url(): moodle_url|bool {
         global $CFG, $DB;
@@ -198,7 +198,7 @@ class company {
     /**
      * Gets the types of managers available to the class
      *
-     * @param boolean $full
+     * @param bool $full
      * @return array
      */
     public function get_managertypes(bool $full = false): array {
@@ -483,7 +483,7 @@ class company {
      * Get child companies in a formatted manner
      *
      * @param int $companyid
-     * @param boolean $useprepend
+     * @param bool $useprepend
      * @param array $companyarray
      * @param string $prepend
      * @return array
@@ -718,7 +718,7 @@ class company {
      * Assign company role templates
      *
      * @param array $templates
-     * @param boolean $clear
+     * @param bool $clear
      * @return void
      */
     public function assign_role_templates(array $templates = [], bool $clear = false) {
@@ -761,7 +761,7 @@ class company {
      * Apply company email templates
      *
      * @param integer $templatesetid
-     * @return boolean
+     * @return bool
      */
     public function apply_email_templates(int $templatesetid = 0): bool {
         global $DB;
@@ -806,9 +806,9 @@ class company {
      *
      * @param object $course
      * @param integer $departmentid
-     * @param boolean $own
-     * @param boolean $licensed
-     * @return boolean
+     * @param bool $own
+     * @param bool $licensed
+     * @return bool
      */
     public function add_course(object $course, int $departmentid=0, bool $own=false, bool $licensed=false): bool {
         global $DB, $CFG;
@@ -943,7 +943,7 @@ class company {
      * Removes control of a course from a company
      *
      * @param integer $courseid
-     * @return boolean
+     * @return bool
      */
     public function remove_control_of_course(int $courseid): bool {
         global $DB, $CFG;
@@ -1019,7 +1019,7 @@ class company {
      * @param object $course
      * @param integer $companyid
      * @param integer $departmentid
-     * @return boolean
+     * @return bool
      */
     public static function remove_course(object $course, int $companyid, int $departmentid=0): bool {
         global $DB, $PAGE;
@@ -1176,8 +1176,8 @@ class company {
      *
      * @param integer $companyid
      * @param integer $courseid
-     * @param boolean $destroy
-     * @return boolean
+     * @param bool $destroy
+     * @return bool
      */
     public static function delete_course(int $companyid, int $courseid, bool $destroy = false): bool {
         global $DB, $USER, $CFG;
@@ -1349,9 +1349,9 @@ class company {
      * @param integer $userid
      * @param integer $departmentid
      * @param integer $managertype
-     * @param boolean $ws
-     * @param boolean $import
-     * @return boolean
+     * @param bool $ws
+     * @param bool $import
+     * @return bool
      */
     public function assign_user_to_company(int $userid,
                                            int $departmentid = 0,
@@ -1451,9 +1451,9 @@ class company {
      * @param int $companyid
      * @param int $departmentid
      * @param int $managertype
-     * @param boolean $educator
-     * @param boolean $ws
-     * @param boolean $move
+     * @param bool $educator
+     * @param bool $ws
+     * @param bool $move
      * @return bool
      */
     public static function upsert_company_user(int $userid,
@@ -1991,8 +1991,8 @@ class company {
      * Removes a user from a company
      *
      * @param integer $userid
-     * @param boolean $ws
-     * @return boolean
+     * @param bool $ws
+     * @return bool
      */
     public function unassign_user_from_company(int $userid, bool $ws = false): bool {
         global $CFG, $DB;
@@ -2284,7 +2284,7 @@ class company {
      * @param int $companyid
      * @param object $currentdepartment
      * @param object $importtree
-     * @param boolean $toplevel
+     * @param bool $toplevel
      * @return void
      */
     public static function import_departments(int $companyid,
@@ -2442,7 +2442,7 @@ class company {
      * Get list of departments which are below this on on the tree
      *
      * @param object $parent
-     * @param boolean $ignorecurrentbranch
+     * @param bool $ignorecurrentbranch
      * @return object
      */
     public static function get_subdepartments(object $parent, bool $ignorecurrentbranch = false): object {
@@ -2552,7 +2552,7 @@ class company {
      * The parent department given a departmentid
      *
      * @param integer $departmentid
-     * @return object|boolean
+     * @return object|bool
      */
     public static function get_department_parentnode(int $departmentid): object|bool {
         global $DB;
@@ -2713,7 +2713,7 @@ class company {
      * including the passed department.
      *
      * @param integer $parentnodeid
-     * @param boolean $addchildcompanies
+     * @param bool $addchildcompanies
      * @return array
      */
     public static function get_all_subdepartments(int $parentnodeid, bool $addchildcompanies = false): array {
@@ -2753,7 +2753,7 @@ class company {
      * including the passed department.
      *
      * @param integer $departmentid
-     * @param boolean $addchildcompanies
+     * @param bool $addchildcompanies
      * @return array
      */
     public static function get_recursive_department_users(int $departmentid, bool $addchildcompanies = false): array {
@@ -2938,8 +2938,8 @@ class company {
      * @param integer $departmentid
      * @param integer $userid
      * @param integer $managertype
-     * @param boolean $ws
-     * @return boolean
+     * @param bool $ws
+     * @return bool
      */
     public static function assign_user_to_department(int $departmentid,
                                                      int $userid,
@@ -2979,7 +2979,7 @@ class company {
      * @param string $fullname
      * @param string $shortname
      * @param integer $parentid
-     * @return boolean
+     * @return bool
      */
     public static function create_department(int $departmentid,
                                              int $companyid,
@@ -3019,7 +3019,7 @@ class company {
      * Delete a department.
      *
      * @param integer $departmentid
-     * @return boolean
+     * @return bool
      */
     public static function delete_department(int $departmentid): bool {
         global $DB;
@@ -3058,7 +3058,7 @@ class company {
      * Check if a user is a manger of this department.
      *
      * @param integer $departmentid
-     * @return boolean
+     * @return bool
      */
     public static function can_manage_department(int $departmentid): bool {
         global $DB, $USER;
@@ -3136,7 +3136,7 @@ class company {
      * @param integer $departmentid
      * @param integer $courseid
      * @param integer $companyid
-     * @return boolean
+     * @return bool
      */
     public static function assign_course_to_department(int $departmentid, int $courseid, int $companyid): bool {
         global $DB;
@@ -3238,7 +3238,7 @@ class company {
      * Gets a list of all courses for this license id
      *
      * @param integer $licenseid
-     * @param boolean $visible
+     * @param bool $visible
      * @return array
      */
     public static function get_courses_by_license(int $licenseid, bool $visible = true): array {
@@ -3306,7 +3306,7 @@ class company {
      * Check if a license is assigned to a child company.
      *
      * @param integer $licenseid
-     * @return boolean
+     * @return bool
      */
     public function is_child_license(int $licenseid): bool {
         global $DB;
@@ -3332,13 +3332,13 @@ class company {
     /**
      * Get a menu list of courses based on the parameters passed.
      *
-     * @param boolean $shared include shared courses
-     * @param boolean $unlicensed include only unlicensed courses
-     * @param boolean $groups include courses without groups enabled
-     * @param boolean $default include a default menu item
-     * @param boolean $licenseonly include only licensed courses
-     * @param boolean $noncompany include courses that are unassigned to a tenant
-     * @param boolean $includehidden include courses which are hidde
+     * @param bool $shared include shared courses
+     * @param bool $unlicensed include only unlicensed courses
+     * @param bool $groups include courses without groups enabled
+     * @param bool $default include a default menu item
+     * @param bool $licenseonly include only licensed courses
+     * @param bool $noncompany include courses that are unassigned to a tenant
+     * @param bool $includehidden include courses which are hidde
      * @return array
      */
     public function get_menu_courses(bool $shared = false,
@@ -3484,7 +3484,7 @@ class company {
      * @param integer $licenseid
      * @param integer $courseid
      * @param integer $userid
-     * @return boolean
+     * @return bool
      */
     public static function license_ok_to_use(int $licenseid, int $courseid, int $userid): bool {
         global $DB, $CFG;
@@ -3656,7 +3656,7 @@ class company {
      * @param integer $userid
      * @param integer $companyid
      * @param integer $groupid
-     * @param boolean $clear
+     * @param bool $clear
      * @return void
      */
     public static function add_user_to_shared_course(int $courseid,
@@ -3734,7 +3734,7 @@ class company {
      *
      * @param integer $companyid
      * @param object $course
-     * @param boolean $oktounenroll
+     * @param bool $oktounenroll
      * @param integer $groupid
      * @return string|bool
      */
@@ -3879,7 +3879,7 @@ class company {
     /**
      * Suspend or Unsuspend a company and all of it's users
      *
-     * @param boolean $suspend
+     * @param bool $suspend
      * @return void
      */
     public function suspend(bool $suspend = true) {
@@ -3926,7 +3926,7 @@ class company {
      * Terminates a company, removing all course access and licenses for
      * all of it's users
      *
-     * @return boolean
+     * @return bool
      */
     public function terminate(): bool {
         global $DB;
@@ -4012,7 +4012,7 @@ class company {
     /**
      * Enable or disable ecommerce access for a company
      *
-     * @param boolean $ecommerce
+     * @param bool $ecommerce
      * @return void
      */
     public function ecommerce(bool $ecommerce) {
@@ -4034,7 +4034,7 @@ class company {
      *
      * @param integer $companyid
      * @param integer $departmentid
-     * @return boolean
+     * @return bool
      */
     public static function check_valid_department(int $companyid, int $departmentid): bool {
         global $DB;
@@ -4065,7 +4065,7 @@ class company {
      * @param integer $companyid
      * @param integer $userid
      * @param integer $deparmentid
-     * @return boolean
+     * @return bool
      */
     public static function check_valid_user(int $companyid, int $userid, int $deparmentid=0): bool {
         global $DB, $USER;
@@ -4113,7 +4113,7 @@ class company {
      *
      * @param integer $companyid
      * @param integer $userid
-     * @return boolean
+     * @return bool
      */
     public static function check_user_suspended(int $companyid, int $userid): bool {
         global $DB;
@@ -4131,7 +4131,7 @@ class company {
      * Check if the number of new users to be added to the company brings it above the maximum
      *
      * @param integer $new
-     * @return boolean
+     * @return bool
      */
     public function check_usercount(int $new = 0): bool {
         global $DB, $USER;
@@ -4181,7 +4181,7 @@ class company {
      *
      * @param integer $companyid
      * @param integer $userid
-     * @return boolean
+     * @return bool
      */
     public static function check_canedit_user(int $companyid, int $userid): bool {
         global $DB, $USER;
@@ -4231,7 +4231,7 @@ class company {
      *
      * @param integer $companyid
      * @param integer $licenseid
-     * @return boolean
+     * @return bool
      */
     public static function check_valid_company_license(int $companyid, int $licenseid): bool {
         global $DB;
@@ -4252,7 +4252,7 @@ class company {
      * Check if the current USER can manage a passed user id
      *
      * @param integer $userid
-     * @return boolean
+     * @return bool
      */
     public static function check_can_manage(int $userid): bool {
         global $DB, $USER;
@@ -4484,7 +4484,7 @@ class company {
      *
      * @param string $templatename
      * @param integer $managertype
-     * @return boolean
+     * @return bool
      */
     public function email_template_is_enabled(string $templatename, int $managertype = 0): bool {
         global $DB;
@@ -4612,7 +4612,7 @@ class company {
      *
      * @param pluginname
      * @param postfix
-     * @return boolean
+     * @return bool
      */
     public static function update_plugin(string $pluginname, string $postfix): bool {
         if (empty($pluginname) || empty ($postfix)) {
