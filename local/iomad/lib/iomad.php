@@ -23,8 +23,6 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use mod_questionnaire\responsetype\boolean;
-
 defined('MOODLE_INTERNAL') || die();
 
 require_once(dirname(__FILE__) . '/company.php');
@@ -79,7 +77,7 @@ class iomad {
      * company user tied to a company.
      *
      * @param object $context
-     * @param boolean $required
+     * @param bool $required
      * @return integer
      */
     public static function get_my_companyid(object $context, bool $required = true): int {
@@ -132,7 +130,7 @@ class iomad {
      * Check to see if a user is associated to a company.
      *
      * @param object|null $user
-     * @return boolean|integer
+     * @return bool|integer
      */
     public static function is_company_user(object $user): bool|int {
         global $USER, $DB, $SESSION;
@@ -167,7 +165,7 @@ class iomad {
      * Check to see if a user is a manager in a company.
      *
      * @param object|null $user
-     * @return boolean|integer
+     * @return bool|integer
      */
     public static function is_company_admin(object $user): bool|int {
         global $USER, $DB;
@@ -832,9 +830,9 @@ class iomad {
      * Check if the category is visible to the current user/company
      *
      * @param object $category
-     * @return boolean
+     * @return bool
      */
-    public static function iomad_check_category(object $category): boolean {
+    public static function iomad_check_category(object $category): bool {
         global $CFG, $DB, $USER;
 
         // If we are installing this will be called to build
@@ -862,7 +860,7 @@ class iomad {
      * Check if a course category id can be seen by a user.
      *
      * @param integer $categoryid
-     * @return boolean
+     * @return bool
      */
     public static function iomad_check_categoryid(int $categoryid): bool {
         global $CFG, $DB, $USER;
@@ -895,8 +893,8 @@ class iomad {
      * @param integer $checkid course id
      * @param string $name course shortname
      * @param string $idnumber course idnumber
-     * @param boolean $checkhidden don't strip hidden courses
-     * @return boolean
+     * @param bool $checkhidden don't strip hidden courses
+     * @return bool
      */
     public static function iomad_check_course(
         int $checkid = 0,
@@ -1115,8 +1113,8 @@ class iomad {
      * @param string $sort
      * @param string $dir
      * @param integer $departmentid
-     * @param boolean $nogrades
-     * @param boolean $allcourse
+     * @param bool $nogrades
+     * @param bool $allcourse
      * @return object
      */
     public static function get_user_sqlsearch(array $params,
@@ -1659,7 +1657,7 @@ class iomad {
      * @param string $sort
      * @param string $dir
      * @param integer|null $departmentid
-     * @param boolean $licenses
+     * @param bool $licenses
      * @return object
      */
     public static function get_user_license_sqlsearch(array $params,
@@ -1750,7 +1748,7 @@ class iomad {
      *
      * @param integer $departmentid
      * @param integer $courseid
-     * @param boolean $showsuspended
+     * @param bool $showsuspended
      * @return array
      */
     public static function get_course_license_summary_info(
@@ -1841,8 +1839,8 @@ class iomad {
      * @param integer $page
      * @param integer $perpage
      * @param integer $completiontype
-     * @param boolean $showsuspended
-     * @param boolean $showused
+     * @param bool $showsuspended
+     * @param bool $showused
      * @return array
      */
     public static function get_all_user_course_license_data(array $searchinfo,
@@ -1998,8 +1996,8 @@ class iomad {
      * @param integer $page
      * @param integer $perpage
      * @param integer $completiontype
-     * @param boolean $showsuspended
-     * @param boolean $showused
+     * @param bool $showsuspended
+     * @param bool $showused
      * @return object
      */
     public static function get_user_course_license_data(array $searchinfo,
@@ -2083,7 +2081,7 @@ class iomad {
      * @param string $capability
      * @param context $context
      * @param array $accessdata
-     * @return boolean
+     * @return bool
      */
     private static function has_capability_in_accessdata(
         int $companyid,
@@ -2301,7 +2299,7 @@ class iomad {
      *
      * @param string $plugin
      * @param string $name
-     * @return boolean|object|string
+     * @return bool|object|string
      */
     public static function get_config($plugin, $name = null) {
 
