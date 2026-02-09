@@ -199,7 +199,7 @@ class renderer extends plugin_renderer_base {
         // Get the calendar type used - see MDL-18375.
         $calendartype = \core_calendar\type_factory::get_calendar_instance();
 
-        $this->_elements = array();
+        $this->_elements = [];
 
         $dateformat = $calendartype->get_date_order();
         // Reverse date element (Day, Month, Year), in RTL mode.
@@ -298,8 +298,8 @@ class renderer extends plugin_renderer_base {
             $userlevels = $company->get_userlevel($USER);
         }
 
-        $subhierarchieslist = array();
-        $departmenttree = array();
+        $subhierarchieslist = [];
+        $departmenttree = [];
         foreach ($userlevels as $userlevelid => $userlevel) {
             $subhierarchieslist = $subhierarchieslist + company::get_all_subdepartments($userlevelid, $addchildcompanies);
             $departmenttree[$userlevelid] = company::get_all_subdepartments_raw($userlevelid, false, $addchildcompanies);
@@ -356,8 +356,8 @@ class renderer extends plugin_renderer_base {
         }
 
         // Put them into a big list.
-        $subhierarchieslist = array();
-        $departmenttree = array();
+        $subhierarchieslist = [];
+        $departmenttree = [];
         foreach ($userlevels as $userlevelid => $userlevel) {
             $subhierarchieslist = $subhierarchieslist + company::get_all_subdepartments($userlevelid, $addchildcompanies);
             $departmenttree[] = company::get_all_subdepartments_raw($userlevelid, false, $addchildcompanies);

@@ -135,7 +135,7 @@ if (!empty($companyid)) {
     $company = $DB->get_record('company', array('id' => $companyid), '*', MUST_EXIST);
 
     // Get the company category.
-    $categories = array();
+    $categories = [];
     $profileinfo = new stdclass();
     $profileinfo->profileid = $company->profileid;
     $categories[$company->profileid] = $profileinfo;
@@ -156,7 +156,7 @@ foreach ($categories as $category) {
     $table->align = array('left', 'right');
     $table->width = '95%';
     $table->attributes['class'] = 'generaltable profilefield';
-    $table->data = array();
+    $table->data = [];
 
     if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->profileid), 'sortorder ASC')) {
         foreach ($fields as $field) {

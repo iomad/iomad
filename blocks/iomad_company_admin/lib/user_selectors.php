@@ -111,7 +111,7 @@ abstract class company_user_selector_base extends user_selector_base {
     protected function get_course_user_ids() {
         global $CFG, $DB, $PAGE;
         if (!isset( $this->courseid) ) {
-            return array();
+            return [];
         } else {
             $course = $DB->get_record('course', array('id' => $this->courseid));
             $courseenrolmentmanager = new courseenrolmentmanager($PAGE, $course);
@@ -283,7 +283,7 @@ class current_company_managers_user_selector extends company_user_selector_base 
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
 
         if (empty($availableusers)) {
-            return array();
+            return [];
         }
 
         if ($search) {
@@ -331,7 +331,7 @@ class potential_company_managers_user_selector extends company_user_selector_bas
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
 
         if (empty($availableusers)) {
-            return array();
+            return [];
         }
 
         if ($search) {
@@ -377,7 +377,7 @@ class current_company_users_user_selector extends company_user_selector_base {
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
 
         if (empty($availableusers)) {
-            return array();
+            return [];
         }
 
         if ($search) {
@@ -440,7 +440,7 @@ class potential_company_users_user_selector extends company_user_selector_base {
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
 
         if (empty($availableusers)) {
-            return array();
+            return [];
         }
 
         foreach ($availableusers as $id => $user) {
@@ -524,7 +524,7 @@ class current_company_course_user_selector extends company_user_selector_base {
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
 
         if (empty($availableusers)) {
-            return array();
+            return [];
         }
 
         // We want the enrolment id here not the user id.
@@ -555,20 +555,20 @@ class current_company_course_user_selector extends company_user_selector_base {
     protected function load_selected_users() {
         // See if we got anything.
         if ($this->multiselect) {
-            $userids = optional_param_array($this->name, array(), PARAM_INT);
+            $userids = optional_param_array($this->name, [], PARAM_INT);
         } else if ($userid = optional_param($this->name, 0, PARAM_INT)) {
             $userids = array($userid);
         }
         // If there are no users there is nobody to load.
         if (empty($userids)) {
-            return array();
+            return [];
         }
 
         // If we did, use the find_users method to validate the ids.
         $groupedusers = $this->find_users('', true);
 
         // Aggregate the resulting list back into a single one.
-        $users = array();
+        $users = [];
         foreach ($groupedusers as $group) {
             foreach ($group as $user) {
                 if (!isset($users[$user->userenrolmentid]) && empty($user->disabled) && in_array($user->userenrolmentid, $userids)) {
@@ -660,7 +660,7 @@ class potential_company_course_user_selector extends company_user_selector_base 
             $countsql = " HAVING count(ue.enrolid) = " . count($selectedcourses);
         }
         if (!isset( $this->selectedcourses) ) {
-            return array();
+            return [];
         } else {
             $usersql = "SELECT ue.userid,count(ue.enrolid) AS enrolcount FROM {user_enrolments} ue
                         JOIN {enrol} e ON (ue.enrolid = e.id AND e.status = 0)
@@ -673,7 +673,7 @@ class potential_company_course_user_selector extends company_user_selector_base 
                 // Only return the keys (user ids).
                 return array_keys($users);
             } else {
-                return array();
+                return [];
             }
         }
     }
@@ -749,7 +749,7 @@ class potential_company_course_user_selector extends company_user_selector_base 
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
 
         if (empty($availableusers)) {
-            return array();
+            return [];
         }
 
         if ($search) {
@@ -801,7 +801,7 @@ class potential_department_user_selector extends company_user_selector_base {
     protected function get_department_user_ids() {
         global $CFG, $DB;
         if (!isset( $this->departmentid) ) {
-            return array();
+            return [];
         } else {
             if ($this->roletype != 3) {
                 // We dont want users of this type in the list.
@@ -811,7 +811,7 @@ class potential_department_user_selector extends company_user_selector_base {
                     // Only return the keys (user ids).
                     return array_keys($users);
                 } else {
-                    return array();
+                    return [];
                 }
             } else {
                 if ($users = $DB->get_records('company_users', array('companyid' => $this->companyid,
@@ -820,7 +820,7 @@ class potential_department_user_selector extends company_user_selector_base {
                     // Only return the keys (user ids).
                     return array_keys($users);
                 } else {
-                    return array();
+                    return [];
                 }
             }
         }
@@ -901,7 +901,7 @@ class potential_department_user_selector extends company_user_selector_base {
         if (!empty($deptids)) {
             $departmentsql = "AND du.departmentid in ($deptids)";
         } else {
-            return array();
+            return [];
         }
 
         $sql = " FROM {user} u
@@ -940,7 +940,7 @@ class potential_department_user_selector extends company_user_selector_base {
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params)
                           + $DB->get_records_sql($fields . $othermanagersql . $order, $params);
         if (empty($availableusers)) {
-            return array();
+            return [];
         }
 
         if ($search) {
@@ -997,13 +997,13 @@ class current_department_user_selector extends company_user_selector_base {
     protected function get_department_user_ids() {
         global $CFG, $DB;
         if (!isset( $this->departmentid) ) {
-            return array();
+            return [];
         } else {
             if ($users = $DB->get_records('company_users', array('departmentid' => $this->departmentid, 'suspended' => 0), null, 'userid')) {
                 // Only return the keys (user ids).
                 return array_values($users);
             } else {
-                return array();
+                return [];
             }
         }
     }
@@ -1064,7 +1064,7 @@ class current_department_user_selector extends company_user_selector_base {
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
 
         if (empty($availableusers)) {
-            return array();
+            return [];
         }
 
         if ($search) {
@@ -1150,7 +1150,7 @@ class potential_license_user_selector extends company_user_selector_base {
         global $CFG, $DB;
 
         if (!isset( $this->license->id) ) {
-            return array();
+            return [];
         } else {
             if (!empty($this->selectedcourses) && !in_array(0, $this->selectedcourses)) {
                 $coursesql = " AND clu.licensecourseid IN (" . implode(',', array_values($this->selectedcourses)) . ") ";
@@ -1178,7 +1178,7 @@ class potential_license_user_selector extends company_user_selector_base {
                 // Only return the keys (user ids).
                 return array_keys($users);
             } else {
-                return array();
+                return [];
             }
         }
     }
@@ -1187,7 +1187,7 @@ class potential_license_user_selector extends company_user_selector_base {
         global $CFG, $DB, $USER, $companycontext;
 
         if (!isset( $this->licenseid) ) {
-            return array();
+            return [];
         } else {
             if (!$DB->get_records_sql("SELECT pc.id
                                       FROM {iomad_courses} pc
@@ -1212,7 +1212,7 @@ class potential_license_user_selector extends company_user_selector_base {
                         clc.licenseid = ".$this->licenseid ."
                         AND d.company = ".$this->companyid;
                 $departments = $DB->get_records_sql($sql);
-                $shareddepartment = array();
+                $shareddepartment = [];
                 if ($shared) {
                     if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext)) {
                         // Need to add the top level department.
@@ -1228,7 +1228,7 @@ class potential_license_user_selector extends company_user_selector_base {
                     // Only return the keys (user ids).
                     return array_keys($departments);
                 } else {
-                    return array();
+                    return [];
                 }
             } else {
                 return array($this->departmentid);
@@ -1259,7 +1259,7 @@ class potential_license_user_selector extends company_user_selector_base {
 
         // If there are no courses we can't display any users.
         if (empty($this->selectedcourses)) {
-            return array();
+            return [];
         }
 
         $companyrec = $DB->get_record('company', array('id' => $this->companyid));
@@ -1312,7 +1312,7 @@ class potential_license_user_selector extends company_user_selector_base {
         if (!empty($deptids)) {
             $departmentsql = "AND du.departmentid in ($deptids)";
         } else {
-            return array();
+            return [];
         }
 
         $sql = " FROM {user} u
@@ -1337,7 +1337,7 @@ class potential_license_user_selector extends company_user_selector_base {
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
 
         if (empty($availableusers)) {
-            return array();
+            return [];
         }
 
         $this->process_license_allocations($availableusers);
@@ -1405,13 +1405,13 @@ class current_license_user_selector extends company_user_selector_base {
         global $CFG, $DB;
 
         if (!isset( $this->licenseid) ) {
-            return array();
+            return [];
         } else {
             if (!empty($this->selectedcourses) && !in_array(0, $this->selectedcourses)) {
                 $coursesql = " AND licensecourseid IN (" . implode(',', array_values($this->selectedcourses)) . ") ";
                 $countsql = " HAVING count(licensecourseid) = " . count($this->selectedcourses);
             } else {
-                return array();
+                return [];
                 $coursesql = "";
                 $countsql = " HAVING count(licensecourseid) = " . count($this->courses);
             }
@@ -1437,7 +1437,7 @@ class current_license_user_selector extends company_user_selector_base {
                 // Only return the keys (user ids).
                 return array_values($users);
             } else {
-                return array();
+                return [];
             }
         }
     }
@@ -1467,7 +1467,7 @@ class current_license_user_selector extends company_user_selector_base {
 
         // If there are no courses we can't display any users.
         if (empty($this->selectedcourses)) {
-            return array();
+            return [];
         }
 
         // By default wherecondition retrieves all users except the deleted, not confirmed and guest.
@@ -1555,12 +1555,12 @@ class current_license_user_selector extends company_user_selector_base {
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
 
         if (empty($availableusers)) {
-            return array();
+            return [];
         }
 
         // If we are a program then we only want one entry per user.
         if (!empty($this->program)) {
-            $userlist = array();
+            $userlist = [];
             foreach ($availableusers as $id => $rawuser) {
                 $userlist[$rawuser->id] = $rawuser;
             }
@@ -1628,20 +1628,20 @@ class current_license_user_selector extends company_user_selector_base {
     protected function load_selected_users() {
         // See if we got anything.
         if ($this->multiselect) {
-            $userids = optional_param_array($this->name, array(), PARAM_INT);
+            $userids = optional_param_array($this->name, [], PARAM_INT);
         } else if ($userid = optional_param($this->name, 0, PARAM_INT)) {
             $userids = array($userid);
         }
         // If there are no users there is nobody to load.
         if (empty($userids)) {
-            return array();
+            return [];
         }
 
         // If we did, use the find_users method to validate the ids.
         $groupedusers = $this->find_users('', true);
 
         // Aggregate the resulting list back into a single one.
-        $users = array();
+        $users = [];
         foreach ($groupedusers as $group) {
             foreach ($group as $user) {
                 if (!isset($users[$user->licenseid]) && empty($user->disabled) && in_array($user->licenseid, $userids)) {
@@ -1726,7 +1726,7 @@ class current_company_group_user_selector extends company_user_selector_base {
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
 
         if (empty($availableusers)) {
-            return array();
+            return [];
         }
 
         if ($search) {
@@ -1833,7 +1833,7 @@ class potential_company_group_user_selector extends company_user_selector_base {
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
 
         if (empty($availableusers)) {
-            return array();
+            return [];
         }
 
         if ($search) {
@@ -1910,7 +1910,7 @@ class current_company_thread_user_selector extends company_user_selector_base {
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
 
         if (empty($availableusers)) {
-            return array();
+            return [];
         }
 
         //  Add the group details.
@@ -2033,7 +2033,7 @@ class potential_company_thread_user_selector extends company_user_selector_base 
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
 
         if (empty($availableusers)) {
-            return array();
+            return [];
         }
 
         if ($search) {

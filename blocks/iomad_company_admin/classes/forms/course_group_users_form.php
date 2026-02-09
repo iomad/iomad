@@ -48,7 +48,7 @@ class course_group_users_form extends moodleform {
     protected $selectedgroup = 0;
     protected $selectedcourse = 0;
     protected $isdefault = false;
-    protected $defaultgroup = array();
+    protected $defaultgroup = [];
 
     public function __construct($actionurl, $companycontext, $companyid, $departmentid, $courseid, $groupid) {
         global $USER;

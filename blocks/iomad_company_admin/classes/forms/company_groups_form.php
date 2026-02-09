@@ -36,7 +36,7 @@ class company_groups_form extends company_moodleform {
     protected $companydepartment = 0;
     protected $selectedcourse = 0;
     protected $company = null;
-    protected $courses = array();
+    protected $courses = [];
 
 
     public function __construct($actionurl, $context, $companyid, $selectedcourse) {

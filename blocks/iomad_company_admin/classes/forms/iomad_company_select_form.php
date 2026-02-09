@@ -26,9 +26,9 @@ namespace block_iomad_company_admin\forms;
 use \moodleform;
 
 class iomad_company_select_form extends moodleform {
-    protected $companies = array();
+    protected $companies = [];
 
-    public function __construct($actionurl, $companies = array(), $selectedcompany = 0) {
+    public function __construct($actionurl, $companies = [], $selectedcompany = 0) {
         global $USER, $DB;
         if (empty($selectedcompany) || empty($companies[$selectedcompany])) {
             $this->companies = [0 => get_string('selectacompany', 'block_iomad_company_selector')] + $companies;

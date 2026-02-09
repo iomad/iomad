@@ -53,7 +53,7 @@ class companyenableshop extends adhoc_task {
         \iomad_commerce::update_company($companyrecord, $companyrecord);
 
         // get the company user ids.
-        //$userids = array();
+        //$userids = [];
         $userids = $company->get_all_user_ids();
 
         // fire the user update.

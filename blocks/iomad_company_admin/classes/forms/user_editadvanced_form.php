@@ -68,9 +68,9 @@ class user_editadvanced_form extends moodleform {
         $auths = core_component::get_plugin_list('auth');
         $enabled = get_string('pluginenabled', 'core_plugin');
         $disabled = get_string('plugindisabled', 'core_plugin');
-        $authoptions = array($enabled => array(), $disabled => array());
-        $cannotchangepass = array();
-        $cannotchangeusername = array();
+        $authoptions = array($enabled => [], $disabled => array());
+        $cannotchangepass = [];
+        $cannotchangeusername = [];
         foreach ($auths as $auth => $unused) {
             $authinst = get_auth_plugin($auth);
 
@@ -251,7 +251,7 @@ class user_editadvanced_form extends moodleform {
         $usernew->username = trim($usernew->username);
 
         $user = $DB->get_record('user', array('id' => $usernew->id));
-        $err = array();
+        $err = [];
 
         if (!$user and !empty($usernew->createpassword)) {
             if ($usernew->suspended) {

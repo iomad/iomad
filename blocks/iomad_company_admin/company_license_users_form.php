@@ -32,7 +32,7 @@ $courseid = optional_param('courseid', 0, PARAM_INTEGER);
 $departmentid = optional_param('deptid', 0, PARAM_INTEGER);
 $licenseid = optional_param('licenseid', 0, PARAM_INTEGER);
 $error = optional_param('error', 0, PARAM_INTEGER);
-$selectedcourses = optional_param_array('courses', array(), PARAM_INT);
+$selectedcourses = optional_param_array('courses', [], PARAM_INT);
 $chosenid = optional_param('chosenid', 0, PARAM_INT);
 
 require_login();
@@ -88,7 +88,7 @@ if ($courseid) {
 $parentlevel = company::get_company_parentnode($companyid);
 
 $availablewarning = '';
-$licenselist = array();
+$licenselist = [];
 if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
     $userhierarchylevel = $parentlevel->id;
     // Get all the licenses.

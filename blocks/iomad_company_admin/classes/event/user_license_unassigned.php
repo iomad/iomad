@@ -99,7 +99,7 @@ class user_license_unassigned extends \core\event\base {
     }
 
     public static function get_other_mapping() {
-        $othermapped = array();
+        $othermapped = [];
 
         return $othermapped;
     }

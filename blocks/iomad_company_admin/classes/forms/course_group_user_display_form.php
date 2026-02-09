@@ -58,7 +58,7 @@ class course_group_user_display_form extends company_moodleform {
         if (!empty($this->courseid)) {
             $coursegroups = $company->get_course_groups_menu($this->courseid);
         } else {
-            $coursegroups = array();
+            $coursegroups = [];
         }
 
 

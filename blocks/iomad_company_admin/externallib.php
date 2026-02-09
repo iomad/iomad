@@ -98,7 +98,7 @@ class block_iomad_company_admin_external extends external_api {
         require_capability('block/iomad_company_admin:company_add', $context);
 
         // Array to return newly created records
-        $companyinfo = array();
+        $companyinfo = [];
 
         foreach ($params['companies'] as $company) {
 
@@ -258,7 +258,7 @@ class block_iomad_company_admin_external extends external_api {
      * @param $companyids
      * @return array of objects
      */
-    public static function get_companies($criteria = array()) {
+    public static function get_companies($criteria = []) {
         global $CFG, $DB;
 
         // Validate parameters
@@ -269,10 +269,10 @@ class block_iomad_company_admin_external extends external_api {
         self::validate_context($context);
         require_capability('block/iomad_company_admin:company_add', $context);
 
-        $companies = array();
-        $warnings = array();
-        $sqlparams = array();
-        $usedkeys = array();
+        $companies = [];
+        $warnings = [];
+        $sqlparams = [];
+        $usedkeys = [];
         $sql = " shortname IS NOT NULL ";
 
         foreach ($params['criteria'] as $criteriaindex => $criteria) {
@@ -638,7 +638,7 @@ class block_iomad_company_admin_external extends external_api {
      * @param $comapnyid
      * @return array of department records.
      */
-    public static function get_departments($criteria = array()) {
+    public static function get_departments($criteria = []) {
         global $CFG, $DB;
 
         // Validate parameters
@@ -650,10 +650,10 @@ class block_iomad_company_admin_external extends external_api {
         require_capability('block/iomad_company_admin:edit_all_departments', $context);
 
         // Validate the criteria and retrieve the users.
-        $users = array();
-        $warnings = array();
-        $sqlparams = array();
-        $usedkeys = array();
+        $users = [];
+        $warnings = [];
+        $sqlparams = [];
+        $usedkeys = [];
         $sql = ' company != 0 ';
 
         foreach ($params['criteria'] as $criteriaindex => $criteria) {
@@ -776,7 +776,7 @@ class block_iomad_company_admin_external extends external_api {
      * @param $companyid
      * @return array of course records.
      */
-    public static function get_company_courses($criteria = array()) {
+    public static function get_company_courses($criteria = []) {
         global $CFG, $DB;
 
         // Validate parameters
@@ -789,9 +789,9 @@ class block_iomad_company_admin_external extends external_api {
 
         // Validate the criteria and retrieve the users.
         $params = $params['criteria'][0];
-        $courses = array();
-        $warnings = array();
-        $sqlparams = array();
+        $courses = [];
+        $warnings = [];
+        $sqlparams = [];
         $sql = ' company != 0 ';
 
         if (!empty($params['companyid'])) {
@@ -928,7 +928,7 @@ class block_iomad_company_admin_external extends external_api {
         self::validate_context($context);
         require_capability('block/iomad_company_admin:assign_company_manager', $context);
 
-        $result = array();
+        $result = [];
 
         // Deal with the list of users.
         foreach ($params['users'] as $userrecord) {
@@ -982,7 +982,7 @@ class block_iomad_company_admin_external extends external_api {
                               'result' => $succeeded,
                               'message' => $errormessage);
         }
-        return array('users' => $result, 'warning' => array());;
+        return array('users' => $result, 'warning' => []);;
     }
 
    /**
@@ -1206,7 +1206,7 @@ class block_iomad_company_admin_external extends external_api {
         return new external_function_parameters(
             array(
                 'departmentids' => new external_multiple_structure(
-                    new external_value(PARAM_INT, 'Department id'), 'List of department IDs', VALUE_DEFAULT, array()
+                    new external_value(PARAM_INT, 'Department id'), 'List of department IDs', VALUE_DEFAULT, []
                 )
             )
         );
@@ -1220,7 +1220,7 @@ class block_iomad_company_admin_external extends external_api {
      * @param $comapnyid
      * @return array of department records.
      */
-    public static function get_department_users($departmentids = array()) {
+    public static function get_department_users($departmentids = []) {
         global $CFG, $DB;
 
         $params = array(
@@ -1234,7 +1234,7 @@ class block_iomad_company_admin_external extends external_api {
         $context = context_system::instance();
         self::validate_context($context);
         require_capability('block/iomad_company_admin:editusers', $context);
-        $departmentinfo= array();
+        $departmentinfo= [];
 
         if (!empty($params['departmentids']))  {
 
@@ -1499,7 +1499,7 @@ class block_iomad_company_admin_external extends external_api {
         return new external_function_parameters(
             array(
                 'courrseids' => new external_multiple_structure(
-                    new external_value(PARAM_INT, 'Course id'), 'List of course IDs', VALUE_DEFAULT, array()
+                    new external_value(PARAM_INT, 'Course id'), 'List of course IDs', VALUE_DEFAULT, []
                 )
             )
         );
@@ -1513,7 +1513,7 @@ class block_iomad_company_admin_external extends external_api {
      * @param $comapnyid
      * @return array of department records.
      */
-    public static function get_course_info($courseids = array()) {
+    public static function get_course_info($courseids = []) {
         global $CFG, $DB;
 
         // Validate parameters
@@ -1532,7 +1532,7 @@ class block_iomad_company_admin_external extends external_api {
         }
 
         // convert to suitable format (I think)
-        $courseinfo = array();
+        $courseinfo = [];
         foreach ($courses as $course) {
             $courseinfo[] = (array) $course;
         }
@@ -1609,7 +1609,7 @@ class block_iomad_company_admin_external extends external_api {
      * @param $comapnyid
      * @return array of department records.
      */
-    public static function get_license_info($criteria = array()) {
+    public static function get_license_info($criteria = []) {
         global $CFG, $DB;
 
         // Validate parameters
@@ -1621,10 +1621,10 @@ class block_iomad_company_admin_external extends external_api {
         require_capability('block/iomad_company_admin:view_licenses', $context);
 
         // Validate the criteria and retrieve the licenses.
-        $licenses = array();
-        $warnings = array();
-        $sqlparams = array();
-        $usedkeys = array();
+        $licenses = [];
+        $warnings = [];
+        $sqlparams = [];
+        $usedkeys = [];
         $sql = ' allocation > 0 ';
 
         foreach ($params['criteria'] as $criteriaindex => $criteria) {
@@ -1779,7 +1779,7 @@ class block_iomad_company_admin_external extends external_api {
      * @param $comapnyid
      * @return array of department records.
      */
-    public static function create_licenses($licenses = array()) {
+    public static function create_licenses($licenses = []) {
         global $DB, $USER;
 
         $params = self::validate_parameters(self::create_licenses_parameters(), array('licenses' => $licenses));
@@ -1790,7 +1790,7 @@ class block_iomad_company_admin_external extends external_api {
         require_capability('block/iomad_company_admin:edit_licenses', $context);
 
         // Array to return newly created records
-        $licenseinfo = array();
+        $licenseinfo = [];
 
         foreach ($params['licenses'] as $license) {
 
@@ -2546,7 +2546,7 @@ class block_iomad_company_admin_external extends external_api {
                 array($token));
 
         if (!$userrec = $DB->get_record('user', array('username' => $token['username']))) {
-            $result = array();
+            $result = [];
             $result['status'] = false;
             $result['warnings'] = array(array('item' => 'username',
                                               'username' => $token['username'],
@@ -2556,7 +2556,7 @@ class block_iomad_company_admin_external extends external_api {
         }
 
         if (!$DB->get_record_select('company_transient_tokens', 'userid = :userid AND expires > :time', array('userid' => $userrec->id, 'time' => time()))) {
-            $result = array();
+            $result = [];
             $result['status'] = false;
             $result['warnings'] = array(array('item' => 'token',
                                               'token' => $token['token'],
@@ -2565,9 +2565,9 @@ class block_iomad_company_admin_external extends external_api {
             return $result;
         }
 
-        $result = array();
+        $result = [];
         $result['status'] = true;
-        $result['warnings'] = array();
+        $result['warnings'] = [];
         return $result;
     }
 
@@ -2646,9 +2646,9 @@ class block_iomad_company_admin_external extends external_api {
             \core\event\user_updated::create_from_userid($user->userid)->trigger();
         }
 
-        $result = array();
+        $result = [];
         $result['status'] = true;
-        $result['warnings'] = array();
+        $result['warnings'] = [];
         return $result;
     }
 

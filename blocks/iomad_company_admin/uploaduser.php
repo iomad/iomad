@@ -165,7 +165,7 @@ $stdfields = array('id', 'firstname', 'lastname', 'username', 'email',
         'url', 'description', 'descriptionformat', 'oldusername', 'deleted',
         'password', 'temppassword', 'suspended');
 
-$prffields = array();
+$prffields = [];
 
 if ($proffields = $DB->get_records('user_info_field')) {
     foreach ($proffields as $proffield) {
@@ -284,10 +284,10 @@ if (!empty($cancelled)) {
                                                                        AND clc.licenseid = :licenseid)",
                                                                        array('licenseid' => $formdata->licenseid));
             } else {
-                $formdata->licensecourses = optional_param_array('licensecourses', array(), PARAM_INT);
+                $formdata->licensecourses = optional_param_array('licensecourses', [], PARAM_INT);
             }
         } else {
-            $formdata->licensecourses = array();
+            $formdata->licensecourses = [];
         }
 
         // Print the header.
@@ -316,12 +316,12 @@ if (!empty($cancelled)) {
         $weakpasswords = 0;
         $numlicenses = 0;
         $numlicenseerrors = 0;
-        $erroredusers = array();
+        $erroredusers = [];
 
         // Caches.
-        $ccache       = array(); // Course cache - do not fetch all courses here, we  will not probably use them all anyway!
+        $ccache       = []; // Course cache - do not fetch all courses here, we  will not probably use them all anyway!
         $rolecache    = uu_allowed_roles_cache(); // Roles lookup cache.
-        $manualcache  = array(); // Cache of used manual enrol plugins in each course.
+        $manualcache  = []; // Cache of used manual enrol plugins in each course.
 
         $allowedauths   = uu_allowed_auths();
         $allowedauths   = array_keys($allowedauths);
@@ -337,7 +337,7 @@ if (!empty($cancelled)) {
 
         // Clear bulk selection.
         if ($bulk) {
-            $SESSION->bulk_users = array();
+            $SESSION->bulk_users = [];
         }
 
         // Init csv import helper.
@@ -687,7 +687,7 @@ if (!empty($cancelled)) {
                     // Load existing profile data.
                     profile_load_data($existinguser);
 
-                    $allowed = array();
+                    $allowed = [];
                     if ($updatetype == 1) {
                         $allowed = $columns;
                     } else if ($updatetype == 2 or $updatetype == 3) {
@@ -1074,7 +1074,7 @@ if (!empty($cancelled)) {
                         }
                         //build group cache
                         if (is_null($ccache[$shortname]->groups)) {
-                            $ccache[$shortname]->groups = array();
+                            $ccache[$shortname]->groups = [];
                             if ($groups = groups_get_all_groups($course->id)) {
                                 foreach ($groups as $gid=>$group) {
                                     $ccache[$shortname]->groups[$gid] = new stdClass();
@@ -1173,7 +1173,7 @@ if (!empty($cancelled)) {
             // Enrol user into courses that were selected on the form.
             if (!empty($formdata->selectedcourses)) {
                 // add the user to the courses selected in the upload form.
-                $courseids = array();
+                $courseids = [];
                 foreach ($formdata->selectedcourses as $selectedcourse) {
                     if (is_object($selectedcourse)) {
                         $selectedcourse = $selectedcourse->id;
@@ -1307,10 +1307,10 @@ echo $output->header();
 $cir->init();
 $availableauths = \core_component::get_plugin_list('auth');
 $availableauths = array_keys($availableauths);
-$contents = array();
+$contents = [];
 while ($fields = $cir->next()) {
-    $errormsg = array();
-    $rowcols = array();
+    $errormsg = [];
+    $rowcols = [];
     foreach ($fields as $key => $field) {
         $rowcols[$columns[$key]] = $field;
     }
@@ -1434,7 +1434,7 @@ while ($fields = $cir->next()) {
     }
 
     if (!empty($errormsg)) {
-        $rowcols['error'] = array();
+        $rowcols['error'] = [];
         $rowcols['error'] = $errormsg;
     }
     if ($rowcols['action'] != 'skipped') {
@@ -1444,7 +1444,7 @@ while ($fields = $cir->next()) {
 $cir->close();
 
 // Get heading.
-$headings = array();
+$headings = [];
 foreach ($contents as $content) {
     foreach ($content as $key => $value) {
         if (!in_array($key, $headings)) {
@@ -1458,8 +1458,8 @@ $table->id = "uupreview";
 $table->attributes['class'] = 'generaltable';
 $table->tablealign = 'center';
 $table->summary = get_string('uploaduserspreview', 'tool_uploaduser');
-$table->head = array();
-$table->data = array();
+$table->head = [];
+$table->data = [];
 
 // Print heading.
 foreach ($headings as $heading) {
@@ -1627,7 +1627,7 @@ class uu_progress_tracker {
 
     public function flush() {
         if (empty($this->_row) or empty($this->_row['line']['normal'])) {
-            $this->_row = array();
+            $this->_row = [];
             foreach ($this->columns as $col) {
                 $this->_row[$col] = array('normal' => '', 'info' => '', 'warning' => '', 'error' => '');
             }
@@ -1695,7 +1695,7 @@ function validate_user_upload_columns(&$columns) {
         return get_string('csvfewcolumns', 'error');
     }
     // Test columns.
-    $processed = array();
+    $processed = [];
     foreach ($columns as $key => $unused) {
         $field = $columns[$key];
         if (!in_array($field, $stdfields) && !in_array($field, $prffields) &&
@@ -1812,7 +1812,7 @@ function uu_allowed_auths() {
     // TODO: add support for more plugins in 2.0!
     $whitelist = array('manual', 'nologin', 'none', 'email');
     $plugins = get_enabled_auth_plugins();
-    $choices = array();
+    $choices = [];
     foreach ($plugins as $plugin) {
         $choices[$plugin] = get_string('pluginname', "auth_{$plugin}");
     }
@@ -1844,6 +1844,6 @@ function uu_allowed_roles_cache() {
     if (!empty($rolecache)) {
         return $rolecache;
     } else {
-        return array();
+        return [];
     }
 }

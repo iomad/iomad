@@ -66,7 +66,7 @@ class iomad_company_admin {
         $capabilities = $DB->get_records('role_capabilities', array('roleid' => $roleid, 'contextid' => $context->id));
 
         // Filter out caps. Only want 'local/report' and ones containing 'iomad'
-        $filtered_capabilities = array();
+        $filtered_capabilities = [];
         foreach ($capabilities as $capability) {
             if ((strpos($capability->capability, 'local/report')===false)
                     && (strpos($capability->capability, 'iomad')===false)
@@ -105,7 +105,7 @@ class iomad_company_admin {
         $capabilities = $DB->get_records('role_capabilities', array('roleid' => $roleid, 'contextid' => $context->id));
 
         // Filter out caps. Only want 'local/report' and ones containing 'iomad'
-        $filtered_capabilities = array();
+        $filtered_capabilities = [];
         foreach ($capabilities as $capability) {
             if ((strpos($capability->capability, 'local/report')===false)
                     && (strpos($capability->capability, 'iomad')===false)

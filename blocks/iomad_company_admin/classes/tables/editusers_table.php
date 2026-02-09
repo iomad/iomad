@@ -277,7 +277,7 @@ class editusers_table extends table_sql {
         global $USER, $output, $params, $companycontext, $DB, $companyid;
 
         // User actions
-        $actions = array();
+        $actions = [];
 
         if ($row->username == 'guest') {
             return; // Do not dispaly dummy new user and guest here.

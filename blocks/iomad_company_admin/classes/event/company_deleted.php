@@ -98,7 +98,7 @@ class company_deleted extends \core\event\base {
     }
 
     public static function get_other_mapping() {
-        $othermapped = array();
+        $othermapped = [];
 
         return $othermapped;
     }

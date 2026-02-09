@@ -56,7 +56,7 @@ $company = new company($companyid);
 
 iomad::require_capability('block/iomad_company_admin:assign_groups', $companycontext);
 
-$urlparams = array();
+$urlparams = [];
 if ($returnurl) {
     $urlparams['returnurl'] = $returnurl;
 }
@@ -112,7 +112,7 @@ if (!empty($groupform) && $groupform->is_cancelled()) {
     }
     if (!empty($selectedgroup)) {
         $groupform->process();
-        $groupform->set_data(array());
+        $groupform->set_data([]);
         $groupform->display();
     }
 

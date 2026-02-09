@@ -19,7 +19,7 @@ require(dirname(__FILE__) . '/config.php');
 $functionname = 'block_iomad_company_admin_get_companies';
 
 /// PARAMETERS
-$params = array();
+$params = [];
 
 /// XML-RPC CALL
 header('Content-Type: text/plain');

@@ -109,11 +109,11 @@ class current_company_frameworks_selector extends company_framework_selector_bas
                             $DB->get_records_sql($fields . $sharedsql . $order, $params);
 
         if (empty($availableframeworks)) {
-            return array();
+            return [];
         }
 
         // Set up empty return.
-        $frameworkarray = array();
+        $frameworkarray = [];
         if (!empty($availableframeworks)) {
             if ($search) {
                 $groupname = get_string('currcompanyframeworksmatching', 'block_iomad_company_admin', $search);
@@ -202,13 +202,13 @@ class potential_company_frameworks_selector extends company_framework_selector_b
         $DB->get_records_sql($distinctfields . $sqldistinct . $order, $params);
 
         // Only show one list of frameworks
-        $availableframeworks = array();
+        $availableframeworks = [];
         foreach ($allframeworks as $framework) {
             $availableframeworks[$framework->id] = $framework;
         }
 
         if (empty($availableframeworks)) {
-            return array();
+            return [];
         }
 
         if ($search) {

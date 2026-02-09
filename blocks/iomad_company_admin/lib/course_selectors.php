@@ -245,7 +245,7 @@ class current_company_course_selector extends company_course_selector_base {
 
 
         if (empty($availablecourses)) {
-            return array();
+            return [];
         }
 
         // Have any of the courses got enrollments?
@@ -253,7 +253,7 @@ class current_company_course_selector extends company_course_selector_base {
         $this->process_hidden_courses($availablecourses);
 
         // Set up empty return.
-        $coursearray = array();
+        $coursearray = [];
         if (!empty($availablecourses)) {
             if ($search) {
                 $groupname = get_string('companycoursesmatching', 'block_iomad_company_admin', $search);
@@ -378,12 +378,12 @@ class all_department_course_selector extends company_course_selector_base {
         $globalcourses = $DB->get_records_sql($fields . $globalcoursesql . $order, $params);
 
         if (empty($availablecourses) && empty($globalcourses)) {
-            return array();
+            return [];
         }
         $this->process_hidden_courses($availablecourses);
 
         // Set up empty return.
-        $coursearray = array();
+        $coursearray = [];
         if (!empty($availablecourses)) {
             if ($search) {
                 $groupname = get_string('companycoursesmatching', 'block_iomad_company_admin', $search);
@@ -534,13 +534,13 @@ class potential_company_course_selector extends company_course_selector_base {
         $DB->get_records_sql($distinctfields . $sqldistinct . $order, $params);
 
         // Only show one list of courses
-        $availablecourses = array();
+        $availablecourses = [];
         foreach ($allcourses as $course) {
             $availablecourses[$course->id] = $course;
         }
 
         if (empty($availablecourses)) {
-            return array();
+            return [];
         }
 
         // Have any of the courses got enrollments?
@@ -658,10 +658,10 @@ class potential_subdepartment_course_selector extends company_course_selector_ba
         }
 
         if (empty($availablecourses)) {
-            return array();
+            return [];
         }
 
-        $sanitisedcourses = array();
+        $sanitisedcourses = [];
         foreach($availablecourses as $key => $availablecourse) {
             $sanitisedcourses[$key] = $availablecourse;
         }
@@ -712,7 +712,7 @@ class any_course_selector extends company_course_selector_base {
         $availablecourses = $DB->get_records_sql($fields . $sql . $order, $params);
 
         if (empty($availablecourses)) {
-            return array();
+            return [];
         }
         $this->process_hidden_courses($availablecourses);
 
@@ -798,7 +798,7 @@ class current_user_course_selector extends company_course_selector_base {
                 return array($groupname => $coursearray);
             }
         } else {
-            return array();
+            return [];
         }
     }
 }
@@ -858,7 +858,7 @@ class potential_user_course_selector extends company_course_selector_base {
         } else {
             $companysql = " AND c.id in (".implode(',', array_keys($companycourses)).") AND cc.companyid = :companyid";
         }
-        $deptids = array();
+        $deptids = [];
         foreach ($userdepartments as $userdepartmentid => $userdepartment) {
             $deptids = $deptids + company::get_recursive_department_courses($userdepartmentid);
         }
@@ -959,7 +959,7 @@ class potential_user_course_selector extends company_course_selector_base {
         $DB->get_records_sql($fields . $partialsharedsql . $order, $params);
 
         if (empty($availablecourses)) {
-            return array();
+            return [];
         }
         $this->process_hidden_courses($availablecourses);
 
@@ -1044,7 +1044,7 @@ class current_user_license_course_selector extends company_course_selector_base 
         $availablecourses = $DB->get_records_sql($fields . $sql . $order, $params);
 
         if (empty($availablecourses)) {
-            return array();
+            return [];
         }
         $this->process_license_allocations($availablecourses, $this->user->id);
         $this->process_hidden_courses($availablecourses, true);
@@ -1070,14 +1070,14 @@ class current_user_license_course_selector extends company_course_selector_base 
         if (!$this->multiselect) {
             $courseids = optional_param($this->name, null, PARAM_INTEGER);
             if (empty($courseids)) {
-                return array();
+                return [];
             } else {
                 $courseids = array($courseids);
             }
         } else {
-            $courseids = optional_param_array($this->name, array(), PARAM_INTEGER);
+            $courseids = optional_param_array($this->name, [], PARAM_INTEGER);
             if (empty($courseids)) {
-                return array();
+                return [];
             }
         }
 
@@ -1087,7 +1087,7 @@ class current_user_license_course_selector extends company_course_selector_base 
         $this->validatingcourseids = null;
 
         // Aggregate the resulting list back into a single one.
-        $courses = array();
+        $courses = [];
         foreach ($groupedcourses as $group) {
             foreach ($group as $course) {
                 if (!isset($courses[$course->id]) && empty($course->disabled)
@@ -1115,8 +1115,8 @@ class current_user_license_course_selector extends company_course_selector_base 
      */
     protected function search_sql($search, $u) {
         global $DB, $CFG;
-        $params = array();
-        $tests = array();
+        $params = [];
+        $tests = [];
 
         if ($u) {
             $u .= '.';
@@ -1248,7 +1248,7 @@ class potential_user_license_course_selector extends company_course_selector_bas
         $availablecourses = $DB->get_records_sql($distinctfields . $sql . $order, $params);
 
         if (empty($availablecourses)) {
-            return array();
+            return [];
         }
         $this->process_hidden_courses($availablecourses);
 

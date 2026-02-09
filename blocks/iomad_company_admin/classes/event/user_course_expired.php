@@ -93,7 +93,7 @@ class user_course_expired extends \core\event\base {
     }
 
     public static function get_other_mapping() {
-        $othermapped = array();
+        $othermapped = [];
 
         return $othermapped;
     }

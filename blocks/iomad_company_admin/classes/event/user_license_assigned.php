@@ -103,7 +103,7 @@ class user_license_assigned extends \core\event\base {
     }
 
     public static function get_other_mapping() {
-        $othermapped = array();
+        $othermapped = [];
 
         return $othermapped;
     }

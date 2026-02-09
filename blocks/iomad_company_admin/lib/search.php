@@ -63,9 +63,9 @@ $userselector = new $classname($name, $options);
 
 // Do the search and output the results.
 $results = $userselector->find_users($search);
-$jsonresults = array();
+$jsonresults = [];
 foreach ($results as $groupname => $users) {
-    $groupdata = array('name' => $groupname, 'users' => array());
+    $groupdata = array('name' => $groupname, 'users' => []);
     foreach ($users as $user) {
         $output = new stdClass;
         $output->id = $user->id;

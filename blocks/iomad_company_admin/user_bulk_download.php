@@ -118,7 +118,7 @@ if ($format) {
     $params = array('companyid'=>$companyid);
 
     // Get department users.
-    $departmentusers = array();
+    $departmentusers = [];
     $userlevels = $company->get_userlevel($USER);
     foreach ($userlevels as $userlevelid => $userlevel) {
         $departmentusers = company::get_recursive_department_users($userlevelid);
@@ -183,7 +183,7 @@ function user_download_ods($userids, $fields, $includecompanyfield) {
     $workbook = new MoodleODSWorkbook('-');
     $workbook->send($filename);
 
-    $worksheet = array();
+    $worksheet = [];
 
     $worksheet[0] = $workbook->add_worksheet('');
     $col = 0;
@@ -237,7 +237,7 @@ function user_download_xls($userids, $fields, $includecompanyfield) {
     $workbook = new MoodleExcelWorkbook('-');
     $workbook->send($filename);
 
-    $worksheet = array();
+    $worksheet = [];
 
     $worksheet[0] = $workbook->add_worksheet('');
     $col = 0;
@@ -296,7 +296,7 @@ function user_download_csv($userids, $fields, $includecompanyfield) {
     $delimiter = get_string('listsep', 'langconfig');
     $encdelim  = '&#'.ord($delimiter);
 
-    $row = array();
+    $row = [];
     foreach ($fields as $fieldname) {
         if ($includecompanyfield || $fieldname != "profile_field_company") {
             $row[] = str_replace($delimiter, $encdelim, $fieldname);
@@ -308,7 +308,7 @@ function user_download_csv($userids, $fields, $includecompanyfield) {
     foreach ($userids as $userid) {
         // Stop the script from timing out on large numbers of users.
         set_time_limit(30);
-        $row = array();
+        $row = [];
         if (!$user = $DB->get_record('user', array('id' => $userid))) {
             continue;
         }

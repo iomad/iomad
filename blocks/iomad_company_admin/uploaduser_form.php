@@ -273,7 +273,7 @@ class admin_uploaduser_form2 extends company_moodleform {
                                                              JOIN {course} c ON (clc.courseid = c.id
                                                              AND clc.licenseid = :licenseid)",
                                                              array('licenseid' => $mylicenseid))) {
-                    $licensecourses = array();
+                    $licensecourses = [];
                 }
 
                 $mform->addElement('html', '<div id="licensecoursescontainer" style="display:none;">');
@@ -286,7 +286,7 @@ class admin_uploaduser_form2 extends company_moodleform {
                 if (!empty($mylicensedetails->program)) {
                     $licensecourseselect->setSelected($licensecourses);
                 } else {
-                    $licensecourseselect->setSelected(array());
+                    $licensecourseselect->setSelected([]);
                 }
                 $mform->addElement('html', "</div></div>");
             }

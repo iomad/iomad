@@ -23,7 +23,7 @@ require(dirname(__FILE__) . '/config.php');
 $functionname = 'block_iomad_company_admin_get_license_info';
 
 /// PARAMETERS
-$params = array();
+$params = [];
 
 /// XML-RPC CALL
 $serverurl = $domainname . '/webservice/xmlrpc/server.php'. '?wstoken=' . $token;

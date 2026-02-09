@@ -141,7 +141,7 @@ class company_users_form extends moodleform {
                                                 'companyname' => $companyshortname,
                                                 'usertype' => 0,
                                                 'usertypename' => '',
-                                                'oldcompany' => json_encode(array()));
+                                                'oldcompany' => json_encode([]));
 
                             $event = \block_iomad_company_admin\event\company_user_assigned::create(array('context' => context_system::instance(),
                                                                                                           'userid' => $USER->id,

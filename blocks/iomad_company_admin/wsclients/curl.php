@@ -29,8 +29,8 @@ class curl {
     public  $cache    = false;
     public  $proxy    = false;
     /** @var array */
-    public  $response = array();
-    public  $header   = array();
+    public  $response = [];
+    public  $header   = [];
     /** @var string */
     public  $info;
     public  $error;
@@ -48,7 +48,7 @@ class curl {
     /**
      * @param array $options
      */
-    public function __construct($options = array()){
+    public function __construct($options = []){
         if (!function_exists('curl_init')) {
             $this->error = 'cURL module must be enabled!';
             trigger_error($this->error, E_USER_ERROR);
@@ -76,7 +76,7 @@ class curl {
      * Resets the CURL options that have already been set
      */
     public function resetopt(){
-        $this->options = array();
+        $this->options = [];
         $this->options['CURLOPT_USERAGENT']         = 'MoodleBot/1.0';
         // True to include the header in the output
         $this->options['CURLOPT_HEADER']            = 0;
@@ -120,7 +120,7 @@ class curl {
      * reset the options to default value.
      *
      */
-    public function setopt($options = array()) {
+    public function setopt($options = []) {
         if (is_array($options)) {
             foreach($options as $name => $val){
                 if (stripos($name, 'CURLOPT_') === false) {
@@ -185,7 +185,7 @@ class curl {
                     $this->response[$key][] = $value;
                 } else {
                     $tmp = $this->response[$key];
-                    $this->response[$key] = array();
+                    $this->response[$key] = [];
                     $this->response[$key][] = $tmp;
                     $this->response[$key][] = $value;
 
@@ -264,7 +264,7 @@ class curl {
      * @param array $options An array of options to set
      * @return array An array of results
      */
-    public function download($requests, $options = array()) {
+    public function download($requests, $options = []) {
         $options['CURLOPT_BINARYTRANSFER'] = 1;
         $options['RETURNTRANSFER'] = false;
         return $this->multi($requests, $options);
@@ -277,10 +277,10 @@ class curl {
      * @param array $options An array of options to set
      * @return array An array of results
      */
-    protected function multi($requests, $options = array()) {
+    protected function multi($requests, $options = []) {
         $count   = count($requests);
-        $handles = array();
-        $results = array();
+        $handles = [];
+        $results = [];
         $main    = curl_multi_init();
         for ($i = 0; $i < $count; $i++) {
             $url = $requests[$i];
@@ -313,7 +313,7 @@ class curl {
      * @param array $options
      * @return bool
      */
-    protected function request($url, $options = array()){
+    protected function request($url, $options = []){
         // create curl instance
         $curl = curl_init($url);
         $options['url'] = $url;
@@ -359,7 +359,7 @@ class curl {
      * @param array $options
      * @return bool
      */
-    public function head($url, $options = array()){
+    public function head($url, $options = []){
         $options['CURLOPT_HTTPGET'] = 0;
         $options['CURLOPT_HEADER']  = 1;
         $options['CURLOPT_NOBODY']  = 1;
@@ -398,7 +398,7 @@ class curl {
         if (is_object($postdata)) {
             $postdata = (array) $postdata;
         }
-        $data = array();
+        $data = [];
         foreach ($postdata as $k=>$v) {
             if (is_object($v)) {
                 $v = (array) $v;
@@ -422,7 +422,7 @@ class curl {
      * @param array $options
      * @return bool
      */
-    public function post($url, $params = '', $options = array()){
+    public function post($url, $params = '', $options = []){
         $options['CURLOPT_POST']       = 1;
         if (is_array($params)) {
             $params = $this->format_postdata_for_curlcall($params);
@@ -439,7 +439,7 @@ class curl {
      * @param array $options
      * @return bool
      */
-    public function get($url, $params = array(), $options = array()){
+    public function get($url, $params = [], $options = array()){
         $options['CURLOPT_HTTPGET'] = 1;
 
         if (!empty($params)){
@@ -457,7 +457,7 @@ class curl {
      * @param array $options
      * @return bool
      */
-    public function put($url, $params = array(), $options = array()){
+    public function put($url, $params = [], $options = array()){
         $file = $params['file'];
         if (!is_file($file)){
             return null;
@@ -483,7 +483,7 @@ class curl {
      * @param array $options
      * @return bool
      */
-    public function delete($url, $param = array(), $options = array()){
+    public function delete($url, $param = [], $options = array()){
         $options['CURLOPT_CUSTOMREQUEST'] = 'DELETE';
         if (!isset($options['CURLOPT_USERPWD'])) {
             $options['CURLOPT_USERPWD'] = 'anonymous: noreply@moodle.org';
@@ -498,7 +498,7 @@ class curl {
      * @param array $options
      * @return bool
      */
-    public function trace($url, $options = array()){
+    public function trace($url, $options = []){
         $options['CURLOPT_CUSTOMREQUEST'] = 'TRACE';
         $ret = $this->request($url, $options);
         return $ret;
@@ -510,7 +510,7 @@ class curl {
      * @param array $options
      * @return bool
      */
-    public function options($url, $options = array()){
+    public function options($url, $options = []){
         $options['CURLOPT_CUSTOMREQUEST'] = 'OPTIONS';
         $ret = $this->request($url, $options);
         return $ret;

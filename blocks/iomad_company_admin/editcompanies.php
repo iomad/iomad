@@ -374,7 +374,7 @@ if (!empty($companylist)) {
     $allmycompanies = iomad::get_companies_listing($sort, $dir, 0, 0, '', '', '', $companylist);
     $companycount = count($allmycompanies);
 } else {
-    $companies = array();
+    $companies = [];
     $companycount = 0;
 }
 

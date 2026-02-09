@@ -54,7 +54,7 @@ class course_group_display_form extends company_moodleform {
         if (!empty($this->courseid)) {
             $coursegroups = $company->get_course_groups_menu($this->courseid);
         } else {
-            $coursegroups = array();
+            $coursegroups = [];
         }
 
         // Create the course group checkboxes html.
@@ -81,7 +81,7 @@ class course_group_display_form extends company_moodleform {
         $mform->addElement('hidden', 'selectedcourse', $this->courseid);
         $mform->setType('selectedcourse', PARAM_INT);
 
-        $buttonarray = array();
+        $buttonarray = [];
         $buttonarray[] = $mform->createElement('submit', 'create',
                                 get_string('creategroup', 'block_iomad_company_admin'));
         if (!empty($coursegroups)) {

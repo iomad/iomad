@@ -108,7 +108,7 @@ if ($coursesform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL))
         $coursesform = new \block_iomad_company_admin\forms\company_users_licenses_form($PAGE->url, $companycontext, $companyid, $departmentid, $userid, $licenseid);
         // Display the license selector.
         $availablewarning = "";
-        $licenselist = array();
+        $licenselist = [];
         if (iomad::has_capability('block/iomad_company_admin:unallocate_licenses', $companycontext)) {
             $parentlevel = company::get_company_parentnode($companyid);
             $userhierarchylevel = $parentlevel->id;

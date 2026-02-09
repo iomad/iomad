@@ -28,7 +28,7 @@ require_once($CFG->dirroot.'/local/email/lib.php');
 
 $returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
 $companyid = optional_param('companyid', 0, PARAM_INTEGER);
-$courses = optional_param_array('courses', array(), PARAM_INTEGER);
+$courses = optional_param_array('courses', [], PARAM_INTEGER);
 $departmentid = optional_param('deptid', 0, PARAM_INTEGER);
 $groupid = optional_param('groupid', 0, PARAM_INTEGER);
 

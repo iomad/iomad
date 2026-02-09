@@ -45,7 +45,7 @@ class company_users_licenses_form extends moodleform {
     protected $userid = null;
     protected $user = null;
     protected $licenseid = 0;
-    protected $liccourses = array();
+    protected $liccourses = [];
     protected $license = null;
 
     public function __construct($actionurl, $companycontext, $companyid, $departmentid, $userid, $licenseid) {
@@ -233,7 +233,7 @@ class company_users_licenses_form extends moodleform {
 
     public function validation($data, $files) {
 
-        $errors = array();
+        $errors = [];
 
         // if we are removing we don't care about the date.
         if (optional_param('remove', false, PARAM_BOOL)) {
@@ -271,7 +271,7 @@ class company_users_licenses_form extends moodleform {
                         echo "<div class='mform'><span class='error'>" . get_string('triedtoallocatetoomanylicenses', 'block_iomad_company_admin') . "</span></div>";
                         return;
                     } else {
-                        $due = optional_param_array('due', array(), PARAM_INT);
+                        $due = optional_param_array('due', [], PARAM_INT);
                         if (!empty($due)) {
                             $duedate = strtotime($due['year'] . '-' . $due['month'] . '-' . $due['day'] . ' ' . $due['hour'] . ':' . $due['minute']);
                         } else {
@@ -341,7 +341,7 @@ class company_users_licenses_form extends moodleform {
                         if ($licenserecord['used'] + count($coursestoassign) > $licenserecord['allocation']) {
                             echo "<div class='mform'><span class='error'>" . get_string('triedtoallocatetoomanylicenses', 'block_iomad_company_admin') . "</span></div>";
                         } else {
-                            $due = optional_param_array('due', array(), PARAM_INT);
+                            $due = optional_param_array('due', [], PARAM_INT);
                             if (!empty($due)) {
                                 $duedate = strtotime($due['year'] . '-' . $due['month'] . '-' . $due['day'] . ' ' . $due['hour'] . ':' . $due['minute']);
                             } else {

@@ -110,11 +110,11 @@ class current_company_templates_selector extends company_template_selector_base 
                             $DB->get_records_sql($fields . $sharedsql . $order, $params);
 
         if (empty($availabletemplates)) {
-            return array();
+            return [];
         }
 
         // Set up empty return.
-        $templatearray = array();
+        $templatearray = [];
         if (!empty($availabletemplates)) {
             if ($search) {
                 $groupname = get_string('currcompanytemplatesmatching', 'block_iomad_company_admin', $search);
@@ -201,13 +201,13 @@ class potential_company_templates_selector extends company_template_selector_bas
         $DB->get_records_sql($distinctfields . $sqldistinct . $order, $params);
 
         // Only show one list of templates
-        $availabletemplates = array();
+        $availabletemplates = [];
         foreach ($alltemplates as $template) {
             $availabletemplates[$template->id] = $template;
         }
 
         if (empty($availabletemplates)) {
-            return array();
+            return [];
         }
 
         if ($search) {

@@ -97,7 +97,7 @@ if ($roleid) {
 } else if ($manage) {
 
     // Display the list of templates.
-    $templates = $DB->get_records('company_role_templates', array(), 'name');
+    $templates = $DB->get_records('company_role_templates', [], 'name');
     $roletemplates = new \block_iomad_company_admin\output\roletemplates($templates, $linkurl);
     $buttons .= $output->single_button($linkurl, get_string('back'), 'get');
 

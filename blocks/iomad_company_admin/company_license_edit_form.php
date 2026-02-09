@@ -130,7 +130,7 @@ if ( $mform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL) ) {
         }
 
         $new = false;
-        $licensedata = array();
+        $licensedata = [];
         $licensedata['name'] = trim($data->name);
         $licensedata['reference'] = trim($data->reference);
         if (empty($data->program)) {
@@ -145,7 +145,7 @@ if ( $mform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL) ) {
         $licensedata['expirydate'] = $data->expirydate;
         $licensedata['startdate'] = $data->startdate;
         if (empty($data->languages)) {
-            $data->languages = array();
+            $data->languages = [];
         }
         if (empty($data->parentid)) {
             $licensedata['companyid'] = $data->companyid;

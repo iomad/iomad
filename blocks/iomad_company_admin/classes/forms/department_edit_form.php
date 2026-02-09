@@ -101,7 +101,7 @@ class department_edit_form extends company_moodleform {
     public function validation($data, $files) {
         global $DB;
 
-        $errors = array();
+        $errors = [];
 
         if ($departmentbyname = $DB->get_record('department', array('company' => $this->selectedcompany, 'shortname' => trim($data['shortname'])))) {
             if ($departmentbyname->id != $this->departmentid) {

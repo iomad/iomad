@@ -51,7 +51,7 @@ $delegateid = optional_param('delegateid', 0, PARAM_INT);
 $cloneid = optional_param('cloneid', 0, PARAM_INT);
 $action = optional_param('action', '', PARAM_ALPHA);
 
-$params = array();
+$params = [];
 
 $params['companyid'] = $companyid;
 $params['coursesearch'] = $coursesearch;

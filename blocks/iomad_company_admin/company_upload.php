@@ -58,7 +58,7 @@ if (!iomad::has_capability('block/iomad_company_admin:company_add', $companycont
     $useparentid = true;
 }
 
-$urlparams = array();
+$urlparams = [];
 if ($returnurl) {
     $urlparams['returnurl'] = $returnurl;
 }
@@ -109,7 +109,7 @@ if (empty($iid)) {
     if ($importdata = $mform->get_data()) {
         // Verification moved to two places: after upload and into form2.
         $companyerrors  = 0;
-        $erroredcompanies = array();
+        $erroredcompanies = [];
         $errorstr = get_string('error');
 
 
@@ -535,7 +535,7 @@ class upload_progress_tracker {
 
     public function flush() {
         if (empty($this->_row) or empty($this->_row['line']['normal'])) {
-            $this->_row = array();
+            $this->_row = [];
             foreach ($this->columns as $col) {
                 $this->_row[$col] = array('normal' => '', 'info' => '', 'warning' => '', 'error' => '');
             }
@@ -600,7 +600,7 @@ function validate_uploadcompany_columns(&$columns) {
         return get_string('csvfewcolumns', 'error');
     }
     // Test columns.
-    $processed = array();
+    $processed = [];
     foreach ($columns as $key => $unused) {
         $field = $columns[$key];
         if (!in_array($field, $stdfields)) {

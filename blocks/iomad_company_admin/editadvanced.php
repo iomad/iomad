@@ -234,7 +234,7 @@ if ($usernew = $userform->get_data()) {
 
     // Update user picture.
     if (!empty($CFG->gdversion)) {
-        core_user::update_picture($usernew, array());
+        core_user::update_picture($usernew, []);
     }
 
     // Update mail bounces.

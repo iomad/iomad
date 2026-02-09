@@ -49,7 +49,7 @@ $company = new company($companyid);
 
 iomad::require_capability('block/iomad_company_admin:edit_departments', $companycontext);
 
-$urlparams = array();
+$urlparams = [];
 if ($returnurl) {
     $urlparams['returnurl'] = $returnurl;
 }

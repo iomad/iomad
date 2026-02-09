@@ -36,7 +36,7 @@ class iomad_company_filter_form extends \moodleform {
         global $CFG, $DB, $USER, $SESSION;
 
         $mform =& $this->_form;
-        $filtergroup = array();
+        $filtergroup = [];
         $mform->addElement('header', '', format_string(get_string('companysearchfields', 'local_iomad')));
         $mform->addElement('text', 'name', get_string('name'), 'size="20"');
         $mform->addElement('text', 'city', get_string('companycity', 'block_iomad_company_admin'), 'size="20"');
@@ -71,7 +71,7 @@ class iomad_company_filter_form extends \moodleform {
         $mform->closeHeaderBefore('buttonar');
 
         // Action buttons.
-        $buttonarray = array();
+        $buttonarray = [];
         $buttonarray[] = $mform->createElement('submit', 'submitbutton', get_string('companyfilter', 'local_iomad'));
         $buttonarray[] = $mform->createElement('submit', 'resetbutton', get_string('reset'), null, false);
         $mform->addGroup($buttonarray, 'buttonar', '', ' ', false);

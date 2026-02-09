@@ -64,7 +64,7 @@ class profile_define_base {
 
         $form->addElement('selectyesno', 'signup', get_string('profilesignup', 'admin'));
 
-        $choices = array();
+        $choices = [];
         $choices[PROFILE_VISIBLE_NONE]    = get_string('profilevisiblenone', 'admin');
         $choices[PROFILE_VISIBLE_PRIVATE] = get_string('profilevisibleprivate', 'admin');
         $choices[PROFILE_VISIBLE_ALL]     = get_string('profilevisibleall', 'admin');
@@ -103,7 +103,7 @@ class profile_define_base {
     public function define_validate($data, $files) {
 
         $data = (object)$data;
-        $err = array();
+        $err = [];
 
         $err += $this->define_validate_common($data, $files);
         $err += $this->define_validate_specific($data, $files);
@@ -121,7 +121,7 @@ class profile_define_base {
     public function define_validate_common($data, $files) {
         global $USER, $DB;
 
-        $err = array();
+        $err = [];
 
         // Check the shortname was not truncated by cleaning.
         if (empty($data->shortname)) {
@@ -153,7 +153,7 @@ class profile_define_base {
      */
     public function define_validate_specific($data, $files) {
         // Do nothing - overwrite if necessary.
-        return array();
+        return [];
     }
 
     /**
@@ -213,7 +213,7 @@ class profile_define_base {
      * @return array
      */
     public function define_editors() {
-        return array();
+        return [];
     }
 }
 
@@ -416,7 +416,7 @@ function profile_move_category($id, $move) {
 function profile_list_datatypes() {
     global $CFG;
 
-    $datatypes = array();
+    $datatypes = [];
 
     $plugins = \core_component::get_plugin_list('profilefield');
     foreach ($plugins as $type => $unused) {
@@ -434,7 +434,7 @@ function profile_list_datatypes() {
 function profile_list_categories() {
     global $DB;
     if (!$categories = $DB->get_records_sql_menu('select * from {user_info_category}')) {
-        $categories = array();
+        $categories = [];
     }
     return $categories;
 }

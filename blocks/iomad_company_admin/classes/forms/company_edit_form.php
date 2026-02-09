@@ -55,7 +55,7 @@ class company_edit_form extends \company_moodleform {
         $this->previousroletemplateid = $companyrecord->previousroletemplateid;
         $this->previousemailtemplateid = $companyrecord->previousemailtemplateid;
         if (!empty($companyrecord->templates)) {
-            $this->companyrecord->templates = array();
+            $this->companyrecord->templates = [];
         }
         $this->child = $child;
         if (empty($this->companyrecord->theme)) {
@@ -201,7 +201,7 @@ class company_edit_form extends \company_moodleform {
                                                     WHERE id = :companyid
                                                   )", array('companyid' => $this->companyid));
         } else {
-            $companyfields = array();
+            $companyfields = [];
         }
         $profilefields = array('0' => get_string('none')) + $globalfields + $companyfields;
 
@@ -237,7 +237,7 @@ class company_edit_form extends \company_moodleform {
 
         if (iomad::has_capability('block/iomad_company_admin:company_add', $this->context)) {
             // Add in the template selector for the company.
-            $templates = $DB->get_records_menu('company_role_templates', array(), 'name', 'id,name');
+            $templates = $DB->get_records_menu('company_role_templates', [], 'name', 'id,name');
             $mform->addElement('autocomplete', 'templates', get_string('availabletemplates', 'block_iomad_company_admin'), $templates, array('multiple' => true));
             $mform->addHelpButton('templates', 'availabletemplates', 'block_iomad_company_admin');
 
@@ -379,34 +379,34 @@ class company_edit_form extends \company_moodleform {
         $mform->addElement('header', 'userdefaults',
                             get_string('userdefaults', 'block_iomad_company_admin'));
 
-        $choices = array();
+        $choices = [];
         $choices['0'] = get_string('emaildisplayno');
         $choices['1'] = get_string('emaildisplayyes');
         $choices['2'] = get_string('emaildisplaycourse');
         $mform->addElement('select', 'maildisplay', get_string('emaildisplay'), $choices);
         $mform->setDefault('maildisplay', $CFG->defaultpreference_maildisplay);
 
-        $choices = array();
+        $choices = [];
         $choices['0'] = get_string('textformat');
         $choices['1'] = get_string('htmlformat');
         $mform->addElement('select', 'mailformat', get_string('emailformat'), $choices);
         $mform->setDefault('mailformat', $CFG->defaultpreference_mailformat);
 
-        $choices = array();
+        $choices = [];
         $choices['0'] = get_string('emaildigestoff');
         $choices['1'] = get_string('emaildigestcomplete');
         $choices['2'] = get_string('emaildigestsubjects');
         $mform->addElement('select', 'maildigest', get_string('emaildigest'), $choices);
         $mform->setDefault('maildigest', $CFG->defaultpreference_maildigest);
 
-        $choices = array();
+        $choices = [];
         $choices['1'] = get_string('autosubscribeyes');
         $choices['0'] = get_string('autosubscribeno');
         $mform->addElement('select', 'autosubscribe', get_string('autosubscribe'), $choices);
         $mform->setDefault('autosubscribe', $CFG->defaultpreference_autosubscribe);
 
         if (!empty($CFG->forum_trackreadposts)) {
-            $choices = array();
+            $choices = [];
             $choices['0'] = get_string('trackforumsno');
             $choices['1'] = get_string('trackforumsyes');
             $mform->addElement('select', 'trackforums', get_string('trackforums'), $choices);
@@ -415,7 +415,7 @@ class company_edit_form extends \company_moodleform {
 
         $editors = editors_get_enabled();
         if (count($editors) > 1) {
-            $choices = array();
+            $choices = [];
             $choices['0'] = get_string('texteditor');
             $choices['1'] = get_string('htmleditor');
             $mform->addElement('select', 'htmleditor', get_string('textediting'), $choices);
@@ -471,7 +471,7 @@ class company_edit_form extends \company_moodleform {
 
                 // Get the list of themes.
                 $themes = \core_component::get_plugin_list('theme');
-                $themeselectarray = array();
+                $themeselectarray = [];
                 foreach ($themes as $themename => $themedir) {
 
                     // Load the theme config.

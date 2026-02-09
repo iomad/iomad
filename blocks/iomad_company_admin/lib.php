@@ -258,7 +258,7 @@ function block_iomad_company_admin_inplace_editable($itemtype, $itemid, $newvalu
  * @param bool $embed Whether this file will be served embed into an iframe.
  * @todo MDL-31088 file serving improments
  */
-function block_iomad_company_admin_pluginfile($course, $birecord_or_cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
+function block_iomad_company_admin_pluginfile($course, $birecord_or_cm, $context, $filearea, $args, $forcedownload, array $options=[]) {
     global $DB, $CFG, $USER;
 
     if ($context->contextlevel != CONTEXT_SYSTEM) {

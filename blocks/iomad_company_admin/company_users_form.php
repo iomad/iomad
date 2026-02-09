@@ -38,7 +38,7 @@ $company = new company($companyid);
 
 iomad::require_capability('block/iomad_company_admin:company_user', $companycontext);
 
-$urlparams = array();
+$urlparams = [];
 if ($returnurl) {
     $urlparams['returnurl'] = $returnurl;
 }

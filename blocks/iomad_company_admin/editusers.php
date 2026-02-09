@@ -47,7 +47,7 @@ $showall = optional_param('showall', false, PARAM_BOOL);
 $usertype = optional_param('usertype', 'a', PARAM_ALPHANUM);
 $edit = optional_param('edit', -1, PARAM_BOOL);
 
-$params = array();
+$params = [];
 
 if ($showsuspended) {
     $params['showsuspended'] = $showsuspended;
@@ -191,8 +191,8 @@ $mform->set_data($params);
 $mform->get_data();
 
 // Get the company additional optional user parameter names.
-$fieldnames = array();
-$allfields = array();
+$fieldnames = [];
+$allfields = [];
 $foundfields = false;
 
 if (!$showall && $category = $DB->get_record_sql('select uic.id, uic.name from {user_info_category} uic, {company} c where c.id = '.$companyid.'
@@ -227,9 +227,9 @@ if (!$showall && $category = $DB->get_record_sql('select uic.id, uic.name from {
 }
 
 // Deal with the user optional profile search.
-$idlist = array();
+$idlist = [];
 if (!empty($fieldnames)) {
-    $fieldids = array();
+    $fieldids = [];
     foreach ($fieldnames as $id => $fieldname) {
         if (!empty($allfields[$id]->datatype) && $allfields[$id]->datatype == "menu") {
             $paramarray = explode("\n", $allfields[$id]->param1);
@@ -496,7 +496,7 @@ echo html_writer::end_tag('div');
 
 // Build the table.
 // Do we have any additional reporting fields?
-$extrafields = array();
+$extrafields = [];
 if (!empty($CFG->iomad_report_fields)) {
     $companyrec = $DB->get_record('company', array('id' => $companyid));
     foreach (explode(',', $CFG->iomad_report_fields) as $extrafield) {

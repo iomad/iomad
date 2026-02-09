@@ -85,7 +85,7 @@ if (!$new) {
     if (empty($companyrecord->showgrade)) {
         $companyrecord->showgrade = false;
     }
-    $companyrecord->templates = array();
+    $companyrecord->templates = [];
     if ($companytemplates = $DB->get_records('company_role_templates_ass', array('companyid' => $companyid), null, 'templateid')) {
         $companyrecord->templates = array_keys($companytemplates);
     }
@@ -186,7 +186,7 @@ $PAGE->set_heading($linktext);
 block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Are there any existing companies?
-$firstcompany = !$DB->record_exists('company', array());
+$firstcompany = !$DB->record_exists('company', []);
 
 $urlparams = array('companyid' => $companyid);
 if ($returnurl) {
@@ -359,7 +359,7 @@ if ($domains = $DB->get_records('company_domains', array('companyid' => $company
 
 // Set up the form.
 $mform = new block_iomad_company_admin\forms\company_edit_form($PAGE->url, $isadding, $companyid, $companyrecord, $firstcompany, $parentid, $child);
-$companyrecord->templates = array();
+$companyrecord->templates = [];
 
 // Set the parent company id if it's being passed.
 if (!empty($companyrecord->parentid)) {
@@ -598,7 +598,7 @@ if ($mform->is_cancelled()) {
 
         // Deal with any assigned templates.
         if (empty($data->templates)) {
-            $data->templates = array();
+            $data->templates = [];
         }
         $company->assign_role_templates($data->templates, true);
 

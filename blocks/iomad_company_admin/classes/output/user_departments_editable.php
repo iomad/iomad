@@ -190,7 +190,7 @@ class user_departments_editable extends \core\output\inplace_editable {
                                                      ['companyid' => $companyid, 'userid' => $userid]);
 
         // Set an array where the index is the departmentid.
-        $userdepartments = array();
+        $userdepartments = [];
         $managertype = 0;
         $educator = 0;
         foreach ($userdepartmentsbyid as $id => $department) {
