@@ -1,0 +1,148 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_forum/local/grades/local/grader/grading
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * data-region="user_picker"
+    * data-region="grade"
+    * data-region="grade-errors"
+
+    Context variables required for this template:
+    * none
+
+    Example context (json):
+    {
+    }
+}}
+{{<core/drawer}}
+    {{$drawerid}}grading-drawer-{{uniqid}}{{/drawerid}}
+    {{$drawerclasses}}grader-grading-panel flex-shrink-0 {{/drawerclasses}}
+    {{$drawercontent}}
+        <div class="h-100 w-100 bg-white d-flex flex-column" role="region" aria-label="{{#str}} forumgradingpanel, mod_forum {{/str}}">
+            <div class="flex-shrink-0 d-flex flex-column">
+                <div class="header-container">
+                    <div class="info-container d-flex align-items-center" data-region="grading-info-container">
+                        <button
+                            class="btn btn-icon btn-secondary"
+                            data-action="collapse-grading-drawer"
+                            aria-controls="grading-drawer-{{uniqid}}"
+                            aria-expanded="true"
+                            title="{{#str}} closebuttontitle, core {{/str}}"
+                            aria-label="{{#str}} hidegraderpanel, mod_forum {{/str}}"
+                        >
+                            <span class="dir-ltr-hide">{{#pix}} t/left, core {{/pix}}</span>
+                            <span class="dir-rtl-hide">{{#pix}} t/right, core {{/pix}}</span>
+                        </button>
+                        <div class="ml-3 text-left" data-region="status-container">
+                            {{> mod_forum/local/grades/local/grader/status_placeholder }}
+                        </div>
+                    </div>
+                    <div
+                        id="searchbox-{{uniqid}}"
+                        class="user-search-container d-flex flex-grow-1 align-items-center collapsed"
+                        data-region="user-search-container"
+                    >
+                        <div class="search-input-container w-100">
+                            <span class="search-icon d-flex justify-content-center align-items-center">
+                                <span class="search-input-icon">
+                                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.25 19.25L15.5 15.5M4.75 11C4.75 7.54822 7.54822 4.75 11 4.75C14.4518 4.75 17.25 7.54822 17.25 11C17.25 14.4518 14.4518 17.25 11 17.25C7.54822 17.25 4.75 14.4518 4.75 11Z"></path>
+                                    </svg>
+                                </span>
+                            </span>
+                            <input
+                                type="text"
+                                data-region="user-search-input"
+                                class="form-control"
+                                placeholder="{{#str}} searchusers, mod_forum {{/str}}"
+                                aria-labelledby="user-search-input-{{uniqid}}-label"
+                            >
+                            <span id="user-search-input-{{uniqid}}-label" class="sr-only">{{#str}}searchusers, mod_forum{{/str}}</span>
+                            <button
+                                class="toggle-search-button d-flex align-items-center justify-content-center"
+                                aria-expanded="false"
+                                aria-controls="searchbox-{{uniqid}}"
+                                data-action="toggle-search"
+                            >
+                                <div class="expanded-icon" data-region="user-search-icon-hide">
+                                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.25 6.75L6.75 17.25"></path>
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6.75 6.75L17.25 17.25"></path>
+                                    </svg>
+                                </div>
+                                <div class="collapsed-icon" data-region="user-search-icon-show">
+                                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.25 19.25L15.5 15.5M4.75 11C4.75 7.54822 7.54822 4.75 11 4.75C14.4518 4.75 17.25 7.54822 17.25 11C17.25 14.4518 14.4518 17.25 11 17.25C7.54822 17.25 4.75 14.4518 4.75 11Z"></path>
+                                    </svg>
+                                </div>
+                            </button>
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="border-bottom px-3 pt-2" data-region="user_picker">
+                    {{> mod_forum/local/grades/local/grader/user_picker_placeholder }}
+                </div>
+            </div>
+            <div class="body-container position-relative d-flex flex-column overflow-auto" data-region="body-container">
+                <div class="grader-grading-panel-display pt-3 overflow-auto" data-region="grading-panel-container">
+
+                    <div class="grade-grade-box">
+                        <h4 class="mb-3 d-inline-flex w-100 align-items-center">
+                            <svg class="mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.75 19.25L9 18.25L18.2929 8.95711C18.6834 8.56658 18.6834 7.93342 18.2929 7.54289L16.4571 5.70711C16.0666 5.31658 15.4334 5.31658 15.0429 5.70711L5.75 15L4.75 19.25Z"></path>
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.25 19.25H13.75"></path>
+                            </svg>
+                            {{#str}} gradingmodulename, core_grades, {{moduleName}} {{/str}}
+                        </h4>
+                        <div data-region="grade" class="grade-form">
+                            {{> mod_forum/local/grades/local/grader/grade_placeholder }}
+                        </div>
+                    </div>
+
+                    <div class="grade-notifications-box mt-2">
+                        <h4 class="mb-3 d-inline-flex w-100 align-items-center">
+                            {{#str}}notifications, core{{/str}}
+                        </h4>
+                        <div data-region="notification" role="radiogroup" aria-labelledby="send-student-notifications-setting">
+                        <label class="form-check d-inline-flex align-items-center justify-content-start w-100 mr-2">
+                            <input class="form-check-input" type="radio" name="sendstudentnotifications" value="1"{{#defaultsendnotifications}} checked{{/defaultsendnotifications}}/>
+                            {{#str}}sendstudentnotificationsyes, mod_forum{{/str}}
+                        </label>
+                        <label class="form-check d-inline-flex align-items-center justify-content-start w-100">
+                            <input class="form-check-input" type="radio" name="sendstudentnotifications" value="0"{{^defaultsendnotifications}} checked{{/defaultsendnotifications}}/>
+                            {{#str}}sendstudentnotificationsno, mod_forum{{/str}}
+                        </label>
+                        {{#helpicon}}
+                            {{>core/help_icon}}
+                        {{/helpicon}}
+                    </div>
+                    <div data-region="grade-errors" role="alert" aria-live="assertive"></div>
+                    </div>
+                    <div data-region="grade-errors" role="alert" aria-live="assertive"></div>
+                </div>
+            </div>
+            <div class="hidden overflow-auto" data-region="search-results-container"></div>
+        </div>
+        <div data-region="grade-errors" role="alert" aria-live="assertive"></div>
+        <hr/>
+    {{/drawercontent}}
+{{/core/drawer}}

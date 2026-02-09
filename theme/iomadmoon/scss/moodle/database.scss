@@ -1,0 +1,85 @@
+//---- Database for default UI
+//---- Module Activity
+//----
+//---- TODO: Add different styles and templates
+
+.picturesingle {
+    img {
+        max-width: 100%;
+        border-radius: $btn-border-radius;
+    }
+}
+
+.recordauthor {
+    margin-bottom: 1rem;
+    padding: .35rem;
+    border-radius: $btn-border-radius;
+    border: 1px solid $border-color;
+
+    a {
+        display: inline-flex;
+    }
+}
+
+#page-mod-data-view {
+    .jsenabled .comment-link {
+        margin-top: 2rem;
+    }
+}
+
+.data-timeinfo {
+    font-size: $font-size-sm;
+    color: $body-color-light;
+
+    .theme-dark & {
+        color: $dm-body-color-light;     
+    }
+}
+
+.imagegallery-listentry .card-title {
+    font-size: $font-size-md!important;
+}
+
+#imagegallery-list img.list_picture {
+    border-radius: $btn-border-radius $btn-border-radius 0 0;
+}
+
+#page-mod-data-view .datapreferences {
+    #options {
+        label, .font-weight-bold {
+            font-size: $font-size-xs;
+            margin: 5px;
+        }
+    
+        .custom-select,
+        .form-control {
+            padding: 8px 12px;
+            height: auto;
+            font-size: $font-size-xs;
+        }
+    
+        .custom-select {
+            padding-right: 20px;
+        }
+    
+        .btn {
+            padding: 6px 14px;
+            font-size: $font-size-xs;
+        }
+    
+        [type="checkbox"] {
+            width: 20px;
+            height: 20px;
+        }
+    }
+}
+
+.imagegallery-asearch {
+    padding: 16px;
+    border-radius: $btn-border-radius;
+    background-color: $gray-100;
+    
+    .theme-dark & {
+        background-color: $dm-gray-100;
+    }
+}

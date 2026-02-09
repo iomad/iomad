@@ -1,0 +1,162 @@
+.pagination,
+.comment-paging {
+  margin: 1rem 0;
+  display: flex;
+  @include list-unstyled();
+  @include border-radius();
+
+  .pagination {
+    margin: 0;
+  }
+}
+
+.page-link,
+.comment-paging a {
+  position: relative;
+  display: flex;
+  padding: $pagination-padding-y $pagination-padding-x;
+  margin-left: $pagination-border-width;
+  line-height: $pagination-line-height;
+  font-weight: $font-weight-medium;
+  color: $pagination-color;
+  text-decoration: if($link-decoration == none, null, none);
+  border-radius: $btn-border-radius;
+
+  .theme-dark & {
+    color: $dm-pagination-color;
+  }
+
+  &:hover {
+    z-index: 2;
+    color: $pagination-hover-color;
+    text-decoration: none;
+    background-color: $pagination-hover-bg;
+
+    .theme-dark & {
+      color: $dm-pagination-hover-color;
+      background-color: $dm-pagination-hover-bg;
+    }
+  }
+
+  &:focus {
+    z-index: 3;
+  }
+}
+
+.page-item {
+  &.active .page-link {
+    z-index: 3;
+    color: $pagination-active-color;
+    background-color: $pagination-active-bg;
+
+    .theme-dark & {
+      color: $dm-pagination-active-color;
+      background-color: $dm-pagination-active-bg;
+    }
+  }
+
+  &.disabled .page-link {
+    color: $pagination-disabled-color;
+    pointer-events: none;
+    // Opinionated: remove the "hand" cursor set previously for .page-link
+    cursor: auto;
+    background-color: $pagination-disabled-bg;
+    border-color: $pagination-disabled-border-color;
+
+    opacity: .3;
+
+    .theme-dark & {
+      color: $dm-pagination-disabled-color;
+      background-color: $dm-pagination-disabled-bg;
+      border-color: $dm-pagination-disabled-border-color;
+    }
+  }
+}
+
+  //Comments pagination
+  .comment-pagination {
+    margin-bottom: 1rem;
+  }
+
+  .curpage {
+    color: $pagination-active-color;
+    background-color: $pagination-active-bg;
+
+    .theme-dark & {
+      color: $dm-pagination-active-color;
+      background-color: $dm-pagination-active-bg;
+    }
+  }
+
+//
+// Sizing
+//
+
+.pagination-lg {
+  @include pagination-size($pagination-padding-y-lg, $pagination-padding-x-lg, $font-size-lg, $line-height-lg, $pagination-border-radius-lg);
+}
+
+.pagination-sm {
+  .page-link {
+    margin: 0;
+    padding: 4px 10px;
+    font-size: $font-size-xs;
+    min-width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 30px!important;
+  }
+}
+
+.initialsdropdown {
+  .initialbarlabel {
+    color: $dm-body-color;
+
+    .theme-dark & {
+      color: $dm-body-color;
+    }
+  }
+
+  .page-item.active .page-link {
+    .dropdown-menu & {
+      background-color: $dropdown-link-hover-bg;
+      color: $dropdown-color;
+  
+      .theme-dark & {
+        background-color: $dm-dropdown-link-hover-bg;
+        color: $dm-dropdown-color;
+      }
+    }
+  }
+}
+
+.initialbar {
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+
+  .dropdown-menu & {
+    border-bottom: 1px solid $dropdown-border-color;
+
+    .theme-dark & {
+      border-color: $dropdown-border-color;
+    }
+  }
+
+  &:last-of-type {
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-bottom: 0;
+  }
+}
+
+.initialbargroups ul.pagination-sm {
+  margin: 0!important;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.initialbar + .rui-title-container {
+  margin-top: 30px!important;
+}

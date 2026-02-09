@@ -1,0 +1,2238 @@
+/* admin.less */
+/* Sticky admin nav */
+.rui-list-admin-links {
+    margin-top: 3px;
+    font-size: $font-size-base;
+
+    a {
+        color: $body-color;
+
+        .theme-dark & {
+            color: $dm-body-color;
+        }
+
+        &:hover {
+            color: $link-hover-color;
+
+            .theme-dark & {
+                color: $dm-link-hover-color;
+            }
+        }
+    }
+
+    ul li a {
+        color: $body-color-light;
+
+        .theme-dark & {
+            color: $dm-body-color-light;
+        }
+    }
+}
+
+@include media-breakpoint-between(xs, md) {
+    .rui-nav--admin-container {
+        overflow-x: auto;
+    }
+}
+
+.rui-nav--admin {
+    padding: 0 10px;
+
+    width: max-content;
+
+    font-size: 0.875rem;
+
+    @include media-breakpoint-up(lmd) {
+        height: calc(100vh - 260px);
+        overflow-y: auto;
+        position: sticky;
+        top: 30px;
+
+        display: block;
+
+        width: 180px;
+        max-width: 180px;
+        height: 90vh;
+        overflow-y: auto;
+    }
+
+    @include media-breakpoint-between(xs, md) {
+        display: inline-flex;
+
+        .nav-link {
+            padding: 16px;
+            height: 100%;
+        }
+    }
+}
+
+.rui-settings-container {
+    margin-top: 12px;
+
+    @include media-breakpoint-between(xs, md) {
+        padding: 0;
+    }
+}
+
+.formtable tbody th {
+    font-weight: normal;
+    text-align: right;
+}
+
+.path-admin .admintable .leftalign {
+    text-align: left;
+}
+
+.environmenttable {
+
+    .warn,
+    .error,
+    .ok {
+        padding: 5px 10px;
+        margin-bottom: 0;
+
+        font-size: $font-size-xs;
+        color: $body-color;
+        border-radius: $btn-border-radius;
+    }
+
+    .warn {
+        background-color: $state-warning-bg;
+    }
+
+    .error {
+        background-color: $state-danger-bg;
+    }
+
+    .ok {
+        background-color: $state-success-bg;
+    }
+
+    a {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
+
+        display: inline-flex;
+        align-items: center;
+        padding: $badge-padding-y $badge-padding-x;
+        @include font-size($badge-font-size);
+        font-weight: $badge-font-weight;
+        vertical-align: baseline;
+        border-radius: $btn-border-radius;
+
+        background-color: $gray-100;
+        color: $gray-800;
+
+        &:before {
+            display: none;
+        }
+
+        .icon {
+            margin-left: 5px;
+            width: 16px;
+            height: 16px;
+        }
+
+        .icon-pre {
+            display: none;
+        }
+    }
+}
+
+.path-admin .admintable.environmenttable .name,
+.path-admin .admintable.environmenttable .info,
+.path-admin #assignrole .admintable .role,
+.path-admin #assignrole .admintable .userrole,
+.path-admin #assignrole .admintable .roleholder {
+    white-space: nowrap;
+}
+
+.path-admin .admintable.environmenttable td.name {
+    font-weight: $font-weight-medium;
+}
+
+.path-admin .admintable.environmenttable td.info {
+    color: $body-color-light;
+    font-style: italic;
+}
+
+.path-admin .incompatibleblockstable td.c0 {
+    font-weight: $font-weight-bold;
+}
+
+#page-admin-course-category .addcategory {
+    padding: 10px;
+}
+
+#page-admin-course-index .editcourse {
+    margin: 20px auto;
+}
+
+#page-admin-course-index .editcourse th,
+#page-admin-course-index .editcourse td {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.timewarninghidden {
+    display: none;
+}
+
+#page-admin-report-capability-index #capabilitysearch {
+    width: 30em;
+}
+
+#page-admin-qtypes #qtypes div,
+#page-admin-qtypes #qtypes form,
+#page-admin-qbehaviours #qbehaviours div,
+#page-admin-qbehaviours #qbehaviours form {
+    display: inline;
+}
+
+#page-admin-qtypes #qtypes img.spacer,
+#page-admin-qbehaviours #qbehaviours img.spacer {
+    width: 16px;
+}
+
+#page-admin-qbehaviours .cell.c3,
+#page-admin-qtypes .cell.c3 {
+    font-size: $font-size-sm;
+}
+
+#page-admin-lang .generalbox,
+#page-admin-course-index .singlebutton,
+#page-admin-course-index .addcategory,
+#page-course-index .buttons,
+#page-admin-course-category .addcategory,
+#page-admin-stickyblocks .generalbox,
+#page-admin-maintenance .buttons,
+#page-admin-course-index .buttons,
+#page-admin-course-category .buttons,
+#page-admin-index .copyright,
+#page-admin-index .copyrightnotice,
+#page-admin-index .adminerror .singlebutton,
+#page-admin-index .adminwarning .singlebutton,
+#page-admin-index #layout-table .singlebutton {
+    margin: $page-padding-global 0 0;
+}
+
+#page-course-index-category .buttons {
+    margin-top: $page-padding-global;
+
+    @include media-breakpoint-between(xs, sm) {
+        display: block;
+
+        .singlebutton {
+            margin: .35rem 0;
+            width: 100%;
+
+            .btn {
+                width: 100%;
+            }
+        }
+    }
+}
+
+.path-admin-roles .capabilitysearchui {
+    text-align: left;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: $spacer;
+    margin-bottom: $spacer;
+}
+
+#page-admin-roles-define .topfields {
+    margin: 20px 0;
+    padding: 2rem;
+    border: 1px solid $border-color;
+    border-radius: $btn-border-radius;
+
+    .felement {
+        font-size: $font-size-sm;
+        color: $body-color-secondary;
+    }
+}
+
+.theme-dark#page-admin-roles-define .topfields {
+    border-color: $dm-border-color;
+
+    .felement {
+        color: $dm-body-color-secondary;
+    }
+}
+
+#page-admin-roles-define .capdefault {
+    background-color: $table-hover-bg;
+}
+
+.topfields .fitemtitle,
+.topfields .fitemtitle label {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+}
+
+#page-admin-roles-define .cap-desc {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column-reverse;
+
+    font-size: $font-size-xs;
+    font-weight: $font-weight-normal;
+
+    a {
+        font-weight: $font-weight-normal;
+    }
+}
+
+#page-filter-manage .backlink,
+.path-admin-roles .backlink {
+    margin-top: 1em;
+
+    p {
+        margin-top: 1rem;
+        margin-bottom: 0;
+    }
+}
+
+#page-admin-roles-explain #chooseuser h3,
+#page-admin-roles-usersroles .contextname {
+    margin-top: 0;
+}
+
+#page-admin-roles-explain #chooseusersubmit {
+    margin-top: 0;
+    text-align: center;
+}
+
+#page-admin-roles-usersroles p {
+    margin: 0;
+}
+
+#page-admin-roles-override .cell.c1,
+#page-admin-roles-assign .cell.c3,
+#page-admin-roles-assign .cell.c1 {
+    padding-top: 0.75em;
+}
+
+#page-admin-roles-override .overridenotice,
+#page-admin-roles-define .definenotice {
+    margin: 1em 10% 2em 10%;
+    text-align: left;
+}
+
+#page-admin-index .adminwarning.availableupdatesinfo .moodleupdateinfo span {
+    display: block;
+}
+
+#page-admin-index .updateplugin div {
+    margin-bottom: 0.5em;
+}
+
+#page-admin-user-user_bulk #users .fgroup {
+    white-space: nowrap;
+}
+
+#page-admin-report-stats-index .graph {
+    text-align: center;
+    margin-bottom: 1em;
+}
+
+#page-admin-report-courseoverview-index .graph {
+    text-align: center;
+    margin-bottom: 1em;
+}
+
+#page-admin-lang .translator {
+    border-width: 1px;
+    border-style: solid;
+}
+
+// This is the CSS for the role assignment control.
+.path-enrol,
+.path-admin {
+    .enroloptions {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: $btn-border-radius;
+        background-color: $gray-200;
+
+        .theme-dark & {
+            background-color: $dm-gray-200;
+        }
+
+        select {
+            width: 100%;
+        }
+
+        p {
+            margin: 0 0 .75rem !important;
+
+            &:last-of-type {
+                margin: 0 !important;
+            }
+        }
+
+        label {
+            font-size: $font-size-xs;
+            font-weight: $font-weight-medium;
+        }
+    }
+
+    .roleassigntable {
+        width: 100%;
+
+        tr {
+            background-color: transparent !important;
+        }
+
+        tr:hover {
+            box-shadow: none;
+        }
+    }
+
+    .roleassigntable td {
+        vertical-align: top;
+        padding: 10px 0;
+    }
+
+    .roleassigntable p {
+        text-align: left;
+        margin: 0.2em 0;
+    }
+
+    .roleassigntable #existingcell,
+    .roleassigntable #potentialcell {
+        width: 42%;
+    }
+
+    // Targetting the label at the top.
+    .roleassigntable #existingcell p>label:first-child,
+    .roleassigntable #potentialcell p>label:first-child {
+        font-weight: $font-weight-bold;
+    }
+
+    .roleassigntable #buttonscell {
+        width: 16%;
+    }
+
+    .roleassigntable #buttonscell #assignoptions {
+        font-size: $font-size-sm;
+    }
+
+    .roleassigntable #removeselect_wrapper,
+    .roleassigntable #addselect_wrapper {
+        width: 100%;
+    }
+
+    table.rolecap tr.rolecap th {
+        text-align: left;
+        font-weight: normal;
+    }
+
+    .rolecap .hiddenrow {
+        display: none;
+    }
+
+    #defineroletable {
+        .rolecap {
+
+            .inherit,
+            .allow,
+            .prevent,
+            .prohibit {
+                text-align: center;
+                padding: 0;
+                min-width: 3.5em;
+
+                .note {
+                    font-size: $font-size-xs;
+                    opacity: .8;
+                }
+            }
+        }
+    }
+
+    .rolecap .cap-name,
+    .rolecap .note {
+        display: block;
+        font-size: $font-size-sm;
+        white-space: nowrap;
+        font-weight: normal;
+    }
+
+    .rolecap label {
+        display: block;
+        text-align: center;
+        padding: 0.5em;
+        margin: 0;
+    }
+}
+
+
+
+.plugincheckwrapper {
+    width: 100%;
+}
+
+.environmentbox {
+    margin-top: 1em;
+}
+
+#mnetconfig table {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.environmenttable .cell {
+    padding: .15em .5em;
+}
+
+#trustedhosts .generaltable {
+    margin-left: auto;
+    margin-right: auto;
+    width: 500px;
+}
+
+#trustedhosts .standard {
+    width: auto;
+}
+
+// This usage of legend is a bit weird,
+// seems to be using them as error text
+// that's only sometimes visible. Should
+// look into sorting it.
+#adminsettings legend {
+    display: none;
+}
+
+#adminsettings fieldset.error {
+    margin: .2em 0 .5em 0;
+}
+
+#adminsettings fieldset.error legend {
+    display: block;
+}
+
+#adminsettings fieldset {
+    .rui-title-container {
+        margin: 0;
+    }
+
+    .rui-main-content-title--h3,
+    .adminpagetitle,
+    .h3 {
+        margin: .25rem 0;
+        width: 100%;
+
+        a {
+            width: 100%;
+            display: block;
+
+            padding: 1rem 1.5rem;
+            color: inherit;
+            background-color: $gray-100;
+            background-size: 20px;
+            background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M14.25 12L8.75 7.75V16.25L14.25 12Z' stroke='#{url-friendly-colour($body-color)}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: top 50% right 20px;
+
+            border-radius: $btn-border-radius;
+
+            font-family: $font-family-base;
+            font-weight: $font-weight-medium;
+            font-size: .9rem;
+            text-decoration: none;
+
+            &::before {
+                display: none;
+            }
+
+            .dir-rtl & {
+                background-image: none;
+            }
+
+            .theme-dark & {
+                background-color: $dm-gray-100;
+                background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M14.25 12L8.75 7.75V16.25L14.25 12Z' stroke='#{url-friendly-colour($dm-body-color)}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3C/path%3E%3C/svg%3E");
+
+                .dir-rtl & {
+                    background-image: none;
+                }
+            }
+
+            &:hover {
+                background-color: var(--primary-color-100);
+                text-decoration: none;
+
+                .theme-dark & {
+                    background-color: $dm-gray-400;
+                }
+            }
+
+            &:after {
+                display: none;
+            }
+        }
+    }
+}
+
+
+
+.rui-setting-heading {
+    display: flex;
+
+    position: relative;
+    z-index: 1;
+
+    font-size: 1.5rem;
+
+    .rui-admin-no {
+        background-color: $gray-900;
+        color: $gray-100;
+        border-radius: $btn-border-radius-lg;
+        justify-content: center;
+
+        .theme-dark & {
+            background-color: $dm-gray-900;
+            color: $dm-gray-100;
+        }
+    }
+}
+
+.rui-setting-desc {
+    position: relative;
+    z-index: 1;
+    font-size: $font-size-sm;
+    color: $body-color-secondary;
+
+    p {
+        margin-bottom: 2px;
+    }
+
+    .theme-dark & {
+        color: $dm-body-color-secondary;
+    }
+}
+
+.rui-main-content-title+.adminsettings {
+    margin-bottom: 20px;
+}
+
+#admin-spelllanguagelist textarea,
+#page-admin-setting-editorsettingstinymce .form-textarea textarea {
+    /* rtl:ignore */
+    text-align: left;
+    /* rtl:ignore */
+    direction: ltr;
+}
+
+/* Styles for flags on admin settings */
+.adminsettingsflags {
+    float: right;
+}
+
+.adminsettingsflags label {
+    margin-right: 7px;
+}
+
+.form-description:empty {
+    display: none;
+}
+
+.form-description pre,
+.formsettingheading pre {
+    /*rtl:ignore*/
+    direction: ltr;
+
+    padding: 10px;
+    background-color: $gray-100;
+    border-radius: $btn-border-radius;
+    white-space: pre-wrap;
+
+    max-height: 300px;
+
+    .theme-dark & {
+        background-color: $dm-gray-100;
+    }
+}
+
+.formsettingheading {
+    font-size: $font-size-base;
+    margin-bottom: 1rem;
+}
+
+.formsettingheading .form-horizontal {
+    color: $text-muted;
+
+    .theme-dark & {
+        color: $dm-text-muted;
+    }
+}
+
+.form-item .form-setting .form-htmlarea {
+    display: inline;
+}
+
+.form-item .form-setting .form-htmlarea .htmlarea {
+    width: 640px;
+    display: block;
+}
+
+.form-item .form-setting .form-multicheckbox ul {
+    list-style: none;
+    padding: 0;
+    margin: 7px 0 0 0;
+}
+
+.form-item .form-setting .defaultsnext {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.form-item .form-setting .locked-checkbox {
+    margin-right: 0.2em;
+    margin-left: 0.5em;
+    display: inline;
+}
+
+.form-item .form-setting .form-password .unmask {
+    display: inline-block;
+}
+
+.form-item .form-setting .form-defaultinfo {
+    max-width: 100%;
+    max-height: 120px;
+    text-align: left;
+    overflow-y: auto;
+}
+
+#admin-emoticons td input {
+    width: 8em;
+}
+
+#admin-emoticons td.c0 input {
+    width: 4em;
+}
+
+#adminthemeselector .selectedtheme td.c0 {
+    border: 2px solid $state-info-border;
+    border-right-width: 0;
+}
+
+#adminthemeselector .selectedtheme td.c1 {
+    border: 2px solid $state-info-border;
+    border-left-width: 0;
+}
+
+#adminthemeselector {
+    img {
+        max-width: 300px;
+        border-radius: $btn-border-radius;
+    }
+}
+
+.admin_colourpicker,
+.admin_colourpicker_preview {
+    display: none;
+}
+
+.jsenabled .admin_colourpicker_preview {
+    display: inline;
+}
+
+@include media-breakpoint-up(md) {
+    .jsenabled .admin_colourpicker {
+        display: block;
+        height: 102px;
+        width: 410px;
+        margin-bottom: 10px;
+        box-sizing: content-box;
+    }
+
+    .admin_colourpicker .colourdialogue {
+        float: left;
+        border: 1px solid $input-border-color;
+    }
+
+    .admin_colourpicker .previewcolour {
+        border: 1px solid $input-border-color;
+        margin-left: 301px;
+    }
+
+    .admin_colourpicker .currentcolour {
+        border: 1px solid $input-border-color;
+        margin-left: 301px;
+        border-top-width: 0;
+    }
+}
+
+@include media-breakpoint-between(xs, sm) {
+    .admin_colourpicker .colourdialogue {
+        max-width: 100%;
+    }
+
+    .jsenabled .admin_colourpicker {
+        height: 150px;
+        margin-bottom: 10px;
+        display: block;
+        position: relative;
+    }
+
+    .admin_colourpicker .previewcolour {
+        display: none;
+    }
+
+    .admin_colourpicker .currentcolour {
+        position: absolute;
+        border: 1px solid $border-color;
+        top: 100px;
+        left: 0;
+
+        .theme-dark & {
+            border: 1px solid $dm-border-color;
+        }
+    }
+
+}
+
+.admin_colourpicker .loadingicon {
+    vertical-align: middle;
+    margin-left: auto;
+}
+
+#page-admin-index #notice .checkforupdates {
+    text-align: center;
+}
+
+// Plugins overview page at admin/plugins.php
+#page-admin-plugins {
+    #plugins-overview-panel {
+        .info {
+            display: inline-block;
+            margin: 1rem 1.5rem 1rem 0;
+
+            a {
+                font-size: $font-size-sm;
+                font-weight: $font-weight-medium;
+                color: inherit;
+
+                &:hover {
+                    color: $link-hover-color;
+                    text-decoration: none;
+                }
+            }
+
+        }
+    }
+
+    .checkforupdates {
+        margin: 10px 0;
+
+        .singlebutton {
+            margin: 5px 0;
+            padding: 0;
+
+            div,
+            input {
+                margin: 0 3px 0 0;
+            }
+        }
+    }
+
+    .updateavailableinstallall {
+        margin: .5rem 1rem .5rem 0;
+        padding: 0;
+
+        div,
+        input {
+            margin: 0 3px 5px 0;
+        }
+    }
+
+    #plugins-control-panel {
+        .action-icon {
+            margin: 0 .35rem;
+        }
+
+        .status-missing {
+            background-color: $red-100;
+            border-top: 2px solid $red-600;
+            border-bottom: 2px solid $red-600;
+        }
+
+        .displayname {
+            display: inline-flex;
+            align-items: center;
+            font-weight: $font-weight-medium;
+
+            .icon.spacer {
+                display: inline-flex;
+                width: 35px;
+                margin-right: 13px;
+            }
+        }
+
+        .pluginname {
+            .componentname {
+                margin-left: 48px;
+                font-size: $font-size-xs;
+                color: $body-color-light;
+
+                .theme-dark & {
+                    color: $dm-body-color-light;
+                }
+            }
+        }
+
+        .version {
+            .versionnumber {
+                font-size: $font-size-xs;
+                color: $body-color-light;
+
+                .theme-dark & {
+                    color: $dm-body-color-light;
+                }
+            }
+        }
+
+        .uninstall {
+            a {
+                width: max-content;
+                color: $red-800;
+            }
+        }
+
+        .settings a {
+            width: max-content;
+            display: block;
+        }
+
+        .notes {
+            .label {
+                margin-right: 3px;
+            }
+
+            .requiredby {
+                margin-top: 0.5rem;
+                margin-left: 14px;
+                font-size: $font-size-xs;
+                color: var(--primary-color-400);
+
+                .theme-dark & {
+                    background-color: $dm-gray-600;
+                }
+            }
+        }
+    }
+}
+
+
+// Plugins check page displayed during upgrade.
+#plugins-check-page {
+
+    // Plugins check table.
+    #plugins-check {
+
+        .status-missing,
+        .status-downgrade {
+            td.displayname {
+                font-weight: $font-weight-bold;
+            }
+
+            background-color: $red-100;
+            border-left: 5px solid $red-600;
+        }
+
+        .status-new,
+        .status-upgrade {
+            background-color: $blue-100;
+            border-left: 5px solid $blue-600;
+        }
+    }
+
+    .plugintypeheader {
+        border-top: 0;
+
+        th {
+            padding-top: 30px;
+            font-size: 1.25rem;
+            font-weight: $font-weight-bold;
+        }
+    }
+}
+
+// Available plugin update notification.
+
+#plugins-check-page,
+#plugins-control-panel {
+    .pluginupdateinfo {
+        margin: .5rem 0;
+
+        padding: 20px;
+        border: none;
+        background-color: #fff;
+        box-shadow: $box-shadow-lg;
+        border-radius: $border-radius-lg;
+
+        font-size: $font-size-sm;
+        text-align: left;
+
+        .version {
+            font-weight: $font-weight-medium;
+        }
+
+        .infos {
+            margin-top: .5rem;
+            font-size: $font-size-xs;
+            display: block;
+        }
+
+        .separator {
+            display: none
+        }
+
+        .info a {
+            @extend .underline--anim;
+        }
+
+        &.maturity50 {
+            background-color: $state-danger-bg;
+        }
+
+        &.maturity100,
+        &.maturity150 {
+            background-color: $state-warning-bg;
+        }
+
+        @include border-radius(5px);
+
+        .info {
+            display: block;
+        }
+
+        .separator:after {
+            content: " | ";
+        }
+
+        .btn {
+            padding: 7px 16px;
+            font-size: $font-size-sm;
+        }
+
+        .singlebutton {
+            margin: 1rem 0 0;
+            padding: 0;
+
+            div,
+            input {
+                margin: 0 3px 0 0;
+            }
+        }
+    }
+}
+
+.plugins-management-confirm-buttons {
+    >div {
+        display: inline-block;
+        margin: 0 .5rem 0 0;
+    }
+
+    .continue {
+        padding: 0;
+
+        div,
+        input {
+            margin: 0;
+        }
+    }
+}
+
+#page-admin-index .upgradepluginsinfo {
+    text-align: center;
+}
+
+#page-admin-index .adminwarning.availableupdatesinfo .moodleupdateinfo .separator:after {
+    content: " | ";
+}
+
+/** MNet networking */
+#page-admin-mnet-peers .box.deletedhosts {
+    margin-bottom: 1em;
+    font-size: $font-size-sm;
+}
+
+#core-cache-plugin-summaries table,
+#core-cache-store-summaries table {
+    width: 100%;
+}
+
+#core-cache-lock-summary table,
+#core-cache-definition-summaries table,
+#core-cache-mode-mappings table {
+    margin: 0 auto;
+}
+
+#core-cache-store-summaries .default-store td {
+    font-style: italic;
+}
+
+#core-cache-rescan-definitions,
+#core-cache-mode-mappings .edit-link,
+#core-cache-lock-additional-actions .new-instance {
+    margin-top: 0.5em;
+    text-align: left;
+}
+
+.maintenancewarning {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    overflow: hidden;
+    z-index: $zindex-dropdown;
+}
+
+//Modal for admins e.g When you removing a plugin
+.modal.modal-in-page {
+    padding: 0 !important;
+    margin-left: 0;
+    margin-right: 0;
+    z-index: 0;
+
+    #page-login-index & {
+        margin: 0 auto!important;
+    }
+
+    div {
+        padding: 0 !important;
+        border: none;
+    }
+
+    .modal-footer {
+        margin-top: 1rem;
+    }
+
+    .singlebutton:first-of-type {
+        float: right;
+        margin-left: .5rem;
+    }
+
+}
+
+.modal.modal-in-page .modal-content {
+    padding: 20px !important;
+}
+
+
+.adminpagetitle {
+    margin-bottom: 0;
+    border-bottom: none;
+}
+
+.adminpagepath {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0.5rem $breadcrumb-padding-x $breadcrumb-padding-y;
+    padding: 0.5rem 1.5rem;
+
+    border: 1px solid $border-color;
+    color: $body-color-secondary;
+    border-radius: $btn-border-radius;
+
+    @include font-size($breadcrumb-font-size);
+    list-style: none;
+
+    .theme-dark & {
+        border: 1px solid $dm-border-color;
+        color: $dm-body-color-secondary;
+    }
+
+    li {
+        +li:before {
+            padding-right: 0.5rem;
+            padding-left: 0.5rem;
+            content: "#{$breadcrumb-divider}";
+        }
+    }
+
+}
+
+@media (min-width: 576px) {
+    .container {
+        overflow-wrap: break-word;
+        width: auto;
+    }
+}
+
+
+#page-admin-tasklogs {
+    .task-class {
+        font-size: $font-size-sm;
+        color: $gray-800;
+
+        .theme-dark & {
+            background-color: $dm-gray-600;
+        }
+    }
+}
+
+.path-admin-tool-uploaduser {
+    .uuwarning {
+        background-color: $state-warning-bg;
+    }
+
+    .uuerror {
+        background-color: $state-danger-bg;
+    }
+
+    .uuinfo {
+        background-color: $state-success-bg;
+    }
+}
+
+[data-region="plans"] {
+    margin-top: $page-padding-global;
+}
+
+#page-admin-tool-task-scheduledtasks,
+#page-admin-tool-task-runningtasks {
+    .task-class {
+        padding: 0;
+    }
+}
+
+.helplinkpopup {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    color: $body-color;
+
+    .iconhelp {
+        margin-right: 0.35rem;
+
+        .theme-dark & {
+            filter: invert(1);
+        }
+    }
+
+    .theme-dark & {
+        color: $dm-body-color;
+    }
+}
+
+
+// Update page
+// ---- URL: /admin/tool/installaddon/index.php
+.plugin-install-console {
+    padding: $spacer;
+    background-color: $black;
+    color: $white;
+
+    border-radius: $btn-border-radius;
+}
+
+// ---- URL: /admin/settings.php?section=frontpagesettings
+#adminsettings {
+    .form-group {
+        margin: 0;
+
+        .custom-select {
+            margin: .15rem;
+        }
+    }
+}
+
+#page-admin-tool-installaddon-index #installfromrepobox {
+    text-align: left;
+}
+
+
+.pagelayout-maintenance {
+    h2+.alert {
+        margin-top: $page-padding-global;
+    }
+}
+
+// Plugin check - tab bar
+.actions {
+    a {
+        font-weight: $font-weight-medium;
+
+        .badge {
+            margin-left: .5rem;
+        }
+    }
+}
+
+
+// Admin tools
+#page-admin-report-log-index,
+#page-admin-tool-monitor-managerules {
+    .main-content {
+        .rui-main-content-title--h2 {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .rui-main-content-title--h4 {
+            margin-top: $page-padding-global;
+            margin-bottom: 10px;
+        }
+
+        .rui-main-content-title+a,
+        .rui-main-content-title+form {
+            margin: 1rem 0;
+        }
+
+        div {
+            margin-top: 10px;
+        }
+    }
+}
+
+// ---- URL:  /report/loglive/index.php
+#livelogs-pause-button {
+    margin-bottom: $page-padding-global;
+}
+
+#intro {
+    &:empty {
+        display: none;
+    }
+}
+
+// Plugin check view
+#plugins-check-info {
+    margin: 30px 0;
+
+    .actions {
+        .badge {
+            margin-left: 10px;
+            padding: 3px 10px;
+        }
+    }
+}
+
+
+#page-admin-tool-langimport-index .langimport {
+    margin: $page-padding-global 0 0;
+    padding: 0;
+}
+
+
+// Admin settings - typo
+.rui-admin-desc--small {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+}
+
+
+@include media-breakpoint-up(lmd) {
+    .rui-setting-heading-wrapper--special {
+        margin-left: 60px;
+        position: relative;
+    }
+}
+
+.rui-settings-item+.rui-setting-heading-wrapper {
+    margin-top: $page-padding-global;
+}
+
+.rui-setting-heading-wrapper {
+    position: relative;
+    margin-bottom: 20px;
+
+    [id^="page-admin-setting-themesetting"] & {
+        margin-top: -1px;
+        margin-bottom: 0;
+
+        padding: 20px 0;
+        border-top: 1px solid $border-color;
+
+        @include media-breakpoint-up(lmd) {
+            margin-left: 60px;
+        }
+
+        .rui-setting-heading {
+            font-size: 1.25rem;
+        }
+
+        &:hover {
+            cursor: pointer;
+
+            &:after {
+                content: '';
+                opacity: 1;
+                width: calc(100% + 30px);
+                height: calc(100% - 4px);
+
+                position: absolute;
+                top: 2px;
+                left: -15px;
+                z-index: 0;
+
+                background-color: $gray-100;
+                border-radius: $btn-border-radius;
+            }
+        }
+
+        &::before {
+            content: '';
+            background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M14.25 12L8.75 7.75V16.25L14.25 12Z' stroke='#{url-friendly-colour($body-color)}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3C/path%3E%3C/svg%3E");
+            background-size: 18px;
+            background-repeat: no-repeat;
+            background-position: center;
+
+            width: 24px;
+            height: 24px;
+            position: absolute;
+            right: 0;
+            top: 22px;
+            z-index: 1;
+        }
+
+        &.active::before {
+            background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 9.75L16.25 15.25H7.75L12 9.75Z' stroke='#{url-friendly-colour($body-color)}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3C/path%3E%3C/svg%3E%0A");
+        }
+    }
+
+    [id^="page-admin-setting-themesetting"].theme-dark & {
+        border-color: $dm-border-color;
+
+        &::before {
+            background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M14.25 12L8.75 7.75V16.25L14.25 12Z' stroke='#{url-friendly-colour($dm-body-color)}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3C/path%3E%3C/svg%3E");
+        }
+
+        &.active::before {
+            background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 9.75L16.25 15.25H7.75L12 9.75Z' stroke='#{url-friendly-colour($dm-body-color)}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3C/path%3E%3C/svg%3E%0A");
+        }
+
+        &:hover:after,
+        &.active:after {
+            background-color: $dm-gray-100;
+        }
+
+    }
+
+}
+
+.rui-settings-item {
+    margin-bottom: 20px;
+    padding: 0 0 20px 0;
+    border-bottom: 1px solid $border-color;
+
+    [id^="page-admin-setting-themesetting"] & {
+        @include media-breakpoint-up(lmd) {
+            padding-left: 60px;
+        }
+    }
+
+    &:last-of-type {
+        border-bottom: none;
+    }
+
+    .theme-dark & {
+        border-bottom: 1px solid $dm-border-color;
+    }
+}
+
+.rui-settings-label {
+    margin-bottom: 7px;
+    position: relative;
+
+    label {
+        position: relative;
+        font-size: $font-size-md;
+        flex-wrap: wrap;
+
+        #theme_iomadmoonchild_scb &,
+        #theme_iomadmoon_scb & {
+            width: 180px;
+        }
+
+    }
+}
+
+.rui-settings-shortname {
+    background-color: $gray-100;
+    padding: 5px 10px;
+    border-radius: $border-radius-lg;
+
+    font-size: $font-size-xs;
+    color: $gray-800;
+
+    .theme-dark & {
+        background-color: $dm-gray-100;
+        color: $dm-gray-600;
+    }
+
+    @include media-breakpoint-down(sm) {
+        display: none !important;
+    }
+}
+
+[id^="page-admin-setting-themesetting"] {
+    .rui-sticky-btns {
+        margin-left: 220px;
+
+        @include media-breakpoint-between(xs, sm) {
+            margin-left: 0;
+        }
+    }
+}
+
+#theme_iomadmoon_scb,
+#theme_iomadmoonchild_scb {
+    .rui-settings-item {
+        width: calc(100% - 60px);
+        margin: 0 0 0 60px;
+        padding: 10px 0;
+
+        display: inline-flex;
+        align-items: center;
+
+        @include media-breakpoint-between(xs, sm) {
+            width: 100%;
+            margin: 30px;
+        }
+
+        .rui-settings-label {
+            margin: 0 1rem 0 0;
+
+            @include media-breakpoint-up(lg) {
+                min-width: 350px;
+            }
+
+            display: flex;
+            align-items: center;
+        }
+
+        .form-item .form-label label {
+            margin: 0 1rem 0 0;
+        }
+
+        .form-description {
+            margin: 0 !important;
+        }
+    }
+}
+
+@include media-breakpoint-up(lg) {
+    [data-settings-name="theme_iomadmoon_scb"],
+    [data-settings-name="theme_iomadmoonchild_scb"] {
+        margin-top: 35px;
+        position: relative;
+
+        &:before {
+            content: '';
+            background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 7H9V9H7V7Z' fill='#{url-friendly-colour($body-color-light)}' /%3E%3Cpath d='M11 7H13V9H11V7Z' fill='#{url-friendly-colour($body-color-light)}' /%3E%3Cpath d='M17 7H15V9H17V7Z' fill='#{url-friendly-colour($body-color-light)}' /%3E%3Cpath d='M7 11H9V13H7V11Z' fill='#{url-friendly-colour($body-color-light)}' /%3E%3Cpath d='M13 11H11V13H13V11Z' fill='#{url-friendly-colour($body-color-light)}' /%3E%3Cpath d='M15 11H17V13H15V11Z' fill='#{url-friendly-colour($body-color-light)}' /%3E%3Cpath d='M9 15H7V17H9V15Z' fill='#{url-friendly-colour($body-color-light)}' /%3E%3Cpath d='M11 15H13V17H11V15Z' fill='#{url-friendly-colour($body-color-light)}' /%3E%3Cpath d='M17 15H15V17H17V15Z' fill='#{url-friendly-colour($body-color-light)}' /%3E%3C/svg%3E");
+            width: 24px;
+            height: 24px;
+
+            position: absolute;
+            top: -22px;
+            left: -6px;
+
+            .theme-dark & {
+                background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 7H9V9H7V7Z' fill='#{url-friendly-colour($dm-body-color-light)}' /%3E%3Cpath d='M11 7H13V9H11V7Z' fill='#{url-friendly-colour($dm-body-color-light)}' /%3E%3Cpath d='M17 7H15V9H17V7Z' fill='#{url-friendly-colour($dm-body-color-light)}' /%3E%3Cpath d='M7 11H9V13H7V11Z' fill='#{url-friendly-colour($dm-body-color-light)}' /%3E%3Cpath d='M13 11H11V13H13V11Z' fill='#{url-friendly-colour($dm-body-color-light)}' /%3E%3Cpath d='M15 11H17V13H15V11Z' fill='#{url-friendly-colour($dm-body-color-light)}' /%3E%3Cpath d='M9 15H7V17H9V15Z' fill='#{url-friendly-colour($dm-body-color-light)}' /%3E%3Cpath d='M11 15H13V17H11V15Z' fill='#{url-friendly-colour($dm-body-color-light)}' /%3E%3Cpath d='M17 15H15V17H17V15Z' fill='#{url-friendly-colour($dm-body-color-light)}' /%3E%3C/svg%3E");
+            }
+        }
+    }
+}
+
+.rui-admin-no {
+    margin-right: 20px;
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+    color: $body-color;
+
+    border-right: 1px solid $border-color;
+
+    .theme-dark & {
+        border-color: $border-color;
+        color: $dm-body-color;
+    }
+}
+
+// For Settings - Textareas
+textarea[id$="introtitle"],
+textarea[id$="introcontent"],
+textarea[id$="footercontent"],
+textarea[id$="id_s_theme_iomadmoon_iconcustomitem"] textarea[id$="id_s_theme_iomadmoon_labelcustomitem"] textarea[id$="id_s_theme_iomadmoon_urlcustomitem"] {
+    height: 85px;
+}
+
+.editor_atto_content.form-control[id$="htmlcontenteditable"] {
+    min-height: max-content !important;
+}
+
+.rui-settings-item[id^="admin-block4q"],
+#admin-fontheadings,
+#admin-fontbody,
+#admin-fontweightregular,
+#admin-fontweightmedium,
+#admin-fontweightbold,
+#admin-isitemonsitehome,
+#admin-isitemondashboard,
+#admin-isitemoncalendar,
+#admin-isitemonprivatefiles,
+#admin-isitemoncontentbank,
+#admin-iscustomitem1on,
+#admin-isitemonmycourses,
+#admin-poscustomitem1,
+#admin-labelcustomitem1,
+#admin-iconcustomitem1,
+#admin-iscustomitem2on,
+#admin-poscustomitem2,
+#admin-labelcustomitem2,
+#admin-iconcustomitem2,
+#admin-iscustomitem3on,
+#admin-poscustomitem3,
+#admin-labelcustomitem3,
+#admin-iconcustomitem3,
+#admin-iscustomitem4on,
+#admin-poscustomitem4,
+#admin-labelcustomitem4,
+#admin-iconcustomitem4,
+#admin-iscustomitem5on,
+#admin-poscustomitem5,
+#admin-labelcustomitem5,
+#admin-iconcustomitem5,
+#admin-cccfooter,
+#admin-cccsummary,
+#admin-stringaccess,
+#admin-maxcoursecardtextheight,
+#admin-customloginlogo,
+#admin-customlogo,
+#admin-customsidebarlogo,
+#admin-showblock1sliderwrapper,
+#admin-showblock1wrapper,
+#admin-showblock2wrapper,
+#admin-showblock3wrapper,
+#admin-customlogoandname,
+#admin-topbarlogoareaon,
+#admin-sdarkmode,
+#admin-darkmodefirst,
+#coursecarddesclimit,
+#admin-customitem1,
+#admin-customitem2,
+#admin-customitem3,
+#admin-customitem4,
+#admin-customitem5,
+#admin-urlcustomitem1,
+#admin-urlcustomitem2,
+#admin-urlcustomitem3,
+#admin-urlcustomitem4,
+#admin-urlcustomitem5,
+#admin-closecustomalert,
+#admin-colorfooterlink,
+#admin-colorlink,
+#admin-dmcolorlink,
+#admin-colordrawernavbtnicon,
+#admin-colordrawernavbtntext,
+#admin-colordrawernavbtntexth,
+#admin-colordrawerlink,
+#admin-showsociallist,
+#admin-facebook,
+#admin-twitter,
+#admin-linkedin,
+#admin-instagram,
+#admin-youtube,
+#admin-customsocialicon,
+#admin-stringshowhidden {
+    padding-bottom: 0 !important;
+    border-bottom: 0 !important;
+}
+
+#admin-fontweightheadings,
+#admin-fontweightregular,
+#admin-fontweightmedium,
+#admin-fontweightbold,
+#admin-loginlogooutside,
+#admin-customdmlogo,
+#admin-customsidebardmlogo,
+#admin-possitehome,
+#admin-posdashboard,
+#admin-posmycourses,
+#admin-posprivatefiles,
+#admin-poscalendar,
+#admin-poscontentbank,
+#admin-labelcustomitem1,
+#admin-iconcustomitem1,
+#admin-urlcustomitem1,
+#admin-poscustomitem1,
+#admin-labelcustomitem2,
+#admin-iconcustomitem2,
+#admin-urlcustomitem2,
+#admin-poscustomitem2,
+#admin-labelcustomitem3,
+#admin-iconcustomitem3,
+#admin-urlcustomitem3,
+#admin-poscustomitem3,
+#admin-labelcustomitem4,
+#admin-iconcustomitem4,
+#admin-urlcustomitem4,
+#admin-poscustomitem4,
+#admin-labelcustomitem5,
+#admin-iconcustomitem5,
+#admin-urlcustomitem5,
+#admin-poscustomitem5,
+#admin-cccfooter,
+#admin-cccsummary,
+#admin-stringaccess,
+#admin-maxcoursecardtextheight,
+#admin-coursecarddesclimit,
+#admin-block1sliderwrapperbg,
+#admin-block1wrapperbg,
+#admin-block2wrapperbg,
+#admin-block3wrapperbg,
+#admin-customlogotxt,
+#admin-customlogo,
+#admin-sdarkmode,
+#admin-slightmode,
+#showcustomfields,
+#admin-customitem1,
+#admin-customitem2,
+#admin-customitem3,
+#admin-customitem4,
+#admin-customitem5,
+#admin-customalertid,
+#admin-colordrawernavbtniconh,
+#admin-colordrawernavbtntexth,
+#admin-colordrawernavbtnbgh,
+#admin-colordrawerlinkh,
+#admin-dmcolorlinkhover,
+#admin-colorlinkhover,
+#admin-facebook,
+#admin-twitter,
+#admin-linkedin,
+#admin-instagram,
+#admin-youtube,
+#admin-customsocialicon,
+#admin-colorfooterlinkhover,
+#stringshowonlyinprogress {
+    @include media-breakpoint-up(lmd) {
+        padding-left: 110px !important;
+        position: relative;
+
+        &:before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 60px;
+
+            width: 40px;
+            height: 40px;
+            background-image: url("data:image/svg+xml,%3Csvg height='34' viewBox='0 0 16 34' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m.5 30v-30m0 31h13' fill='none' stroke='#{url-friendly-colour($body-color-light)}' stroke-linecap='round' stroke-width='2' transform='translate(1 1.5)'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 10px -17px;
+            background-size: 20px;
+
+            .theme-dark & {
+                background-image: url("data:image/svg+xml,%3Csvg height='34' viewBox='0 0 16 34' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m.5 30v-30m0 31h13' fill='none' stroke='#{url-friendly-colour($dm-body-color-light)}' stroke-linecap='round' stroke-width='2' transform='translate(1 1.5)'/%3E%3C/svg%3E");
+            }
+        }
+    }
+}
+
+
+[id^="admin-displayblock"] {
+    display: inline-flex;
+    width: 100%;
+
+    .rui-settings-shortname {
+        display: none !important;
+    }
+
+    .rui-settings-label {
+        margin-top: 7px;
+        margin-bottom: 0;
+        margin-right: 30px;
+    }
+}
+
+[id^="theme_iomadmoonchild_block1"],
+[id^="theme_iomadmoon_block1"] {
+    a {
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+}
+
+.rui--turnedon {
+    position: relative;
+
+    &:after {
+        content: '';
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='#{url-friendly-colour($green-600)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M5.75 12.8665L8.33995 16.4138C9.15171 17.5256 10.8179 17.504 11.6006 16.3715L18.25 6.75'%3E%3C/path%3E%3C/svg%3E%0A");
+        background-repeat: no-repeat;
+        background-position: center;
+
+        width: 20px;
+        height: 20px;
+
+        position: absolute;
+        right: 0;
+        top: calc(50% - 10px);
+    }
+
+    .small {
+        max-width: 120px;
+    }
+}
+
+// ---- URL:  /admin/tool/dataprivacy/pluginregistry.php#
+.type-expand,
+.component-expand {
+    &:hover {
+        color: $link-hover-color;
+        text-decoration: none;
+    }
+}
+
+
+// ---- URL:  /admin/index.php
+#page-admin-index {
+    .checkforupdates {
+        margin: 0 !important;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        .singlebutton {
+
+            .btn {
+                background-color: $gray-900;
+                color: $gray-100;
+            }
+
+            margin-bottom: 0;
+        }
+
+        div {
+            display: flex;
+            font-size: $font-size-xs;
+        }
+    }
+
+    .copyright {
+        font-size: $font-size-md;
+    }
+}
+
+.sqcolor {
+    width: 60px;
+    height: 60px;
+    border-radius: $btn-border-radius;
+    position: relative;
+
+    &:before {
+        content: '';
+        position: absolute;
+        padding: 2px 5px;
+        font-size: $font-size-xs;
+        font-weight: $font-weight-bold;
+        color: $white;
+        background-color: $black;
+        border-radius: $btn-border-radius;
+    }
+}
+
+.bg-primary-100 {
+    background-color: var(--primary-color-100);
+
+    &.bg--desc {
+        &:before {
+            content: '100';
+        }
+    }
+
+}
+
+.bg-primary-200 {
+    background-color: var(--primary-color-200);
+
+    &.bg--desc {
+        &:before {
+            content: '200';
+        }
+    }
+}
+
+.bg-primary-300 {
+    background-color: var(--primary-color-300);
+
+    &.bg--desc {
+        &:before {
+            content: '300';
+        }
+    }
+}
+
+.bg-primary-400 {
+    background-color: var(--primary-color-400);
+
+    &.bg--desc {
+        &:before {
+            content: '400';
+        }
+    }
+}
+
+.bg-primary-500 {
+    background-color: var(--primary-color-500);
+
+    &.bg--desc {
+        &:before {
+            content: '500';
+        }
+    }
+}
+
+.bg-primary-600 {
+    background-color: var(--main-theme-color);
+
+    &::after {
+        content: '';
+        border: 4px solid var(--main-theme-color);
+        position: absolute;
+        top: -4px;
+        left: -4px;
+        right: -4px;
+        bottom: -4px;
+        border-radius: 9px;
+    }
+
+    &.bg--desc {
+        &:before {
+            content: '* 600';
+            box-shadow: $box-shadow-lg;
+        }
+    }
+}
+
+.bg-primary-700 {
+    background-color: var(--primary-color-700);
+
+    &.bg--desc {
+        &:before {
+            content: '700';
+        }
+    }
+}
+
+.bg-primary-800 {
+    background-color: var(--primary-color-800);
+
+    &.bg--desc {
+        &:before {
+            content: '800';
+        }
+    }
+}
+
+.bg-primary-900 {
+    background-color: var(--primary-color-900);
+
+    &.bg--desc {
+        &:before {
+            content: '900';
+        }
+    }
+}
+
+.bg-gray-100 {
+    background-color: $gray-100;
+
+    &.bg--desc {
+        &:before {
+            content: '100';
+        }
+    }
+}
+
+.bg-gray-200 {
+    background-color: $gray-200;
+
+    &.bg--desc {
+        &:before {
+            content: '200';
+        }
+    }
+}
+
+.bg-gray-300 {
+    background-color: $gray-300;
+
+    &.bg--desc {
+        &:before {
+            content: '300';
+        }
+    }
+}
+
+.bg-gray-400 {
+    background-color: $gray-400;
+
+    &.bg--desc {
+        &:before {
+            content: '400';
+        }
+    }
+}
+
+.bg-gray-500 {
+    background-color: $gray-500;
+
+    &.bg--desc {
+        &:before {
+            content: '500';
+        }
+    }
+}
+
+.bg-gray-600 {
+    background-color: $gray-600;
+
+    &::after {
+        content: '';
+        border: 4px solid rgba($gray-600, .3);
+        position: absolute;
+        top: -4px;
+        left: -4px;
+        right: -4px;
+        bottom: -4px;
+        border-radius: 8px;
+    }
+
+    &.bg--desc {
+        &:before {
+            content: '* 600';
+            box-shadow: $box-shadow-lg;
+        }
+    }
+}
+
+.bg-gray-700 {
+    background-color: $gray-700;
+
+    &.bg--desc {
+        &:before {
+            content: '700';
+        }
+    }
+}
+
+.bg-gray-800 {
+    background-color: $gray-800;
+
+    &.bg--desc {
+        &:before {
+            content: '800';
+        }
+    }
+}
+
+.bg-gray-900 {
+    background-color: $gray-900;
+
+    &.bg--desc {
+        &:before {
+            content: '900';
+        }
+    }
+}
+
+.bg-dm-gray-100 {
+    background-color: $dm-gray-100;
+
+    &.bg--desc {
+        &:before {
+            content: '100';
+        }
+    }
+}
+
+.bg-dm-gray-200 {
+    background-color: $dm-gray-200;
+
+    &.bg--desc {
+        &:before {
+            content: '200';
+        }
+    }
+}
+
+.bg-dm-gray-300 {
+    background-color: $dm-gray-300;
+
+    &.bg--desc {
+        &:before {
+            content: '300';
+        }
+    }
+}
+
+.bg-dm-gray-400 {
+    background-color: $dm-gray-400;
+
+    &.bg--desc {
+        &:before {
+            content: '400';
+        }
+    }
+}
+
+.bg-dm-gray-500 {
+    background-color: $dm-gray-500;
+
+    &.bg--desc {
+        &:before {
+            content: '500';
+        }
+    }
+}
+
+.bg-dm-gray-600 {
+    background-color: $dm-gray-600;
+
+    &::after {
+        content: '';
+        border: 4px solid rgba($dm-gray-600, .3);
+        position: absolute;
+        top: -4px;
+        left: -4px;
+        right: -4px;
+        bottom: -4px;
+        border-radius: 8px;
+    }
+
+    &.bg--desc {
+        &:before {
+            content: '* 600';
+            box-shadow: $box-shadow-lg;
+        }
+    }
+}
+
+.bg-dm-gray-700 {
+    background-color: $dm-gray-700;
+
+    &.bg--desc {
+        &:before {
+            content: '700';
+        }
+    }
+}
+
+.bg-dm-gray-800 {
+    background-color: $dm-gray-800;
+
+    &.bg--desc {
+        &:before {
+            content: '800';
+        }
+    }
+}
+
+.bg-dm-gray-900 {
+    background-color: $dm-gray-900;
+
+    &.bg--desc {
+        &:before {
+            content: '900';
+        }
+    }
+}
+
+
+#admin-sdarkmode,
+#admin-slightmode,
+#labelsidebaropened,
+#labelsidebarclosed,
+[id^="admin-string"] {
+    textarea {
+        height: 90px;
+    }
+}
+
+[id^="#id_s_theme_iomadmoon_labelcustomitem"],
+[id^="#id_s_theme_iomadmoon_urlcustomitem"],
+[id^="#id_s_theme_iomadmoonchild_labelcustomitem"],
+[id^="#id_s_theme_iomadmoonchild_urlcustomitem"] {
+    height: 65px;
+}
+
+
+
+.admintable.environmenttable {
+    td {
+        font-size: $font-size-sm;
+    }
+}
+
+#plugins-check-page,
+.environmenttable {
+    .status {
+        text-align: right;
+
+        .badge {
+            padding: 3px 7px;
+            font-size: 11px;
+            font-weight: $font-weight-medium;
+            border-radius: 3px;
+        }
+    }
+}
+
+#page-maintenance {
+    margin: 30px auto;
+
+    @include media-breakpoint-between(md, lmd) {
+        max-width: 700px;
+    }
+
+    @include media-breakpoint-between(xs, sm) {
+        width: calc(100% - 40px);
+        padding: 20px;
+    }
+
+
+    h2 {
+        margin-top: 20px;
+        margin-bottom: 10px;
+
+        font-size: $font-size-md;
+        text-align: left;
+    }
+}
+
+.form-textarea {
+    width: 100%;
+}
+
+#page-admin-roles-define {
+    .buttons {
+        margin-top: 20px;
+    }
+}
+
+#plugin_type_cell_mod {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.badge.bg-light.text-dark {
+    background-color: $gray-200!important;
+}

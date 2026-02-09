@@ -1,0 +1,102 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template block_myoverview/course-action-menu
+
+    This template renders action menu for each course.
+
+    Example context (json):
+    {
+        "isfavourite": true
+    }
+}}
+<div class="ml-auto dropdown">
+    <button class="rui-coursemenu-btn"
+        type="button"
+        data-toggle="dropdown"
+        aria-haspopup="true"
+        aria-expanded="false">
+
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.75 5.75H19.25" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M9.75 18.25H19.25" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M4.75 12H19.25" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            <span class="sr-only">
+                {{#str}} aria:courseactions, block_myoverview {{/str}} {{{fullname}}}
+            </span>
+    </button>
+    <div class="dropdown-menu dropdown-menu-right">
+        <a class="dropdown-item {{#isfavourite}}hidden{{/isfavourite}}" href="#"
+            data-action="add-favourite"
+            data-course-id="{{id}}"
+            aria-controls="favorite-icon-{{ id }}-{{ uniqid }}"
+            >
+            <svg class="mr-2" width="18" height="18" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.75L13.75 10.25H19.25L14.75 13.75L16.25 19.25L12 15.75L7.75 19.25L9.25 13.75L4.75 10.25H10.25L12 4.75Z"></path>
+            </svg>
+            {{#str}} addtofavourites, block_myoverview {{/str}}
+            <div class="sr-only">
+                {{#str}} aria:addtofavourites, block_myoverview {{/str}} {{{fullname}}}
+            </div>
+        </a>
+        <a class="dropdown-item {{^isfavourite}}hidden{{/isfavourite}}" href="#"
+            data-action="remove-favourite"
+            data-course-id="{{id}}"
+            aria-controls="favorite-icon-{{ id }}-{{ uniqid }}"
+            >
+            <svg class="mr-2" width="18" height="18" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.75 12C4.75 7.99594 7.99594 4.75 12 4.75V4.75C16.0041 4.75 19.25 7.99594 19.25 12V12C19.25 16.0041 16.0041 19.25 12 19.25V19.25C7.99594 19.25 4.75 16.0041 4.75 12V12Z"></path>
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 9.75L14.25 14.25"></path>
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.25 9.75L9.75 14.25"></path>
+            </svg>
+            {{#str}} removefromfavourites, block_myoverview {{/str}}
+            <div class="sr-only">
+                {{#str}} aria:removefromfavourites, block_myoverview {{/str}} {{{fullname}}}
+            </div>
+        </a>
+        <a class="dropdown-item {{^hidden}}hidden{{/hidden}}" href="#"
+            data-action="show-course"
+            data-course-id="{{id}}"
+            aria-controls="favorite-icon-{{ id }}-{{ uniqid }}"
+            >
+            <svg class="mr-2" width="18" height="18" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.25 12C19.25 13 17.5 18.25 12 18.25C6.5 18.25 4.75 13 4.75 12C4.75 11 6.5 5.75 12 5.75C17.5 5.75 19.25 11 19.25 12Z"></path>
+                <circle cx="12" cy="12" r="2.25" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></circle>
+            </svg>
+            {{#str}} show, block_myoverview {{/str}}
+            <div class="sr-only">
+                {{#str}} aria:showcourse, block_myoverview, {{fullname}} {{/str}}
+            </div>
+        </a>
+        <a class="dropdown-item {{#hidden}}hidden{{/hidden}}" href="#"
+            data-action="hide-course"
+            data-course-id="{{id}}"
+            aria-controls="favorite-icon-{{ id }}-{{ uniqid }}"
+            >
+            <svg class="mr-2" width="18" height="18" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.6247 10C19.0646 10.8986 19.25 11.6745 19.25 12C19.25 13 17.5 18.25 12 18.25C11.2686 18.25 10.6035 18.1572 10 17.9938M7 16.2686C5.36209 14.6693 4.75 12.5914 4.75 12C4.75 11 6.5 5.75 12 5.75C13.7947 5.75 15.1901 6.30902 16.2558 7.09698"></path>
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.25 4.75L4.75 19.25"></path>
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.409 13.591C9.53033 12.7123 9.53033 11.2877 10.409 10.409C11.2877 9.5303 12.7123 9.5303 13.591 10.409"></path>
+            </svg>
+            {{#str}} hidecourse, block_myoverview {{/str}}
+            <div class="sr-only">
+                {{#str}} aria:hidecourse, block_myoverview, {{fullname}} {{/str}}
+            </div>
+        </a>
+    </div>
+</div>

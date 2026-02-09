@@ -1,0 +1,95 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_message/message_drawer_view_overview_section
+
+    This template is a base template to render a collapsible "section" on the
+    overview page of the message drawer, for example the messages section.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * All data attributes are required
+
+    Context variables required for this template:
+    * userid The logged in user id
+    * urls The URLs for the popover
+
+    Example context (json):
+    {}
+
+}}
+
+<div
+    class="rui-message-accordion-wrapper"
+    data-region="{{$region}}{{/region}}"
+>
+    <div id="{{$region}}{{/region}}-toggle" class="rui-message-accordion-toggle" data-region="toggle">
+
+        <button
+            class="rui-message-accordion w-100 {{^expanded}}collapsed{{/expanded}}"
+            data-toggle="collapse"
+            data-target="#{{$region}}{{/region}}-target-{{uniqid}}"
+            aria-expanded="{{#expanded}}true{{/expanded}}{{^expanded}}false{{/expanded}}"
+            aria-controls="{{$region}}{{/region}}-target-{{uniqid}}"
+        >
+            <span class="rui-message-accordion-toggle-icon" role="button" aria-label="{{$title}}{{/title}}">
+                <span class="sr-only">{{$title}}{{/title}}</span>
+                <svg height="5" viewBox="0 0 9 5" width="9" xmlns="http://www.w3.org/2000/svg"><path d="m.5810971 12h7.47401829c.51705218 0 .77557827.6245293.40957504.9905325l-3.73555675 3.7384616c-.22657343.2265734-.59548144.2265734-.82205487 0l-3.73555675-3.7384616c-.36600323-.3660032-.10747714-.9905325.40957504-.9905325z" fill="currentColor" transform="translate(0 -12)"/></svg>
+            </span>
+            <span class="rui-message-accordion-title-icon rui-message-accordion-title">{{$title}}{{/title}}</span>
+            <small
+                class="hidden ml-auto"
+                data-region="section-total-count-container"
+            >
+                <span class="rui-message-badge mr-2" aria-labelledby="{{$region}}{{/region}}-total-count-label">
+                    <span class="rui-message-badge-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 18.25C15.866 18.25 19.25 16.1552 19.25 11.5C19.25 6.84483 15.866 4.75 12 4.75C8.13401 4.75 4.75 6.84483 4.75 11.5C4.75 13.2675 5.23783 14.6659 6.05464 15.7206C6.29358 16.0292 6.38851 16.4392 6.2231 16.7926C6.12235 17.0079 6.01633 17.2134 5.90792 17.4082C5.45369 18.2242 6.07951 19.4131 6.99526 19.2297C8.0113 19.0263 9.14752 18.722 10.0954 18.2738C10.2933 18.1803 10.5134 18.1439 10.7305 18.1714C11.145 18.224 11.5695 18.25 12 18.25Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span aria-hidden="true" data-region="section-total-count" class="rui-message-total-count">{{count.total}}</span>
+                    <span class="sr-only">
+                        {{#str}} totalconversations, core_message, {{count.total}} {{/str}}
+                    </span>
+                </span>
+            </small>
+
+            <span
+                class="{{^count.unread}}hidden{{/count.unread}} badge badge-xs badge-primary"
+                data-region="section-unread-count-container" aria-labelledby="{{$region}}{{/region}}-unread-count-label"
+            >
+                <span aria-hidden="true" data-region="section-unread-count">{{count.unread}}</span>
+                <span class="sr-only" id="{{$region}}{{/region}}-unread-count-label">
+                    {{#str}} unreadconversations, core_message, {{count.unread}} {{/str}}
+                </span>
+            </span>
+            <span class="hidden ml-2" data-region="loading-icon-container">
+                {{> core/loading }}
+            </span>
+        </button>
+    </div>
+    {{< core_message/message_drawer_lazy_load_list }}
+        {{$rootclasses}}collapse {{#expanded}}show{{/expanded}}{{/rootclasses}}
+        {{$rootattributes}}
+            id="{{$region}}{{/region}}-target-{{uniqid}}"
+            aria-labelledby="{{$region}}{{/region}}-toggle"
+            data-parent="#message-drawer-view-overview-container-{{uniqid}}"
+        {{/rootattributes}}
+    {{/ core_message/message_drawer_lazy_load_list }}
+</div>

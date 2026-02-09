@@ -1,0 +1,92 @@
+{{!
+This file is part of Moodle - http://moodle.org/
+
+Moodle is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Moodle is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more comments.
+
+You should have received a copy of the GNU General Public License
+along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_contentbank/viewcontent/toolbarview
+
+    Contentbank view toolbar.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * contenthtml - string - content html.
+    * usercanedit - boolean - whether the user has permission to edit the content.
+    * editcontenturl - string - edit page URL.
+    * closeurl - string - close landing page.
+
+    Example context (json):
+    {
+        "usercanedit" : true,
+        "heading" : "This is a heading",
+        "editcontenturl" : "http://something/contentbank/edit.php?contextid=1&plugin=h5p&id=1",
+        "closeurl" : "http://moodle.test/h5pcb/moodle/contentbank/index.php",
+        "actionmenu": {
+            "options": [
+                {
+                    "url": "www.google.com",
+                    "label": "Google",
+                    "attributes": [
+                        {
+                            "name": "data-attrib",
+                            "value": "1"
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}}
+
+{{#heading}}<h4 class=" rui-main-content-title rui-main-content-title--h4">{{heading}}</h4>{{/heading}}
+{{#usercanedit}}
+<div class="cb-toolbar-container w-100 m-0 text-right">
+    <div class="d-inline-flex">
+        <a href="{{editcontenturl}}" class="btn btn-primary" data-action="edit-content">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.75 19.25L9 18.25L18.2929 8.95711C18.6834 8.56658 18.6834 7.93342 18.2929 7.54289L16.4571 5.70711C16.0666 5.31658 15.4334 5.31658 15.0429 5.70711L5.75 15L4.75 19.25Z"></path>
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.25 19.25H13.75"></path>
+            </svg>
+            <span class="ml-1">{{#str}}edit{{/str}}</span>
+        </a>
+        {{#actionmenu}}
+        <div class="mx-2">
+            {{> core_contentbank/contentbankmenu }}
+        </div>
+        {{/actionmenu}}
+
+        <div class="ml-auto">
+            <a href="{{closeurl}}" class="btn btn-secondary ml-4" data-action="close-content">
+                <span class="mr-1">{{#str}}exit, core_contentbank{{/str}}</span>
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 8.75L19.25 12L15.75 15.25"></path>
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 12H10.75"></path>
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.25 4.75H6.75C5.64543 4.75 4.75 5.64543 4.75 6.75V17.25C4.75 18.3546 5.64543 19.25 6.75 19.25H15.25"></path>
+                </svg>
+            </a>
+        </div>
+    </div>
+</div>
+{{/usercanedit}}
+
+{{^usercanedit}}
+    {{#actionmenu}}
+        {{> core_contentbank/contentbankmenu }}
+    {{/actionmenu}}
+{{/usercanedit}}

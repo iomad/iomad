@@ -1,0 +1,305 @@
+//---- Chat
+//---- Module Activity
+
+// -------------------------
+.yui-skin-sam .yui-layout.path-mod-chat-gui_ajax {
+    background-color: $body-bg;
+
+    .theme-dark & {background-color: $dm-body-bg;}
+
+    .yui-layout-unit div.yui-layout-bd-nohd,
+    .yui-layout-unit div.yui-layout-bd-noft,
+    .yui-layout-unit div.yui-layout-bd,
+    .yui-layout-unit-right,
+    .yui-layout-unit-bottom {
+        border: 0;
+    }
+
+    .yui-layout-unit-right,
+    .yui-layout-unit-bottom {
+        border-radius: 0;
+    }
+
+    .yui-layout-unit div.yui-layout-bd {
+        background-color: transparent;
+    }
+    .yui-layout-unit.yui-layout-unit-center div.yui-layout-bd {
+        background-color: $gray-100;
+
+        .theme-dark & {background-color: $dm-gray-100;}
+    }
+    // Override the default padding added by function $OUTPUT->box();
+    #chat-input-area.py-3 {
+        padding: 0 !important; /* stylelint-disable-line declaration-no-important */
+    }
+    #chat-input-area {
+        .form-group {
+            margin: 0;
+
+            #input-message {
+                height: auto;
+                padding: 10px;
+            }
+        }
+    }
+    #chat-input-area table.generaltable,
+    #chat-input-area table.generaltable td.cell {
+        border: 0;
+        padding: 3px 15px;
+        white-space: nowrap;
+        margin-bottom: 0;
+    }
+
+    #chat-userlist {
+        padding: 5px;
+
+        #users-list {
+            li {
+                border-top: 1px solid $body-bg;
+                border-bottom: 1px solid $gray-300;
+                padding: 5px 0;
+
+                .theme-dark & {
+                    border-top: 1px solid $dm-body-bg;
+                    border-bottom: 1px solid $dm-gray-300;
+                }
+            }
+
+            img {
+                margin-right: 8px;
+                border-radius: $btn-border-radius;
+                max-width: none;
+            }
+
+            strong {
+                font-size: $font-size-sm;
+                font-weight: $font-weight-medium;
+            }
+        }
+    }
+
+    #chat-messages {
+        margin: 20px 25px;
+
+        .chat-event.course-theme {
+            text-align: center;
+            margin: 10px 0;
+            font-size: $font-size-sm;
+            color: $gray-700;
+
+            .theme-dark & {color: $dm-gray-700;}
+        }
+
+        .chat-message.course-theme {
+            margin-bottom: $card-spacer-y;
+            @include border-radius($card-border-radius);
+            border: $card-border-width solid $card-border-color;
+            padding: $card-spacer-x;
+
+            .theme-dark & {border: $card-border-width solid $dm-card-border-color;}
+
+            .time {
+                float: right;
+                font-size: 11px;
+                color: $gray-700;
+
+                .theme-dark & {color: $dm-gray-700;}
+            }
+        }
+
+        .chat-message.course-theme {
+            background-color: $white;
+
+            .user {
+                font-weight: $font-weight-bold;
+            }
+        }
+    }
+}
+
+#page-mod-chat-report,
+#page-mod-chat-view {
+    .main-content {
+        #intro {
+            p {
+                margin: 0;
+            }
+        }
+
+        #enterlink {
+            &:empty {
+                display: none;
+            }
+            
+            p {
+                margin-bottom: 0.5rem;
+            }
+        }
+    }
+}
+
+#page-mod-chat-report {
+    .main-content {
+        .list-group {
+            margin-top: 2rem;
+
+            p {
+                margin: 0 5px 0;
+                font-size: $font-size-sm;
+                color: $body-color-secondary;
+
+                .theme-dark & {color: $dm-body-color-secondary;}
+            }
+
+            .generalbox {
+                padding: 0!important;
+            }
+
+            [align="right"] {
+                margin: 1rem 5px 0;
+
+                width: 100%;
+
+                display: inline-flex;
+                justify-content: space-between;
+
+                a:nth-of-type(2) {
+                    color: $red-800;
+                }
+            }
+        }
+    }
+}
+
+.chat-message {
+    .userpicture {
+        border-radius: $btn-border-radius;
+    }
+
+    .title {
+        font-size: $font-size-sm;
+        color: $body-color-secondary;
+
+        .theme-dark & {color: $dm-body-color-secondary;}
+    }
+
+    p {
+        font-size: $font-size-base;
+        color: $body-color;
+
+        .theme-dark & {color: $dm-body-color;}
+    }
+}
+
+.chat-event {
+    margin-bottom: .25rem;
+    background-color: $gray-100;
+    border-radius: $btn-border-radius;
+
+    .theme-dark & {background-color: $dm-gray-100;}
+
+    td {
+        padding: .25rem .35rem;
+    }
+
+    .text {
+        padding-right: 1rem;
+        font-size: $font-size-xs;
+    }
+
+    .event {
+        color: $gray-700;
+
+        .theme-dark & {color: $dm-gray-700;}
+    }
+
+    .userpicture {
+        margin: 0;
+
+        width: 26px;
+        height: 26px;
+    }
+}
+
+
+#chatcurrentusers {
+    padding: 1rem;
+    background-color: $gray-100;
+    border-radius: $btn-border-radius;
+
+    .theme-dark & {background-color: $dm-gray-100;}
+
+    .chatuserimage {
+        margin-right: .5rem;
+
+        img {
+            border-radius: $btn-border-radius;
+        }
+    }
+
+    p {
+        margin: 0;
+        font-weight: $font-weight-medium;
+    }
+
+    .idletime {
+        font-size: $font-size-xs;
+        color: $body-color-secondary;
+
+        .theme-dark & {color: $dm-body-color-secondary;}
+    }
+}
+
+
+//More accessible interface
+#page-mod-chat-gui_basic-index {
+    margin: 10px 0;
+
+    #page {
+        padding: 2rem!important;
+    }
+
+    #messages {
+        margin: 2rem 0 0;
+    }
+
+    .generaltable {
+        margin: 20px;
+        width: calc(100% - 40px);
+    }
+
+    #participants {
+        margin: 10px 60px;
+
+        .userpicture {
+            border-radius: $btn-border-radius;
+        }
+
+        .userinfo {
+            font-size: $font-size-xs;
+            color: $body-color-secondary;
+
+            .theme-dark & {color: $dm-body-color-secondary;}
+        }
+    }
+}
+
+#enterlink {
+    padding: 20px 30px;
+    background-color: var(--primary-color-100);
+    border-radius: $btn-border-radius;
+
+    text-align: center;
+
+    .theme-dark & {
+        background-color: transparent;
+        border: 1px solid $dm-border-color;
+    }
+}
+
+#enterlink p:nth-of-type(1) {
+    margin-top: 10px;
+    margin-bottom: 20px!important;
+
+    color: var(--primary-color-700);
+}

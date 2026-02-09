@@ -1,0 +1,73 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_message/message_drawer_view_conversation_heeader_content_type_private_no_controls
+
+    This template will render the header content of the conversation page without controls in
+    the message message drawer.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * All data attributes are required
+
+    Context variables required for this template:
+    * userid The logged in user id
+    * urls The URLs for the popover
+
+    Example context (json):
+    {}
+
+}}
+
+<div class="d-flex rui-message-header-margin">
+    <div class="align-self-stretch" >
+        <a href="#" role="button" class="h-100 mx-3 d-flex align-items-center btn-msg" data-route-back>
+            {{> core_message/message_drawer_icon_back }}
+        </a>
+    </div>
+    <div class="d-flex">
+        {{#imageurl}}
+            <div class="d-flex align-items-center">
+                <img
+                    class="rounded"
+                    src="{{{.}}}"
+                    alt="{{name}}"
+                    aria-hidden="true"
+                    style="height: 40px"
+                >
+                <span class="{{^isfavourite}}hidden{{/isfavourite}} {{#isfavourite}}d-grid{{/isfavourite}} rui-message-name-favorite" data-region="favourite-icon-container">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4.75L13.75 10.25H19.25L14.75 13.75L16.25 19.25L12 15.75L7.75 19.25L9.25 13.75L4.75 10.25H10.25L12 4.75Z"></path>
+                    </svg>
+                </span>
+            </div>
+        {{/imageurl}}
+        <div class="w-100 ml-2 row align-items-center">
+            <div class="w-100 d-flex">
+                <strong class="m-0 message-name">{{name}}</strong>
+            </div>
+            {{#showonlinestatus}}
+                <span class="w-100 message-user-status small">
+                    {{#isonline}}{{#str}} loggedin, core_message {{/str}}{{/isonline}}
+                    {{^isonline}}{{#str}} loggedoff, core_message {{/str}}{{/isonline}}
+                </span>
+            {{/showonlinestatus}}
+        </div>
+    </div>
+</div>

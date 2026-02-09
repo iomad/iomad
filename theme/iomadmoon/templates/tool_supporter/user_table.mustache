@@ -1,0 +1,135 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+
+    @template tool_supporter/user_table
+    Template which outputs a table of users.
+
+    Classes required for JS:
+    * dataTables
+
+    Context variables required for this template:
+    * users - array of arrays: user details to be displayed in a table.
+
+Example context (json):
+{
+  "users": [
+    {
+      "id": 1,
+      "idnumber": "",
+      "username": "guest",
+      "firstname": "Gast",
+      "lastname": " ",
+      "email": "root@localhost"
+    },
+    {
+      "id": 2,
+      "idnumber": "",
+      "username": "admin",
+      "firstname": "Admin",
+      "lastname": "Nutzer",
+      "email": "hasbvdjh@sabdhadbvsdaj.de"
+    },
+    {
+      "id": 3,
+      "idnumber": "",
+      "username": "testnutzer",
+      "firstname": "testnutzer",
+      "lastname": "testnutzer",
+      "email": "testnutzer@bsdahuvugdvsaudvusdaau.de"
+    },
+    {
+      "id": 4,
+      "idnumber": "Matrikel",
+      "username": "deaktiviert_suspended",
+      "firstname": "deaktiviert_suspended",
+      "lastname": "deaktiviert_suspended",
+      "email": "deaktiviert_suspended@sadhbsaudbsaudbvasubd.net"
+    }
+  ],
+  "searchname": "Suchen",
+  "refreshname": "Aktualisieren"
+}
+
+}}
+<div data-region="user_table" class="card rui-user-table">
+    <div class = "card-header">
+	    <div class="row">
+	    	<div class="col">
+          <h4 class="card-title">{{#str}}users{{/str}}
+            <button class="ml-4 btn btn-xs p-1 btn-secondary" id="btn_refresh_users">{{#pix}} a/refresh, core, {{refreshname}} {{/pix}}</button>
+          </h4>
+        </div>
+	    </div>
+    </div>
+
+    <div id="users_dynamic_search" class="btn-toolbar ml-3 mt-1" role="toolbar" style="visibility: hidden;">
+        <div class="btn-group pull-right" role="group">
+            <select id="user_table_column_chooser" class="form-control custom-select mr-1">
+                <!-- Additional Options are later added with javascript -->
+                <option selected value="-1">{{#str}}all{{/str}}</option>
+            </select>
+        </div>
+        <div class="btn-group" role="group" style="width: 60%">
+            <input type="text" id="user_table_search_input" class="form-control form-control-sm" placeholder={{searchname}}>
+        </div>
+	  </div>
+
+	 <div class = "table table-responsive">
+	     <table class = "stripe hover row-border" id = "userTable">
+	         <thead>
+				<tr>
+			        <th>ID</th>
+			        <th>{{#str}}idnumbermod{{/str}}</th>
+			        <th>{{#str}}username{{/str}}</th>
+			        <th>{{#str}}firstname{{/str}}</th>
+			        <th>{{#str}}lastname{{/str}}</th>
+			        <th>{{#str}}email{{/str}}</th>
+				</tr>
+			  </thead>
+			  <tbody>
+		      </tbody>
+		</table>
+	</div>
+	<span class="loading-icon text-center" id="userTable-loadingIcon">{{#pix}} i/loading, core, {{#str}} loading {{/str}} {{/pix}}</span>
+</div>
+
+{{#js}}
+require(['tool_supporter/load_information', 'jquery', 'core/ajax', 'core/notification', 'core/templates',
+         'tool_supporter/datatables', 'tool_supporter/table_filter'],
+function(loadInformation, $, ajax, notification, templates, datatables, tableFilter) {
+
+    var columns = [
+                     {data: 'id', name: 'ID'},
+                     {data: 'idnumber', name: '{{#str}}idnumbermod{{/str}}'},
+                     {data: 'username', name: '{{#str}}username{{/str}}'},
+                     {data: 'firstname', name: '{{#str}}firstname{{/str}}'},
+                     {data: 'lastname', name: '{{#str}}lastname{{/str}}'},
+                     {data: 'email', name: '{{#str}}email{{/str}}'}
+                  ];
+    datatables.dataTableAjax('#userTable', 'tool_supporter_get_users', {}, 'users', columns);
+
+    // Refresh this table.
+    loadInformation.clickOnRefresh('#userTable', 'tool_supporter_get_users', {}, 'users', columns);
+
+    // Load detailed information about the clicked user.
+    loadInformation.clickOnUser('#userTable');
+
+    // Search the table.
+    tableFilter.searchTable('#userTable', '#user_table_column_chooser', '#user_table_search_input', columns);
+});
+{{/js}}

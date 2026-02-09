@@ -1,0 +1,167 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_courseformat/local/content/cm/activity
+
+    Display the activity content of a cm.
+
+    Example context (json):
+    {
+        "cmname": {
+            "displayvalue" : "<a class=\"aalink\" href=\"#\"><span class=\"instancename\">Activity example</span></a>"
+        },
+        "hasname": "true",
+        "afterlink": "<span class=\"resourcelinkdetails\">24.7&nbsp;KB · Uploaded 26/05/23, 16:29</span>",
+        "activitybadge": {
+            "badgecontent": "PDF",
+            "badgestyle": "badge-none",
+            "badgeurl": "http://example.org/help",
+            "badgeelementid": "myelementid",
+            "badgeextraattributes": [
+                {
+                    "name": "data-el1name",
+                    "value": "el1value"
+                },
+                {
+                    "name": "data-el2name",
+                    "value": "el2value"
+                }
+            ]
+        },
+        "hasextras": true,
+        "extras": ["<span class=\"badge badge-secondary\">[extras]</span>"],
+        "activityinfo": {
+            "hasmodavailability": true,
+            "activityname": "Activity example",
+            "hascompletion": true,
+            "uservisible": true,
+            "hasdates": true,
+            "isautomatic": true,
+            "istrackeduser": true,
+            "activitydates": [
+                {
+                    "label": "Opens:",
+                    "datestring": "6 April 2021, 6:46 PM"
+                }
+            ],
+            "completiondetails": [
+                {
+                    "statuscomplete": 1,
+                    "description": "Viewed"
+                },
+                {
+                    "statusincomplete": 1,
+                    "description": "Receive a grade"
+                }
+            ]
+        },
+        "visibility": {
+            "isInteractive": false,
+            "modhiddenfromstudents": true
+        }
+    }
+}}
+
+{{#moveicon}} {{{moveicon}}} {{/moveicon}}
+<div class="align-items-center {{#isautomatic}}rui--activity-is-automatic{{/isautomatic}} {{#completion}}{{#hascompletion}}rui--has-completion{{/hascompletion}}{{/completion}}">
+    
+    <div>
+        {{! Dates }}
+        {{#dates}}
+            {{#hasdates}}
+                <div data-region="activity-dates" class="rui-activity-dates activity-dates course-description-item">
+                    {{#activitydates}}
+                        {{$core_course/activity_date}}
+                            {{>core_course/activity_date}}
+                        {{/core_course/activity_date}}
+                    {{/activitydates}}
+                </div>
+            {{/hasdates}}
+        {{/dates}}
+
+        <div class="activity-basis d-flex align-items-center flex-wrap">
+            {{#completion}}
+                {{#hascompletion}}
+                    <div class="activity-completion align-self-center">
+                        {{$ core_courseformat/local/content/cm/activity_info}}
+                            {{> core_courseformat/local/content/cm/activity_info}}
+                        {{/ core_courseformat/local/content/cm/activity_info}}
+                    </div>
+                {{/hascompletion}}
+            {{/completion}}
+            <div class="rui-cmname d-flex flex-column flex-md-row align-items-start align-items-md-center">
+                {{! Visibility }}
+                {{#cmname}}
+                {{$ core_courseformat/local/content/cm/cmname }}
+                    {{> core_courseformat/local/content/cm/cmname }}
+                {{/ core_courseformat/local/content/cm/cmname }}
+                {{/cmname}}
+            </div>
+            {{! Completion }}
+            {{! Group mode }}
+            {{#groupmodeinfo}}
+                <div
+                    class="activity-groupmode-info align-self-center ml-auto"
+                    data-region="groupmode"
+                >
+                    {{$ core_courseformat/local/content/cm/groupmode}}
+                        {{> core_courseformat/local/content/cm/groupmode}}
+                    {{/ core_courseformat/local/content/cm/groupmode}}
+                </div>
+            {{/groupmodeinfo}}
+            {{#controlmenu}}
+                <div class="activity-actions align-self-start {{#groupmodeinfo}}ml-2{{/groupmodeinfo}} {{^groupmodeinfo}}ml-auto{{/groupmodeinfo}}">
+                    {{$ core_courseformat/local/content/cm/controlmenu }}
+                        {{> core_courseformat/local/content/cm/controlmenu }}
+                    {{/ core_courseformat/local/content/cm/controlmenu }}
+                </div>
+            {{/controlmenu}}
+        </div>
+        {{#hasname}}
+            {{$ core_courseformat/local/content/cm/badges }}
+                {{> core_courseformat/local/content/cm/badges }}
+            {{/ core_courseformat/local/content/cm/badges }}
+        {{/hasname}}
+    
+        <div class="rui-contentafterlink contentafterlink description {{^completion}}rui--nocompletion{{/completion}}">
+            {{#altcontent}}
+                <div class="activity-altcontent {{#hasname}}mt-md-2 course-description-item {{/hasname}}{{^hasname}}contentwithoutlink{{/hasname}} d-flex text-break">
+                    <div class="flex-fill description-inner">
+                        {{{altcontent}}}
+                    </div>
+                </div>
+            {{/altcontent}}
+
+            {{! Availability }}
+            {{#modavailability}}
+                {{$ core_courseformat/local/content/cm/availability }}
+                    {{> core_courseformat/local/content/cm/availability }}
+                {{/ core_courseformat/local/content/cm/availability }}
+            {{/modavailability}}
+        </div>
+
+        {{! Afterlink }}
+        {{#afterlink}}
+            <div class="rui-contentafterlink afterlink mt-2">
+                {{{afterlink}}}
+            </div>
+        {{/afterlink}}
+
+    </div>    
+
+
+</div>

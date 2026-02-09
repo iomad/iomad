@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="15px" height="13px" viewBox="0 0 15 13" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>task-done-rtl</title>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
+        <g id="task-done-rtl" transform="translate(1.000000, 1.000000)" stroke="#048444" stroke-width="2">
+            <polyline id="Path" transform="translate(6.500000, 5.005000) scale(-1, 1) translate(-6.500000, -5.005000) " points="13 0 3 10.01 0 7.01"></polyline>
+        </g>
+    </g>
+</svg>

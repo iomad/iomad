@@ -1,0 +1,146 @@
+<?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Get and post request
+ * @package   local_mo_scim
+ * @copyright   2025  miniOrange
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU/GPL v3 or later, see license.txt
+ * @author      miniOrange
+ */
+
+namespace local_mo_scim\request;
+
+defined('MOODLE_INTERNAL') || die;
+global $CFG;
+
+require_once($CFG->libdir . '/moodlelib.php');
+require_once($CFG->dirroot . '/user/lib.php');
+require_once($CFG->dirroot . '/user/profile/lib.php');
+
+use local_mo_scim\database\DatabaseHandler;
+use local_mo_scim\utility\BaseUtility;
+use local_mo_scim\handler\UserResponseHandler;
+use local_mo_scim\http\HttpStatus;
+use local_mo_scim\auth\AuthHelper;
+use local_mo_scim\request\AzureSCIMRequest;
+
+/**
+ * Get and post request class
+ */
+class GetAndPostRequest {
+    /**
+     * Database handler instance
+     * @var DatabaseHandler
+     */
+    private $dbhandler;
+    /**
+     * Base utility instance
+     * @var BaseUtility
+     */
+    private $baseutilityinstance;
+    /**
+     * User response handler instance
+     * @var UserResponseHandler
+     */
+    private $reshandlerobject;
+    /**
+     * HTTP status instance
+     * @var HttpStatus
+     */
+    private $statushandlerobject;
+
+    /**
+     * Constructor
+     */
+    public function __construct() {
+        $this->dbhandler = new DatabaseHandler();
+        $this->baseutilityinstance = new BaseUtility();
+        $this->reshandlerobject = new UserResponseHandler();
+        $this->statushandlerobject = new HttpStatus();
+    }
+
+    /**
+     * Handle user get request
+     * @param int $scimuserid
+     */
+    public function handleusergetrequest($scimuserid) {
+        $user = $this->dbhandler->getuserbyid($scimuserid);
+
+        if (!$user) {
+            $this->statushandlerobject->setheaders(404, 'application/json;charset=utf-8');
+            echo json_encode(['error' => 'User not found']);
+            exit;
+        }
+
+        $response = $this->reshandlerobject->prepareexistinguserresponse($user);
+
+        $this->statushandlerobject->setheaders(200, 'application/json;charset=utf-8');
+        echo json_encode($response);
+        exit;
+    }
+
+    /**
+     * Create user
+     * @param array $body
+     * @return object
+     */
+    private function createuser($body) {
+        $createuserwith = !empty($body['username']) ? $body['username'] : $body['email'];
+
+        $authtype = BaseUtility::getauthenticationtypetoset();
+
+        if (empty($body['password'])) {
+            $passwordhelper = new AuthHelper();
+            $password = $passwordhelper->getrandompassword();
+        } else {
+            $password = $body['password'];
+        }
+
+        $createduser = create_user_record($createuserwith, $password, $authtype);
+
+        return $createduser;
+    }
+
+    /**
+     * Handle post request
+     * @param array $json
+     * @param array $userdata
+     */
+    public function handlepostrequest($json, $userdata) {
+        $user = $this->dbhandler->getuserbyusername($userdata['username']);
+
+        if (!empty($user)) {
+            $updateuserinstance = new AzureSCIMRequest();
+            $updateuserinstance->updateuser($user, $json);
+
+            $response = $this->reshandlerobject->prepareexistinguserresponse($user);
+
+            $this->statushandlerobject->setheaders(200, 'application/json;charset=utf-8');
+            echo json_encode($response);
+            exit;
+        } else {
+            $user = $this->createuser($userdata);
+            $user = $this->baseutilityinstance->updateuserprofilewithattributes($user, $userdata);
+            $userid = $user->id;
+            $response = $this->reshandlerobject->preparenewuserresponse($userid, $userdata);
+
+            $this->statushandlerobject->setheaders(201, 'application/json;charset=utf-8');
+            echo json_encode($response);
+            exit;
+        }
+    }
+}

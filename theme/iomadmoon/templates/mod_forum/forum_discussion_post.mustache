@@ -1,0 +1,413 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_forum/forum_discussion_post
+
+    Template to render a single post from a discussion.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Example context (json):
+    {
+    }
+}}
+<article
+    id="p{{id}}"
+    class="forum-post-container my-2"
+    data-post-id="{{id}}"
+    data-region="post"
+    data-target="{{id}}-target"
+    tabindex="0"
+    aria-labelledby="post-header-{{id}}-{{uniqid}}"
+    aria-describedby="post-content-{{id}}"
+>
+    {{! The firstpost and starter classes below aren't used for anything other than to identify the first post in behat. }}
+    <div
+        class="position-relative mb-2 forum-post focus-target {{#unread}}unread{{/unread}} {{#firstpost}}firstpost starter{{/firstpost}}"
+        aria-label='{{#str}} postbyuser, mod_forum, {"post": "{{subject}}", "user": "{{author.fullname}}"} {{/str}}'
+        data-post-id="{{id}}" data-content="forum-post"
+    >
+        {{#isfirstunread}}<a id="unread" aria-hidden="true"></a>{{/isfirstunread}}
+
+                    {{^isdeleted}}
+                        {{#author}}
+
+                        {{#groups}}
+                                    {{#urls.group}}
+                                    <div class="mb-2 ml-auto d-flex justify-content-end align-items-end">
+                                        {{#urls.image}}
+                                            <a href="{{urls.group}}" class="badge badge-link badge-light" role="button" aria-label="{{#str}} memberofgroup, group, {{name}}{{/str}}" title="{{#str}} memberofgroup, group, {{name}}{{/str}}">
+                                                <img
+                                                    class="rounded icon mr-1"
+                                                    src="{{{.}}}"
+                                                    alt="{{#str}} pictureof, core, {{name}} {{/str}}"
+                                                    aria-hidden="true"
+                                                    title="{{#str}} pictureof, core, {{name}} {{/str}}"
+                                                >
+                                                <span class="group-name">{{name}}</span>
+                                            </a>
+                                        {{/urls.image}}
+                                    {{/urls.group}}
+                                    {{^urls.group}}
+                                        
+                                        {{#urls.image}}
+                                        <div class="badge badge-info">
+                                            <img class="rounded icon mr-3"
+                                                src="{{{.}}}"
+                                                alt="{{#str}} pictureof, core, {{name}} {{/str}}"
+                                                title="{{#str}} pictureof, core, {{name}} {{/str}}"
+                                            >
+                                            <span>{{#str}} pictureof, core, {{name}} {{/str}}</span>
+                                        </div>                                       
+                                        {{/urls.image}}
+                                    
+                                    {{/urls.group}}
+                                    </div>
+                                {{/groups}}
+
+                        {{/author}}
+                    {{/isdeleted}}
+
+        <div class="d-flex flex-column w-100"  data-region-content="forum-post-core">
+            <header id="post-header-{{id}}-{{uniqid}}" class="mb-2 pb-2 forum-post-header d-flex align-items-center">
+                {{^isdeleted}}
+                    {{#author}}
+                        <div class="mb-0 mr-3" style="width: 60px;">
+                            {{#urls.profileimage}}
+                                <img
+                                    class="rounded w-100"
+                                    src="{{{.}}}"
+                                    alt="{{#str}} pictureof, core, {{author.fullname}} {{/str}}"
+                                    aria-hidden="true"
+                                    title="{{#str}} pictureof, core, {{author.fullname}} {{/str}}"
+                                >
+                            {{/urls.profileimage}}
+                        </div>
+                    {{/author}}
+                {{/isdeleted}}
+                <div class="d-flex flex-column">
+                    {{#parentauthorname}}
+                        <span class="sr-only">{{#str}} inreplyto, mod_forum, {{.}} {{/str}}</span>
+                    {{/parentauthorname}}
+                    {{$subjectheading}}
+                    {{#subject}}
+                        <div {{!
+                            }}class="{{#unread}}forum-post-unread font-weight-bold{{/unread}} forum-post-core-subject" {{!
+                            }}data-region-content="forum-post-core-subject" {{!
+                            }}data-reply-subject="{{replysubject}}" {{!
+                            }}>
+
+                                {{$subject}}<h5 class="my-0" title="{{{subject}}}"><span class="d-inline-block text-truncate font-weight-bold" style="max-width: 600px;" title="{{subject}}">{{{subject}}}</span></h5>{{/subject}}
+
+                            </div>
+                    {{/subject}}
+                    {{/subjectheading}}
+                    {{^isdeleted}}
+                        <div class="forum-post-details" tabindex="-1">
+                            {{#html.authorsubheading}}{{{.}}}{{/html.authorsubheading}}
+                            {{^html.authorsubheading}}
+                                {{< core/time_element }}
+                                    {{$elementid}}created-{{id}}-{{uniqid}}{{/elementid}}
+                                    {{$timestampval}}{{timecreated}}{{/timestampval}}
+                                    {{$userdateformatval}}{{#str}} strftimedaydatetime, core_langconfig {{/str}}{{/userdateformatval}}
+                                {{/core/time_element}}
+                            {{/html.authorsubheading}}
+                        </div>
+                    {{/isdeleted}}
+                    {{#isprivatereply}}
+                        <div class="privatereplyinfo badge badge-dark mt-1">
+                        {{#str}}postisprivatereply, forum{{/str}}
+                        </div>
+                    {{/isprivatereply}}
+                    {{#hasreplycount}}
+                        <span class="sr-only">{{#str}} numberofreplies, mod_forum, {{replycount}} {{/str}}</span>
+                    {{/hasreplycount}}
+                </div>
+            </header>
+
+            <div class="d-flex body-content-container">
+                <div class="mr-3 d-sm-none d-md-block" style="width: 60px; flex-shrink: 0"></div>
+                <div class="w-100 content-alignment-container">
+                    <div id="post-content-{{id}}" class="post-content-container mb-2">
+                        {{{message}}}
+                    </div>
+
+                    {{^isdeleted}}
+                        {{#haswordcount}}
+                            <p class="mt-3 mb-0 badge badge-info"><small>{{#str}} numwords, core, {{wordcount}} {{/str}}</small></p>
+                        {{/haswordcount}}
+
+                        {{#attachments}}
+                            {{#isimage}}
+                                <div class="attachedimages">
+                                    <img
+                                        src="{{{url}}}"
+                                        alt="{{#str}} attachmentname, mod_forum, {{filename}} {{/str}}"
+                                        style="max-width: 100%"
+                                    >
+                                    {{#urls.export}}
+                                        <a href="{{{.}}}" title="{{#str}} addtoportfolio, core_portfolio {{/str}}">
+                                            {{#pix}} t/portfolioadd, core {{/pix}}
+                                        </a>
+                                    {{/urls.export}}
+                                    {{#html.plagiarism}}
+                                        <div>{{{.}}}</div>
+                                    {{/html.plagiarism}}
+                                </div>
+                            {{/isimage}}
+                        {{/attachments}}
+
+                        {{{html.taglist}}}
+
+                        {{#attachments}}
+                            {{^isimage}}
+                                <div class="attachments">
+                                    <a
+                                        href="{{{url}}}"
+                                        aria-label="{{#str}} attachmentname, mod_forum, {{filename}} {{/str}}"
+                                    >
+                                        {{#pix}} {{icon}}, core {{/pix}} {{filename}}
+                                    </a>
+                                    {{#urls.export}}
+                                        <a href="{{{.}}}" title="{{#str}} exportattachmentname, mod_forum, {{filename}} {{/str}}">
+                                            {{#pix}} t/portfolioadd, core {{/pix}}
+                                        </a>
+                                    {{/urls.export}}
+                                    {{#html.plagiarism}}
+                                        <div>{{{.}}}</div>
+                                    {{/html.plagiarism}}
+                                </div>
+                            {{/isimage}}
+                        {{/attachments}}
+
+                        {{^readonly}}
+                            <div class="d-flex flex-wrap">
+                                {{#html.rating}}
+                                    <div class="mt-2 forum-post-rating">{{{.}}}</div>
+                                {{/html.rating}}
+                                {{$actions}}
+                                    <div
+                                        class="w-100 post-actions d-flex align-items-center justify-content-md-end justify-content-lg-start flex-wrap mx-0 mt-2 mb-0"
+                                        data-region="post-actions-container"
+                                        role="menubar"
+                                        aria-label='{{#str}} postbyuser, mod_forum, {"post": "{{subject}}", "user": "{{author.fullname}}"} {{/str}}'
+                                        aria-controls="p{{id}}"
+                                    >
+                                        {{#capabilities}}
+
+                                            {{#reply}}
+                                            <div class="mb-2">
+                                                {{$replyoutput}}
+                                                    <a
+                                                        data-region="post-action"
+                                                        href="{{{urls.reply}}}"
+                                                        class="btn btn-primary btn-sm"
+                                                        data-post-id="{{id}}"
+                                                        data-action="collapsible-link"
+                                                        data-can-reply-privately="{{canreplyprivately}}"
+                                                        title="{{#str}} reply, mod_forum {{/str}}"
+                                                        aria-label="{{#str}} reply, mod_forum {{/str}}"
+                                                        role="menuitem"
+                                                    >
+                                                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.25 15.25V6.75H8.75"></path>
+                                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 7L6.75 17.25"></path>
+                                                        </svg>
+                                                        <span class="d-none d-md-flex ml-md-2">{{#str}} reply, mod_forum {{/str}}</span>
+                                                    </a>
+                                                {{/replyoutput}}
+                                            </div>
+                                            {{/reply}}
+                                            {{^reply}}
+                                                {{#selfenrol}}
+                                                    {{$replyoutput}}
+                                                        <a
+                                                            href="{{{urls.reply}}}"
+                                                            class="btn btn-primary btn-sm mb-2"
+                                                            data-post-id="{{id}}"
+                                                            data-can-reply-privately="{{canreplyprivately}}"
+                                                            title="{{#str}} reply, mod_forum {{/str}}"
+                                                            aria-label="{{#str}} reply, mod_forum {{/str}}"
+                                                            role="menuitem"
+                                                        >
+                                                            {{#str}} reply, mod_forum {{/str}}
+                                                        </a>
+                                                    {{/replyoutput}}
+                                                {{/selfenrol}}
+                                            {{/reply}}
+  
+                                            {{#edit}}
+                                            <div class="ml-2 mb-2 rui-forum-edit-buttons">
+                                                {{#controlreadstatus}}
+                                                {{#unread}}
+                                                    <a
+                                                        data-region="post-action"
+                                                        href="{{{urls.markasread}}}"
+                                                        class="btn btn-primary btn-sm mb-2"
+                                                        role="menuitem"
+                                                        title="{{#str}} markread, mod_forum {{/str}}"
+                                                        aria-label="{{#str}} markread, mod_forum {{/str}}"
+                                                    >
+                                                        {{#str}} markread, mod_forum {{/str}}
+                                                    </a>
+                                                {{/unread}}
+                                                {{^unread}}
+                                                    <a
+                                                        data-region="post-action"
+                                                        href="{{{urls.markasunread}}}"
+                                                        class="btn btn-secondary btn-sm mb-2"
+                                                        role="menuitem"
+                                                        title="{{#str}} markunread, mod_forum {{/str}}"
+                                                        aria-label="{{#str}} markunread, mod_forum {{/str}}"
+                                                    >
+                                                        {{#str}} markunread, mod_forum {{/str}}
+                                                    </a>
+                                                {{/unread}}
+                                                {{/controlreadstatus}}
+
+                                                {{#view}}
+                                                <a
+                                                    data-region="post-action"
+                                                    href="{{{urls.view}}}"
+                                                    class="btn btn-secondary btn-sm"
+                                                    title="{{#str}} permanentlinktopost, mod_forum {{/str}}"
+                                                    aria-label="{{#str}} permanentlinktopost, mod_forum {{/str}}"
+                                                    role="menuitem"
+                                                >
+                                                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.75 13.25L18 12C19.6569 10.3431 19.6569 7.65685 18 6V6C16.3431 4.34315 13.6569 4.34315 12 6L10.75 7.25"></path>
+                                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7.25 10.75L6 12C4.34315 13.6569 4.34315 16.3431 6 18V18C7.65685 19.6569 10.3431 19.6569 12 18L13.25 16.75"></path>
+                                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.25 9.75L9.75 14.25"></path>
+                                                    </svg>
+                                                    <span class="d-none d-md-flex ml-md-2">{{#str}} permalink, mod_forum {{/str}}</span>
+                                                </a>
+                                                {{/view}}
+
+                                                {{#urls.viewparent}}
+                                                <a
+                                                    data-region="post-action"
+                                                    href="{{{.}}}"
+                                                    class="btn btn-secondary btn-sm"
+                                                    title="{{#str}} permanentlinktoparentpost, mod_forum {{/str}}"
+                                                    aria-label="{{#str}} permanentlinktoparentpost, mod_forum {{/str}}"
+                                                    role="menuitem"
+                                                >
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M4.75 19.25H19.25" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                        <path d="M12 15.25V4.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                        <path d="M15.25 8.25L12 4.75L8.75 8.25" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                    </svg>
+                                                    <span class="d-none d-md-flex ml-md-2">{{#str}} parent, mod_forum {{/str}}</span>
+                                                </a>
+                                                {{/urls.viewparent}}
+
+                                                <a
+                                                    data-region="post-action"
+                                                    href="{{{urls.edit}}}"
+                                                    class="btn btn-outline-secondary btn-sm"
+                                                    role="menuitem"
+                                                    title="{{#str}} edit, mod_forum {{/str}}"
+                                                    aria-label="{{#str}} edit, mod_forum {{/str}}"
+                                                >
+                                                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.75 19.25L9 18.25L18.2929 8.95711C18.6834 8.56658 18.6834 7.93342 18.2929 7.54289L16.4571 5.70711C16.0666 5.31658 15.4334 5.31658 15.0429 5.70711L5.75 15L4.75 19.25Z"></path>
+                                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.25 19.25H13.75"></path>
+                                                    </svg>
+                                                    <span class="d-none d-md-flex ml-md-2">{{#str}} edit, mod_forum {{/str}}</span>
+                                                </a>
+                                            {{/edit}}
+
+                                            {{#split}}
+                                                <a
+                                                    data-region="post-action"
+                                                    href="{{{urls.split}}}"
+                                                    class="btn btn-outline-secondary btn-sm"
+                                                    role="menuitem"
+                                                    title="{{#str}} prune, mod_forum {{/str}}"
+                                                    aria-label="{{#str}} prune, mod_forum {{/str}}"
+                                                >
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M9.25 8C9.25 9.24264 8.24264 10.25 7 10.25C5.75736 10.25 4.75 9.24264 4.75 8C4.75 6.75736 5.75736 5.75 7 5.75C8.24264 5.75 9.25 6.75736 9.25 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                        <path d="M9.25 16C9.25 17.2426 8.24264 18.25 7 18.25C5.75736 18.25 4.75 17.2426 4.75 16C4.75 14.7574 5.75736 13.75 7 13.75C8.24264 13.75 9.25 14.7574 9.25 16Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                        <path d="M9 15L19.25 6.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                        <path d="M9 9L19.25 16.25" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                    </svg>
+                                                    <span class="d-none d-md-flex ml-md-2">{{#str}} prune, mod_forum {{/str}}</span>
+                                                </a>
+                                            {{/split}}
+                                            {{#delete}}
+                                                <a
+                                                    data-region="post-action"
+                                                    href="{{{urls.delete}}}"
+                                                    class="btn btn-outline-danger btn-sm btn-icon"
+                                                    role="menuitem"
+                                                    title="{{#str}} delete, mod_forum {{/str}}"
+                                                    aria-label="{{#str}} delete, mod_forum {{/str}}"
+                                                >
+                                                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.75 7.75L7.59115 17.4233C7.68102 18.4568 8.54622 19.25 9.58363 19.25H14.4164C15.4538 19.25 16.319 18.4568 16.4088 17.4233L17.25 7.75"></path>
+                                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 7.5V6.75C9.75 5.64543 10.6454 4.75 11.75 4.75H12.25C13.3546 4.75 14.25 5.64543 14.25 6.75V7.5"></path>
+                                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7.75H19"></path>
+                                                    </svg>
+                                                </a>
+                                            {{/delete}}
+
+                                            {{#edit}}
+                                            </div>
+                                            {{/edit}}
+
+                                            {{#export}}
+                                            <div class="ml-md-auto mb-2">
+                                                <a
+                                                    data-region="post-action"
+                                                    href="{{{urls.export}}}"
+                                                    class="btn btn-secondary btn-sm"
+                                                    title="{{#str}} addtoportfolio, core_portfolio {{/str}}"
+                                                    aria-label="{{#str}} addtoportfolio, core_portfolio {{/str}}"
+                                                    role="menuitem"
+                                                >
+                                                    {{#str}} addtoportfolio, core_portfolio {{/str}}
+                                                </a>
+                                            </div>
+                                            {{/export}}
+                                        {{/capabilities}}
+                                    </div>
+                                {{/actions}}
+                            </div>
+                        {{/readonly}}
+
+                        <div class="forum-post-footer">{{$footer}}{{/footer}}</div>
+                    {{/isdeleted}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{$replies}}
+        <div data-region="replies-container">
+            {{#hasreplies}}
+                {{#replies}}
+                    {{> mod_forum/forum_discussion_post }}
+                {{/replies}}
+            {{/hasreplies}}
+        </div>
+    {{/replies}}
+</article>

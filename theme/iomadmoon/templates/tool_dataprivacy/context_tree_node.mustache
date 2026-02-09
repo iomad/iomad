@@ -1,0 +1,69 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tool_dataprivacy/context_tree_branch
+
+    A tree branch.
+
+    Classes required for JS:
+
+    Data attributes required for JS:
+
+    Context variables required for this template:
+
+    Example context (json):
+    {
+    }
+
+}}
+
+
+<a class="list-group-item list-group-item-action {{#active}}active{{/active}}" href="#" data-context-tree-node="1"
+        {{#contextlevel}} data-contextlevel="{{.}}" {{/contextlevel}}
+        {{#contextid}} data-contextid="{{.}}" {{/contextid}}
+        {{#expandcontextid}} data-expandcontextid="{{.}}" {{/expandcontextid}}
+        {{#expandelement}} data-expandelement="{{.}}" {{/expandelement}}
+        data-expanded="{{expanded}}">
+
+        {{#expandelement}}{{#expanded}}
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 9.75L16.25 15.25H7.75L12 9.75Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        {{/expanded}}{{/expandelement}}
+
+        {{#expandelement}}{{^expanded}}
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 15.25L16.25 9.75H7.75L12 15.25Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        {{/expanded}}{{/expandelement}}
+
+        {{^expandelement}}{{#expanded}}
+        <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.25 17.25V9.75C19.25 8.64543 18.3546 7.75 17.25 7.75H4.75V17.25C4.75 18.3546 5.64543 19.25 6.75 19.25H17.25C18.3546 19.25 19.25 18.3546 19.25 17.25Z"></path>
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.5 7.5L12.5685 5.7923C12.2181 5.14977 11.5446 4.75 10.8127 4.75H6.75C5.64543 4.75 4.75 5.64543 4.75 6.75V11"></path>
+        </svg>
+        {{/expanded}}{{/expandelement}}
+
+        {{^expandelement}}{{^expanded}}
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12.75 4.75H7.75C6.64543 4.75 5.75 5.64543 5.75 6.75V17.25C5.75 18.3546 6.64543 19.25 7.75 19.25H16.25C17.3546 19.25 18.25 18.3546 18.25 17.25V10.25M12.75 4.75V8.25C12.75 9.35457 13.6454 10.25 14.75 10.25H18.25M12.75 4.75L18.25 10.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        {{/expanded}}{{/expandelement}}
+
+        <span class="ml-2">{{text}}</span>
+</a>
+{{> tool_dataprivacy/context_tree_branches}}

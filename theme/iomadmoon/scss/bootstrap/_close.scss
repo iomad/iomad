@@ -1,0 +1,81 @@
+.close {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+
+  padding: 0;
+  margin: 5px;
+
+  width: 29px;
+  height: 29px;
+
+  background-color: $gray-100;
+  color: $close-color;
+  border-radius: $btn-border-radius;
+
+  line-height: 1;
+
+  transition: $transition-base;
+
+  .theme-dark & {
+    background-color: $dm-gray-100;
+    color: $dm-close-color;
+  }
+
+  &:hover {
+    background-color: $red-600;
+
+    &:before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='#{url-friendly-colour($red-100)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M17.25 6.75L6.75 17.25'/%3E%3Cpath stroke='#{url-friendly-colour($red-100)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M6.75 6.75L17.25 17.25'/%3E%3C/svg%3E%0A");
+    }
+  }
+
+  &:before {
+    content: '';
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='#{url-friendly-colour($close-color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M17.25 6.75L6.75 17.25'/%3E%3Cpath stroke='#{url-friendly-colour($close-color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M6.75 6.75L17.25 17.25'/%3E%3C/svg%3E%0A");
+    background-size: 20px;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    .theme-dark & {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='#{url-friendly-colour($dm-close-color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M17.25 6.75L6.75 17.25'/%3E%3Cpath stroke='#{url-friendly-colour($dm-close-color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M6.75 6.75L17.25 17.25'/%3E%3C/svg%3E%0A");
+    }
+  }
+
+  // Override <a>'s hover style
+  @include hover() {
+    color: $close-color;
+    text-decoration: none;
+
+    .theme-dark & {color: $dm-close-color;}
+  }
+
+  &:not(:disabled):not(.disabled) {
+    @include hover-focus() {
+      opacity: 1;
+    }
+  }
+}
+
+// Additional properties for button version
+// iOS requires the button element instead of an anchor tag.
+// If you want the anchor version, it requires `href="#"`.
+// See https://developer.mozilla.org/en-US/docs/Web/Events/click#Safari_Mobile
+
+// stylelint-disable-next-line selector-no-qualifying-type
+button.close {
+  border: 0;
+}
+
+// Future-proof disabling of clicks on `<a>` elements
+
+// stylelint-disable-next-line selector-no-qualifying-type
+a.close.disabled {
+  pointer-events: none;
+}

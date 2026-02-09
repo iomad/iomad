@@ -1,0 +1,165 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_group/index
+
+    Template for the Groups page.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * courseid int The course ID.
+    * selectedgroup string The initially selected group.
+    * editgroupsettingsdisabled bool Whether to disable the "Edit group settings" button on load.
+    * deletegroupdisabled bool Whether to disable the "Delete selected group" button on load.
+    * addmembersdisabled bool Whether to disable the "Add/remove users" button on load.
+    * groups array The list of groups.
+    * members array The list of members, grouped based on roles.
+    * undeletablegroups string A JSON string containing an array of group IDs that a user cannot delete.
+    * messagingsettingsvisible bool Wether the messaging settings buttons should be visible.
+
+    Example context (json):
+    {
+        "courseid": "1",
+        "selectedgroup": "Group 1 (3)",
+        "editgroupsettingsdisabled": false,
+        "deletegroupdisabled": false,
+        "addmembersdisabled": false,
+        "messagingenabled": true,
+        "groups": [
+            {
+                "value": "1",
+                "text": "Group 1 (3)",
+                "selected": true
+            },
+            {
+                "value": "2",
+                "text": "Group 2 (2)"
+            }
+        ],
+        "members": [
+            {
+                "role": "Student",
+                "rolemembers": [
+                    {
+                        "value": "1",
+                        "text": "John Doe"
+                    },
+                    {
+                        "value": "2",
+                        "text": "Jane Doe"
+                    },
+                    {
+                        "value": "3",
+                        "text": "John Smith"
+                    }
+                ]
+            }
+        ],
+        "undeletablegroups": "[1: true, 3: true]"
+    }
+}}
+<form id="groupeditform" action="index.php" method="post">
+    <div class="container-fluid groupmanagementtable">
+        <div class="row rtl-compatible justify-items-between">
+            <div class="col-md-6 mb-1 pl-0">
+                <input type="hidden" name="id" value="{{courseid}}">
+                <div class="form-group">
+                    <label for="groups">
+                        <span id="groupslabel" class="badge badge-secondary">
+                            <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.78168 19.25H13.2183C13.7828 19.25 14.227 18.7817 14.1145 18.2285C13.804 16.7012 12.7897 14 9.5 14C6.21031 14 5.19605 16.7012 4.88549 18.2285C4.773 18.7817 5.21718 19.25 5.78168 19.25Z"></path>
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 14C17.8288 14 18.6802 16.1479 19.0239 17.696C19.2095 18.532 18.5333 19.25 17.6769 19.25H16.75"></path>
+                                <circle cx="9.5" cy="7.5" r="2.75" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></circle>
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.75 10.25C16.2688 10.25 17.25 9.01878 17.25 7.5C17.25 5.98122 16.2688 4.75 14.75 4.75"></path>
+                            </svg>
+                            <span class="ml-1">{{#str}}groups{{/str}}</span>
+                        </span>
+                        <span id="thegrouping">&nbsp;</span>
+                    </label>
+                    <select name="groups[]" multiple="multiple" id="groups" size="15" class="form-control input-block-level">
+                        {{#groups}}
+                            <option value="{{value}}" {{#selected}}selected="selected"{{/selected}} title="{{{text}}}">{{{text}}}</option>
+                        {{/groups}}
+                    </select>
+                </div>
+                <h4 class="mt-2"> {{#str}} withselected, group {{/str}} </h4>
+                <div class="form-group form-group-btns mb-3">
+                    <button type="submit" name="action" id="updatemembers" value="updatemembers" class="btn btn-xs btn-secondary">{{#str}}showmembersforgroup, group{{/str}}</button>
+                    <button type="submit" name="action" id="showeditgroupsettingsform" value="showgroupsettingsform" {{#editgroupsettingsdisabled}}disabled="disabled"{{/editgroupsettingsdisabled}} class="btn btn-xs btn-secondary">{{#str}}editgroupsettings, group{{/str}}</button>
+                    {{#messagingsettingsvisible}}
+                    <button type="submit" name="action" id="disablemessaging" value="disablemessaging" class="btn btn-xs btn-warning" disabled="disabled">{{#str}}disablemessagingaction, group{{/str}}</button>
+                    <button type="submit" name="action" id="enablemessaging" value="enablemessaging" class="btn btn-xs btn-success" disabled="disabled">{{#str}}enablemessagingaction, group{{/str}}</button>
+                    {{/messagingsettingsvisible}}
+                    <button type="submit" name="action" id="deletegroup" value="deletegroup" {{#deletegroupdisabled}}disabled="disabled"{{/deletegroupdisabled}} class="btn btn-xs btn-danger">{{#str}}deleteselectedgroup, group{{/str}}</button>
+                </div>
+
+                <h4 class="mt-2"> {{#str}} manageactions, group {{/str}} </h4>
+                <div class="form-group form-group-btns mb-3">
+                    <button type="submit" name="action" id="showcreateorphangroupform" value="showcreateorphangroupform" class="btn btn-sm btn-primary">{{#str}}creategroup, group{{/str}}</button>
+                    <button type="submit" name="action" id="showautocreategroupsform" value="showautocreategroupsform" class="btn btn-sm btn-outline-secondary">{{#str}}autocreategroups, group{{/str}}</button>
+                    <button type="submit" name="action" id="showimportgroups" value="showimportgroups" class="btn btn-sm btn-secondary">{{#str}}importgroups, group{{/str}}</button>
+                </div>
+            </div>
+            <div class="col-md-6 mb-1 pr-0">
+                <div class="form-group">
+                    <label for="members" class="d-inline-flex">
+                        <span id="memberslabel" class="badge badge-secondary">
+                            <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                                <circle cx="12" cy="8" r="3.25" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></circle>
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12.25 19.25H6.94953C5.77004 19.25 4.88989 18.2103 5.49085 17.1954C6.36247 15.7234 8.23935 14 12.25 14"></path>
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 14.75V19.25"></path>
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.25 17L14.75 17"></path>
+                            </svg>
+                            <span id="memberslabel" class="ml-1">{{#str}}membersofselectedgroup, group{{/str}}</span>
+                        </span>
+                        <span id="thegroup" class="badge">{{{selectedgroup}}}</span>
+                    </label>
+                    <select size="15" multiple="multiple" class="form-control input-block-level" id="members" name="user">
+                        {{#members}}
+                            <optgroup label="{{role}}">
+                                {{#rolemembers}}
+                                    <option value="{{value}}" title="{{text}}">{{{text}}}</option>
+                                {{/rolemembers}}
+                            </optgroup>
+                        {{/members}}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="submit" value="showaddmembersform" class="btn btn-secondary" {{#addmembersdisabled}}disabled="disabled"{{/addmembersdisabled}} name="action" id="showaddmembersform">{{#str}}adduserstogroup, group{{/str}}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{{#js}}
+    require(['jquery', 'core/yui'], function($) {
+        $("#groups").change(function() {
+            M.core_group.membersCombo.refreshMembers();
+        });
+        M.core_group.init_index(Y, "{{wwwroot}}", {{courseid}});
+        var undeletableGroups = JSON.parse('{{{undeletablegroups}}}');
+        M.core_group.groupslist(Y, undeletableGroups);
+    });
+{{/js}}
+{{#js}}
+    require(['core_group/index'], (module) => module.init());
+{{/js}}

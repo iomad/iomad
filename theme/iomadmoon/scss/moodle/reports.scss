@@ -1,0 +1,148 @@
+/* reports.less */
+
+// The home for small tweaks to reports that don't require
+// changes drastic enough to pull in the full module css
+// and replace it completely.
+
+#page-report-participation-index .participationselectform div label { // Using 'div' here to override the report styles.css
+    display: inline-block;
+    margin: 0 5px; // No top and bottom margin with a 5px left and right for LTR and RTL.
+}
+
+#page-report-participation-index .participationselectform div label[for=menuinstanceid] {
+    margin-left: 0; // No left margin for LTR.
+}
+
+#page-report-outline-user {
+    .main-content {
+        .section {
+            margin: 1rem auto;
+            padding: 1rem;
+            border: 1px solid $border-color;
+            border-radius: $btn-border-radius;
+
+            .content {
+                margin: 1rem 0;
+
+                table {
+                    width: 100%;
+                    font-size: $font-size-xs;
+
+                    td {
+                        vertical-align: middle!important;
+
+                        &:nth-child(1) {
+                            width: max-content;
+
+                            .rui-icon {
+                                margin-right: 0;
+                            }
+                        }
+
+                        &:nth-child(2) {
+                            max-width: 300px!important;
+                            font-size: $font-size-sm;
+                            font-weight: $font-weight-medium;
+                        }
+
+                        &:nth-child(6) {
+                            max-width: 300px!important;
+                            color: $body-color-light;
+                            white-space: normal!important;
+
+                            .theme-dark & {
+                                color: $dm-body-color-light;
+                            }
+                        }
+                    }
+                }
+            }
+
+            h2 {
+                margin: 0;
+                padding: .35rem .45rem;
+                display: inline-block;
+
+                background-color: $gray-100;
+                border-radius: $btn-border-radius;
+
+                font-size: $font-size-sm;
+                font-weight: $font-weight-bold;
+            }
+
+            h4 {
+                width: calc(100% + 2rem);
+                margin-left: -1rem;
+                margin-top: 1rem;
+                padding-top: 1rem;
+                padding-left: 1rem;
+                padding-right: 1rem;
+
+                border-top: 2px solid $border-color;
+            }
+
+            .rui-icon {
+                margin-right: 8px;
+            }
+
+            ul {
+                margin-left: 23px;
+                font-size: $font-size-sm;
+            }
+
+        }
+    }
+}
+
+.theme-dark#page-report-outline-user  {
+    .main-content {
+        .section {
+            border-color: $dm-border-color;
+
+            h2 {
+                background-color: $dm-gray-100;
+            }
+
+            h4 {
+                border-color: $dm-border-color;
+            }
+        }
+    }
+}
+
+.export-actions a {
+    margin-top: .5rem;
+}
+
+#page-report-log-index .logselecform {
+    margin-bottom: $page-padding-global
+}
+
+#page-report-completion-index {
+    .rui-main-content-title--h3 {
+        margin-bottom: $page-padding-global;
+    }
+
+    .urlselect .urlselect {
+        margin-bottom: 0!important;
+    }
+}
+
+
+/* Log live report table */
+.reportloglive {
+    .c0 {
+        font-size: $font-size-xs;
+        color: $body-color-light;
+    }
+}
+
+#page-report-progress-index {
+    .main-content {
+        div.urlselect {
+            display: inline-flex;
+            margin-right: 2rem!important;
+            width: auto;
+        }
+    }
+}

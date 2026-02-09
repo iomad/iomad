@@ -1,0 +1,72 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tool_supporter/enrolusersection
+    Template which adds an enrol user function for the selected course and user
+
+    Classes required for JS:
+    * none
+
+    Context variables required for this template:
+    * assignableRoles - array of arrays: roles which can be assigned when enrolling.
+
+Example context (json):
+{
+  "assignableRoles": [
+    {
+      "id": 5,
+      "name": "Teilnehmer/in"
+    },
+    {
+      "id": 1,
+      "name": "Manager/in"
+    },
+    {
+      "id": 3,
+      "name": "Trainer/in"
+    },
+    {
+      "id": 4,
+      "name": "Trainer/in ohne Bearbeitungsrecht"
+    }
+  ]
+}
+
+}}
+
+<div id="enrolusersection" data-region="enroluserregion" style="display: none; padding-left: 5px;">
+  
+  <div class="btn-toolbar" role="toolbar">
+	  <div class="btn-group" role="group">
+	    <button type="button" class="btn btn-primary mr-1" id ="enroluserintocoursebutton">{{#str}}enrolusers, enrol{{/str}}</button>
+	  </div>
+	  <div class="btn-group" role="group">
+	    <select class="form-control custom-select" id="role-dropdown">
+          {{#assignableRoles}}
+            <option value={{id}}>{{name}}</option>
+          {{/assignableRoles}}
+        </select>
+	  </div>
+	</div>
+  
+</div>
+
+{{#js}}
+require(['tool_supporter/enrol'], function(enrol) {
+    enrol.enrolUserIntoCourse();
+});
+{{/js}}

@@ -1,0 +1,919 @@
+/* modules.less */
+/*
+
+ █████╗  ██████╗████████╗██╗██╗   ██╗██╗████████╗██╗   ██╗
+██╔══██╗██╔════╝╚══██╔══╝██║██║   ██║██║╚══██╔══╝╚██╗ ██╔╝
+███████║██║        ██║   ██║██║   ██║██║   ██║    ╚████╔╝
+██╔══██║██║        ██║   ██║╚██╗ ██╔╝██║   ██║     ╚██╔╝
+██║  ██║╚██████╗   ██║   ██║ ╚████╔╝ ██║   ██║      ██║
+╚═╝  ╚═╝ ╚═════╝   ╚═╝   ╚═╝  ╚═══╝  ╚═╝   ╚═╝      ╚═╝
+
+███╗   ███╗ ██████╗ ██████╗ ██╗   ██╗██╗     ███████╗███████╗
+████╗ ████║██╔═══██╗██╔══██╗██║   ██║██║     ██╔════╝██╔════╝
+██╔████╔██║██║   ██║██║  ██║██║   ██║██║     █████╗  ███████╗
+██║╚██╔╝██║██║   ██║██║  ██║██║   ██║██║     ██╔══╝  ╚════██║
+██║ ╚═╝ ██║╚██████╔╝██████╔╝╚██████╔╝███████╗███████╗███████║
+╚═╝     ╚═╝ ╚═════╝ ╚═════╝  ╚═════╝ ╚══════╝╚══════╝╚══════╝
+
+*/
+
+// The home for small tweaks to modules that don't require
+// changes drastic enough to pull in the full module css
+// and replace it completely
+// Plus some misc. odds and ends
+
+select {
+    width: auto;
+}
+
+//---- Choice
+//---- Activity Module
+.path-mod-choice {
+    .horizontal .choices .option {
+        display: inline-flex;
+        align-items: center;
+    }
+}
+
+.path-mod-choice {
+    .choices .option label {
+        margin: 10px;
+    }
+}
+
+.reportlink {
+    @include media-breakpoint-between(xs, sm) {
+        text-align: center;
+
+        a {
+            width: 100%;
+        }
+    }
+}
+
+
+.maincalendar .calendarmonth td,
+.maincalendar .calendarmonth th {
+    border: 1px dotted $table-border-color;
+
+    .theme-dark & {
+        border-color: $dm-table-border-color;
+    }
+}
+
+.path-grade-report-grader h1 {
+    text-align: inherit;
+}
+
+#page-mod-chat-gui_basic input#message {
+    max-width: 100%;
+}
+
+#page-mod-data-view #singleimage {
+    width: auto;
+}
+
+.path-mod-data form {
+    margin-top: 0;
+}
+
+.path-mod-data .rui-page-title {
+    margin-bottom: 0;
+}
+
+#page-mod-data-templates td.save_template,
+#page-mod-data-templates .template_heading {
+    text-align: left;
+}
+
+//---- Data
+//---- Activity Module
+#tempform {
+    table {
+        width: 100%;
+    }
+}
+
+#availabletags_wrapper {
+    max-width: 300px;
+}
+
+.template_heading {
+    margin-top: 10px;
+}
+
+.breadcrumb-button {
+    margin-top: 4px;
+}
+
+.breadcrumb-button .singlebutton {
+    float: left;
+    margin-left: 4px;
+}
+
+.langmenu form {
+    margin: 0;
+}
+
+// contributed by Paul Hibbitts, see http://msdn.microsoft@mixin com/en-us/library/ie/jj583807(v=vs.85).aspx
+canvas {
+    -ms-touch-action: auto;
+}
+
+div#dock {
+    display: none;
+}
+
+
+//---- Lesson.
+//---- Activity Module.
+.path-mod-lesson .invisiblefieldset.fieldsetfix {
+    display: block;
+}
+
+.path-mod-lesson .answeroption .checkbox label p {
+    display: inline;
+    margin: 0;
+}
+
+.path-mod-lesson {
+    .contents {
+        font-size: $font-size-base;
+    }
+    
+    #fitem_id_submitbutton,
+    .answeroption {
+        .col-md-3, .col-md-9 {
+            flex: 0 0 100%;
+            max-width: 100%;
+
+            .form-check {
+                margin: 5px 0;
+            }
+        }
+    }
+}
+
+
+.path-mod-lesson .form-inline label.form-check-label {
+    display: inline-block;
+}
+
+.path-mod-lesson .slideshow {
+    overflow: auto;
+    padding: 15px;
+}
+
+#page-mod-lesson-view .branchbuttoncontainer .singlebutton button[type="submit"] {
+    white-space: normal;
+}
+
+#page-mod-lesson-view {
+    .vertical .singlebutton {
+        display: block;
+
+        +.singlebutton {
+            margin-left: 0;
+            margin-top: 1rem;
+        }
+    }
+
+    .fitem .felement .custom-select {
+        align-self: flex-start;
+    }
+}
+
+.path-mod-lesson .generaltable td {
+    vertical-align: middle;
+
+    label {
+        margin-bottom: 0;
+    }
+
+    .highlight {
+        display: inline-block;
+        margin-left: 0.25rem;
+    }
+
+    input[type="checkbox"] {
+        display: block;
+    }
+}
+
+.wiki_headingtitle,
+.midpad {
+    text-align: left;
+}
+
+.wiki_headingtitle {
+    margin-top: $page-padding-global;
+}
+
+.path-mod-wiki .wiki_headingtitle {
+    .icon {
+        margin-left: .35rem;
+    }
+}
+
+.wiki_difftime,
+.wiki_headingtime {
+    margin-bottom: .35rem;
+    font-style: normal;
+    color: $body-color-secondary;
+
+    .theme-dark & {
+        color: $dm-body-color-secondary;
+    }
+}
+
+.path-mod-wiki .wiki_contentbox {
+    width: 100%;
+}
+
+// Survey module
+.path-mod-survey #surveyform th {
+    font-size: $font-size-sm;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.path-mod-survey {
+    .surveytable {
+        >tbody>tr:nth-of-type(odd) {
+            background-color: $table-bg;
+        }
+
+        >tbody>tr:nth-of-type(even) {
+            background-color: $table-accent-bg;
+        }
+
+        tr:hover {
+            background-color: var(--primary-color-100) !important;
+        }
+
+        .rblock label {
+            text-align: center;
+            margin: 0;
+        }
+
+        .qnumtopcell {
+            display: inline-flex;
+            font-size: $font-size-sm;
+        }
+
+        .optioncell,
+        .questioncell {
+            padding: 10px;
+        }
+    }
+}
+
+.path-mod-survey .smalltext {
+    th {
+        font-size: $font-size-xs !important;
+        color: $body-color-light;
+    }
+}
+
+.theme-dark.path-mod-survey .smalltext {
+    th {
+        color: $dm-body-color-light;
+    }
+}
+
+// Dark mode.
+.theme-dark.path-mod-survey .surveytable .whitecell {
+    background-color: $dm-container-bg;
+}
+
+.theme-dark.path-mod-survey .surveytable tr:hover {
+    background-color: var(--primary-color-700) !important;
+}
+
+#intro {
+    margin-top: 0;
+    padding: 0 !important;
+
+    @include media-breakpoint-up(md) {
+        margin-bottom: $page-padding-global;
+    }
+
+    @include media-breakpoint-between(xs, sm) {
+        margin-bottom: 16px;
+    }
+}
+
+.nav .caret {
+    margin-left: 4px;
+}
+
+// Dividers
+.nav {
+    .divider {
+        overflow: hidden;
+        width: 0;
+    }
+}
+
+// Usermenu
+.usermenu {
+    .login {
+        line-height: 2.25rem;
+    }
+
+    .action-menu {
+        display: flex !important;
+        padding: 0;
+        margin: 0;
+    }
+
+    .dropdown {
+        display: flex;
+    }
+
+    .dropdown-btn {
+        margin-left: 1px;
+        padding: 0;
+        background-color: transparent;
+        color: rgba($topbar-btn-text, .6);
+
+        .theme-dark & {
+            color: rgba($dm-topbar-btn-text, .6);
+        }
+    }
+
+    .btn.btn-icon {
+        padding: 0 !important;
+    }
+
+    img.userpicture {
+        margin: 0;
+        border-radius: $btn-border-radius;
+
+        width: 40px;
+        height: 40px;
+    }
+
+    @include media-breakpoint-between(xs, sm) {
+        .dropdown-toggle::after {
+            display: none;
+        }
+    }
+}
+
+// Moodle 4.x.
+.userinitials {
+    min-width: 40px;
+    min-height: 40px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: $border-width solid $border-color;
+    border-radius: $btn-border-radius;
+
+    background-color: transparent;
+    font-size: .85rem;
+    font-weight: $font-weight-bold;
+    line-height: 1;
+    color: $topbar-text;
+
+    .theme-dark & {
+        color: $dm-topbar-text;
+        border-color: $dm-border-color;
+    }
+
+    .avatar.current & {
+
+        .userloggedinas & {
+            background-color: $container-bg;
+            font-size: 9px;
+            min-width: 20px;
+            min-height: 20px;
+            width: 20px;
+            height: 20px;
+            max-width: 20px;
+            max-height: 20px;
+            border: none;
+            font-size: 11px;
+            color: $body-color;
+        }
+
+    }
+
+    table &,
+    .aabtn & {
+        margin-right: .5rem;
+    }
+}
+
+.userinitials.size-56 {
+    width: 40px;
+    height: 40px;
+}
+
+.userinitials.size-100 {
+    width: 40px;
+    height: 40px;
+    display: flex;
+
+    .page-context-header & {
+        margin-right: 0;
+        width: 50px;
+        height: 50px;
+    }
+}
+
+// end Moodle 4.0
+
+.userloggedinas,
+.userswitchedrole,
+.loginfailures {
+    .usermenu {
+        .usertext {
+            float: left;
+            text-align: right;
+            margin-right: $spacer * .5;
+            height: 35px;
+
+            .meta {
+                display: block;
+                font-size: $font-size-sm;
+            }
+        }
+
+        .avatar {
+            img {
+                margin: 0;
+            }
+
+            &::before {
+                content: '';
+                width: 16px;
+                height: 16px;
+
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' currentColor='#{url-friendly-colour($gray-900)}' viewBox='0 0 24 24'%3E%3Cg data-name='Layer 2'%3E%3Cg data-name='info'%3E%3Crect width='24' height='24' transform='rotate(180 12 12)' opacity='0'/%3E%3Cpath d='M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z'/%3E%3Ccircle cx='12' cy='8' r='1'/%3E%3Cpath d='M12 10a1 1 0 0 0-1 1v5a1 1 0 0 0 2 0v-5a1 1 0 0 0-1-1z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+                background-size: 14px;
+                background-position: center;
+                background-color: $yellow-500;
+                border-radius: 20px;
+
+                position: absolute;
+                top: 3px;
+                right: 3px;
+            }
+        }
+    }
+}
+
+.userloggedinas .usermenu {
+    .userbutton .avatars {
+        position: relative;
+        display: inline-block;
+
+        .avatar {
+            &.current {
+                display: inline-block;
+                position: absolute;
+                bottom: 1px;
+                right: 0;
+                width: 20px;
+                height: 20px;
+                border-radius: $btn-border-radius;
+
+                img {
+                    vertical-align: baseline;
+                }
+
+                &::before {
+                    display: none;
+                }
+            }
+
+            img {
+                width: inherit;
+                height: inherit;
+            }
+        }
+
+        .realuser {
+            width: 44px;
+            height: 44px;
+            display: inline-block;
+        }
+    }
+}
+
+@include media-breakpoint-between(xs, sm) {
+    .usertext {
+        display: none;
+    }
+}
+
+//---- Quiz
+//---- Activity Module
+.path-mod-quiz .mod-quiz-edit-content {
+    // Force the quiz edit page to always be large enough to prevent scrolling when accessing the menu.
+    margin-bottom: 10rem;
+}
+
+#page-mod-quiz-mod #id_reviewoptionshdr .col-md-3,
+#page-mod-quiz-mod #id_reviewoptionshdr .col-md-9 {
+    width: auto;
+    max-width: none;
+}
+
+#page-mod-quiz-mod #id_reviewoptionshdr .form-group {
+    width: 20rem;
+    display: inline-block;
+    min-height: 12rem;
+}
+
+#page-mod-quiz-mod #id_reviewoptionshdr .btn-link {
+    line-height: 1.5;
+    vertical-align: bottom;
+}
+
+#page-mod-quiz-mod #id_reviewoptionshdr .form-inline {
+    float: left;
+    clear: left;
+}
+
+#page-mod-quiz-mod #id_reviewoptionshdr .form-check {
+    width: 90%;
+    height: 22px;
+    justify-content: flex-start;
+}
+
+.review_option_item {
+    width: 98%;
+    display: flex;
+    margin: 5px 0;
+}
+
+// Question navigation block.
+.qn_buttons {
+    grid-gap: 9px;
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: start;
+}
+
+#mod_quiz_navblock {
+
+    .qnbutton {
+        display: grid;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: $font-weight-bold;
+        background-color: transparent;
+        background-image: none;
+        height: 40px;
+        width: 40px;
+        border-radius: $btn-border-radius-lg;
+        border: 0;
+        overflow: hidden;
+        margin: 0 6px 6px 0;
+
+        .theme-dark & {
+            color: $dm-body-color!important;
+        }
+    }
+
+    span.qnbutton {
+        cursor: default;
+        background-color: $input-disabled-bg;
+        color: $gray-700;
+    }
+
+    a.qnbutton:hover,
+    a.qnbutton:active,
+    a.qnbutton:focus {
+        text-decoration: underline;
+    }
+
+    span.qnbutton {
+        background-color: transparent;
+
+        .theme-dark & {
+            background-color: transparent;
+        }
+    }
+
+    .qnbutton .thispageholder {
+        border-radius: $btn-border-radius-lg;
+        z-index: 1;
+        border: 1px solid $border-color;
+        background-color: transparent;
+
+        .theme-dark & {
+            border-color: $dm-border-color;
+        }
+    }
+
+    span.qnbutton.thispage {
+        color: var(--main-theme-color);
+        background-color: var(--primary-color-100);
+    }
+
+    .qnbutton.thispage {
+        .thispageholder {
+            border-color: var(--main-theme-color);
+        }
+    }
+
+    .qnbutton.flagged .thispageholder {
+        &::before {
+            content: '';
+            background-color: $red-600;
+            width: 4px;
+            height: 4px;
+            border-radius: 4px;
+
+            position: absolute;
+            top: 5px;
+            left: calc(50% - 2px);
+        }
+    }
+
+    .qnbutton .trafficlight {
+        border: 0;
+    }
+
+    .qnbutton.notyetanswered .trafficlight,
+    .qnbutton.invalidanswer .trafficlight {
+        background-color: transparent;
+    }
+
+    .qnbutton.incorrect,
+    .qnbutton.invalidanswer {
+        color: $red-800;
+
+        .thispageholder {
+            border-color: $red-300;
+        }
+    }
+
+    .qnbutton.invalidanswer .trafficlight {
+        background-color: rgba($red-200, .3);
+        color: $red-800;
+
+        .theme-dark & {
+            background-color: rgba($red-200, .3);
+        }
+    }
+
+    .qnbutton.correct {
+        color: $green-600;
+
+        .thispageholder {
+            border-color: $green-300;
+        }
+    }
+
+    .qnbutton.correct .trafficlight {
+        background-color: rgba($green-200, .5);
+        color: $green-600;
+    }
+
+    .qnbutton.blocked .trafficlight {
+        background-color: rgba($gray-200, .5);
+        color: $gray-400;
+    }
+
+    .qnbutton.notanswered {
+        color: $red-800;
+
+        .thispageholder {
+            border-color: $red-300;
+        }
+    }
+
+    .qnbutton.notanswered .trafficlight,
+    .qnbutton.incorrect .trafficlight {
+        background-color: rgba($red-200, .5);
+        color: $red-800;
+
+        .theme-dark & {
+            background-color: rgba($red-200, .3);
+        }
+    }
+
+    .qnbutton.partiallycorrect {
+        color: $yellow-800;
+
+        .thispageholder {
+            border-color: $yellow-400;
+        }
+    }
+
+    .qnbutton.partiallycorrect .trafficlight {
+        background-color: rgba($yellow-200, .5);
+        color: $yellow-600;
+    }
+
+    .qnbutton.complete .trafficlight,
+    .qnbutton.answersaved .trafficlight,
+    .qnbutton.requiresgrading .trafficlight {
+        background-color: rgba($gray-600, .2);
+        color: $gray-800;
+    }
+}
+
+#page-mod-quiz-edit ul.slots li.section li.activity .instancemaxmarkcontainer form input {
+    height: 1.4em;
+    vertical-align: middle;
+}
+
+#page-mod-quiz-edit ul.slots li.section li.activity .instancemaxmarkcontainer {
+    padding: 0;
+    margin: 0 0.4em;
+}
+
+/* Countdown timer. */
+#page-mod-quiz-attempt #region-main {
+    overflow-x: inherit;
+}
+
+#quiz-timer-wrapper {
+    display: none;
+    position: sticky;
+    top: $navbar-height + 15px;
+    z-index: $zindex-sticky;
+
+    .btn {
+        border-radius: $btn-border-radius-lg;
+    }
+
+    #quiz-timer {
+        margin: 0;
+        padding: 8px 9px 8px 10px;
+
+        border-radius: $btn-border-radius-lg;
+        background-color: $green-100;
+
+        display: flex;
+        align-items: center;
+
+        font-size: $font-size-md;
+        font-weight: $font-weight-medium;
+        color: $green-600;
+    }
+}
+
+.pagelayout-embedded #quiz-timer-wrapper {
+    top: 5px;
+}
+
+@for $i from 0 through 16 {
+    #quiz-timer-wrapper #quiz-timer.timeleft#{$i} {
+        $bg: lighten($red, ($i * 3%));
+        background-color: $bg;
+        color: color-yiq($bg);
+    }
+}
+
+
+.path-mod-quiz #mod_quiz_navblock h3.mod_quiz-section-heading {
+    width: 100%;
+    font-size: $font-size-xs;
+}
+
+//---- LTI
+//---- Activity Module
+.path-admin-mod-lti {
+
+    .btn .loader img,
+    #tool-list-loader-container .loader img {
+        height: auto;
+    }
+}
+
+
+
+//---- Resource
+//---- Activity Module
+.path-mod-resource .resourcecontent {
+    margin-top: $page-padding-global;
+    text-align: left;
+
+    #resourceobject {
+        width: 100% !important;
+        border-radius: $btn-border-radius;
+    }
+}
+
+//---- Survey
+//---- Activity Module
+.path-mod-survey {
+    .main-content {
+        .reportlink {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .rui-main-content-title--h3 {
+            margin-top: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .centerpara {
+            text-align: left;
+        }
+
+        .generaltable {
+            .c0 {
+                width: 35px !important;
+            }
+        }
+    }
+}
+
+
+//---- H5P
+//---- UI Improvements
+#page-contentbank-edit {
+    .h5p-editor-iframe {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    #fgroup_id_buttonar {
+        .col-md-3 {
+            display: none;
+        }
+
+        .col-md-9 {
+            padding: 0;
+        }
+    }
+
+}
+
+
+//----  BigBlueButton Custom UI
+.bigbluebutton-container {
+    overflow-x: auto;
+
+    .yui3-datatable-paginator {
+        background-color: transparent;
+        background-image: none;
+
+        padding: 10px 0;
+        font-size: $font-size-sm;
+    }
+
+    .yui3-datatable-paginator-group {
+        button {
+            padding: $btn-padding-y-sm $btn-padding-x-sm;
+            font-size: $btn-font-size-sm;
+
+            background-color: $gray-200;
+            border: 0;
+            border-radius: $btn-border-radius;
+            color: $gray-900;
+
+            .theme-dark & {
+                background-color: $dm-gray-200;
+                color: $dm-gray-900;
+            }
+
+            &:hover {
+                background-color: $gray-300;
+                border: 0;
+                color: $gray-900;
+                box-shadow: none;
+
+                .theme-dark & {
+                    background-color: $dm-gray-300;
+                    color: $dm-gray-900;
+                }
+            }
+        }
+
+        input,
+        select {
+            margin: 0 .5rem;
+            min-width: 3rem;
+            padding: $btn-padding-y-sm $btn-padding-x-sm;
+            font-size: $btn-font-size-sm;
+            background: transparent;
+            border: $custom-select-border-width solid $custom-select-border-color;
+            border-radius: $btn-border-radius;
+            color: $gray-900;
+        }
+    }
+}
+
+#fitem_id_h5peditor {
+    .form-control-static {
+        width: 100%;
+    }
+}
+
+
+//---- Folder
+.foldertree {
+    margin-top: 30px;
+}

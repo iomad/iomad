@@ -1,0 +1,181 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+
+    @template theme_iomadmoon/navbar
+
+    This template renders the top navbar.
+
+    Example context (json):
+    {
+        "output": {
+            "should_display_navbar_logo": true,
+            "get_compact_logo_url": "http://placekitten.com/50/50",
+            "custom_menu": "<li>..</li>",
+            "page_heading_menu": "<li>..</li>",
+            "search_box": "<div><input type='text'></div>",
+            "navbar_plugin_output": "<div class='dropdown'>Messaging</div>",
+            "user_menu": "<div class='dropdown'>John Doe</div>"
+        },
+        "config": {
+            "wwwroot": "#"
+        },
+        "sitename": "Moodle Site"
+    }
+}}
+
+<nav id="topBar" class="rui-topbar-wrapper {{#topbargradient}}rui-topbar--gradient{{/topbargradient}} moodle-has-zindex">
+
+    <div class="rui-mobile-nav">
+        {{# output.should_display_navbar_logo }}
+            <span class="rui-logo mx-0">
+                {{^isfrontpage}}<img src="{{output.get_compact_logo_url}}" class="rui-company-logo mx-0" />{{/isfrontpage}}
+                
+                {{#isfrontpage}}
+                {{#customlogo}}
+                    <span class="rui-logo {{#customdmlogo}}dark-mode-logo{{/customdmlogo}}">
+                        <img src="{{customlogo}}" class="rui-custom-logo mx-0" alt="{{sitename}}" />
+                        {{#customdmlogo}}<img src="{{customdmlogo}}" class="rui-custom-dmlogo mx-0" alt="{{sitename}}" />{{/customdmlogo}}
+                    </span>
+                    {{#customlogoandname}}<span class="site-name mx-0 d-none d-md-flex">{{{ customlogotxt }}}</span>{{/customlogoandname}}
+                {{/customlogo}}
+
+                {{^customlogo}}
+                    <span class="site-name mx-0">
+                        {{^ customlogotxt }}{{{ sitename }}}{{/ customlogotxt }}
+                            {{{ customlogotxt }}}
+                    </span>
+                {{/customlogo}}
+                {{/isfrontpage}}
+            </span>
+            {{/ output.should_display_navbar_logo }}
+
+            <button id="mobileNav" class="rui-mobile-nav-btn rui-topbar-btn">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.75 5.75H19.25"></path>
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.75 18.25H19.25"></path>
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.75 12H19.25"></path>
+                </svg>
+            </button>
+    </div>
+
+
+    <div class="rui-topbar wrapper-page rui-topbar--custom-menu">
+
+        <div id="topbarLeft" class="d-inline-flex align-items-center">
+
+            <div class="d-inline-flex align-items-center">
+
+                {{^hiddensidebar}}
+                    <div class="rui-drawer-toggle" data-region="drawer-toggle">
+                        <button id="mainNav" class="rui-topbar-btn nav-drawer-btn" aria-expanded="{{#navdraweropen}}true{{/navdraweropen}}{{^navdraweropen}}false{{/navdraweropen}}" aria-controls="nav-drawer" type="button" data-action="toggle-drawer" data-side="left" data-preference="drawer-open-nav">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8 9H6V15H8V9Z" fill="currentColor" />
+                                <path fill-rule="evenodd" clip-rule="evenodd" d="M2 8C2 6.34315 3.34315 5 5 5H19C20.6569 5 22 6.34315 22 8V16C22 17.6569 20.6569 19 19 19H5C3.34315 19 2 17.6569 2 16V8ZM5 7H19C19.5523 7 20 7.44771 20 8V16C20 16.5523 19.5523 17 19 17H5C4.44772 17 4 16.5523 4 16V8C4 7.44772 4.44772 7 5 7Z" fill="currentColor" />
+                            </svg>
+                        </button>
+                    </div>
+                {{/hiddensidebar}}
+
+                {{#topbarlogoareaon}}
+                        {{^hidemainlogo}}
+                            <a id="logo" href="{{{ config.wwwroot }}}" class="d-none d-lmd-inline-flex align-items-center rui-navbar-brand {{#customlogo}}rui-navbar-brand--img{{/customlogo}} aabtn {{# output.should_display_navbar_logo }}has-logo{{/ output.should_display_navbar_logo }}">
+                                {{#customlogo}}
+                                    <span class="rui-logo {{#customdmlogo}}dark-mode-logo{{/customdmlogo}}">
+                                        <img src="{{customlogo}}" class="rui-custom-logo ml-3" alt="{{sitename}}" />
+                                        {{#customdmlogo}}<img src="{{customdmlogo}}" class="rui-custom-dmlogo ml-3" alt="{{sitename}}" />{{/customdmlogo}}
+                                    </span>
+                                    {{#customlogoandname}}<span class="site-name mx-2 d-none d-md-flex">{{{ customlogotxt }}}</span>{{/customlogoandname}}
+                                {{/customlogo}}
+
+                                {{^customlogo}}
+                                    <span class="site-name">
+                                        {{^ customlogotxt }}{{{ sitename }}}{{/ customlogotxt }}
+                                            {{{ customlogotxt }}}
+                                    </span>
+                                {{/customlogo}}
+                            </a>
+                        {{/hidemainlogo}}
+                {{/topbarlogoareaon}}
+
+                {{#topbarcompanyleft}}
+                {{#output.get_company_name}}
+                 <a id="logoCompany" href="{{{ config.wwwroot }}}" class="d-none d-lmd-inline-flex align-items-center rui-logo-box rui-navbar-brand {{#customlogo}}rui-navbar-brand--img{{/customlogo}} aabtn {{# output.should_display_navbar_logo }}has-logo{{/ output.should_display_navbar_logo }}">
+                    {{# output.should_display_navbar_logo }}
+                        <span class="rui-logo mx-0">
+                            <img src="{{output.get_compact_logo_url}}" class="rui-company-logo ml-1 mr-0" />
+                        </span>
+                        {{/ output.should_display_navbar_logo }}
+                        <span class="site-name mx-2 d-none d-md-flex">{{output.get_company_name}}</span>
+                </a>
+                {{/output.get_company_name}}
+                {{/topbarcompanyleft}}
+
+            </div>
+            <div class="{{#topbarlogoareaon}}rui-navbar-nav--sep{{/topbarlogoareaon}} d-inline-flex mx-1">
+                {{{ output.render_lang_menu }}}
+            </div>
+
+            {{#primarymoremenu}}
+            <div class="primary-navigation">
+                {{> core/moremenu}}
+            </div>
+            {{/primarymoremenu}}
+
+        </div>
+
+        <div class="ml-auto d-flex align-items-center">
+            <ul class="rui-icon-menu rui-icon-menu--right rui-navbar-nav--sep">
+                {{^isnotloggedin}}
+                    <li class="rui-icon-menu-search rui-drawer-search">
+                        {{{ output.search_box }}}
+                    </li>
+                    {{#darkmodetheme}}
+                        <li class="rui-icon-menu-darkmode">
+                            <button id="darkModeBtn" class="btn--darkmode rui-tooltip--bottom" aria-checked="false" type="button" data-preference="darkmode-on" {{^sdarkmode}}data-title="Dark Mode" {{/sdarkmode}} {{#sdarkmode}} data-title="{{{sdarkmode}}}" {{/sdarkmode}}>
+                                <div class="rui-dark-mode-status--on">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16ZM12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z" fill="currentColor" />
+                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M11 0H13V4.06189C12.6724 4.02104 12.3387 4 12 4C11.6613 4 11.3276 4.02104 11 4.06189V0ZM7.0943 5.68018L4.22173 2.80761L2.80752 4.22183L5.6801 7.09441C6.09071 6.56618 6.56608 6.0908 7.0943 5.68018ZM4.06189 11H0V13H4.06189C4.02104 12.6724 4 12.3387 4 12C4 11.6613 4.02104 11.3276 4.06189 11ZM5.6801 16.9056L2.80751 19.7782L4.22173 21.1924L7.0943 18.3198C6.56608 17.9092 6.09071 17.4338 5.6801 16.9056ZM11 19.9381V24H13V19.9381C12.6724 19.979 12.3387 20 12 20C11.6613 20 11.3276 19.979 11 19.9381ZM16.9056 18.3199L19.7781 21.1924L21.1923 19.7782L18.3198 16.9057C17.9092 17.4339 17.4338 17.9093 16.9056 18.3199ZM19.9381 13H24V11H19.9381C19.979 11.3276 20 11.6613 20 12C20 12.3387 19.979 12.6724 19.9381 13ZM18.3198 7.0943L21.1923 4.22183L19.7781 2.80762L16.9056 5.6801C17.4338 6.09071 17.9092 6.56608 18.3198 7.0943Z" fill="currentColor" />
+                                    </svg>
+                                </div>
+                                <div class="rui-dark-mode-status--off">
+                                    <svg width="18" height="18" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" color="currentColor">
+                                        <path d="M3 11.507a9.493 9.493 0 0018 4.219c-8.507 0-12.726-4.22-12.726-12.726A9.494 9.494 0 003 11.507z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    </svg>
+                                </div>
+                            </button>
+                        </li>
+                    {{/darkmodetheme}}
+                {{/isnotloggedin}}
+                <li class="rui-icon-menu-admin">{{{output.adminheaderlink}}}</li>
+                <li class="rui-icon-menu-plugins">{{{ output.navbar_plugin_output }}}</li>
+                <li class="rui-icon-menu-user m-0">{{{ output.user_menu }}}</li>
+            </ul>
+        </div>
+
+        <button class="d-flex d-md-none rui-mobile-nav-btn-close rui-topbar-btn">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.25 6.75L6.75 17.25"></path>
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.75 6.75L17.25 17.25"></path>
+            </svg>
+        </button>
+
+        {{{ output.edit_switch }}}
+
+    </div>
+</nav>

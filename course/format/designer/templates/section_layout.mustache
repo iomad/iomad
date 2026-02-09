@@ -1,0 +1,268 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template format_designer/section_layout
+
+    Displays the course module card layout
+
+    Example context (json):
+    {
+        "sectiondesigntextcolor": "color: #fff",
+        "sectionheaderstyle": "min-height:100px;"
+    }
+}}
+
+<div class="section-content-wrapper {{#sectionprogresscomp}} section-progress-info-completed {{/sectionprogresscomp}}" {{#sectionsingle}} data-action="go-to-section-url"
+data-target="{{#sectioncardcontentdirect}}_blank{{/sectioncardcontentdirect}}" data-url="{{#sectionvisible}} {{{sectionurl}}} {{/sectionvisible}}" {{/sectionsingle}}>
+{{#sectiondesignwhole}}
+    <div class="section-background-style section-design-whole" style="{{#sectionbackgroundstyle}} {{sectionbackgroundstyle}} {{/sectionbackgroundstyle}}">
+        {{#maskinner}}
+        <div class="mask-inner-section" style="{{{maskinner}}}"></div>
+        {{/maskinner}}
+    </div>
+
+    {{#bgoverlay}}
+    <div class="bg-overlay" style="{{bgoverlay}}">
+    </div>
+    {{/bgoverlay}}
+{{/sectiondesignwhole}}
+
+<div class="right side">
+    {{#controlmenu}}
+        {{$ format_designer/courseformat/content/section/controlmenu }}
+            {{> format_designer/courseformat/content/section/controlmenu }}
+        {{/ format_designer/courseformat/content/section/controlmenu }}
+    {{/controlmenu}}
+    <div class="icon-loader-block"></div>
+</div>
+
+<div class="course-section-header section-header-content {{#sectioncollapse}}{{^sectionshow}}collapsed{{/sectionshow}}{{/sectioncollapse}} {{coursetype.classes}} {{#flowsizeclass}} {{flowsizeclass}} {{/flowsizeclass}}"
+    id="section-head-{{section.section}}"
+    {{#sectioncollapse}} data-toggle="collapse" {{/sectioncollapse}}
+    data-target="#section-content-{{section.section}}"
+    aria-expanded="false"
+    aria-controls="section-head-{{section.section}}"
+    role="contentinfo"
+    style="{{sectionheaderstyle}}"
+    data-for="section_title"
+    data-id="{{id}}"
+    data-number="{{num}}"
+    {{coursetype.attributes}}
+    >
+    {{#flowcourse}}
+    <div class="flow-stack-header"></div>
+    <div class="section-background-color" style="{{sectionbackcolor}}"></div>
+    {{/flowcourse}}
+        {{#sectiondesignheader}}
+            <div class="section-background-style sectiondesign-header" style="{{sectionbackgroundstyle}}">
+                {{#maskinner}}
+                <div class="mask-inner-section" style="{{{maskinner}}}"></div>
+                {{/maskinner}}
+            </div>
+        {{/sectiondesignheader}}
+        {{#sectioncollapse}}
+        <span class="section-collapse-icon" style="{{{sectiondesigntextcolor}}}"></span>
+        {{/sectioncollapse}}
+
+        {{#bgoverlay}}
+        {{^sectiondesignwhole}}
+            <div class="bg-overlay" style="{{bgoverlay}}">
+            </div>
+        {{/sectiondesignwhole}}
+        {{/bgoverlay}}
+
+        {{#flowcourse}}
+            {{#section.categorisetitle}}
+            <div class="categorise-section-block">
+                <span class="badge" style="color:{{section.categorisetextcolor}}; background-color:{{section.categorisebackcolor}};">{{section.categorisetitle}}</span>
+            </div>
+            {{/section.categorisetitle}}
+        {{/flowcourse}}
+
+        {{! Section name header }}
+        <div class="section-head-text" style="{{#sectiondesigntextcolor}} {{sectiondesigntextcolor}} {{/sectiondesigntextcolor}}">
+            {{#singleheader}}
+            {{$ format_designer/courseformat/content/section/header }}
+                {{> format_designer/courseformat/content/section/header }}
+            {{/ format_designer/courseformat/content/section/header }}
+            {{/singleheader}}
+            {{#header}}
+            {{$ format_designer/courseformat/content/section/header }}
+                {{> format_designer/courseformat/content/section/header }}
+            {{/ format_designer/courseformat/content/section/header }}
+            {{/header}}
+        </div>
+
+        {{! End of section name }}
+
+        {{! Section badges }}
+        <div data-region="sectionbadges" class="sectionbadges align-items-center">
+            {{$ core_courseformat/local/content/section/badges }}
+                {{> core_courseformat/local/content/section/badges }}
+            {{/ core_courseformat/local/content/section/badges }}
+        </div>
+        {{^hidesectiontitle}}
+        {{^flowcourse}}
+            {{#section.categorisetitle}}
+            <div class="categorise-section-block">
+                <span class="badge" style="color:{{section.categorisetextcolor}}; background-color:{{section.categorisebackcolor}};">{{section.categorisetitle}}</span>
+            </div>
+            {{/section.categorisetitle}}
+        {{/flowcourse}}
+         {{/hidesectiontitle}}
+
+        {{! End of section badges }}
+
+        {{^flowcourse}}
+            {{#issectioncompletion}}
+            <div class="section-progress-info">
+                {{^progresspro}}
+                {{^sectionprogresscomp}}
+                <div class="section-progress-bar">
+                    <div class="progress">
+                        <div class="progress-bar{{#sectionprogress}} progress-bg-success{{/sectionprogress}}{{^sectionprogress}} progress-not-started{{/sectionprogress}}" role="progressbar" style= "width: {{sectionprogress}}%" aria-valuenow="{{sectionprogress}}" aria-valuemin="0" aria-valuemax="100">
+                            <span class="percentage">{{sectionprogress}}%</span>
+                        </div>
+                    </div>
+                </div>
+                {{/sectionprogresscomp}}
+                {{#sectionprogresscomp}}
+                    <div class="section-progress-completed">
+                        <span class="badge badge-completion badge-success"><span><i class="fa fa-check"></i> {{#str}}sectioncompleted, format_designer{{/str}}</span></span>
+                    </div>
+                {{/sectionprogresscomp}}
+                {{/progresspro}}
+                {{#progresspro}}
+                    {{{progress}}}
+                {{/progresspro}}
+            </div>
+            {{/issectioncompletion}}
+        {{/flowcourse}}
+
+        {{#availability}}
+        <div class="availability-section-block">
+            {{$ format_designer/courseformat/content/section/availability }}
+                {{> format_designer/courseformat/content/section/availability }}
+            {{/ format_designer/courseformat/content/section/availability }}
+        </div>
+        {{/availability}}
+
+        {{^hidesectionsummary}}
+            <div class="summary" style="{{#sectiondesigntextcolor}} {{sectiondesigntextcolor}} {{/sectiondesigntextcolor}}">
+            {{#summary}}
+                {{$ core_courseformat/local/content/section/summary }}
+                    {{> core_courseformat/local/content/section/summary }}
+                {{/ core_courseformat/local/content/section/summary }}
+            {{/summary}}
+            </div>
+        {{/hidesectionsummary}}
+
+
+        {{#sectioncardctacontent}}
+            {{{sectioncardctacontent}}}
+        {{/sectioncardctacontent}}
+
+        {{#flowcourse}}
+            {{#issectioncompletion}}
+            <div class="section-progress-info">
+                {{^progresspro}}
+                {{^sectionprogresscomp}}
+                <div class="section-progress-bar">
+                    <div class="progress">
+                        <div class="progress-bar progress-bg-success" role="progressbar" style= "width: {{sectionprogress}}%" aria-valuenow="{{sectionprogress}}" aria-valuemin="0" aria-valuemax="100">
+                            <span class="percentage">{{sectionprogress}}%</span>
+                        </div>
+                    </div>
+                </div>
+                {{/sectionprogresscomp}}
+                {{#sectionprogresscomp}}
+                    <div class="section-progress-completed">
+                        <span class="badge badge-completion badge-success"><span><i class="fa fa-check"></i> {{#str}}sectioncompleted, format_designer{{/str}}</span></span>
+                    </div>
+                {{/sectionprogresscomp}}
+                {{/progresspro}}
+                {{#progresspro}}
+                    {{{progress}}}
+                {{/progresspro}}
+            </div>
+            {{/issectioncompletion}}
+        {{/flowcourse}}
+        {{#sectioncountstatus}}
+        <div class="section-summary-activities pr-2 mdl-right">
+            {{#sectionmodcount}}
+                <div class="img-element activity-img {{customclass}}" style="{{{sectionmoduleimgstyle}}}">
+                    {{#activityimgsvg}}
+                        {{{activityimgsvg}}}
+                    {{/activityimgsvg}}
+
+                    {{^activityimgsvg}}
+                        {{#img}}
+                            <img src="{{img}}" alt="{{name}}" title="{{name}}">
+                        {{/img}}
+                    {{/activityimgsvg}}
+
+                    {{#icon}}
+                        <i class="fa {{icon}}" data-purpose="{{name}}"> </i>
+                    {{/icon}}
+                    <span class="activity-count" style="{{{sectionactivitycountstyle}}}" data-name={{name}}>{{count}}</span>
+                </div>
+            {{/sectionmodcount}}
+        </div>
+        {{/sectioncountstatus}}
+        {{#gotosection}}
+            {{#sectionsingle}}
+                <a href="{{{sectionurl}}}" target="{{#sectioncardcontentdirect}}_blank{{/sectioncardcontentdirect}}" class="goto-section btn btn-primary" {{#sectioncountstatus}} style="{{#sectiontextcolor}} {{sectiontextcolor}} {{/sectiontextcolor}}" {{/sectioncountstatus}}><i class="fa fa-fw fa-arrow-right"></i></a>
+            {{/sectionsingle}}
+            {{^sectionsingle}}
+            	<a href="{{{sectionurl}}}" class="goto-section btn btn-primary">{{#str}}gotosection, format_designer{{/str}}</a>
+            {{/sectionsingle}}
+        {{/gotosection}}
+</div>
+
+<div class="content {{sectioncontentlayout}}
+    {{#sectioncollapse}}collapse{{/sectioncollapse}}
+    {{#sectionshow}}show{{/sectionshow}}
+    {{^iscoursedisplaymultipage}}
+        {{^sitehome}}course-content-item-content {{/sitehome}}
+    {{/iscoursedisplaymultipage}} {{coursetype.content.classes}}"
+    id="section-content-{{section.section}}"
+    aria-labelledby="section-head-{{section.section}}"
+    {{#sectionaccordion}}
+    data-parent="#section-course-accordion"
+    {{/sectionaccordion}}
+    role="contentinfo"
+    style="{{#sectioncontentwidth}} {{sectioncontentwidth}} {{/sectioncontentwidth}}"
+    {{coursetype.content.attributes}}>
+
+    {{^sectionheader}}
+        {{#cmlist}}
+        {{$ format_designer/courseformat/content/section/cmlist }}
+            {{> format_designer/courseformat/content/section/cmlist }}
+        {{/ format_designer/courseformat/content/section/cmlist }}
+        {{/cmlist}}
+
+        {{{cmcontrols}}}
+        {{#insertafter}}
+        {{#numsections}}
+            {{$ core_courseformat/local/content/addsection}}
+                {{> core_courseformat/local/content/addsection}}
+            {{/ core_courseformat/local/content/addsection}}
+        {{/numsections}}
+        {{/insertafter}}
+    {{/sectionheader}}
+</div>
+</div>

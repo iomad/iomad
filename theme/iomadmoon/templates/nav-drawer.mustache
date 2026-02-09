@@ -1,0 +1,134 @@
+{{!
+    @template theme_iomadmoon/nav-drawer
+
+
+    Example context (json): {}
+}}
+<nav id="nav-drawer"
+    data-region="drawer"
+    class="d-block d-print-none moodle-has-zindex {{^navdraweropen}}closed{{/navdraweropen}}"
+    aria-hidden="{{#navdraweropen}}false{{/navdraweropen}}{{^navdraweropen}}true{{/navdraweropen}}"
+    data-preference="drawer-open-nav"
+    tabindex="-1">
+
+    <div class="nav-drawer-container">
+
+        {{{ sidebartb }}}
+
+        {{#customsidebarlogo}}
+            <div class="rui-drawer-logo {{#customsidebardmlogo}}dark-mode-logo{{/customsidebardmlogo}} text-sm-center text-md-left">
+                <a href="{{{ config.wwwroot }}}" class="text-decoration-none">
+                    <img src="{{customsidebarlogo}}" alt="{{sitename}}" class="rui-custom-logo img-fluid" />
+                    {{#customsidebardmlogo}}<img src="{{customsidebardmlogo}}" alt="{{sitename}}" class="rui-custom-dmlogo img-fluid" />{{/customsidebardmlogo}}
+                </a>
+            </div>
+        {{/customsidebarlogo}}
+
+        {{#customstcontent}}
+            <div class="rui-custom-sidebar-content my-4">
+                {{{customstcontent}}}
+            </div>
+        {{/customstcontent}}
+
+        {{#output.mainsidebarmenu}}
+            <ul class="rui-flatnavigation rui-flatnavigation-box {{^customsidebarlogo}}mt-2{{/customsidebarlogo}}">
+                {{{output.mainsidebarmenu}}}
+                {{{customnavitems}}}
+            </ul>
+        {{/output.mainsidebarmenu}}
+
+        {{#customsmcontent}}
+            <div class="rui-custom-sidebar-content my-4">
+                {{{customsmcontent}}}
+            </div>
+        {{/customsmcontent}}
+
+        {{#showmycoursesbox}}
+            <div class="rui-sidebar-mycourses">
+                <button id="myCoursesBtn"
+                    class="rui-sidebar-abtn rui-sidebar-nav-item-link"
+                    type="button"
+                    role="button"
+                    data-preference="mycourses-on"
+                    data-toggle="collapse"
+                    data-target="#myCoursesBox"
+                    aria-expanded="false"
+                    aria-controls="myCoursesBox">
+                    <span class="rui-sidebar-nav-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10.75 7.75C10.75 6.64543 11.6454 5.75 12.75 5.75H17.25C18.3546 5.75 19.25 6.64543 19.25 7.75V16.25C19.25 17.3546 18.3546 18.25 17.25 18.25H12.75C11.6454 18.25 10.75 17.3546 10.75 16.25V7.75Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M10.25 8.5C10.6642 8.5 11 8.16421 11 7.75C11 7.33579 10.6642 7 10.25 7V8.5ZM10.25 18C10.6642 18 11 17.6642 11 17.25C11 16.8358 10.6642 16.5 10.25 16.5V18ZM9.75 8.5H10.25V7H9.75V8.5ZM10.25 16.5H9.75V18H10.25V16.5ZM8.5 15.25V9.75H7V15.25H8.5ZM9.75 16.5C9.05964 16.5 8.5 15.9404 8.5 15.25H7C7 16.7688 8.23122 18 9.75 18V16.5ZM9.75 7C8.23122 7 7 8.23122 7 9.75H8.5C8.5 9.05964 9.05964 8.5 9.75 8.5V7Z" fill="currentColor"></path>
+                            <path d="M7.25 9.5C7.66421 9.5 8 9.16421 8 8.75C8 8.33579 7.66421 8 7.25 8V9.5ZM7.25 17C7.66421 17 8 16.6642 8 16.25C8 15.8358 7.66421 15.5 7.25 15.5V17ZM6.75 9.5H7.25V8H6.75V9.5ZM7.25 15.5H6.75V17H7.25V15.5ZM5.5 14.25V10.75H4V14.25H5.5ZM6.75 15.5C6.05964 15.5 5.5 14.9404 5.5 14.25H4C4 15.7688 5.23122 17 6.75 17V15.5ZM6.75 8C5.23122 8 4 9.23122 4 10.75H5.5C5.5 10.0596 6.05964 9.5 6.75 9.5V8Z" fill="currentColor"></path>
+                        </svg>
+                    </span>
+                    <span class="rui-sidebar-nav-text">{{{ output.space_mycourses_heading_text }}}</span>
+                </button>
+                <div class="collapse {{#mycourseson}}show{{/mycourseson}}" id="myCoursesBox">
+
+                    <div class="form-inline simplesearchform">
+                        <div class="search-input-group d-inline-flex justify-content-between w-100 mt-1" role="search">
+                            <span class="search-input-icon">
+                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.25 19.25L15.5 15.5M4.75 11C4.75 7.54822 7.54822 4.75 11 4.75C14.4518 4.75 17.25 7.54822 17.25 11C17.25 14.4518 14.4518 17.25 11 17.25C7.54822 17.25 4.75 14.4518 4.75 11Z"></path>
+                                </svg>
+                            </span>
+                            <input type="text" id="myCoursesListSearch" onkeyup="myCoursesList()" class="search-input w-100" placeholder="{{#str}}search, core{{/str}}" aria-label="{{#str}}search, core{{/str}}" />
+                        </div>
+                    </div>
+
+                    <div class="rui-sidebar-filter">
+                        {{#output.displayfilterhidden}}
+                        <div class="mycourses-filter mycourses-hidden-filter-checkbox-container">
+                            <div class="custom-control custom-control--xs custom-switch my-2 mx-1 d-flex justify-content-between">
+                                <input id="myCoursesHidden"
+                                    data-preference="mycourses-hidden-on"
+                                    type="checkbox"
+                                    name="navdrawer_hidden_checkbox"
+                                    onchange="myCoursesList()"
+                                    class="custom-control-input custom-control-input--xs mycourses-hidden-filter-checkbox"
+                                    value="1" {{#mycourseshiddenon}}checked=""{{/mycourseshiddenon}}>
+                                <label class="custom-control-label" for="myCoursesHidden">
+                                    {{{stringshowhidden}}}
+                                </label>
+                            </div>
+                        </div>
+                        {{/output.displayfilterhidden}}
+           
+                        <div class="mycourses-filter mycourses-inprogress-filter-checkbox-container">
+                            <div class="custom-control custom-control--xs custom-switch my-2 mx-1 d-flex justify-content-between">
+                                <input id="myCoursesInprogress"
+                                    data-preference="mycourses-inprogress-on"
+                                    type="checkbox"
+                                    name="navdrawer_inprogress_checkbox"
+                                    onchange="myCoursesList()"
+                                    class="custom-control-input custom-control-input--xs mycourses-inprogress-filter-checkbox"
+                                    value="1" {{#mycoursesinprogresson}}checked=""{{/mycoursesinprogresson}}>
+                                <label class="custom-control-label" for="myCoursesInprogress">
+                                    {{{stringshowonlyinprogress}}}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rui-course-wrapper">
+                        {{{ output.space_mycourses }}}
+                    </div>
+
+                    {{^hidedetails}}
+                    {{{ output.space_mycourses_heading }}}
+                    {{/hidedetails}}
+                    {{{ output.space_allcourseslink }}}
+                </div>
+            </div>
+        {{/showmycoursesbox}}
+
+        {{#customsfcontent}}
+            <div class="rui-custom-sidebar-content my-4">
+                {{{customsfcontent}}}
+            </div>
+        {{/customsfcontent}}
+
+        {{{ sidebarbb }}}
+
+    </div>
+</nav>

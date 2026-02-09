@@ -1,0 +1,45 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template theme_iomadmoon/progress-chart from block_myoverview in M3.5.
+
+    This template renders a doughnut chart to show course progress.
+
+    Example context (json):
+    {
+        "progress": "60"
+    }
+}}
+<div class="course-progressbar-wrapper">
+    <div class="row no-gutters align-items-center">
+        <div class="progressbar-container col">
+            <span id="{{id}}_status"></span>
+            <div class="rui-progress rui-progress--value-{{progress}}">
+                <div id="{{id}}_bar" class="rui-progress-bar" role="progressbar" aria-valuenow="{{progress}}" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;" title="{{progress}}%" data-toggle="tooltip"></div>
+            </div>
+        </div>
+
+        <div class="rui-progress-count">
+            <svg class="icon mx-1" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.75 12C4.75 7.99594 7.99594 4.75 12 4.75V4.75C16.0041 4.75 19.25 7.99594 19.25 12V12C19.25 16.0041 16.0041 19.25 12 19.25V19.25C7.99594 19.25 4.75 16.0041 4.75 12V12Z"></path>
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 12.75L10.1837 13.6744C10.5275 14.407 11.5536 14.4492 11.9564 13.7473L14.25 9.75"></path>
+            </svg>
+            <span class="rui-progress-count-completed">{{progresscountc}}</span>
+            <span class="rui-progress-count-total"> / {{progresscounttotal}}</span>
+        </div>
+    </div>
+</div>

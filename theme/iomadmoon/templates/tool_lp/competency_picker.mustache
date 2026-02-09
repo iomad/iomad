@@ -1,0 +1,108 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tool_lp/competency_picker
+
+    Show a competency tree and allow picking a competency.
+
+    Context variables required for this template:
+    * frameworks - array of competency framework
+      * id
+      * shortname
+      * idnumber
+      * selected
+
+    * framework - competency framework
+      * id
+      * name
+      * shortname
+      * idnumber
+
+    * competencies - array of nodes
+      * id - competency id
+      * name - competency idnumber
+      * children - array of children
+      * haschildren - boolean
+
+    Example context (json):
+    {
+        "frameworks": [
+            {
+                "id": "1",
+                "shortname": "Framework",
+                "idnumber": "F1"
+            }
+        ],
+        "competencies": [
+        ]
+    }
+}}
+<div data-region="competencylinktree">
+{{^singleFramework}}
+<h5 class="mb-2">{{#str}}competencyframeworks, tool_lp{{/str}}</h5>
+<select data-action="chooseframework" class="custom-select mb-3">
+{{#frameworks}}
+<option value="{{id}}" {{#selected}}selected="selected"{{/selected}}>{{{shortname}}} <em>{{idnumber}}</em></option>
+{{/frameworks}}
+</select>
+{{/singleFramework}}
+<h5 class="mb-2">{{#str}}locatecompetency, tool_lp{{/str}}</h5>
+
+<div class="simplesearchform">
+    <form data-region="filtercompetencies" class="form-inline" data-frameworkid="{{framework.id}}">
+        <div class="search-input-group d-inline-flex justify-content-between w-100">
+            <label class="accesshide" for="filter{{uniqid}}">{{#str}}search, tool_lp{{/str}}</label>
+            <span class="search-input-icon">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.25 19.25L15.5 15.5M4.75 11C4.75 7.54822 7.54822 4.75 11 4.75C14.4518 4.75 17.25 7.54822 17.25 11C17.25 14.4518 14.4518 17.25 11 17.25C7.54822 17.25 4.75 14.4518 4.75 11Z"></path>
+                </svg>
+            </span>
+            <input type="text"
+            id="filter{{uniqid}}"
+            class="search-input w-100"
+            placeholder="{{#str}}search, tool_lp{{/str}}"
+            aria-label="{{#str}}search, tool_lp{{/str}}"
+            name="{{ inputname }}"
+            data-region="input"
+            autocomplete="off"
+            value="{{ search }}"
+            >
+            <button type="submit" class="search-input-btn">
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.75 6.75L19.25 12L13.75 17.25"></path>
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H4.75"></path>
+                </svg>
+                <span class="sr-only">{{ searchstring }}</span>
+            </button>
+        </div>
+    </form>
+</div>
+<ul data-enhance="linktree" style="display: none;" class="mt-1 mx-0 p-3 competency-tree">
+    <li><span>{{{framework.shortname}}}</span>
+        <ul class="pl-2">
+            {{#competencies}}
+                {{> tool_lp/competencies_tree }}
+            {{/competencies}}
+        </ul>
+    </li>
+</ul>
+<div data-region="link-buttons" class="row px-3">
+    <input type="button" class="col btn btn-secondary" data-action="cancel" value="{{#str}}cancel{{/str}}"/>
+    <input type="button" class="col btn btn-primary" data-action="add" value="{{#str}}add{{/str}}"/>
+</div>
+<div class="clearfix"></div>
+</div>

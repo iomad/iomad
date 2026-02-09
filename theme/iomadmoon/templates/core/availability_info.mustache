@@ -1,0 +1,79 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core/availability_info
+
+    @deprecated since Moodle 3.9 MDL-68612 - Use core_courseformat\\output\\local\\content\\section\\availability instead
+
+    Renders the availability info on the course outline page.
+
+    Availability info can be displayed for activity modules or whole course
+    sections. Activity modules can be either hidden from students, or available
+    but not shown on course page (stealth), or the access can be restricted by
+    configured conditions. Sections can be hidden.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * classes String list of CSS classes for the wrapping element
+    * text HTML formatted text with the actual availability information
+    * ishidden Boolean flag indiciating that the item is hidden from students
+    * isstealth Boolean flag indicating that the item is in stealth mode
+    * isrestricted Boolean flag indicating that restricted access conditions apply
+    * isfullinfo Boolean flag indicating that the full list of restricted
+      access conditions is displayed (aka teacher's view).
+
+    Example context (json):
+    {
+        "classes": "",
+        "text": "Not available unless: <ul><li>It is on or after <strong>8 June 2012</strong></li></ul>",
+        "ishidden": 0,
+        "isstealth": 0,
+        "isrestricted": 1,
+        "isfullinfo": 1
+    }
+}}
+{{#text}}
+<div class="rui-availabilityinfo {{classes}}">
+    {{^isrestricted}}
+    <div>
+        <svg class="mr-2" width="24" height="24" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.6247 10C19.0646 10.8986 19.25 11.6745 19.25 12C19.25 13 17.5 18.25 12 18.25C11.2686 18.25 10.6035 18.1572 10 17.9938M7 16.2686C5.36209 14.6693 4.75 12.5914 4.75 12C4.75 11 6.5 5.75 12 5.75C13.7947 5.75 15.1901 6.30902 16.2558 7.09698"></path>
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.25 4.75L4.75 19.25"></path>
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.409 13.591C9.53033 12.7123 9.53033 11.2877 10.409 10.409C11.2877 9.5303 12.7123 9.5303 13.591 10.409"></path>
+        </svg>
+        <span>{{{text}}}</span>
+    </div>
+    {{/isrestricted}}
+    {{#isrestricted}}
+    <span class="d-inline-flex align-items-start w-100">
+        <span title="{{#str}}restricted, core{{/str}}">
+            <svg class="mr-2" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.9522 16.3536L10.2152 5.85658C10.9531 4.38481 13.0539 4.3852 13.7913 5.85723L19.0495 16.3543C19.7156 17.6841 18.7487 19.25 17.2613 19.25H6.74007C5.25234 19.25 4.2854 17.6835 4.9522 16.3536Z"></path>
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10V12"></path>
+                <circle cx="12" cy="16" r="1" fill="currentColor"></circle>
+            </svg>
+        </span>
+        <span class="rui-availabilityinfo-text">{{{text}}}</span>
+    </span>
+    {{/isrestricted}}
+</div>
+{{/text}}

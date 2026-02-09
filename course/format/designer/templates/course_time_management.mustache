@@ -1,0 +1,177 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template format_designer/cm_completion
+
+    Displays the course module card layout
+
+    Example context (json):
+    {
+        "enrolmentstartdate": "1640983783",
+        "userdate": "true"
+    }
+}}
+<div class="course-info-block">
+    {{#enrolmentstartdate}}
+    <div class="course-start-date">
+        <h6><i class="fa fa-calendar"></i> {{#str}} coursestartdate, format_designer {{/str}}</h6>
+        <h3>{{#userdate}} {{enrolmentstartdate}}, {{#str}} strftimedate {{/str}} {{/userdate}}</h3>
+    </div>
+    {{/enrolmentstartdate}}
+
+    {{#courseduedate}}
+    <div class="course-due-date">
+        <h6><i class="fa fa-clock-o"></i> {{#str}} courseduedate, format_designer {{/str}}</h6>
+        <h3>{{#userdate}} {{courseduedate}}, {{#str}} strftimedate {{/str}} {{/userdate}}</h3>
+    </div>
+    {{/courseduedate}}
+
+    {{#showcompletiondate}}
+    <div class="course-completion-date">
+        <h6><i class="fa fa-flag-checkered"></i> {{#str}} coursecompletiondate, format_designer {{/str}}</h6>
+        {{#completiondate}}
+        <h3> {{#userdate}} {{completiondate}}, {{#str}} strftimedate {{/str}} {{/userdate}}</h3>
+        {{/completiondate}}
+        {{^completiondate}}
+        <h3> -/-</h3>
+        {{/completiondate}}
+    </div>
+    {{/showcompletiondate}}
+
+    {{#enrolmentenddate}}
+    <div class="course-expire-date">
+        <h6><i class="fa fa-sign-out"></i> {{#str}} courseexpirationdate, format_designer {{/str}} </h6>
+        {{#enrolmentenddate}}
+        <h3>{{#userdate}} {{enrolmentenddate}}, {{#str}} strftimedate {{/str}} {{/userdate}}</h3>
+        {{/enrolmentenddate}}
+        {{^enrolmentenddate}}
+        <h3>-/-</h3>
+        {{/enrolmentenddate}}
+    </div>
+    {{/enrolmentenddate}}
+
+    {{#statuscoursestaffinfo}}
+        <div id="courseStaffinfoControls" class="carousel slide" data-ride="carousel">
+            <div class="carousel-inner">
+                {{#coursestaffinfo}}
+                <div class="carousel-item {{#active}}active{{/active}}">
+                    <div class="contact-element">
+                        <div class="contact-block">
+                            <!--Contact User img block-->
+                            <a href="{{{profileurl}}}">
+                                <div class="img-block">
+                                    <div class="overlay-block"></div> <!--Contact User border split-->
+                                    <img src="{{{profileimageurl}}}" alt="{{{fullname}}}" title="{{{fullname}}}" role="presentation"> <!--Contact User img-->
+                                </div>
+                            </a>
+
+                            <div class="content-block">
+                                <!--Contact User name-->
+                                <div class="title-block">
+                                    <a href="{{{profileurl}}}"> <h4>{{{fullname}}}<h4> </a>
+                                    <span>
+                                        <i class="icon fa fa-envelope fa-fw iconsmall" title="{{#str}}mail, format_designer{{/str}} " aria-label="mail"></i>
+                                        <span class="user-email"> {{email}}</span>
+                                    </span>
+                                    <span class="user-role">{{role}}</span>
+                                    {{#customfield}}
+                                        <span class="profile-field"> {{{value}}} </span>
+                                    {{/customfield}}
+                                </div>
+                                {{#ismessaging}}
+                                <div class="info-block">
+                                    <div class="btn-group header-button-group">
+                                        <a id="message-user-button" role="button" data-conversationid="0" data-userid="{{userid}}" class="btn"
+                                            href="{{{contacturl}}}">
+                                            <span>
+                                                <i class="icon fa fa-comment fa-fw iconsmall" title="Message" aria-label="Message"></i>
+                                                <span class="header-button-title">{{#str}} message, format_designer {{/str}}</span>
+                                            </span>
+                                        </a>
+                                        <span class="sr-only sr-only-focusable" data-region="jumpto" tabindex="-1"></span>
+                                        {{#showaddtocontacts}}
+                                        <a data-currentuserid="{{currentuser}}" data-userid="{{userid}}" data-is-contact="{{iscontact}}" role="button" class="ajax-contact-button btn toggle-contact-button" href="#">
+                                            <span>
+                                                <i class="icon fa fa-address-card fa-fw iconsmall" title="{{contacttitle}}" aria-label="Add to contacts"></i>
+                                                <span class="header-button-title">{{contacttitle}}</span>
+                                            </span>
+                                            <span class="loading-icon icon-no-margin">
+                                                <i class="icon fa fa-circle-o-notch fa-spin fa-fw " title="Loading" aria-label="Loading"></i>
+                                            </span>
+                                        </a>
+                                        {{/showaddtocontacts}}
+                                    </div>
+                                </div>
+                                {{/ismessaging}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {{/coursestaffinfo}}
+            </div>
+            {{#slidearrow}}
+            <a class="carousel-control carousel-control-prev" href="#courseStaffinfoControls" role="button" data-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="sr-only">Previous</span>
+            </a>
+            <a class="carousel-control carousel-control-next" href="#courseStaffinfoControls" role="button" data-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="sr-only">Next</span>
+            </a>
+            {{/slidearrow}}
+        </div>
+    {{/statuscoursestaffinfo}}
+    <div class="clearfix"></div>
+    {{#courseprogress}}
+    <div class="progress-block">
+
+        <div class="progress">
+            <div class="progress-bar success" role="progressbar" style="width: {{courseprogress.percent}}%" aria-valuenow="{{courseprogress.percent}}"
+                aria-valuemin="0" aria-valuemax="100" data-toggle="popover" data-content="{{courseprogress.completioncriteriahtml}}"
+                data-animation="true" data-placement="bottom" data-html="true">
+            </div>
+            <div class="progress-bar bg-remain-block" role="progressbar" style="width: {{courseprogress.remain}}%" aria-valuenow="{{courseprogress.remain}}"
+                aria-valuemin="0" aria-valuemax="100" data-toggle="popover" data-content="{{courseprogress.uncompletioncriteriahtml}}"
+                data-animation="true" data-placement="bottom" data-html="true">
+            </div>
+        </div>
+
+        <div class="activity-completed-block">
+            <p>
+                {{#str}} criteriacompleted, format_designer, { "count": {{courseprogress.count}}, "completed": {{courseprogress.completed}} } {{/str}}
+                {{{progresshelpicon}}}
+            </p>
+        </div>
+        {{#due}}
+            {{#due.dues}}
+            <div class="activity-due-block">
+                <p>{{#str}} todaydue, format_designer, {
+                    "due": {{due.dues}}
+                } {{/str}}</p>
+            </div>
+            {{/due.dues}}
+            {{#due.overdues}}
+            <div class="activity-overdue-block">
+                <p>{{#str}} overdues, format_designer, {
+                    "overdues": {{due.overdues}}
+                } {{/str}}</p>
+            </div>
+            {{/due.overdues}}
+        {{/due}}
+    </div>
+    {{/courseprogress}}
+</div>

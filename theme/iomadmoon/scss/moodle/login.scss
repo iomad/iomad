@@ -1,0 +1,808 @@
+// Login Page Layout
+body.rui-login-layout-2,
+body.rui-login-layout-3,
+body.path-login.pagelayout-admin,
+body.path-login.pagelayout-base {
+    background-image: none;
+}
+
+#page-login-index,
+#page-login-signup,
+#page-login-forgot_password {
+    background-color: $gray-100;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    height: auto;
+
+    &.drawer-open-left {
+        width: auto;
+    }
+
+    &.rui-login-layout-1 {
+        display: block;
+    }
+
+    .main-content {
+        margin-bottom: 0;
+    }
+}
+
+.theme-dark#page-login-index,
+.theme-dark#page-login-signup,
+.theme-dark#page-login-forgot_password {
+    background-color: $dm-gray-100;
+}
+
+.rui-login-footer {
+    padding: 0 20px;
+    margin-bottom: 30px;
+
+    @include media-breakpoint-between(xs, md) {
+        margin: 0 auto 20px;
+        width: 90%;
+    }
+}
+
+.rui-login-footer-content {
+    font-size: $font-size-md;
+}
+
+.rui-login-top-btn {
+    background-color: rgba($black, .4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 5px 14px;
+    border-radius: $btn-border-radius;
+
+    font-size: $font-size-md;
+    text-align: center;
+    color: $white;
+
+    @include media-breakpoint-up(lmd) {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        text-align: right;
+
+        .rui-login-layout-5 & {
+            left: 20px;
+            right: auto;
+        }
+    }
+
+    @include media-breakpoint-between(xs, md) {
+        margin: 3px auto;
+        width: max-content;
+        max-width: 300px;
+        position: relative;
+        top: 0;
+        left: 0;
+        right: 0;
+
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+
+        text-align: center;
+    }
+
+    a,
+    .btn-link--clean {
+        font-size: $font-size-md;
+        color: $white;
+
+        &:hover {
+            color: $white;
+            opacity: .6;
+        }
+    }
+
+    h1 {
+        font-size: 14px;
+    }
+
+}
+
+.rui-login-layout {
+
+    .rui-login-layout-4 &,
+    .rui-login-layout-5 & {
+        height: 100vh;
+    }
+}
+
+.login-wrapper {
+
+    .rui-login-layout-1 &,
+    .rui-login-layout-2 &,
+    .rui-login-layout-3 & {
+        align-content: center;
+        display: grid;
+        height: 100%;
+        min-height: 100vh;
+    }
+}
+
+.rui-loginpage-intro-logo {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
+    .rui-login-logo {
+        width: 100%;
+        max-width: 260px;
+        height: 90px;
+        object-fit: contain;
+        object-position: center;
+    }
+
+    a {
+        &:hover {
+            text-decoration: none;
+        }
+    }
+
+    h1 {
+        font-size: 30px;
+        margin-bottom: 0;
+    }
+}
+
+
+.rui-login-large-container {
+    width: 700px;
+    margin: $page-padding-global auto;
+
+    input[type="text"],
+    input[type="password"] {
+        width: 100%;
+    }
+
+    @include media-breakpoint-between(sm, md) {
+        max-width: 90%;
+    }
+}
+
+.rui-login-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: $container-bg;
+
+    .theme-dark & {
+        background-color: $dm-container-bg;
+    }
+
+    @include media-breakpoint-between(xs, sm) {
+        padding: 10px;
+    }
+
+    .rui-login-layout--1 & {
+        padding: 30px;
+        border-radius: $btn-border-radius;
+
+        @include media-breakpoint-between(xs, sm) {
+            padding: 20px;
+        }
+    }
+
+    .rui-login-layout--2 &,
+    .rui-login-layout--3 & {
+        padding: 60px;
+
+        @include media-breakpoint-between(xs, sm) {
+            padding: 20px;
+        }
+    }
+
+    .rui-login-layout--3 & {
+        border-radius: $btn-border-radius 0 0 $btn-border-radius;
+    }
+
+    .rui-login-layout--3 & {
+        border-radius: 0 $btn-border-radius $btn-border-radius 0;
+    }
+
+    .rui-login-layout--4 &,
+    .rui-login-layout--5 & {
+        padding: 40px;
+
+        @include media-breakpoint-between(xs, lmd) {
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            border-radius: $btn-border-radius;
+            margin: 0 auto;
+        }
+    }
+}
+
+#page-admin-tool-mfa-auth .login-container .main-content,
+#page-login-forgot_password .login-container .main-content {
+    max-width: 500px;
+
+    padding: 60px;
+    margin: 60px auto;
+
+    background-color: $container-bg;
+    border-radius: $btn-border-radius;
+
+    @include media-breakpoint-between(xs, sm) {
+        padding: 20px;
+    }
+
+    .mform {
+
+        .col-md-3,
+        .col-md-9 {
+            padding: 0 !important;
+            margin-bottom: .35rem !important;
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
+            text-align: left !important;
+        }
+    }
+}
+
+.theme-dark#page-login-forgot_password .login-container .main-content {
+    background-color: $dm-container-bg;
+}
+
+.rui-hasinstructions-desc {
+    font-size: $font-size-xs;
+    font-weight: 400;
+}
+
+.rui-rememberusername-text,
+.rui-login-forgot-btn {
+    margin-top: 5px;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    color: $body-color-light;
+}
+
+
+// Layout
+
+.rui-login-container {
+    margin: 30px auto;
+
+    overflow: hidden;
+
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+
+    border-radius: $btn-border-radius;
+
+    .rui-login-layout-img & {
+        max-width: 1020px;
+        width: 100%;
+
+        @include media-breakpoint-up(lg) {
+            width: 100%;
+        }
+    }
+
+    .rui-login-layout--2 & {
+        flex-direction: row;
+
+        @include media-breakpoint-up(md) {
+            border-radius: $btn-border-radius-lg;
+        }
+
+        @include media-breakpoint-between(xs, sm) {
+            border-radius: $btn-border-radius;
+        }
+    }
+
+    .rui-login-layout--3 & {
+        flex-direction: row-reverse;
+
+        @include media-breakpoint-up(md) {
+            border-radius: $btn-border-radius-lg;
+        }
+
+        @include media-breakpoint-between(xs, sm) {
+            border-radius: $btn-border-radius;
+        }
+    }
+}
+
+.rui-login-bg-container {
+    width: 50%;
+    background-color: $login-bgcolor;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+
+    color: $login-bgcolor-txt;
+
+    .theme-dark & {
+        background-color: $dm-container-bg;
+        color: $dm-body-color;
+    }
+
+    .rui-login-layout--2 & {
+        border-radius: 0 $border-radius-lg $border-radius-lg 0;
+    }
+
+    .rui-login-layout--3 & {
+        border-radius: $btn-border-radius-lg 0 0 $border-radius-lg;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    p,
+    small,
+    span,
+    div {
+        color: inherit;
+    }
+
+    @include media-breakpoint-between(sm, md) {
+        width: 100%;
+    }
+}
+
+.rui-login-box {
+    .rui-login-content {
+        @include media-breakpoint-up(md) {
+            width: 340px;
+            height: 100%;
+        }
+
+        @include media-breakpoint-between(xs, sm) {
+            max-width: 280px;
+            height: 100%;
+        }
+    }
+
+    .rui-login-layout-img & {
+        width: 50%;
+
+        @include media-breakpoint-only(md) {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        @include media-breakpoint-only(sm) {
+            width: 100%;
+            margin: 0 auto;
+        }
+    }
+
+    .rui-login-layout--1 & {
+        margin: 30px auto;
+        width: 100%;
+        max-width: 400px;
+        @include thin-scrolls($scroll-bg-track);
+    }
+
+    .rui-login-layout--4 &,
+    .rui-login-layout--5 & {
+        @include media-breakpoint-up(lmd) {
+            position: absolute;
+            top: 0;
+            border-radius: 0;
+            min-height: 100vh;
+        }
+
+        @include media-breakpoint-down(md) {
+            position: relative;
+            top: 0;
+        }
+    }
+
+    .rui-login-layout--4 & {
+        left: 0;
+    }
+
+    .rui-login-layout--5 & {
+        right: 0;
+    }
+}
+
+.rui-login-additional-content {
+    position: absolute;
+    top: 90px;
+    left: 90px;
+
+    font-size: 2rem;
+    font-weight: $font-weight-bold;
+}
+
+.rui-login-wrapper {
+    width: 100%;
+    max-width: 1020px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+.rui-login-logo--sep {
+    margin-bottom: 0;
+    margin-left: 40px;
+    padding-left: 20px;
+    position: relative;
+
+    &:before {
+        content: '';
+        position: absolute;
+        left: -10px;
+        top: calc(50% - 10px);
+
+        background-color: $border-color;
+        width: 1px;
+        height: 20px;
+    }
+}
+
+.rui-signup-layout {
+    padding: 40px 40px 40px 100px;
+    height: 100vh;
+
+    display: flex;
+    justify-content: center;
+
+    @include media-breakpoint-only(md) {
+        padding: 0 30px 30px 30px;
+    }
+
+    @include media-breakpoint-between(xs, sm) {
+        padding: 0;
+    }
+}
+
+.rui-login-box {
+    .form-control {
+        width: 100%;
+    }
+
+    .col-md-3,
+    .col-md-9 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        text-align: left !important;
+    }
+
+    .col-md-3 {
+        padding: 0 !important;
+        margin-top: 5px !important;
+        margin-bottom: 5px !important;
+    }
+
+    .rui-additional-content {
+        position: sticky;
+        top: 60px;
+    }
+
+    .mform fieldset.collapsible legend a.fheader {
+        &:last-of-type {
+            margin-bottom: 0;
+        }
+    }
+}
+
+.rui-signup-additional-content {
+    height: max-content;
+
+    @include media-breakpoint-up(lg) {
+        position: sticky;
+        top: 11%;
+
+        margin: 90px 0;
+        padding-left: 80px;
+    }
+
+    @include media-breakpoint-between(xs, md) {
+        width: 90%;
+        padding-left: 0;
+        margin: 30px auto;
+        position: relative;
+    }
+}
+
+.rui-backtologin {
+    position: fixed;
+    top: 26px;
+    left: 30px;
+
+    @include media-breakpoint-between(xs, sm) {
+        position: absolute;
+        top: -34px;
+        left: 10px;
+    }
+}
+
+.btn--back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: transparent;
+    width: 40px;
+    height: 40px;
+
+    border: 1px solid $border-color;
+    border-radius: $btn-border-radius-lg;
+
+    color: $gray-900;
+
+    &:hover {
+        background-color: $gray-900;
+        border-color: $gray-900;
+        color: $gray-100;
+    }
+}
+
+.rui-badge-guest {
+    position: fixed;
+    bottom: 3px;
+    right: 3px;
+
+    padding: 6px 12px;
+
+    display: inline-flex;
+    align-items: center;
+
+    border-radius: $btn-border-radius;
+
+    background-color: $yellow-200;
+    font-size: $font-size-md;
+    font-weight: $font-weight-medium;
+    color: $body-color;
+
+    transition: right 250ms ease;
+
+    .scrolled & {
+        right: 60px;
+    }
+}
+
+.rui-login-lang-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 40px;
+
+    border: none;
+    background-color: $gray-900;
+    border-radius: $btn-border-radius-lg;
+    font-size: $font-size-xs;
+    color: $gray-100;
+
+    @include media-breakpoint-between(xs, sm) {
+        padding: 8px;
+    }
+
+    &[aria-expanded="true"],
+    &:hover {
+        color: $gray-100;
+        background-color: $gray-800;
+        text-decoration: none;
+    }
+}
+
+// Form mod
+.form-control--username,
+.form-control--password {
+    background-size: 22px;
+    background-position: left 16px top 11px;
+    background-repeat: no-repeat;
+    background-color: transparent;
+
+    padding-left: 50px;
+    position: relative;
+}
+
+.form-control--username-box:before,
+.form-control--password-box:before {
+    content: '';
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    z-index: 3;
+    top: calc(50% - 10px);
+    left: 16px;
+
+    background-size: 20px;
+ }
+
+.form-control--username-box:before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24' fill='#{url-friendly-colour($body-color-light)}'%3E%3Cg%3E%3Cg data-name='person'%3E%3Crect width='24' height='24' opacity='0'/%3E%3Cpath d='M12 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0-6a2 2 0 1 1-2 2 2 2 0 0 1 2-2z'/%3E%3Cpath d='M12 13a7 7 0 0 0-7 7 1 1 0 0 0 2 0 5 5 0 0 1 10 0 1 1 0 0 0 2 0 7 7 0 0 0-7-7z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.form-control--password-box:before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='#{url-friendly-colour($body-color-light)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M15 13.25C17.3472 13.25 19.25 11.3472 19.25 9C19.25 6.65279 17.3472 4.75 15 4.75C12.6528 4.75 10.75 6.65279 10.75 9C10.75 9.31012 10.7832 9.61248 10.8463 9.90372L4.75 16V19.25H8L8.75 18.5V16.75H10.5L11.75 15.5V13.75H13.5L14.0963 13.1537C14.3875 13.2168 14.6899 13.25 15 13.25Z'%3E%3C/path%3E%3Cpath stroke='#{url-friendly-colour($body-color-light)}' d='M16.5 8C16.5 8.27614 16.2761 8.5 16 8.5C15.7239 8.5 15.5 8.27614 15.5 8C15.5 7.72386 15.7239 7.5 16 7.5C16.2761 7.5 16.5 7.72386 16.5 8Z'%3E%3C/path%3E%3C/svg%3E%0A");
+}
+
+// Top Wrapper
+.rui-login-lang-wrapper {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: $zindex-fixed;
+
+    .rui-login-layout-5 & {
+        left: 20px;
+    }
+}
+
+@include media-breakpoint-between(xs, sm) {
+    .rui-lang-btn .rui-lang-btn-text {
+        display: none;
+    }
+}
+
+.rui-login-wrapper--margin {
+    margin-top: 25px;
+}
+
+.rui-login-logo-container {
+    .rui-login-logo {
+        max-width: 260px;
+        height: 90px;
+    }
+
+    .rui-login-layout--1 &,
+    .rui-login-layout--2 &,
+    .rui-login-layout--3 & {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+
+        max-width: 100%;
+        max-height: 200px;
+    }
+
+    .rui-login-layout--4 &,
+    .rui-login-layout--5 & {
+        @include media-breakpoint-up(lmd) {
+            width: 200px;
+            position: fixed;
+            top: 40px;
+        }
+
+        @include media-breakpoint-down(md) {
+            width: 100%;
+            position: relative;
+            text-align: center;
+        }
+    }
+
+    .rui-login-layout--4 & {
+        @include media-breakpoint-up(lmd) {
+            right: 60px;
+            text-align: right;
+        }
+    }
+
+    .rui-login-layout--5 & {
+        @include media-breakpoint-up(lmd) {
+            left: 60px;
+            text-align: left;
+        }
+    }
+}
+
+.rui-topbar {
+
+    .rui-login-layout--1 &,
+    .rui-login-layout--2 &,
+    .rui-login-layout--3 & {
+        width: 100%;
+        margin-top: 30px;
+        margin-bottom: 30px;
+    }
+}
+
+.rui-login-html-1 {
+
+    .rui-login-layout--4 &,
+    .rui-login-layout--5 & {
+        position: fixed;
+        top: 40%;
+
+        font-weight: $font-weight-bold;
+        color: $white;
+
+        @include media-breakpoint-up(lmd) {
+            font-size: 40px;
+        }
+
+        @include media-breakpoint-down(md) {
+            display: none;
+        }
+    }
+
+    .rui-login-layout--4 & {
+        right: 60px;
+    }
+
+    .rui-login-layout--5 & {
+        left: 60px;
+    }
+
+}
+
+#page-login-index {
+    .greedy {
+        @include media-breakpoint-between(sm, md) {
+            justify-content: center;
+        }
+    }
+}
+
+.rui-login-logo-name {
+    margin-bottom: 0;
+    font-size: 1.125rem;
+    font-weight: $font-weight-bold;
+    color: $body-color;
+}
+
+.btn--cookie {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+
+    .rui-multilang & {
+        bottom: 70px;
+    }
+
+    .rui-login-layout--5 & {
+        left: 20px;
+        right: auto;
+    }
+}
+
+.rui-login-layout-1 {
+
+    .login-container {
+        min-height: 100vh;
+        display: grid;
+        align-content: center;
+    }
+
+    .main-content {
+        margin-bottom: 0;
+    }
+
+}
+
+.rui-maintenance {
+
+    .rui-login-layout-4 &,
+    .rui-login-layout-5 & {
+        max-width: 400px;
+
+        position: absolute;
+        top: 0;
+        left: 30px;
+    }
+
+    h1 {
+        font-size: 16px;
+    }
+
+    .rui-maintenance-desc {
+        font-size: $font-size-sm;
+    }
+}
+
+.rui-login-box .custom-select {
+    width: 100%;
+}

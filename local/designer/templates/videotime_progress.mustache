@@ -1,0 +1,39 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_designer/videotime_progress.
+
+    Template for the form element wrapper template.
+
+    Example context (json):
+    {
+        "instance": [{
+            "show_viewed_duration": true
+        }]
+    }
+}}
+{{#instance.show_viewed_duration}}
+    <div class="progress video-progress">
+        <div class="progress-bar
+            {{#module_sessions.is_finished}}progress-bar-success{{/module_sessions.is_finished}}
+            {{^module_sessions.is_finished}}progress-bar-danger{{/module_sessions.is_finished}}" role="progressbar"
+                aria-valuenow="{{module_sessions.percent_formatted}}" aria-valuemin="0" aria-valuemax="100"
+                style="width:{{module_sessions.percent_formatted}}%">
+            <span class="sr-only">{{module_sessions.percent_formatted}}%</span>
+        </div>
+    </div>
+{{/instance.show_viewed_duration}}

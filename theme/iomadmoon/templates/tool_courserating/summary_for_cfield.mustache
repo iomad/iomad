@@ -1,0 +1,55 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tool_courserating/summary_for_cfield
+
+    This template is used to generate content for the custom course profile field that shows course rating.
+    Because the content of the custom course profile field is purified, it is not allowed to use any data-
+    attributes. The course id is included as a part of a 'class' attribute.
+
+    Example context (json):
+    {
+        "avgrating": "3.6",
+        "stars": {
+            "staricons": [
+                {"key": "star", "component": "tool_courserating", "title": ""},
+                {"key": "star", "component": "tool_courserating", "title": ""},
+                {"key": "star", "component": "tool_courserating", "title": ""},
+                {"key": "star-half", "component": "tool_courserating", "title": ""},
+                {"key": "star-o", "component": "tool_courserating", "title": ""}
+            ]
+        },
+        "courseid": "2",
+        "cntall": "15"
+    }
+
+}}
+{{#cntall}}
+<span class="tool_courserating-cfield"><a
+        class="tool_courserating-ratings tool_courserating-ratings-courseid-{{courseid}}"
+        title="{{#str}}pluginname, tool_courserating{{/str}}"
+        href="#">{{#stars}}{{> tool_courserating/stars }}{{/stars}}<span
+        class="course-average-value tool_courserating-ratingcolor ml-2">{{avgrating}}</span><span
+    class="ml-2 course-rating-cntall">({{cntall}})</span></a></span>
+{{/cntall}}
+{{#displayempty}}
+    {{^cntall}}
+        <span class="tool_courserating-cfield"><a
+                class="tool_courserating-ratings tool_courserating-ratings-courseid-{{courseid}} tool_courserating-norating"
+                href="#">{{#stars}}{{> tool_courserating/stars }}{{/stars}}</a></span>
+    {{/cntall}}
+{{/displayempty}}

@@ -1,0 +1,416 @@
+//---- Book
+//---- Module Activity
+
+.path-mod-book .navtop,
+.path-mod-book .navbottom {
+    border: 0 !important;
+
+
+    @include media-breakpoint-between(xs, md) {
+        width: 100%;
+    }
+
+    a {
+        width: auto;
+        padding: .75rem 1.25rem;
+        background-color: $gray-100;
+        border-radius: $btn-border-radius;
+
+        color: $gray-700;
+        line-height: 1.2;
+
+        &:only-of-type {
+            margin-left: 0 !important;
+        }
+
+        &:hover {
+            text-decoration: none;
+            background-color: var(--primary-color-100);
+            color: var(--main-theme-color);
+        }
+
+        .icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: auto;
+
+            font-size: $font-size-xs;
+            line-height: 1.5;
+        }
+
+        &.bookexit {
+            background-color: $red-100;
+            color: $red-800;
+
+            &:hover {
+                background-color: $red-200;
+            }
+        }
+    }
+
+    &:after {
+        display: none;
+    }
+}
+
+.path-mod-book .navtop {
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+
+    position: sticky;
+    top: 60px;
+}
+
+.path-mod-book .navbottom {
+    //TODO: Temporrary disabled
+    /*margin: 1rem 0 0;
+            width: 100%;
+            display: inline-flex;
+            justify-content: flex-end;*/
+    display: none;
+}
+
+
+.theme-dark.path-mod-book .navtop a,
+.theme-dark.path-mod-book .navbottom a {
+    filter: invert(1);
+}
+
+
+.bookprev {
+    margin-right: .5rem;
+    width: 50%;
+    text-align: left;
+}
+
+.booknext {
+    margin-left: .5rem;
+}
+
+.booknext,
+.bookexit {
+    width: 50%;
+    text-align: right;
+}
+
+
+.block_book_toc {
+    h5 {
+        display: block !important;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* toc style INDENTED*/
+
+.path-mod-book .book_toc ul {
+    margin: 0;
+}
+
+.path-mod-book .book_toc li {
+    margin: 0 0 15px;
+
+    strong {
+        background-color: transparent;
+        display: block;
+    }
+
+    a {
+        background-color: transparent;
+        font-size: 14px;
+        color: $body-color;
+        text-decoration: none;
+
+        &:hover {
+            color: $link-hover-color;
+        }
+    }
+
+    strong {
+        //active item
+        color: var(--main-theme-color);
+    }
+
+    div {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    ul li {
+        font-size: $font-size-xs;
+        margin-bottom: 2px;
+
+        a,
+        strong {
+            color: $body-color-light;
+        }
+    }
+
+}
+
+.theme-dark.path-mod-book .book_toc li {
+    a {
+        color: $dm-body-color;
+
+        &:hover {
+            color: $dm-link-hover-color;
+        }
+
+    }
+
+    strong {
+        background-color: $dm-gray-200;
+        color: $dm-body-color-light;
+    }
+}
+
+.editing {
+    .book_toc {
+        .text-truncate {
+            padding: 0px 10px 5px;
+            margin: 0 -5px;
+            width: calc(100% + 10px);
+            border-bottom: 1px solid $border-color;
+        }
+    }
+}
+
+.theme-dark .editing {
+    .book_toc {
+        .text-truncate {
+            border-color: $dm-border-color;
+        }
+    }
+}
+
+.editing.path-mod-book .book_toc li {
+    border: 1px solid $border-color;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.theme-dark.editing.path-mod-book .book_toc li {
+    border-color: $dm-border-color;
+}
+
+#page-grade-report-overview-index .main-content,
+.rui-book-wrapper,
+.modal-in-page,
+.book_content {
+    background-color: $container-bg;
+    padding: 30px !important;
+    margin: 0 !important;
+
+    position: relative;
+
+    border-width: 1px 2px 1px 2px;
+    border-style: solid solid solid dashed;
+    border-color: $gray-300 $gray-200 $gray-300 $gray-300;
+    border-radius: $btn-border-radius;
+
+    @include media-breakpoint-between(xs, sm) {
+        padding: 10px !important;
+        margin: 0 20px !important;
+    }
+
+    &:before,
+    &:after {
+        content: '';
+
+        width: 10px;
+        height: 100%;
+
+        position: absolute;
+        top: 0;
+
+        border-radius: $btn-border-radius;
+        border-style: solid;
+    }
+
+    &:before {
+        right: 4px;
+        border-color: $gray-200;
+        border-width: 0px 2px 0px 0px;
+    }
+
+    &:after {
+        right: 1px;
+        border-color: $gray-100;
+        border-width: 0px 2px 0px 0px;
+    }
+}
+
+.theme-dark#page-enrol-index .main-content,
+.theme-dark#page-grade-report-overview-index .main-content,
+.theme-dark .rui-book-wrapper,
+.theme-dark .modal-in-page,
+.theme-dark .book_content {
+    background-color: $dm-container-bg;
+    border-color: $dm-gray-300 $dm-gray-300 $dm-gray-300 $dm-gray-300;
+
+    &:before {
+        border-color: $dm-gray-300;
+    }
+
+    &:after {
+        border-color: $dm-gray-300;
+    }
+}
+
+#page-grade-report-overview-index .main-content {
+    .grade-navigation {
+        width: auto;
+    }
+}
+
+
+.book_content {
+    margin-bottom: 20px;
+
+    .rui-title-container {
+        margin-top: 0;
+    }
+
+    .rui-main-content-title--h3 {
+        font-size: 1.125rem;
+        font-weight: $font-weight-bold;
+    }
+
+    .rui-main-content-title--h4 {
+        font-size: $font-size-md;
+        font-weight: $font-weight-bold;
+    }
+}
+
+
+
+.book-tags {
+    margin-top: $page-padding-global;
+    margin-bottom: $page-padding-global;
+
+    a {
+        padding-left: 24px;
+
+        &::after {
+            content: '# ';
+            position: absolute;
+            font-size: 10px;
+            top: calc(50% - 7px);
+            left: 12px;
+        }
+    }
+
+    b {
+        display: none;
+    }
+}
+
+
+// Block
+.path-mod-book .block_book_toc {
+    border: 0 !important;
+    padding: 0;
+
+    .card-body {
+        padding: 0;
+    }
+
+    .action-list {
+        gap: 5px;
+        margin-top: 10px;
+        margin-bottom: 5px;
+        width: 100%;
+        justify-content: flex-end;
+
+        a {
+            margin: 0 !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 30px;
+            width: 30px;
+
+            background-color: $gray-100;
+            border-radius: 30px;
+            font-size: 14px !important;
+            color: $body-color;
+            text-decoration: none;
+
+            &:hover {
+                background-color: var(--primary-color-100);
+                color: var(--main-theme-color);
+            }
+        }
+
+        .icon {
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            .theme-dark & {
+                filter: invert(1);
+            }
+        }
+    }
+}
+
+.theme-dark.path-mod-book .block_book_toc .action-list a {
+    background-color: $dm-gray-100;
+    color: $dm-body-color;
+}
+
+.path-mod-book {
+    .main-content {
+        .rui-main-content-title {
+            margin-bottom: 0;
+            display: inline-flex;
+            align-content: center;
+            justify-content: space-between;
+        }
+    }
+}
+
+.path-mod-book #mod_book-chaptersnavigation {
+    top: 80px;
+    width: inherit;
+    margin: 0 -45px;
+    position: sticky;
+
+    @include media-breakpoint-between(xs, sm) {
+
+        .tertiary-navigation div {
+            width: auto;
+        }
+
+        margin: 0 -9px;
+    }
+}
+
+.path-mod-book .btn-previous,
+.path-mod-book .btn-next {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 40px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background-color: $gray-100;
+
+    box-shadow: none;
+
+    transition: $transition-base;
+
+    &:hover {
+        opacity: .7;
+    }
+}
+
+.theme-dark.path-mod-book .btn-previous,
+.theme-dark.path-mod-book .btn-next {
+    filter: invert(1);
+}

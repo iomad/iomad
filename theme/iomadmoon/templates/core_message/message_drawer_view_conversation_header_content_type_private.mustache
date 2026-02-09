@@ -1,0 +1,131 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_message/message_drawer_view_conversation_heeader_content
+
+    This template will render the header content of the conversation page in
+    the message message drawer.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * All data attributes are required
+
+    Context variables required for this template:
+    * userid The logged in user id
+    * urls The URLs for the popover
+
+    Example context (json):
+    {}
+
+}}
+
+<div class="rui-message-header-margin">
+    <div class="d-flex align-items-start">
+    {{#showrouteback}}
+        <div class="align-self-stretch" >
+            <a class="ml-3 d-flex align-items-center btn-msg mr-3" href="#" data-route-back role="button">
+            {{> core_message/message_drawer_icon_back }}
+            </a>
+        </div>
+    {{/showrouteback}}
+    <div class="d-inline-flex">
+        <a class="rui-message-header-info d-inline-flex text-decoration-none" href="#" data-action="view-contact" role="button">
+            {{#imageurl}}
+                <div class="d-block">
+                    <img
+                        class="rui-message-avatar rounded mr-3"
+                        src="{{{.}}}"
+                        alt="{{name}}"
+                        aria-hidden="true"
+                        style="height: 40px"
+                    >
+                    <span class="{{^isfavourite}}hidden{{/isfavourite}} {{#isfavourite}}d-grid{{/isfavourite}} rui-message-name-favorite" data-region="favourite-icon-container">
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4.75L13.75 10.25H19.25L14.75 13.75L16.25 19.25L12 15.75L7.75 19.25L9.25 13.75L4.75 10.25H10.25L12 4.75Z"></path>
+                        </svg>
+                    </span>
+                </div>
+            {{/imageurl}}
+            <div class="w-100">
+                <div class="d-block">
+                    <h4 class="rui-message-name mb-0 pr-2">
+                    {{name}}
+                        <span
+                            class="{{^ismuted}}hidden{{/ismuted}} ml-1 text-primary"
+                            data-region="muted-icon-container"
+                        >
+                            {{#pix}} i/muted, core, {{#str}} mutedconversation, core_message {{/str}} {{/pix}}
+                        </span>
+                    </h4>
+                </div>
+                {{#showonlinestatus}}
+                    <div class="rui-message-user-status">
+                        {{#isonline}}<span class="badge-xs badge-success">{{#str}} loggedin, core_message {{/str}}</span>{{/isonline}}
+                        {{^isonline}}<span class="badge-xs badge-danger">{{#str}} loggedoff, core_message {{/str}}</span>{{/isonline}}
+                    </div>
+                {{/showonlinestatus}}
+            </div>
+        </a>
+    </div>
+    <div class="ml-auto dropdown mr-2">
+        <button id="conversation-actions-menu-button" class="btn-msg px-0" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="{{#str}} conversationactions, core_message {{/str}}" aria-controls="conversation-actions-menu">
+            <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M13 12C13 12.5523 12.5523 13 12 13C11.4477 13 11 12.5523 11 12C11 11.4477 11.4477 11 12 11C12.5523 11 13 11.4477 13 12Z"></path>
+                <path fill="currentColor" d="M13 8C13 8.55228 12.5523 9 12 9C11.4477 9 11 8.55228 11 8C11 7.44772 11.4477 7 12 7C12.5523 7 13 7.44772 13 8Z"></path>
+                <path fill="currentColor" d="M13 16C13 16.5523 12.5523 17 12 17C11.4477 17 11 16.5523 11 16C11 15.4477 11.4477 15 12 15C12.5523 15 13 15.4477 13 16Z"></path>
+            </svg>
+        </button>
+        <div id="conversation-actions-menu" class="dropdown-menu dropdown-menu-right" role="menu"
+        aria-labelledby="conversation-actions-menu-button">
+            <a class="dropdown-item" href="#" data-action="view-contact" role="menuitem">
+                {{#str}} info, core_message {{/str}}
+            </a>
+            <a class="dropdown-item {{#isfavourite}}hidden{{/isfavourite}} {{^showfavourite}}hidden{{/showfavourite}}" href="#"
+            data-action="confirm-favourite" role="menuitem">
+                {{#str}} addtofavourites, core_message {{/str}}
+            </a>
+            <a class="dropdown-item {{^isfavourite}}hidden{{/isfavourite}} {{^showfavourite}}hidden{{/showfavourite}}" href="#"
+            data-action="confirm-unfavourite" role="menuitem">
+                {{#str}} removefromfavourites, core_message {{/str}}
+            </a>
+            <a class="dropdown-item {{#isblocked}}hidden{{/isblocked}}" href="#" data-action="request-block" role="menuitem">
+                {{#str}} blockuser, core_message {{/str}}
+            </a>
+            <a class="dropdown-item {{^isblocked}}hidden{{/isblocked}}" href="#" data-action="request-unblock" role="menuitem">
+                {{#str}} unblockuser, core_message {{/str}}
+            </a>
+            <a class="dropdown-item {{#ismuted}}hidden{{/ismuted}}" href="#" data-action="confirm-mute" role="menuitem">
+                {{#str}} muteconversation, core_message {{/str}}
+            </a>
+            <a class="dropdown-item {{^ismuted}}hidden{{/ismuted}}" href="#" data-action="confirm-unmute" role="menuitem">
+                {{#str}} unmuteconversation, core_message {{/str}}
+            </a>
+            <a class="dropdown-item" href="#" data-action="request-delete-conversation" role="menuitem">
+                {{#str}} deleteconversation, core_message {{/str}}
+            </a>
+            <a class="dropdown-item {{#iscontact}}hidden{{/iscontact}}" href="#" data-action="request-add-contact" role="menuitem">
+                {{#str}} addtoyourcontacts, core_message {{/str}}
+            </a>
+            <a class="dropdown-item {{^iscontact}}hidden{{/iscontact}}" href="#" data-action="request-remove-contact"
+            role="menuitem">
+                {{#str}} removefromyourcontacts, core_message {{/str}}
+            </a>
+        </div>
+    </div>
+</div>

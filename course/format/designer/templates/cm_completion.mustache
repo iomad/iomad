@@ -1,0 +1,144 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template format_designer/cm_completion
+
+    Displays the course module card layout
+
+    Example context (json):
+    {
+        "reactionurl_dislike": "http://moodleurl/course/format/designer/classes/output/cm_completion.php"
+    }
+}}
+<div class="completion-html-card">
+    <div class="completion-info">
+        {{#ispreview}}
+            {{! Show preview for admin or editing teacher }}
+            {{#completiontrackingmanual}}
+                <span class="badge badge-completion badge-{{colorclass}}"><i class="fa fa-check-square-o"></i> {{#str}}completiontrackingmanual, format_designer{{/str}}</span>
+            {{/completiontrackingmanual}}
+            {{#completiontrackingautomatic}}
+                <span class="badge badge-completion badge-{{colorclass}}"><i class="fa fa-check-circle"></i> {{#str}}completiontrackingautomatic, format_designer{{/str}}</span>
+            {{/completiontrackingautomatic}}
+        {{/ispreview}}
+        {{^ispreview}}
+            {{! Show completion info for users/students }}
+            {{#completiontrackingmanual}}
+            <form action="{{{completioncheckbox.url}}}" method="post">
+                {{#completioncheckbox}} {{{completioncheckbox.inputfield}}} {{/completioncheckbox}}
+                {{#completionincomplete}}
+                <button class="{{completioncheckbox.buttonclass}} btn-outline-secondary border-badge-{{colorclass}}" data-action="toggle-manual-completion" 
+                data-toggletype="manual:mark-done" data-cmid="{{cmid}}" data-activityname="{{activityname}}" data-withavailability="{{withavailability}}" {{!
+                }}{{#accessibledescription}}{{!
+                    }}title="{{.}}" {{!
+                    }}aria-label="{{.}}" {{!
+                }}{{/accessibledescription}}{{!
+                }}{{^accessibledescription}}{{!
+                    }}title="{{#str}}completion_manual:aria:markdone, format_designer, {{activityname}} {{/str}}" {{!
+                    }}aria-label="{{#str}}completion_manual:aria:markdone, format_designer, {{activityname}} {{/str}}" {{!
+                }}{{/accessibledescription}}>
+
+                    {{#duetoday}}
+                        <span><i class="fa fa-exclamation-triangle"></i> {{#str}} completion_manual:markdone:duetoday, format_designer{{/str}}</span>
+                    {{/duetoday}}
+                    {{^duetoday}}
+                        {{#isoverdue}}
+                            <span><i class="fa fa-exclamation-circle"></i> {{#str}} completion_manual:markdone:overdue, format_designer{{/str}} {{overdueby}}</span>
+                        {{/isoverdue}}
+                        {{^isoverdue}}
+                            {{#completionexpected}}
+                                <span><i class="fa fa-calendar"></i> {{#str}}  completion_manual:markdone:completeby, format_designer{{/str}} {{completionexpected}}</span>
+                            {{/completionexpected}}
+                            {{^completionexpected}}
+                                <span><i class="fa fa-circle-o"></i> {{#str}} completion_manual:markdone, format_designer {{/str}}</span>
+                            {{/completionexpected}}
+                        {{/isoverdue}}
+                    {{/duetoday}}
+                    {{#isoverridden}}
+                        (override)
+                    {{/isoverridden}}
+                </button>
+                {{/completionincomplete}}
+                {{#completioncomplete}}
+                    <button class="{{completioncheckbox.buttonclass}} btn-outline-success badge-completion badge-{{colorclass}}"
+                    data-action="toggle-manual-completion"
+                    data-toggletype="manual:undo"
+                    data-cmid="{{cmid}}"
+                    data-activityname="{{activityname}}"
+                    data-withavailability="{{withavailability}}" {{!
+                    }}{{#accessibledescription}}{{!
+                        }}title="{{.}}" {{!
+                        }}aria-label="{{.}}" {{!
+                    }}{{/accessibledescription}}{{!
+                    }}{{^accessibledescription}}{{!
+                        }}title="{{#str}}completion_manual:aria:done, format_designer, {{activityname}} {{/str}}" {{!
+                        }}aria-label="{{#str}}completion_manual:aria:done, format_designer, {{activityname}} {{/str}}" {{!
+                    }}{{/accessibledescription}}>
+                            <i class="fa fa-check" aria-hidden="true"></i>
+                            <span> {{#str}}completion_manual:done, format_designer{{/str}} {{completiondate}} </span>
+                            {{#isoverridden}}
+                                (override)
+                            {{/isoverridden}}
+                        </button>
+                {{/completioncomplete}}
+            </form>
+            {{/completiontrackingmanual}}
+
+            {{^completiontrackingmanual}}
+                {{#completionincomplete}}
+                    {{#duetoday}}
+                        <span class="badge badge-completion badge-{{colorclass}}"><span><i class="fa fa-exclamation-triangle"></i> {{#str}}duetoday, format_designer{{/str}}</span></span>
+                    {{/duetoday}}
+                    {{^duetoday}}
+                        {{#isoverdue}}
+                            <span class="badge badge-completion badge-{{colorclass}}"><span><i class="fa fa-exclamation-circle"></i> {{#str}}overdue, format_designer{{/str}} {{overdueby}}</span></span>
+                        {{/isoverdue}}
+                        {{^isoverdue}}
+                            {{#completionexpected}}
+                                <span class="badge badge-completion badge-{{colorclass}}"><span><i class="fa fa-calendar"></i> {{#str}}completeby, format_designer{{/str}} {{completionexpected}}</span></span>
+                            {{/completionexpected}}
+                            {{^completionexpected}}
+                                <span class="badge badge-completion badge-{{colorclass}}"><span><i class="fa fa-circle-o"></i> {{#str}}notyetcompleted, format_designer{{/str}}</span></span>
+                            {{/completionexpected}}
+                        {{/isoverdue}}
+                    {{/duetoday}}
+                    {{#isoverridden}}
+                        (override)
+                    {{/isoverridden}}
+                {{/completionincomplete}}
+                {{#completioncomplete}}
+                    <span class="badge badge-completion badge-{{colorclass}}"><span><i class="fa fa-check-circle"></i> {{#str}}completed, format_designer{{/str}} {{completiondate}}</span></span>
+                    {{#isoverridden}}
+                        (override)
+                    {{/isoverridden}}
+                {{/completioncomplete}}
+                {{#completionincompletepass}}
+                    <span class="badge badge-completion badge-{{colorclass}}"><span><i class="fa fa-check-circle"></i> {{#str}}passed, format_designer{{/str}} {{completiondate}}</span></span>
+                    {{#isoverridden}}
+                        (override)
+                    {{/isoverridden}}
+                {{/completionincompletepass}}
+                {{#completionincompletefail}}
+                    <span class="badge badge-completion badge-{{colorclass}}"><span><i class="fa fa-times"></i> {{#str}}failed, format_designer{{/str}} {{completiondate}}</span></span>
+                    {{#isoverridden}}
+                        (override)
+                    {{/isoverridden}}
+                {{/completionincompletefail}}
+            {{/completiontrackingmanual}}
+        {{/ispreview}}
+    </div>
+</div>

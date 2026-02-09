@@ -1,0 +1,94 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core/filemanager_selectlayout
+
+    This template renders the window appearing to select a file.
+
+    Example context (json):
+    {}
+}}
+<div class="file-picker fp-select">
+    <div class="fp-select-loading">
+            <span class="sr-only">{{#str}}loadinghelp{{/str}}</span>
+            <svg class="spinner" viewBox="0 0 50 50">
+                <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+            </svg>
+    </div>
+    <div class="fp-container">
+        <form>
+            <div class="alert alert-secondary px-4">
+                <div class="form-check fp-linktype-2 custom-control custom-radio custom-control-inline">
+                    <div class="form-check-label">
+                        <input class="form-check-input custom-control-input" type="radio">
+                        <label class="custom-control-label ml-2">{{#str}}makefileinternal, repository{{/str}}</label>
+                    </div>
+                </div>
+                <div class="form-check fp-linktype-1 custom-control custom-radio custom-control-inline">
+                    <div class="form-check-label">
+                        <input class="form-check-input custom-control-input" type="radio">
+                        <label class="custom-control-label ml-2">{{#str}}makefilelink, repository{{/str}}</label>
+                    </div>
+                </div>
+                <div class="form-check fp-linktype-4 custom-control custom-radio custom-control-inline">
+                    <div class="form-check-label">
+                        <input class="form-check-input custom-control-input" type="radio">
+                        <label class="custom-control-label ml-2">{{#str}}makefilereference, repository{{/str}}</label>
+                    </div>
+                </div>
+                <div class="form-check fp-linktype-8 custom-control custom-radio custom-control-inline">
+                    <div class="form-check-label">
+                        <input class="form-check-input custom-control-input" type="radio">
+                        <label class="custom-control-label ml-2">{{#str}}makefilecontrolledlink, repository{{/str}}</label>
+                    </div>
+                </div>
+            </div>
+            <div class="fp-saveas form-group row no-gutters">
+                <label class="form-control-label my-0 mr-md-2 col-sm-12 col-md-4">{{#str}}saveas, repository{{/str}}</label>
+                <div class="col"><input class="form-control" type="text"></div>
+            </div>
+            <div class="fp-setauthor form-group row no-gutters">
+                <label class="form-control-label my-0 mr-md-2 col-sm-12 col-md-4">{{#str}}author, repository{{/str}}</label>
+                <div class="col"><input class="form-control" type="text"></div>
+            </div>
+            <div class="fp-setlicense form-group row no-gutters">
+                {{>core/filemanager_chooselicense}}
+            </div>
+            <div class="form-group row">
+                <div class="fp-select-buttons form-group mb-0 w-100 d-inline-flex">
+                    <button class="fp-select-cancel btn-secondary btn mb-1 col-4">{{#str}}cancel{{/str}}</button>
+                    <button class="fp-select-confirm btn-primary btn ml-2 mb-1 col justify-content-bettween">{{#str}}getfile, repository{{/str}}</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <hr />
+    <div class="fp-info clearfix d-inline-flex align-items-start col-12 p-0">
+        <div class="row no-gutters w-100">
+            <div class="fp-thumbnail col"></div>
+            <div class="col fp-fileinfo">
+                <div class="fp-datemodified"><strong>{{#str}}lastmodified, repository{{/str}}</strong><br /><span class="fp-value"></span></div>
+                <div class="fp-datecreated"><strong>{{#str}}datecreated, repository{{/str}}</strong><br /><span class="fp-value"></span></div>
+                <div class="fp-size"><strong>{{#str}}size, repository{{/str}}</strong><br /><span class="fp-value"></span></div>
+                <div class="fp-license"><strong>{{#str}}license, repository{{/str}}</strong><br /><span class="fp-value"></span></div>
+                <div class="fp-author"><strong>{{#str}}author, repository{{/str}}</strong><br /><span class="fp-value"></span></div>
+                <div class="fp-dimensions"><strong>{{#str}}dimensions, repository{{/str}}</strong><br /><span class="fp-value" dir="ltr"></span></div>
+            </div>
+        </div>
+    </div>
+
+</div>

@@ -1,0 +1,54 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_courseformat/local/content/cm/availability
+
+    Displays a activity availability.
+
+    Example context (json):
+    {
+        "info": [
+            {
+                "classes": "",
+                "text": "Not available unless: <ul><li>It is on or after <strong>8 June 2012</strong></li></ul>",
+                "ishidden": 0,
+                "isstealth": 0,
+                "isrestricted": 1,
+                "isfullinfo": 1
+            }
+        ],
+        "hasmodavailability": true
+    }
+}}
+{{#hasmodavailability}}
+    {{#info}}
+        <div class="rui-availabilityinfo availabilityinfo course-description-item {{classes}}" data-region="availabilityinfo">
+        {{^isrestricted}}
+            <span class="badge badge-sm badge-warning">{{{text}}}</span>
+        {{/isrestricted}}
+        {{#isrestricted}}
+            <div class="description-inner">
+                <svg class="mr-2" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.75 11.75C5.75 11.1977 6.19772 10.75 6.75 10.75H17.25C17.8023 10.75 18.25 11.1977 18.25 11.75V17.25C18.25 18.3546 17.3546 19.25 16.25 19.25H7.75C6.64543 19.25 5.75 18.3546 5.75 17.25V11.75Z"></path>
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7.75 10.5V10.3427C7.75 8.78147 7.65607 7.04125 8.74646 5.9239C9.36829 5.2867 10.3745 4.75 12 4.75C13.6255 4.75 14.6317 5.2867 15.2535 5.9239C16.3439 7.04125 16.25 8.78147 16.25 10.3427V10.5"></path>
+                </svg>
+                <span>{{{text}}}</span>
+            </div>
+        {{/isrestricted}}
+        </div>
+    {{/info}}
+{{/hasmodavailability}}

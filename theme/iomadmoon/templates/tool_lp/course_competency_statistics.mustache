@@ -1,0 +1,84 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tool_lp/course_competency_statistics
+
+    IDs required for JS:
+    * none
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+
+    See competency/classes/external/course_competency_statistics_exporter
+
+    Example context (json):
+    {
+        "competencycount": 4,
+        "canbegradedincourse": true,
+        "canmanagecoursecompetencies": true,
+        "proficientcompetencycount": 3,
+        "proficientcompetencypercentage": 75,
+        "proficientcompetencypercentageformatted": 75.0,
+        "leastproficientcount": 1,
+        "leastproficient": [
+            { "id": 1, "shortname": "Comp 1", "idnumber": "C1" }
+        ]
+    }
+
+}}
+{{!
+    Template statistics template.
+}}
+{{#competencycount}}
+<hr class="hr-small" />
+<div data-region="coursecompetencystatistics" class="mt-4 wrapper-fw">
+    {{#canbegradedincourse}}
+        {{< tool_lp/progress_bar}}
+            {{$progresstext}}
+                {{#str}}xcompetenciesproficientoutofyincourse, tool_lp, { "x": "{{proficientcompetencycount}}", "y": "{{competencycount}}" } {{/str}}
+            {{/progresstext}}
+            {{$percentage}}{{proficientcompetencypercentage}}{{/percentage}}
+            {{$percentlabel}}{{proficientcompetencypercentageformatted}}&nbsp;%{{/percentlabel}}
+        {{/tool_lp/progress_bar}}
+    {{/canbegradedincourse}}
+    {{#canmanagecoursecompetencies}}
+    {{#leastproficientcount}}
+    <div>
+        <div>
+            <div class="badge badge-info">{{#str}}competenciesmostoftennotproficientincourse, tool_lp{{/str}}</div>
+        </div>
+        <nav class="my-5 pb-0 border-bottom">
+            <ul class="list-unstyled d-inline-flex">
+            {{#leastproficient}}
+                <li class="mr-4">
+                <a href="#competency-info-link-{{id}}" class="d-block my-2">
+                <div class="d-inline-flex"><h4 class="mb-0"><span class="shortname py-1 mr-2">{{{shortname}}}</span><div class="badge badge-info">{{idnumber}}</div></h4></div>
+                </a>
+                </li>
+            {{/leastproficient}}
+            </ul
+        </nav>
+    </div>
+    {{/leastproficientcount}}
+    {{/canmanagecoursecompetencies}}
+</div>
+{{/competencycount}}

@@ -1,0 +1,188 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tool_lp/manage_competencies_page
+
+    Manage competencies template.
+
+    Classes required for JS:
+
+    Data attibutes required for JS:
+    * data-action=add
+    * data-enhance=tree
+    * data-region=term
+    * data-region=selected-competency
+
+    Example context (json):
+    {
+        "framework": {
+            "description": "Framework",
+            "id": 0
+        },
+        "competencies": [],
+        "canmanage": false
+    }
+}}
+<div data-region="managecompetencies">
+    <h3 class="d-inline-flex align-items-center w-100 mb-4">
+        {{{framework.shortname}}}
+        {{#canmanage}}
+                <a class="btn btn-icon btn-secondary ml-3" href="{{pluginbaseurl}}/editcompetencyframework.php?id={{framework.id}}&pagecontextid={{pagecontextid}}&return=competencies" title="{{#str}}editcompetencyframework, tool_lp{{/str}}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-settings"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                </a>
+        {{/canmanage}}
+    </h2>
+
+    <div class="rui-framework-desc">{{{framework.description}}}</div>
+
+    <h5>{{#str}}competencies, core_competency{{/str}}</h5>
+    <div class="row-fluid row">
+        <div class="col-lg-6">
+        <div class="simplesearchform">
+            <form data-region="filtercompetencies" data-planid="{{plan.id}}" class="form-inline">
+                <div class="search-input-group d-inline-flex justify-content-between w-100">
+                    <label class="accesshide" for="filter{{uniqid}}">{{#str}}search, tool_lp{{/str}}</label>
+                    <span class="search-input-icon">
+                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.25 19.25L15.5 15.5M4.75 11C4.75 7.54822 7.54822 4.75 11 4.75C14.4518 4.75 17.25 7.54822 17.25 11C17.25 14.4518 14.4518 17.25 11 17.25C7.54822 17.25 4.75 14.4518 4.75 11Z"></path>
+                        </svg>
+                    </span>
+                    <input type="text"
+                    id="filter{{uniqid}}"
+                    class="search-input w-100"
+                    placeholder="{{#str}}search, tool_lp{{/str}}"
+                    aria-label="{{#str}}search, tool_lp{{/str}}"
+                    name="{{ inputname }}"
+                    data-region="input"
+                    autocomplete="off"
+                    value="{{ search }}"
+                    >
+                    <button type="submit" class="search-input-btn">
+                        <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.75 6.75L19.25 12L13.75 17.25"></path>
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H4.75"></path>
+                        </svg>
+                        <span class="sr-only">{{ searchstring }}</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+            <ul data-enhance="tree" class="competency-tree mt-2 mx-0 p-3">
+                {{> tool_lp/loading }}
+            </ul>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card p-2 p-md-3 border-radius">
+                <div class="card-title">
+                    <h5 data-region="selected-competency" class="border-bottom pt-2 pb-2 mb-0 float-left">{{#str}}selectedcompetency, tool_lp{{/str}}</h5>
+                        <span data-region="competencyactionsmenu" class="float-right">
+                            <ul title="{{#str}}edit{{/str}}" class="competencyactionsmenu mb-0 px-0">
+                                <li>
+                                    <a href="#" class="btn btn-icon btn-secondary" title="{{#str}}edit{{/str}}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-settings"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                    </a>
+                                    <ul class="dropdown dropdown-menu">
+                                    {{#canmanage}}
+                                    <li class="dropdown-item">
+                                        <a href="#" data-action="edit">
+                                           {{#pix}}t/edit, core,{{/pix}} {{#str}}edit{{/str}}
+                                        </a>
+                                    </li>
+                                    <li class="dropdown-item">
+                                        <a href="#" data-action="move">
+                                            {{#pix}}t/move, core,{{/pix}} {{#str}}movetonewparent, tool_lp{{/str}}
+                                        </a>
+                                    </li>
+                                    <li class="dropdown-item">
+                                        <a href="#" data-action="delete">
+                                            {{#pix}}t/delete, core,{{/pix}} {{#str}}delete{{/str}}
+                                        </a>
+                                    </li>
+                                    <li class="dropdown-item">
+                                        <a href="#" data-action="moveup">
+                                            {{#pix}}t/up, core,{{/pix}} {{#str}}moveup{{/str}}
+                                        </a>
+                                    </li>
+                                    <li class="dropdown-item">
+                                        <a href="#" data-action="movedown">
+                                            {{#pix}}t/down, core,{{/pix}} {{#str}}movedown{{/str}}
+                                        </a>
+                                    </li>
+                                    {{/canmanage}}
+                                    <li class="dropdown-item">
+                                        <a href="#" data-action="linkedcourses">
+                                            {{#pix}}t/viewdetails, core,{{/pix}} {{#str}}linkedcourses, tool_lp{{/str}}
+                                        </a>
+                                    </li>
+                                    {{#canmanage}}
+                                    <li class="dropdown-item">
+                                        <a href="#" data-action="relatedcompetencies">
+                                            {{#pix}}t/add, core,{{/pix}} {{#str}}addcrossreferencedcompetency, tool_lp{{/str}}
+                                        </a>
+                                    </li>
+                                    <li class="dropdown-item">
+                                        <a href="#" data-action="competencyrules">
+                                            {{#pix}}t/edit, core,{{/pix}} {{#str}}competencyrule, tool_lp{{/str}}
+                                        </a>
+                                    </li>
+                                    {{/canmanage}}
+                                </ul>
+                            </li>
+                        </ul>
+                    </span>
+                </div>
+                <div data-region="competencyinfo">
+                    <div class="badge badge-warning">{{#str}}nocompetencyselected, tool_lp{{/str}}</div>
+                </div>
+                <div data-region="competencyactions" class="mb-0">
+                    {{#canmanage}}
+                    <button class="btn btn-primary" data-action="add">
+                        <span class="mr-2">
+                            <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.75 12C4.75 7.99594 7.99594 4.75 12 4.75V4.75C16.0041 4.75 19.25 7.99594 19.25 12V12C19.25 16.0041 16.0041 19.25 12 19.25V19.25C7.99594 19.25 4.75 16.0041 4.75 12V12Z"></path>
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8.75003V15.25"></path>
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.25 12L8.75 12"></path>
+                            </svg>
+                        </span>
+                        <span data-region="term"></span>
+                    </button>
+                    {{/canmanage}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{{#js}}
+// Initialise the JS.
+require(['tool_lp/tree', 'tool_lp/competencytree', 'tool_lp/competencyactions', 'jquery'],
+        function(ariatree, treeModel, actions, $) {
+
+    treeModel.init({{framework.id}},
+                   {{#quote}} {{{framework.shortname}}} {{/quote}},
+                   '{{search}}',
+                   '[data-enhance=tree]',
+                   {{canmanage}},
+                   {{competencyid}});
+
+    actions.init(treeModel, {{pagecontextid}}, '{{{framework.taxonomies}}}', {{{rulesmodules}}});
+
+});
+{{/js}}
+

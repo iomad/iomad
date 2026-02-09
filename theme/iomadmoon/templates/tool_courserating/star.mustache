@@ -1,0 +1,43 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tool_courserating/star
+
+    TODO. This template is not currently used because it is not compatible with a custom field format.
+
+    Example context (json):
+    {
+        "uniqueid": "abcdef",
+        "fillcolor": "rgb(0, 118, 206)",
+        "offcolor": "rgb(238, 238, 238)",
+        "rating": "50.00"
+    }
+
+}}
+<svg focusable="false" xmlns="http://www.w3.org/2000/svg" width="12px" height="12px" viewBox="0 0 25 25"
+     style="width: 12px !important; height: 12px !important;">
+    <polygon points=""
+             style="fill: url('#{{uniqueid}}') !important;"></polygon>
+    <path d="M24.8676481,9.0008973 C24.7082329,8.54565507 24.2825324,8.23189792 23.7931772,8.20897226 L16.1009423,8.20897226 L13.658963,0.793674161 C13.4850788,0.296529881 12.9965414,-0.0267985214 12.4623931,0.00174912135 L12.4623931,0.00174912135 C11.9394964,-0.00194214302 11.4747239,0.328465149 11.3146628,0.81767189 L8.87268352,8.23296999 L1.20486846,8.23296999 C0.689809989,8.22949161 0.230279943,8.55030885 0.0640800798,9.0294023 C-0.102119784,9.50849575 0.0623083246,10.0383495 0.472274662,10.3447701 L6.69932193,14.9763317 L4.25734261,22.4396253 C4.08483744,22.9295881 4.25922828,23.4727606 4.68662933,23.7767181 C5.11403038,24.0806756 5.69357086,24.0736812 6.11324689,23.7595003 L12.6333317,18.9599546 L19.1778362,23.7595003 C19.381674,23.9119158 19.6299003,23.9960316 19.8860103,23.9994776 C20.2758842,24.0048539 20.6439728,23.8232161 20.8724402,23.5127115 C21.1009077,23.202207 21.1610972,22.8017824 21.0337405,22.4396253 L18.5917612,14.9763317 L24.6967095,10.3207724 C25.0258477,9.95783882 25.0937839,9.43328063 24.8676481,9.0008973 Z"
+          style="fill: url('#{{uniqueid}}') !important;"></path>
+    <defs>
+        <linearGradient id="{{uniqueid}}" x1="{{rating}}%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color: {{fillcolor}}; stop-opacity: 1;"></stop>
+            <stop offset="1%" style="stop-color: {{offcolor}}; stop-opacity: 1;"></stop>
+        </linearGradient>
+    </defs>
+</svg>

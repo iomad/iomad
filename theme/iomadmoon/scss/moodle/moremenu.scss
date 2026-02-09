@@ -1,0 +1,109 @@
+.moremenu {
+    opacity: 0;
+    height: 40px;
+
+    &.observed {
+        opacity: 1;
+        width: auto;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+
+        &.focus,
+        &:focus {
+            position: relative;
+        }
+
+        &:before {
+            display: none;
+        }
+
+        &[data-toggle="tab"] {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            &::after {
+                content: attr(data-text) / "";
+                height: 0;
+                visibility: hidden;
+                overflow: hidden;
+                user-select: none;
+                pointer-events: none;
+                font-weight: bold;
+            }
+        }
+    }
+
+    .nav-tabs {
+        background-color: $gray-200;
+        border-radius: $btn-border-radius;
+        margin-left: 0;
+
+        width: max-content;
+        max-width: 100%;
+
+        #page-site-index & {
+            margin: 0 auto;
+        }
+
+        .theme-dark & {
+            background-color: $dm-gray-100;
+        }
+    }
+
+    // .show > .nav-link,
+    // .active > .nav-link,
+    // .nav-link.show,
+    // .nav-link.active,
+    // .nav-link:hover
+    // {
+    //     background-color: transparent;
+    // }
+
+    // Styling for dropdown menus inside the MoreButton.
+    .dropdownmoremenu {
+        .nav-link {
+            padding-right: 14px;
+        }
+    }
+
+    .dropdownmoremenu>.dropdown-menu {
+        &>.dropdown-item {
+            padding: 0;
+        }
+
+        .dropdown-menu {
+            position: static;
+            padding: 0;
+            border: 0;
+
+            &.show {
+                display: block;
+            }
+
+            .dropdown-divider {
+                display: none;
+            }
+        }
+    }
+
+    .dropdown-item[aria-current="true"],
+    .dropdown-item.active {
+        background-color: transparent;
+        color: $dropdown-link-color;
+
+        &:focus-within,
+        &:hover {
+            background-color: $dropdown-link-active-bg;
+            color: $dropdown-link-active-color;
+
+            a {
+                color: $dropdown-link-active-color;
+            }
+        }
+    }
+}

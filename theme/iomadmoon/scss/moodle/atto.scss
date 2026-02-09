@@ -1,0 +1,426 @@
+.atto-fullscreen .editor_atto_wrap {
+    z-index: $zindex-fixed; // mod for full screen plugin to Atto Editor
+}
+
+.editor_atto_content {
+    padding: 1rem;
+    resize: vertical;
+    overflow: auto;
+    border: 0;
+
+    .wrapper-md,
+    .wrapper-lg,
+    .wrapper-fw,
+    .wrapper-xl {
+        max-width: 100%;
+    }
+}
+
+.editor_atto_content_wrap,
+.editor_atto+textarea {
+    width: 100%;
+    padding: 0;
+
+    .swiper,
+    .swiper-wrapper {
+        #page-admin-setting-themesettingspace & {
+            max-width: 900px;
+            overflow-x: auto;
+        }
+    }
+}
+
+.editor_atto+textarea {
+    border-radius: 0;
+    resize: vertical;
+    margin-top: -1px;
+}
+
+div.editor_atto_toolbar {
+    display: block;
+    background: $container-bg;
+    min-height: 35px;
+    border: 1px solid $input-border-color;
+    width: 100%;
+    padding: 0 0 7px 0;
+    border-radius: $btn-border-radius $btn-border-radius 0 0;
+
+    .theme-dark & {
+        background: $dm-container-bg;
+    }
+}
+
+div.editor_atto_toolbar .menuplaceholder {
+    display: inline-block;
+}
+
+div.editor_atto_toolbar button {
+    padding: 6px;
+    margin: 1px;
+    background: none;
+    border: 0;
+    margin: 0;
+    border-radius: $btn-border-radius;
+    cursor: pointer;
+
+    &:hover {
+        outline: 2px solid rgba($blue-700, .7);
+    }
+}
+
+div.editor_atto_toolbar button+button {
+    border-left: 0;
+}
+
+div.editor_atto_toolbar button[disabled] {
+    opacity: .45;
+    background: none;
+    cursor: default;
+}
+
+.editor_atto_toolbar button:hover {
+    background-image: none;
+    background-color: $gray-100;
+
+    .theme-dark & {
+        background-color: $dm-gray-100;
+    }
+}
+
+.editor_atto_toolbar button:active,
+.editor_atto_toolbar button.highlight {
+    background-color: var(--primary-color-100);
+    background-image: none;
+
+    .theme-dark & {
+        background-color: var(--primary-color-500);
+    }
+
+    .icon {
+        color: var(--main-theme-color);
+    }
+}
+
+.editor_atto_toolbar button.highlight {
+    &::before {
+        display: none;
+    }
+}
+
+/* Make firefox button sizes match other browsers */
+div.editor_atto_toolbar button::-moz-focus-inner {
+    border: 0;
+    padding: 0;
+}
+
+div.editor_atto_toolbar button .icon {
+    padding: 0;
+    margin: 2px 0;
+
+    .theme-dark & {
+        filter: invert(1);
+    }
+}
+
+div.editor_atto_toolbar div.atto_group {
+    display: inline-flex;
+    border: 1px solid $border-color;
+    border-radius: $btn-border-radius;
+    padding: 4px;
+    margin: 7px 0 0 7px;
+
+    background: transparent;
+
+    .theme-dark & {
+        border-color: $dm-border-color;
+    }
+}
+
+.editor_atto_content_wrap {
+    background-color: $container-bg;
+    color: $body-color;
+
+    .theme-dark & {
+        background-color: $dm-container-bg;
+        color: $dm-body-color;
+    }
+
+    .form-control {
+        box-shadow: none;
+    }
+}
+
+.editor_atto_content img {
+    resize: both;
+    overflow: auto;
+}
+
+.atto_hasmenu {
+    /* IE8 places the images on top of each other if that is not set. */
+    white-space: nowrap;
+}
+
+.atto_menuentry .icon {
+    width: 16px;
+    height: 16px;
+}
+
+.atto_menuentry {
+    clear: left;
+}
+
+.atto_menuentry h1,
+.atto_menuentry h2,
+.atto_menuentry p {
+    margin: 4px;
+}
+
+/*.atto_form label.sameline {
+    display: inline-block;
+    min-width: 10em;
+}*/
+
+.atto_form textarea.fullwidth,
+.atto_form input.fullwidth {
+    width: 100%;
+}
+
+.atto_form {
+    padding: 0;
+
+    .form-check {
+        display: inline-flex;
+        align-items: center;
+
+        input {
+            position: relative;
+            margin: 10px;
+        }
+    }
+}
+
+/*.atto_form label {
+    display: block;
+    margin: 0 0 5px 0;
+}*/
+
+.atto_control {
+    position: absolute;
+    right: -6px;
+    bottom: -6px;
+    display: none;
+    cursor: pointer;
+}
+
+.atto_control .icon {
+    background-color: $white;
+}
+
+div.editor_atto_content:focus .atto_control,
+div.editor_atto_content:hover .atto_control {
+    display: block;
+}
+
+.editor_atto_menu.yui3-menu-hidden {
+    display: none;
+}
+
+/* Get broken images back in firefox */
+.editor_atto_content img:-moz-broken {
+    -moz-force-broken-image-icon: 1;
+    min-width: 24px;
+    min-height: 24px;
+}
+
+/* Atto menu styling */
+.moodle-dialogue-base .editor_atto_menu .moodle-dialogue-content .moodle-dialogue-bd {
+    padding: 3px 0 0 !important;
+    z-index: 1000;
+}
+
+// Full width button on all Atto modals.
+.atto_form {
+    .mdl-align .btn {
+        width: 100%;
+    }
+}
+
+.editor_atto_menu .dropdown-menu>li>a {
+    margin: 3px 0;
+}
+
+.editor_atto_menu .open ul.dropdown-menu {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.editor_atto_wrap {
+    position: relative;
+    width: 100%;
+}
+
+/*rtl:ignore*/
+.editor_atto_wrap textarea {
+    direction: ltr;
+}
+
+.editor_atto_notification .atto_info,
+.editor_atto_notification .atto_warning {
+    margin-top: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+
+    background-color: $gray-100;
+    padding: 0.5rem;
+
+    font-size: $font-size-xs;
+
+    border-radius: $btn-border-radius;
+
+    .theme-dark & {
+        background-color: $dm-gray-100;
+    }
+
+    img {
+        margin-right: 0.25rem;
+
+        .theme-dark & {
+            filter: invert(1);
+        }
+    }
+}
+
+.editor_atto_notification .atto_info {
+    background-color: $gray-100;
+
+    .theme-dark & {
+        background-color: $dm-gray-100;
+    }
+}
+
+.editor_atto_notification .atto_warning {
+    background-color: $yellow-200;
+}
+
+.editor_atto_toolbar,
+.editor_atto_content_wrap,
+.editor_atto+textarea {
+    border-radius: 0 0 $border-radius $border-radius;
+    box-sizing: border-box;
+    border: 1px solid $border-color;
+
+    .theme-dark & {
+        border: 1px solid $dm-border-color;
+    }
+}
+
+.editor_atto_content.form-control {
+    width: 100%;
+    min-height: 200px !important;
+    border-top: 0;
+}
+
+/** Atto fields do not have form-control because that would break the layout of the editor.
+    So they need these extra styles to highlight the editor when there is a validation error. */
+.has-danger .editor_atto_content.form-control,
+.has-danger .editor_atto_content.form-control-danger {
+    @include form-validation-state('invalid', $form-feedback-invalid-color, $form-feedback-icon-invalid);
+}
+
+.open.atto_menu>.dropdown-menu {
+    display: block;
+}
+
+/* modal windos - elements */
+.atto_equation_library button {
+    margin: 3px;
+
+    min-width: 40px;
+    width: auto;
+    height: 40px;
+}
+
+.atto_image_preview {
+    width: auto !important;
+    max-height: 200px;
+}
+
+.atto_h5p_urlentrysubmit {
+    width: 100%;
+}
+
+// Atto editor modal window
+.ftoggler {
+
+    .yui3-widget-modal &,
+    .modal & {
+        h3 {
+            font-size: $font-size-sm;
+        }
+    }
+}
+
+.atto_form.atto_media>.tab-content {
+    padding: 10px;
+}
+
+.atto_image_button_text-top.img-fluid,
+.atto_image_button_middle.img-fluid,
+.atto_image_button_text-bottom.img-fluid {
+    max-width: 100%;
+    margin: 0;
+}
+
+.atto_toolbar_row {
+    display: inline;
+}
+
+.atto_form {
+    fieldset.collapsible legend a.fheader {
+        width: 30px;
+        padding: 10px !important;
+        background-position: center;
+        margin: 0 10px 0 0 !important;
+    }
+
+    fieldset {
+        margin: 5px 0;
+    }
+}
+
+
+.modal .nav-tabs {
+    width: max-content;
+    max-width: 100%;
+    margin-bottom: 10px !important;
+    background-color: $gray-100;
+    border-radius: $btn-border-radius;
+
+    .theme-dark & {
+        background-color: $dm-gray-100;
+    }
+}
+
+.modal .nav-tabs .nav-link {
+    padding: 7px 14px;
+
+    font-size: $font-size-xs;
+}
+
+.tiny_media_source {
+    margin: 10px 0;
+}
+
+.card-text {
+    p img.img-fluid {
+        border-radius: $btn-border-radius;
+    }
+}
+
+.tox-sidebar-wrap {
+    min-height: 180px!important;
+}
+
+.editor_atto_content_wrap {
+    word-break: break-word;
+}

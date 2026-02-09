@@ -1,0 +1,261 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template theme_iomadmoon/tmpl-incourse
+
+    Context variables required for this template:
+    * sitename - The name of the site
+    * output - The core renderer for the page
+    * bodyattributes - attributes for the body tag as a string of html attributes
+    * sidepreblocks - HTML for the blocks
+    * hasblocks - true if there are blocks on this page
+    * navdraweropen - true if the nav drawer should be open on page load
+    * regionmainsettingsmenu - HTML for the region main settings menu
+    * hasregionmainsettingsmenu - There is a region main settings menu on this page.
+
+    Example context (json):
+    {
+        "sitename": "Moodle",
+        "output": {
+            "doctype": "<!DOCTYPE html>",
+            "page_title": "Test page",
+            "favicon": "favicon.ico",
+            "main_content": "<h1>Headings make html validators happier</h1>"
+         },
+        "bodyattributes":"",
+        "sidepreblocks": "<h2>Blocks html goes here</h2>",
+        "hasblocks":true,
+        "navdraweropen":true,
+        "regionmainsettingsmenu": "",
+        "hasregionmainsettingsmenu": false
+    }
+}}
+{{> theme_iomadmoon/head }}
+
+<body {{{ bodyattributes }}}>
+    {{> core/local/toast/wrapper}}
+
+    <div id="page-wrapper" class="d-print-block">
+
+        {{{ output.standard_top_of_body_html }}}
+        {{^hiddensidebar}}
+            {{> theme_iomadmoon/nav-drawer }}
+        {{/hiddensidebar}}
+        {{^hidecourseindexnav}}
+        {{#courseindex}}
+            {{< theme_iomadmoon/drawer }}
+                {{$id}}space-drawers-courseindex{{/id}}
+                {{$drawerheadercontent}}
+                    {{> theme_iomadmoon/courseindexdrawercontrols}}
+                {{/drawerheadercontent}}
+                {{$drawerclasses}}drawer drawer-left drawer-course-left drawer-course-index {{#courseindexopen}}show{{/courseindexopen}}{{/drawerclasses}}
+                {{$drawercontent}}
+                    {{{ output.display_course_progress }}}
+                    {{{courseindex}}}
+                {{/drawercontent}}
+                {{$drawerpreferencename}}drawer-open-index{{/drawerpreferencename}}
+                {{$drawerstate}}show-drawer-left{{/drawerstate}}
+                {{$tooltipplacement}}right{{/tooltipplacement}}
+                {{$closebuttontext}}{{#str}}closecourseindex, core{{/str}}{{/closebuttontext}}
+            {{/ theme_iomadmoon/drawer}}
+        {{/courseindex}}
+        {{/hidecourseindexnav}}
+        {{#hasblocks}}
+            {{< theme_iomadmoon/drawer }}
+                {{$id}}space-drawers-blocks{{/id}}
+                {{$drawerclasses}}rui-right-drawer rui-blocks-column rui-blocks-area drawer drawer-right {{#blockdraweropen}} show{{/blockdraweropen}}{{/drawerclasses}}
+                {{$drawercontent}}
+                    <section class="d-print-none" aria-label="{{#str}}blocks{{/str}}">
+                        {{{ addblockbutton }}}
+                        {{{ sidepreblocks }}}
+                    </section>
+                {{/drawercontent}}
+                {{$drawerpreferencename}}drawer-open-block{{/drawerpreferencename}}
+                {{$forceopen}}{{#forceblockdraweropen}}1{{/forceblockdraweropen}}{{/forceopen}}
+                {{$drawerstate}}show-drawer-right{{/drawerstate}}
+                {{$tooltipplacement}}left{{/tooltipplacement}}
+                {{$drawercloseonresize}}1{{/drawercloseonresize}}
+                {{$closebuttontext}}{{#str}}closeblockdrawer, core{{/str}}{{/closebuttontext}}
+            {{/ theme_iomadmoon/drawer}}
+        {{/hasblocks}}
+
+        {{> theme_iomadmoon/navbar }}
+
+        <div id="page" data-region="mainpage" data-usertour="scroller" class="drawers {{#blockdraweropen}}show-hidden-drawer{{/blockdraweropen}} {{#blockdraweropen}}show-drawer-right{{/blockdraweropen}} drag-container">
+            <div id="topofscroll" class="main-inner">
+                <div id="page-content" class="page-content wrapper-page">
+
+                    <div class="drawer-toggles d-flex">
+                        {{#courseindex}}
+                            <div class="drawer-toggler drawer-left-toggle open-nav d-print-none">
+                                <button
+                                    class="btn-drawer btn-drawer--left drawertoggle"
+                                    data-toggler="drawers"
+                                    data-action="toggle"
+                                    data-target="space-drawers-courseindex"
+                                    data-toggle="tooltip"
+                                    data-placement="right"
+                                    title="{{#str}}opendrawerindex, core{{/str}}"
+                                >
+                                    <span class="sr-only">{{#str}}opendrawerindex, core{{/str}}</span>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 5.99519C2 5.44556 2.44556 5 2.99519 5H11.0048C11.5544 5 12 5.44556 12 5.99519C12 6.54482 11.5544 6.99039 11.0048 6.99039H2.99519C2.44556 6.99039 2 6.54482 2 5.99519Z" fill="currentColor" /><path d="M2 11.9998C2 11.4501 2.44556 11.0046 2.99519 11.0046H21.0048C21.5544 11.0046 22 11.4501 22 11.9998C22 12.5494 21.5544 12.9949 21.0048 12.9949H2.99519C2.44556 12.9949 2 12.5494 2 11.9998Z" fill="currentColor" /><path d="M2.99519 17.0096C2.44556 17.0096 2 17.4552 2 18.0048C2 18.5544 2.44556 19 2.99519 19H15.0048C15.5544 19 16 18.5544 16 18.0048C16 17.4552 15.5544 17.0096 15.0048 17.0096H2.99519Z" fill="currentColor" /></svg>
+                                </button>
+                            </div>
+                        {{/courseindex}}
+                        {{#hasblocks}}
+                            <div id="sidepreopen-control" class="drawer-toggler drawer-right-toggle ml-auto d-print-none">
+                                <button
+                                    class="btn border-0 icon-no-margin drawertoggle btn-close-drawer--right"
+                                    data-toggler="drawers"
+                                    data-action="toggle"
+                                    data-target="space-drawers-blocks"
+                                    data-toggle="tooltip"
+                                    data-placement="right"
+                                    title="{{#str}}opendrawerblocks, core{{/str}}"
+                                >
+                                    <span class="sr-only">{{#str}}opendrawerblocks, core{{/str}}</span>
+                                    <span class="dir-rtl-hide">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;">
+                                            <g transform="matrix(1,0,0,1,-2,0)">
+                                                <path d="M18.333,15L18.333,5C18.333,3.629 17.205,2.5 15.833,2.5L14.167,2.5C12.795,2.5 11.667,3.629 11.667,5L11.667,15C11.667,16.371 12.795,17.5 14.167,17.5L15.833,17.5C17.205,17.5 18.333,16.371 18.333,15Z" style="fill:none;fill-rule:nonzero;stroke:currentColor;stroke-width:1.67px;" />
+                                            </g>
+                                            <g transform="matrix(1,0,0,1,-2,0)">
+                                                <path d="M11.667,10L5,10M5,10L7.5,7.5M5,10L7.5,12.5" style="fill:none;fill-rule:nonzero;stroke:currentColor;stroke-width:1.25px;stroke-linecap:round;stroke-linejoin:round;" />
+                                            </g>
+                                        </svg>
+                                    </span>
+                                    <span class="dir-ltr-hide">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;">
+                                            <g transform="matrix(1,0,0,1,-2,0)">
+                                                <path d="M18.333,15L18.333,5C18.333,3.629 17.205,2.5 15.833,2.5L14.167,2.5C12.795,2.5 11.667,3.629 11.667,5L11.667,15C11.667,16.371 12.795,17.5 14.167,17.5L15.833,17.5C17.205,17.5 18.333,16.371 18.333,15Z" style="fill:none;fill-rule:nonzero;stroke:currentColor;stroke-width:1.67px;" />
+                                            </g>
+                                            <g transform="matrix(1,0,0,1,-2,0)">
+                                                <path d="M11.667,10L5,10M5,10L7.5,7.5M5,10L7.5,12.5" style="fill:none;fill-rule:nonzero;stroke:currentColor;stroke-width:1.25px;stroke-linecap:round;stroke-linejoin:round;" />
+                                            </g>
+                                        </svg>                            
+                                    </span>
+                                </button>
+                            </div>
+                        {{/hasblocks}}
+                    </div>
+                    
+                    {{{ output.breadcrumbs }}}
+                    {{{coursepageinformationbanners}}}
+
+                    {{#secondarymoremenu}}
+                        <div class="secondary-navigation d-print-none">
+                            {{> core/moremenu}}
+                        </div>
+                    {{/secondarymoremenu}}
+
+                    {{#hasctopbl}}
+                        <div class="wrapper-xxl">
+                            <section id="ctopbl" data-region="ctopbl" class="rui-blocks-area">
+                                {{{ ctopbl }}}
+                            </section>
+                        </div>
+                    {{/hasctopbl}}
+
+                    <div id="region-main-box" class="region-main-wrapper">
+                        <div class="wrapper-header">
+                            {{{ output.simple_header }}}
+                        </div>
+                        {{#hasregionmainsettingsmenu}}
+                            <div id="region-main-settings-menu" class="d-print-none">
+                                <div> {{{ regionmainsettingsmenu }}} </div>
+                            </div>
+                        {{/hasregionmainsettingsmenu}}
+                        <section id="region-main" class="{{#hassidecourseblocks}}has-sidecourseblocks wrapper-has-blocks{{/hassidecourseblocks}}" aria-label="{{#str}}content{{/str}}">
+                            <div {{#hassidecourseblocks}}class="blocks-wrapper d-inline-flex flex-wrap justify-content-between w-100" {{/hassidecourseblocks}}>
+                                <div class="{{#hassidecourseblocks}}wrapper-blocks mx-0{{/hassidecourseblocks}}">
+                                    {{#hascstopbl}}
+                                        <section id="cstopbl" data-region="stopbl" class="rui-blocks-area">
+                                            {{{ cstopbl }}}
+                                        </section>
+                                    {{/hascstopbl}}
+                                    {{#hasregionmainsettingsmenu}}
+                                        <div class="region_main_settings_menu_proxy"></div>
+                                    {{/hasregionmainsettingsmenu}}
+                                    {{{ output.course_content_header }}}
+                                    {{#headercontent}}
+                                        {{> core/activity_header }}
+                                    {{/headercontent}}
+                                    {{#overflow}}
+                                        <div class="container-fluid tertiary-navigation mt-3 px-0">
+                                            <div class="navitem">
+                                                {{> core/url_select}}
+                                            </div>
+                                        </div>
+                                    {{/overflow}}
+
+
+                                    {{#enrollmentcustomlayout}}
+                                    <div class="row no-gutters">
+                                        <div class="col pr-6 mr-5"> 
+                                        {{{ output.efull_header }}}
+                                        </div>
+                                        <div style="width: 100%; max-width: 400px;">
+                                            {{{ output.main_content }}}
+                                        </div>
+                                    </div>
+                                    {{/enrollmentcustomlayout}}
+
+                                    {{^enrollmentcustomlayout}}
+                                    {{{ output.main_content }}}
+                                    {{/enrollmentcustomlayout}}
+
+                                    {{#hascsbottombl}}
+                                        <div>
+                                            <section id="csbottombl" data-region="csbottombl" class="rui-blocks-area">
+                                                {{{ csbottombl }}}
+                                            </section>
+                                        </div>
+                                    {{/hascsbottombl}}
+
+                                </div>
+                                {{#hassidecourseblocks}}
+                                    <div class="tmpl-course-blocks">
+                                        <section id="sidecourseblocks" data-region="sidecourseblocks" class="rui-blocks-area">
+                                            {{{ sidecourseblocks }}}
+                                        </section>
+                                    </div>
+                                {{/hassidecourseblocks}}
+                            </div>
+                            {{{ output.activity_navigation }}}
+                            {{{ output.course_content_footer }}}
+                        </section>
+                    </div>
+
+                </div>
+            </div>
+            {{> theme_iomadmoon/footer }}
+        </div>
+
+        {{{ output.standard_after_main_region_html }}}
+
+    </div>
+
+</body>
+
+</html>
+{{#js}}
+    M.util.js_pending('theme_iomadmoon/loader');
+    require(['theme_iomadmoon/loader', 'theme_iomadmoon/drawer'], function(Loader, Drawer) {
+    Drawer.init();
+    M.util.js_complete('theme_iomadmoon/loader');
+    });
+{{/js}}

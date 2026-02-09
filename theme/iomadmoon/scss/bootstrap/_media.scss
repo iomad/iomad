@@ -1,0 +1,32 @@
+.media {
+  display: flex;
+  align-items: flex-start;
+}
+
+.media-body {
+  flex: 1;
+}
+
+.itemimage {
+  background-color: $white;
+  border-radius: $btn-border-radius;
+}
+
+.media-heading {
+  font-size: $font-size-md;
+}
+
+.media-details {
+  margin-top: .35rem;
+  font-size: $font-size-xs;
+  color: $body-color-secondary;
+
+  .theme-dark & {color: $dm-body-color-secondary;}
+
+  a {
+    font-weight: $font-weight-medium;
+    color: $body-color-secondary;
+
+    .theme-dark & {color: $dm-body-color-secondary;}
+  }
+}

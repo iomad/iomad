@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<libraries>
+	<library>
+        <location>amd/src/slick.js</location>
+        <name>Slick</name>
+        <version>1.8.0</version>
+        <license>Apache</license>
+        <licenseversion>1.8.0</licenseversion>
+    </library>
+    <library>
+        <location>amd/src/lc_color_picker.js</location>
+        <name>The colorpicker for modern web</name>
+        <version>2.0.0</version>
+        <license>Apache</license>
+        <licenseversion>2.0.0</licenseversion>
+    </library>
+</libraries>

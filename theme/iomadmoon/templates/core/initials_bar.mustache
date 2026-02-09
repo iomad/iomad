@@ -1,0 +1,119 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core/initials_bar
+
+    Initials bar.
+
+    Example context (json):
+    {
+        "title": "First name",
+        "class": "firstinitial",
+        "current": "A",
+        "url": "http://moodle.generic32/report/progress/index.php?course=2&sifirst",
+        "all": "All",
+        "group": [
+           {
+              "letter": [
+                 {
+                    "name": "A",
+                    "url": "http://moodle.generic32/report/progress/index.php?course=2&sifirst=A"
+                 },
+                 {
+                    "name": "B",
+                    "url": "http://moodle.generic32/report/progress/index.php?course=2&sifirst=B"
+                 },
+                 {
+                    "name": "C",
+                    "url": "http://moodle.generic32/report/progress/index.php?course=2&sifirst=C"
+                 },
+                 {
+                    "name": "D",
+                    "url": "http://moodle.generic32/report/progress/index.php?course=2&sifirst=D"
+                 }
+
+              ]
+           },
+           {
+              "letter": [
+                 {
+                    "name": "W",
+                    "url": "http://moodle.generic32/report/progress/index.php?course=2&sifirst=W",
+                    "selected": "W"
+                 },
+                 {
+                    "name": "X",
+                    "url": "http://moodle.generic32/report/progress/index.php?course=2&sifirst=X"
+                 },
+                 {
+                    "name": "Y",
+                    "url": "http://moodle.generic32/report/progress/index.php?course=2&sifirst=Y"
+                 },
+                 {
+                    "name": "Z",
+                    "url": "http://moodle.generic32/report/progress/index.php?course=2&sifirst=Z"
+                 }
+
+              ]
+           }
+         ]
+    }
+}}
+<div class="initialbar {{class}}">
+    <h5 class="initialbarlabel font-weight-bold d-block">{{title}}</h5>
+
+    <div class="initialbargroups d-flex flex-wrap justify-content-center justify-content-md-start">
+        <ul class="pagination pagination-sm my-1">
+        {{#current}}
+            <li class="initialbarall page-item">
+                <a data-initial="" class="page-link" href="{{url}}">
+                    <svg class="mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.75 19.2502H18.25C18.8023 19.2502 19.25 18.8025 19.25 18.2502V5.75C19.25 5.19772 18.8023 4.75 18.25 4.75H5.75C5.19772 4.75 4.75 5.19772 4.75 5.75V18.2502C4.75 18.8025 5.19772 19.2502 5.75 19.2502Z"></path>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.25 9.25L5.25 9.25"></path>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.25 14.75L5.25 14.75"></path>
+                    </svg>
+                    {{all}}</a>
+            </li>
+        {{/current}}
+        {{^current}}
+            <li class="initialbarall page-item active">
+                <a data-initial="" class="page-link">
+                    <svg class="mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.75 19.2502H18.25C18.8023 19.2502 19.25 18.8025 19.25 18.2502V5.75C19.25 5.19772 18.8023 4.75 18.25 4.75H5.75C5.19772 4.75 4.75 5.19772 4.75 5.75V18.2502C4.75 18.8025 5.19772 19.2502 5.75 19.2502Z"></path>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.25 9.25L5.25 9.25"></path>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.25 14.75L5.25 14.75"></path>
+                    </svg>
+                    {{all}}</a>
+                </a>
+            </li>
+        {{/current}}
+        </ul>
+        {{#group}}
+            <ul class="pagination pagination-sm my-1">
+                {{#letter}}
+                    {{#selected}}
+                        <li data-initial="{{name}}" class="page-item active {{name}}"><span class="page-link">{{name}}</span></li>
+                    {{/selected}}
+                    {{^selected}}
+                        <li data-initial="{{name}}" class="page-item {{name}}"><a class="page-link" href="{{url}}">{{name}}</a></li>
+                    {{/selected}}
+                {{/letter}}
+            </ul>
+        {{/group}}
+    </div>
+</div>
+

@@ -1,0 +1,54 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_designer/fontawesome-iconpicker-popover
+
+    Boost Union template for the list of valid fontawesome icons.
+    It is based on core/form_autocomplete_suggestions.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * options - List of icons with label and value fields.
+
+    Example context (json):
+    {
+        "options": [
+            {
+                "label": "fa-book",
+                "value": "core:book",
+                "icon": "<i class=\"icon fa fa-book fa-fw\" aria-hidden=\"true\"></i>"
+            },
+            {
+                "label": "fa-info-circle",
+                "value": "core:docs",
+                "icon": "<i class=\"icon fa fa-info-circle fa-fw\" aria-hidden=\"true\"></i>"
+            }
+        ]
+    }
+}}
+<div class="fontawesome-iconpicker-popover">
+    <ul class="fontawesome-icon-suggestions" id="fontawesome-icon-suggestions" role="listbox" aria-label="{{#str}}suggestions, form{{/str}}" aria-hidden="true" tabindex="-1">
+        {{#options}}
+            <li aria-value="{{value}}" aria-label="{{label}}">{{{icon}}}</li>
+        {{/options}}
+    </ul>
+</div>

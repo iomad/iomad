@@ -1,0 +1,26 @@
+// RTL
+.dir-rtl {
+    .icon,
+    .btn .icon,
+    .btn svg {
+        transform: scaleX(-1);
+    }
+}
+
+.dir-rtl {
+    .rui-icon {
+        transform: scaleX(-1);
+    }
+}
+
+.dir-rtl {
+    .dir-rtl-hide {
+        display: none;
+    }
+}
+
+.dir-ltr {
+    .dir-ltr-hide {
+        display: none;
+    }
+}

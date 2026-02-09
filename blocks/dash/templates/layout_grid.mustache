@@ -1,0 +1,59 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dash/layout_grid
+
+    Example context (json):
+    {
+        "sitefullname": "Moodle - 311",
+		"courseurl": "https://localhost/moodle/course/view.php?id=2"
+    }
+}}
+{{< block_dash/layout }}
+    {{$body}}
+        {{^data.rows}}
+            {{#noresult}}{{{noresult}}}{{/noresult}}
+        {{/data.rows}}
+        <div class="table-responsive{{#preferences.hidetable}} d-none{{/preferences.hidetable}}">
+            <table class="table dash-table">
+                <thead>
+                    <tr>
+                        {{#data.first_child.data}}
+                            {{#is_visible}}
+                                <th class="dash-sort" data-sort="{{get_name}}">{{get_label}}</th>
+                            {{/is_visible}}
+                        {{/data.first_child.data}}
+                        {{^data.first_child.data}}
+                            <th></th>
+                        {{/data.first_child.data}}
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#data.rows}}
+                        <tr {{#is_active}}class="table-active"{{/is_active}}>
+                            {{#data}}
+                                {{#is_visible}}
+                                    <td>{{{get_value}}}</td>
+                                {{/is_visible}}
+                            {{/data}}
+                        </tr>
+                    {{/data.rows}}
+                </tbody>
+            </table>
+        </div>
+    {{/body}}
+{{/ block_dash/layout }}

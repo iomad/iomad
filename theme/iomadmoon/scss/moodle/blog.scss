@@ -1,0 +1,128 @@
+//---- Blog UI
+.blog_entry {
+    .comment-link {
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+      text-align: left;
+
+      .icon {
+        display: none;
+      }
+    }
+
+    .audience {
+      text-align: left;
+      font-size: $font-size-xs;
+      color: $gray-700;
+
+      .theme-dark & { color: $dm-gray-700; }
+    }
+
+    .tags {
+        margin-top: 15px;
+    }
+
+    .content {
+      margin-left: 43px;
+     }
+  }
+
+
+.blog {
+  width: 100%;
+  margin: 1.5rem auto;
+  padding: 1.5rem;
+
+  border: 1px solid $border-color;
+  border-radius: $btn-border-radius;
+
+  position: relative;
+
+  .theme-dark & {
+    border: 1px solid $dm-border-color;
+  }
+
+  .blog-entry-author {
+    font-size: $font-size-xs;
+    color: $body-color-secondary;
+
+    .theme-dark & {
+      color: $dm-body-color-secondary;
+    }
+
+    .userpicture {
+      margin: 0 0 0 10px;
+    }
+
+  }
+
+  .tag_list {
+    margin-top: 0.5rem;
+  }
+
+  .blog-entry-cover {
+    overflow: hidden;
+    width: 100%;
+    margin: 1rem 0;
+
+    img {
+      width: 100%;
+    }
+  }
+
+  .blog-entry-topic {
+    a {
+      display: block;
+      margin: 1rem 0;
+      font-size: 1.5rem;
+      font-weight: $font-weight-medium;
+      color: $body-color;
+
+      .theme-dark & {
+        color: $dm-body-color;
+      }
+    }
+  }
+
+  .blog-entry-date {
+    color: $body-color-secondary;
+
+    .theme-dark & {
+      color: $dm-body-color-secondary;
+    }
+  }
+
+  .blog-entry {
+    font-size: $font-size-base;
+  }
+
+  .blog-entry-footer {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 0;
+    border-top: 1px solid $border-color;
+
+    .theme-dark & {
+      border-top: 1px solid $dm-border-color;
+    }
+  }
+
+  .comment-link {
+    margin-top: 1rem;
+  }
+
+  .attachments {
+    margin-top: 1rem;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    font-size: $font-size-sm;
+
+    a {
+      margin: 0;
+      font-size: inherit;
+    }
+  }
+
+}

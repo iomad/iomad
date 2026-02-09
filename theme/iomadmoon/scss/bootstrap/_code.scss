@@ -1,0 +1,88 @@
+// Inline code
+code {
+  padding: 0.35rem 0.45rem;
+  background-color: rgba(232 217 188 / 20%);
+  border-radius: 3px;
+  font-size: $code-font-size;
+  font-weight: $font-weight-medium;
+  color: $body-color;
+  line-height: 2;
+  word-wrap: break-word;
+
+  pre & {
+    background-color: transparent;
+    padding: 0;
+
+    .theme-dark & {
+      background-color: transparent;
+    }
+  }
+
+  .theme-dark & {
+    background-color: rgba($white, .2);
+    color: $white;
+  }
+
+  // Streamline the style when inside anchors to avoid broken underline and more
+  a > & {
+    color: inherit;
+  }
+}
+
+// User input typically entered via keyboard
+kbd {
+  padding: $kbd-padding-y $kbd-padding-x;
+  @include font-size($kbd-font-size);
+  color: $kbd-color;
+  background-color: $kbd-bg;
+  @include border-radius($border-radius-sm);
+  @include box-shadow($kbd-box-shadow);
+
+  .theme-dark & {color: $dm-kbd-color;}
+
+  kbd {
+    padding: 0;
+    @include font-size(100%);
+    font-weight: $nested-kbd-font-weight;
+    @include box-shadow(none);
+  }
+}
+
+// Blocks of code
+pre {
+  display: block;
+  @include font-size($code-font-size);
+  color: $pre-color;
+
+  .theme-dark & {
+    color: $dm-pre-color;
+  }
+
+  // Account for some code outputs that place code tags in pre tags
+  code {
+    @include font-size(inherit);
+    color: inherit;
+    word-break: normal;
+  }
+}
+
+.CodeMirror-wrap pre,
+.theme-dark .CodeMirror-wrap pre {
+  color: inherit;
+}
+
+.theme-dark div[class*='cm-'] {max-width: 100%;}
+.theme-dark .CodeMirror-gutters {background-color: $dm-gray-200}
+.theme-dark .CodeMirror {background-color: $dm-gray-100; color: $dm-body-color; }
+.theme-dark .CodeMirror-cursor {border-left: 1px solid $dm-gray-800;}
+.theme-dark .cm-s-default .cm-qualifier {color: $gray-500 !important;}
+.theme-dark .cm-s-default .cm-attribute {color: $blue-400 !important;}
+.theme-dark .cm-s-default .cm-string { color: #e07575; }
+.theme-dark .cm-s-default .cm-tag { color: #64bc56;}
+.theme-dark .cm-s-default .cm-meta { color: #8a8a8a; }
+
+// Enable scrollable blocks of code
+.pre-scrollable {
+  max-height: $pre-scrollable-max-height;
+  overflow-y: scroll;
+}

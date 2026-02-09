@@ -1,0 +1,364 @@
+// Base class
+//
+// Requires one of the contextual, color modifier classes for `color` and
+// `background-color`.
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  flex-wrap: wrap;
+  justify-content: center;
+
+  padding: $badge-padding-y $badge-padding-x;
+  
+  font-weight: $badge-font-weight;
+  vertical-align: baseline;
+  @include border-radius($badge-border-radius);
+  @include transition($badge-transition);
+
+  strong, span {
+    margin-left: 2px;
+    margin-right: 2px;
+  }
+
+  @include media-breakpoint-up(md) {
+    @include font-size($badge-font-size);
+  }
+
+  @include media-breakpoint-between(xs, sm) {
+    font-size: 11px;
+  }
+
+  .dir-rtl & {
+    border: none !important;
+  }
+
+  @at-root a#{&} {
+    @include hover-focus() {
+      text-decoration: none;
+    }
+  }
+
+  a {
+    color: inherit;
+  }
+
+  +.badge {
+    margin-left: .35rem;
+  }
+
+  // Empty badges collapse automatically
+  &:empty,
+  &:before {
+    display: none;
+  }
+
+  .bage--remove-icon {
+    font-size: 0.6875rem; //11px
+  }
+
+  img {
+    width: 14px;
+    height: 14px; 
+
+    .theme-dark & {
+      filter: invert(1);
+    }
+  }
+  
+  .icon {
+    width: 14px;
+    height: 14px;
+    line-height: 14px;
+    font-size: $badge-font-size;
+  }
+}
+
+.badge.bg-secondary {
+  background-color: $gray-200!important;
+}
+
+a.badge {
+  text-decoration: none;
+}
+
+.badge-sq {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  padding: $badge-padding-y $badge-padding-x;
+  @include font-size($badge-font-size);
+  font-weight: $badge-font-weight;
+  vertical-align: baseline;
+  border-radius: $btn-border-radius;
+
+  a {
+    font-weight: $font-weight-bold;
+    color: inherit;
+    opacity: .7;
+    margin-left: .35rem;
+  }
+}
+
+.badge-sm {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  flex-wrap: wrap;
+
+  padding: .3rem .85rem;
+  @include font-size($badge-font-size);
+  font-weight: $badge-font-weight;
+  vertical-align: baseline;
+  @include border-radius($badge-border-radius);
+  @include transition($badge-transition);
+
+  @at-root a#{&} {
+    @include hover-focus() {
+      text-decoration: none;
+    }
+  }
+
+  a {
+    color: inherit;
+  }
+
+  // Empty badges collapse automatically
+  &:empty {
+    display: none;
+  }
+
+  .bage--remove-icon {
+    font-size: 0.6875rem; //11px
+  }
+
+  .icon {
+    width: auto;
+    height: auto;
+    font-size: $badge-font-size;
+  }
+}
+
+.badge-xs {
+  padding: 3px 6px;
+  border-radius: $btn-border-radius;
+  font-size: 11px;
+  font-weight: $badge-font-weight;
+
+  .fa {
+    line-height: 20px;
+  }
+}
+
+.badge-gap {
+  gap: 5px;
+}
+
+// Quick fix for badges in buttons
+.btn .badge {
+  position: relative;
+  top: -1px;
+}
+
+// Pill badges
+//
+// Make them extra rounded with a modifier to replace v3's badges.
+
+.badge-pill {
+  padding-right: $badge-pill-padding-x;
+  padding-left: $badge-pill-padding-x;
+  @include border-radius($badge-pill-border-radius);
+}
+
+// Colors
+//
+// Contextual variations (linked badges get darker on :hover).
+
+.badge-primary {
+  background-color: var(--primary-color-100);
+  color: var(--primary-color-700);
+
+  .theme-dark & {
+    background-color: var(--main-theme-color);
+    color: var(--primary-color-100);
+  }
+}
+
+.badge-secondary {
+  background-color: var(--primary-color-100);
+  color: var(--main-theme-color);
+
+  .theme-dark & {
+    background-color: $dm-gray-100;
+    color: $dm-gray-800;
+  }
+}
+
+.badge-success {
+  background-color: $green-100;
+  color: $green-800;
+
+  .theme-dark & {
+    background-color: #0a6457;
+    color: $green-100;
+  }
+}
+
+.badge-danger {
+  background-color: $red-100;
+  color: $red-700;
+
+  .theme-dark & {
+    background-color: #B13A3A;
+    color: $red-100;
+  }
+}
+
+.badge-warning {
+  background-color: $yellow-200;
+  color: $body-color;
+
+  .theme-dark & {
+    background-color: #7E6E4E;
+    color: $yellow-100;
+  }
+}
+
+.badge-info {
+  background-color: $blue-100;
+  color: $blue-600;
+
+  .theme-dark & {
+    background-color: #525ea9;
+    color: $blue-100;
+  }
+}
+
+.badge-light {
+  background-color: $gray-100;
+  color: $gray-700;
+
+  .theme-dark & {
+    background-color: $dm-gray-400;
+    color: $dm-gray-800;
+  }
+}
+
+.badge-dark {
+  background-color: $black;
+  color: $white;
+
+  .theme-dark & {
+    background-color: $black;
+    color: $white;
+  }
+}
+
+.badge-link {
+  cursor: pointer;
+  transition: $transition-base;
+
+  &:hover {
+    text-decoration: none;
+  }
+
+  &:before {
+    display: none;
+  }
+
+  a {
+    &:hover {
+      text-decoration: none;
+      opacity: 0.8;
+    }
+  }
+}
+
+
+// Mod Quiz
+.badge {
+  h5 {
+    color: inherit;
+  }
+}
+
+// ---- URL:  /report/outline/index.php?id=10
+.loginfo {
+  margin-top: 1rem;
+
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  padding: $badge-padding-y 1.25rem;
+  @include font-size($badge-font-size);
+  font-weight: $badge-font-weight;
+  vertical-align: baseline;
+  @include border-radius($badge-border-radius);
+
+  @extend .badge-info;
+}
+
+
+#page-badges-mybadges {
+  #fgroup_id_searchgroup {
+    .col-md-3 {
+      display: none;
+    }
+  }
+}
+
+.rui-badge-box {
+  padding: 20px;
+  margin-bottom: 30px;
+  border-radius: $btn-border-radius;
+  border: 1px solid $border-color;
+
+  position: relative;
+
+  .theme-dark & {
+    border: 1px solid $dm-border-color;
+  }
+
+  &:last-child,
+  &:only-child {
+    margin-bottom: 0;
+  }
+}
+
+.rui-badge-not-available {
+  border: 1px solid $red-300;
+}
+
+@include media-breakpoint-up(md) {
+  .rui-badge-overview {
+    width: calc(100% - 220px);
+  }
+}
+
+.rui-badge-overview-actions {
+  margin: 0 -20px 20px;
+  padding: 0 20px 20px;
+  border-bottom: 1px solid $border-color;
+
+  .theme-dark & {
+    border-bottom: 1px solid $dm-border-color;
+  }
+}
+
+.badge-icon+.badge-name {
+  margin-left: .5rem;
+}
+
+a.badge {
+  transition: $transition-base;
+
+  &:hover {
+    opacity: .6;
+  }
+}
+
+.badge--label {
+  width: calc(100% - 24px);
+}

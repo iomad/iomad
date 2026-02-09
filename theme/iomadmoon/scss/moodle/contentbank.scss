@@ -1,0 +1,204 @@
+/*
+    TODO: Improve UI:
+    - RWD
+    - Table
+*/
+.content-bank-container {
+    .cb-content-wrapper {
+        padding: 0.5rem;
+        min-height: 140px;
+        max-height: 500px;
+        overflow-x: auto;
+        flex-wrap: wrap;
+    }
+    .cb-thumbnail {
+        width: 24px;
+        height: 24px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+    }
+    &.view-grid {
+        .cb-listitem {
+            margin-bottom: 0.5rem;
+        }
+
+        .cb-listitem.cb-unlisted {
+            position: relative;
+        }
+
+        @include media-breakpoint-between(xs,sm) {
+            .cb-listitem {
+                flex-basis: 50%;
+            }
+        }
+
+        @include media-breakpoint-up(sm) {
+            .cb-listitem {
+                max-width: 120px;
+                min-width: 120px;
+            }
+        }
+
+        .cb-name {
+            text-align: center;
+        }
+        .cb-file {
+            padding: 0.5rem;
+        }
+        .cb-thumbnail {
+            width: 64px;
+            height: 64px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 0.5rem;
+        }
+
+        .cb-unlisted .cb-thumbnail {
+            opacity: .15;
+        }
+
+        /* Display a centered eye slash on top of unlisted content icons. */
+        .cb-unlisted::after {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='#{url-friendly-colour($body-color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M18.6247 10C19.0646 10.8986 19.25 11.6745 19.25 12C19.25 13 17.5 18.25 12 18.25C11.2686 18.25 10.6035 18.1572 10 17.9938M7 16.2686C5.36209 14.6693 4.75 12.5914 4.75 12C4.75 11 6.5 5.75 12 5.75C13.7947 5.75 15.1901 6.30902 16.2558 7.09698'%3E%3C/path%3E%3Cpath stroke='#{url-friendly-colour($body-color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M19.25 4.75L4.75 19.25'%3E%3C/path%3E%3Cpath stroke='#{url-friendly-colour($body-color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M10.409 13.591C9.53033 12.7123 9.53033 11.2877 10.409 10.409C11.2877 9.5303 12.7123 9.5303 13.591 10.409'%3E%3C/path%3E%3C/svg%3E%0A");
+            background-repeat: no-repeat;
+            background-size: 24px;
+
+            .theme-dark & {
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='#{url-friendly-colour($dm-body-color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M18.6247 10C19.0646 10.8986 19.25 11.6745 19.25 12C19.25 13 17.5 18.25 12 18.25C11.2686 18.25 10.6035 18.1572 10 17.9938M7 16.2686C5.36209 14.6693 4.75 12.5914 4.75 12C4.75 11 6.5 5.75 12 5.75C13.7947 5.75 15.1901 6.30902 16.2558 7.09698'%3E%3C/path%3E%3Cpath stroke='#{url-friendly-colour($dm-body-color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M19.25 4.75L4.75 19.25'%3E%3C/path%3E%3Cpath stroke='#{url-friendly-colour($dm-body-color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M10.409 13.591C9.53033 12.7123 9.53033 11.2877 10.409 10.409C11.2877 9.5303 12.7123 9.5303 13.591 10.409'%3E%3C/path%3E%3C/svg%3E%0A");
+            }
+        }
+
+        .cb-heading,
+        .cb-uses,
+        .cb-date,
+        .cb-size,
+        .cb-type,
+        .cb-author {
+            display: none;
+        }
+    }
+
+    &.view-list {
+        .cb-content-wrapper {
+            padding: 0 0.5rem;
+            flex-direction: column;
+            flex-wrap: nowrap;
+        }
+
+        .cb-thumbnail {
+            margin-right: 0.5rem;
+        }
+
+        .cb-listitem,
+        .cb-heading {
+            display: flex;
+            flex-wrap: wrap;
+            width: 100%;
+            border-bottom: $border-width solid $border-color;
+
+            .theme-dark & {border-color: $dm-border-color;}
+        }
+
+        .cb-column {
+            display: flex;
+            align-items: center;
+            padding: 0.25rem;
+            border-right: $border-width solid $border-color;
+
+            .theme-dark & {border-color: $dm-border-color;}
+
+            .title {
+                font-size: 12px;
+                font-weight: $font-weight-medium;
+                color: $body-color-light;
+            }
+        }
+
+        .cb-listitem.cb-unlisted .cb-thumbnail {
+            opacity: .3;
+        }
+
+        .cb-listitem.cb-unlisted .cb-column,
+        .cb-listitem.cb-unlisted .cb-column a {
+            color: $text-muted;
+
+            .theme-dark & {color: $dm-text-muted;}
+        }
+
+        @include media-breakpoint-between(xs,sm) {
+            .cb-column {
+                flex: 0 0 50%;
+                max-width: 50%;
+            }
+        }
+
+        @include media-breakpoint-up(sm) {
+            .cb-heading {
+                position: sticky;
+                top: 0;
+                z-index: 1;
+            }
+
+            .cb-file {
+                flex: 0 0 40%;
+                max-width: 40%;
+            }
+            .cb-uses,
+            .cb-date,
+            .cb-size,
+            .cb-type,
+            .cb-author {
+                flex: 0 0 12%;
+                max-width: 12%;
+            }
+            .cb-column.last {
+                border-right: 0;
+            }
+        }
+
+        .cb-btnsort {
+            span {
+                display: none;
+            }
+            .title {
+                display: inline;
+            }
+            &.dir-none .default,
+            &.dir-asc .asc,
+            &.dir-desc .desc {
+                display: inline;
+            }
+
+            .icon {
+                width: 14px;
+                height: 14px;
+            }
+        }
+    }
+}
+
+.cb-toolbar-container .dropdown-scrollable {
+    @include thin-scrolls($dm-drawer-scroll-bg-track);
+
+    max-height: 390px;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    .icon-size-4 .icon {
+        width: 24px!important;
+        height: 24px!important;
+    }
+
+    .icon {
+        filter: invert(0)!important;
+        background: $white;
+        opacity: 1;
+        border-radius: $btn-border-radius-lg;
+    }
+}

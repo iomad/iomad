@@ -1,0 +1,335 @@
+$courseindex-item-padding-y: .5rem;
+$courseindex-item-padding-x: .75rem;
+
+$courseindex-item-padding-y-sm: .3rem;
+$courseindex-item-padding-x-sm: 7px;
+
+$courseindex-item-dragging-bg: theme-color-level('info', -11) !default;
+$courseindex-item-dragging-border: theme-color-level('info', -9) !default;
+
+// Dark mode.
+$dm-courseindex-item-dragging-bg: theme-color-level('info', -11) !default;
+$dm-courseindex-item-dragging-border: theme-color-level('info', -9) !default;
+
+@mixin courseindex-item-hover() {
+    @include hover-focus() {
+        background-color: $drawer-nav-btn-bg-hover;
+        color: $drawer-nav-btn-text-hover;
+
+        .theme-dark & {
+            background-color: $dm-drawer-link-hover-bg;
+            color: $dm-drawer-link;
+        }
+
+        span,
+        .courseindex-link,
+        .courseindex-chevron {
+            align-self: center;
+            color: $drawer-nav-btn-text-hover;
+            cursor: pointer;
+
+            .theme-dark & {
+                color: $dm-drawer-link;
+            }
+        }
+        &.dimmed {
+            opacity: .6;
+            color: $drawer-nav-btn-text-hover;
+
+            .theme-dark & {
+                color: $dm-drawer-link;
+            }
+
+            .courseindex-link,
+            .courseindex-chevron {
+                color: $drawer-nav-btn-text-hover;
+
+                .theme-dark & {
+                    color: $dm-drawer-link;
+                }
+            }
+        }
+        &.draggable {
+            cursor: pointer;
+        }
+    }
+}
+
+@mixin courseindex-item-dragging() {
+    &.dragging {
+        border: $border-width solid $courseindex-item-dragging-border;
+        background-color: $courseindex-item-dragging-bg;
+
+        .theme-dark & {
+            border: $border-width solid $dm-courseindex-item-dragging-border;
+            background-color: $dm-courseindex-item-dragging-bg;
+        }
+    }
+}
+
+.drawer-course-index {
+    @include media-breakpoint-up(lmd) {
+        z-index: $zindex-fixed + 1;
+    }
+    @include media-breakpoint-down(md) {
+        z-index: $zindex-fixed + 100;
+    }
+}
+
+.drawer-course-index .drawercontent {
+    padding: 1rem;
+}
+
+.courseindex {
+    // Both activity and section items.
+    .courseindex-item {
+        padding: $courseindex-item-padding-y-sm $courseindex-item-padding-x-sm;
+        border: $border-width solid transparent;
+        @include border-radius($border-radius);
+        position: relative;
+
+        align-items: center;
+
+        &.courseindex-section-title {
+            padding: $courseindex-item-padding-y $courseindex-item-padding-x $courseindex-item-padding-y .5rem;
+            flex-wrap: wrap;
+        }
+
+        &.courseindex-section-title a {
+            font-weight: $font-weight-medium;
+            font-size: $font-size-sm;
+            color: $drawer-nav-btn-text;
+            text-decoration: none;
+
+            .theme-dark & {
+                color: $dm-headings-color;
+            }
+        }
+
+        .icons-collapse-expand {
+            line-height: 1;
+        }
+
+        .courseindex-name,
+        .courseindex-link {
+            align-self: center;
+            color: $drawer-nav-btn-text;
+            font-size: .8rem;
+            text-decoration: none;
+            display: block;
+            width: calc(100% - 60px);
+
+            .theme-dark & {
+                color: $dm-body-color-secondary;
+            }
+        }
+
+        @include courseindex-item-hover();
+        @include courseindex-item-dragging();
+
+        &.active {
+            background-color: $drawer-nav-btn-bg-hover;
+            color: $drawer-nav-btn-text-hover;
+        }
+
+        // Hidden elements.
+        &.dimmed {
+            opacity: .6;
+
+            .courseindex-link,
+            .courseindex-chevron {
+                opacity: .6;
+            }
+        }
+
+        // Restrictions icon.
+        .courseindex-locked {
+            display: none;
+        }
+        &.restrictions {
+            .courseindex-locked {
+                display: inline-flex;
+
+                .rui-icon {
+                    background-color: $yellow-200;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 24px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+
+                .icon {
+                    padding: 4px;
+                    width: 16px;
+                    height: 16px;
+                }
+            }
+        }
+
+        // Current page item.
+        &.pageitem {
+            &:before {
+                content: '';
+                position: absolute;
+                top: -2px;
+                left: -2px;
+                right: -2px;
+                bottom: -2px;
+                z-index: -1;
+                background-color: transparent;
+            }
+
+            background-color: $drawer-nav-btn-bg-hover;
+            scroll-margin: 80px;
+
+            .theme-dark & {
+                background-color: $dm-dropdown-link-hover-bg;
+                color: $dm-dropdown-link-hover-color;         
+            }
+
+            a {
+                align-self: center;
+                color: $drawer-nav-btn-text-hover;
+                
+                .theme-dark & {
+                    color: $dm-dropdown-link-hover-color;       
+                }
+            }
+
+            @include hover-focus() {
+                background-color: rgba($drawer-nav-btn-bg-hover, .7);
+                color: $drawer-nav-btn-text-hover;
+
+                .courseindex-link,
+                .courseindex-chevron {
+                    color: $drawer-nav-btn-text-hover;
+                }
+            }
+        }
+
+        // Completion.
+        .completioninfo {
+            line-height: 1;
+            margin-right: 6px;
+            min-width: 20px;
+
+            &.completion_complete {
+                color: #00665f;
+
+                .theme-dark & {
+                    color: var(--primary-color-200);
+                }
+            }
+
+            &.completion_fail {
+                color: $danger;
+            }
+        }
+
+        .completion_complete ~ .courseindex-link {
+            color: #00665f;
+
+            .theme-dark & {
+                color: var(--primary-color-200);
+            }
+        }
+
+        &.indented {
+            padding: 4px 2px!important;
+            margin-left: 32px;
+
+            .courseindex-link {
+                font-size: 12px;
+                opacity: .8;
+            }
+        }
+    }
+
+    // The full section collapsable.
+    .courseindex-section {
+        background-color: $drawer-nav-container;
+        border-radius: $btn-border-radius;
+        margin-bottom: 5px;
+
+        .theme-dark & {
+            background-color: $dm-drawer-bg;
+        }
+
+        @include courseindex-item-dragging();
+
+        .current-badge {
+            line-height: $line-height-base;
+            display: none;
+            opacity: .6;
+            position: relative;
+            margin-top: 5px;
+            margin-left: 24px;
+        }
+
+        &.current {
+            color: $drawer-nav-btn-text-hover;
+            background-color: $drawer-nav-btn-bg-hover;
+
+            .theme-dark & {
+                color: $drawer-nav-btn-text-hover;
+                background-color: $dm-gray-200;      
+            }
+
+            .current-badge {
+                display: inline-block;
+            }
+        }
+
+        &.dropready .courseindex-item-content {
+            /* Extra dropzone space */
+            padding-bottom: 1em;
+        }
+
+        .courseindex-sectioncontent {
+            .courseindex-item {
+                padding-left: $courseindex-item-padding-x-sm;
+            }
+        }
+    }
+
+    .courseindex-sectioncontent {
+        padding: 3px;
+    }
+
+    // Element visible only on editing mode.
+    .d-flex-noedit {
+        display: none;
+    }
+    &.editing {
+        .d-flex-noedit {
+            display: flex;
+        }
+    }
+
+    // Placeholders.
+    .media-list {
+        .placeholder-circle {
+            height: 20px;
+            width: 20px;
+            border-radius: $btn-border-radius;
+        }
+
+        .placeholder-rec {
+            width: 50%;
+            height: 20px;
+            border-radius: $btn-border-radius;
+            margin: 0.5rem 0;
+        }
+    }
+}
+
+@include media-breakpoint-up(lmd) {
+.btn-drawer--left {
+    .drawer-open-index--open &,
+    .drawer-courseindex--open & {
+        display: none;
+    }
+}
+}

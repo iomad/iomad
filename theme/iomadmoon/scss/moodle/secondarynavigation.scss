@@ -1,0 +1,61 @@
+.secondary-navigation {
+    max-width: 100%;
+    width: max-content;
+    margin: 0 0 30px;
+
+    @include media-breakpoint-down(md) {
+        width: 100%;
+    }
+    
+    #page-site-index & {
+        margin: 30px auto;
+    }
+
+    #page-admin-search & {
+        display: none;
+    }
+
+    @include media-breakpoint-up(lmd) {
+        position: sticky;
+        top: 10px;
+        z-index: $zindex-fixed;
+
+        #page-grade-report-grader-index & {
+            position: relative;
+        }
+
+        #page-site-index & {
+            top: 24px;
+        }
+    }
+
+    .navigation {
+        .nav-tabs {
+            .nav-link {
+                font-size: $font-size-sm;
+                border-radius: $btn-border-radius;
+
+                &.active {
+                    background-color: var(--primary-color-100);
+                    color: var(--main-theme-color);
+
+                    .theme-dark & {
+                        background-color: $dm-gray-300;
+                        color: $dm-gray-800;
+                    }
+                }
+
+                &:hover {
+                    background-color: $gray-300;
+                    color: var(--main-theme-color);
+
+                    .theme-dark & {
+                        background-color: var(--main-theme-color);
+                        color: var(--primary-color-100);
+                    }
+
+                }
+            }
+        }
+    }
+}

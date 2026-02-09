@@ -1,0 +1,59 @@
+.primary-navigation {
+
+    .navigation {
+        min-height: 40px;
+
+        // @include media-breakpoint-between(xs, md) {
+        //     height: max-content;
+        //     width: 100%;
+        //     padding: 30px 0 0;
+        // }
+
+        .nav-link {
+            padding: 9px 15px;
+            margin: 0 .15rem;
+            min-height: 40px;
+            font-weight: $font-weight-medium;
+            color: $topbar-btn-text;
+            border: none;
+            border-radius: $btn-border-radius;
+
+            &:before {
+                display: none;
+            }
+
+            &[aria-expanded="true"],
+            &:hover {
+                background-color: $topbar-btn-hover;
+                color: $topbar-btn-hover-text;
+
+                .theme-dark & {
+                    background-color: $dm-topbar-btn-hover;
+                    color: $dm-topbar-btn-hover-text;
+                }
+            }
+
+            .theme-dark & {
+                color: $dm-body-color;
+            }
+        }
+    }
+}
+
+.editmode-switch-form .custom-control-input {
+    z-index: 1;
+}
+
+.drawer-primary .drawercontent {
+    padding: 0;
+
+    .list-group {
+        border-radius: 0;
+        margin-top: -1px;
+
+        .list-group-item {
+            border-left: 0;
+            border-right: 0;
+        }
+    }
+}

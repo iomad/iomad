@@ -1,0 +1,224 @@
+//
+// Base styles
+//
+
+.alert {
+  position: relative;
+  margin: 1rem 0;
+  padding: $alert-padding-y $alert-padding-x;
+  border: $alert-border-width solid transparent;
+  @include border-radius($alert-border-radius);
+
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+
+  #page-maintenance & {
+    width: max-content;
+    max-width: 100%;
+    margin: 3px 0;
+  }
+
+  .close {
+    &:before {
+      #page-maintenance & {
+        background-size: 14px;
+      }  
+    }
+  }
+
+  p {
+    margin-top: .25rem;
+    margin-bottom: .25rem;
+
+    &:last-child {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  label {
+    margin-bottom: 0;
+    color: inherit;
+  }
+
+  h1, h2, h3, h4, h5 {
+    color: inherit;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: $font-weight-bold;
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: $font-weight-bold;
+  }
+
+  & + .alert {
+    margin-top: 5px;
+  }
+
+  .close {
+    background-color: $container-bg;
+  }
+
+  // Advanced Notifications Plugin.
+  .notification_aicon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .notification-block-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+  
+}
+
+  .alert:first-of-type {
+    margin-top: 0;
+  }
+
+  h2 + .alert {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .alert--close {
+    padding-right: 40px;
+
+    .close {
+      margin: 0;
+    }
+  }
+
+
+// Headings for larger alerts
+.alert-heading {
+  // Specified to prevent conflicts of changing $headings-color
+  color: inherit;
+}
+
+// Provide class for links that match alerts
+.alert-link {
+  font-weight: $alert-link-font-weight;
+}
+
+
+// Dismissible alerts
+//
+// Expand the right padding and account for the close button's positioning.
+
+.alert-dismissible {
+  padding-right: $close-font-size + $alert-padding-x * 2;
+
+  // Adjust close link position
+  .close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 2;
+    padding: $alert-padding-y $alert-padding-x;
+    color: inherit;
+  }
+}
+
+
+// Alternate styles
+//
+// Generate contextual modifier classes for colorizing the alert.
+
+.alert-primary {
+  background-color: $blue-100;
+  color: $blue-900;
+
+  .theme-dark & {
+    background-color: #335094;
+    color: $blue-100;
+  }
+}
+
+.alert-secondary {
+  background-color: $gray-100;
+  color: $gray-900;
+
+  .theme-dark & {
+    background-color: $dm-gray-100;
+    color: $dm-gray-900;
+  }
+}
+
+.alert-success {
+  background-color: $green-100;
+  color: $green-900;
+
+  .theme-dark & {
+    background-color: #0a6457;
+    color: $green-100;
+  }
+}
+
+.que .validationerror,
+.alert-danger {
+  background-color: $red-100;
+  color: $red-900;
+
+  .theme-dark & {
+    background-color: #B13A3A;
+    color: $red-100;
+  }
+}
+
+.alert-warning {
+  background-color: $yellow-100;
+  color: $yellow-900;
+
+  .theme-dark & {
+    background-color: #7E6E4E;
+    color: $yellow-100;
+
+    a {
+      color: $yellow-200;
+    }
+  }
+}
+
+.alert-info {
+  background-color: $blue-100;
+  color: $blue-900;
+
+  .theme-dark & {
+    background-color: #525ea9;
+    color: #dde1f8;
+
+    a {
+      color: $blue-100;
+    }
+  }
+}
+
+.alert-light {
+  background-color: $gray-100;
+  color: $gray-900;
+
+  .theme-dark & {
+    background-color: #212121;
+    color: $dm-gray-900;
+
+    img.icon {
+      filter: invert(1);
+    }
+  }
+}
+
+.alert-dark {
+  background-color: $gray-900;
+  color: $gray-100;
+
+  .theme-dark & {
+    background-color: $dm-gray-900;
+    color: $dm-gray-100;
+  }
+}

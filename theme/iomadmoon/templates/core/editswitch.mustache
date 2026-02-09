@@ -1,0 +1,66 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+
+    @template core/editswitch
+
+    This template renders the top navbar.
+
+    Example context (json):
+    {
+        "url": "http://localhost/",
+        "sesskey": "sesskey",
+        "edit": 1,
+        "adminedit": true,
+        "checked": "",
+        "string": "Edit on",
+        "legacyseturl": "/editmode.php"
+    }
+}}
+<form action="{{{legacyseturl}}}" method="post" class="d-flex align-items-center editmode-switch-form d-print-none">
+    <div class="input-group">
+        <div class="custom-control custom-control--xs custom-switch mx-0">
+            <input type="checkbox"{{!
+                }} name="setmode"{{!
+                }}{{#checked}}{{!
+                    }} checked{{!
+                }}{{/checked}}{{!
+                }} class="custom-control-input custom-control-input--xs"{{!
+                }} id="{{uniqid}}-editingswitch"{{!
+                }} data-context="{{{pagecontextid}}}"{{!
+                }} data-pageurl="{{{pageurl}}}"{{!
+            }}>
+            <label class="mr-2 mb-0 custom-control-label" for="{{uniqid}}-editingswitch">
+                <span>{{#str}} editmode {{/str}}</span>
+            </label>
+        </div>
+    </div>
+    <input type="hidden" name="sesskey" value="{{{sesskey}}}">
+    <input type="hidden" name="pageurl" value="{{{pageurl}}}">
+    <input type="hidden" name="context" value="{{{pagecontextid}}}">
+    <noscript>
+        <input type="submit" value="{{#str}}setmode, core{{/str}}">
+    </noscript>
+    <a href="#" id="showBlockArea" role="button" class="btn btn-secondary ml-2 p-1 pr-0" aria-label="{{#str}}show, moodle{{/str}}/{{#str}}hide, moodle{{/str}} - {{#str}}region, block{{/str}}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 6H10V4H4V10H6V6Z" fill="currentColor" /><path d="M10 18H6V14H4V20H10V18Z" fill="currentColor" /><path d="M14 6H18V10H20V4H14V6Z" fill="currentColor" /><path d="M14 18H18V14H20V20H14V18Z" fill="currentColor" /><path d="M12 8.5C10.067 8.5 8.5 10.067 8.5 12C8.5 13.933 10.067 15.5 12 15.5C13.933 15.5 15.5 13.933 15.5 12C15.5 10.067 13.933 8.5 12 8.5Z" fill="currentColor" /></svg>
+    </a>
+</form>
+{{#js}}
+require(['core/edit_switch'], function(editSwitch) {
+    editSwitch.init('{{uniqid}}-editingswitch');
+});
+{{/js}}

@@ -1,0 +1,68 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template gradereport_singleview/report_navigation
+    The previous/next user navigation for the user report view.
+    Context variables required for this template:
+    * previoususer - (optional) The object containing information about the previous user.
+        * name - The name of the previous user.
+        * url - The URL to the previous user report.
+    * nextuser - (optional) The object containing information about the next user.
+        * name - The name of the next user.
+        * url - The URL to the next user report.
+    Example context (json):
+    {
+        "previoususer": {
+            "name": "John Smith",
+            "url": "https://example.com/grade/report/user/index.php?id=2&userid=3"
+        },
+        "previoususer": {
+            "name": "Jane Doe",
+            "url": "https://example.com/grade/report/user/index.php?id=2&userid=5"
+        }
+    }
+}}
+<div class="mr-auto d-flex align-items-center report-navigation">
+    {{#perpageselect}}
+        <div class="d-inline-flex report-paging ml-3">
+            {{{perpageselect}}}
+            {{{pager}}}
+        </div>
+    {{/perpageselect}}
+    <div class="d-inline-flex {{#perpageselect}}ml-3{{/perpageselect}}">
+
+            {{#previoususer}}
+                <div class="previous d-flex mr-2">
+                    <a href="{{url}}" class="btn btn-sm btn-secondary"  aria-label="{{#str}} gotopreviousreport, gradereport_singleview {{/str}}">
+                        <svg class="" width="18" height="18" stroke-width="2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" color="currentColor">
+                            <path d="M18.5 12H6m0 0l6-6m-6 6l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                        <span class="ml-2">{{name}}</span>
+                    </a>
+                </div>
+            {{/previoususer}}
+
+            {{#nextuser}}
+                <div class="next d-flex {{#previoususer}}ml-2{{/previoususer}} mr-2">
+                    <a href="{{url}}" class="btn btn-sm btn-secondary"  aria-label="{{#str}} gotonextreport, gradereport_singleview {{/str}}">
+                        <span class="mr-2">{{name}}</span>
+                        <svg width="18" height="18" stroke-width="2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" color="currentColor">
+                            <path d="M6 12h12.5m0 0l-6-6m6 6l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </a>
+                </div>
+            {{/nextuser}}
+
+    </div>
+</div>

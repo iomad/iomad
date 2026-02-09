@@ -1,0 +1,87 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_forum/inpage_reply
+
+    Template which defines a forum post for sending in a single-post HTML email.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Example context (json):
+    {
+        "postid": 0,
+        "reply_url": "",
+        "sesskey": "",
+        "parentsubject": "",
+        "throttlingwarningmsg": "You are approaching the posting threshold. You have posted 3 times in the last 1 week and the limit is 4 posts."
+    }
+}}
+<div data-content="inpage-reply-content" style="display: none;">
+    {{#throttlingwarningmsg}}
+        <div class="alert alert-danger alert-block fade in " role="alert">
+            {{throttlingwarningmsg}}
+        </div>
+    {{/throttlingwarningmsg}}
+
+    <div class="forum-post-reply">
+        <form data-post-id="{{postid}}" id="inpage-reply-{{postid}}" data-content="inpage-reply-form" action="{{{reply_url}}}">
+            <div class="mb-1">
+                <div class="w-100">
+                    <textarea rows="5" name="post" title="{{#str}} message, mod_forum {{/str}}" class="form-control mb-2 w-100" placeholder="{{#str}} replyplaceholder, forum {{/str}}"></textarea>
+                    <input type="hidden" name="postformat" value="{{postformat}}"/>
+                </div>
+                <input type="hidden" name="subject" value="{{parentsubject}}"/>
+                <input type="hidden" name="reply" value="{{postid}}"/>
+                <input type="hidden" name="sesskey" value="{{sesskey}}"/>
+            </div>
+            <div class="d-inline-flex flex-wrap justify-content-between align-items-center w-100 mb-md-4">
+                <div class="d-inline-flex flex-wrap align-items-center">
+                    <button class="btn btn-primary mr-1" title="{{#str}} submit, core {{/str}}" data-action="forum-inpage-submit">
+                        <span data-region="submit-text">{{#str}} submit, core {{/str}}</span>
+                        <span data-region="loading-icon-container" class="hidden">{{> core/loading }}</span>
+                    </button>
+                    <button class="btn btn-secondary" title="{{#str}} cancel, core {{/str}}" data-action="collapsible-link">
+                        {{#str}} cancel, core {{/str}}
+                    </button>
+                    {{#canreplyprivately}}
+                    <div class="custom-control custom-switch ml-2 d-flex align-items-center">
+                        <div class="custom-control custom-switch d-flex align-items-center">
+                            <input name="privatereply" type="checkbox" class="custom-control-input" id="private-reply-checkbox-{{uniqid}}" aria-label="{{#str}} privatereply, forum {{/str}}">
+                            <label class="custom-control-label m-0" for="private-reply-checkbox-{{uniqid}}">
+                                {{#str}} privatereply, forum {{/str}}
+                            </label>
+                        </div>
+                    </div>
+                    {{/canreplyprivately}}
+                </div>
+
+                <button title="{{#str}} advanced, core {{/str}}" data-action="forum-advanced-reply" class="forum-advanced-btn btn btn-info border-0 float-right" type="submit">
+                    <svg class="mr-2" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5.75 13L7.75 19.25H16.25L18.25 13L12 4.75L5.75 13Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        <path d="M5.75 19.25H18.25" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        <path d="M12 4.75V12.25" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    {{#str}} advanced, core {{/str}}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,14 @@
+{{!
+@template theme_iomadmoon/custom_sec_nav_item
+
+Example context (json): {}
+}}
+<li class="nav-item" role="none"
+    data-forceintomoremenu="{{#forceintomoremenu}}true{{/forceintomoremenu}}{{^forceintomoremenu}}false{{/forceintomoremenu}}">
+    <a role="menuitem" class="nav-link"
+        href="{{{url}}}"
+        aria-label="{{{title}}}"
+        tabindex="-1">
+        {{{title}}}
+    </a>
+</li>

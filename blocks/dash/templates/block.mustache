@@ -1,0 +1,47 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dash/block
+
+    Example context (json):
+    {
+        "sitefullname": "Moodle - 311",
+		"courseurl": "https://localhost/moodle/course/view.php?id=2"
+    }
+}}
+
+{{#blockmenu}}
+<div class="dash-custom-menu" >{{{blockmenu}}}</div>
+{{/blockmenu}}
+
+<div id="dash-{{block_instance_id}}" class="dash-container{{#collapseaction}} collapse{{/collapseaction}}{{#showcollapseblock}} show{{/showcollapseblock}}">
+    <div class="dash-header-content">
+        {{{header_content}}}
+    </div>
+    <div class="dash-block-content">
+        {{{preloaded}}}
+    </div>
+    <div class="dash-footer-content">
+        {{{footer_content}}}
+    </div>
+</div>
+
+{{#js}}
+    require(["block_dash/dash_instance"], function(DashInstance) {
+        new DashInstance("#inst{{block_instance_id}}", "{{block_instance_id}}", "{{block_context_id}}", {{#editing}}true{{/editing}}{{^editing}}false{{/editing}}, "{{istotara}}", "{{pagelayout}}", "{{pagecontext}}");
+    });
+{{/js}}

@@ -1,0 +1,70 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_courseformat/local/content/cm/activity_info
+
+    Container to display activity information on the course page such as:
+      - Activity completion requirements (automatic completion)
+      - Manual completion button
+
+    Example context (json):
+    {
+        "cmid": 123,
+        "activityname": "Course announcements",
+        "hascompletion": true,
+        "uservisible": true,
+        "completiondialog": {
+            "buttoncontent": "To do",
+            "dialogcontent": "You must view this activity to complete it.",
+            "buttonclasses": "btn btn-sm btn-outline-secondary dropdown-toggle",
+            "classes": "completion-dropdown"
+        },
+        "isautomatic": true,
+        "showmanualcompletion": true,
+        "completiondetails": [
+             {
+                "statuscomplete": 1,
+                "description": "Viewed"
+            },
+            {
+                "statusincomplete": 1,
+                "description": "Receive a grade"
+            }
+        ]
+    }
+}}
+<div data-region="activity-information" data-activityname="{{activityname}}" class="activity-information">
+    {{#uservisible}}
+        <div data-region="completion-info">
+            {{! Completion dropdown dialog }}
+            {{#completiondialog}}
+                <div data-region="completionrequirements" aria-label="{{#str}}completionrequirements, core_course, {{activityname}}{{/str}}">
+                    {{> core/local/dropdown/dialog-min }}
+                </div>
+            {{/completiondialog}}
+
+            {{! Manual completion button }}
+            {{#showmanualcompletion}}
+                {{#istrackeduser}}
+                    {{$ core_course/completion_manual }}
+                        {{> core_course/completion_manual }}
+                    {{/ core_course/completion_manual }}
+                {{/istrackeduser}}
+            {{/showmanualcompletion}}
+        </div>
+    {{/uservisible}}
+</div>

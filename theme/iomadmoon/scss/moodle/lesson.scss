@@ -1,0 +1,87 @@
+//---- Lesson
+//---- Module Activity
+
+.addlinks {
+    margin-top: 2rem;
+    border-top: 1px solid $border-color;
+    text-align: center;
+
+    &:nth-of-type(1) {
+        margin-top: 0;
+        border-top: none;
+    }
+}
+
+.branchbuttoncontainer {
+    .singlebutton {
+        margin: .25rem 0;
+    }
+}
+
+.text_to_html + .singlebutton {
+    margin-top: 10px;
+}
+
+@include media-breakpoint-between(xs,sm) {
+    .branchbuttoncontainer {
+        .singlebutton, 
+        .btn {
+            width: 100%;
+        }
+    }
+}
+
+.path-mod-lesson .progress_bar {
+    font-size: $font-size-sm;
+
+    .progress_bar {
+        margin-top: 10px;
+    }
+
+}
+
+.path-mod-lesson {
+    .wrapper-fw + .wrapper-fw {
+        margin-top: 10px;
+    }
+}
+
+.menuwrapper {
+    ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+
+        li {
+            margin-bottom: 3px;
+            font-size: $font-size-xs;
+        }
+
+        .selected {
+            padding: 3px 6px;
+            border-radius: $btn-border-radius;
+
+            background-color: var(--primary-color-100);
+            color: var(--main-theme-color);
+        }
+
+        .notselected a {
+            display: block;
+            padding: 3px 6px;
+            border-radius: $btn-border-radius;
+
+            background-color: $gray-100;
+            color: $body-color;
+
+            &:hover {
+                background-color: var(--primary-color-100);
+                color: var(--main-theme-color);
+            }
+
+            .theme-dark & {
+                background-color: $dm-gray-100;
+                color: $dm-body-color;
+            }
+        }
+    }
+}

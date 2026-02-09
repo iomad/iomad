@@ -1,0 +1,239 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template block_dash/widget_mylearning
+
+    Example context (json):
+    {
+        "sitefullname": "Moodle - 311",
+		"courseurl": "https://localhost/moodle/course/view.php?id=2"
+    }
+}}
+<!--Course info block-->
+<div class="block_dash-info-element">
+    <div class="course-info-block">
+        {{#data.courses}}
+        <div class="row">
+            <div class="col-md-5 d-none d-md-block">
+                <!--Course left side block-->
+                <div class="left-block">
+                    {{#courseimage}}
+                    <div class="img-block">
+                        <img src="{{{courseimage}}}" alt="{{{fullname}}}" class='img-responsive' role='presentation'>
+                    </div> <!--Course image-->
+                    {{/courseimage}}
+
+                    {{{badges}}}
+
+                    {{{contacts}}}
+
+                    <div class="customfields-container">
+                        {{#customfields}}
+                        <div class="field-item">
+                            <h5>{{{fieldname}}}</h5>
+                            <span>{{{value}}}</span>
+                        </div>
+                        {{/customfields}}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-7 d-none d-md-block">
+                <!--Course right side block-->
+                <div class="right-block">
+                    {{#category}}
+                        <h6 class="card-title card-title-sub">{{{category}}}</h6>
+                    {{/category}}
+                    <div class="desc-block"> <!--Course title and description block-->
+                        <a href="{{{courseurl}}}"> <h2>{{{fullname}}}</h2> </a>
+                        {{{summary}}}
+                    </div>
+
+                    <div class="info-block">  <!--Course info block-->
+                        <!-- S.O course contents -->
+                        <div id="accordion" class="accordion-block"> <!--Course accordion block-->
+                            {{#coursecontent}}
+                            <div class="card {{#completed}}completed-bg{{/completed}}">
+                                <div class="card-header {{^uservisible}} restricted {{/uservisible}}" id="section-head-{{id}}">  <!--Course accordion header block-->
+                                    <h5 class="mb-0">
+                                        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#section-content-{{id}}" aria-expanded="true" aria-controls="section-content-{{id}}">{{{name}}}</button>
+                                        {{#completed}}
+                                        <div class="completion-card completed"> <!-- Course section completed -->
+                                            <p><i class="fa fa-check"></i></p>
+                                        </div>
+                                        {{/completed}}
+                                        {{#uservisible}}
+                                        {{^completed}}
+                                        <div class="completion-card"> <!--Course section in progress -->
+                                            {{#activitycount}}
+                                            <p><span> {{activitycompleted}} </span> / {{activitycount}}</p>
+                                            {{/activitycount}}
+                                        </div>
+                                        {{/completed}}
+                                        {{/uservisible}}
+                                        {{^uservisible}}
+                                        <div class="completion-card restricted">
+                                            <p><i class="fa fa-lock"></i></p>
+                                        </div>
+                                        {{/uservisible}}
+                                    </h5>
+                                </div>
+                                {{#uservisible}}
+                                <div id="section-content-{{id}}" class="collapse" aria-labelledby="section-head-{{id}}" data-parent="#accordion">
+                                    {{^hidemodules}}
+                                    <div class="card-body">  <!--Course accordion content block-->
+                                        {{#modules}}
+                                        <div class="section-block {{^uservisible}} restricted {{/uservisible}} {{#completiondata.state}}completed{{/completiondata.state}} {{#uservisible}}{{^completiondata.state}} inprogress {{/completiondata.state}}{{/uservisible}}"> <!--Course activity block completed-->
+                                            <h5><img src="{{{modicon}}}" role="presentation" class="dash-mod-icon"><a href="{{{url}}}">{{{name}}}</a></h5>
+                                            <div class="section-action">
+                                                {{#completiondata.state}}
+                                                <i class="fa fa-check"></i>
+                                                {{/completiondata.state}}
+                                                {{^uservisible}}
+                                                <i class="fa fa-lock"></i>
+                                                {{/uservisible}}
+                                                {{#uservisible}}
+                                                {{^completiondata.state}}
+                                                <a href="{{{url}}}">{{#str}} openmodule, block_dash{{/str}}</a>
+                                                {{/completiondata.state}}
+                                                {{/uservisible}}
+                                            </div> <!--Course activity completed-->
+                                        </div>
+                                        {{/modules}}
+                                    </div>
+                                    {{/hidemodules}}
+                                </div>
+                                {{/uservisible}}
+
+                            </div>
+                            {{/coursecontent}}
+
+                        </div>
+                        <!-- E.O Course contents -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 d-md-none d-block">
+                <div class="left-block">
+                    {{#courseimage}}
+                    <div class="img-block">
+                        <img src="{{{courseimage}}}" alt="{{{fullname}}}" class='img-responsive' role='presentation'>
+                    </div> <!--Course image-->
+                    {{/courseimage}}
+                </div>
+
+                <div class="right-block">
+                    {{#category}}
+                        <h6 class="card-title card-title-sub">{{{category}}}</h6>
+                    {{/category}}
+
+                    <div class="desc-block"> <!--Course title and description block-->
+                        <a href="{{{courseurl}}}"> <h2>{{{fullname}}}</h2> </a>
+                        {{{summary}}}
+                    </div>
+                </div>
+
+                <div class="left-block">
+                    {{{badges}}}
+
+                    {{{contacts}}}
+
+                    <div class="customfields-container">
+                        {{#customfields}}
+                        <div class="field-item">
+                            <h5>{{{fieldname}}}</h5>
+                            <span>{{{value}}}</span>
+                        </div>
+                        {{/customfields}}
+                    </div>
+                </div>
+
+                <!--Course right side block-->
+                <div class="right-block">
+                    <div class="info-block">  <!--Course info block-->
+                        <!-- S.O course contents -->
+                        <div id="accordion" class="accordion-block"> <!--Course accordion block-->
+                            {{#coursecontent}}
+                            <div class="card {{#completed}}completed-bg{{/completed}}">
+                                <div class="card-header {{^uservisible}} restricted {{/uservisible}}" id="section-head-{{id}}">  <!--Course accordion header block-->
+                                    <h5 class="mb-0">
+                                        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#section-content-{{id}}" aria-expanded="true" aria-controls="section-content-{{id}}">{{{name}}}</button>
+                                        {{#completed}}
+                                        <div class="completion-card completed"> <!-- Course section completed -->
+                                            <p><i class="fa fa-check"></i></p>
+                                        </div>
+                                        {{/completed}}
+                                        {{#uservisible}}
+                                        {{^completed}}
+                                        <div class="completion-card"> <!--Course section in progress -->
+                                            {{#activitycount}}
+                                            <p><span> {{activitycompleted}} </span> / {{activitycount}}</p>
+                                            {{/activitycount}}
+                                        </div>
+                                        {{/completed}}
+                                        {{/uservisible}}
+                                        {{^uservisible}}
+                                        <div class="completion-card restricted">
+                                            <p><i class="fa fa-lock"></i></p>
+                                        </div>
+                                        {{/uservisible}}
+                                    </h5>
+                                </div>
+                                {{#uservisible}}
+                                <div id="section-content-{{id}}" class="collapse" aria-labelledby="section-head-{{id}}" data-parent="#accordion">
+                                    {{^hidemodules}}
+                                    <div class="card-body">  <!--Course accordion content block-->
+                                        {{#modules}}
+                                        <div class="section-block {{^uservisible}} restricted {{/uservisible}} {{#completiondata.state}}completed{{/completiondata.state}} {{#uservisible}}{{^completiondata.state}} inprogress {{/completiondata.state}}{{/uservisible}}"> <!--Course activity block completed-->
+                                            <h5><img src="{{{modicon}}}" role="presentation" class="dash-mod-icon"><a href="{{{url}}}">{{{name}}}</a></h5>
+                                            <div class="section-action">
+                                                {{#completiondata.state}}
+                                                <i class="fa fa-check"></i>
+                                                {{/completiondata.state}}
+                                                {{^uservisible}}
+                                                <i class="fa fa-lock"></i>
+                                                {{/uservisible}}
+                                                {{#uservisible}}
+                                                {{^completiondata.state}}
+                                                <a href="{{{url}}}">{{#str}}openmodule, block_dash{{/str}}</a>
+                                                {{/completiondata.state}}
+                                                {{/uservisible}}
+                                            </div> <!--Course activity completed-->
+                                        </div>
+                                        {{/modules}}
+                                    </div>
+                                    {{/hidemodules}}
+                                </div>
+                                {{/uservisible}}
+
+                            </div>
+                            {{/coursecontent}}
+
+                        </div>
+                        <!-- E.O Course contents -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{/data.courses}}
+        {{^data.courses}}
+            {{#noresult}} {{{noresult}}} {{/noresult}}
+        {{/data.courses}}
+    </div>
+
+</div>

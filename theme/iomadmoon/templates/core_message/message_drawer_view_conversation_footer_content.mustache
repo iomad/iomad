@@ -1,0 +1,96 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_message/message_drawer_view_conversation_footer_content
+
+    This template will render the footer content for the conversation page in
+    the message drawer.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * All data attributes are required
+
+    Context variables required for this template:
+    * userid The logged in user id
+    * urls The URLs for the popover
+
+    Example context (json):
+    {}
+
+}}
+
+{{#showemojipicker}}
+    <div
+        class="d-block emoji-auto-complete-container w-100 hidden"
+        data-region="emoji-auto-complete-container"
+        aria-live="polite"
+        aria-hidden="true"
+    >
+    </div>
+{{/showemojipicker}}
+<div class="mt-1 row no-gutters">
+    <textarea
+        dir="auto"
+        data-region="send-message-txt"
+        class="rui-textarea form-control w-100 mx-0 mb-2"
+        rows="4"
+        data-auto-rows
+        data-min-rows="4"
+        data-max-rows="5"
+        aria-label="{{#str}} writeamessage, core_message {{/str}}"
+        placeholder="{{#str}} writeamessage, core_message {{/str}}"
+        style="resize: none"
+        maxlength="{{messagemaxlength}}"
+    ></textarea>
+    <button
+        class="btn btn-primary mt-1 {{#showemojipicker}}col mr-2{{/showemojipicker}} {{^showemojipicker}}w-100{{/showemojipicker}}"
+        aria-label="{{#str}} sendmessage, core_message {{/str}}"
+        data-action="send-message"
+    >
+        <span data-region="send-icon-container">
+            <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.25 15.25V6.75H8.75"></path>
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 7L6.75 17.25"></path>
+            </svg>
+        </span>
+        <span class="hidden" data-region="loading-icon-container">{{> core/loading }}</span>
+    </button>
+
+    {{#showemojipicker}}
+        <div
+            data-region="emoji-picker-container"
+            class="w-100 emoji-picker-container hidden"
+            aria-hidden="true"
+        >
+            {{> core/emoji/picker }}
+        </div>
+        <button
+            class="btn btn-secondary mt-1"
+            aria-label="{{#str}} toggleemojipicker, core {{/str}}"
+            data-action="toggle-emoji-picker"
+        >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19.25 12C19.25 16.0041 16.0041 19.25 12 19.25C7.99594 19.25 4.75 16.0041 4.75 12C4.75 7.99594 7.99594 4.75 12 4.75C16.0041 4.75 19.25 7.99594 19.25 12Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M9.75 13.75C9.75 13.75 10 15.25 12 15.25C14 15.25 14.25 13.75 14.25 13.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M10.5 10C10.5 10.2761 10.2761 10.5 10 10.5C9.72386 10.5 9.5 10.2761 9.5 10C9.5 9.72386 9.72386 9.5 10 9.5C10.2761 9.5 10.5 9.72386 10.5 10Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M14.5 10C14.5 10.2761 14.2761 10.5 14 10.5C13.7239 10.5 13.5 10.2761 13.5 10C13.5 9.72386 13.7239 9.5 14 9.5C14.2761 9.5 14.5 9.72386 14.5 10Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+        </button>
+    {{/showemojipicker}}
+</div>

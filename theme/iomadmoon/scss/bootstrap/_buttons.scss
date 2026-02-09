@@ -1,0 +1,1476 @@
+// stylelint-disable selector-no-qualifying-type
+
+//
+// Base styles
+//
+.btn {
+  text-decoration: none;
+  // Disabled comes first so active can properly restyle
+  &.disabled,
+  &:disabled {
+    opacity: $btn-disabled-opacity;
+    @include box-shadow(none);
+  }
+
+  &::before {
+    display: none;
+  }
+
+  &:not(:disabled):not(.disabled) {
+    cursor: if($enable-pointer-cursor-for-buttons, pointer, null);
+
+    &:active,
+    &.active {
+      @include box-shadow($btn-active-box-shadow);
+    }
+  }
+
+  & + .btn {
+    margin-left: 0.35rem;
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+
+    .drawerheader & {
+      width: 22px;
+      height: 22px;
+    }
+  }
+
+  img.icon {
+    margin: 0 .35rem;
+    width: 16px;
+    height: 16px;
+
+    font-size: $btn-font-size;
+
+    .theme-dark & {
+      filter: invert(1) contrast(0.3);
+    }
+  }
+
+  flex-wrap: wrap;
+}
+
+a.btn {
+  text-decoration: none;
+
+  &:after {
+    display: none;
+  }
+}
+
+.btn,
+.collapseexpand,
+.actions p a,
+.backlink a,
+.addtagcoll a,
+.resettable a,
+#page-admin-grade-edit-letter-index .main-content .mdl-align a,
+.moreless-toggler,
+.ajax-contact-button,
+#message-user-button,
+.search-results .result-context-info a,
+.tool_dataprivacy-expand-all,
+[data-fieldtype="submit"] a,
+.path-admin-tag .addstandardtags a,
+.edit-link a,
+#core-cache-rescan-definitions a,
+.continuebutton a,
+.tour-actions>ul>li>a,
+.gradereport_history_usp .usp-finish input,
+.gradereport_history_usp .usp-search input[type="submit"],
+#siteconfiglink a,
+.cancel a,
+.forum-post-footer a,
+.comment-area .fd a,
+#enterlink a,
+.allcoursegrades a,
+.reportlink a,
+.gradingform_guide.editor .addcriterion input,
+.gradingform_guide.editor .addcomment input,
+.gradingform_rubric.editor .addlevel input,
+.path-tag .tagarea .controls .exclusivemode,
+.addbloglink a,
+.notesgroup p a,
+.progress-actions a,
+.path-mod-glossary .printicon,
+.rui-form-element-group a,
+#page-mod-quiz-report .toggleincludeauto a,
+#page-mod-quiz-report .gradetheselink,
+.mod_quiz-next-nav,
+.rui-quizattemptcounts a,
+.rui-quizattemptsummary .c3 a,
+.mod_quiz-prev-nav,
+#page-mod-quiz-report .bold .reviewlink,
+.categorypagingbarcontainer .paging a,
+.page_split_join,
+.midpad a,
+.wiki_right a,
+#enabletemplateeditor,
+.path-auth-oauth2 .main-content h2 + a,
+#addcontrols input,
+#removecontrols input,
+#page-mod-forum-index .subscription .helplink:nth-of-type(1) a,
+#page-mod-forum-index .subscription .helplink:nth-of-type(2) a,
+#page-mod-forum-view .subscription .helplink a,
+.createstep,
+.endtestlink,
+.webservicestokenui + a,
+.chart-table-expand a,
+.export-actions a,
+.que .comment a,
+.path-mod-quiz .othernav a:not(.mod_quiz-next-nav),
+.modal-footer a:not(.btn-primary),
+#page-grade-edit-letter-index .mdl-align a,
+#page-mod-feedback-complete [align="center"] a,
+.commentlink a,
+.quizsummaryofattempt .c0 a,
+#changenumsections a,
+.itemnav a,
+#page-enrol-index .main-content [type="submit"],
+.rui-pre button,
+.pick.template,
+.action.remove,
+.helpdoclink a,
+#resetpagetour,
+.que .info .questionflag a,
+.path-mod-attendance .attbtn a,
+.section-collapsemenu,
+.path-mod-booking #gotop,
+.path-mod-booking #goenrol,
+.path-mod-booking #searchButton,
+.path-mod-booking #buttonclear,
+// .course-content-header a,
+// .course-content-footer a,
+[data-action="showcount"],
+.realtimequiz_editicons a,
+.printdiscussion input,
+#page .hsuforum-tools a,
+.addcomponent //Atto Editor
+{
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-family: $btn-font-family;
+  font-weight: $btn-font-weight;
+  line-height: $btn-line-height;
+
+  border-radius: $btn-border-radius;
+
+  text-align: center;
+  text-decoration: if($link-decoration == none, null, none);
+  white-space: $btn-white-space;
+  vertical-align: middle;
+  user-select: none;
+
+  word-break: break-word;
+  max-width: 100%;
+  white-space: normal;
+
+  @include transition($btn-transition);
+
+  @include hover() {
+    text-decoration: none;
+  }
+
+  @include media-breakpoint-up(md) {
+    padding: $btn-padding-y $btn-padding-x;
+    font-size: $btn-font-size;
+  }
+
+  @include media-breakpoint-between(xs, sm) {
+      padding: 9px 14px;
+      font-size: $font-size-xs;
+  }
+
+  .icon {
+    margin: 0 .25rem;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+  }
+}
+
+@include media-breakpoint-between(xs, sm) {
+  .btn.dropdown-toggle {
+    padding: 4px 11px 4px 5px !important;
+    font-size: $font-size-xs;
+    height: 30px;
+  }
+}
+
+
+.btn-icon {
+  padding: 0;
+  min-width: 40px;
+  height: 40px;
+  max-height: 40px;
+  border-radius: $btn-border-radius;
+
+  justify-content: center;
+
+  .icon {
+    margin: 1px;
+  }
+}
+
+.btn-icon--sm {
+  padding: 0;
+  min-width: 30px;
+  height: 30px;
+  max-height: 30px;
+  border-radius: $btn-border-radius;
+  line-height: 1;
+}
+
+// Future-proof disabling of clicks on `<a>` elements
+a.btn.disabled,
+fieldset:disabled a.btn {
+  pointer-events: none;
+}
+
+
+//
+// Alternate buttons
+//
+
+.btn-primary {
+  background-color: var(--main-theme-color);
+  border: 1px solid transparent;
+  color: var(--primary-color-100);
+
+  img {
+    filter: invert(100%);
+  }
+
+  &:hover {
+    background-color: var(--primary-color-700);
+    border: 1px solid transparent;
+    color: var(--primary-color-100);
+
+    .theme-dark & {
+      background-color: var(--primary-color-700);
+      color: var(--primary-color-100);
+    }
+  }
+
+  .theme-dark & {
+    background-color: var(--main-theme-color);
+    color: var(--primary-color-100);
+  }
+}
+
+.btn-secondary {
+  background-color: $gray-100;
+  border: 1px solid transparent;
+  color: $gray-900;
+
+  .theme-dark & {
+    background-color: $dm-gray-400;
+    color: $dm-gray-900;
+  }
+
+  &:hover {
+    background-color: $gray-200;
+    border: 1px solid transparent;
+    color: $gray-900;
+
+    .theme-dark & {
+      background-color: $dm-gray-500;
+      color: $dm-gray-800;
+    }
+  }
+}
+
+.btn-success
+{
+  background-color: $green-100;
+  border: 1px solid transparent;
+  color: $green-800;
+
+  &:hover {
+    background-color: $green-200;
+    border: 1px solid transparent;
+    color: $green-900;
+
+    .theme-dark & {
+      background-color: $green-700;
+      color: $green-100;
+    }
+  }
+
+  .theme-dark & {
+    background-color: $green-600;
+    color: $green-100;
+  }
+}
+
+.btn-danger,
+#resetpagetour
+{
+  background-color: $red-100;
+  border: 1px solid transparent;
+  color: $red-800!important;
+
+  &:hover {
+    background-color: $red-200;
+    border: 1px solid transparent;
+    color: $red-800!important;
+
+    .theme-dark & {
+      background-color: #c03f4e;
+      color: $white;
+    }
+  }
+
+  .theme-dark & {
+    background-color: #aa2b3a;
+    color: $white;
+  }
+}
+
+.btn-warning
+{
+  background-color: $yellow-100;
+  border: 1px solid $yellow-100;
+  color: $body-color;
+
+  &:hover {
+    background-color: $yellow-200;
+    border: 1px solid transparent;
+    color: $body-color;
+  }
+}
+
+.btn-info,
+#id_saverubricdraft,
+#id_saveguidedraft,
+.que .info .questionflag a,
+.path-mod-quiz .othernav a:not(.mod_quiz-next-nav)
+{
+  background-color: var(--primary-color-100);
+  border: 1px solid transparent;
+  color: var(--main-theme-color);
+
+  .theme-dark & {
+    background-color: $dm-gray-300;
+    color: $white;
+  }
+
+  &:hover {
+    background-color: var(--primary-color-200);
+    border: 1px solid transparent;
+    color: var(--primary-color-800);
+
+    .theme-dark & {
+      background-color: $dm-gray-400;
+      color: $white;
+    }
+  }
+}
+
+.btn-light,
+.filter-actions .btn
+{
+  background-color: $white;
+  border: 1px solid transparent;
+  color: $black;
+
+  .theme-dark & {
+    background-color: $dm-container-bg;
+    color: $dm-rblack;
+  }
+
+  &:hover {
+    background-color: var(--primary-color-100);
+    border: 1px solid transparent;
+    color: var(--primary-color-700);
+
+    .theme-dark & {
+      background-color: var(--primary-color-700);
+      color: var(--primary-color-100);
+    }
+  }
+}
+
+.btn-dark
+{
+  background-color: $gray-900;
+  mix-blend-mode: luminosity;
+  border: 1px solid transparent;
+  color: $gray-100;
+
+  .theme-dark & {
+    background-color: $black;
+    color: $white;
+  }
+
+  &:hover {
+    background-color: $gray-700;
+    border: 1px solid transparent;
+    color: $gray-100;
+
+    .theme-dark & {
+      background-color: $gray-900;
+      color: $gray-100;
+    }
+  }
+}
+
+
+// Buttons Outlines
+.btn-outline-primary,
+#page-grade-edit-letter-index .mdl-align a,
+#enterlink p:nth-of-type(3) a,
+#id_submitbutton2 {
+  color: var(--main-theme-color);
+  background-color: transparent;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  border: 1px solid var(--primary-color-300);
+
+  @include hover() {
+    color: var(--primary-color-100);
+    background-color: var(--main-theme-color);
+    border-color: var(--main-color-theme);
+  }
+
+  .theme-dark & {
+    color: var(--primary-color-400);
+    border: 1px solid var(--primary-color-400);
+    background-color: rgba($dm-container-bg, .8);
+  }
+}
+
+.btn-outline-secondary {
+  color: $gray-800;
+  background-color: rgba($container-bg, .8);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  border: 1px solid $gray-300;
+
+  .theme-dark & {
+    color: $dm-gray-700;
+    border: 1px solid $dm-gray-600;
+    background-color: rgba($dm-container-bg, .8);
+  }
+
+  @include hover() {
+    color: $gray-800;
+    background-color: $gray-100;
+    border-color: $gray-200;
+
+    .theme-dark & {
+      color: $dm-gray-800;
+      background-color: $dm-gray-100;
+      border-color: $dm-gray-100;
+    }
+  }
+}
+
+.btn-outline-danger,
+#page-badges-mybadges #fgroup_id_searchgroup #id_clearsearch
+{
+  color: $red-800;
+  background-color: transparent;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  border: 1px solid $red-200;
+
+  .theme-dark & {
+    color: #ef7979;
+    border: 1px solid #ef7979;
+  }
+
+  @include hover() {
+    color: $red-800;
+    background-color: $red-100;
+    border-color: $red-200;
+
+    .theme-dark & {
+      color: #fff;
+      background-color: #dd5858;
+      border-color: #dd5858;
+    }
+  }
+}
+
+.btn-outline-success {
+  color: $green-700;
+  background-color: transparent;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  border: 1px solid $green-200;
+
+  @include hover() {
+    color: $green-800;
+    background-color: $green-100;
+    border-color: $green-200;
+
+    .theme-dark & {
+      color: $green-100;
+      background-color: #0a6457;
+      border-color: #0a6457;
+    }
+  }
+
+  .theme-dark & {
+    color: #0a6457;
+    border-color: #0a6457;
+  }
+}
+
+.btn-outline-warning {
+  color: $body-color;
+  background-color: transparent;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  border: 1px solid $yellow-300;
+
+  @include hover() {
+    color: $body-color;
+    background-color: $yellow-100;
+    border-color: $yellow-200;
+
+    .theme-dark & {
+      color: $dm-body-color;
+    }
+  }
+
+  .theme-dark & {
+    color: $dm-body-color;
+  }
+}
+
+.btn-outline-light {
+  color: $white;
+  background-color: transparent;
+  border: 1px solid $white;
+
+  @include hover() {
+    color: $black;
+    background-color: $white;
+    border-color: rgba($white, .9);
+  }
+}
+
+.btn-outline-dark {
+  color: $black;
+  background-color: transparent;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  border: 1px solid $black;
+
+  @include hover() {
+    color: $white;
+    background-color: $black;
+    border-color: rgba($black, .9);
+  }
+}
+
+//
+// Link buttons
+//
+
+// Make a button look and behave like a link
+.btn-link {
+  display: inline-flex;
+  align-items: center;
+
+  background-color: transparent;
+  border: none;
+  font-size: $btn-font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $link-color;
+
+  .theme-dark & {
+    color: $dm-link-color;
+  }
+
+  @include hover() {
+    color: $link-hover-color;
+    text-decoration: none;
+
+    .theme-dark & {
+      color: $dm-link-hover-color;
+    }
+  }
+
+  &:focus,
+  &.focus {
+    text-decoration: $link-decoration;
+  }
+
+  &:disabled,
+  &.disabled {
+    color: $btn-link-disabled-color;
+    pointer-events: none;
+  }
+
+  // No need for an active state here
+
+  .rui-icon-container {
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+
+.btn-link--clean {
+  background-color: transparent;
+  border: 0;
+  padding: 0;
+  font-weight: $font-weight-medium;
+  color: $link-color;
+
+  .theme-dark & {
+    color: $dm-link-color;
+  }
+
+  &:hover {
+    color: $link-hover-color;
+
+    .theme-dark & {
+      color: $dm-link-hover-color;
+    }
+  }
+}
+
+//
+// Button Sizes
+//
+
+.btn-lg
+{
+  @include button-size($btn-padding-y-lg, $btn-padding-x-lg, $btn-font-size-lg, $btn-line-height-lg, $btn-border-radius);
+}
+
+.btn-xs,
+#page-mod-quiz-edit .mod_quiz-edit-action-buttons .btn,
+.realtimequiz_editicons a
+{
+  padding: .25rem .85rem;
+  font-size: .8rem;
+}
+
+.btn-sm,
+.search-results .result-context-info a,
+.forum-post-footer a,
+.comment-area .fd a,
+.rui-assign-btns .singlebutton .btn,
+.visibleifjs .btn,
+#enterlink p:nth-of-type(3) a,
+.reportoption .btn,
+.allcoursegrades a,
+.availability-list .btn,
+.addlinks a,
+.reportlink a,
+.notesgroup .footer a,
+#page-report-progress-index .progress-actions a,
+#page-mod-quiz-report .gradetheselink,
+.rui-quizattemptsummary .c3 a,
+.rui-submitbtns--back .btn,
+.mod_quiz-prev-nav,
+.mod_quiz-next-nav,
+#page-mod-quiz-report .bold .reviewlink,
+#page-mod-quiz-edit .add-menu-outer .btn,
+.categorypagingbarcontainer .paging a,
+.page_split_join,
+.path-mod-wiki .printicon,
+#enabletemplateeditor,
+.path-auth-oauth2 .main-content h2 + a,
+#page-mod-forum-index .subscription .helplink:nth-of-type(1) a,
+#page-mod-forum-index .subscription .helplink:nth-of-type(2) a,
+#page-mod-forum-view .subscription .helplink a,
+.endtestlink,
+.export-actions a,
+.path-mod-quiz .othernav a:not(.mod_quiz-next-nav),
+.resettable a,
+#page-grade-edit-letter-index .mdl-align a,
+#page-mod-feedback-complete [align="center"] a,
+.commentlink a,
+.quizsummaryofattempt .c0 a,
+.itemnav a,
+.que .comment a,
+.course-content .collapsible-actions a,
+#settingsMenu .btn-secondary,
+.rui-pre button,
+.helpdoclink a,
+.que .info .questionflag a,
+#sticky-footer .col-auto .btn,
+.section-collapsemenu,
+#page-admin-roles-define .buttons .btn,
+.path-mod-booking #gotop,
+.path-mod-booking #goenrol,
+.path-mod-booking #searchButton,
+.path-mod-booking #buttonclear,
+// .course-content-header a,
+// .course-content-footer a,
+[data-action="showcount"],
+.filter-save,
+.tertiary-navigation .navitem .btn,
+.collapseexpand,
+.availability-dialogue .col-6 .btn,
+#page .hsuforum-tools a,
+.addcomponent //Atto Editor
+{
+
+  @include media-breakpoint-up(md) {
+    padding: $btn-padding-y-sm $btn-padding-x-sm;
+    font-size: $btn-font-size-sm;
+  }
+  
+  @include media-breakpoint-between(xs, sm) {
+    padding: 4px 9px;
+    font-size: $font-size-xs;
+    height: 30px;
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
+.btn-submit {
+  border: none;
+}
+
+//
+// Block button
+//
+
+.btn-block {
+  display: block;
+  width: 100%;
+
+  // Vertically space out multiple block buttons
+  + .btn-block {
+    margin-top: $btn-block-spacing-y;
+  }
+}
+
+// Specificity overrides
+input[type="submit"],
+input[type="reset"],
+input[type="button"] {
+  &.btn-block {
+    width: 100%;
+  }
+}
+
+
+
+//Button Primary
+.addtagcoll a,
+.path-admin-tag .addstandardtags a,
+.gradereport_history_usp .usp-finish input,
+#siteconfiglink a,
+.forum-post-footer a,
+.rui-submissionaction .singlebutton .btn,
+#enterlink p:nth-of-type(1) a,
+.mod_quiz-next-nav,
+.addbloglink a,
+#addcontrols input,
+#page-mod-forum-index .subscription .helplink:nth-of-type(1) a,
+#page-mod-forum-view .subscription .helplink a,
+.midpad a,
+.createstep,
+#enterlink p:nth-of-type(2) a,
+.webservicestokenui + a,
+.rui-pre button,
+.last-add-menu .dropdown-btn
+{
+  @extend .btn-primary;
+}
+
+//Button Secondary
+.collapseexpand,
+.actions p a,
+.backlink a,
+#page-admin-grade-edit-letter-index .main-content .mdl-align a,
+.moreless-toggler,
+.search-results .result-context-info a,
+.tool_dataprivacy-expand-all,
+.edit-link a,
+#core-cache-rescan-definitions a,
+.continuebutton a,
+.tour-actions>ul>li>a,
+.gradereport_history_usp .usp-search input[type="submit"],
+.comment-area .fd a[id*=post],
+.allcoursegrades a,
+.addlinks a,
+#page-grade-grading-manage .actions .action,
+.gradingform_rubric.editor .addlevel input,
+.path-tag .tagarea .controls .exclusivemode,
+.notesgroup p a,
+#page-report-progress-index .progress-actions a,
+.path-mod-glossary .printicon,
+.rui-form-element-group a,
+.mod_quiz-prev-nav,
+.categorypagingbarcontainer .paging a,
+.page_split_join,
+.path-mod-wiki .printicon,
+.path-auth-oauth2 .main-content h2 + a,
+#page-mod-forum-index .subscription .helplink:nth-of-type(2) a,
+.rui-contentbank-view-btns .btn,
+.chart-table-expand a,
+.export-actions a,
+.modal-footer a:not(.btn-primary),
+.commentlink a,
+.itemnav a,
+.que .comment a,
+.btn-inverse,
+.pick.template,
+.action.remove,
+.helpdoclink a,
+.path-mod-attendance .attbtn a,
+#feedback_dragarea .dropdown-btn,
+.section-collapsemenu,
+.pagenumber .dropdown-btn,
+.path-mod-booking #gotop,
+.path-mod-booking #goenrol,
+.path-mod-booking #searchButton,
+.path-mod-booking #buttonclear,
+.ajax-contact-button,
+#message-user-button,
+// .course-content-header a,
+// .course-content-footer a,
+[data-action="showcount"],
+.realtimequiz_editicons a,
+.printdiscussion input,
+#page .hsuforum-tools a,
+.addcomponent //Atto Editor
+{
+    @extend .btn-secondary;
+}
+
+//Button Link
+[data-fieldtype="submit"] a,
+.cancel a,
+#page-mod-quiz-report .gradetheselink
+{
+  @extend .btn-link;
+}
+
+//Button Outline Secondary
+.comment-area .fd a[id*=cancel],
+.visibleifjs .btn,
+.gradingform_guide.editor .addcriterion input,
+.gradingform_guide.editor .addcomment input
+{
+  @extend .btn-outline-secondary;
+}
+
+
+//Button Outline Danger
+#removecontrols input,
+.rui-assign-btns .singlebutton:nth-child(2) .btn
+{
+  @extend .btn-outline-danger;
+}
+
+//Button additional settings
+#page-mod-quiz-report .toggleincludeauto a,
+.reportlink a,
+#page-mod-quiz-report .bold .reviewlink,
+#enabletemplateeditor,
+.endtestlink,
+.rui-contentbank-view-btns .btn.active,
+.rui-quizattemptcounts a,
+#page-mod-feedback-complete [align="center"] a
+{
+  @extend .btn-info;
+}
+
+.resettable a
+{
+  @extend .btn-danger;
+}
+
+//Button Success
+#changenumsections a,
+.rui-quizattemptsummary .c3 a,
+.quizsummaryofattempt .c0 a,
+#page-enrol-index .main-content [type="submit"]
+{
+  @extend .btn-success;
+}
+
+    .user-heading {
+      .ajax-contact-button,
+      #message-user-button {
+        width: 40px;
+
+        // Reset btn-icon styles
+        .icon {
+          background-color: transparent!important;
+          padding: 0!important;
+        }
+      }
+    }
+
+    @include media-breakpoint-between(xs, sm) {
+      #page-message-output-popup-notifications #message-user-button {
+        margin-left: 0;
+      }
+
+      .path-user #message-user-button {
+        margin-bottom: 10px;
+        width: auto;
+      }
+    }
+
+    .ajax-contact-button {
+      margin-left: .35rem;
+
+      .icon {
+        margin-right: .25rem;
+      }
+    }
+
+
+    .moreless-toggler,
+    .card-body .footer a {
+      width: 100%;
+    }
+
+    .card-body .footer {
+      a {
+        display: block;
+  
+        width: 100%;
+        padding: .85rem 1.25rem;
+        margin: 15px 0 2px;
+  
+        border-radius: $btn-border-radius;
+  
+        font-size: $font-size-xs;
+        font-weight: $font-weight-medium;
+        background-color: $gray-100;
+        color: $body-color-light;
+        text-align: center;
+
+        .theme-dark & {
+          background-color: $dm-gray-100;
+          color: $dm-body-color-light;
+        }
+  
+        &:hover {
+          background-color: var(--primary-color-100);
+          color: var(--main-theme-color);
+          text-decoration: none;
+
+          .theme-dark & {
+            background-color: $dm-gray-200;
+            color: $dm-body-color-light;
+          }
+        }
+      }
+    } 
+
+    .path-mod-quiz .othernav a:not(.mod_quiz-next-nav) {
+      display: block;
+      width: 100%;
+    }
+
+
+    // ---- URL:  /filter/manage.php?contextid=78
+    .backlink a {
+      padding-left: 50px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='#{url-friendly-colour($body-color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M10.25 6.75L4.75 12L10.25 17.25'%3E%3C/path%3E%3Cpath stroke='#{url-friendly-colour($body-color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M19.25 12H5'%3E%3C/path%3E%3C/svg%3E%0A");
+      background-repeat: no-repeat;
+      background-size: 24px;
+      background-position: 12px;
+
+      .theme-dark & {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='#{url-friendly-colour($dm-body-color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M10.25 6.75L4.75 12L10.25 17.25'%3E%3C/path%3E%3Cpath stroke='#{url-friendly-colour($dm-body-color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M19.25 12H5'%3E%3C/path%3E%3C/svg%3E%0A");
+      }
+    }
+
+
+
+    // ---- Module Activity Wiki
+    .path-mod-wiki .printicon {
+      padding-left: 40px;
+      background-position: 15px;
+    }
+
+
+    .rui-form-element-group a {
+      .icon {
+        margin: 0;
+      }
+
+      &[data-toggle="popover"] {
+        margin-right: .5rem;
+      }
+    }
+
+
+    // ---- URL: /course/customfield.php
+    [data-role="deletecategory"] {
+      margin: 1px;
+      padding: 10px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: $btn-border-radius-lg;
+
+      background-color: $red-100;
+      color: $red-800;
+
+      font-size: $font-size-xs;
+
+      transition: $transition-base;
+
+      &:hover {
+        background-color: $red-200;
+        color: $red-800;
+      }
+
+      .icon {
+        width: auto;
+        height: auto;
+        font-size: $font-size-xs;
+      }
+    }
+
+
+    // ---- URL: /user/profile/index.php
+    #page-admin-user-profile-index {
+      .main-content {
+        h2 {
+          width: 100%;
+
+          display: inline-flex;
+          align-items: center;
+
+          a {
+            &:hover {
+              text-decoration: none;
+            }
+          }
+
+          .icon:not(.spacer) {
+            margin: 1px;
+            padding: 10px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: $btn-border-radius-lg;
+
+            background-color: $gray-200;
+            font-size: $font-size-xs;
+            color: $gray-800;
+
+            transition: $transition-base;
+
+
+            &.fa-trash {
+                background-color: $red-100;
+                color: $red-800;
+            }
+
+            &:hover {
+                  background-color: $blue-200;
+                  color: $blue-700;
+
+                  &.fa-trash {
+                      background-color: $red-800;
+                      color: $red-100!important;
+                  }
+          }
+          }
+        }
+      }
+    }
+
+
+    // ---- URL: /admin/category.php?category=webservicesettings
+    [data-groupname="buttonar"],
+    .rui-sticky-btns,
+    .form-buttons {
+      position: sticky;
+      bottom: 20px;
+      z-index: $zindex-sticky;
+
+      .show-custom-alert & {
+        bottom: 70px;
+      }
+
+      .mod_quiz_preflight_popup & {
+        position: relative;
+        bottom: 0;
+      }
+
+      @include media-breakpoint-between(xs,sm) {
+        bottom: 20px;
+        left: 20px;
+      }
+    }
+
+
+    #page-report-progress-index .progress-actions {
+      margin: $page-padding-global auto 0;
+      padding: 0;
+
+      text-align: left;
+
+      li {
+        display: inline-flex;
+        margin-right: .35rem;
+        margin-bottom: .5rem;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+
+
+    .path-mod-glossary .printicon {
+      padding-left: 40px;
+      background-position: 15px!important;
+    }
+
+    .path-mod-glossary .glossarypost .commands {
+      display: block;
+      margin-bottom: 20px;
+      
+      a {
+        padding: 10px;
+        margin: 2px;
+        border-radius: $btn-border-radius;
+        background: $gray-100;
+      }
+    }
+
+    .theme-dark.path-mod-glossary .glossarypost .commands a {
+      background-color: $dm-gray-100;
+    }
+
+    .theme-dark.path-mod-glossary .glossarypost .commands a img.icon {
+      filter: invert(1);
+    }
+
+
+    .rui-show-sidebar {
+      position: absolute;
+      top: 0;
+      right: 60px;
+    }
+
+
+    .btn-special-icon {
+      padding: 10px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: $btn-border-radius-lg;
+
+      background-color: $gray-200;
+      font-size: $font-size-base;
+      color: $body-color;
+
+      transition: $transition-base;
+
+      .theme-dark & {
+        background-color: $dm-gray-300;
+        color: $dm-body-color;
+      }
+    }
+
+    .btn-special-icon--hover {
+      background-color: $blue-200;
+      color: $blue-700;
+    }
+
+    .btn--disabled {
+      opacity: .3;
+      cursor: not-allowed;
+    }
+
+    .editing_groupsnone,
+    .editing_groupsseparate,
+    .editing_groupsvisible
+    {
+      display: inline-flex;
+      margin-left: 10px;
+      padding: 10px 15px;
+      border-radius: $btn-border-radius-lg;
+      font-size: 13px;
+      font-weight: $font-weight-medium;
+
+      @include media-breakpoint-between(xs,sm) {
+        margin-top: 10px;
+        margin-left: 0;
+        white-space: break-spaces;
+      }
+
+      .rui-icon-container {
+        padding: 0!important;
+        margin: 0!important;
+        background-color: transparent!important;
+      }
+
+      .icon {
+        width: 17px;
+        height: 17px;
+        margin-right: .5rem!important;
+      }
+
+      .dropdown-item--text {
+        display: inline-flex!important;
+      }
+    }
+
+    .editing_groupsnone {
+      background-color: $red-100;
+      color: $red-700;
+
+      &:hover {
+        background-color: $red-200;
+        color: $red-800;
+      }
+
+      .icon {
+        color: $red-600!important;
+      }
+    }
+
+    .editing_groupsseparate {
+      background-color: $white;
+      color: $body-color;
+
+      &:hover {
+        background-color: $gray-200;
+        color: $body-color-secondary;
+      }
+
+      .icon {
+        color: $body-color-secondary!important;
+      }
+    }
+
+    .editing_groupsvisible {
+      background-color: $green-100;
+      color: $green-700;
+
+      &:hover {
+        background-color: $green-200;
+        color: $green-900;
+      }
+
+      .icon {
+        color: $green-600!important;
+      }
+    }
+
+    .helplink a {
+      .icon {
+        height: 18px;
+      }
+    }
+
+    .rui-footer-btns {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+
+      @include media-breakpoint-between(xs,sm) {
+      display: block;
+      }
+
+      div {
+        display: flex;
+      }
+      
+      a {
+        font-size: $font-size-xs;
+        font-weight: $font-weight-medium;
+        color: $footer-link-color;
+
+        &::before {
+          background-color: $footer-link-color;
+
+          .theme-dark & {
+            background-color: $dm-body-color-light;
+          }
+        }
+  
+        .theme-dark & {
+          color: $dm-body-color-light;
+        }
+  
+        &:hover {
+          color: $footer-link-color-hover;
+  
+          .theme-dark & {
+            color: $dm-link-hover-color;
+          }
+        }
+        
+        @include media-breakpoint-between(xs,sm) {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: .35rem;
+        }
+
+        // Remove icons from all footer buttons
+        img, .icon {
+          display: none;
+        }
+      }
+    }
+
+    .rui-footer-btns + .rui-footer-btns {
+      margin-left: 16px;
+    }
+    
+    .course-content .collapsible-actions a.collapseall,
+    .course-content .collapsible-actions a.expandall {
+      padding-left: 26px;
+      background-position: 5px!important;
+      background-size: 18px;
+    }
+
+
+    // Dark mode.
+    .btn--darkmode {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+  
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: $btn-border-radius;
+      color: #665e4f;
+      background-color: #fff0d6;
+
+      .theme-dark & {
+        background-color: #4a350d;
+        color: #FFC457;
+      }
+
+      .btn--darkmode-wrapper {
+        padding: 10px;
+      }
+
+      &:hover {
+        background-color: $gray-900;
+        color: $gray-100;
+
+        .theme-dark & {
+          background-color: $dm-gray-400;
+        }
+      }
+    }
+
+
+
+    // Button Settings - Turn editin on/off
+    @include media-breakpoint-between(xs,sm) {
+    .btn--text {
+      display: none;
+    }
+    }
+
+    .btn {
+      svg {
+        pointer-events: none
+      }
+    }
+
+    // Tool Lp Competencies
+    // Edit icon next to string
+    #id_parentcompetencybutton {
+      display: inline-flex;
+    }
+
+    .rui-debug {
+      div {
+        position: relative;
+      }
+    }
+
+    .btn--name+.btn--icon,
+    .btn--icon+.btn--name {
+      margin-left: .5rem;
+    }
+
+    .helpdoclink a {
+      .icon {
+        display: none;
+      }
+    }
+
+    // Grade report user selector
+    .btn.dropdown-toggle {
+      border: 0;
+      height: 100%;
+      min-height: 30px;
+    }
+
+    .dropdown-btn.btn-primary {
+      color: $white;
+    }
+    
+    .btn-insight {
+      border-radius: $btn-border-radius;
+    }
+
+    /* File manager, cancel button border fix */
+    .fp-dlg-butcancel {
+      border: 0;
+    }
+
+    // .course-content-header a,
+    // .course-content-footer a {
+    //   padding-left: 3px;
+
+    //   img.icon {
+    //     .theme-dark & {
+    //       filter: invert(1);
+    //     }
+    //   }
+    // }
+    
+    .notesgroup p a {
+      &:after {
+        display: none;
+      }
+    }
+
+    // Moodle 4.3
+    .groupmode-information {
+      display: inline-flex;
+      flex-wrap: wrap;
+      width: max-content;
+      max-width: 100%;
+
+      img.icon {
+        .theme-dark & {
+          filter: invert(1);
+        }
+      }
+    }
+
+    .btn--completion {
+      padding: 0 6px;
+      height: 30px;
+      border-radius: $btn-border-radius-lg;
+    }

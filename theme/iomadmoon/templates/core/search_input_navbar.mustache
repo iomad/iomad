@@ -1,0 +1,135 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core/search_input_navbar
+
+    Navbar search input template.
+
+    Example context (json):
+    {
+        "action": "https://moodle.local/admin/search.php",
+        "inputname": "search",
+        "searchstring": "Search",
+        "hiddenfields": [
+            {
+                "name": "cmid",
+                "value": "11"
+            }
+        ]
+    }
+}}
+<div id="searchinput-navbar-{{uniqid}}" class="simplesearchform m-0">
+    <div class="collapse" id="searchform-navbar">
+        <form autocomplete="off" action="{{{ action }}}" method="get" accept-charset="utf-8" class="mform form-inline searchform-navbar">
+            {{#hiddenfields}}
+                <input type="hidden" name="{{ name }}" value="{{ value }}">
+            {{/hiddenfields}}
+            <div class="search-input-group d-inline-flex justify-content-between w-100">
+                <label for="searchinput-{{uniqid}}">
+                    <span class="sr-only">{{{ searchstring }}}</span>
+                </label>
+
+                <span class="search-input-icon">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.25 19.25L15.5 15.5M4.75 11C4.75 7.54822 7.54822 4.75 11 4.75C14.4518 4.75 17.25 7.54822 17.25 11C17.25 14.4518 14.4518 17.25 11 17.25C7.54822 17.25 4.75 14.4518 4.75 11Z"></path>
+                    </svg>
+                </span>
+
+                <input type="text"
+                id="searchinput-{{uniqid}}"
+                class="search-input w-100"
+                placeholder="{{{ searchstring }}}"
+                aria-label="{{{ searchstring }}}"
+                name="{{{ inputname }}}"
+                data-region="input"
+                autocomplete="off"
+                value="{{ query }}"
+                >
+                <a class="btn btn-close mr-1"
+                    data-action="closesearch"
+                    data-toggle="collapse"
+                    href="#searchform-navbar"
+                    aria-label="{{#str}} closebuttontitle {{/str}}"
+                    role="button"
+                >
+                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.25 6.75L6.75 17.25"></path>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6.75 6.75L17.25 17.25"></path>
+                    </svg>
+                    <span class="sr-only">{{#str}} closebuttontitle {{/str}}</span>
+                </a>
+                <button type="submit" class="search-input-btn" aria-label="{{ searchstring }}">
+                    <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.75 6.75L19.25 12L13.75 17.25"></path>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H4.75"></path>
+                    </svg>
+                    <span class="sr-only">{{ searchstring }}</span>
+                </button>
+
+            </div>
+        </form>
+    </div>
+
+        <a
+            class="rui-topbar-special-btn"
+            data-toggle="collapse"
+            data-action="opensearch"
+            href="#searchform-navbar"
+            role="button"
+            aria-expanded="false"
+            aria-label="{{#str}} togglesearch {{/str}}"
+            aria-controls="searchform-navbar"
+        >
+            <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.25 19.25L15.5 15.5M4.75 11C4.75 7.54822 7.54822 4.75 11 4.75C14.4518 4.75 17.25 7.54822 17.25 11C17.25 14.4518 14.4518 17.25 11 17.25C7.54822 17.25 4.75 14.4518 4.75 11Z"></path>
+            </svg>
+            <span class="sr-only">{{#str}} togglesearch {{/str}}</span>
+        </a>
+
+</div>
+
+{{#js}}
+require(
+[
+    'jquery',
+],
+function(
+    $
+) {
+    var uniqid = "{{uniqid}}";
+    var container = $('#searchinput-navbar-' + uniqid);
+    var opensearch = container.find('[data-action="opensearch"]');
+    var input = container.find('[data-region="input"]');
+    var submit = container.find('[data-action="submit"]');
+
+    submit.on('click', function(e) {
+        if (input.val() === '') {
+            e.preventDefault();
+        }
+    });
+    container.on('hidden.bs.collapse', function() {
+        opensearch.removeClass('d-none');
+        input.val('');
+    });
+    container.on('show.bs.collapse', function() {
+        opensearch.addClass('d-none');
+    });
+    container.on('shown.bs.collapse', function() {
+        input.focus();
+    });
+});
+{{/js}}

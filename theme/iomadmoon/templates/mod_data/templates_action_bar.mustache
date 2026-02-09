@@ -1,0 +1,105 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_data/templates_action_bar
+
+    Actions bar at the top of the template pages in the database activity.
+
+    Context variables required for this template:
+    * d - The database id.
+    * selectmenu - The data object containing the required properties to render core/selectmenu.
+    * actionsselect - The presets actions selector.
+
+    Example context (json):
+    {
+        "d": 1,
+        "selectmenu": {
+            "name": "Templates tertiary navigation selector",
+            "value": "opt",
+            "baseid": "select-menu1",
+            "selectedoption": "Single view template",
+            "options": [
+                {
+                    "selected": false,
+                    "name": "Add entry template",
+                    "id": "select-menu-group1"
+                },
+                {
+                    "selected": true,
+                    "name": "Single view template",
+                    "value": "opt2",
+                    "id": "select-menu-option2"
+                }
+            ]
+        },
+        "actionsselect": {
+            "classes": "moodle-actionmenu",
+            "instance": "1",
+            "triggerrole": "button",
+            "primary": {
+                "attributes": [
+                    {"name": "id", "value": "action-menu-1"},
+                    {"name": "role", "value": "menu"}
+                ],
+                "items": [
+                    {
+                        "attributes": [
+                            {"name": "role", "value": "menuitem"}
+                        ],
+                        "rawhtml": "Actions"
+                    }
+                ]
+            },
+            "secondary": {
+                "attributes": [
+                    {"name": "id", "value": "action-menu-1-menu"},
+                    {"name": "role", "value": "menuitem"}
+                ],
+                "items": [
+                    {
+                        "rawhtml": "Import preset"
+                    },
+                    {
+                        "rawhtml": "Export preset"
+                    }
+                ]
+            }
+        }
+    }
+}}
+<div class="container-fluid tertiary-navigation px-0 mx-0">
+    <div class="row">
+        <div class="navitem mb-0 col">
+            {{#selectmenu}}
+                <div>
+                    {{>core/tertiary_navigation_selector}}
+                </div>
+            {{/selectmenu}}
+        </div>
+        <div class="col-auto">
+            {{#actionsselect}}
+                <div class='navitem mb-0 presetsactions'>
+                    {{>core/action_menu}}
+                </div>
+            {{/actionsselect}}
+        </div>
+    </div>
+</div>
+<hr/>
+{{#js}}
+    require(['mod_data/saveaspreset', 'mod_data/resetalltemplates'], function(saveAsPreset, resetAll) {
+        saveAsPreset.init();
+        resetAll.init();
+    });
+{{/js}}

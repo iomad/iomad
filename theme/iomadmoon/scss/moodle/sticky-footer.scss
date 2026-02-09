@@ -1,0 +1,184 @@
+/**
+ * This file contains the styles required to make the footer sticky.
+ */
+
+html,
+body {
+    height: 100%;
+}
+
+.stickyfooter {
+    width: max-content;
+    max-width: calc(100% - 40px);
+
+    @include media-breakpoint-up(md) {
+        height: $stickyfooter-height;
+        bottom: calc(#{$stickyfooter-height} * -1);
+        left: 20px;
+        right: 20px;
+    }
+
+    @include media-breakpoint-between(xs, sm) {
+        max-width: calc(100% - 32px);
+        min-width: calc(100% - 32px);
+        left: 16px;
+        right: 16px;
+        bottom: -100%;
+
+        .disabled {
+            display: none!important;
+        }
+    }
+
+    display: flex;
+    flex-wrap: wrap;
+
+    transition: all 350ms ease;
+
+    background-color: $body-bg;
+    border-top: none !important;
+
+    border-radius: $btn-border-radius;
+    box-shadow: $box-shadow-md;
+    z-index: $zindex-fixed + 200;
+
+    #page-grade-import-csv-index &,
+    #page-grade-report-grader-index.path-grade &,
+    #page-grade-export-txt-index &,
+    #page-grade-export-xls-index &,
+    #page-grade-export-xml-index &,
+    #page-grade-report-user-index &,
+    #page-grade-report-singleview-index &,
+    #page-grade-export-ods-index.path-grade & {
+        padding: 10px 0 0 !important;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        position: relative;
+        box-shadow: none;
+        background-color: transparent !important;
+        z-index: 1;
+
+        .col-md-9,
+        .col-md-3 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+    }
+
+    .theme-dark & {
+        background-color: $dm-gray-100;
+    }
+
+    @include media-breakpoint-up(lg) {
+
+        .drawer-open-index--open &,
+        .drawer-open-left & {
+            left: $drawer-width + $drawer-offscreen-gutter + 10px;
+        }
+    }
+
+    div {
+        margin-top: 0 !important;
+    }
+
+    label {
+        margin-bottom: 0;
+        font-size: $font-size-sm;
+    }
+
+    select {
+        margin-top: 0 !important;
+        margin-left: .5rem;
+        padding: 2px 30px 2px 10px;
+        height: 30px;
+        font-size: $font-size-xs;
+    }
+
+    .col-auto {
+        padding: 0 !important;
+    }
+
+    .col:empty {
+        display: none;
+    }
+
+    .pagination, .comment-paging {
+        margin: 0 3px;
+    }
+}
+
+.hasstickyfooter .stickyfooter {
+    bottom: 20px;
+}
+
+@include media-breakpoint-up(sm) {
+    #page-wrapper {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+
+        #page {
+            &:not(.drawers) {
+                flex: 1 0 auto;
+            }
+
+            display: flex;
+            flex-direction: column;
+
+            #page-content {
+                flex: 1 0 auto;
+            }
+        }
+
+        #page-footer {
+            flex-shrink: 0;
+        }
+    }
+}
+
+@include media-breakpoint-down(sm) {
+    #page-wrapper {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+
+        #page {
+            &:not(.drawers) {
+                flex: 1 0 auto;
+            }
+
+            display: flex;
+            flex-direction: column;
+        }
+    }
+
+    .custom-control-label--text {
+        font-size: $font-size-xs;
+    }
+
+    .bulkediting--close {
+        position: absolute;
+        top: -50px;
+        right: 0;
+    }
+}
+
+.path-grade {
+    .sticky-footer {
+        padding: 9px !important;
+
+        .btn-primary {
+            padding: .6rem 1rem;
+        }
+    }
+}
+
+.path-grade-edit #sticky-footer {
+    padding: 10px!important;
+}
+
+#sticky-footer .col+.col-auto {
+    margin-left: 10px;
+}

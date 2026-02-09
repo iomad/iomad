@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<libraries>
+    <library>
+        <location>amd/src/datepicker.js</location>
+        <name>Datepicker2 for Bootstrap</name>
+        <version>1.9.0</version>
+        <license>Apache</license>
+        <licenseversion>2.0</licenseversion>
+    </library>
+    <library>
+        <location>amd/src/select2.js</location>
+        <name>Searchable select</name>
+        <version>2.0</version>
+        <license>Apache</license>
+        <licenseversion>2.0</licenseversion>
+    </library>
+    <library>
+        <location>styles/datepicker.css</location>
+        <name>Datepicker2 for Bootstrap</name>
+        <version>2.0</version>
+        <license>Apache</license>
+        <licenseversion>2.0</licenseversion>
+    </library>
+    <library>
+        <location>styles/select2.min.css</location>
+        <name>Searchable select</name>
+        <version>2.0</version>
+        <license>Apache</license>
+        <licenseversion>2.0</licenseversion>
+    </library>
+     <library>
+        <location>amd/src/lc_color_picker.js</location>
+        <name>Color picker</name>
+        <version>2.0</version>
+        <license>Apache</license>
+        <licenseversion>2.0</licenseversion>
+    </library>
+</libraries>

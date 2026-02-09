@@ -1,0 +1,114 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_message/message_drawer_messages_list
+
+    This template will render a list of messages for the message drawer.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * All data attributes are required
+
+    Context variables required for this template:
+    * userid The logged in user id
+    * urls The URLs for the popover
+
+    Example context (json):
+    {}
+
+}}
+
+{{#messages}}
+    <a
+        href="#"
+        class="p-1 text-decoration-none d-flex list-group-item list-group-item-action align-items-start"
+        data-route="view-conversation"
+        {{#conversationid}}
+            data-route-param-1="{{.}}"
+            {{#frompanel}}
+                data-route-param-2="frompanel"
+            {{/frompanel}}
+        {{/conversationid}}
+        {{^conversationid}}
+            data-route-param-1="false"
+            data-route-param-2="create"
+            data-route-param-3="{{userid}}"
+            {{#frompanel}}
+                data-route-param-4="frompanel"
+            {{/frompanel}}
+        {{/conversationid}}
+        data-conversation-id="{{conversationid}}"
+        role="button"
+    >
+        <img
+            class="rounded"
+            src="{{{profileimageurl}}}"
+            alt="{{fullname}}"
+            aria-hidden="true"
+            style="height: 20px"
+        >
+        {{#showonlinestatus}}
+            <span class="contact-status {{#isonline}}online{{/isonline}}"></span>
+        {{/showonlinestatus}}
+        <div class="w-100 ml-2">
+            <div class="d-flex align-items-center">
+                <h5 class="message-title m-0 text-truncate">
+                    {{fullname}}
+                </h5>
+                <span class="{{#isblocked}}rui-contact-icon-blocked ml-1{{/isblocked}} {{^isblocked}}hidden{{/isblocked}}" data-region="contact-icon-blocked">
+                    {{#pix}} t/block, core, {{#str}} contactblocked, message {{/str}} {{/pix}}
+                </span>
+                <div
+                    class="rui-last-message-date ml-auto align-items-center {{^lastmessagedate}}hidden{{/lastmessagedate}}"
+                    data-region="last-message-date"
+                >
+                    {{#lastmessagedate}}
+                    <span class="rui-last-message-date-icon">
+                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="7.25" stroke="currentColor" stroke-width="2"></circle>
+                            <path stroke="currentColor" stroke-width="2" d="M12 8V12L14 14"></path>
+                        </svg>
+                    </span>
+                    <span class="rui-last-message-date-text">
+                        {{#userdate}} {{.}}, {{#str}} strftimedatefullshort, core_langconfig  {{/str}} {{/userdate}}
+                    </span>
+                    {{/lastmessagedate}}
+                </div>
+            </div>
+
+            <div class="mt-1 pr-2 rui-last-message message-txt" data-region="last-message">
+                <div class="rui-last-message-user-you" title="{{#str}} you, core_message {{/str}}">
+                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.25 15.25V6.75H8.75"></path>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 7L6.75 17.25"></path>
+                    </svg>
+                </div>
+                <span class="rui-last-message-text">{{#shortentext}} 100, {{{lastmessage}}}{{/shortentext}}</span>
+            </div>
+
+        </div>
+
+        <span
+            class="rui-unreadcount {{^unreadcount}}hidden{{/unreadcount}}"
+            data-region="unread-count"
+        >
+            {{unreadcount}}
+        </span>
+    </a>
+{{/messages}}

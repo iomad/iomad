@@ -1,0 +1,145 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core/filemanager_fileselect
+
+    This template renders the window with file information/actions.
+
+    Example context (json):
+    {
+        "helpicon": "<a class='btn ..'><i class='icon fa fa-question-circle ..'></i></a>",
+        "licensehelpicon": {
+            "text": "<ul><li><a href='http://en.wikipedia.org/wiki/All_rights_reserved'>All rights reserved</a></li></ul>",
+            "alt": "Help with Choose license"
+        },
+        "columns": true
+    }
+}}
+<div class="filemanager fp-select">
+    <div class="fp-select-loading">
+        <svg class="spinner" viewBox="0 0 50 50">
+            <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+        </svg>
+    </div>
+    <form class="form clearfix">
+        <div class="form-group row justify-content-end no-gutters mt-0 mb-3">
+            <button class="fp-file-download btn btn-sm btn-secondary m-1 border-0">
+                <svg class="mr-2" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M4.75 14.75V16.25C4.75 17.9069 6.09315 19.25 7.75 19.25H16.25C17.9069 19.25 19.25 17.9069 19.25 16.25V14.75"></path>
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12 14.25L12 4.75"></path>
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M8.75 10.75L12 14.25L15.25 10.75"></path>
+                </svg>
+                {{#str}}download{{/str}}
+            </button>
+            <button class="fp-file-delete btn btn-sm btn-danger m-1 border-0">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M6.75 7.75L7.59115 17.4233C7.68102 18.4568 8.54622 19.25 9.58363 19.25H14.4164C15.4538 19.25 16.319 18.4568 16.4088 17.4233L17.25 7.75"/>
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M9.75 7.5V6.75C9.75 5.64543 10.6454 4.75 11.75 4.75H12.25C13.3546 4.75 14.25 5.64543 14.25 6.75V7.5"/>
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M5 7.75H19"/>
+                </svg>
+            </button>
+            <button class="fp-file-setmain btn btn-sm btn-secondary m-1 border-0">{{#str}}setmainfile, repository{{/str}}</button>
+            <span class="fp-file-setmain-help col m-1">{{{helpicon}}}</span>
+            <button class="fp-file-zip btn btn-sm btn-secondary m-1 border-0">
+                <svg class="mr-2" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M18.25 8.75H5.75L6.57758 17.4396C6.67534 18.4661 7.53746 19.25 8.56857 19.25H15.4314C16.4625 19.25 17.3247 18.4661 17.4224 17.4396L18.25 8.75Z"></path>
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M19.25 5.75C19.25 5.19772 18.8023 4.75 18.25 4.75H5.75C5.19771 4.75 4.75 5.19772 4.75 5.75V7.75C4.75 8.30228 5.19772 8.75 5.75 8.75H18.25C18.8023 8.75 19.25 8.30228 19.25 7.75V5.75Z"></path>
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M9.75 13.25H14.25"></path>
+                </svg>
+                {{#str}}zip, editor{{/str}}
+            </button>
+            <button class="fp-file-unzip btn btn-sm btn-secondary m-1 border-0">
+                <svg class="mr-2" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4.75 19.25H19.25" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                    <path d="M12 15.25V4.75" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                    <path d="M15.25 8.25L12 4.75L8.75 8.25" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+                {{#str}}unzip{{/str}}
+            </button>
+        </div>
+
+                <div class="fp-saveas form-group row no-gutters">
+                    <label class="form-control-label my-0 mr-md-2 col-sm-12 col-md-4">{{#str}}name, repository{{/str}}</label>
+                    <div class="col"><input class="form-control" type="text"/></div>
+                </div>
+                <div class="fp-author form-group row no-gutters">
+                    <label class="form-control-label my-0 mr-md-2 col-sm-12 col-md-4">{{#str}}author, repository{{/str}}</label>
+                    <div class="col"><input class="form-control" type="text"/></div>
+                </div>
+                <div class="fp-license form-group row no-gutters">
+                    <div class="form-control-label my-0 mr-md-2 col-sm-12 col-md-4 d-inline-flex align-items-center">
+                        <label for="choose-license-{{uniqid}}" class="mb-0">
+                            {{#str}}chooselicense, repository{{/str}}
+                        </label>
+                        {{#licensehelpicon}}{{>core/help_icon}}{{/licensehelpicon}}
+                    </div>
+                    <div class="col">
+                        <select id="choose-license-{{uniqid}}" class="form-control custom-select w-100"></select>
+                    </div>
+                </div>
+                <div class="fp-path form-group row no-gutters">
+                    <label class="form-control-label my-0 mr-md-2 col-sm-12 col-md-4">{{#str}}path, repository{{/str}}</label>
+                    <div class="col">
+                        <select class="custom-select"></select>
+                    </div>
+                </div>
+                <div class="fp-original form-group row no-gutters">
+                    <label class="form-control-label my-0 mr-md-2 col-sm-12 col-md-4">{{#str}}original, repository{{/str}}</label>
+                    <div class="col">
+                        <span class="fp-originloading">{{#pix}}i/loading_small{{/pix}} {{#str}}loading, repository{{/str}}</span><span class="fp-value"></span>
+                    </div>
+                </div>
+                <div class="fp-reflist form-group row no-gutters">
+                    <label class="form-control-label my-0 mr-md-2 col-sm-12 col-md-4">{{#str}}referenceslist, repository{{/str}}</label>
+                    <div class="col">
+                        <p class="fp-refcount"></p>
+                        <span class="fp-reflistloading">
+                            <svg class="spinner" viewBox="0 0 50 50">
+                                <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+                            </svg>
+                            {{#str}}loading, repository{{/str}}
+                        </span>
+                        <ul class="fp-value"></ul>
+                    </div>
+                </div>
+        <div class="fp-select-buttons form-group mb-0 w-100 d-inline-flex">
+            <button class="fp-file-cancel btn-secondary btn mb-1 col-4">{{#str}}cancel{{/str}}</button>
+            <button class="fp-file-update btn-primary btn ml-2 mb-1 col justify-content-bettween">
+                {{#str}}update{{/str}}
+                <svg class="ml-2" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M11.25 4.75L8.75 7L11.25 9.25"></path>
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12.75 19.25L15.25 17L12.75 14.75"></path>
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M9.75 7H13.25C16.5637 7 19.25 9.68629 19.25 13V13.25"></path>
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M14.25 17H10.75C7.43629 17 4.75 14.3137 4.75 11V10.75"></path>
+                </svg>
+            </button>
+        </div>
+    </form>
+    <hr />
+    <div class="fp-info clearfix d-inline-flex align-items-start col-12 p-0">
+        <div class="row no-gutters w-100">
+          <div class="fp-thumbnail col"></div>
+          <div class="col fp-fileinfo">
+              <div class="fp-datemodified"><p><strong>{{#str}}lastmodified, repository{{/str}}</strong><br><span class="fp-value"></span></div>
+              <div class="fp-datecreated"><strong>{{#str}}datecreated, repository{{/str}}</strong><br><span class="fp-value"></span></div>
+              <div class="fp-size"><strong>{{#str}}size, repository{{/str}}</strong><br><span class="fp-value"></span></div>
+              <div class="fp-dimensions"><strong>{{#str}}dimensions, repository{{/str}}</strong><br><span class="fp-value"></span></div>
+          </div>
+        </div>
+
+    </div>
+</div>

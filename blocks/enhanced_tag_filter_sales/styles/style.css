@@ -1,0 +1,47 @@
+/* styles/style.css */
+
+/* CSS styles for the block content */
+
+.rui-course-card{
+    max-width: 340px!important;
+}
+.deactivated{
+background-color: #FCFCFC !important;
+color: #d3d3d3 !important;
+}
+/* Tag styles */
+.tag_cloud li a {
+    display: inline-block;
+    padding: 6px 12px;
+    margin: 4px;
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Highlight selected tags with inverse colors */
+.tag_cloud .selected{
+    background-color:  #75BE39 !important;
+    color: #FFFFFF !important;
+}
+
+.tag_cloud .selected:hover{
+    background-color:  #75BE39 !important;
+    color: #FFFFFF !important;
+    text-decoration: underline;
+}
+
+/* Default styling for tags */
+.tag_cloud li a {
+    background-color: #F0F0F0; /* Very light green background */
+    color: #000000; /* Black font color */
+    border-radius: 5px; /* Rounded border */
+    padding: 5px 10px; /* Adjust padding as needed */
+    transition: background-color 0.3s, color 0.3s; /* Smooth transition for hover effect */
+}
+
+/* Hover effect */
+.tag_cloud li a:hover {
+    background-color: #F0F0F0 !important;
+    color:  #75BE39 !important;
+}

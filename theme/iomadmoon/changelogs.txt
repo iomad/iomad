@@ -1,0 +1,114 @@
+CHANGELOG
+Moon IOMAD Theme
+- - - -
+## [1.5.2] - September 12, 2024
+# Improvements:
+ - Block Badge UI
+
+# Fixed:
+ - Sign-up page error
+ - Minor Bug Fixes
+
+## [1.5.1] - August 5, 2024
+# Improvements:
+ - Minor Bug Fixes
+
+## [1.5] - June 20, 2024
+# Added:
+ - New Activities Icons
+ - FontAwesome Icon System
+ - Custom Enrollment Page
+ - WCAG Improvements
+
+and a lot of improvements, bug fixes
+
+## [1.4.1] - April 9, 2024
+ - UI Improvements
+ - Minor Bug Fixes
+
+## [1.4.0] - April 8, 2024
+# Improvements:
+ - Support for IOMAD 4.3
+ - Minor Bug Fixes
+
+## [1.3.0] - December 20, 2023
+# Improvements:
+ - Google Analytics
+ - Minor Bug Fixes
+
+## [1.2.0] - December 11, 2023
+# Fixed:
+ - Minor Bug Fixes
+
+## [1.1.0] - December 11, 2023
+# Added:
+- Optional Display Hidden Courses Toggle (Sidebar - My Courses - Display Hidden Courses Toggle)
+- Back To Top Button (IOMAD Moon - General - Back to Top Button)
+- Course Card - Custom Fields (IOMAD Moon - Course Page - Course Card - Show Custom Fields)
+- My Courses Box New Features, Better UI and UX
+- New Show/Hide Sidebar Button Icons
+- Show/Hide Sidebar Button Aria Label (Open/Close)
+- New Admin Settings Icon
+- Sidebar Label on Hover (IOMAD Moon - Sidebar - Sidebar Label Customization)
+- Tooltips for Messages and Notifications (on the top bar)
+- Dark Mode Colors Customization (IOMAD Moon - Customization)
+- Display Custom Sidebar Items based on User Roles Restrictions
+- Separated Front Page Block Area #1, #2 (Block #01 #02)
+- Additional classes bg-primary-100 ... bg-primary-900, bg-gray-100 ... bg-gray-900
+
+# Improvements:
+- Backup UI
+- Calendar UI
+- Forms UI
+- Label Module (RWD)
+- Lesson Module
+- Proctorio Support
+- Course Management UI
+- Course Format Tiles UI
+- Course Image (on the course page)
+- Grade Report UI
+- Login Page (Full-width Select Field)
+- Message UI
+- Subcourse Module Dark Mode Support and Few UI Improvements
+- Sidebar Icon (Show/Hide) hidden when the course index opened
+- Quiz Page - UX improvements - Quiz navigation current question
+- Block #1 (Front Page)
+- Course Page - Top section block area under the course image
+- Even more WCAG improvements (checkboxes, aria-label, colors)
+- Forum Module UI
+- Theme Translations uses now parameter {$a} instead hard-coded site url.
+- RWD Improvements (Admin layout)
+- Dark mode UI for editor (code view)
+- OneTopic Format (Dark Mode)
+- Few UX Improvements
+
+# Fixed:
+- Blinking Page when Right Sidebar Opened
+- Duplicate reactions with Point of view - Feedback Plugin
+- Few issues with TinyMCE editor
+- First-time drawer block open (forceblockdraweropen) - Mod Book, Quiz, Lesson
+- Heading Color (IOMAD Moon - Customization - Text Colors)
+- Unsupported operand types: string - int (When Course Summary Limit is null)
+- Course Competency UI (checkboxes, dark mode)
+- Additional Sidebar Navigation Roles
+- Few bug related with custom alert
+- Groups non-functional buttons
+- Grader Sticky Footer has been redesigned in few cases
+- Modal window backdrop issue on mobile
+- Minor Bug Fixes
+
+
+## [1.0.2] - June 26, 2023
+# Added:
+ - Login page: Force Custom Logo
+
+## [1.0.1] - April 3, 2023
+# Added:
+ - Optional Top Bar Gradient (Top bar - Top bar with gradient)
+ 
+# Fixed: 
+ - Top Bar - Company Name Issue
+
+
+## [1.0.0] - March 21, 2023
+ - Released

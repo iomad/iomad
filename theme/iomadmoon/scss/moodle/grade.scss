@@ -1,0 +1,1469 @@
+// The class gradetreebox matches the pages displaying the gradebook
+// "Gradebook setup" > "Simple view" and "Full view".
+.gradetreebox {
+
+    h4 {
+        // Force back the base font-size to minimise width.
+        font-size: $font-size-base;
+
+        .icon {
+            .theme-dark & {
+                filter: invert(1);
+            }
+        }
+    }
+
+    input[type=text] {
+        // Fallback on the minimum width.
+        min-width: 120px;
+    }
+
+    input[type=text],
+    select {
+        // Remove the bottom margin to gain height.
+        margin-bottom: 0;
+    }
+}
+
+// Grade upgrade notice.
+.core_grades_notices {
+    .singlebutton {
+        display: inline-block;
+    }
+}
+
+.path-grade-report #maincontent+.urlselect {
+    position: absolute;
+    left: 40vw;
+}
+
+.path-grade-report-grader {
+
+    #region-main {
+        overflow-x: visible;
+        min-width: 100%;
+        width: auto;
+        display: inline-flex;
+        flex-direction: column;
+
+        &>.card {
+            width: auto;
+            overflow-x: initial;
+        }
+
+        div[role="main"] {
+            flex: 1 1 auto;
+        }
+    }
+
+    [data-region="blocks-column"] {
+        width: 100%;
+        clear: both;
+    }
+
+    .gradeparent .user.cell {
+        .username {
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+
+            .userinitials {
+                margin-right: .5rem;
+            }
+        }
+
+        .userpicture {
+            display: flex;
+        }
+    }
+}
+
+.path-grade-report-grader .header, .path-grade-report-grader td.userfield div {
+    padding: 2px 0;
+}
+
+.path-grade-report-grader,
+.path-grade-report-user {
+    .gradepass {
+        color: $success;
+    }
+
+    .gradefail {
+        color: $danger;
+    }
+}
+
+// Rubrics
+#page-grade-grading-manage {
+    #activemethodselector {
+        label {
+            display: inline-block;
+        }
+
+        .helptooltip {
+            margin-right: 0.5em;
+        }
+    }
+
+    .actions {
+        display: flex;
+        gap: 10px;
+
+        border: 1px solid $border-color;
+        border-radius: $btn-border-radius;
+        padding: 20px;
+
+        margin: 1rem 0 $page-padding-global;
+
+        .action {
+            padding: .6rem 1rem;
+            font-size: .75rem;
+
+            .action-text {
+                position: relative;
+                font-size: $font-size-sm;
+                white-space: normal;
+            }
+
+            .icon {
+                display: none;
+            }
+        }
+    }
+}
+
+#page-grade-grading-form-rubric-edit {
+    .gradingform_rubric_editform .status {
+        font-size: 70%;
+    }
+}
+
+.gradingform_rubric {
+    margin-bottom: 1em;
+    $rubricPadding: 6px;
+
+    // When doing evaluation on the rubrics table.
+    &.evaluate .criterion .levels .level {
+
+        &:hover,
+        &.checked {
+            background: $primary-color-300;
+        }
+
+        &.checked {
+            border: none;
+            border-left: 1px solid $border-color;
+        }
+    }
+
+    .criterion {
+        .description {
+            vertical-align: top;
+            padding: $rubricPadding;
+
+            textarea {
+                margin-bottom: 0;
+                height: 115px;
+            }
+        }
+
+        .definition {
+            padding: 2px;
+            font-size: $font-size-sm;
+
+            textarea {
+                width: 80%;
+                margin-bottom: 0;
+            }
+        }
+
+        .score {
+            position: relative;
+            margin: 10px 0;
+            text-align: center;
+            color: $success;
+
+            input {
+                margin-bottom: 0;
+            }
+        }
+
+        .level {
+            vertical-align: top;
+            padding: $rubricPadding;
+
+            &.currentchecked {
+                background: $primary-color-100;
+            }
+
+            &.checked {
+                background: $primary-color-300;
+                border: 1px solid $border-color;
+            }
+
+            .delete {
+                position: relative;
+                width: 100%;
+                height: 40px;
+                margin-top: 5px;
+
+                input {
+                    display: block;
+                    position: absolute;
+                    right: 0;
+                    bottom: 0;
+                    height: 40px;
+                    width: 100%;
+                    border-radius: $btn-border-radius;
+                    margin: 0;
+
+                    &:hover {
+                        background-color: $red-200;
+                    }
+                }
+            }
+        }
+
+        .scorevalue {
+            input {
+                // Should handle at least three chars with room to spare.
+                float: none;
+                width: 2em;
+
+                &.hiddenelement,
+                &.pseudotablink {
+                    // Zero out the width if it's still in the block flow for some reason
+                    // when hidden
+                    width: 0;
+                }
+            }
+        }
+
+        .addlevel {
+            vertical-align: top;
+            padding-top: 6px;
+
+            input {
+                height: 30px;
+                line-height: 1rem;
+            }
+        }
+    }
+
+
+    .addcriterion {
+        margin-left: 5px;
+        padding: 0;
+
+        input {
+            margin: 0;
+            color: inherit;
+            text-shadow: inherit;
+            border: 0 none;
+            line-height: inherit;
+            background: transparent url([[pix:t/add]]) no-repeat 7px 8px;
+            padding-left: 26px;
+        }
+
+        margin-bottom: 1em;
+    }
+
+    .options {
+        clear: both;
+
+        .option {
+            label {
+                margin: 0;
+                padding: 0;
+                font-size: inherit;
+                font-weight: normal;
+                line-height: 2em;
+                color: inherit;
+                text-shadow: none;
+                background-color: transparent;
+            }
+
+            input {
+                margin-left: 5px;
+                margin-right: 12px;
+            }
+        }
+    }
+}
+
+.grade-display {
+    .description {
+        font-size: 1rem;
+    }
+}
+
+.criterion {
+    .description {
+        font-size: 1rem;
+    }
+
+    .criterion-toggle {
+        .expanded-icon {
+            display: block;
+        }
+
+        .collapsed-icon {
+            display: none;
+        }
+
+        &.collapsed {
+            .expanded-icon {
+                display: none;
+            }
+
+            .collapsed-icon {
+                display: block;
+            }
+        }
+    }
+}
+
+// Set up grades layout.
+//.path-grade-edit-tree
+    .gradetree-wrapper {
+        padding: 10px 10px;
+        background-color: $gray-100;
+
+        .theme-dark & {
+            background-color: $dm-gray-100;
+        }
+
+        .grade_icons {
+            .icon {
+                width: 20px;
+                height: 20px;
+                padding: 3px;
+                border-radius: $btn-border-radius-lg;
+                background-color: $gray-100;
+
+                .theme-dark & {
+                    filter: invert(1);
+                }
+            }
+
+        }
+
+        .setup-grades {
+            h4 {
+                margin: 0;
+
+                .icon {
+                    padding: 4px;
+                    background-color: $gray-100;
+                    border-radius: $btn-border-radius;
+                }
+            }
+
+            .column-rowspan {
+                padding: 0;
+                width: 24px;
+                min-width: 24px;
+                max-width: 24px;
+            }
+
+            .emptyrow {
+                display: none;
+            }
+
+            .gradeitemdescription {
+                font-weight: normal;
+                padding-left: 24px;
+            }
+
+            &.generaltable {
+
+                tr {
+                    &.spacer {
+                        height: 0.5rem;
+                    }
+
+                    &[data-hidden="true"] {
+                        display: none;
+                    }
+
+                    th {
+                        vertical-align: middle;
+                        border: none;
+                        text-align: left;
+                        background-color: $gray-100;
+
+                        .theme-dark & {
+                            background-color: $dm-gray-100;
+                        }
+
+                        &.rowspan {
+                            padding: 0;
+                            width: 24px;
+                            min-width: 24px;
+                        }
+                    }
+
+                    td {
+                        min-width: 4.5em;
+                        background-color: $gray-100;
+                        border: none;
+                        vertical-align: middle;
+
+                        .theme-dark & {
+                            background-color: $dm-gray-100;
+                        }
+
+                        &.column-name {
+                            padding-left: 38px;
+
+                            .small {
+                                font-size: 70%;
+                            }
+
+                            .itemicon {
+                                font-size: 18px;
+                                width: 18px;
+                                height: 18px;
+                            }
+                        }
+
+                        &.column-weight {
+                            .weightoverride {
+                                margin-right: 5px;
+                            }
+                            min-width: 15em;
+                        }
+
+                        &.column-actions {
+                            .dropdown-toggle::after {
+                                display: none;
+                            }
+                        }
+
+                        &.movehere {
+                            padding: 0;
+
+                            a.movehere {
+                                display: block;
+                                width: 100%;
+                                height: 50px;
+                                margin: 5px 0 5px 0;
+                                padding: 0;
+
+                                &:before {
+                                    display: none;
+                                }
+
+                                hr {
+                                    border: none;
+                                }
+
+                            }
+                        }
+                    }
+
+                    &.category {
+                        td {
+                            background-color: white;
+                            border-top: 1px solid $table-border-color;
+                            border-bottom: 1px solid $table-border-color;
+
+                            .theme-dark & {
+                                background-color: $dm-gray-100!important;
+                                border-color: $dm-table-border-color!important;
+                            }
+
+                            &:first-child {
+                                border-left: 1px solid $table-border-color;
+
+                                .theme-dark & {
+                                    border-color: $dm-table-border-color;
+                                }
+                            }
+
+                            &:last-child {
+                                border-right: 1px solid $table-border-color;
+
+                                .theme-dark & {
+                                    border-color: $dm-table-border-color;
+                                }
+                            }
+
+                            &.column-name {
+                                padding-left: 10px;
+                                font-weight: $font-weight-bold;
+
+                                div {
+                                    display: flex;
+                                    min-height: 30px;
+                                    align-items: center;
+
+                                    a {
+                                        &.toggle-category {
+                                            height: 40px!important;
+                                            width: 40px!important;
+                                            font-size: 12px;
+                                            line-height: 24px;
+                                            margin-right: 10px!important;
+
+                                            &[aria-expanded="true"] .expanded,
+                                            &[aria-expanded="false"] .collapsed {
+                                                display: none;
+                                            }
+
+                                            background-color: $gray-100;
+                                            color: $body-color;
+
+                                            .theme-dark & {
+                                            background-color: $dm-gray-100;
+                                            color: $dm-body-color;
+                                            }
+
+                                            i {
+                                                font-size: 12px;
+                                                width: 12px;
+                                                height: 12px;
+                                                color: $body-color;
+                                                margin: 0;
+
+                                                .theme-dark & {
+                                                    color: $dm-body-color!important;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    &.item {
+                        td {
+                            background-color: white;
+                            border-top: 3px solid $gray-100;
+
+                            .theme-dark & {
+                                background-color: $dm-gray-100!important;
+                                border-color: $dm-table-border-color!important;
+                            }
+                        }
+
+                        &.categoryitem,
+                        &.courseitem {
+                            td {
+                                min-width: 4.5em;
+                                background-color: $gray-100;
+                                border: none;
+                                vertical-align: middle;
+
+                                &.column-name {
+                                    padding-left: 0;
+                                }
+
+                                &:not(.column-actions) {
+                                    font-weight: $font-weight-bold;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        .badge-light {
+            margin-right: 0.5em;
+            margin-bottom: 0.5em;
+        }
+
+    }
+
+    td.movehere a.movehere {
+        display: block;
+        width: 100%;
+        height: 2rem;
+        border: 2px dashed $primary-color-600;
+        background-color: $primary-color-100;
+        border-radius: $btn-border-radius;
+
+        &:hover {
+            background-color: $primary-color-200;
+
+            .theme-dark & {
+                background-color: $dm-gray-100;
+            }
+        }
+
+        .theme-dark & {
+            border: 2px dashed $dm-gray-700;
+            background-color: $dm-gray-300;
+        }
+    }
+
+/**
+ * Grader report.
+ */
+.column-name .gradeitemheader,
+.column-itemname .gradeitemheader {
+    display: flex;
+    align-items: center;
+
+    .icon.itemicon {
+        margin-right: .5rem;
+        width: 30px;
+        height: 30px;
+    }
+}
+
+// ---- URL: /grade/edit/tree/index.php?id=4
+.column-name .gradeitemheader {
+    margin-left: 3px;
+}
+
+.path-grade-report-grader .heading .gradeitemheader {
+    line-height: 1.3;
+}
+
+.path-grade-report-grader .gradeitemheader {
+    vertical-align: middle;
+}
+
+.gradeparent {
+    // width: calc(100vw - 178px);
+    // max-width: calc(100vw - 178px);
+    // overflow-x: auto;
+
+    .drawer-courseindex--open &,
+    .drawer-open-index--open &,
+    .drawer-open-left & {
+        width: calc(100vw - 460px);
+        max-width: calc(100vw - 460px);
+    }
+}
+
+.search-input-group .search-input-icon,
+.path-grade-report-grader .usersearchwidget button,
+.path-grade-report-grader .usersearchwidget a {
+    z-index: 3;
+}
+
+/**
+ * Grader report.
+ */
+
+ .path-grade-report-grader {
+    .gradeparent {
+        tr .cell,
+        .floater .cell {
+            background-color: $pagination-bg;
+
+            &.gradecell {
+                .dropdown-menu {
+                    &.show {
+                        z-index: 1;
+                    }
+                }
+            }
+        }
+
+        table,
+        .cell {
+            border-color: $table-border-color;
+
+            div {
+                align-items: center;
+            }
+        }
+
+        .heading .cell,
+        .cell.category,
+        .avg .cell {
+            background-color: $gray-100;
+        }
+
+        table .clickable {
+            cursor: pointer;
+        }
+
+        tr.heading {
+            position: sticky;
+            top: 0;
+            z-index: 4;
+        }
+
+        tr.userrow {
+            th {
+                z-index: 2;
+
+                &.actions-menu-active {
+                    z-index: 3;
+                }
+            }
+        }
+
+        tr.lastrow {
+            position: sticky;
+            // Hack used by the observer to help detecting when the sticky 'Overall average' row is pinned. */
+            bottom: -1px;
+
+            &.pinned {
+                z-index: 4;
+            }
+
+            td,
+            th {
+                border-top: 1px solid $table-border-color;
+            }
+        }
+
+        th.header {
+            @include media-breakpoint-down(sm) {
+                left: 0;
+            }
+            @include media-breakpoint-up(md) {
+                left: -80px;
+            }
+            position: sticky;
+
+            &#studentheader {
+                z-index: 1;
+            }
+        }
+
+        td.noborder {
+            border-right: transparent;
+        }
+    }
+
+    .show-drawer-left .gradeparent th.header {
+        left: -80px;
+    }
+}
+
+.theme-dark.path-grade-report-grader {
+    .gradeparent {
+        tr .cell,
+        .floater .cell {
+            background-color: $dm-pagination-bg;
+        }
+    
+        table,
+        .cell {
+            border-color: $dm-table-border-color;
+        }
+
+        .heading .cell,
+        .cell.category,
+        .avg .cell {
+            background-color: $dm-gray-100;
+        }
+    }
+
+    tr.lastrow {
+        td,
+        th {
+            border-top: 1px solid $dm-table-border-color;
+        }
+    }
+}
+
+/**
+ * User report.
+ */
+.path-grade-report-user .user-grade {
+    border: none;
+
+    &.generaltable {
+        .levelodd {
+            background-color: $table-accent-bg;
+        }
+
+        .leveleven {
+            background-color: $table-bg;
+        }
+    }
+
+    .column-contributiontocoursetotal,
+    .column-range,
+    .column-percentage,
+    .column-weight {
+        /*rtl:ignore*/
+        direction: ltr;
+    }
+}
+
+/**
+ * Single view.
+ */
+.path-grade-report-singleview input[name^="finalgrade"] {
+    width: 80px;
+}
+
+
+
+/* Table */
+.scale_options {
+    font-size: $font-size-xs;
+    color: $body-color-light;
+
+    .theme-dark & {
+        color: $dm-body-color-light;
+    }
+}
+
+/* Modal */
+.usp-results-count {
+    padding: 0.5rem 0;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+    text-align: left;
+}
+
+.gradereport_history_usp {
+
+    .usp-finish {
+        padding: 7px 0 0;
+
+        input {
+            width: 100%;
+        }
+    }
+
+    .usp-search-field {
+        text-align: left;
+    }
+
+    .usp-search {
+        text-align: left;
+
+        input {
+            width: auto;
+            display: inline-flex;
+        }
+
+        input[type="submit"] {
+            margin-left: 0.35rem;
+        }
+    }
+
+    .usp-user .details {
+        font-size: $font-size-sm;
+
+        .userpicture {
+            border-radius: $btn-border-radius;
+        }
+
+        .fullname label {
+            font-weight: $font-weight-bold;
+        }
+    }
+
+}
+
+.path-mod-assign [data-region="grade-panel"] .gradingform_rubric .criterion .remark textarea {
+    min-width: 200px;
+    min-height: 70px;
+}
+
+// ---- URL: /grade/grading/pick.php?targetid=X
+#page-grade-grading-pick {
+    .templatesearchform {
+        margin-bottom: 2rem;
+    }
+
+    h2+.singlebutton {
+        margin-top: 1rem;
+    }
+}
+
+
+// Form Grading
+#page-grade-grading-form-rubric-edit .options,
+.gradingform_guide .options {
+    margin-top: 2rem;
+}
+
+.gradingform_guide .options .optionsheading {
+    padding-bottom: 1rem;
+    font-size: $font-size-sm;
+}
+
+.gradingform_guide .options .option label {
+    margin-bottom: 0;
+}
+
+.gradingform_guide .commentheader {
+    margin-top: 2rem;
+}
+
+.gradingform_guide .criterion label {
+    font-size: $font-size-sm;
+    margin: 1rem 0 .5rem 0;
+}
+
+.gradingform_rubric {
+    width: 100%;
+
+    .criteria {
+        overflow: auto;
+    }
+}
+
+
+#rubric-rubric.gradingform_rubric #rubric-criteria .criterion .scorevalue input,
+.gradingform_guide .criterion .description .criterionmaxscore input {
+    width: 100% !important;
+}
+
+.gradingform_rubric .criterion .levels .level .score {
+    font-size: $font-size-base;
+    font-style: normal;
+    font-weight: $font-weight-medium;
+    white-space: normal;
+    color: $green-900;
+    background-color: $green-200;
+
+    display: block !important;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+.gradingform_rubric .criterion .level {
+    width: 150px !important;
+    font-size: $font-size-sm;
+}
+
+.gradingform_rubric.editor .criterion .controls,
+.gradingform_rubric .criterion .description,
+.gradingform_rubric.editor .criterion .addlevel,
+.gradingform_rubric .criterion .remark,
+.gradingform_rubric .criterion .levels .level {
+    padding: 10px;
+}
+
+.gradingform_rubric .criterion .levels .level {
+    min-width: 120px;
+}
+
+.gradingform_rubric .criterion,
+.gradingform_rubric .criterion .levels .level {
+    border-color: $border-color;
+
+    .theme-dark & {
+        border-color: $dm-border-color;
+    }
+}
+
+.gradingform_guide.editor .criterion .controls .delete input,
+.gradingform_guide.editor .moveup input,
+.gradingform_guide.editor .movedown input,
+.gradingform_rubric.editor .criterion .controls .delete input,
+.gradingform_rubric.editor .criterion .controls .duplicate input,
+.gradingform_rubric.editor .movedown input,
+.gradingform_rubric.editor .moveup input {
+    background-color: $gray-100;
+    border-radius: $btn-border-radius;
+    margin: .25rem;
+}
+
+.gradingform_rubric.editor .levels .level .delete input,
+.gradingform_rubric.editor .criterion .controls .delete input,
+.gradingform_guide.editor .criterion .controls .delete input {
+    width: 100%;
+    height: 40px;
+    background: $red-100 url([[pix:theme|mod/workshop/userplan/task-fail]]) no-repeat center center;
+
+    &:hover {
+        background: $red-200 url([[pix:theme|mod/workshop/userplan/task-fail]]) no-repeat center center;
+    }
+}
+
+.controls {
+    .delete input {
+        max-width: 40px;
+    }
+}
+
+.gradingform_rubric.editor .moveup input,
+.gradingform_guide.editor .moveup input {
+    width: 40px;
+    height: 40px;
+    background: $gray-100 url([[pix:theme|iomadmoon/icon-arrow-up]]) no-repeat center center;
+}
+
+.gradingform_rubric.editor .movedown input,
+.gradingform_guide.editor .movedown input {
+    width: 40px;
+    height: 40px;
+    background: $gray-100 url([[pix:theme|iomadmoon/icon-arrow-down]]) no-repeat center center;
+}
+
+.gradingform_rubric.editor .criterion .controls .duplicate input {
+    width: 40px;
+    height: 40px;
+    background: $gray-100 url([[pix:theme|iomadmoon/icon-copy]]) no-repeat center center;
+}
+
+.gradingform_rubric .criteria {
+    overflow: auto;
+    margin-bottom: $page-padding-global;
+
+    .col-md-9 & {
+        margin-bottom: 0;
+    }
+}
+
+#rubric-rubric.gradingform_rubric #rubric-criteria .criterion .addlevel input,
+#rubric-rubric.gradingform_rubric .addcriterion,
+#rubric-rubric.gradingform_rubric .addcriterion input,
+.gradingform_rubric.editor .addlevel input,
+.gradingform_guide.editor .addcriterion input,
+.gradingform_guide.editor .addcomment input {
+    background-image: none;
+    background-color: $primary-color-600;
+    color: $primary-color-100;
+    font-weight: $font-weight-medium;
+    font-size: $font-size-sm;
+
+    margin: .5rem 0;
+    height: auto;
+    line-height: inherit;
+}
+
+.addlevel .btn {
+    width: max-content;
+}
+
+#rubric-rubric.gradingform_rubric .addcriterion input {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.gradingform_rubric .plainvalue.empty,
+.gradingform_guide .plainvalue.editname,
+.gradingform_guide .plainvalue.empty {
+    background: $yellow-100 url([[pix:theme|iomadmoon/icon-edit]]) no-repeat 20px;
+    background-size: 14px;
+
+    padding: 10px 10px 10px 50px;
+    font-size: $font-size-sm;
+    font-style: normal;
+    color: $body-color-secondary;
+}
+
+.gradingform_guide .plainvalue.editname {
+    font-size: $font-size-base;
+}
+
+#rubric-rubric.gradingform_rubric #rubric-criteria .criterion .scorevalue input.hiddenelement,
+#rubric-rubric.gradingform_rubric #rubric-criteria .criterion .scorevalue input.pseudotablink,
+.gradingform_guide.editor .pseudotablink {
+    height: 0;
+}
+
+.gradingform_rubric .criterion.even,
+.gradingform_guide .criterion.even {
+    background: transparent;
+}
+
+.gradingform_rubric .criterion {
+    border-width: 0 0 2px 0;
+    border-color: $border-color;
+    border-style: solid;
+}
+
+.gradingform_guide.editor .criterion .description {
+    padding: 1rem;
+}
+
+.gradingform_guide.editor .criterion .controls {
+    padding: 0;
+}
+
+#guide-comments,
+#guide-criteria {
+    textarea {
+        min-height: 100px;
+    }
+}
+
+// Table - Form
+.path-mod-assign {
+    .quickgrade {
+        display: inline-flex;
+        width: auto;
+    }
+
+    tr.unselectedrow td {
+        &.c7 {
+            font-size: $font-size-xs;
+        }
+
+        &.c8 {
+            max-width: 320px;
+            font-size: $font-size-xs;
+        }
+    }
+}
+
+.grade-navigation {
+    margin-top: $page-padding-global;
+    margin-bottom: $page-padding-global;
+}
+
+.rui-grader-toolbar {
+    .active {
+        background-color: $primary-color-100;
+
+        .theme-dark & {
+            background-color: $primary-color-800;
+        }
+    }
+}
+
+#guide-criteria {
+    label {
+        padding-top: 1rem;
+        display: block;
+        border-top: 1px solid $border-color;
+        color: $body-color-secondary;
+    }
+
+    .criteriondescriptionmarkers {
+        width: auto;
+    }
+}
+
+.gradingform_rubric_editform .status,
+.gradingform_guide_editform .status {
+    display: inline-flex;
+    align-items: center;
+
+    padding: $badge-padding-y $badge-padding-x;
+    @include font-size($badge-font-size);
+    font-weight: $badge-font-weight;
+    @include border-radius($badge-border-radius);
+    text-transform: none;
+    border: none;
+}
+
+// ---- URL:  /course/user.php?mode=grade&id=4&user=2
+#page-grade-edit-letter-index .mdl-align {
+    text-align: left;
+}
+
+.gradereport-grader-table .user.cell {
+    position: sticky;
+    left: -80px;
+    z-index: 3;
+}
+
+.path-grade-report-grader .gradeparent table {
+    border: 0;
+}
+
+table a {
+    &::before {
+        display: none;
+    }
+}
+
+#page-grade-report-overview-index .main-content {
+    .generaltable {
+        margin-bottom: 0;
+
+        td,
+        th {
+            padding: .75rem 0;
+        }
+
+        tr {
+            &:hover {
+                background-color: transparent;
+                border-color: $primary-color-200;
+            }
+        }
+    }
+
+}
+
+// TODO: checkl if there is better solution https://demo.rosea.io/iomadmoon/1/grade/report/overview/index.php?id=4&userid=3
+#page-grade-report-overview-index {
+    .main-content {
+
+        .rui-page-title--page,
+        .rui-page-title--avatar {
+            display: none;
+        }
+    }
+}
+
+.path-grade-report-singleview div.reporttable {
+    text-align: left;
+}
+
+.theme-dark.path-grade-report-singleview div.reporttable {
+    background-color: $dm-gray-100;
+    color: $dm-body-color;
+}
+
+.theme-dark.path-grade-report-singleview .reporttable tbody tr,
+.theme-dark.path-grade-report-singleview .reporttable tbody tr:nth-of-type(odd),
+.theme-dark.path-grade-report-singleview .reporttable tbody tr:hover {
+    background-color: $dm-gray-200;
+    color: $dm-body-color;
+    border-color: $dm-border-color;
+}
+
+.path-grade-report-singleview .overrideexcludecheck {
+    width: 16px!important;
+    height: 16px!important;
+    padding: 5px;
+    border-radius: 20px;
+    background-color: $green-200;
+}
+
+.path-grade-report-singleview .reporttable tbody th {
+    .itemicon {
+        margin-right: .35rem;
+        width: 36px;
+        height: 36px;
+    }
+}
+
+.path-grade-report-singleview .reporttable {
+    .category {
+        font-size: $font-size-xs;
+        color: $body-color-light;
+    }
+}
+
+// TODO: check this http://localhost:8888/moodle311/grade/report/singleview/index.php?id=6&item=grade&itemid=31
+.pagelayout-redirect {
+    #page {
+        max-width: 400px;
+        margin: $page-padding-global auto;
+        padding: 20px;
+    }
+}
+
+
+// Grading page 
+.path-mod-assign [data-region="review-panel"].collapsed+[data-region="grade-panel"] [data-region="grade"],
+.path-mod-assign [data-region="grade-panel"].fullwidth [data-region="grade"] {
+    max-width: calc(100% - 40px);
+    /* increasing the width of the screen*/
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.path-mod-assign [data-region="grade-panel"] .gradingform_rubric .criterion .description {
+    width: 20%;
+    /* reduces the size of the criterion description from 50% to 20%*/
+}
+
+.path-mod-assign [data-region="grade-panel"] .gradingform_rubric {
+    margin-top: 20px;
+}
+
+.path-mod-assign [data-region="grade-panel"].fullwidth {
+    left: 0;
+    width: calc(100% - 40px);
+    overflow: auto;
+}
+
+.gradingform_rubric .criterion .description {
+    max-width: 300px;
+}
+
+#graded_users_selector {
+    margin-top: $page-padding-global;
+}
+
+// Single Report Index
+.path-grade-report {
+    .main-content {
+        .itemnav {
+            max-width: 260px;
+        }
+
+        .previtem {
+            text-align: left;
+        }
+
+        .nextitem {
+            text-align: right;
+        }
+    }
+}
+
+.theme-dark.path-mod-assign td.submissionnotgraded,
+.theme-dark.path-mod-assign div.submissionnotgraded {
+    color: $dm-body-color;
+}
+
+// Hack for hiding current stamp alt text on img tag without the image source.
+.currentstampbutton {
+    img {
+        text-indent: -9999px;
+    }
+}
+
+// Moodle 4.1
+.search-widget {
+    .btn {
+        padding: 2px !important;
+    }
+
+    .userinitials:empty {
+        display: block;
+    }
+
+    .user-info {
+        padding: 10px 16px;
+    }
+
+    .dropdown-menu {
+        min-height: 50px;
+    }
+}
+
+// Moodle 4.2.
+@include media-breakpoint-up(md) {
+    .path-grade-report-grader .initialsdropdown {
+        min-width: 460px;
+    }
+}
+
+.path-grade-report-grader .grade_type_value .grade_icons .icon {
+    background-color: $yellow-100;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 5px;
+    width: 16px;
+    height: 16px;
+    border-radius: $btn-border-radius-lg;
+}
+
+.theme-dark.path-grade-report-grader .grade_type_value .grade_icons .icon {
+    background-color: $gray-200;
+    filter: invert(1);
+}
+
+.path-grade-report-user .user-report-container,
+.grade-report-user .user-report-container,
+.gradereport_history_usp .usp-user,
+.gradereport_history_usp .usp-ajax-content {
+    border-color: $border-color;
+}
+
+.theme-dark.path-grade-report-user .user-report-container,
+.theme-dark .grade-report-user .user-report-container,
+.theme-dark .gradereport_history_usp .usp-user,
+.theme-dark .gradereport_history_usp .usp-ajax-content {
+    border-color: $dm-border-color;
+}
+
+// Reset default styles
+.path-grade-report-user .user-grade thead th,
+.grade-report-user .user-grade thead th,
+.path-grade-report-user .user-grade td,
+.grade-report-user .user-grade td,
+.path-grade-report-user .user-grade .baggt,
+.path-grade-report-user .user-grade .baggb,
+.grade-report-user .user-grade .baggt,
+.grade-report-user .user-grade .baggb,
+.path-grade-report-user .user-report-container,
+.grade-report-user .user-report-container,
+.path-grade-report-user .user-grade tbody tr,
+.grade-report-user .user-grade tbody tr,
+.path-grade-report-user .user-grade tbody tr:hover,
+.grade-report-user .user-grade tbody tr:hover {
+    background-color: $gray-100;
+}
+
+.path-grade-report-user .user-grade td.item,
+.grade-report-user .user-grade td.item,
+.path-grade-report-user .user-grade th.column-itemname:not(.header,.category,.baggt,.baggb),
+.grade-report-user .user-grade th.column-itemname:not(.header,.category,.baggt,.baggb),
+.path-grade-report-user .user-grade th.category,
+.grade-report-user .user-grade th.category {
+    background-color: $container-bg;
+    border-color: $border-color;
+}
+
+.theme-dark.path-grade-report-user .user-grade thead th,
+.theme-dark .grade-report-user .user-grade thead th,
+.theme-dark.path-grade-report-user .user-grade td,
+.theme-dark .grade-report-user .user-grade td,
+.theme-dark.path-grade-report-user .user-grade .baggt,
+.theme-dark.path-grade-report-user .user-grade .baggb,
+.theme-dark .grade-report-user .user-grade .baggt,
+.theme-dark .grade-report-user .user-grade .baggb,
+.theme-dark.path-grade-report-user .user-report-container,
+.theme-dark .grade-report-user .user-report-container,
+.theme-dark.path-grade-report-user .user-grade tbody tr,
+.theme-dark .grade-report-user .user-grade tbody tr,
+.theme-dark.path-grade-report-user .user-grade tbody tr:hover,
+.theme-dark .grade-report-user .user-grade tbody tr:hover {
+    background-color: $dm-gray-100;
+
+    .rui-icon {
+        filter: invert(1);
+    }
+}
+
+.theme-dark.path-grade-report-user .user-grade td.item,
+.theme-dark .grade-report-user .user-grade td.item,
+.theme-dark.path-grade-report-user .user-grade th.column-itemname:not(.header,.category,.baggt,.baggb),
+.theme-dark .grade-report-user .user-grade th.column-itemname:not(.header,.category,.baggt,.baggb),
+.theme-dark.path-grade-report-user .user-grade th.category,
+.theme-dark .grade-report-user .user-grade th.category {
+    background-color: $dm-container-bg;
+    border-color: $dm-border-color;
+    
+    .rui-icon {
+        filter: invert(1);
+    }
+}
+
+.column-name .gradeitemheader, .column-itemname .gradeitemheader {
+    font-size: $font-size-md;
+}
+// End.
+
+.gradereport_history_usp .usp-user .details {
+    padding: 6px 10px;
+}
+
+.extrafields {
+    font-size: $font-size-xs;
+}
+
+.searchresultitemscontainer {
+    margin: 10px 0 0;
+}
+
+.path-grade-report-singleview .overrideexcludecheck {
+    width: 24px;
+    height: 24px;
+}
+
+.path-grade-report-singleview .report-navigation .container,
+.path-grade-report-user .user-navigation .container {
+    max-width: 100%;
+    width: 100%;
+}
+
+.searchresultitemscontainer {
+    .userpicture {
+        width: 40px!important;
+        height: 40px!important;
+    }
+}
+
+.initialsdropdown .initialbarlabel {
+    color: $dropdown-color;
+}

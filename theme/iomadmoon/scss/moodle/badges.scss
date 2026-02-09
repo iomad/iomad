@@ -1,0 +1,256 @@
+//---- Badges Page
+
+#badge-overview {
+    h3 {
+        margin: 0.5rem 0;
+        font-size: 1.25rem;
+    }
+
+    dl {
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid $border-color;
+
+        .theme-dark & {
+            border-bottom: 1px solid $dm-border-color;
+        }
+    }
+
+    ul {
+        margin: .5rem .25rem;
+    }
+
+    .activatebadge {
+        margin: 1rem 0;
+    }
+}
+
+.badge.number {
+    background-color: $blue-100;
+    color: $blue-600;
+
+    .theme-dark & {
+      background-color: $blue-600;
+      color: $blue-100;
+    }
+}
+
+//TODO: Optymalizacja tego typu ikonek
+.criteria-header {
+    a {
+        .icon {
+            padding: 10px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: $btn-border-radius;
+
+            background-color: $gray-200;
+            font-size: $font-size-xs;
+            color: $gray-800;
+
+            transition: $transition-base;
+
+            .theme-dark & {
+                background-color: $dm-gray-200;
+                color: $dm-gray-800;
+            }
+
+            &.fa-trash,
+            &.fa-eye-slash {
+                background-color: $red-100;
+                color: $red-700;
+            }
+
+            &.fa-eye {
+                background-color: $green-100;
+                color: $green-800;
+            }
+        }
+
+        &:hover {
+            text-decoration: none;
+
+            &:before {
+                display: none;
+            }
+
+            .icon {
+                background-color: $blue-200;
+                color: $blue-700!important;
+
+                &.fa-trash {
+                    background-color: $red-700;
+                    color: $red-100!important;
+                }
+            }
+        }
+    }
+}
+
+.rui-badge-name {
+    margin: 2rem 0 1rem;
+    font-weight: $font-weight-bold;
+    font-size: 1.125rem;
+    color: $body-color;
+
+    .theme-dark & {color: $dm-body-color;}
+}
+
+.rui-badge-expires-info {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    font-size: $font-size-xs;
+    color: $body-color-secondary;
+
+    .theme-dark & {color: $dm-body-color-secondary;}
+}
+
+.rui-badge-alert {
+    margin: $page-padding-global 0;
+
+    padding: 2px 2px 2px 20px;
+    border: 2px dashed $border-color;
+    border-radius: $btn-border-radius;
+
+    font-size: $font-size-sm;
+
+    .theme-dark & {
+        border-bottom: 2px dashed $dm-border-color;
+    }
+
+    .btn {
+        margin: 5px;
+        padding: 8px 16px;
+        font-size: $font-size-sm;
+    }
+
+    .activatebadge {
+        margin: 0 0 0 auto;
+    }
+
+    &.inactive {
+        .activatebadge .btn {
+            color: $green-800;
+            background-color: $green-100;
+            &:hover {
+                background: $green-200;
+            }
+        }
+    }
+
+    &.active {
+        .activatebadge .btn {
+            color: $red-700;
+            background-color: $red-100;
+            &:hover {
+                background: $red-200;
+            }
+        }
+    }
+}
+
+.rui-badge-comment {
+    background-color: $yellow-100;
+}
+
+.rui-main-content-title .activatebadge {
+    margin: 0 1rem 0 0;
+    padding: 10px;
+    border: 1px solid $border-color;
+    border-radius: $btn-border-radius;
+
+    .theme-dark & {
+        border: 1px solid $dm-border-color;
+    }
+}
+
+.rui-list-group {
+    li {
+      position: relative;
+
+      width: 100%;
+      margin: 0;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 3px;
+      border: 1px solid $list-group-border-color;
+
+      &:first-child {
+        @include border-top-radius($border-radius);
+      }
+
+      &:last-child {
+        @include border-bottom-radius($border-radius);
+        border-width: 1px;
+      }
+
+      &:only-child {
+        border-radius: $btn-border-radius;
+        border-width: 1px;
+      }
+
+      .badge-name {
+          margin: 0 .35rem;
+          font-size: $font-size-sm;
+      }
+
+    }
+  }
+
+
+#page-badges-backpacks {
+    .text-danger {
+        margin: $page-padding-global auto 0;
+        padding: 2rem;
+
+        background-color: $red-100;
+        border-radius: $btn-border-radius;
+
+        font-size: $font-size-xs;
+        color: $red-700;
+
+        .icon {
+            margin-right: 7px;
+            filter: invert(13%) sepia(89%) saturate(4751%) hue-rotate(356deg) brightness(86%) contrast(96%);
+            width: 15px;
+            height: 15px;
+        }
+    }
+}
+
+// Status badges
+span.status {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+  
+    margin: 0 .5rem;
+    padding: $badge-padding-y $badge-padding-x;
+    @include font-size($badge-font-size);
+    font-weight: $badge-font-weight;
+    vertical-align: baseline;
+    @include border-radius($badge-border-radius);
+    @include transition($badge-transition);
+
+    &.ready {
+        background-color: $green-100;
+        color: $green-800;
+    }
+
+
+    &.draft {
+        background-color: $yellow-100;
+        color: $yellow-800;
+    }
+}
+
+.bg-primary.text-light {
+    color: $white!important;
+}

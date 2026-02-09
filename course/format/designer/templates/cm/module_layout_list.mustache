@@ -1,0 +1,149 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template format_designer/cm/module_layout_cards
+
+    Displays the course module card list
+
+    Example context (json):
+    {
+        "cmname": "<a class=\"aalink\" href=\"#\"><span class=\"instancename\">Assign example</span></a>",
+        "hasname": "true",
+        "id": 3,
+        "module": "assign",
+        "extraclasses": ""
+
+    }
+}}
+
+<li class="{{modclasses}} {{#isrestricted}}restricted{{/isrestricted}} position-relative"
+    style="{{{modstyle}}}"
+    id="{{anchor}}"
+    data-for="cmitem"
+    data-id="{{cm.id}}">
+
+    {{#cmformat.moveicon}} {{{cmformat.moveicon}}} {{/cmformat.moveicon}}
+    <div class="activity-block designer activity-basis activity-item {{#modstealth}}hiddenactivity{{/modstealth}}{{!
+        }}{{#modhiddenfromstudents}}hiddenactivity{{/modhiddenfromstudents}}{{!
+        }}{{#modinline}}activityinline{{/modinline}}" data-activityname="{{activityname}}" style="{{#prostyle}} {{{prostyle}}} {{/prostyle}}">
+        {{#hascmbulk}}
+            {{$ core_courseformat/local/content/cm/bulkselect }}
+                {{> core_courseformat/local/content/cm/bulkselect }}
+            {{/ core_courseformat/local/content/cm/bulkselect }}
+        {{/hascmbulk}}
+        <div class="card card-list {{colorclass}}" data-action="go-to-url" data-url="{{cmurl}}" >
+            <div class="card-body">
+                <div class="activity-background-style" style="{{#modulebackgroundstyle}} {{modulebackgroundstyle}} {{/modulebackgroundstyle}}">
+                </div>
+                {{#modbackoverlaycolor}}
+                <div class="bg-overlay" style="{{modbackoverlaycolor}}"></div>
+                {{/modbackoverlaycolor}}
+                <div class="mod-indent-outer w-100">
+
+                    <div class="{{indentclasses}}"></div>
+                        <div class="row">
+                            <div class="col-12 col-md-7">
+                                <div class="activityinstance {{modcontentclass}}">
+                                    {{#cmformat.cmname}}
+                                        {{$ format_designer/courseformat/content/cm/cmname }}
+                                            {{> format_designer/courseformat/content/cm/cmname }}
+                                        {{/ format_designer/courseformat/content/cm/cmname }}
+                                    {{/cmformat.cmname}}
+
+                                    {{! Module restricttions }}
+                                    {{#modrestricted}}
+                                    <div class="availability-info {{elementstate.calltoaction}}">
+                                        {{#cmformat.modavailability}}
+                                            <div class='restrict-block'>
+                                                <div class='info-content-block'>
+                                                {{$ core_courseformat/local/content/cm/availability }}
+                                                    {{> core_courseformat/local/content/cm/availability }}
+                                                {{/ core_courseformat/local/content/cm/availability }}
+                                                <div class='call-action-block'>
+                                                {{{calltoactionhtml}}}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {{/cmformat.modavailability}}
+                                    </div>
+                                    {{/modrestricted}}
+
+                                    {{#afterlink}}
+                                        <div class="afterlink">
+                                            {{{afterlink}}}
+                                        </div>
+                                    {{/afterlink}}
+                                </div>
+
+                                {{{beforecontent}}}
+
+                                {{#modcontent}}
+                                    <div class="mod-content {{elementstate.description}}" style="{{#moduletextcolor}} {{moduletextcolor}} {{/moduletextcolor}}">
+                                        {{{modcontent}}}
+                                    </div>
+                                {{/modcontent}}
+
+                                {{#hasname}}
+                                        {{$ core_courseformat/local/content/cm/badges }}
+                                            {{> core_courseformat/local/content/cm/badges }}
+                                        {{/ core_courseformat/local/content/cm/badges }}
+                                {{/hasname}}
+
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="row h-100 pull-right">
+                                    <div class="col align-self-center">
+                                        {{#modvisits}}
+                                        <div class="mod-visits-block  {{elementstate.visits}}">
+                                            <p style="{{#moduletextcolor}} {{moduletextcolor}} {{/moduletextcolor}}">{{modvisits}}</p>
+                                        </div>
+                                        {{/modvisits}}
+                                        {{#cmcompletionhtml}}
+                                            <div class="completion-html-card {{elementstate.completionbadge}}">
+                                                {{{cmcompletionhtml}}}
+                                            </div>
+                                        {{/cmcompletionhtml}}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-2 show-on-hover">
+                                {{^modrestricted}}
+                                <div class="row h-100 pull-right">
+                                    <div class="col align-self-center">
+                                        <div class="action-html-card {{elementstate.calltoaction}}">
+                                            {{{calltoactionhtml}}}
+                                        </div>
+                                    </div>
+                                </div>
+                                {{/modrestricted}}
+                            </div>
+                        </div>
+                </div>
+            </div>
+            {{#cmformat.controlmenu}}
+            <div class="activity-actions bulk-hidden align-self-start">
+                {{$ core_courseformat/local/content/cm/controlmenu }}
+                    {{> core_courseformat/local/content/cm/controlmenu }}
+                {{/ core_courseformat/local/content/cm/controlmenu }}
+            </div>
+            {{/cmformat.controlmenu}}
+        </div>
+         {{#moduleprogress}}
+            {{{moduleprogress}}}
+        {{/moduleprogress}}
+    </div>
+ </li>

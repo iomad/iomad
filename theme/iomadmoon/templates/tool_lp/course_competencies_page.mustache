@@ -1,0 +1,173 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tool_lp/course_competencies_page
+
+    Course competencies template.
+
+    For a full list of the context for this template see the course_competencies_page renderable.
+
+    This template includes ajax functionality, so it cannot be shown in the template library.
+}}
+<div data-region="coursecompetenciespage">
+    <div data-region="actions" class="clearfix wrapper-fw my-3">
+        <div class="float-sm-left">
+            {{#canmanagecoursecompetencies}}
+                <button class="btn btn-sm btn-primary" disabled>{{#str}}addcoursecompetencies, tool_lp{{/str}}</button>
+            {{/canmanagecoursecompetencies}}
+        </div>
+    </div>
+    <div data-region="configurecoursecompetencies" class="wrapper-fw">
+    {{#cangradecompetencies}}
+        <div class="alert alert-light my-3">
+        {{#settings.pushratingstouserplans}}
+            {{#str}}coursecompetencyratingsarepushedtouserplans, tool_lp{{/str}}
+        {{/settings.pushratingstouserplans}}
+        {{^settings.pushratingstouserplans}}
+            {{#str}}coursecompetencyratingsarenotpushedtouserplans, tool_lp{{/str}}
+        {{/settings.pushratingstouserplans}}
+        {{#canconfigurecoursecompetencies}}
+            <a href="#"
+               data-action="configure-course-competency-settings"
+               data-courseid="{{courseid}}"
+               data-pushratingstouserplans="{{settings.pushratingstouserplans}}">
+                {{#pix}}t/edit, core, {{#str}}edit{{/str}}{{/pix}}
+            </a>
+        {{/canconfigurecoursecompetencies}}
+        </div>
+    {{/cangradecompetencies}}
+    </div>
+{{#statistics}}
+{{> tool_lp/course_competency_statistics }}
+{{/statistics}}
+
+<div data-region="coursecompetencies">
+    <table class="generaltable fullwidth managecompetencies position-relative my-2">
+        <tbody class="drag-parentnode">
+        {{#competencies}}
+            <tr class="drag-samenode position-relative" data-id="{{competency.id}}">
+            <td class="position-relative">
+                {{#canmanagecoursecompetencies}}
+                <span class="drag-handlecontainer"></span>
+                <div class="float-sm-right">
+                    <a href="#" data-action="delete-competency-link" data-id="{{competency.id}}" class="btn btn-icon btn-danger">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6.75 7.75L7.59115 17.4233C7.68102 18.4568 8.54622 19.25 9.58363 19.25H14.4164C15.4538 19.25 16.319 18.4568 16.4088 17.4233L17.25 7.75"></path>
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 7.5V6.75C9.75 5.64543 10.6454 4.75 11.75 4.75H12.25C13.3546 4.75 14.25 5.64543 14.25 6.75V7.5"></path>
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 7.75H19"></path>
+                        </svg>
+                    </a>
+                </div>
+                {{/canmanagecoursecompetencies}}
+
+                <div class="bg-white p-4 border rounded">
+                    {{#competency}}
+                        <a href="{{pluginbaseurl}}/user_competency_in_course.php?courseid={{courseid}}&competencyid={{competency.id}}&userid={{gradableuserid}}"
+                            id="competency-info-link-{{competency.id}}"
+                            class="d-block mb-2"
+                            title="{{#str}}viewdetails, tool_lp{{/str}}">
+                            <div class="d-inline-flex"><strong class="py-1 mr-2">{{{competency.shortname}}}</strong><div class="badge badge-sq badge-xs badge-info">{{competency.idnumber}}</div></div>
+                        </a>
+                        <div>{{{competency.description}}}</div>
+                    {{/competency}}
+
+                    {{#comppath}}
+                    <div class="d-inline-flex align-items-center my-2">
+                        <span class="badge badge-light mr-2">{{#str}}path, tool_lp{{/str}}</span>
+                        <span>{{> tool_lp/competency_path }}</span>
+                    </div>
+                    {{/comppath}}
+                    {{#usercompetencycourse}}
+                        {{#grade}}
+                        <span class="badge {{#proficiency}}badge-success{{/proficiency}}{{^proficiency}}badge-danger{{/proficiency}}">{{gradename}}</span>
+                        {{/grade}}
+                    {{/usercompetencycourse}}
+                    {{#canmanagecoursecompetencies}}
+                    <div data-region="coursecompetency-ruleoutcome" class="my-3">
+                        <label class="my-0">
+                            <span class="mr-1">{{#str}}uponcoursecompletion, tool_lp{{/str}}</span>
+                            <select data-field="ruleoutcome" data-id="{{coursecompetency.id}}" class="custom-select">
+                            {{#ruleoutcomeoptions}}
+                                <option value="{{value}}" {{#selected}}selected{{/selected}}>{{text}}</option>
+                            {{/ruleoutcomeoptions}}
+                            </select>
+                        </label>
+                    </div>
+
+                    {{/canmanagecoursecompetencies}}
+                    <div data-region="coursecompetencyactivities" class="my-3 pb-3 border-bottom">
+                        <h6>{{#str}}activities{{/str}}</h6>
+                        <ul class="inline list-inline mt-2 p-0">
+                        {{#coursemodules}}
+                            <li class="list-inline-item"><a href="{{url}}"><img src="{{iconurl}}"> {{name}} </a></li>
+                        {{/coursemodules}}
+                        {{^coursemodules}}
+                            <li class="list-inline-item"><div class="badge badge-warning">{{#str}}noactivities, tool_lp{{/str}}</div></li>
+                        {{/coursemodules}}
+                        </ul>
+                    </div>
+
+                    <div data-region="learningplans">
+
+                        <h6>{{#str}}userplans, core_competency{{/str}}</h6>
+                        <ul class="inline list-inline mt-2 p-0">
+                        {{#plans}}
+                            <li class="list-inline-item"><a href="{{pluginbaseurl}}/plan.php?id={{id}}">{{{name}}}</a></li>
+                        {{/plans}}
+                        {{^plans}}
+                            <li class="list-inline-item"><div class="badge badge-warning">{{#str}}nouserplanswithcompetency, core_competency{{/str}}</div></li>
+                        {{/plans}}
+                        </ul>
+
+                    </div>
+
+                </div>
+            </td>
+            </tr>
+        {{/competencies}}
+        </tbody>
+    </table>
+{{^competencies}}
+<div class="badge badge-sq badge-danger my-3">
+    {{#moduleid}}
+        {{#str}}nocompetenciesinactivity, tool_lp{{/str}}
+    {{/moduleid}}
+    {{^moduleid}}
+        {{#str}}nocompetenciesincourse, tool_lp{{/str}}
+    {{/moduleid}}
+</div>
+{{/competencies}}
+</div>
+<div data-region="actions">
+    {{#canmanagecompetencyframeworks}}
+        <a class="btn btn-primary" href="{{manageurl}}">{{#str}}managecompetenciesandframeworks, tool_lp{{/str}}</a>
+    {{/canmanagecompetencyframeworks}}
+</div>
+</div>
+
+{{#js}}
+require(['tool_lp/competencies'], function(mod) {
+    (new mod({{courseid}}, 'course', {{pagecontextid}}));
+});
+{{/js}}
+{{#canconfigurecoursecompetencies}}
+{{#js}}
+require(['tool_lp/course_competency_settings'], function(Mod) {
+    (new Mod('[data-action=configure-course-competency-settings]'));
+});
+{{/js}}
+{{/canconfigurecoursecompetencies}}

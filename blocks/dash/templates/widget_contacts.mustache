@@ -1,0 +1,107 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template block_dash/widget_contacts
+
+    Example context (json):
+    {
+        "sitefullname": "Moodle - 311",
+		"courseurl": "https://localhost/moodle/course/view.php?id=2"
+    }
+}}
+
+<div class="block_dash-community-block">
+
+    <div class="contact-block">
+
+        <!--Contact Users-->
+        <div class="contact-element">
+            <div class="row">
+                {{#data.contacts}}
+                <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-xs-12">
+                    <div class="contact-img-block">
+                        <!--Contact User img block-->
+                        <div class="img-block">
+                            <div class="overlay-block"></div> <!--Contact User border split-->
+                            <div class="img-block-overlay">
+                                <a href="{{{profileurl}}}"><i class="fa fa-address-book-o"></i></a>
+                            </div> <!--Contact address icon-->
+                            <div class="img-block-overlay img-block-overlay-1">
+                                <a data-userid="{{{id}}}" href="{{{groupsurl}}}" class="contact-widget-viewgroup"><i class="fa fa-users"></i></a>
+                            </div> <!--Contact Users icon-->
+                            <div class="img-block-overlay img-block-overlay-2">
+                                <a href="{{contacturl}}"><i class="fa fa-comment"></i></a>
+                            </div> <!--Contact comment icon-->
+                            {{#unreadcount}}
+                            <span class="badge-block">{{unreadcount}}</span> <!--Contact User badge-->
+                            {{/unreadcount}}
+                            {{#profiletext}}
+                            <h3 class="user-letter-circle">{{profiletext}}</h3>
+                            {{/profiletext}}
+                            {{^profiletext}}
+                            <img src="{{{profileimageurl}}}" alt="{{{fullname}}}" title="{{{fullname}}}" role="presentation"> <!--Contact User img-->
+                            {{/profiletext}}
+                        </div>
+
+                        <!--Contact User name-->
+                        <div class="title-block">
+                            <h4>{{{fullname}}}<h4>
+                        </div>
+                    </div>
+                </div>
+                {{/data.contacts}}
+            </div>
+            {{^data.contacts}}
+                {{#noresult}} {{{noresult}}} {{/noresult}}
+            {{/data.contacts}}
+            <div class="suggested-contact">
+                <h4>{{#str}} suggestcontacts, block_dash{{/str}}</h4>
+                <div class="row">
+                    {{#data.suggestions}}
+                    <div class="col-md-3">
+                        <div class="contact-element">
+                            <div class="img-block">
+                                {{#profiletext}}
+                                <h3 class="user-letter-circle">{{profiletext}}</h3>
+                                {{/profiletext}}
+                                {{^profiletext}}
+                                <img src="{{{profileimageurl}}}" alt="{{{fullname}}}" title="{{{fullname}}}" role="presentation"> <!--Contact User img-->
+                                {{/profiletext}}
+                            </div>
+                            <div class="suggested-element">
+                                <div class="info">
+                                    {{#suggestinfo}}
+                                    <h6> {{{.}}} </h6>
+                                    {{/suggestinfo}}
+                                </div>
+                                <h5>{{{fullname}}}</h5>
+                                <div class="btn-block">
+                                    <a data-currentuserid="{{data.currentuser}}" data-userid="{{id}}" class="ajax-contact-button btn toggle-contact-button"  >
+                                        {{#addcontacticon}} {{{addcontacticon}}} {{/addcontacticon}}
+                                        {{#str}} addtocontacts, block_dash {{/str}}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {{/data.suggestions}}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

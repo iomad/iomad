@@ -1,0 +1,226 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Report department security functions for IOMAD reports
+ *
+ * This file contains centralized security functions for filtering departments
+ * in IOMAD reports based on user permissions and manager types.
+ *
+ * @package    local_iomad
+ * @copyright  2024 TreeSolution Consulting GmbH
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Filter user departments based on report viewing permissions
+ *
+ * @param company $company The company object
+ * @param stdClass $user The user object
+ * @param string $capability The capability to check (e.g., 'local/report_users:view')
+ * @return array Filtered array of departments the user can access for reports
+ */
+function filter_report_departments($company, $user, $capability) {
+    global $DB;
+    
+    $companycontext = \core\context\company::instance($company->id);
+    
+    // Check if user has full admin access
+    if (\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+        $parentlevel = company::get_company_parentnode($company->id);
+        return array($parentlevel->id => $parentlevel->id);
+    }
+    
+    // Get all departments user belongs to
+    $userlevels = $company->get_userlevel($user);
+    
+    // Filter userlevels to only include departments where user has proper report viewing permissions
+    $filtereduserlevels = array();
+    foreach ($userlevels as $userlevelid => $userlevel) {
+        // Get the user's role assignment in this department
+        $departmentrec = $DB->get_record('company_users', array(
+            'userid' => $user->id, 
+            'departmentid' => $userlevelid, 
+            'companyid' => $company->id
+        ));
+        
+        if ($departmentrec) {
+            $shouldInclude = false;
+
+            // Check managertype:
+            // 0 = normal user (should NOT have access unless clientadministrator)
+            // 1 = company manager (should have access)
+            // 2 = department manager (should have access)
+            // 4 = company report only (should have access)
+            if ($departmentrec->managertype == 1 || $departmentrec->managertype == 2 || $departmentrec->managertype == 4) {
+                $shouldInclude = true;
+            } else if ($departmentrec->managertype == 0) {
+                // Normal user - check if they have clientadministrator role which should have full access
+                $roles = get_user_roles($companycontext, $user->id);
+                foreach ($roles as $role) {
+                    if ($role->shortname == 'clientadministrator') {
+                        $shouldInclude = true;
+                        break;
+                    }
+                }
+            }
+
+            if ($shouldInclude) {
+                $filtereduserlevels[$userlevelid] = $userlevel;
+
+                // For managers (company manager, department manager), also include subdepartments
+                if ($departmentrec->managertype == 1 || $departmentrec->managertype == 2) {
+                    $subdepartments = company::get_all_subdepartments($userlevelid, false);
+                    if (is_array($subdepartments)) {
+                        $filtereduserlevels = $filtereduserlevels + $subdepartments;
+                    }
+                }
+            }
+        }
+    }
+
+    return $filtereduserlevels;
+}
+
+/**
+ * Validate that user has access to the requested department
+ *
+ * @param int $departmentid The requested department ID
+ * @param array $userlevels Array of allowed departments for the user
+ * @param array $params URL parameters for redirect
+ * @return void Redirects if access denied, otherwise continues
+ */
+function validate_report_department_access($departmentid, $userlevels, $params) {
+    global $USER;
+    
+    // Security check: Validate that the requested departmentid is in the user's allowed departments
+    if (!empty($departmentid) && !array_key_exists($departmentid, $userlevels)) {
+        error_log("SECURITY WARNING: User {$USER->id} attempted to access unauthorized department {$departmentid}. Allowed departments: " . implode(',', array_keys($userlevels)));
+        
+        // Redirect to an allowed department or show error
+        if (!empty($userlevels)) {
+            // Redirect to the first allowed department
+            $alloweddepartmentid = key($userlevels);
+
+            // Ensure params is an array and contains only scalar values for URL construction
+            $cleanparams = array();
+            if (is_array($params)) {
+                foreach ($params as $key => $value) {
+                    if (is_scalar($value)) {
+                        $cleanparams[$key] = $value;
+                    }
+                }
+            }
+            $cleanparams['deptid'] = $alloweddepartmentid;
+
+            $redirecturl = new moodle_url('/local/report_users/index.php', $cleanparams);
+            redirect($redirecturl, get_string('accessdenied', 'admin'), null, \core\output\notification::NOTIFY_ERROR);
+        } else {
+            // User has no allowed departments - this shouldn't happen if they passed the capability check
+            throw new moodle_exception('accessdenied', 'admin');
+        }
+    }
+}
+
+/**
+ * Generate filtered tree selector HTML for reports
+ *
+ * This function replaces the standard display_tree_selector call with filtered departments
+ *
+ * @param renderer_base $output The output renderer
+ * @param company $company The company object
+ * @param stdClass $parentlevel The parent level object
+ * @param moodle_url $linkurl The base URL for links
+ * @param array $urlparams URL parameters
+ * @param int $departmentid Currently selected department ID
+ * @param bool $addchildcompanies Whether to add child companies
+ * @param string $capability The capability to check for filtering
+ * @return string HTML for the filtered tree selector
+ */
+function get_filtered_tree_selector_html($output, $company, $parentlevel, $linkurl, $urlparams, $departmentid = 0, $addchildcompanies = false, $capability = '') {
+    global $DB, $USER;
+
+    // Get filtered departments based on user capabilities
+
+    $companycontext = \core\context\company::instance($company->id);
+    
+    // Get filtered departments
+    if (!empty($capability)) {
+        $userlevels = filter_report_departments($company, $USER, $capability);
+    } else {
+        // Fallback to standard behavior if no capability specified
+        if (\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+            $userlevels = array($parentlevel->id => $parentlevel->id);
+        } else {
+            $userlevels = $company->get_userlevel($USER);
+        }
+    }
+
+    // Build the department tree with filtered departments
+    $subhierarchieslist = array();
+    $departmenttree = array();
+    foreach ($userlevels as $userlevelid => $userlevel) {
+        $subdepartments = company::get_all_subdepartments($userlevelid, $addchildcompanies);
+        if (is_array($subdepartments)) {
+            $subhierarchieslist = $subhierarchieslist + $subdepartments;
+        }
+        $departmenttree[$userlevelid] = company::get_all_subdepartments_raw($userlevelid, false, $addchildcompanies);
+    }
+
+    // Prune any nodes which are somewhere else down another branch
+
+    // Prune any nodes which are somewhere else down another branch
+    foreach ($departmenttree as $key => $branch) {
+        $rest = $departmenttree;
+        unset($rest[$key]);
+        $flat = company::array_flatten_children($rest);
+        if (!empty($flat[$key])) {
+            unset($departmenttree[$key]);
+        }
+    }
+
+    if (empty($departmentid)) {
+        $departmentid = key($userlevels);
+    }
+
+    // Generate the tree HTML (visual representation)
+    $treehtml = $output->department_tree($departmenttree, optional_param('deptid', 0, PARAM_INT));
+
+    // Create the hidden dropdown for functionality (using 'deptid' like the original)
+    $departmentselect = new single_select(new moodle_url($linkurl, $urlparams), 'deptid', $subhierarchieslist, $departmentid);
+    $departmentselect->label = get_string('department', 'block_iomad_company_admin') .
+                               $output->help_icon('department', 'block_iomad_company_admin') . '&nbsp';
+
+    // Build the HTML structure exactly like the original
+    if (empty($departmentid)) {
+        $returnhtml = html_writer::tag('h4', get_string('department', 'block_iomad_company_admin'));
+    } else {
+        $departmentrec = $DB->get_record('department', ['id' => $departmentid]);
+        $returnhtml = html_writer::tag('h4', get_string('departmentwithname', 'block_iomad_company_admin', $departmentrec));
+    }
+    $returnhtml .= html_writer::start_tag('div', array('class' => 'iomadclear'));
+    $returnhtml .= html_writer::start_tag('div', array('class' => 'fitem'));
+    $returnhtml .= $treehtml;
+    $returnhtml .= html_writer::start_tag('div', array('style' => 'display:none'));
+    $returnhtml .= $output->render($departmentselect);
+    $returnhtml .= html_writer::end_tag('div');
+    $returnhtml .= html_writer::end_tag('div');
+    $returnhtml .= html_writer::end_tag('div');
+
+    return $returnhtml;
+}

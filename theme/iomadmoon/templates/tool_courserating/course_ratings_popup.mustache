@@ -1,0 +1,49 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tool_courserating/course_ratings_popup
+
+    Example context (json):
+    {
+        "courseid": 12
+    }
+
+}}
+<div class="tool_courserating-reviews-popup">
+    {{#canrate}}
+        <p class="mdl-align">
+            <a href="#" class="btn btn-secondary w-100" data-action="tool_courserating-addrating" data-courseid="{{courseid}}">
+                {{#hasrating}}
+                    {{#str}}editrating, tool_courserating{{/str}}
+                {{/hasrating}}
+                {{^hasrating}}
+                    {{#str}}addrating, tool_courserating{{/str}}
+                {{/hasrating}}
+            </a>
+        </p>
+    {{/canrate}}
+
+    <div class="container course-rating-summary" data-courseid="{{courseid}}" data-for="tool_courserating-summary">
+        {{>tool_courserating/course_ratings_summary}}
+    </div>
+
+    <div class="course-reviews" data-for="tool_courserating-reviews"
+         data-systemcontextid="{{systemcontextid}}" data-courseid="{{courseid}}"
+         data-withrating="0">
+        {{>tool_courserating/course_ratings_popup_reviews}}
+    </div>
+</div>

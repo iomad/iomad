@@ -1,0 +1,249 @@
+//---- Glossary
+//---- Module Activity
+
+#page-mod-glossary-view table.glossarycategoryheader {
+    h3 {
+        font-size: 2.5rem;
+    }
+}
+
+//----- Continuous & FAQ Template
+.continuous,
+.faq,
+.dictionary
+{
+    .entryheader {
+        .concept {
+            color: $body-color-secondary;
+
+            .theme-dark & {
+                color: $dm-body-color-secondary;
+            }
+
+            h4 {
+                margin: 1rem 0;
+                font-size: 1.5rem;
+                color: $body-color;
+                line-height: 1.5;
+
+                .theme-dark & {
+                    color: $dm-body-color-secondary;
+                }
+            }
+        }
+    }
+
+    .entry {
+        padding-top: 1rem;
+
+        b {
+            margin: 1rem 0;
+            font-size: $font-size-sm;
+        }
+    }
+}
+
+.continuous,
+.faq,
+.fullwithauthor,
+.fullwithoutauthor,
+.dictionary
+{
+
+    .time {
+        display: block;
+        margin: 0 0 .5rem 0;
+        font-size: $font-size-xs;
+        font-weight: $font-weight-normal;
+        color: $body-color-light;
+
+        .theme-dark & {
+            color: $dm-body-color-light;
+        }
+    }
+
+    .attachments {
+        margin: 1rem 0;
+
+        a {
+            padding: .25rem 0;
+
+            font-size: $font-size-xs;
+            color: inherit;
+
+            &:hover {
+                text-decoration: none;
+            }
+        }
+
+        br + a { margin-top: 10px;}
+    }
+}
+
+//----- Encyclopedia, Full with and withour author Template
+.fullwithoutauthor,
+.fullwithauthor
+{
+    .userpicture {
+        border-radius: $btn-border-radius;
+    }
+
+    .concept {
+        h4 {
+            margin: 0 0 .5rem;
+        }
+    }
+
+    .author {
+        display: inline-flex;
+        margin: .5rem 0;
+        font-size: $font-size-xs;
+        color: $body-color-light;
+
+        .theme-dark & {
+            color: $dm-body-color-light;
+        }
+
+        a {
+            margin: 0 .25rem;
+        }
+    }
+
+    .entrylowersection {
+        padding-top: 1rem;
+    }
+}
+
+.path-mod-glossary .glossarypost {
+    width: 100%;
+}
+
+.path-mod-glossary .glossarypost .entrylowersection .icons {
+    margin-top: 10px;
+    display: block;
+    text-align: left;
+}
+
+.glossarypost {
+    .aliases,
+    .entrylowersection {
+        display: block;
+        margin-top: .35rem;
+        text-align: left;
+
+        label {
+            margin-right: .35rem;
+            font-size: $font-size-xs;
+        }
+    }
+
+    .attachments {
+        margin: 1rem 0;
+
+        img {
+            margin: 10px 0;
+            max-width: 100%;
+            border-radius: $btn-border-radius;
+        }
+    }
+}
+
+.glossarypost.fullwithauthor,
+.glossarypost.encyclopedia {
+    padding: 0;
+
+    .entryheader {
+        padding: 8px 16px;
+    }
+
+    .concept h4 {
+        margin-bottom: 0;
+    }
+
+    .entry {
+        padding-left: 16px;
+    }
+
+    .userpicture {
+        border-radius: $btn-border-radius;
+    }
+
+    .author {
+        display: inline-flex;
+        margin: .5rem 0;
+        font-size: $font-size-xs;
+        color: $body-color-light;
+
+        .theme-dark & {
+            color: $dm-body-color-light;
+        }
+
+        a {
+            margin: 0 .25rem;
+        }
+    }
+
+    .entrylowersection {
+        padding-top: 1rem;
+    }
+}
+
+//hack for pagination
+.path-mod-glossary .entrybox {
+    text-align: center;
+}
+
+.entrybox {
+    table th, table td {
+        border: 0;
+    }
+}
+
+#page-mod-glossary-view {
+    .main-content {
+
+        .glossaryexplain
+        {
+            margin: 0 auto 20px;
+        }
+
+        .glossarycontrol,
+        .simplesearchform,
+        .glossaryaddentry
+        {
+            margin: 0 auto;
+
+            float: none;
+        }
+
+        .glossarycontrol {
+            text-align: left!important;
+        }
+
+        .glossaryaddentry {
+            display: block;
+            margin-bottom: 2.5rem;
+
+            div {
+                width: 100%;
+
+                .btn {
+                    margin: 0;
+                    width: 100%;
+                }
+            }
+        }
+
+        hr {
+            border-width: 2px;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+    }
+
+    #intro {
+        display: block;
+        margin: 0 auto 2rem auto;
+        padding: 0!important;
+    }
+}

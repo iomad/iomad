@@ -1,0 +1,596 @@
+//---- Backup UI
+
+.theme-dark.path-backup .mform {
+    .icon {
+        filter: invert(.9);
+    }
+}
+
+.path-backup {
+    .table-responsive table {
+        width: 100%;
+    }
+}
+
+.path-backup .mform {
+
+    .checkbox .form-check {
+        background-color: transparent;
+        padding: 3px 0;
+    }
+
+    .form-control-static {
+        line-height: 2;
+
+        padding: 0;
+        margin: 0;
+        background-color: transparent;
+        box-shadow: none;
+
+        .icon {
+            font-size: 12px;
+            height: auto !important;
+        }
+
+    }
+
+    .fcontainer {
+        margin: 0 0 1rem;
+    }
+
+    .grouped_settings {
+        clear: both;
+        overflow: hidden;
+
+        .icon {
+            margin: 3px;
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Use card styles but avoid extend because that brings in too much. */
+        &.section_level {
+            @include border-radius($card-border-radius);
+            @include clearfix;
+            margin-bottom: $card-spacer-x;
+        }
+    }
+
+    /* These are long labels with checkboxes on the right. */
+    .include_setting {
+        width: 50%;
+        display: inline-block;
+
+        .text {
+            display: flex;
+            flex-direction: row-reverse;
+            align-items: center;
+        }
+
+        &.section_level {
+            padding: 0;
+        }
+    }
+
+    .normal_setting {
+        width: 50%;
+        display: inline-block;
+    }
+
+    .backup_selector {
+        padding: 10px 15px;
+        background-color: $gray-100;
+
+        .theme-dark & {
+            background-color: $dm-gray-100;
+        }
+    }
+
+}
+
+.path-backup {
+    .section_level {
+        font-weight: $font-weight-medium;
+    }
+
+    .section_level .activity_level {
+        padding-left: 64px;
+
+        .form-group label {
+            margin: 0;
+            font-size: $font-size-xs;
+        }
+    }
+
+    .proceedbutton {
+        margin-left: auto;
+    }
+
+    .detail-pair {
+        border-bottom: 1px solid $border-color;
+        padding: 10px 0;
+
+        &:last-of-type {
+            border-bottom: 0;
+        }
+
+        .backup-restore & {
+            display: inline-flex;
+        }
+
+        .detail-pair-label {
+            margin: 0;
+            padding-right: 10px;
+            font-weight: $font-weight-bold;
+
+            &:empty {
+                display: none;
+            }
+        }
+    }
+
+    h2.header {
+        font-size: 1.25rem;
+    }
+
+    .subheader {
+        margin: 1rem 0;
+        font-size: 1rem;
+    }
+}
+
+.theme-dark.path-backup {
+    .detail-pair {
+        .theme-dark & {
+            border-bottom: 1px solid $dm-border-color;
+        }
+    }
+}
+
+/* Override the columns width to leave more room for the labels. */
+.path-backup .mform {
+
+    .felement {
+        padding: 0.25rem 0;
+        font-size: $font-size-xs;
+        font-weight: $font-weight-medium;
+    }
+
+    .custom-select {
+        padding: 10px 20px 10px 10px;
+    }
+
+    .root_setting,
+    .grouped_settings {
+
+        padding: 5px 0;
+
+        /* Striped rows like a table */
+        &:nth-of-type(odd) {
+            border-bottom: 1px solid $border-color;
+        }
+
+        .form-group {
+            margin: 0!important;
+
+            .col-md-3.checkbox {
+                width: 0%;
+            }
+
+            .col-md-9.checkbox {
+                width: 100%;
+                left: 0;
+            }
+        }
+    }
+}
+
+.theme-dark.path-backup .mform {
+
+    .root_setting,
+    .grouped_settings {
+        &:nth-of-type(odd) {
+            border-color: $dm-border-color;
+        }
+    }
+
+    .mform .grouped_settings .icon {
+        filter: invert(.9);
+    }
+}
+
+/* Detail pair is (usually) some short label with a longer value */
+.path-backup .detail-pair {
+    width: 100%;
+    display: inline-flex;
+
+    .detail-pair-label,
+    .detail-pair-value {
+        display: block !important;
+    }
+
+}
+
+.detail-pair {
+
+    .rcs-search {
+        margin-top: 10px;
+    }
+
+    .pl-2 {
+        padding: 0 !important;
+    }
+
+}
+
+.ics-results {
+    margin-bottom: 1rem;
+}
+
+/* Make these bits full width and work with the detail-pair */
+#id_rootsettings,
+#id_coursesettings {
+    font-size: $font-size-sm !important;
+
+    border-radius: $btn-border-radius;
+    border: 2px solid var(--primary-color-300);
+
+    padding: $card-spacer-x;
+    margin-bottom: $card-spacer-x;
+
+    .theme-dark & {
+        border-color: $dm-border-color;
+    }
+
+    legend {
+        width: auto;
+        padding: 5px 20px;
+        border-radius: $btn-border-radius;
+        background-color: var(--main-theme-color);
+        color: $white;
+
+        font-size: $font-size-sm;
+        font-weight: $font-weight-medium;
+    }
+
+}
+
+.path-backup .backup-section {
+    font-size: $font-size-sm;
+
+    border-radius: $btn-border-radius;
+
+    @include clearfix;
+    padding: $card-spacer-x;
+    margin-bottom: $card-spacer-x;
+
+    .generaltable {
+        margin-bottom: 0;
+    }
+
+    .sub-header,
+    .backup-sub-section,
+    .singlebutton {
+        width: 100%;
+        float: left;
+        clear: both;
+    }
+
+    /* Fix for nested table headers */
+    th.header {
+        width: auto;
+        float: none;
+    }
+
+    /* Add card styles to backup sections */
+    ::after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+
+    .ics-totalresults {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+        font-size: $font-size-base;
+        font-weight: $font-weight-medium;
+    }
+
+    &.ics-existing-course {
+        .detail-pair {
+            display: block !important;
+        }
+    }
+}
+
+.backup-restore .backup-section {
+    border: 1px solid $border-color;
+    border-radius: $btn-border-radius;
+
+    .theme-dark & {
+        border: 1px solid $dm-border-color;
+    }
+
+    .detail-pair {
+        label {
+            margin-bottom: 0 !important;
+        }
+
+        .detail-pair-label,
+        .detail-pair-value {
+            display: inline-flex;
+            width: auto;
+            margin-bottom: 0 !important;
+        }
+    }
+
+    .w-25,
+    .w-75 {
+        width: 100% !important;
+    }
+
+    .subheader {
+        margin: 2rem 0 0.5rem;
+    }
+}
+
+.path-backup .notification.dependencies_enforced {
+    color: $red-800;
+    font-weight: $font-weight-bold;
+}
+
+.rui-backup-progress {
+    margin-top: 0;
+    margin-bottom: $card-spacer-y;
+
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    color: $body-color-secondary;
+
+    .theme-dark & {
+        color: $dm-body-color-secondary;
+    }
+
+    .sep {
+        display: none
+    }
+
+    .backup_stage {
+        margin: 3px;
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+
+        padding: $badge-padding-y $badge-padding-x;
+        @include font-size($badge-font-size);
+        font-weight: $badge-font-weight;
+        vertical-align: baseline;
+        @include border-radius($badge-border-radius);
+        @include transition($badge-transition);
+
+        @at-root a#{&} {
+            @include hover-focus() {
+                text-decoration: none;
+            }
+        }
+
+        @extend .badge-light;
+        @extend .badge-link;
+
+        &.backup_stage_current {
+            @extend .badge-primary;
+        }
+
+        &.backup_stage_next {
+            opacity: 0.5;
+            cursor: not-allowed;
+
+            &+.accesshide+.arrow+.backup_stage,
+            &+.accesshide+.arrow+.backup_stage+.accesshide+.arrow+.backup_stage,
+            &+.accesshide+.arrow+.backup_stage+.accesshide+.arrow+.backup_stage+.accesshide+.arrow+.backup_stage,
+            &+.accesshide+.arrow+.backup_stage+.accesshide+.arrow+.backup_stage+.accesshide+.arrow+.backup_stage+.accesshide+.arrow+.backup_stage {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+        }
+    }
+
+
+}
+
+.path-backup .rui-backup-progress span.backup_stage.backup_stage_complete {
+    color: inherit;
+}
+
+#page-backup-restore .filealiasesfailures {
+    background-color: $state-danger-bg;
+
+    .aliaseslist {
+        background-color: $body-bg;
+    }
+}
+
+
+//TODO: I have now clue for what this part is.
+.wibbler {
+    margin: 5px auto 10px;
+    padding: 10px;
+
+    position: relative;
+    min-height: 10px;
+
+    border-radius: $btn-border-radius;
+    background-color: $gray-100;
+
+    .theme-dark & {
+        background-color: $dm-gray-100;
+    }
+
+    .wibble {
+        position: absolute;
+        left: 10px;
+        right: 10px;
+        top: 8px;
+        height: 5px;
+        border-radius: $btn-border-radius;
+    }
+
+    .state0 {
+        background: $yellow-200;
+    }
+
+    .state1 {
+        background: $yellow-300;
+    }
+
+    .state2 {
+        background: $yellow-600;
+    }
+
+    .state3 {
+        background: $green-500;
+    }
+
+    .state4 {
+        background: $green-600;
+    }
+
+    .state5 {
+        background: $green-700;
+    }
+
+    .state6 {
+        background: $green-800;
+    }
+
+    .state7 {
+        background: $green-900;
+    }
+
+    .state8 {
+        background: $blue-200;
+    }
+
+    .state9 {
+        background: $blue-300;
+    }
+
+    .state10 {
+        background: $blue-400;
+    }
+
+    .state11 {
+        background: $blue-500;
+    }
+
+    .state12 {
+        background: $blue-600;
+    }
+}
+
+#page-backup-backup {
+    [role="main"] {
+        .form-group {
+            margin: 0!important;
+            padding: 0 0.25rem!important;
+
+            label {
+                margin: 0;
+            }
+        }
+    }
+}
+
+.path-backup .mform .grouped_settings.section_level {
+    padding: 10px;
+    border: 1px solid $border-color;
+
+    .theme-dark & {
+        border: 1px solid $dm-border-color;
+    }
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+
+.backup-restore {
+    span.error {
+        margin: 15px 0 0;
+        padding: 10px;
+        display: inline-flex;
+
+        font-size: $font-size-xs;
+        font-weight: $font-weight-medium;
+        color: $white;
+        background-color: $red-600;
+
+        border-radius: $btn-border-radius $btn-border-radius 0 0;
+    }
+
+    fieldset.error {
+        padding: 1rem;
+        background-color: $white;
+        border-radius: 0 $border-radius $border-radius $border-radius;
+        border: 2px solid $red-600;
+    }
+
+    td,
+    th {
+        padding: 3px;
+        font-size: $font-size-xs;
+    }
+
+    .error {
+        .detail-pair {
+            align-items: flex-start;
+        }
+    }
+
+}
+
+.activitytable {
+    .modulename .icon {
+        margin-right: 0.35rem;
+    }
+}
+
+.backup_progress {
+    margin-bottom: 20px;
+    font-size: $font-size-xs;
+
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.backup_progress .arrow.sep {
+    margin: 0 4px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 16px;
+    height: 16px;
+    border-radius: 16px;
+
+    background: $gray-200;
+
+    font-size: 9px;
+    color: $gray-800;
+    text-indent: 2px;
+
+    .theme-dark & {
+        background-color: $dm-gray-200;
+        color: $dm-gray-600;
+    }
+}
+
+.normal_setting,
+.root_setting {
+    label {
+        margin-bottom: 0;
+    }
+}

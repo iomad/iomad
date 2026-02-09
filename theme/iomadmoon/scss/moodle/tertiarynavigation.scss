@@ -1,0 +1,137 @@
+.tertiary-navigation {
+
+  label {
+    margin-bottom: 0;
+    font-size: $font-size-sm;
+  }
+
+  .navitem {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    @include media-breakpoint-between(xs, sm) {
+      width: 100%;
+      margin-bottom: 5px;
+
+      .btn {
+        width: 100%;
+      }
+    }
+  }
+
+  &.full-width-bottom-border {
+    width: 100%;
+    padding: 0;
+    border-bottom: 1px solid $border-color;
+    margin-bottom: 25px;
+
+    .theme-dark & {
+      border-color: $dm-border-color;
+    }
+
+    .row {
+      margin: 0;
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+
+  .tertiary-navigation-selector {
+    .dropdown-toggle {
+      padding: 6px 17px!important;
+      font-size: 1rem;
+      font-weight: $font-weight-medium;
+      height: 47px;
+
+    &:after {
+      margin-left: 14px;
+    }
+
+      &:hover {
+        box-shadow: $box-shadow-md;
+
+        .theme-dark & {
+          color: $dm-body-color-light;
+        }
+      }
+    }
+  }
+
+  @include media-breakpoint-up(md) {
+  .navitem-divider {
+    display: flex;
+    align-self: center;
+    margin-bottom: 1rem;
+
+    width: 1px;
+    height: 30px;
+    background-color: $border-color;
+
+    .theme-dark & {
+      background-color: $dm-border-color;
+    }
+  }
+  }
+
+  &>a.btn,
+  &>div.urlselect {
+    @include media-breakpoint-up(md) {
+      margin-bottom: 25px;
+    }
+
+    @include media-breakpoint-between(xs, sm) {
+      margin-bottom: 10px;
+      width: 100%;
+    }
+  }
+
+  @include media-breakpoint-between(xs, sm) {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+
+    div {
+      width: 100%;
+      margin: 0;
+    }
+
+    .btn,
+    .form-inline .custom-select {
+      padding: 8px 20px;
+      margin: 2px 0 !important;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .btn {
+      font-size: $font-size-xs;
+    }
+
+    .form-inline .custom-select {
+      padding: 3px 16px;
+      height: 40px;
+      line-height: 1.5;
+      font-size: $font-size-xs;
+    }
+  }
+
+  @include media-breakpoint-up(md) {
+
+    .navitem:not(:last-child),
+    .navitem-divider:not(:last-child) {
+      margin-right: 20px;
+    }
+  }
+}
+
+@media print {
+  .tertiary-navigation {
+    display: none;
+  }
+}
+
+.path-report .tertiary-navigation {
+  margin-bottom: $page-padding-global;
+}

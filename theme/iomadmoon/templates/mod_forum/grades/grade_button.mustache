@@ -1,0 +1,59 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_forum/grades/grade_button
+
+    Template which defines a forum post for sending in a single-post HTML email.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Example context (json):
+    {
+    }
+}}
+<button
+    class="btn btn-secondary"
+    type="button"
+    data-grade-action="launch"
+    data-contextid="{{contextid}}"
+    data-cmid="{{cmid}}"
+    data-name="{{name}}"
+    data-course-id="{{courseid}}"
+    data-course-name="{{coursename}}"
+    data-experimental-display-mode="{{experimentaldisplaymode}}"
+    data-group="{{groupid}}"
+    data-grading-component="{{gradingcomponent}}"
+    data-grading-component-subtype="{{gradingcomponentsubtype}}"
+    data-gradable-itemtype="forum"
+    data-grade-only-active-users="{{gradeonlyactiveusers}}"
+    {{#sendstudentnotifications}}data-send-student-notifications="1" {{/sendstudentnotifications}}
+>
+    <svg class="mr-2" width="24" height="24" fill="none" viewBox="0 0 24 24">
+        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.75 19.25L9 18.25L18.2929 8.95711C18.6834 8.56658 18.6834 7.93342 18.2929 7.54289L16.4571 5.70711C16.0666 5.31658 15.4334 5.31658 15.0429 5.70711L5.75 15L4.75 19.25Z"></path>
+        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.25 19.25H13.75"></path>
+    </svg>
+    {{#str}}gradeusers, forum{{/str}}
+</button>
+{{#js}}
+    require(['mod_forum/grades/grader'], function(Grader) {
+        Grader.registerLaunchListeners();
+    });
+{{/js}}

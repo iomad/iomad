@@ -1,0 +1,92 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template course_course/coursecard
+
+    This template renders the a card for the course cards.
+
+    Example context (json):
+    {
+        "courses": [
+            {
+                "name": "Assignment due 1",
+                "viewurl": "https://moodlesite/course/view.php?id=2",
+                "courseimage": "https://moodlesite/pluginfile/123/course/overviewfiles/123.jpg",
+                "fullname": "course 3",
+                "hasprogress": true,
+                "progress": 10,
+                "visible": true
+            }
+        ]
+    }
+}}
+<div class="rui-course-card {{#progress}}rui-progress-{{progress}}{{/progress}} {{#showcoursecategory}}rui-course-card--cat{{/showcoursecategory}}" role="listitem" data-region="course-content" data-course-id="{{{id}}}">
+
+    <div class="rui-course-card-icons">
+        {{> core_course/favouriteicon }}
+    </div>
+
+    <div class="rui-course-card-wrapper">
+        {{$menu}}{{/menu}}
+        <a href="{{viewurl}}" tabindex="-1" title="{{#str}}courseoverviewfiles, moodle {{/str}}" class="text-decoration-none">
+            <figure class="rui-course-card-img-top" style="background-image: url('{{{courseimage}}}');" alt="{{#str}}courseoverviewfiles, moodle {{/str}}"></figure>
+        </a>
+        <div class="rui-course-card-body" id="course-info-container-{{id}}-{{uniqid}}">
+
+            {{^visible}}
+                <div class="d-inline-flex flex-wrap mb-2">
+                    <span class="rui-course-hidden-badge">
+                        <svg class="mr-1" width="16" height="16" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.6247 10C19.0646 10.8986 19.25 11.6745 19.25 12C19.25 13 17.5 18.25 12 18.25C11.2686 18.25 10.6035 18.1572 10 17.9938M7 16.2686C5.36209 14.6693 4.75 12.5914 4.75 12C4.75 11 6.5 5.75 12 5.75C13.7947 5.75 15.1901 6.30902 16.2558 7.09698"></path>
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.25 4.75L4.75 19.25"></path>
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.409 13.591C9.53033 12.7123 9.53033 11.2877 10.409 10.409C11.2877 9.5303 12.7123 9.5303 13.591 10.409"></path>
+                        </svg>
+                        {{#str}} hiddenfromstudents {{/str}}
+                    </span>
+                </div>
+            {{/visible}}
+            <div class="d-flex align-items-start">
+                <div class="w-100">
+                    {{#showshortname}}
+                        <div class="rui-course-card-shortname flex-wrap">
+
+                            <span class="sr-only">
+                                {{#str}}aria:courseshortname, core_course{{/str}}
+                            </span>
+                            <div>
+                                {{{shortname}}}
+                            </div>
+                        </div>
+                    {{/showshortname}}
+                    <h4 class="rui-course-card-title mb-0 w-100">
+                        <a href="{{viewurl}}">
+                            <span class="sr-only">{{#str}}aria:coursename, core_course{{/str}}</span>
+                            {{$coursename}}{{/coursename}}
+                        </a>
+                    </h4>
+                </div>
+            </div>
+            <div class="rui-course-cat d-flex mt-2 mx-0 mb-0">
+                <div class="rui-course-cat-badge">
+                    <div class="text-truncate">{{$coursecategory}}{{/coursecategory}}</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    {{$progress}}{{/progress}}
+</div>

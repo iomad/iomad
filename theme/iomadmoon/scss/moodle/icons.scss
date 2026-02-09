@@ -1,0 +1,356 @@
+// The only class we need for icons is .icon
+// Standardize the size, padding and alignment for all icons in Moodle.
+
+// Size of default icons.
+$icon-width: 20px;
+$icon-height: 20px;
+// Size of big icons.
+$icon-big-width: 60px;
+$icon-big-height: 60px;
+
+// stylelint-disable
+$iconsizes: (
+    ) !default;
+$iconsizes: map-merge((0: 0,
+            1: ($icon-width * .25),
+            2: ($icon-width * .5),
+            3: $icon-width,
+            4: ($icon-width * 1.5),
+            5: ($icon-width * 2),
+            6: ($icon-width * 2.5),
+            7: ($icon-width * 3)), $iconsizes
+);
+// stylelint-enable
+
+.icon {
+    width: $icon-width;
+    height: $icon-height;
+    font-size: 14px;
+    line-height: 20px;
+    // vertical-align: middle;
+    margin: 0;
+    padding: 0;
+    box-sizing: content-box;
+
+    .sup & {
+        width: 16px;
+        height: 16px;
+        font-size: 16px;
+        line-height: 12px;
+    }
+
+    &.itemicon {
+        margin-right: 0.25rem;
+    }
+
+    &.spacer {
+        display: none;
+    }
+
+    &.iconsize-big {
+        width: $icon-big-width;
+        height: $icon-big-height;
+        font-size: $icon-big-height;
+        line-height: $icon-big-height;
+    }
+}
+
+// Mainly for icons in page title
+.iconlarge {
+    font-size: 40px;
+    width: 40px;
+    height: 40px;
+}
+
+h2 .icon.iconlarge {
+    margin-right: .5rem;
+}
+
+
+.action-menu-item a:hover {
+    text-decoration: none;
+
+    &:after {
+        display: none;
+    }
+}
+
+// YUI 2 Tree View icons must not have a margin left.
+.ygtvcell .icon {
+    margin: 3px 6px !important;
+    /* stylelint-disable-line declaration-no-important */
+}
+
+// In the navigation, tree icons should not have margins.
+.block_navigation,
+.block_settings {
+    .tree_item .icon {
+        margin-left: 0;
+    }
+}
+
+[data-action=toggle-drawer] .icon {
+    margin: 0;
+}
+
+// Apply in special cases where the default icons styles does not work properly. Eg file picker buttons.
+.icon-no-spacing a>.icon {
+    margin: 0;
+}
+
+.rui-icon-no-margin {
+    .icon {
+        margin-left: 0;
+        margin-right: 0;
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+}
+
+.completion-dialog {
+    font-size: $font-size-xs;
+
+    .rui-icon {
+        margin-right: 5px;
+        width: 14px;
+        height: 14px;
+        filter: invert(1);
+    }
+}
+
+
+.icon-large>.icon {
+    width: ($icon-width * 2);
+    height: ($icon-height * 2);
+}
+
+@each $size, $length in $iconsizes {
+    .icon-size-#{$size} {
+        .icon {
+            height: $length !important;
+            /* stylelint-disable-line declaration-no-important */
+            width: $length !important;
+            /* stylelint-disable-line declaration-no-important */
+            font-size: $length !important;
+            /* stylelint-disable-line declaration-no-important */
+            line-height: $length;
+        }
+    }
+}
+
+.helplink .icon {
+    margin-right: 0.5rem;
+}
+
+.action-icon+a {
+    margin-left: 0.5rem;
+}
+
+.dropdown-item.action-icon {
+    border-radius: $btn-border-radius-lg;
+}
+
+.icon-req {
+    padding: 4px;
+    position: relative;
+    top: 0;
+
+    width: auto;
+    height: auto;
+    background: $red-100;
+    border-radius: $btn-border-radius;
+
+    font-size: 8px;
+    color: $red-700 !important;
+
+    .fdescription & {
+        background-color: transparent;
+        color: $yellow-700;
+    }
+}
+
+.icon-info {
+    padding: 7px;
+}
+
+// Moodle 4.x.
+.icons-collapse-expand {
+    display: flex;
+    align-items: center;
+
+    img {
+        .theme-dark & {
+            filter: invert(1);
+        }
+    }
+
+    .expanded-icon {
+        display: flex;
+        align-items: center;
+        padding: 0 !important;
+    }
+
+    .collapsed-icon {
+        display: none;
+    }
+
+    &.collapsed {
+        .expanded-icon {
+            display: none;
+        }
+
+        .collapsed-icon {
+            line-height: 1;
+            display: flex;
+            align-items: center;
+        }
+    }
+}
+
+.rui-adv-icon {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
+    background-color: $gray-100;
+    color: $gray-800;
+
+    font-size: 10px;
+    font-weight: $font-weight-bold;
+
+    width: 16px;
+    height: 16px;
+    border-radius: 12px;
+
+    .theme-dark & {
+        background-color: $dm-gray-100;
+        color: $dm-gray-600;
+    }
+}
+
+.movecategory {
+    .icon {
+        background-color: $white;
+        border-radius: $btn-border-radius-lg;
+        box-shadow: $box-shadow-md;
+        padding: 10px;
+        width: 16px;
+        height: 16px;
+
+        transition: $transition-base;
+
+        &:hover {
+            box-shadow: $box-shadow;
+        }
+
+        .theme-dark & {
+            filter: invert(1);
+            box-shadow: none;
+        }
+    }
+}
+
+.movefield {
+    .icon {
+        background-color: $white;
+        border-radius: $btn-border-radius-lg;
+        box-shadow: $box-shadow;
+        padding: 8px;
+        font-size: 12px;
+        width: 14px;
+        height: 14px;
+
+        transition: $transition-base;
+
+        &:hover {
+            box-shadow: $box-shadow-md;
+        }
+
+        .theme-dark & {
+            filter: invert(1);
+            box-shadow: none;
+        }
+    }
+}
+
+// Force proper icon size based on FontAwesome Icon system
+.fa-fw {
+    font-size: 16px;
+    line-height: 1.3 !important;
+
+    .dropdown-menu & {
+        font-size: 12px;
+    }
+}
+
+.icon {
+    &.fa {
+        filter: none !important;
+    }
+}
+
+.sup * {
+    display: inline-flex;
+    align-items: flex-end;
+    font-size: 14px;
+
+    .icon {
+        line-height: 20px !important;
+    }
+}
+
+.activityiconcontainer {
+    padding: 6px;
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 40px;
+    width: 40px;
+    border-radius: $btn-border-radius;
+
+    .page-header-content & {
+        width: 50px;
+        height: 50px;
+    }
+
+    img {
+        padding: 6px;
+    }
+
+    .indented & {
+        height: 36px;
+        width: 36px;
+
+        img {
+            padding: 2px;
+        }
+    }
+}
+
+@each $type, $value in $activity-icon-colors {
+    .activityiconcontainer.#{$type} {
+        background-color: $value;
+
+        // .activityicon,
+        // .icon {
+        //     &:not(.nofilter) {
+        //         filter: brightness(0) invert(1);
+        //     }
+        // }
+    }
+}
+
+.format-tiles li.activity .activityiconcontainer.content {
+    background-color: $icon-color-content;
+}
+
+.generaltable {
+    .itemicon {
+        padding: 3px;
+        border-radius: 30px;
+        background-color: $gray-100;
+    }
+}

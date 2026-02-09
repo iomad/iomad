@@ -1,0 +1,1505 @@
+//Files - Privates Files
+#page-user-files,
+#page-mod-assign-editsubmission {
+
+    #fgroup_id_buttonar,
+    #userfilesform {
+        .col-md-3 {
+            display: none!important;
+        }
+
+        .col-md-9 {
+            flex: 0 0 100%;
+            max-width: 100%;
+            padding: 0;
+        }
+    }
+
+    #fgroup_id_buttonar {
+        margin-bottom: 0 !important;
+    }
+
+    .generalbox {
+        padding: 0 !important;
+    }
+}
+
+// Moodle 4.x.
+#page-user-files {
+    .main-content {
+        .rui-main-content-title--h2 {
+            margin: 0 0 16px;
+        }
+    }
+}
+
+// end Moodle 4.0
+
+// File Picker and File Manager
+.fp-content-center {
+    height: 100%;
+    width: 100%;
+    display: table-cell;
+}
+
+.fp-content-hidden {
+    visibility: hidden;
+}
+
+// Dialogue (File Picker and File Manager)
+.yui3-panel-focused {
+    outline: none;
+}
+
+.fp-panel-button {
+    background: #fff;
+    padding: 3px 20px 2px 20px;
+    text-align: center;
+    margin: 10px;
+
+    @include border-radius(10px);
+    display: inline-block;
+
+    @include box-shadow(2px 2px 3px .1px #999);
+}
+
+// File Picker layout
+.filepicker .yui3-widget-content-expanded {
+    height: auto;
+}
+
+@include media-breakpoint-between(xs, md) {
+    .filepicker.moodle-dialogue {
+        max-width: 100%;
+        height: 100% !important;
+
+        .container {
+            margin: 0;
+        }
+
+        .rui-nav--admin {
+            padding: 0;
+
+            display: contents;
+            height: max-content;
+        }
+
+        .rui-nav-wrapper {
+            margin-bottom: $page-padding-global;
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .rui-nav-col {
+            width: max-content;
+
+            .nav {
+                display: inline-flex;
+            }
+        }
+
+        ul li {
+            display: inline-flex;
+        }
+    }
+}
+
+.yui3-widget {
+    outline: none;
+}
+
+/* The javascript is adding a style="height: 0px;" to this element - we need to set the min-height so the height is ignored. */
+.filepicker .moodle-dialogue-bd {
+    min-height: 520px;
+}
+
+.file-picker .fp-navbar {
+    min-height: 40px;
+    padding: 4px;
+}
+
+.fp-navbar {
+    border-color: $border-color;
+}
+
+.file-picker .fp-content {
+    border-top: 0;
+    background: $container-bg;
+    clear: none;
+    overflow: auto;
+    height: 375px;
+
+    .theme-dark & {
+        background: $dm-container-bg;
+    }
+
+    .form-group {
+        margin-top: 0;
+    }
+}
+
+.filepicker.moodle-dialogue-fullscreen .file-picker .fp-content {
+    width: 100%;
+}
+
+.file-picker .fp-content-loading {
+    height: 100%;
+    width: 100%;
+    display: table;
+    text-align: center;
+}
+
+.file-picker .fp-content .fp-object-container {
+    width: 98%;
+    height: 98%;
+}
+
+.file-picker .fp-def-search {
+    margin-top: 0;
+}
+
+// Repositories on fp-repo-area (File Picker only)
+.file-picker .fp-list {
+    list-style-type: none;
+    padding: 0;
+    float: left;
+    width: 100%;
+    margin: 0;
+}
+
+.file-picker .fp-list .fp-repo a {
+    display: block;
+    padding: .5em .7em;
+}
+
+.file-picker .fp-list .fp-repo.active {
+    background: #f2f2f2;
+}
+
+.file-picker .fp-list .fp-repo-icon {
+    padding: 0 7px 0 5px;
+    width: 16px;
+    height: 16px;
+}
+
+// Tools, Path & View on fp-navbar (File Picker and File Manager)
+.fp-toolbar {
+    .fp-tb-search input.form-control {
+        padding: .35rem .5rem;
+        height: auto;
+    }
+
+
+    @include media-breakpoint-between(xs, sm) {
+        margin-bottom: .35rem;
+    }
+}
+
+.fp-toolbar.empty {
+    display: none;
+}
+
+.fp-toolbar .disabled {
+    display: none;
+}
+
+.fp-toolbar div {
+    display: inline-flex;
+    margin-right: .35rem;
+}
+
+.fp-toolbar img {
+    vertical-align: -15%;
+    margin-right: 5px;
+}
+
+.fp-viewbar:not(.disabled) a.checked {
+    background-color: var(--main-theme-color);
+    color: var(--primary-color-100);
+    border-color: var(--main-theme-color);
+}
+
+.fp-viewbar.disabled a {
+    pointer-events: none;
+    opacity: $btn-disabled-opacity;
+    @include box-shadow(none);
+}
+
+.file-picker .fp-clear-left {
+    clear: left;
+}
+
+.fp-pathbar.empty {
+    display: none;
+}
+
+.fp-pathbar .fp-path-folder {
+    background: url('[[pix:theme|fp/path_folder]]') left 5px no-repeat;
+    background-size: 12px 12px;
+    height: 12px;
+    margin-left: 12px;
+}
+
+/*rtl:raw:
+.fp-pathbar .fp-path-folder {
+    background-image: url('[[pix:theme|fp/path_folder_rtl]]');
+}
+*/
+
+.fp-pathbar .fp-path-folder-name {
+    font-weight: $font-weight-medium;
+}
+
+.fp-pathbar .fp-path-folder {
+    background-image: none;
+    height: auto;
+    margin-left: 0;
+}
+
+// Icon view (File Picker and File Manager)
+.fp-iconview {
+    display: grid;
+    flex-direction: column;
+    align-items: stretch;
+    grid-template-columns: repeat(auto-fill,minmax(100px,1fr));
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.fp-iconview .fp-file {
+    text-align: center;
+    position: relative;
+    margin: 10px 3px 25px;
+
+    color: $body-color;
+
+    a {
+        color: inherit;
+    }
+}
+
+.fp-iconview .fp-thumbnail {
+    min-width: 110px;
+    min-height: 110px;
+    line-height: 110px;
+    text-align: center;
+    background-color: $container-bg;
+    border: 1px solid $border-color;
+    border-radius: $btn-border-radius;
+    display: block;
+
+    .theme-dark & {
+        background-color: $dm-container-bg;
+        border-color: $dm-border-color;
+
+        img:not(.realpreview) {
+            filter: invert(.9);
+        }
+    }
+}
+
+.fp-iconview .fp-filename-field {
+    height: 33px;
+    margin-top: 3px;
+    word-wrap: break-word;
+    overflow: hidden;
+    position: absolute;
+}
+
+.fp-iconview .fp-file:focus,
+.fp-iconview .fp-file:hover {
+
+    // Undo truncating of text on hover.
+    .fp-filename-field {
+        overflow: visible;
+        z-index: 1000;
+    }
+
+    .fp-filename {
+        overflow: inherit;
+        white-space: normal;
+        text-overflow: inherit;
+    }
+}
+
+.fp-iconview .fp-filename-field .fp-filename {
+    padding: .25rem;
+    background-color: $container-bg;
+    border-radius: $btn-border-radius;
+    min-width: 112px;
+
+    font-size: $font-size-xs;
+
+    .theme-dark & {
+        background-color: $dm-container-bg;
+        color: $dm-body-color;
+    }
+}
+
+// Table view (File Picker only)
+.file-picker .yui3-datatable table {
+    border: 0 solid $gray-300;
+    width: 100%;
+
+    .theme-dark & {
+        border-color: $dm-gray-300;
+    }
+}
+
+// Tree view (File Manager only)
+
+// first or middle sibling, no children
+.file-picker .ygtvtn,
+.filemanager .ygtvtn {
+    /*rtl:remove*/
+    background: url('[[pix:theme|y/tn]]') 14px 0 no-repeat;
+    /*rtl:raw:
+    background: url('[[pix:theme|y/tn_rtl]]') 14px 0 no-repeat;
+    */
+    min-width: 40px;
+    width: 40px;
+    height: 33px;
+}
+
+// first or middle sibling, collapsable
+.file-picker .ygtvtm,
+.filemanager .ygtvtm {
+    background: url('[[pix:theme|y/tm]]') 14px 10px no-repeat;
+    /*rtl:raw:
+        background-position: 14px 10px;
+    */
+    min-width: 40px;
+    width: 40px;
+    height: 30px;
+    cursor: pointer;
+}
+
+// first or middle sibling, collapsable, hover
+.file-picker .ygtvtmh,
+.filemanager .ygtvtmh {
+    background: url('[[pix:theme|y/tm]]') 14px 10px no-repeat;
+    /*rtl:raw:
+        background-position: 14px 10px;
+    */
+    min-width: 40px;
+    width: 40px;
+    height: 30px;
+    cursor: pointer;
+}
+
+// first or middle sibling, expandable
+.file-picker .ygtvtp,
+.filemanager .ygtvtp {
+    /*rtl:remove*/
+    background: url('[[pix:theme|y/tp]]') 14px 10px no-repeat;
+    /*rtl:raw:
+    background: url('[[pix:theme|y/tp_rtl]]') 14px 10px no-repeat;
+    */
+    min-width: 40px;
+    width: 40px;
+    height: 30px;
+    cursor: pointer;
+}
+
+// first or middle sibling, expandable, hover
+.file-picker .ygtvtph,
+.filemanager .ygtvtph {
+    /*rtl:remove*/
+    background: url('[[pix:theme|y/tp]]') 0 10px no-repeat;
+    /*rtl:raw:
+    background: url('[[pix:theme|y/tp_rtl]]') 2px 10px no-repeat;
+    */
+    min-width: 40px;
+    width: 40px;
+    height: 30px;
+    cursor: pointer;
+}
+
+// last sibling, no children
+.file-picker .ygtvln,
+.filemanager .ygtvln {
+    /*rtl:remove*/
+    background: url('[[pix:theme|y/lnl]]') 21px -23px no-repeat;
+    /*rtl:raw:
+    background: url('[[pix:theme|y/ln_rtl]]') 14px 7px no-repeat;
+    */
+    min-width: 40px;
+    width: 40px;
+    height: 32px;
+}
+
+// Last sibling, collapsable
+.file-picker .ygtvlm,
+.filemanager .ygtvlm {
+    background: url('[[pix:theme|y/lm]]') 10px 10px no-repeat;
+    /*rtl:raw:
+        background-position: 10px 10px;
+    */
+    min-width: 30px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+
+// Last sibling, collapsable, hover
+.file-picker .ygtvlmh,
+.filemanager .ygtvlmh {
+    background: url('[[pix:theme|y/lm]]') 10px 10px no-repeat;
+    /*rtl:raw:
+        background-position: 10px 10px;
+    */
+    min-width: 30px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+
+// Last sibling, expandable
+.file-picker .ygtvlp,
+.filemanager .ygtvlp {
+    /*rtl:remove*/
+    background: url('[[pix:theme|y/lp]]') 15px 10px no-repeat;
+    /*rtl:raw:
+    background: url('[[pix:theme|y/lp_rtl]]') 15px 10px no-repeat;
+    */
+    min-width: 30px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+
+// Last sibling, expandable, hover
+.file-picker .ygtvlph,
+.filemanager .ygtvlph {
+    /*rtl:remove*/
+    background: url('[[pix:theme|y/lp]]') 10px 10px no-repeat;
+    /*rtl:raw:
+    background: url('[[pix:theme|y/lp_rtl]]') 10px 10px no-repeat;
+    */
+    min-width: 30px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+
+// Loading icon
+.file-picker .ygtvloading,
+.filemanager .ygtvloading {
+    background: transparent url('[[pix:theme|y/loading]]') 0 0 no-repeat;
+    min-width: 16px;
+    width: 16px;
+    height: 22px;
+}
+
+// the style for the empty cells that are used for rendering the depth of the node
+.file-picker .ygtvdepthcell,
+.filemanager .ygtvdepthcell {
+    background: url('[[pix:theme|y/vline]]') 14px 0 no-repeat;
+    /*rtl:raw:
+    background-position: 0 0;
+    */
+    min-width: 30px;
+    width: 30px;
+    height: 32px;
+}
+
+.file-picker .ygtvblankdepthcell,
+.filemanager .ygtvblankdepthcell {
+    min-width: 17px;
+    width: 17px;
+    height: 22px;
+}
+
+table.ygtvtable {
+    width: 100%;
+}
+
+a.ygtvspacer {
+    min-width: 30px;
+    width: 30px;
+    height: 30px;
+}
+
+a.ygtvspacer:hover {
+    color: transparent;
+    text-decoration: none;
+}
+
+.ygtvlabel,
+.ygtvlabel:link,
+.ygtvlabel:visited,
+.ygtvlabel:hover {
+    background-color: transparent;
+    cursor: pointer;
+    margin-left: 2px;
+    text-decoration: none;
+}
+
+.file-picker .ygtvfocus,
+.filemanager .ygtvfocus {
+    background-color: var(--primary-color-100);
+
+    .theme-dark & {
+        background-color: var(--primary-color-700);
+    }
+}
+
+.fp-filename-icon {
+    margin: 5px 0;
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+    font-size: $font-size-xs;
+
+    a {
+        display: inline-flex;
+        align-items: center;
+        color: $body-color;
+
+        .theme-dark & {
+            color: $dm-body-color;
+        }
+
+        &:hover {
+            color: $link-hover-color;
+            text-decoration: none;
+        }
+    }
+}
+
+.fp-icon {
+    margin-right: .35rem;
+    line-height: 0;
+}
+
+.fp-icon img {
+    width: 24px;
+    height: 24px;
+    max-height: 24px;
+    max-width: 24px;
+    vertical-align: middle;
+}
+
+.fp-filename-icon.fp-folder {
+    .theme-dark & {
+        filter: invert(1);
+
+        a {
+            color: $body-color;
+        }
+    }
+}
+
+.fp-filename {
+    font-weight: $font-weight-medium;
+    word-break: break-all;
+}
+
+.filemanager .yui3-datatable-cell {
+    font-size: $font-size-xs;
+    color: $body-color-light;
+
+    .theme-dark & {
+        color: $dm-body-color-light;
+    }
+}
+
+// Repositories Login on fp-content (File Picker only)
+
+.file-picker .fp-login-form {
+    height: 100%;
+    width: 100%;
+    display: table;
+}
+
+// Upload on fp-content (File Picker only)
+.file-picker .fp-upload-form {
+    height: 100%;
+    width: 100%;
+    display: table;
+}
+
+.file-picker .fp-upload-form table {
+    margin: 0 auto;
+}
+
+// File exists dialogue on Upload (File Picker only)
+.file-picker.fp-dlg {
+    text-align: center;
+}
+
+.file-picker.fp-dlg .fp-dlg-buttons {
+    margin: 0 20px;
+}
+
+// Error dialogue on Upload (File Picker only)
+.file-picker.fp-msg {
+    text-align: center;
+}
+
+// Error on fp-content (File Picker only)
+.file-picker .fp-content-error {
+    height: 100%;
+    width: 100%;
+    display: table;
+    text-align: center;
+}
+
+// Lazy loading on fp-content (File Picker only)
+.file-picker .fp-nextpage {
+    clear: both;
+}
+
+.file-picker .fp-nextpage .fp-nextpage-loading {
+    display: none;
+}
+
+.file-picker .fp-nextpage.loading .fp-nextpage-link {
+    display: none;
+}
+
+.file-picker .fp-nextpage.loading .fp-nextpage-loading {
+    display: block;
+    text-align: center;
+    height: 100px;
+    padding-top: 50px;
+}
+
+// Select Dialogue (File Picker and File Manager)
+.fp-select .fp-select-loading {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.fp-select table {
+    padding: 0 0 10px;
+}
+
+.fp-select table .mdl-right {
+    min-width: 84px;
+}
+
+.fp-select .fp-reflist .mdl-right {
+    vertical-align: top;
+}
+
+.fp-select .fp-select-buttons {
+    float: right;
+}
+
+.fp-select .fp-info {
+    font-size: $font-size-xs;
+}
+
+.fp-select .fp-thumbnail {
+    float: left;
+    min-width: 110px;
+    min-height: 110px;
+    line-height: 110px;
+    text-align: center;
+    margin: 0 1rem 0 0;
+    background: $container-bg;
+    border: 1px solid $border-color;
+    border-radius: $btn-border-radius;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    .theme-dark & {
+        background-color: $dm-container-bg;
+        border-color: $dm-border-color;
+    }
+}
+
+.fp-select .fp-thumbnail img {
+    vertical-align: middle;
+    margin: 10px;
+}
+
+.fp-select .fp-fileinfo {
+    display: inline-block;
+}
+
+.file-picker.fp-select .fp-fileinfo {
+    max-width: 240px;
+}
+
+.fp-select .fp-fileinfo div {
+    padding-bottom: 5px;
+}
+
+.file-picker.fp-select .uneditable {
+    display: none;
+}
+
+.file-picker.fp-select .fp-select-loading {
+    display: none;
+}
+
+.file-picker.fp-select.loading .fp-select-loading {
+    display: block;
+}
+
+.file-picker.fp-select.loading form {
+    display: none;
+}
+
+.fp-select .fp-dimensions.fp-unknown {
+    display: none;
+}
+
+.fp-select .fp-size.fp-unknown {
+    display: none;
+}
+
+// File Manager
+.filemanager-loading {
+    display: none;
+}
+
+.jsenabled .filemanager-loading {
+    display: block;
+    margin-top: 100px;
+}
+
+.filemanager.fm-loading .filemanager-toolbar,
+.filemanager.fm-loading .fp-pathbar,
+.filemanager.fm-loading .filemanager-container,
+.filemanager.fm-loaded .filemanager-loading,
+.filemanager.fm-maxfiles .fp-btn-add,
+.filemanager.fm-maxfiles .dndupload-message,
+.filemanager.fm-noitems .fp-btn-download,
+.filemanager.fm-noitems .fp-btn-delete,
+.filemanager .fm-empty-container,
+.filemanager.fm-noitems .filemanager-container .fp-content {
+    display: none;
+}
+
+.filemanager .fp-img-downloading {
+    display: none;
+    padding-top: 7px;
+}
+
+.filemanager .filemanager-updating {
+    display: none;
+    text-align: center;
+}
+
+.filemanager.fm-updating .filemanager-updating {
+    display: block;
+    margin-top: 37px;
+}
+
+.filemanager.fm-updating .fm-content-wrapper,
+.filemanager.fm-nomkdir .fp-btn-mkdir,
+.fitem.disabled .filemanager .filemanager-toolbar,
+.fitem.disabled .filemanager .fp-pathbar,
+.fitem.disabled .filemanager .fp-restrictions,
+.fitem.disabled .filemanager .fm-content-wrapper {
+    display: none;
+}
+
+// File Manager layout
+.filemanager-toolbar {
+    flex-wrap: wrap;
+}
+
+.filemanager {
+    .fp-restrictions {
+        text-align: right;
+        font-size: $font-size-xs;
+    }
+}
+
+.filemanager .fp-pathbar.empty {
+    display: none;
+}
+
+.filepicker-filelist,
+.filemanager-container {
+    min-height: 120px;
+    border-top: 0;
+
+    background-color: $gray-100;
+    border-radius: $btn-border-radius;
+
+    .theme-dark & {
+        background-color: $dm-gray-100;
+    }
+
+    @include media-breakpoint-only(sm) {
+        min-height: 140px;
+    }
+}
+
+.filemanager .fp-content {
+    padding: 0 5px;
+    overflow: auto;
+    min-height: 120px;
+
+    @include media-breakpoint-only(sm) {
+        height: 160px;
+        width: max-content;
+        overflow: auto;
+    }
+}
+
+.filemanager-container,
+.filepicker-filelist {
+    overflow: hidden;
+}
+
+.file-picker .yui3-datatable-header {
+    background: initial;
+}
+
+.fitem.disabled .filepicker-filelist,
+.fitem.disabled .filemanager-container {
+    background-color: #ebebe4;
+}
+
+.fitem.disabled .fp-btn-choose {
+    color: $text-muted;
+}
+
+.fitem.disabled .filepicker-filelist .filepicker-filename {
+    display: none;
+}
+
+.filepicker-filename {
+    display: grid;
+}
+
+.filepicker-filename {
+    a {
+        padding: $btn-padding-y $btn-padding-x;
+
+        background-color: $container-bg;
+        border: 1px solid $border-color;
+        border-radius: $btn-border-radius;
+
+        font-size: $font-size-xs;
+        font-weight: $font-weight-medium;
+
+        color: $body-color;
+
+        transition: $transition-base;
+
+        .theme-dark & {
+            background-color: $dm-gray-100;
+            border-color: $dm-border-color;
+            color: $dm-body-color
+        }
+
+        &:hover {
+            text-decoration: none;
+            box-shadow: $box-shadow-md;
+            color: inherit;
+        }
+    }
+}
+
+// Icon view (File Manager only)
+.fp-iconview .fp-reficons1 {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+}
+
+.fp-iconview .fp-reficons2 {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+}
+
+.fp-iconview .fp-file.fp-hasreferences .fp-reficons1 {
+    background: url('[[pix:theme|fp/link]]') no-repeat;
+    /*rtl:raw:
+    transform: scaleX(-1);
+    */
+    /*rtl:ignore*/
+    background-position: bottom right;
+    background-size: 16px 16px;
+}
+
+.fp-iconview .fp-file.fp-isreference .fp-reficons2 {
+    background: url('[[pix:theme|fp/alias]]') no-repeat;
+    /*rtl:raw:
+    transform: scaleX(-1);
+    */
+    /*rtl:ignore*/
+    background-position: bottom left;
+    background-size: 16px 16px;
+}
+
+.filemanager .fp-iconview .fp-file.fp-originalmissing .fp-thumbnail img {
+    display: none;
+}
+
+.filemanager .fp-iconview .fp-file.fp-originalmissing .fp-thumbnail {
+    background: url([[pix:s/dead]]) no-repeat;
+    background-position: center center;
+}
+
+// Table view (File Manager only)
+.filemanager .yui3-datatable table {
+    width: 100%;
+    margin-top: 5px;
+    overflow: hidden;
+    border-radius: $btn-border-radius;
+
+    @include media-breakpoint-between(sm, md) {
+        width: max-content;
+    }
+}
+
+.yui3-skin-sam .yui3-datatable-table {
+    font-family: $font-family-base;
+    border: 0;
+}
+
+.yui3-skin-sam .yui3-datatable-header {
+    border-bottom: (2 * $table-border-width) solid $table-border-color;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+    color: $gray-700;
+    text-shadow: none;
+
+    vertical-align: middle;
+}
+
+.yui3-skin-sam .yui3-datatable-sort-liner {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+}
+
+.theme-dark.yui3-skin-sam .yui3-datatable-header {
+    border-color: $dm-table-border-color;
+    color: $dm-gray-700;
+}
+
+.yui3-skin-sam .yui3-datatable-sort-indicator {
+    bottom: 6px;
+    right: 10px;
+}
+
+.theme-dark.yui3-skin-sam .yui3-datatable-sort-indicator {
+    background: url([[pix:theme|iomadmoon/theme-dark-sort-arrow-sprite]]) no-repeat 0 0;
+}
+
+.theme-dark.yui3-skin-sam .yui3-datatable-sorted .yui3-datatable-sort-indicator {
+    background-position: 0 -10px;
+}
+
+.yui3-skin-sam .yui3-datatable-cell,
+.yui3-skin-sam .yui3-datatable-header {
+    padding: 0.25rem;
+}
+
+.theme-dark.yui3-skin-sam .yui3-datatable-even .yui3-datatable-cell {
+    background-color: $dm-container-bg;
+}
+
+.theme-dark.yui3-skin-sam .yui3-datatable-odd .yui3-datatable-cell {
+    background-color: $dm-gray-100;
+}
+
+.theme-dark.yui3-skin-sam .yui3-datatable-cell,
+.theme-dark.yui3-skin-sam .yui3-datatable-header {
+    border-color: $dm-table-border-color;
+}
+
+.theme-dark.yui3-skin-sam .yui3-datatable-columns .yui3-datatable-sorted,
+.theme-dark.yui3-skin-sam .yui3-datatable-sortable-column:hover {
+    filter: invert(1);
+}
+
+/* Override YUI default styling */
+/* stylelint-disable declaration-no-important */
+.filemanager {
+
+    .yui3-datatable-header {
+        background: $container-bg !important;
+        border-bottom: 1px solid $border-color !important;
+        border-left: 0 solid $container-bg !important;
+        color: $body-color !important;
+
+        .theme-dark & {
+            background: $dm-container-bg !important;
+            border-bottom: 1px solid $dm-border-color !important;
+            border-left: 0 solid $dm-container-bg !important;
+            color: $dm-body-color !important;
+        }
+    }
+
+    .yui3-datatable-odd .yui3-datatable-cell {
+        background-color: $gray-100 !important;
+        border-left: 0 solid $gray-100;
+
+        .theme-dark & {
+            background-color: $dm-gray-100 !important;
+            border-left: 0 solid $dm-gray-100;
+        }
+    }
+
+    .yui3-datatable-even .yui3-datatable-cell {
+        background-color: $container-bg !important;
+        border-left: 0 solid $container-bg;
+
+        .theme-dark & {
+            background-color: $dm-container-bg !important;
+            border-left: 0 solid $dm-container-bg;
+        }
+    }
+}
+
+/* stylelint-enable */
+
+.filemanager .fp-filename-icon.fp-hasreferences .fp-reficons1 {
+    background: url('[[pix:theme|fp/link_sm]]') no-repeat 0 0;
+    height: 100%;
+    width: 100%;
+    /*rtl:raw:
+    transform: scaleX(-1);
+    */
+    position: absolute;
+    top: 8px;
+    left: 17px;
+    background-size: 16px 16px;
+}
+
+.filemanager .fp-filename-icon.fp-isreference .fp-reficons2 {
+    background: url('[[pix:theme|fp/alias_sm]]') no-repeat 0 0;
+    height: 100%;
+    width: 100%;
+    /*rtl:raw:
+    transform: scaleX(-1);
+    */
+    position: absolute;
+    top: 9px;
+    left: -6px;
+    background-size: 16px 16px;
+}
+
+// Folder Context Menu (File Manager only)
+.filemanager .fp-contextmenu {
+    display: none;
+}
+
+.filemanager .fp-iconview .fp-folder.fp-hascontextmenu .fp-contextmenu {
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: $btn-border-radius;
+    background-color: $gray-100;
+    color: $body-color;
+
+    .theme-dark & {
+        background-color: $dm-gray-100;
+        color: $dm-body-color;
+    }
+}
+
+.filemanager .fp-treeview .fp-folder.fp-hascontextmenu .fp-contextmenu,
+.filemanager .fp-tableview .fp-folder.fp-hascontextmenu .fp-contextmenu {
+    display: inline;
+
+    margin-right: -20px;
+
+    position: absolute;
+    top: 2px;
+    right: 0;
+}
+
+.fp-treeview {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+// TODO: UI
+// Drag and drop support (filemanager and filepicker form elements)
+.fm-content-wrapper {
+    position: relative;
+
+    @include media-breakpoint-between(xs, sm) {
+        overflow-x: auto;
+    }
+}
+
+
+.dndupload-arrow {
+    background-size: 40px;
+    width: 100%;
+    height: 50px;
+    position: absolute;
+    left: 0;
+    right: 0;
+
+    i {
+        display: none;
+    }
+}
+
+.filepicker-filelist .filepicker-container,
+.filemanager.fm-noitems .fm-empty-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    border: 2px dashed $gray-600;
+    padding-top: 70px;
+    padding-bottom: 30px;
+    border-radius: $btn-border-radius;
+    text-align: center;
+
+    .dndupload-arrow {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='#{url-friendly-colour($gray-800)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M4.75 14.75V16.25C4.75 17.9069 6.09315 19.25 7.75 19.25H16.25C17.9069 19.25 19.25 17.9069 19.25 16.25V14.75'%3E%3C/path%3E%3Cpath stroke='#{url-friendly-colour($gray-800)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M12 14.25L12 5'%3E%3C/path%3E%3Cpath stroke='#{url-friendly-colour($gray-800)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M8.75 8.25L12 4.75L15.25 8.25'%3E%3C/path%3E%3C/svg%3E%0A");
+        background-repeat: no-repeat;
+        background-position: center;
+
+        top: 12px;
+
+        .theme-dark & {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='#{url-friendly-colour($dm-gray-800)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M4.75 14.75V16.25C4.75 17.9069 6.09315 19.25 7.75 19.25H16.25C17.9069 19.25 19.25 17.9069 19.25 16.25V14.75'%3E%3C/path%3E%3Cpath stroke='#{url-friendly-colour($dm-gray-800)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M12 14.25L12 5'%3E%3C/path%3E%3Cpath stroke='#{url-friendly-colour($dm-gray-800)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M8.75 8.25L12 4.75L15.25 8.25'%3E%3C/path%3E%3C/svg%3E%0A");
+        }
+    }
+
+    .theme-dark & {
+        border-color: $dm-gray-400;
+    }
+}
+
+.filepicker-filelist .dndupload-target,
+.filemanager-container .dndupload-target {
+    background: $red-100;
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    border: 2px dashed $red-600;
+    border-radius: $btn-border-radius;
+    padding: 65px 0 35px;
+    text-align: center;
+
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    color: $red-700;
+
+    .dndupload-arrow {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='#{url-friendly-colour($red-700)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M4.75 14.75V16.25C4.75 17.9069 6.09315 19.25 7.75 19.25H16.25C17.9069 19.25 19.25 17.9069 19.25 16.25V14.75'%3E%3C/path%3E%3Cpath stroke='#{url-friendly-colour($red-700)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M12 14.25L12 5'%3E%3C/path%3E%3Cpath stroke='#{url-friendly-colour($red-700)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M8.75 8.25L12 4.75L15.25 8.25'%3E%3C/path%3E%3C/svg%3E%0A");
+        background-repeat: no-repeat;
+        background-position: center;
+
+        top: 12px;
+    }
+}
+
+.filepicker-filelist.dndupload-over .dndupload-target,
+.filemanager-container.dndupload-over .dndupload-target {
+    background: $blue-100;
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    border: 2px dashed $blue-600;
+    border-radius: $btn-border-radius;
+    padding: 65px 0 35px;
+    text-align: center;
+
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    color: $blue-600;
+
+    .dndupload-arrow {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='#{url-friendly-colour($blue-600)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M4.75 14.75V16.25C4.75 17.9069 6.09315 19.25 7.75 19.25H16.25C17.9069 19.25 19.25 17.9069 19.25 16.25V14.75'%3E%3C/path%3E%3Cpath stroke='#{url-friendly-colour($blue-600)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M12 14.25L12 5'%3E%3C/path%3E%3Cpath stroke='#{url-friendly-colour($blue-600)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M8.75 8.25L12 4.75L15.25 8.25'%3E%3C/path%3E%3C/svg%3E%0A");
+        background-repeat: no-repeat;
+        background-position: center;
+
+        top: 12px;
+    }
+}
+
+.dndupload-message {
+    display: none;
+}
+
+.dndsupported .dndupload-message {
+    display: inline-flex;
+    font-size: $font-size-xs;
+}
+
+.dndupload-message {
+    color: $body-color-light;
+
+    .theme-dark & {
+        color: $dm-body-color-light;
+    }
+}
+
+.dnduploadnotsupported-message {
+    display: none;
+}
+
+.dndnotsupported .dnduploadnotsupported-message {
+    display: block;
+    margin: 0;
+}
+
+.dndupload-target {
+    display: none;
+}
+
+.dndsupported .dndupload-ready .dndupload-target {
+    display: block;
+    margin: 0;
+}
+
+.dndupload-uploadinprogress {
+    display: none;
+    text-align: center;
+}
+
+.dndupload-uploading .dndupload-uploadinprogress {
+    display: block;
+}
+
+.fitem.disabled .filepicker-container,
+.fitem.disabled .fm-empty-container {
+    display: none;
+}
+
+.dndupload-progressbars {
+    padding: 10px;
+    display: none;
+    font-size: $font-size-xs;
+}
+
+.dndupload-inprogress .dndupload-progressbars {
+    display: block;
+}
+
+.dndupload-inprogress .fp-content {
+    display: none;
+}
+
+.filemanager.fm-noitems .dndupload-inprogress .fm-empty-container {
+    display: none;
+}
+
+.filepicker-filelist.dndupload-inprogress .filepicker-container {
+    display: none;
+}
+
+.filepicker-filelist.dndupload-inprogress a {
+    display: none;
+}
+
+// Select Dialogue (File Manager only)
+.filemanager.fp-select .fp-select-loading {
+    display: none;
+}
+
+.filemanager.fp-select.loading .fp-select-loading {
+    display: block;
+}
+
+.filemanager.fp-select.loading form {
+    display: none;
+}
+
+.filemanager.fp-select.fp-folder .fp-license,
+.filemanager.fp-select.fp-folder .fp-author,
+.filemanager.fp-select.fp-file .fp-file-unzip,
+.filemanager.fp-select.fp-folder .fp-file-unzip,
+.filemanager.fp-select.fp-file .fp-file-zip,
+.filemanager.fp-select.fp-zip .fp-file-zip {
+    display: none;
+}
+
+.filemanager.fp-select .fp-file-setmain,
+.filemanager.fp-select .fp-file-setmain-help {
+    display: none;
+}
+
+.filemanager.fp-select.fp-cansetmain .fp-file-setmain,
+.filemanager.fp-select.fp-cansetmain .fp-file-setmain-help {
+    display: inline-block;
+}
+
+.filemanager .fp-mainfile .fp-filename {
+    font-weight: $font-weight-bold;
+}
+
+.filemanager.fp-select.fp-folder .fp-file-download {
+    display: none;
+}
+
+// to be implemented
+.fm-operation {
+    font-weight: $font-weight-bold;
+}
+
+.filemanager.fp-select .fp-original.fp-unknown,
+.filemanager.fp-select .fp-original .fp-originloading {
+    display: none;
+}
+
+.filemanager.fp-select .fp-original.fp-loading .fp-originloading {
+    display: inline;
+}
+
+.filemanager.fp-select .fp-reflist.fp-unknown,
+.filemanager.fp-select .fp-reflist .fp-reflistloading {
+    display: none;
+}
+
+.filemanager.fp-select .fp-reflist.fp-loading .fp-reflistloading {
+    display: inline;
+}
+
+.filemanager.fp-select .fp-reflist .fp-value {
+    background: #f9f9f9;
+    border: 1px solid #bbb;
+    padding: 8px 7px;
+    margin: 0;
+    max-height: 75px;
+    overflow: auto;
+}
+
+.filemanager.fp-select .fp-reflist .fp-value li {
+    padding-bottom: 7px;
+}
+
+// Create folder dialogue (File Manager only)
+.filemanager.fp-mkdir-dlg {
+    padding-bottom: 10px;
+}
+
+.filemanager.fp-mkdir-dlg .fp-mkdir-dlg-text {
+    margin: 0 0 20px;
+    text-align: left;
+}
+
+// Confirm dialogue for delete (File Manager only)
+.filemanager.fp-dlg {
+    margin: 0 0 5px;
+    text-align: left;
+
+    .btn {
+        width: 48%;
+    }
+}
+
+.file-picker.fp-msg.fp-msg-error {
+    .btn {
+        width: 100%;
+    }
+}
+
+// file picker search dialog
+.file-picker div.bd {
+    text-align: left;
+}
+
+// Upload form for file picker.
+.fp-formset {
+    padding: 10px 0;
+
+    input[type="file"] {
+        line-height: inherit;
+    }
+}
+
+.fp-forminset {
+    padding: 0 10px;
+}
+
+.fp-fileinfo .fp-value {
+    display: inline-block;
+}
+
+
+[data-fieldtype="filepicker"] {
+    p {
+        margin: 1rem 0 0.5rem;
+        font-size: $font-size-xs;
+    }
+}
+
+/* Filemanager on the course edit page, form below editor */
+#fitem_id_overviewfiles_filemanager {
+    margin-top: $page-padding-global;
+}
+
+// Dark mode.
+.theme-dark {
+
+    .file-picker .ygtvtn,
+    .filemanager .ygtvtn,
+    .file-picker .ygtvtm,
+    .filemanager .ygtvtm,
+    .file-picker .ygtvtmh,
+    .filemanager .ygtvtmh,
+    .file-picker .ygtvtp,
+    .filemanager .ygtvtp,
+    .file-picker .ygtvtph,
+    .filemanager .ygtvtph,
+    .file-picker .ygtvln,
+    .filemanager .ygtvln,
+    .file-picker .ygtvlm,
+    .filemanager .ygtvlm,
+    .file-picker .ygtvlmh,
+    .filemanager .ygtvlmh,
+    .file-picker .ygtvlp,
+    .filemanager .ygtvlp,
+    .file-picker .ygtvlph,
+    .filemanager .ygtvlph,
+    .file-picker .ygtvloading,
+    .filemanager .ygtvloading,
+    .file-picker .ygtvdepthcell,
+    .filemanager .ygtvdepthcell,
+    .fp-iconview .fp-file.fp-hasreferences .fp-reficons1,
+    .fp-iconview .fp-file.fp-isreference .fp-reficons2,
+    .filemanager .fp-iconview .fp-file.fp-originalmissing .fp-thumbnail,
+    .filemanager .fp-filename-icon.fp-hasreferences .fp-reficons1,
+    .filemanager .fp-filename-icon.fp-isreference .fp-reficons2,
+    .ygtvtn,
+    .ygtvln,
+    .ygtvtp,
+    .ygtvtph,
+    .ygtvtmh,
+    .ygtvtm,
+    .ygtvdepthcell {
+        filter: invert(1);
+    }
+}
+
+
+.theme-dark .block_private_files [role="treeitem"]:not([aria-expanded]) {
+    background-image:
+        repeating-linear-gradient(to right,
+            rgba(255, 255, 255, .5) 0,
+            rgba(255, 255, 255, .5) 1px,
+            rgba(255, 255, 255, 0) 1px,
+            rgba(255, 255, 255, 0) 2px),
+        repeating-linear-gradient(to top,
+            rgba(255, 255, 255, .5) 0,
+            rgba(255, 255, 255, .5) 1px,
+            rgba(255, 255, 255, 0) 1px,
+            rgba(255, 255, 255, 0) 2px);
+}

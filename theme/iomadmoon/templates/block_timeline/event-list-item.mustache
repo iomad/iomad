@@ -1,0 +1,88 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template block_timeline/event-list-item
+
+    This template renders an event list item for the timeline block.
+
+    Example context (json):
+    {
+        "name": "Assignment 1 is due",
+        "activityname": "Assignment",
+        "activitystr": "Assignment is due",
+        "courseview": true,
+        "url": "https://www.google.com",
+        "timesort": 1490320388,
+        "course": {
+            "fullnamedisplay": "Course 1"
+        },
+        "action": {
+            "name": "Submit assignment",
+            "url": "https://www.google.com",
+            "itemcount": 1,
+            "showitemcount": true,
+            "actionable": true
+        },
+        "icon": {
+            "key": "icon",
+            "component": "mod_assign",
+            "alttext": "Assignment icon"
+        },
+        "overdue": false,
+        "purpose": "assessment"
+    }
+}}
+<div class="rui-timeline-list-group-item flex-column"
+    data-region="event-list-item"
+    >
+    <div class="d-flex flex-sm-wrap flex-md-nowrap">
+        <div class="rui-event-date text-right text-nowrap mb-sm-4 mb-md-0">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="7.25" stroke="currentColor" stroke-width="2"></circle>
+                <path  stroke="currentColor" stroke-width="2" d="M12 8V12L14 14"></path>
+            </svg>
+            <span class="ml-1">{{#userdate}} {{timesort}}, {{#str}} strftimetime24, core_langconfig {{/str}} {{/userdate}}</span>
+        </div>
+        <div class="rui-event-icon d-flex align-self-top">
+            {{#icon}}{{#pix}} {{key}}, {{component}}, {{alttext}} {{/pix}}{{/icon}}
+        </div>
+        <div class="w-100 event-name-container text-truncate">
+            <a href="{{url}}"
+               class="rui-event-name-link"
+               title={{#quote}}{{{name}}}{{/quote}}
+               aria-label='{{#str}} ariaeventlistitem, block_timeline, { "name": {{#quote}}{{{name}}}{{/quote}}, "course": {{#quote}}{{{course.fullnamedisplay}}}{{/quote}}, "date": "{{#userdate}} {{timesort}}, {{#str}} strftimedatetime, core_langconfig {{/str}} {{/userdate}}" } {{/str}}'
+            ><h5 class="rui-event-name text-truncate mb-0">{{{name}}}</h5></a>
+            {{#course.fullnamedisplay}}
+            <span class="small text-truncate mt-2 rui-event-name--light">{{{course.fullnamedisplay}}}</span>
+            {{/course.fullnamedisplay}}
+            {{#action.actionable}}
+            <div class="mb-0 pt-2">
+                <a class="btn btn-xs btn-secondary" href="{{action.url}}" aria-label="{{action.name}}" title="{{action.name}}" class="list-group-item-action">
+                    <span class="btn--name">{{{action.name}}}</span>
+                    <svg class="btn--icon" width="14" height="14" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13.75 6.75L19.25 12L13.75 17.25"></path>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 12H4.75"></path>
+                    </svg>
+                </a>
+                {{#action.showitemcount}}
+                <span class="badge badge-info">{{action.itemcount}}</span>
+                {{/action.showitemcount}}
+            </div>
+            {{/action.actionable}}
+        </div>
+    </div>
+</div>

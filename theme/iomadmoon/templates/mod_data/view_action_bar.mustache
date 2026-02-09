@@ -1,0 +1,109 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_data/view_action_bar
+
+    Actions bar at the top of the view pages in the database activity.
+
+    Context variables required for this template:
+    * urlselect - The data object containing the required properties to render core/url_select.
+    * actionsselect - The presets actions selector.
+
+    Example context (json):
+    {
+        "urlselect": {
+            "id": "url_select_test",
+            "action": "https://example.com/post",
+            "formid": "url_select_form",
+            "sesskey": "sesskey",
+            "classes": "urlselect",
+            "label": "",
+            "helpicon": false,
+            "showbutton": null,
+            "options": [
+                {
+                    "name": "List view",
+                    "value": "/mod/data/someurl.php",
+                    "selected": false
+                },
+                {
+                    "name": "Single view",
+                    "value": "/mod/data/someurl.php",
+                    "selected": true
+                }
+            ],
+            "disabled": false,
+            "title": null
+        },
+        "actionsselect": {
+            "classes": "moodle-actionmenu",
+            "instance": "1",
+            "triggerrole": "button",
+            "primary": {
+                "attributes": [
+                    {"name": "id", "value": "action-menu-1"},
+                    {"name": "role", "value": "menu"}
+                ],
+                "items": [
+                    {
+                        "attributes": [
+                            {"name": "role", "value": "menuitem"}
+                        ],
+                        "rawhtml": "Actions"
+                    }
+                ]
+            },
+            "secondary": {
+                "attributes": [
+                    {"name": "id", "value": "action-menu-1-menu"},
+                    {"name": "role", "value": "menuitem"}
+                ],
+                "items": [
+                    {
+                        "rawhtml": "Import entries"
+                    },
+                    {
+                        "rawhtml": "Export entries"
+                    }
+                ]
+            }
+        }
+    }
+}}
+<div class="container-fluid tertiary-navigation d-flex w-100 mx-0 px-0">
+    <div class="d-inline-flex w-100">
+        <div class="d-inline-flex">
+            {{#addentrybutton}}
+                <div class="navitem mb-0">
+                    {{>core/single_button}}
+                </div>
+            {{/addentrybutton}}
+        </div>
+        <div class="d-flex">
+            {{#urlselect}}
+                <div class="navitem mb-0">
+                    {{>core/url_select}}
+                </div>
+            {{/urlselect}}
+        </div>
+        <div class="ml-auto">
+            {{#actionsselect}}
+                <div class='navitem mb-0 entriesactions'>
+                    {{>core/action_menu}}
+                </div>
+            {{/actionsselect}}
+        </div>
+    </div>
+</div>
+<hr/>

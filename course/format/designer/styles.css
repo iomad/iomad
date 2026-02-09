@@ -1,0 +1,3437 @@
+:root {
+    --sectioncolor: #0f6cbf;
+    --section-height: 100px;
+    --section-bg-position: top;
+    --section-bg-size: center;
+    --section-bg-repeat: no-repeat;
+    --activity-height: 100px;
+    --activity-bg-position: top;
+    --activity-bg-size: center;
+    --activity-bg-repeat: no-repeat;
+}
+.link-layout .img-element .activityiconcontainer.img-block .activityicon,
+.link-layout .img-element .activityiconcontainer.img-block .icon {
+    filter: none;
+}
+
+@media (min-width: 1200px) {
+    .pagelayout-course.format-designer #page-wrapper #page.drawers .main-inner {
+        max-width: none;
+    }
+}
+
+@media (min-width: 768px) {
+    .pagelayout-standard.format-designer #page.drawers .main-inner,
+    body.limitedwidth.format-designer #page.drawers .main-inner,
+    .pagelayout-standard.format-designer #page.drawers .footer-popover,
+    body.limitedwidth.format-designer #page.drawers .footer-popover {
+        max-width: none;
+    }
+    .format-designer.path-admin.path-admin-roles:not(.format-site) .header-maxwidth,
+    .format-designer.path-admin.path-admin-roles:not(.format-site) .secondary-navigation .navigation .nav-tabs,
+    .format-designer.path-admin.path-admin-tool-lp .header-maxwidth,
+    .format-designer.path-admin.path-admin-tool-lp .secondary-navigation .navigation .nav-tabs {
+        max-width: none;
+    }
+    #page.drawers.format-designer {
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
+.format-designer.path-mod .header-maxwidth,
+.format-designer.path-admin .header-maxwidth {
+    padding: 0 3rem;
+    background-color: #fff;
+}
+.format-designer.path-mod.course-header-type-hero .header-maxwidth,
+.format-designer.path-admin.course-header-type-hero .header-maxwidth {
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+.format-designer.path-mod.course-header-type-hero .header-maxwidth + #page-content,
+.format-designer.path-admin.course-header-type-hero .header-maxwidth + #page-content {
+    margin-top: 2rem;
+}
+.format-designer ul.designer .card.card-list {
+    min-height: 78px;
+    width: 100%;
+    border: none;
+    border-left: 6px solid #333;
+    box-shadow: 1px 1px 1px 1px rgba(0, 0, 0, 0.10);
+}
+.format-designer ul.designer .card.card-list.restricted {
+    border-color: #ccc;
+}
+.format-designer ul.designer .card.card-list .card-body .mod-indent-outer .completion-info {
+    text-align: center;
+    margin-bottom: 5px;
+    display: inline-block;
+    vertical-align: middle;
+}
+.format-designer ul.designer .card-layout .card.card-list .card-body .mod-indent-outer .completion-info {
+    text-align: left;
+}
+.format-designer .designer .section .content .section li.activity .card .card-body {
+    padding: 15px 0;
+    position: relative;
+    z-index: 0;
+}
+.format-designer .designer .section .content .section.list-layout li.activity .card .card-body {
+    padding: 15px 0;
+}
+.format-designer ul.designer .section .content .section.card-layout .card.card-list .card-body {
+    padding: 15px;
+}
+.format-designer .designer .section .content .section li.activity .card .card-body .activity-background-style {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+.format-designer .designer .section.img-text.card-layout .activity.videotime.preview_mode .activity-block .completion-html-card {
+    width: auto;
+    margin-bottom: 40px;
+}
+.format-designer .designer .section.img-text.card-layout .activity.videotime.label_mode .activity-block .completion-html-card {
+    position: static;
+}
+.format-designer ul.designer .section .mod-indent-outer .completion-info button.border-badge-notstarted,
+.format-designer ul.designer .section .card.card-list .card-body .mod-indent-outer .completion-info button.border-badge-notstarted {
+    color: var(--primary);
+    border-color: var(--primary);
+    background: none;
+    box-shadow: none;
+    outline: none;
+}
+.format-designer ul.designer .section .mod-indent-outer .completion-info button.border-badge-danger,
+.format-designer ul.designer .section .card.card-list .card-body .mod-indent-outer .completion-info button.border-badge-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+    background: none;
+    box-shadow: none;
+    outline: none;
+}
+.format-designer ul.designer .section .mod-indent-outer .completion-info button.border-badge-warning,
+.format-designer ul.designer .section .card.card-list .card-body .mod-indent-outer .completion-info button.border-badge-warning {
+    color: #fd7e14;
+    border-color: #fd7e14;
+    background: none;
+    box-shadow: none;
+    outline: none;
+}
+.format-designer ul.designer .card-layout .card.card-list .card-body {
+    padding: 15px;
+    background-repeat: no-repeat;
+    background-size: cover;
+    position: relative;
+}
+.format-designer ul.designer .card.card-list .card-body .mod-indent-outer .mod-indent .row div:nth-child(2) .col {
+    padding: 0;
+    flex-basis: auto;
+}
+.format-designer ul.designer .card.card-list .card-body .mod-indent-outer .mod-indent .row div:nth-child(2) .pull-right {
+    float: none;
+}
+.format-designer ul.designer .card.card-list .card-body .mod-indent-outer .mod-indent .mod-visits-block {
+    display: none;
+    transition: all .5s ease;
+}
+.format-designer ul.designer .card.card-list .card-body .mod-indent-outer .mod-indent .mod-visits-block p {
+    margin-bottom: 0;
+}
+.format-designer ul.designer .card.card-list:hover .card-body .mod-indent-outer .mod-indent .row div:nth-child(2)
+.col + .mod-visits-block {
+    display: inline-block;
+    transition: all .5s ease;
+}
+.format-designer .course-content ul.designer li.section .section-header-content > .d-flex {
+    margin-bottom: 20px;
+    display: inline-block;
+}
+.format-designer .course-content ul.designer li.section h3.sectionname {
+    margin-top: 0;
+    display: inline-block;
+    vertical-align: middle;
+}
+.format-designer .course-content ul.designer li.section .categorise-section-block {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 10px;
+    margin-bottom: 10px;
+}
+.format-designer .course-content ul.designer li.section .categorise-section-block span.badge {
+    font-size: 12px;
+    line-height: 13px;
+    border-radius: 3px;
+}
+.format-designer .course-content ul.designer li.section.section-summary h3 {
+    max-width: 90%;
+    display: inline-block;
+}
+.format-designer .course-content ul.designer li.section.restricted h3.sectionname {
+    opacity: .6;
+}
+.format-designer .course-content ul.designer li.section .availability-section-block {
+    display: inline-block;
+    vertical-align: top;
+    margin-top: 0;
+    margin-bottom: 10px;
+    margin-left: 5px;
+    margin-right: 10px;
+}
+.format-designer .course-content ul.designer li.section .summary .no-overflow {
+    width: 100%;
+}
+.format-designer .course-content ul.designer li.section .availability-section-block + div {
+    clear: both;
+    margin-top: 10px;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .availability-section-block + div {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+}
+.format-designer .course-content ul.designer li.section .availability-section-block .section_availability .availabilityinfo {
+    font-size: 12px;
+    border: 1px solid #ccc;
+    padding: 5px;
+    margin-right: 5px;
+    vertical-align: middle;
+    display: none;
+}
+.format-designer .course-content ul.designer li.section .availability-section-block .section_availability
+.availabilityinfo.isrestricted {
+    background: #fff;
+    display: none;
+    position: absolute;
+    margin-left: 20px;
+}
+.format-designer .course-content ul.designer li.section .availability-section-block .section_availability
+.availabilityinfo.isrestricted.show {
+    display: inline-block;
+}
+.format-designer .course-content ul.designer li.section .availability-section-block .section_availability
+.availabilityinfo.isrestricted .badge-info {
+    display: none;
+}
+.format-designer .course-content ul.designer li.section .availability-section-block .section-restricted-action {
+    display: inline-block;
+    cursor: pointer;
+}
+.format-designer .course-content ul.designer li.section .availability-section-block .section-restricted-action i {
+    font-size: 26px;
+    line-height: 30px;
+    color: #ccc;
+}
+
+/* Course type - Normal*/
+.format-designer .course-content .single-section-layout ul.designer.course-type-normal li.section.main {
+    border-radius: 0;
+    padding: 0 15px;
+}
+.format-designer .course-content .single-section-layout ul.designer.course-type-normal li.section.main .section-header-content {
+    height: 100%;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+.format-designer .course-content .single-section-layout:not(.section-page-layout) ul.designer.course-type-normal
+li.section.main .section-content-wrapper {
+    height: 100%;
+    border: 1px solid #eee;
+    cursor: pointer;
+    position: relative;
+}
+.format-designer .course-content ul.designer.course-type-normal li.section.main:before {
+    border: 0;
+}
+
+/* Section goto link */
+.format-designer .course-content ul.designer:not(.course-type-flow) li.section
+.section-header-content:not(.flow-stack) .goto-section {
+    float: right;
+    clear: both;
+}
+.format-designer .course-content ul.designer.course-type-normal li.section .section-header-content .goto-section {
+    width: 35px;
+    color: var(--primary);
+    text-indent: -999em;
+    border: 0;
+    background: none;
+    padding: 0;
+    margin: 20px 0;
+    clear: none;
+}
+.format-designer .course-content ul.designer.course-type-normal li.section .section-header-content .goto-section:focus {
+    box-shadow: none;
+}
+.format-designer .course-content ul.designer.course-type-normal li.section .section-header-content .goto-section i {
+    font-size: 24px;
+    text-indent: 0;
+    margin: 0 0 0 10px;
+    float: left;
+}
+.format-designer #goto-top-link {
+    z-index: 1;
+}
+/* End of Section goto link */
+
+/* Section block */
+body.format-designer.path-enrol:not(.path-enrol-manual) div#course-header {
+    margin-bottom: 2rem;
+}
+body.format-designer #page.drawers .main-inner .header-maxwidth {
+    position: relative;
+}
+body.format-designer.path-admin #page.drawers .main-inner .header-maxwidth {
+    padding: 0 20px;
+}
+.format-designer .course-content ul.designer li.section .section-content-wrapper.section-progress-info-completed
+.section-progress-info {
+    width: auto;
+}
+
+/* Section activities lists */
+.format-designer .course-content ul.designer.course-type-normal li.section .section-header-content .section-summary-activities {
+    width: 80%;
+    margin-top: 20px;
+    display: inline-flex;
+    flex-wrap: wrap;
+}
+.format-designer .course-content ul.designer.course-type-normal li.section .section-header-content
+.section-summary-activities .img-element {
+    width: 40px;
+    height: 40px;
+    line-height: 35px;
+    text-align: center;
+    border: 2px solid #000;
+    border-radius: 50%;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    position: relative;
+}
+.format-designer .course-content ul.designer.course-type-normal li.section .section-header-content
+.section-summary-activities .img-element img {
+    width: 16px;
+}
+.format-designer .course-content ul.designer.course-type-normal li.section .section-header-content
+.section-summary-activities .img-element svg {
+    width: 24px;
+    height: 24px;
+}
+.format-designer .course-content ul.designer.course-type-normal li.section .section-header-content
+.section-summary-activities .img-element .activity-count {
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    color: #fff;
+    border-radius: 50%;
+    background-color: #000;
+    position: absolute;
+    top: -15px;
+    right: -10px;
+}
+/* Section activities lists */
+/* End of Course type - Normal*/
+
+.format-designer ul.designer .card.card-list.notstarted {
+    border-left-color: var(--primary);
+}
+.format-designer ul.designer .card.card-list.success {
+    border-left-color: #28a745;
+}
+.format-designer ul.designer .card.card-list.warning {
+    border-left-color: #fd7e14;
+    background-color: #ffe4cf;
+}
+.format-designer ul.designer .card.card-list.danger {
+    border-left-color: #dc3545;
+    background-color: #ffe6e8;
+}
+.format-designer ul.designer .card.card-list.muted {
+    color: #d8d8d8;
+    border-left-color: #d8d8d8;
+}
+.format-designer ul.designer .card.card-list.secondary {
+    border-left-color: #d8d8d8;
+}
+.format-designer ul.designer .circles-layout .card.card-list,
+.format-designer ul.designer .circles-layout .card.card-list.secondary {
+    border: 0;
+    box-shadow: none;
+}
+.format-designer.editing ul.designer .section .list-layout li.activity {
+    border: 0;
+    background: none;
+    padding-bottom: 0;
+}
+.format-designer.editing ul.designer .section .list-layout li.activity .editing_move {
+    left: 30px;
+    top: 35px;
+    z-index: 1;
+}
+.format-designer.editing ul.designer .section .list-layout .card.card-list.secondary .mod-indent-outer > i.icon {
+    top: 50px;
+    left: 20px;
+}
+.format-designer .designer .section .activity .module-icons .actions {
+    top: 5px;
+    right: 5px;
+}
+.format-designer .designer .progress-bg-success {
+    background-color: #28a744;
+}
+.format-designer .designer .badge-success {
+    background-color: #28a744;
+}
+.format-designer .designer .badge-due-success,
+.format-designer .designer .badge-due-success:active,
+.format-designer .designer .badge-due-success:focus:active {
+    color: #fff;
+    border-color: #000;
+    background-color: #000;
+    box-shadow: none;
+}
+.format-designer .designer .badge-due-success.btn-outline-success:not(:disabled):not(.disabled):active:focus,
+.format-designer .designer .badge-due-success.btn-outline-success:not(:disabled):not(.disabled).active:focus,
+.format-designer .designer .badge-due-success.show > .btn-outline-success.dropdown-toggle:focus {
+    box-shadow: none;
+}
+.format-designer ul.designer .text-notstarted {
+    color: var(--primary);
+}
+.format-designer ul.designer .badge.badge-completion {
+    min-width: 125px;
+    line-height: 20px;
+    border-radius: 5px;
+    text-align: left;
+    padding: 0 0.5em;
+}
+.format-designer ul.designer .mform .fcontainer .fitem.gradient {
+    display: inline-block;
+    vertical-align: top;
+}
+.format-designer ul.designer .module-icons {
+    margin-left: 20px;
+}
+.format-designer ul.designer li.activity .activity-block .card:hover .show-on-hover {
+    opacity: 1;
+    transition: all .5s ease;
+}
+.format-designer ul.designer li.activity .activity-block .card .show-on-hover .col a,
+.format-designer ul.designer li.activity .activity-block .card:hover .show-on-hover .col a {
+    font-size: 12px;
+    line-height: 24px;
+    color: #000;
+    text-decoration: none;
+    box-shadow: none;
+}
+.format-designer ul.designer li.activity .activity-block .card .col .call-action-block .font-weight-bold,
+.format-designer ul.designer li.activity:hover .activity-block .card .col .font-weight-bold {
+    display: inline-block;
+}
+.format-designer ul.designer li.activity .activity-block .card .show-on-hover .col .restricted a,
+.format-designer ul.designer li.activity .activity-block .card:hover .show-on-hover .col .restricted a {
+    font-size: 20px;
+    text-decoration: none;
+    display: inline-block;
+    margin-left: 5px;
+    vertical-align: top;
+    color: #ccc;
+    height: auto;
+    line-height: normal;
+}
+.format-designer ul.designer .module-icons a.dropdown-toggle,
+.format-designer ul.designer .module-icons .menubar > .action-menu-item > a {
+    color: var(--primary);
+    font-weight: bold;
+    font-size: 0.75em;
+}
+.format-designer ul.designer .badge.badge-notstarted {
+    color: white;
+    background-color: var(--primary);
+}
+
+@media (min-width: 768px) {
+    .format-designer ul.designer .card.card-list .card-body .mod-indent-outer {
+        width: 90%;
+    }
+}
+
+@media (max-width: 575px) {
+    .format-designer.editing ul.designer .section .list-layout li.activity .editing_move {
+        left: 5px;
+    }
+}
+
+/* Style Moodle completion checkbox */
+.format-designer ul.designer .togglecompletion {
+    float: left;
+}
+.format-designer ul.designer .togglecompletion .btn {
+    line-height: 1;
+}
+.format-designer ul.designer .togglecompletion.badge-restricted {
+    color: #333;
+    background: #ccc;
+}
+.format-designer ul.designer .togglecompletion .btn img {
+    background-color: white;
+    border-radius: 5px;
+}
+body.format-designer.editing ul.designer .section .activity .editing_move {
+    left: 0;
+    top: calc(50% - 2px);
+    z-index: 1;
+}
+body.format-designer.editing ul.designer .section .circles-layout .activity .editing_move {
+    top: 0;
+    left: 20px;
+}
+
+@media (max-width: 575px) {
+    .format-designer.editing ul.designer .section .activity .contentwithoutlink,
+    .format-designer.editing ul.designer .section .activity .activityinstance {
+        padding-right: 60px;
+    }
+    body.format-designer.editing ul.designer .section .activity .editing_move {
+        left: 0;
+    }
+    body.format-designer.editing ul.designer .section .list-layout .activity .editing_move {
+        left: 20px;
+        z-index: 1;
+    }
+    body.format-designer.editing ul.designer .section .card-layout .activity .editing_move {
+        top: 10px;
+        left: 20px;
+        z-index: 1;
+    }
+}
+
+/* format_topics CSS copied from boost to replicate basic styling for designer (based on topic) */
+.format-designer .course-content ul.designer {
+    list-style: none;
+    padding: 0 0 20px 0;
+    margin: 0 0 20px 0;
+    clear: both;
+}
+.format-designer .course-content ul.designer li.section.main {
+    width: 100%;
+    padding: 0;
+    padding-bottom: 1rem;
+    margin: 1.5rem auto 0;
+    border: 0;
+    background-size: cover;
+    background-repeat: no-repeat;
+    /* position: relative;
+    z-index: 0; */
+}
+.format-designer .course-content ul.designer li.section.main .section-content-wrapper {
+    position: relative;
+}
+.format-designer .course-content ul.designer li.section.main .section-background-style.section-design-whole {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+.format-designer .course-content ul.designer li.section.main
+.section-background-style.section-design-whole .mask-inner-section,
+.format-designer .course-content ul.designer li.section .section-header-content
+.section-background-style.sectiondesign-header .mask-inner-section {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+.format-designer .course-content ul.designer li.section.main.section-height {
+    min-height: var(--section-height);
+}
+.format-designer .course-content ul.designer li.section.main.section-bg-design {
+    min-height: var(--section-height);
+}
+.format-designer .course-content ul.designer li.section.main .section-background-style,
+.format-designer .course-content ul.designer li.section.bg-color-overlay.section-design-header
+.section-header-content .section-background-style,
+.format-designer .course-content ul.designer li.bg-color-overlay .card .card-body .section-background-style {
+    width: 100%;
+    height: 100%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+.format-designer .course-content ul.designer li.section.main.bg-color-overlay.section-design-whole .bg-overlay,
+.format-designer .course-content ul.designer li.section.main.bg-color-overlay.section-design-header .bg-overlay,
+.format-designer .course-content ul.designer li.section.main.section-design-whole .bg-color-overlay .bg-overlay,
+.format-designer .course-content ul.designer li.section.main.section-design-header .bg-color-overlay .bg-overlay {
+    width: 100%;
+    height: 100%;
+    border-radius: 3px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+.format-designer .course-content ul.designer li.section.main.bg-color-overlay.section-design-whole .img-block .bg-overlay,
+.format-designer .course-content ul.designer li.section.main.section-design-whole .bg-color-overlay .img-block .bg-overlay,
+.format-designer .course-content ul.designer li.section.main.bg-color-overlay.section-design-header .img-block .bg-overlay,
+.format-designer .course-content ul.designer li.section.main.section-design-header .bg-color-overlay .img-block .bg-overlay {
+    border-radius: 50%;
+}
+.format-designer .course-content ul.designer li.section.main.restricted {
+    opacity: .4;
+}
+.format-designer .course-content ul.designer li.section .right.side .btn-group .section_action_menu .dropdown-menu
+.dropdown-item i {
+    display: inline-block;
+}
+.format-designer .course-content ul.designer li.section .content {
+    padding: 0;
+    margin: 0 auto;
+    clear: both;
+}
+.format-designer .course-content ul.designer li.section .left.side {
+    position: absolute;
+    top: 7px;
+    z-index: 1;
+}
+.format-designer .course-content ul.designer li.section .section-header-content {
+    padding: 10px;
+    background-size: cover;
+    background-repeat: no-repeat;
+    position: relative;
+    z-index: 0;
+}
+.format-designer .course-content ul.designer li.section .section-header-content .section-head-text {
+    display: inline-block;
+}
+.format-designer .course-content ul.designer.kanban-board li.section .section-header-content {
+    border-radius: 10px;
+}
+.format-designer .course-content ul.designer li.section .section-header-content > .align-items-start {
+    display: inline-block;
+}
+.format-designer .course-content ul.designer li.section .section-header-content .sectionname {
+    max-width: 300px;
+    display: inline-block;
+}
+.format-designer .course-content ul.designer li.section .section-header-content .sectionbadges {
+    display: inline-block;
+}
+.format-designer .course-content ul.designer li.section .section-header-content .sectionname .inplaceeditable .quickeditlink {
+    margin-left: 10px;
+}
+.format-designer.editing .course-content ul.designer li.section .section-header-content .sectionname
+.inplaceeditable .quickeditlink {
+    display: flex;
+}
+.format-designer.editing .course-content ul.designer li.section .section-header-content .sectionname
+.inplaceeditable .quickeditlink .quickediticon {
+    margin-left: 5px;
+}
+.format-designer .course-content .designer li.section .section-header-content
+span.section-collapse-icon {
+    display: inline-block;
+}
+.format-designer.editing .course-content .designer li.section .section-header-content span.section-collapse-icon,
+.format-designer.editing .course-content ul.designer li.section .section-header-content .section-head-text {
+    float: left;
+}
+.format-designer .course-content .designer li.section .section-header-content
+span.section-collapse-icon:before,
+.format-designer .course-content .course-type-collapsible.designer li.section .section-header-content
+span.section-collapse-icon:before {
+    content: '\f107';
+    width: 20px;
+    font-family: var(--fa-style-family, "Font Awesome 6 Free", fontawesome);
+    font-weight: var(--fa-style, 900);
+    font-size: 24px;
+    line-height: 32px;
+    text-align: center;
+    margin-right: 10px;
+}
+.format-designer .course-content .designer li.section .section-header-content.collapsed
+span.section-collapse-icon:before,
+.format-designer .course-content .course-type-collapsible.designer li.section .section-header-content.collapsed
+span.section-collapse-icon:before {
+    content: '\f105';
+}
+.format-designer .course-content ul.designer li.section .section-header-content.boxed-block,
+.format-designer .course-content ul.designer li.section .content .section.boxed-block {
+    margin: 0 auto;
+}
+.format-designer .course-content ul.designer li.section .section-progress-info {
+    max-width: 300px;
+    width: 100%;
+    text-align: right;
+    float: right;
+    margin: 10px;
+}
+.format-designer .course-content ul.designer li.section .section-progress-info .progress {
+    height: 12px;
+    border-radius: 25px;
+}
+.format-designer .course-content ul.designer li.section .content .summary .no-overflow {
+    width: 100%;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+.format-designer .course-content ul.designer li.section.section-design-header .content .summary .no-overflow a,
+.format-designer .course-content ul.designer li.section.section-design-whole .content .summary .no-overflow a {
+    color: var(--sectioncolor);
+}
+.format-designer.path-course-view ul.designer li.activity form.togglecompletion .btn {
+    text-decoration: none;
+    line-height: 1.5;
+    padding: .375rem .75rem;
+}
+.format-designer.path-course-view ul.designer li.activity form.togglecompletion .btn.badge-success:hover {
+    color: #fff;
+}
+.format-designer.path-course-view ul.designer li.activity form.togglecompletion .btn.badge-success:focus,
+.format-designer.path-course-view ul.designer li.activity form.togglecompletion .btn.badge-success:active {
+    color: #fff;
+    outline: none;
+}
+.format-designer.path-course-view ul.designer li.activity > span {
+    display: inline-block;
+    vertical-align: middle;
+}
+.format-designer.path-course-view.pagelayout-course #page {
+    height: 100%;
+    background-color: transparent;
+}
+.format-designer #page #page-content section#region-main {
+    padding: 15px 10px;
+    border-radius: 5px;
+    overflow: auto;
+}
+.format-designer.path-course-view.pagelayout-course #page #page-content section#region-main {
+    padding: 0;
+    overflow: visible;
+}
+.format-designer .course-content ul.designer li.section.main.container .section-content-wrapper .right .section-collapsemenu {
+    margin-bottom: 10px;
+}
+.format-designer .course-content ul.designer li.section.main.container .section-content-wrapper .right .section_action_menu {
+    margin-top: 10px;
+    display: inline-block;
+}
+
+@media (min-width: 992px) {
+    .format-designer ul.designer .list-layout .card.card-list .row .col-lg-2 .pull-right {
+        text-align: center;
+        float: none;
+    }
+}
+
+@media (max-width: 991px) {
+    .format-designer .designer .section.img-text .activity .row > div .pull-right {
+        margin-top: 10px;
+    }
+}
+
+@media (max-width: 767px) {
+    .format-designer .course-content ul.designer li.section > .d-flex a.btn-icon {
+        display: inline-block;
+    }
+    .format-designer .course-content ul.designer li.section .restricted-section-block {
+        text-align: right;
+        display: block;
+        float: none;
+    }
+}
+
+@media (min-width: 576px) {
+    .format-designer .course-content ul.designer li.section .summary,
+    .format-designer .course-content ul.designer li.section .content > .availabilityinfo {
+        margin-left: 25px;
+        margin-bottom: 20px;
+    }
+    .format-designer .course-content ul.designer li.section .summary {
+        margin-left: 0;
+    }
+}
+.format-designer .course-content ul.designer li.section .left,
+.format-designer .course-content ul.designer li.section .right {
+    width: auto;
+    padding: 0 6px 0;
+    text-align: right;
+}
+.format-designer .course-content ul.designer li.section .right {
+    position: relative;
+    z-index: 2;
+}
+.format-designer .course-content ul.designer li.section .right .dropdown:not(.dropdown-subpanel) {
+    display: inline-block;
+    margin-right: 10px;
+}
+.format-designer .course-content ul.designer li.section .right .icon-loader-block {
+    position: absolute;
+    right: 0;
+}
+.format-designer .course-content ul.designer li.section .right .btn-group .action-menu .menubar {
+    height: 100%;
+    margin-left: 10px;
+    align-items: center;
+}
+
+@media (max-width: 767.98px) {
+    body.format-designer:not(.editing) .course-content ul.designer li.section .left,
+    body.format-designer:not(.editing) .course-content ul.designer li.section .right {
+        display: none;
+    }
+}
+.format-designer .designer .section.img-text .activity .row > div:nth-child(2) .pull-right {
+    text-align: center;
+    float: none;
+}
+.format-designer .designer .list-layout .section .content .section li.activity .mod-visits-block {
+    display: block;
+}
+.format-designer .designer .section.img-text .activity-block .availability-info {
+    position: relative;
+}
+.format-designer .designer .section.img-text .activity-block .availability-info .restrict-block {
+    margin-left: 15px;
+}
+.format-designer .designer .section.img-text.link-layout .activity-block .availability-info {
+    display: inline-block;
+}
+.format-designer .designer .section.img-text.list-layout .activity-block .availability-info {
+    height: 100%;
+    display: inline-flex;
+    align-items: center;
+}
+.format-designer .designer .section.img-text.card-layout .activity-block .availability-info {
+    float: right;
+}
+.format-designer .designer .section.img-text .activity .restrict-block .info-content-block {
+    text-align: left;
+    margin-right: 10px;
+}
+.format-designer .designer .section.img-text.card-layout .activity .restrict-block .info-content-block {
+    margin-right: 0;
+}
+.format-designer .designer .section.img-text .activity .restrict-block .info-content-block
+.availabilityinfo.isrestricted {
+    min-width: 220px;
+    font-size: 12px;
+    color: #000;
+    border: 2px solid #333;
+    background: #fff;
+    padding: 5px;
+    margin: 0;
+    vertical-align: middle;
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 40px;
+    opacity: 1;
+    z-index: 1;
+}
+.format-designer .designer .section.img-text.card-layout .activity .restrict-block .info-content-block
+.availabilityinfo.isrestricted {
+    position: absolute;
+    right: 55px;
+}
+.format-designer .designer .section.img-text .activity .restrict-block.show .info-content-block
+.availabilityinfo.isrestricted {
+    display: inline-block;
+}
+.format-designer .designer .section.img-text.card-layout .activity .restrict-block.show .info-content-block
+.availabilityinfo.isrestricted {
+    left: auto;
+    right: 25px;
+}
+.format-designer .designer .section.img-text.circles-layout .activity .restrict-block .info-content-block
+.availabilityinfo.isrestricted {
+    top: 30px;
+}
+.format-designer .designer .section.img-text .activity .restrict-block.show .info-content-block
+.availabilityinfo.isrestricted ul {
+    padding: 0;
+    margin: 0;
+}
+.format-designer .designer .section.img-text .activity .restrict-block.show .info-content-block
+.availabilityinfo.isrestricted ul li {
+    list-style: none;
+    text-align: left;
+}
+.format-designer .designer .section.img-text .activity .availabilityinfo .badge-info {
+    display: none;
+}
+.format-designer .designer .section.img-text .activity .availabilityinfo strong {
+    font-size: 12px;
+    margin-left: 5px;
+    display: inline-block;
+}
+.format-designer .designer .section.img-text .activity .call-action-block {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 5px;
+}
+.format-designer .designer .section.img-text .activity .call-action-block a:focus {
+    border: 0;
+    background: none;
+    box-shadow: none;
+}
+.format-designer .designer .section.img-text .activity .restrict-block.show .call-action-block {
+    display: inline-block;
+    float: none;
+}
+.format-designer .designer .section.img-text .activity .call-action-block a > span {
+    text-indent: -999em;
+    display: inline-block;
+    line-height: 20px;
+    vertical-align: top;
+}
+.format-designer .designer .section.img-text.list-layout .activity .call-action-block a > span {
+    line-height: 27px;
+}
+.format-designer .designer .section.img-text .activity .call-action-block a > span i {
+    font-size: 26px;
+    color: #ccc;
+    line-height: 32px;
+    text-indent: 0;
+    float: left;
+}
+.format-designer .designer .section.img-text.circles-layout .activity .call-action-block a > span i {
+    margin-top: 0;
+}
+.format-designer .designer .section.img-text .activity .activityinstance {
+    width: 100%;
+    padding-right: 30px;
+    margin-bottom: 0;
+}
+.format-designer .designer .section.img-text.card-layout .activity .activity-block .activityinstance {
+    padding-right: 0;
+    margin-bottom: 5px;
+}
+.format-designer .designer .section.img-text .activity .activityinstance .img-block {
+    border-radius: 5px;
+    padding: 15px;
+}
+.format-designer .designer .section.img-text .activity .activityinstance .img-element.content-show .img-block {
+    visibility: visible;
+}
+.format-designer .designer .section.img-text .activity .activityinstance .img-element.content-hide .img-block {
+    visibility: hidden;
+}
+.format-designer .designer .section.img-text .activity .activityinstance .img-element.content-show-hover .img-block {
+    visibility: hidden;
+}
+.format-designer .designer .section.img-text .activity:hover .activityinstance .img-element.content-show-hover .img-block {
+    visibility: visible;
+}
+.format-designer .designer .section.img-text .activity .activityinstance .img-element.content-hide-hover .img-block {
+    visibility: visible;
+}
+.format-designer .designer .section.img-text .activity:hover .activityinstance .img-element.content-hide-hover .img-block {
+    visibility: hidden;
+}
+.format-designer .designer .section.img-text .activity .activityinstance .img-element.content-remove .img-block {
+    display: none;
+}
+.format-designer .designer .section.img-text.circles-layout .activity
+.activityinstance .img-element.content-hide .img-block,
+.format-designer .designer .section.img-text.circles-layout .activity
+.activityinstance .img-element.content-show-hover .img-block,
+.format-designer .designer .section.img-text.circles-layout .activity:hover
+.activityinstance .img-element.content-hide-hover .img-block {
+    background: none;
+}
+.format-designer .designer .section.img-text.circles-layout .activity:hover
+.activityinstance .img-element.content-show-hover .img-block,
+.format-designer .designer .section.img-text.circles-layout .activity
+.activityinstance .img-element.content-hide-hover .img-block {
+    background: #eee;
+}
+.format-designer .designer .section.img-text.circles-layout .activity
+.activityinstance .img-element.content-show .img-block,
+.format-designer .designer .section.img-text.circles-layout .activity
+.activityinstance .img-element.content-hide .img-block,
+.format-designer .designer .section.img-text.circles-layout .activity
+.activityinstance .img-element.content-show-hover .img-block,
+.format-designer .designer .section.img-text.circles-layout .activity
+.activityinstance .img-element.content-hide-hover .img-block {
+    visibility: visible;
+}
+.format-designer .designer .section.img-text.circles-layout .activity
+.activityinstance .img-element.content-show .img-block .mod-icon-url {
+    visibility: visible;
+}
+.format-designer .designer .section.img-text.circles-layout .activity
+.activityinstance .img-element.content-hide .img-block .mod-icon-url {
+    visibility: hidden;
+}
+.format-designer .designer .section.img-text.circles-layout .activity
+.activityinstance .img-element.content-show-hover .img-block .mod-icon-url {
+    visibility: hidden;
+}
+.format-designer .designer .section.img-text.circles-layout .activity:hover
+.activityinstance .img-element.content-show-hover .img-block .mod-icon-url {
+    visibility: visible;
+}
+.format-designer .designer .section.img-text.circles-layout .activity:hover
+.activityinstance .img-element.content-hide-hover .img-block .mod-icon-url {
+    visibility: hidden;
+}
+.format-designer .designer .section.img-text.circles-layout .activity .activityinstance
+.img-element.content-remove .img-block .mod-icon-url {
+    display: none;
+}
+.format-designer .designer .section.img-text.link-layout .activity .activityinstance .img-block {
+    width: auto;
+    height: auto;
+    text-align: right;
+    display: inline-block;
+    background: none;
+    padding: 0 0 5px 0;
+}
+.format-designer .designer .section.img-text .activity .activityinstance .img-block img {
+    margin: 0 auto;
+}
+.format-designer .designer .section.img-text .activity .activityinstance .inplaceeditable {
+    width: 95%;
+    display: inline-block;
+}
+.format-designer .designer .section.img-text.circles-layout .activity .activityinstance .inplaceeditable {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/*v-4.0+*/
+.format-designer .designer  .section.img-text.list-layout .activity .activityinstance .inplaceeditable {
+    display: flex;
+}
+/*End ofv-4.0+*/
+.format-designer .designer .section.img-text .activity .activityinstance .inplaceeditable.content-show {
+    visibility: visible;
+}
+.format-designer .designer .section.img-text .activity .activityinstance .inplaceeditable.content-hide {
+    visibility: hidden;
+}
+.format-designer .designer .section.img-text .activity .activityinstance.content-show-hover .inplaceeditable {
+    visibility: hidden;
+}
+.format-designer .designer .section.img-text .activity:hover .activityinstance.content-show-hover .inplaceeditable {
+    visibility: visible;
+}
+.format-designer .designer .section.img-text .activity .activityinstance.content-hide-hover .inplaceeditable {
+    visibility: visible;
+}
+.format-designer .designer .section.img-text .activity:hover .activityinstance.content-hide-hover
+.inplaceeditable {
+    visibility: hidden;
+}
+.format-designer .designer .section.img-text .activity .activityinstance .inplaceeditable.content-remove {
+    display: none;
+}
+.format-designer.editing .designer .section.img-text .activity .activityinstance .inplaceeditable
+.activity-instance {
+    width: 90%;
+    display: inline-block;
+}
+.format-designer.editing .designer .section.img-text.circles-layout .activity .activityinstance
+.inplaceeditable .activity-instance {
+    width: 100%;
+}
+.format-designer.editing .designer .section.img-text.circles-layout .activity .activityinstance
+.inplaceeditable .activity-instance {
+    margin: 0 auto;
+}
+.format-designer.editing .designer .section.img-text .activity .activityinstance .inplaceeditable
+.activity-instance .activitytitle,
+.format-designer.editing .designer .section.img-text .activity .activityinstance .inplaceeditable
+.activity-instance .activitytitle .media-body .activityname .aalink .instancename {
+    width: 100%;
+    display: flex;
+}
+.format-designer.editing .designer .section.img-text.circles-layout .activity .activityinstance .inplaceeditable
+.activity-instance .activitytitle,
+.format-designer.editing .designer .section.img-text.circles-layout .activity .activityinstance .inplaceeditable
+.activity-instance .activitytitle .media-body .activityname .aalink .instancename {
+    display: block;
+}
+.format-designer .designer .section.img-text.card-layout .activity .activityinstance .inplaceeditable {
+    width: 90%;
+}
+.format-designer.editing .designer .section.img-text.card-layout .activity .activityinstance
+.inplaceeditable.inplaceeditingon input {
+    width: auto;
+}
+
+/*v-4.0+*/
+.format-designer .designer .section.img-text.card-layout .activity .activityinstance .inplaceeditable {
+    display: block;
+}
+.format-designer .designer .section .content .section.card-layout li.activity .activityinstance .aalink {
+    width: 80%;
+}
+/*End of v-4.0*/
+
+.format-designer .designer .section.img-text.list-layout .activity .activityinstance {
+    padding-right: 30px;
+}
+.format-designer .designer .section.img-text.list-layout .activity .activity-altcontent {
+    margin-top: 15px;
+}
+.format-designer .designer .section.img-text.list-layout .activity .activityinstance .activity-instance {
+    width: 100%;
+}
+.format-designer .designer .section.img-text.list-layout .activity .availabilityinfo {
+    opacity: .5;
+}
+.format-designer .designer .section.list-layout .activity .actions {
+    top: 0;
+    right: 0;
+}
+.format-designer .designer .section.card-layout .activity .actions {
+    right: 10px;
+}
+/* Course Edit dropdown menu */
+@media (min-width: 576px) and (max-width: 1690px) {
+    .format-designer .designer .section.desktop-five-column .section.link-layout .activity .action-menu .menubar .dropdown
+    .dropdown-menu .dropdown-subpanel .dropdown-menu,
+    .format-designer .designer .section.desktop-five-column .section.card-layout .activity .action-menu .menubar .dropdown
+    .dropdown-menu .dropdown-subpanel .dropdown-menu,
+    .format-designer .designer .section.desktop-five-column .section.circles-layout .activity .action-menu .menubar .dropdown
+    .dropdown-menu .dropdown-subpanel .dropdown-menu {
+        left: 0;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 1570px) {
+    .format-designer .designer .section.desktop-four-column .section.link-layout .activity .action-menu .menubar .dropdown
+    .dropdown-menu .dropdown-subpanel .dropdown-menu,
+    .format-designer .designer .section.desktop-four-column .section.card-layout .activity .action-menu .menubar .dropdown
+    .dropdown-menu .dropdown-subpanel .dropdown-menu,
+    .format-designer .designer .section.desktop-four-column .section.circles-layout .activity .action-menu .menubar .dropdown
+    .dropdown-menu .dropdown-subpanel .dropdown-menu {
+        left: 0;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 1380px) {
+    .format-designer .designer .section.desktop-three-column .section.link-layout .activity .action-menu .menubar .dropdown
+    .dropdown-menu .dropdown-subpanel .dropdown-menu,
+    .format-designer .designer .section.desktop-three-column .section.card-layout .activity .action-menu .menubar .dropdown
+    .dropdown-menu .dropdown-subpanel .dropdown-menu,
+    .format-designer .designer .section.desktop-three-column .section.circles-layout .activity .action-menu .menubar .dropdown
+    .dropdown-menu .dropdown-subpanel .dropdown-menu {
+        left: 0;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 991px) {
+    .format-designer .designer .section.desktop-two-column .section.link-layout .activity .action-menu .menubar .dropdown
+    .dropdown-menu .dropdown-subpanel .dropdown-menu,
+    .format-designer .designer .section.desktop-two-column .section.card-layout .activity .action-menu .menubar .dropdown
+    .dropdown-menu .dropdown-subpanel .dropdown-menu,
+    .format-designer .designer .section.desktop-two-column .section.circles-layout .activity .action-menu .menubar .dropdown
+    .dropdown-menu .dropdown-subpanel .dropdown-menu {
+        left: 0;
+    }
+}
+/* End of Course Edit dropdown menu */
+.format-designer .designer .section.list-layout .activity .aalink img.activityicon,
+.format-designer .designer .section.card-layout .activity .aalink img.activityicon {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+    display: none;
+}
+.format-designer .designer .section.list-layout .activity .restricted .instancename {
+    color: #6a737b;
+}
+.format-designer .designer .section.img-text .activity .activityinstance .activity-type p {
+    font-size: 12px;
+}
+.format-designer .designer .section.img-text .activity .activityinstance .instancename {
+    font-size: 16px;
+}
+.format-designer .designer .section.img-text.card-layout .activity .restricted .activityinstance .aalink {
+    color: #ccc;
+}
+.format-designer .designer .section .content .section.card-layout {
+    text-align: left;
+    padding-left: 0;
+    margin: 0;
+    flex-wrap: wrap;
+}
+.format-designer .designer .section .content .section.card-layout li.activity .activity-block.designer {
+    height: 100%;
+}
+.format-designer .designer.kanban-board .section .content .section.card-layout li.activity .activity-block.designer {
+    padding: 0;
+}
+.format-designer .designer .section .content .section.card-layout.circles-layout {
+    text-align: center;
+}
+.format-designer .designer .section .content .section.card-layout li.activity {
+    width: 48%;
+    min-height: 150px;
+    text-align: left;
+    border: 0;
+    background: none;
+    padding: 0.25rem 5px 0.25rem;
+    margin-top: 10px;
+    margin-bottom: 0;
+    margin-right: 15px;
+    display: inline-block;
+    vertical-align: top;
+    position: relative;
+    flex: auto;
+}
+.format-designer .designer .section .content.collapse .section.card-layout li.activity,
+.format-designer .designer .section .content.collapsing .section.card-layout li.activity,
+.format-designer .designer .section .content.show .section.card-layout li.activity {
+    width: 48%;
+}
+.format-designer .designer .section .content .section.card-layout li.activity:hover {
+    border: 0;
+    background: none;
+}
+.format-designer .designer .section .content .section.card-layout li.activity:nth-child(2n) {
+    margin-right: 0;
+}
+.format-designer .designer .section .content .section.list-layout {
+    padding: 0;
+    margin: 0;
+}
+.format-designer .designer .section .content .section.circles-layout {
+    text-align: center;
+    display: block;
+    padding: 0;
+    margin: 0;
+}
+.format-designer .designer .section .content .section li.activity {
+    padding: 10px 10px 0 10px;
+    margin-bottom: 15px;
+    border: 0;
+}
+.format-designer .designer .section .content .section li.activity.activity-height .activity-block .card {
+    min-height: var(--activity-height);
+}
+.format-designer .designer .section .content .section.circles-layout li.activity {
+    padding-bottom: 10px;
+    margin: 10px 0;
+    display: inline-block;
+    vertical-align: top;
+}
+.format-designer .designer .section .content .section.list-layout li.activity {
+    padding-top: 0;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+.format-designer.editing .course-content ul.designer li.section .section-header-content .section-head-text .bulkselect {
+    position: absolute;
+    top: 15px;
+    left: -2rem;
+}
+.format-designer .designer .section .content .section.link-layout li.activity .activity-block .bulkselect {
+    top: 10px;
+    left: 10px;
+    z-index: 1;
+}
+.format-designer .designer .section .content .section.list-layout li.activity .activity-block .bulkselect {
+    top: 2rem;
+    z-index: 1;
+
+}
+.format-designer .designer .section .content .section.card-layout li.activity .bulkselect {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1;
+}
+.format-designer .designer.kanban-board .section .content .section.card-layout li.activity .bulkselect {
+    left: 20px;
+}
+.format-designer .course-content ul.designer.kanban-board li.section.main .section-head-text .bulkselect {
+    top: -5px;
+    left: -5px;
+}
+.format-designer .designer .section .content .section.circles-layout li.activity .activity-block .bulkselect {
+    top: 10px;
+    left: 10px;
+    z-index: 1;
+}
+.format-designer .designer .section .content .section li.activity .activity-block.designer {
+    height: 100%;
+    padding: 10px;
+    border: 0;
+    display: flex;
+    position: relative;
+}
+.format-designer.editing .designer .section .content .section li.activity .activity-block.designer:hover {
+    background: none;
+    box-shadow: none;
+}
+.format-designer .designer .section .content .section li.activity .activity-block.designer .activity-background-style {
+    width: 100%;
+    height: 100%;
+    border-radius: 3px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+}
+.format-designer .designer .section .content .section li.activity .activity-block.designer .contentwithoutlink {
+    padding: 0;
+    display: inline-block;
+}
+.format-designer .designer .section .content .section li.activity.hasinfo {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+.format-designer .designer .section .content .section.link-layout {
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+}
+.format-designer .designer .section .content .section.link-layout li.activity {
+    width: 100%;
+    padding: 0;
+    margin-bottom: 5px;
+    background-repeat: no-repeat;
+    background-size: cover;
+    position: relative;
+    flex: auto;
+}
+.format-designer .designer .section .content .section.link-layout li.activity .mod-indent-outer > i.icon {
+    position: absolute;
+    top: 20px;
+    left: 5px;
+}
+.format-designer .designer .section .content .section.link-layout li.activity .mod-indent-outer {
+    padding-top: 0;
+}
+.format-designer .designer .section .content .section.link-layout li.activity .mod-indent-outer .activityinstance .activitytitle {
+    z-index: 0;
+}
+.format-designer .designer .section .content .section.link-layout li.activity .mod-indent-outer .activityinstance
+.activitytitle .img-element {
+    margin-top: 22px;
+}
+.format-designer.editing .designer .section .content .section.link-layout li.activity .mod-indent-outer {
+    padding: 30px;
+}
+.format-designer .designer .section .content .section.list-layout li.activity .mod-indent-outer > .icon {
+    position: absolute;
+}
+.format-designer.editing .designer .section .content .section.list-layout li.activity .mod-indent-outer > .icon {
+    position: static;
+}
+.format-designer.editing .designer .section .content .section li.activity .mod-indent-outer > .icon {
+    position: absolute;
+}
+.format-designer .activity-item,
+.format-designer .activity-item.hiddenactivity {
+    background-color: transparent;
+}
+.format-designer .designer .section .content .section li.activity .badge-restricted {
+    background: #ced4da;
+}
+.format-designer .designer .section .content .section li.activity .availability-block-content {
+    max-width: 270px;
+    width: 100%;
+    display: inline-block;
+}
+.format-designer .designer .section .content .section.link-layout li.activity .activityinstance {
+    width: 70%;
+    vertical-align: middle;
+    margin-bottom: 0;
+}
+/*V-4.0+*/
+.format-designer .designer .section .content .section.link-layout li.activity .activityinstance {
+    display: inline-block;
+}
+/*End of V-4.0+*/
+.format-designer .designer .section .content .section.link-layout li.activity.label .activityinstance {
+    min-width: auto;
+    width: auto;
+    padding: 0;
+}
+.format-designer .designer .section .content .section li.activity.label .activityinstance {
+    display: none;
+}
+.format-designer .designer .section .content .section li.activity.label .activity-block.designer .contentwithoutlink {
+    width: 94%;
+    padding: 0;
+    display: inline-block;
+    vertical-align: top;
+}
+.format-designer .designer .section .content .section.link-layout li.activity.label .activity-block.designer .contentwithoutlink {
+    width: 65%;
+}
+.format-designer .designer .section .content .section.link-layout li.activity.label .activity-block.designer
+.contentwithoutlink .no-overflow > h2 {
+    display: none;
+}
+.format-designer .designer .section .content .section.link-layout li.activity.restricted .activityinstance.ismodcontent {
+    display: inline-block;
+}
+.format-designer .designer .section .content .section.link-layout li.activity .action-html-card {
+    max-width: 100px;
+    width: 100%;
+    text-align: right;
+    margin-top: 0;
+    margin-left: 0;
+    vertical-align: middle;
+    float: none;
+    opacity: 0;
+    display: none;
+}
+.format-designer .designer .section .content .section.link-layout li.activity:hover .action-html-card {
+    display: none;
+}
+.format-designer .designer .section .content .section.link-layout li.activity.restricted .action-html-card {
+    width: auto;
+    opacity: 1;
+}
+.format-designer .designer .section .content .section li.activity .activity-actions {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+.format-designer .designer .section .content .section.link-layout li.activity .center-reports-block {
+    float: right;
+    margin-top: 18px;
+    margin-right: 10px;
+}
+.format-designer .designer .section .content .section.link-layout li.activity .center-reports-block .pull-right {
+    float: none;
+}
+.format-designer .designer .section .content .section.link-layout li.activity .center-reports-block .pull-right .completion-info {
+    text-align: center;
+}
+.format-designer .designer .section .content .section li.activity .availability-block-content .availabilityinfo {
+    width: 100%;
+    text-align: center;
+    display: inline-block;
+    margin: 0;
+}
+.format-designer .designer .section .content .section li.activity .availability-block-content .center-reports-block {
+    display: block;
+    margin: 0;
+}
+.format-designer .designer .section .content .section li.activity .availability-block-content .center-reports-block .pull-right {
+    width: 100%;
+    float: none;
+    margin: 0;
+}
+.format-designer .designer .section .content .section li.activity .availability-block-content .center-reports-block .pull-right
+.col {
+    text-align: center;
+}
+.format-designer .designer .section .content .section li.activity .activityinstance .activity-type {
+    display: block;
+    margin-top: 10px;
+}
+.format-designer .designer .section .content .section.list-layout li.activity .activityinstance .activity-type,
+.format-designer .designer .section .content .section.link-layout li.activity .activityinstance .activity-type {
+    margin-top: 0;
+}
+.format-designer .designer .section .content .section li.activity .activityinstance .activity-type.content-hide,
+.format-designer .designer .section .content .section li.activity .activityinstance .activity-type.content-remove {
+    margin: 0;
+}
+.format-designer .designer .section .content .section li.activity .activityinstance .activity-type.content-show p {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section li.activity .activityinstance .activity-type.content-hide p {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section li.activity .activityinstance .activity-element
+.activity-type.content-show-hover p {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section li.activity:hover .activityinstance .activity-element
+.activity-type.content-show-hover p {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section li.activity .activityinstance .activity-element
+.activity-type.content-hide-hover p {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section li.activity:hover .activityinstance .activity-element
+.activity-type.content-hide-hover p {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section li.activity .activityinstance .activity-type.content-remove p {
+    display: none;
+}
+.format-designer .designer .section .content .section li.activity:not(.circle-layout) .activityinstance .no-overflow > h2,
+.format-designer .designer .section .content .section li.activity:not(.circle-layout) .activityinstance .no-overflow > p {
+    font-size: 20px;
+    font-weight: bold;
+    color: #6a737b;
+    text-decoration: none;
+}
+.format-designer .designer .section .content .section li.activity .activityinstance .activity-type p {
+    font-size: 10px;
+    font-weight: bold;
+    color: #999;
+    margin-bottom: 0;
+}
+.format-designer .designer .section .content .section li.activity .restricted .activityinstance .activity-type p {
+    color: #ccc;
+}
+.format-designer .designer .section .content .section li.activity .activityinstance .aalink {
+    font-size: 20px;
+    color: rgb(59, 59, 59);
+    text-decoration: none;
+    text-indent: 0;
+    display: inline-flex;
+}
+/*v-4.0+*/
+
+.format-designer .designer .section .content .section li.activity.circle-layout .activityinstance .aalink {
+    display: block;
+    z-index: 1;
+}
+/*End of v-4.0+*/
+
+.format-designer .designer .section .content .section.list-layout li.activity .activityinstance .aalink {
+    width: 100%;
+    display: flex;
+}
+.format-designer .designer .section .content .section.list-layout li.activity .activityinstance .aalink .instancename {
+    width: 100%;
+}
+.format-designer .designer .section .content .section.list-layout li.activity .activityinstance .aalink,
+.format-designer .designer .section .content .section.card-layout li.activity .activityinstance .aalink {
+    text-indent: 0;
+    padding-left: 0;
+    display: inline-block;
+    vertical-align: top;
+}
+.format-designer .designer .section .content .section li.activity .activityinstance .instancename {
+    line-height: 30px;
+    font-weight: bold;
+    display: inline-block;
+    vertical-align: middle;
+}
+.format-designer .designer .section .content .section li.activity .restricted .mod-content {
+    opacity: .5;
+}
+.format-designer .designer .section .content .section.list-layout li.activity .mod-content {
+    margin-left: 65px;
+    margin-bottom: 20px;
+}
+.format-designer .designer .section .content .section li.activity .restricted .mod-content p {
+    color: #6a737b;
+}
+.format-designer .designer .section .content .section li.activity .restricted .mod-content p:empty {
+    display: none;
+}
+.format-designer .designer .section .content .section li.activity .completion-html-card {
+    display: inline-block;
+    vertical-align: middle;
+}
+.format-designer .designer .section .content .section.list-layout li.activity .completion-html-card {
+    margin-bottom: 0;
+}
+.format-designer .designer .section .content .section.list-layout li.activity .action-html-card {
+    margin-top: 0;
+}
+.format-designer .designer .section .content .section li.activity .activityinstance .cmname-block.content-show .aalink {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section li.activity .activityinstance .cmname-block.content-hide .aalink {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section li.activity .activityinstance .cmname-block.content-show-hover .aalink {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section li.activity:hover .activityinstance .cmname-block.content-show-hover .aalink {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section li.activity .activityinstance .cmname-block.content-hide-hover .aalink {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section li.activity:hover .activityinstance .cmname-block.content-hide-hover .aalink {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section li.activity .activityinstance .cmname-block.content-remove .aalink {
+    display: none;
+}
+.format-designer .designer .section .content .section li.activity .completion-html-card.content-show .completion-info {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section li.activity .completion-html-card.content-hide .completion-info {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section li.activity .completion-html-card.content-show-hover .completion-info {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section li.activity:hover .completion-html-card.content-show-hover .completion-info {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section li.activity .completion-html-card.content-hide-hover .completion-info {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section li.activity:hover .completion-html-card.content-hide-hover .completion-info {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section li.activity .completion-html-card.content-remove .completion-info {
+    display: none;
+}
+.format-designer .designer .section .content .section.card-layout li.activity .completion-html-card {
+    margin: 0;
+}
+.format-designer .designer .section .content .section.card-layout li.activity .restricted .completion-html-card
+.completion-info .badge-restricted span {
+    color: #6a737b;
+}
+.format-designer .designer .section .content .section li.activity .mod-indent-outer .row {
+    margin: 0;
+}
+.format-designer .designer .section .content .section li.activity .mod-indent-outer .col.align-self-center {
+    text-align: right;
+    padding: 0;
+}
+.format-designer .designer .section .content .section li.activity .mod-indent-outer .pull-right {
+    float: none;
+}
+.format-designer .designer .section .content .section li.activity .mod-indent-outer .show-on-hover
+.col.align-self-center {
+    text-align: center;
+}
+.format-designer .designer .section .content .section.list-layout li.activity .mod-indent-outer
+.show-on-hover .col.align-self-center {
+    text-align: right;
+}
+.format-designer .designer .section .content .section.list-layout li.activity:hover .mod-indent-outer
+.show-on-hover .col.align-self-center {
+    display: block;
+}
+.format-designer .designer .section .content .section li.activity .mod-visits-block {
+    min-height: 20px;
+    margin-right: 10px;
+    transition: all .5s ease;
+    display: inline-block;
+    vertical-align: middle;
+}
+.format-designer .designer .section .content .section li.activity .mod-visits-block.content-show p {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section li.activity .mod-visits-block.content-hide p {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section li.activity .mod-visits-block.content-show-hover p {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section li.activity:hover .mod-visits-block.content-show-hover p {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section li.activity .mod-visits-block.content-hide-hover p {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section li.activity:hover .mod-visits-block.content-hide-hover p {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section li.activity .mod-visits-block.content-remove p {
+    display: none;
+}
+.format-designer .designer .section .content .section.link-layout li.activity .completion-html-card {
+    margin-bottom: 0;
+}
+.format-designer .designer .section .content .section.link-layout li.activity .mod-visits-block {
+    display: inline-block;
+    vertical-align: middle;
+}
+.format-designer .designer .section .content .section.list-layout li.activity .mod-visits-block {
+    margin-right: 4px;
+}
+.format-designer .designer .section .content .section.card-layout li.activity .mod-visits-block {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+}
+.format-designer .designer .section .content .section.card-layout li.activity .mod-visits-block p {
+    text-align: left;
+    margin-bottom: 0;
+}
+.format-designer .designer .section .content .section li.activity .mod-visits-block p {
+    font-size: 12px;
+    font-weight: normal;
+    color: #999;
+    text-align: center;
+    margin-bottom: 0;
+}
+.format-designer .designer .section .content .section li.activity .action-html-card {
+    text-align: center;
+    margin-top: 10px;
+    margin-left: 30px;
+    float: right;
+}
+.format-designer .designer .section .content .section li.activity .action-html-card.content-show a {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section li.activity .action-html-card.content-hide a {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section li.activity .action-html-card.content-show-hover a {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section li.activity:hover .action-html-card.content-show-hover a {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section li.activity .action-html-card.content-hide-hover a {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section li.activity:hover .action-html-card.content-hide-hover a {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section li.activity .action-html-card.content-remove a {
+    display: none;
+}
+.format-designer .designer .section .content .section li.activity .mod-content {
+    margin-bottom: 20px;
+}
+.format-designer .designer .section .content .section li.activity .mod-content.content-show .trim-summary,
+.format-designer .designer .section .content .section li.activity .mod-content.content-show .fullcontent-summary,
+.format-designer .designer .section .content .section li.activity .mod-content.content-show p {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section li.activity .mod-content.content-hide .trim-summary,
+.format-designer .designer .section .content .section li.activity .mod-content.content-hide .fullcontent-summary,
+.format-designer .designer .section .content .section li.activity .mod-content.content-hide p {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section li.activity .mod-content.content-show-hover .trim-summary,
+.format-designer .designer .section .content .section li.activity .mod-content.content-show-hover .fullcontent-summary,
+.format-designer .designer .section .content .section li.activity .mod-content.content-show-hover p {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section li.activity:hover .mod-content.content-show-hover .trim-summary,
+.format-designer .designer .section .content .section li.activity:hover .mod-content.content-show-hover .fullcontent-summary,
+.format-designer .designer .section .content .section li.activity:hover .mod-content.content-show-hover p {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section li.activity .mod-content.content-hide-hover .trim-summary,
+.format-designer .designer .section .content .section li.activity .mod-content.content-hide-hover .fullcontent-summary,
+.format-designer .designer .section .content .section li.activity .mod-content.content-hide-hover p {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section li.activity:hover .mod-content.content-hide-hover .trim-summary,
+.format-designer .designer .section .content .section li.activity:hover .mod-content.content-hide-hover .fullcontent-summary,
+.format-designer .designer .section .content .section li.activity:hover .mod-content.content-hide-hover p {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section li.activity .mod-content.content-remove .trim-summary,
+.format-designer .designer .section .content .section li.activity .mod-content.content-remove .fullcontent-summary,
+.format-designer .designer .section .content .section li.activity .mod-content.content-remove p {
+    display: none;
+}
+.format-designer .designer .section .content .section.card-layout li.activity .action-html-card {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    margin-top: 0;
+    margin-left: 0;
+}
+.format-designer .designer .section .content .section.card-layout li.activity .restricted .action-html-card {
+    opacity: 1;
+}
+.format-designer .designer .section .content .section li.activity .action-html-card a {
+    font-size: 12px;
+    color: #000;
+    text-decoration: none;
+    box-shadow: none;
+}
+.format-designer .designer .section .content .section li.activity .action-html-card a span i {
+    margin-left: 5px;
+}
+.format-designer .designer .section .content .section.card-layout li.activity .editing_move {
+    left: 20px;
+    z-index: 1;
+}
+.format-designer .designer .section .content .section.link-layout li.activity .activityinstance .aalink.quickeditlink,
+.format-designer .designer .section .content .section.list-layout li.activity .activityinstance .aalink.quickeditlink,
+.format-designer .designer .section .content .section.card-layout li.activity .activityinstance .aalink.quickeditlink {
+    width: auto;
+    float: right;
+}
+.format-designer .designer .section.img-text.list-layout .content .section li.activity .activityinstance .aalink {
+    margin-top: 5px;
+}
+.format-designer .designer .section.img-text.list-layout .activity .activityinstance .activity-element {
+    width: 78%;
+    display: inline-block;
+}
+.format-designer .designer .container-boxed .section.img-text.list-layout .activity .activityinstance .activity-element,
+.format-designer .designer .section.img-text.list-layout.content-boxed .activity .activityinstance .activity-element {
+    width: auto;
+}
+.format-designer .designer .container-boxed .section.img-text.list-layout .activity .activityinstance .availability-info,
+.format-designer .designer .section.img-text.list-layout.content-boxed .activity .activityinstance .availability-info {
+    margin-left: 5px;
+}
+.format-designer.editing .designer .section .content .section.card-layout li.activity .activityinstance
+.activity-element .cmname-block {
+    display: block;
+}
+.format-designer.editing .designer .section .content .section.link-layout li.activity .activityinstance .aalink img.activityicon {
+    display: none;
+}
+.format-designer.editing .designer .section .content .section.link-layout li.activity .activityinstance .aalink .instancename,
+.format-designer.editing .designer .section .content .section.list-layout li.activity .activityinstance .aalink .instancename,
+.format-designer.editing .designer .section .content .section.card-layout li.activity .activityinstance .aalink .instancename {
+    width: 100%;
+}
+.format-designer .designer .section .content .section.card-layout li.activity .activityinstance .activity-element {
+    vertical-align: top;
+}
+.format-designer .designer .section .content .section.card-layout li.activity .activityinstance .activity-element.content-show {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section.card-layout li.activity .activityinstance .activity-element.content-hide {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section.card-layout li.activity:hover .activityinstance.content-show-hover {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section.card-layout li.activity:hover .activityinstance.content-show-hover
+.activity-element.content-show-hover {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section.card-layout li.activity:hover .activityinstance.content-hide-hover {
+    visibility: visible;
+}
+.format-designer .designer .section .content .section.card-layout li.activity:hover .activityinstance.content-hide-hover
+.activity-element.content-hide-hover {
+    visibility: hidden;
+}
+.format-designer .designer .section .content .section.card-layout li.activity .activityinstance .activity-element.content-remove {
+    display: none;
+}
+.format-designer .designer .section .content .section.link-layout li.activity .mod-content {
+    margin-left: 35px;
+    margin-bottom: 5px;
+}
+.format-designer .designer .section .content .section.card-layout li.activity .card.card-list.success {
+    min-height: 250px;
+}
+.format-designer .designer .section .content .section.card-layout li.activity .card.card-list .mod-indent-outer {
+    height: 100%;
+    position: relative;
+}
+.format-designer .designer .section .content .section.card-layout li.activity .card-list {
+    cursor: pointer;
+    margin: 0;
+}
+body.format-designer.editing .designer .section .content .section.card-layout li.activity .card-list {
+    cursor: move;
+}
+body.format-designer.editing .designer .section .content .section.card-layout li.activity .card-list .card-body {
+    padding-top: 40px;
+}
+.format-designer .designer .section .content .section.card-layout li.activity.label .activity-block.designer .contentwithoutlink {
+    width: 100%;
+}
+.format-designer .designer .section .content .section.link-layout li.activity {
+    display: inline-block;
+    margin-right: 15px;
+    margin-top: 15px;
+}
+.format-designer .designer .section .content .section.link-layout li.activity:last-child {
+    margin-right: 0;
+}
+
+@media (min-width: 1500px) {
+    .format-designer .designer .section.container-full .content.show .section.circles-layout li.activity {
+        width: 19.5%;
+    }
+}
+
+@media (min-width: 1367px) and (max-width: 1499px) {
+    .format-designer .designer .section.container-full .content.show .section.card-layout li.activity {
+        width: 32%;
+    }
+}
+
+@media (min-width: 1200px) {
+    .format-designer .designer .section .content .section.link-layout li.activity .mod-content {
+        width: 50%;
+    }
+    .format-designer.editing .designer .section .content .section.link-layout li.activity .activityinstance .aalink.quickeditlink,
+    .format-designer.editing .designer .section .content .section.list-layout li.activity .activityinstance .aalink.quickeditlink,
+    .format-designer.editing .designer .section .content .section.card-layout li.activity .activityinstance .aalink.quickeditlink {
+        width: auto;
+    }
+}
+
+@media (max-width: 1199px) {
+    .format-designer .designer .section.img-text.list-layout .activity .activityinstance .activity-element {
+        width: 70%;
+    }
+    .format-designer .designer .section .content .section li.activity .activity-block.designer .contentwithoutlink {
+        width: 92%;
+    }
+    .format-designer .designer .section .content .section.link-layout li.activity .activityinstance {
+        width: 70%;
+    }
+}
+
+@media (min-width: 768px) {
+    .format-designer .designer .section .content .section.card-layout li.activity .activityinstance .activity-instance {
+        width: 85%;
+    }
+    .format-designer .designer .section .content .section.link-layout li.activity .mod-content {
+        display: inline-block;
+        margin-top: 5px;
+        margin-right: 5px;
+    }
+    .format-designer .designer .section .content .section.link-layout li.activity.restricted .mod-content {
+        display: block;
+    }
+    .format-designer .designer .section .content .section.link-layout li.activity.restricted
+    .ismodcontent + .availability-info + .mod-content {
+        display: inline-block;
+    }
+}
+
+@media (min-width: 992px) {
+    .format-designer .designer .section .content .section.card-layout li.activity .card.card-list {
+        min-height: 220px;
+    }
+    .format-designer .designer .section .content .section.card-layout li.activity .card.card-list .mod-indent-outer {
+        min-height: 190px;
+    }
+    .format-designer.editing .designer .section .content .section.link-layout li.activity .activityinstance .aalink.quickeditlink,
+    .format-designer.editing .designer .section .content .section.list-layout li.activity .activityinstance .aalink.quickeditlink,
+    .format-designer.editing .designer .section .content .section.card-layout li.activity .activityinstance .aalink.quickeditlink {
+        width: auto;
+        margin-right: -20px;
+        position: absolute;
+        right: 0;
+    }
+}
+
+@media (max-width: 991px) {
+    .format-designer .designer .section.img-text.list-layout .activity .activityinstance,
+    .format-designer .designer .section.img-text.card-layout .activity .activityinstance {
+        padding-right: 0;
+    }
+    .format-designer .designer .section .content .section.card-layout li.activity .activityinstance .activity-instance {
+        width: 80%;
+    }
+    .format-designer .designer .section .content .section li.activity .activity-block.designer .contentwithoutlink {
+        width: 90%;
+    }
+    .format-designer .designer .section .content .section.link-layout li.activity .activityinstance {
+        width: 67%;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .format-designer .designer .section .content .section.card-layout li.activity .card.card-list {
+        min-height: 250px;
+    }
+    .format-designer .designer .section .content .section.card-layout li.activity .card.card-list .mod-indent-outer {
+        min-height: 220px;
+    }
+    .format-designer.editing .designer .section .content .section.link-layout li.activity .activityinstance .aalink,
+    .format-designer.editing .designer .section .content .section.list-layout li.activity .activityinstance .aalink,
+    .format-designer.editing .designer .section .content .section.card-layout li.activity .activityinstance .aalink {
+        width: 80%;
+    }
+    .format-designer.editing .designer .section .content .section.link-layout li.activity .activityinstance .aalink.quickeditlink,
+    .format-designer.editing .designer .section .content .section.list-layout li.activity .activityinstance .aalink.quickeditlink,
+    .format-designer.editing .designer .section .content .section.card-layout li.activity .activityinstance .aalink.quickeditlink {
+        width: auto;
+    }
+    .format-designer.editing .designer .section .content .section.link-layout li.activity .activityinstance .aalink .instancename,
+    .format-designer.editing .designer .section .content .section.list-layout li.activity .activityinstance .aalink .instancename,
+    .format-designer.editing .designer .section .content .section.card-layout li.activity .activityinstance .aalink .instancename {
+        width: 70%;
+    }
+    .format-designer .designer .section.img-text.list-layout .activity .activityinstance .activity-element {
+        width: 59%;
+    }
+    .format-designer.editing .designer .section.img-text .activity .activityinstance .inplaceeditable .activity-instance {
+        width: 84%;
+    }
+    .format-designer .designer .section .content .section.list-layout li.activity .activityinstance .aalink.quickeditlink {
+        margin-top: 25px;
+    }
+}
+
+@media (max-width: 767px) {
+    .format-designer .designer .section .content .section.card-layout li.activity {
+        width: 100%;
+        padding: 0;
+        margin-right: 0;
+    }
+    .format-designer .designer .section .content .section.link-layout li.activity .activityinstance {
+        width: 90%;
+    }
+    .format-designer .designer .section .content .section.card-layout li.activity .card-list {
+        min-height: 150px;
+    }
+    .format-designer .designer .section .content .section.card-layout li.activity .card.card-list .mod-indent-outer {
+        min-height: 120px;
+    }
+    .format-designer.editing .designer .section.img-text .activity .activityinstance .inplaceeditable .activity-instance {
+        width: 85%;
+    }
+    .format-designer .designer .section .content .section.card-layout li.activity .editing_move {
+        top: 100px;
+        left: 30px;
+        z-index: 1;
+    }
+    .format-designer .designer .section.img-text.list-layout .activity .activityinstance .activity-element {
+        max-width: none;
+        width: 70%;
+    }
+    .format-designer .designer .section .content .section li.activity .mod-indent-outer .col.align-self-center {
+        text-align: left;
+    }
+    .format-designer.editing .designer .section .content .section.link-layout li.activity .activityinstance .aalink,
+    .format-designer.editing .designer .section .content .section.list-layout li.activity .activityinstance .aalink,
+    .format-designer.editing .designer .section .content .section.card-layout li.activity .activityinstance .aalink {
+        width: 90%;
+    }
+    .format-designer.editing .designer .section .content .section.link-layout li.activity .activityinstance .aalink.quickeditlink,
+    .format-designer.editing .designer .section .content .section.list-layout li.activity .activityinstance .aalink.quickeditlink,
+    .format-designer.editing .designer .section .content .section.card-layout li.activity .activityinstance .aalink.quickeditlink {
+        width: auto;
+    }
+    .format-designer.editing .designer .section .content .section.link-layout li.activity .activityinstance .aalink .instancename {
+        width: 63%;
+    }
+    .format-designer.editing .designer .section .content .section.list-layout li.activity .activityinstance .aalink .instancename,
+    .format-designer.editing .designer .section .content .section.card-layout li.activity .activityinstance .aalink .instancename {
+        width: 80%;
+    }
+    .format-designer .designer .section.img-text .activity .restrict-block .info-content-block .availabilityinfo.isrestricted {
+        left: auto;
+        right: 40px;
+    }
+    .format-designer .designer .section .content .section.link-layout li.activity .mod-content {
+        width: auto;
+        display: block;
+        margin-top: 10px;
+    }
+    .format-designer .designer .section .content .section.link-layout li.activity .center-reports-block {
+        width: 100%;
+        margin-top: 10px;
+        margin-right: 0;
+        float: none;
+    }
+    .format-designer .designer .section .content .section.link-layout li.activity .mod-indent-outer .col.align-self-center {
+        text-align: right;
+    }
+    .format-designer .designer .section .content .section li.activity .activity-block.designer .contentwithoutlink {
+        width: 80%;
+    }
+}
+
+@media (max-width: 575px) {
+    .format-designer .designer .section .content .section.card-layout li.activity {
+        width: 99%;
+    }
+    .format-designer .designer .section .content .section.card-layout li.activity .activityinstance .activity-instance {
+        width: 75%;
+    }
+    .editing .designer .section .content .section.link-layout li.activity .activityinstance .aalink .instancename {
+        width: auto;
+    }
+    .format-designer .designer .section .content .section.link-layout li.activity .activityinstance .aalink.quickeditlink {
+        float: none;
+    }
+    .format-designer .designer .section.img-text.link-layout .activity-block .availability-info {
+        margin-top: 10px;
+        float: right;
+    }
+    .format-designer .designer .section .content .section.link-layout li.activity .activityinstance {
+        width: 85%;
+    }
+    .format-designer .designer .section .content .section li.activity:hover .mod-visits-block {
+        margin-right: 0;
+        display: inline-block;
+    }
+    .format-designer .designer .section .content .section li.activity:hover .mod-visits-block {
+        margin-right: 10px;
+    }
+    .format-designer .designer .section .content .section.link-layout li.activity:hover .mod-visits-block {
+        margin-right: 10px;
+    }
+    .format-designer .designer .section .content .section.list-layout li.activity .mod-indent-outer .col.align-self-center {
+        text-align: left;
+    }
+    .format-designer .designer .section .content .section.link-layout li.activity .mod-indent-outer .col.align-self-center {
+        text-align: right;
+    }
+}
+
+.format-designer .designer .section .content .section li.activity .mod-content .trim-summary.summary-hide {
+    display: none;
+}
+.format-designer .designer .section .content .section li.activity  .mod-content .fullcontent-summary.summary-hide {
+    display: none;
+}
+
+/*Circle layout*/
+.format-designer .designer .section .circle-layout {
+    width: 24.7%;
+    border: 0;
+    background: none;
+    padding: 0;
+    margin: 20px 0 0 0;
+    display: inline-block;
+    vertical-align: top;
+}
+.format-designer .designer .section .circle-layout:not(.horizontal_circles) .activity-block .card {
+    text-align: center;
+    border: 0;
+    background-color: transparent;
+    box-shadow: none;
+}
+.format-designer .designer .section .circle-layout:not(.horizontal_circles) .activity-block .card.warning .img-block {
+    background-color: #ffe4cf;
+}
+.format-designer .designer .section .circle-layout:not(.horizontal_circles) .activity-block .card.danger .img-block {
+    background-color: #ffe6e8;
+}
+.format-designer .designer .section .circle-layout:not(.horizontal_circles) .activity-block .card .card-body {
+    padding: 10px;
+}
+.format-designer .designer .section.img-text.circles-layout .activity-block .img-element {
+    width: 80px;
+    height: 80px;
+    display: inline-block;
+    margin-bottom: 10px;
+}
+.format-designer .designer .section.img-text.circles-layout .activity-block .activityinstance
+.activity-instance .activitytitle .img-element {
+    display: none;
+}
+.format-designer .designer .section.img-text.circles-layout .activity-block .img-block {
+    width: 80px;
+    height: 80px;
+    line-height: 50px;
+    background-color: #eee;
+    background-repeat: no-repeat;
+    background-size: cover;
+    border-radius: 50%;
+    margin: 0 auto 10px;
+    display: inline-block;
+    position: relative;
+    z-index: 0;
+}
+.format-designer .designer .section.img-text .circle-layout .activity-block .activityinstance {
+    margin-bottom: 5px;
+    padding-right: 0;
+    display: block;
+}
+.format-designer .designer.kanban-board .kanban-board-activities .section.img-text .circle-layout
+.activity-block .activityinstance .img-element .img-block {
+    background-color: #fff;
+}
+.format-designer .designer .section.img-text.circles-layout .activity .activityinstance .inplaceeditable
+.activity-instance .activitytitle .img-element,
+.format-designer.editing .designer .section.img-text.circles-layout .activity .activityinstance .inplaceeditable
+.activity-instance .activitytitle .img-element {
+    display: none;
+}
+.format-designer .designer .section.img-text .circle-layout .activity-block .activityinstance
+.activity-instance .activitytitle {
+    display: block;
+    margin: 0 auto;
+}
+.format-designer .designer .section.img-text .circle-layout .activity-block .activityinstance
+.activity-instance .activitytitle .img-element {
+    display: none;
+}
+.format-designer .designer .section.img-text .circle-layout .activity-block .activityinstance .activity-altcontent {
+    text-align: left;
+    margin-left: 90px;
+}
+.format-designer .designer .section .content .section li.activity.circle-layout .activityinstance .activity-type {
+    margin-left: 0;
+    margin-bottom: 5px;
+}
+.format-designer .designer .section .content .section li.activity.circle-layout .mod-content {
+    margin-left: 0;
+}
+.format-designer .designer .section .content .section li.activity.circle-layout .completion-html-card {
+    margin-left: 0;
+    display: block;
+}
+.format-designer .designer .section .circle-layout .activity-block .img-block img.activityicon {
+    margin: 0 auto;
+}
+.format-designer .designer .section .circle-layout .activity-block .aalink img.activityicon {
+    display: none;
+}
+.format-designer ul.designer .circle-layout .card.card-list .card-body .mod-indent-outer .completion-info {
+    text-align: center;
+}
+.format-designer .designer .section .content .section li.activity.circle-layout .mod-visits-block {
+    margin: 0 0 20px 0;
+}
+.format-designer .designer .section .content .section.card-layout li.activity.circle-layout .mod-visits-block p {
+    text-align: center;
+}
+.format-designer:not(.editing) .designer .section .content .section li.activity.circle-layout .activityinstance .aalink {
+    width: 100%;
+    padding: 0;
+}
+.format-designer .designer .section .content .section li.activity.circle-layout .action-html-card {
+    float: none;
+    margin-top: 0;
+    margin-left: 0;
+}
+.format-designer .designer .section.img-text.circles-layout .activity-block .availability-info {
+    position: absolute;
+    top: 0;
+    left: 20px;
+}
+.format-designer .designer .section-design-whole .mod-content .trim-summary a,
+.format-designer .designer .section-design-header .mod-content .trim-summary a {
+    cursor: zoom-in;
+}
+.format-designer .designer .section-design-whole .mod-content .fullcontent-summary a,
+.format-designer .designer .section-design-header .mod-content .fullcontent-summary a {
+    cursor: zoom-out;
+}
+
+@media (min-width: 992px) and (max-width: 1366px) {
+    .format-designer .designer .section .circle-layout {
+        width: 33%;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 991px) {
+    .format-designer .designer .section .circle-layout {
+        width: 49%;
+    }
+}
+
+@media (max-width: 575px) {
+    .format-designer .designer .section .circle-layout {
+        width: 100%;
+    }
+    .format-designer .designer .section .circle-layout .activity-block .card {
+        min-height: auto;
+    }
+}
+
+/*Course Integrate time management*/
+
+.format-designer .course-info-block {
+    margin: 15px 0;
+    clear: both;
+}
+.format-designer.path-course-view .completionprogress + h2.accesshide {
+    clear: both;
+    position: static;
+}
+.format-designer.path-course-view .completionprogress {
+    margin-bottom: 15px;
+}
+.format-designer .course-info-block > div {
+    width: 17%;
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 15px;
+    margin-bottom: 15px;
+}
+.format-designer .course-info-block .carousel {
+    margin-right: 0;
+    float: right;
+}
+.format-designer .course-info-block .carousel .carousel-item .contact-element {
+    margin-right: 15px;
+}
+.format-designer .course-info-block .carousel .carousel-item .contact-element:last-child {
+    margin-right: 0;
+}
+.format-designer .course-info-block .carousel .carousel-control {
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    border-radius: 50%;
+    background: #333;
+    display: none;
+    top: 45%;
+}
+.format-designer .course-info-block .carousel .carousel-control.carousel-control-prev {
+    left: -30px;
+}
+.format-designer .course-info-block .carousel:hover .carousel-control {
+    display: block;
+}
+.format-designer .course-info-block .carousel .carousel-control span {
+    display: none;
+}
+.format-designer .course-info-block .carousel .carousel-control:before {
+    content: '\f104';
+    font-family: var(--fa-style-family, "Font Awesome 6 Free", fontawesome);
+    font-weight: var(--fa-style, 900);
+    color: #fff;
+}
+.format-designer .course-info-block .carousel .carousel-control-next:before {
+    content: '\f105';
+}
+.format-designer .course-info-block .carousel .contact-element .contact-block .img-block {
+    max-width: 80px;
+    width: 100%;
+    height: 80px;
+    margin-right: 10px;
+    float: left;
+}
+.format-designer .course-info-block .carousel .contact-element .contact-block .img-block img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+.format-designer .course-info-block .carousel .contact-element .contact-block .content-block {
+    padding-left: 100px;
+}
+.format-designer .course-info-block .carousel .contact-element .contact-block .content-block .title-block h4 span + span {
+    font-size: 14px;
+    margin-top: 10px;
+}
+.format-designer .course-info-block .carousel .contact-element .contact-block .content-block .title-block > a {
+    text-decoration: none;
+}
+.format-designer .course-info-block .carousel .contact-element .contact-block .content-block .title-block a h4 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #000;
+}
+.format-designer .course-info-block .carousel .contact-element .contact-block .title-block h4 span {
+    font-size: 13px;
+    display: flex;
+}
+.format-designer .course-info-block .carousel .contact-element .contact-block .info-block .btn-group a.btn {
+    font-size: 12px;
+    text-align: left;
+}
+.format-designer .course-info-block .carousel .contact-element .contact-block .info-block .header-button-group a.btn {
+    padding-left: 0;
+}
+.format-designer .course-info-block > div h6 {
+    font-size: 14px;
+    color: #999;
+}
+.format-designer .course-info-block > div h3 {
+    font-size: 24px;
+    font-weight: 500;
+}
+.format-designer .course-info-block > div.progress-block {
+    width: auto;
+    display: block;
+    margin-right: 30px;
+    clear: both;
+}
+.format-designer .course-info-block > div.progress-block > .progress {
+    max-width: 50%;
+    display: flex;
+    border: 0;
+    border-radius: 25px;
+    padding-right: 0;
+    margin-bottom: 10px;
+}
+.format-designer .course-info-block > div.progress-block > .progress .progress-bar {
+    background: #28a745;
+    height: 100%;
+}
+.format-designer .course-info-block > div.progress-block > .progress .progress-bar.bg-remain-block {
+    background: #e9ecef;
+}
+.format-designer .course-info-block > div.progress-block > div {
+    display: inline-block;
+    border-right: 1px solid #eee;
+    padding-right: 10px;
+    margin-right: 10px;
+}
+.format-designer .course-info-block > div.progress-block > div:last-child {
+    border: 0;
+}
+.format-designer .course-info-block > div.progress-block > div p {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 0;
+}
+.format-designer .course-info-block > div.progress-block .activity-completed-block p {
+    color: #000;
+}
+.format-designer .course-info-block > div.progress-block .activity-due-block p {
+    color: #fd7e14;
+}
+.format-designer .course-info-block > div.progress-block .activity-overdue-block p {
+    color: #dc3545;
+}
+
+@media (min-width: 1551px) {
+    .format-designer .course-info-block > div {
+        width: 19%;
+    }
+    .format-designer .course-info-block .carousel {
+        width: 38%;
+    }
+}
+
+@media (min-width: 1200px) and (max-width: 1550px) {
+    .format-designer .course-info-block > div {
+        width: 20%;
+    }
+    .format-designer .course-info-block .carousel {
+        width: 34%;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    .format-designer .course-info-block > div {
+        width: 19%;
+    }
+    .format-designer .course-info-block .carousel {
+        width: 35%;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .format-designer .course-info-block > div {
+        width: 45%;
+    }
+    .format-designer .course-info-block > div:nth-child(2n) {
+        width: 51%;
+        margin-right: 0;
+    }
+    .format-designer .course-info-block .carousel {
+        float: none;
+    }
+}
+
+@media (max-width: 767px) {
+    .format-designer .course-info-block > div {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 30px;
+    }
+    .format-designer .course-info-block .carousel {
+        float: none;
+    }
+    .format-designer .course-info-block > div.progress-block > .progress {
+        max-width: none;
+    }
+}
+
+/*kanban layout*/
+.format-designer .course-content ul.designer.kanban-board li.section.main {
+    min-width: 400px;
+    max-width: 550px;
+    vertical-align: top;
+    padding: 10px;
+    margin: 15px;
+    background: #eee;
+    border-radius: 10px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, .3);
+    align-self: flex-start;
+    flex: none;
+}
+.format-designer .course-content ul.designer.kanban-board li.section.main#section-0 {
+    min-width: 767px;
+    max-width: none;
+    background: none;
+    box-shadow: none;
+    padding: 5px 5px 10px 5px;
+    margin: 0;
+}
+.format-designer .course-content ul.designer.kanban-board .kanban-board-activities {
+    padding-top: 25px;
+    overflow: auto;
+    display: flex;
+}
+.format-designer .course-content ul.designer.kanban-board li.section.main .section-background-style,
+.format-designer .course-content ul.designer.kanban-board li.section.main .bg-overlay {
+    border-radius: 10px;
+}
+.format-designer .course-content ul.designer.kanban-board li.section.main#section-0 .section-header-content
+.section-progress-bar .progress {
+    background: #e9ecef;
+}
+.format-designer .course-content ul.designer.kanban-board li.section .section-progress-info {
+    margin-top: 10px;
+}
+.format-designer .course-content ul.designer.kanban-board .kanban-board-activities li.section .section-progress-info .progress {
+    height: 12px;
+    background: #fff;
+}
+.format-designer .course-content ul.designer.kanban-board li.section .content .section-modchooser {
+    text-align: left;
+    margin-top: 10px;
+}
+.format-designer .course-content ul.designer.kanban-board li.section .content .section-modchooser .section-modchooser-link {
+    color: #6c757d;
+}
+.format-designer .format-designer ul.designer.kanban-board .section.img-text.list-layout .activity .activityinstance
+.activity-element {
+    width: 70%;
+}
+.format-designer .course-content ul.designer.kanban-board .section .content .activity-block.designer .card .card-body
+.col-12.col-md-7 {
+    max-width: none;
+    flex: auto;
+}
+.format-designer .course-content ul.designer.kanban-board .section .content .activity-block.designer .card .card-body
+.col-12.col-md-7 .mod-content {
+    margin-left: 0;
+    margin-bottom: 10px;
+}
+.format-designer .course-content ul.designer.kanban-board .section .content .activity-block.designer .card .card-body
+.col-12.col-md-7 .mod-content > .trim-summary,
+.format-designer .course-content ul.designer.kanban-board .section .content .activity-block.designer .card .card-body
+.col-12.col-md-7 .mod-content > .fullcontent-summary {
+    margin-top: 10px;
+}
+.format-designer .course-content ul.designer.kanban-board .section .content .activity-block.designer .card .card-body
+.col-6.col-md-3,
+.format-designer .course-content ul.designer.kanban-board .section .content .activity-block.designer .card .card-body
+.col-6.col-md-2 {
+    flex: 0 0 50%;
+    max-width: 50%;
+}
+.format-designer .course-content ul.designer.kanban-board .section .content .activity-block.designer .card .card-body
+.col-12.col-md-7 .activityinstance .cmname-block {
+    width: 100%;
+}
+.format-designer .course-content ul.designer.kanban-board .section .content .activity-block.designer .card .card-body
+.col-6.col-md-3 .col.align-self-center {
+    text-align: left;
+    margin: 15px 0;
+    display: flex;
+    flex-direction: column;
+}
+.format-designer .course-content ul.designer.kanban-board .section .content .activity-block.designer .card .card-body
+.col-6.col-md-3 .col.align-self-center .mod-visits-block {
+    margin-top: 5px;
+    display: block;
+}
+.format-designer .course-content ul.designer.kanban-board .section .content .activity-block.designer .card .card-body
+.col-6.col-md-3 .col.align-self-center .mod-visits-block p {
+    text-align: left;
+}
+.format-designer .course-content ul.designer.kanban-board .section .content .activity-block.designer .card .card-body
+.col-6.col-md-3 .col.align-self-center .completion-html-card {
+    margin-bottom: 0;
+    order: -1;
+}
+.format-designer .course-content ul.designer.kanban-board .section .content .activity-block.designer .card .card-body
+.col-6.col-md-2 .col.align-self-center .action-html-card {
+    margin-top: 0;
+}
+
+@media (max-width: 767px) {
+    .format-designer .course-content ul.designer.kanban-board li.section.main#section-0 {
+        min-width: auto;
+        max-width: none;
+        width: 100%;
+    }
+}
+
+/*Video time*/
+
+.format-designer .designer .section.img-text.card-layout .activity.videotime {
+    display: inline-block !important;
+}
+.format-designer .designer .section.img-text .activity.videotime .activity-block.progress-element .card {
+    border-left: 0;
+}
+.format-designer .designer .section.img-text.card-layout .activity.videotime .activity-block .card-body {
+    padding: 0;
+}
+.format-designer .designer .section.img-text .activity.videotime .activity-block .card-body .activity-background-style {
+    background-size: cover;
+}
+.format-designer .designer .section.img-text.card-layout .activity.videotime .activity-block .card-body .mod-visits-block {
+    left: 0;
+    bottom: 0;
+}
+.format-designer .designer .section.img-text .activity.videotime .activity-block .mod-content .panel .panel-body h4 {
+    display: none;
+}
+.format-designer .designer .section.img-text.card-layout .activity.videotime .activity-block .mod-content {
+    margin: 0 0 20px 0;
+}
+.format-designer .designer .section.img-text.card-layout .activity.videotime.preview_mode .activity-block .mod-icon-url {
+    text-align: center;
+    margin: 20px 0;
+    display: block;
+    position: absolute;
+    top: 45%;
+    left: 45%;
+}
+.format-designer .designer .section.img-text.card-layout .activity.videotime.preview_mode .activity-block .mod-icon-url img {
+    width: 50px;
+    height: 50px;
+}
+.format-designer .designer .section.img-text.card-layout .activity.videotime.preview_mode .activity-block
+.img-element .bg-overlay .img-block {
+    width: 50px;
+    height: 50px;
+}
+.format-designer .designer .section .content .section.img-text li.activity.videotime .activity-block.designer {
+    position: relative;
+}
+.format-designer .designer .section .content .section.img-text li.activity.videotime .activity-block.designer .video-progress {
+    width: 100%;
+    height: 7px;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+}
+.format-designer .designer .section .content .section.img-text li.activity.circle-layout .activity-block.designer .video-progress {
+    position: static;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .content.collapse.in {
+    display: contents;
+}
+.format-designer .designer.course-type-flow .section .content .section.img-text li.activity.videotime
+.activity-block.designer .video-progress,
+.format-designer .designer.kanban-board .section .content .section.img-text li.activity.videotime
+.activity-block.designer .video-progress {
+    height: 5px;
+}
+.format-designer .designer .section .content .section.img-text li.activity.videotime .activity-block.designer
+.video-progress .progress-bar {
+    background: #28a744;
+}
+.format-designer .designer .section .content .section.img-text li.activity.videotime .activity-block.designer
+.contentwithoutlink .videotimetabs {
+    display: none;
+}
+.format-designer .designer .section .content .section.img-text li.activity.videotime .activity-block.designer {
+    padding-left: 0;
+    padding-right: 0;
+}
+.format-designer .designer .section.img-text.card-layout .activity.videotime .activity-block
+.completion-html-card .completion-html-card {
+    padding: 0;
+    margin: 0;
+    position: static;
+}
+.format-designer .designer .section.img-text.card-layout .activity.videotime.label_mode .activity-block
+.completion-html-card .completion-html-card {
+    margin-left: 0;
+}
+.format-designer .designer .section .content .section.card-layout li.activity.label_mode .completion-html-card {
+    margin-bottom: 40px;
+}
+.format-designer .designer .section .content .section li.activity.preview_mode .activity-block.designer .contentwithoutlink,
+.format-designer .designer .section.img-text .activity.videotime .activity-block .contentwithoutlink .panel-body,
+.format-designer .designer .section .content .section.img-text li.activity.videotime.hide-videotime-preview-image
+.activity-block.designer .contentwithoutlink {
+    display: none;
+}
+.format-designer .designer .section .content .section.link-layout li.activity.videotime .activity-block.designer
+.contentwithoutlink {
+    width: 75%;
+    vertical-align: middle;
+    margin-bottom: 0;
+}
+.format-designer .designer .section.img-text.card-layout .activity.videotime .activity-block .action-html-card {
+    padding-bottom: 0;
+    right: 0;
+}
+.format-designer .designer .section.img-text.card-layout .activity.videotime.preview_mode .activity-block .badge.video-duration {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+.path-course-view.format-designer li.activity.videotime.preview_mode .panel {
+    min-height: auto;
+    margin-bottom: 20px;
+}
+.format-designer ul.designer .card-layout .card.card-list .card-body .mod-indent-outer > div:last-child {
+    height: 100%;
+}
+.format-designer ul.designer .card-layout .card.card-list .card-body .mod-indent-outer > div:last-child .contentwithoutlink {
+    height: auto;
+    margin-bottom: 10px;
+    display: block;
+}
+.path-course-view.format-designer ul.designer .section .content .section.circles-layout li.activity.videotime {
+    display: inline-block !important;
+}
+.path-course-view.format-designer ul.designer .section .content .section.circles-layout li.activity.videotime.preview_mode {
+    float: none;
+}
+
+/*Horizontal circles*/
+
+.format-designer .designer .section .content .section.horizontal-circles-layout li.activity {
+    width: 100%;
+}
+.format-designer .designer .section .content .section.horizontal-circles-layout li.activity .card {
+    border: 0;
+    background-color: transparent;
+    box-shadow: none;
+}
+.format-designer .designer .section .content .section.horizontal-circles-layout li.activity .card .card-body {
+    min-height: 200px;
+    padding: 0.25rem;
+}
+.format-designer .designer .section.img-text .activity.horizontal_circles .restrict-block .info-content-block,
+.format-designer .designer .section.img-text .activity.horizontal_circles .call-action-block {
+    margin-right: 0;
+}
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles
+.activity-block .activityinstance .cmname-block {
+    margin-right: 20px;
+}
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles
+.activity-block .activityinstance .cmname-block .instancename {
+    line-height: 24px;
+}
+.format-designer.editing .designer .section.img-text.horizontal-circles-layout li.horizontal_circles
+.activityinstance .inplaceeditable,
+.format-designer.editing .designer .section.img-text.horizontal-circles-layout li.horizontal_circles
+.activityinstance .inplaceeditable .activity-instance {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+.format-designer.editing .designer .section.img-text.horizontal-circles-layout li.horizontal_circles .activity-actions {
+    right: 25px;
+}
+
+/*v-4.0+*/
+.format-designer.editing .designer .section.img-text.horizontal-circles-layout li.horizontal_circles .activity-actions {
+    right: 0;
+}
+/*v-4.0+*/
+
+.format-designer .designer.kanban-board .section .content .section.img-text.horizontal-circles-layout li.activity .card {
+    background: none;
+}
+.format-designer .designer.kanban-board .section .content .section.img-text.horizontal-circles-layout li.activity .card .card-body {
+    padding-bottom: 50px;
+}
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles .activity-block .activityinstance {
+    display: inline-block;
+    vertical-align: top;
+}
+.format-designer .designer .section.img-text.circles-layout .circle-layout.circle-size-medium .activity-block
+.activityinstance .img-element,
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles.circle-size-medium
+.activity-block .activityinstance .img-element {
+    margin-right: 10px;
+    zoom: 200%;
+}
+.format-designer .designer .section.img-text.circles-layout .circle-layout.circle-size-large .activity-block
+.activityinstance .img-element,
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles.circle-size-large
+.activity-block .activityinstance .img-element {
+    margin-right: 10px;
+    zoom: 300%;
+}
+.format-designer .designer .section.img-text.circles-layout:not(.horizontal-circles-layout) .circle-layout
+.activity-block .activityinstance .img-element {
+    margin-right: 0;
+}
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles
+.activity-block .activityinstance .img-element {
+    float: left;
+}
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles
+.activity-block .activityinstance .availability-info {
+    left: auto;
+    right: 0;
+}
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles
+.activity-block .activityinstance .activity-type,
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles
+.activity-block .mod-content,
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles
+.activity-block .activityinstance .cmname-block,
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles
+.activity-block .activityinstance ~ .completion-html-card,
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles
+.activity-block .mod-visits-block,
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles
+.activity-block .action-html-card {
+    text-align: left;
+    display: block;
+    margin-left: 90px;
+    margin-bottom: 0;
+}
+.format-designer .designer .section .content .section.img-text.horizontal-circles-layout li.horizontal_circles .mod-visits-block {
+    margin-bottom: 40px;
+}
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles .activity-block
+.activityinstance ~ .completion-html-card {
+    margin-bottom: 0;
+}
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles
+.activity-block .activityinstance ~ .completion-html-card {
+    margin-bottom: 0;
+}
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles
+.activity-block .completion-html-card .completion-html-card {
+    margin-bottom: 0;
+}
+.format-designer.editing .designer .section .content .section li.activity.horizontal_circles .completion-html-card {
+    margin-top: 20px;
+}
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles.circle-size-medium
+.activity-block .activityinstance .activity-type,
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles.circle-size-medium
+.activity-block .mod-content,
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles.circle-size-medium
+.activity-block .activityinstance .cmname-block,
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles.circle-size-medium
+.activity-block .activityinstance ~ .completion-html-card,
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles.circle-size-medium
+.activity-block .mod-visits-block,
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles.circle-size-medium
+.activity-block .action-html-card {
+    margin-left: 180px;
+}
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles.circle-size-large
+.activity-block .activityinstance .activity-type,
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles.circle-size-large
+.activity-block .mod-content,
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles.circle-size-large
+.activity-block .activityinstance .cmname-block,
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles.circle-size-large
+.activity-block .activityinstance ~ .completion-html-card,
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles.circle-size-large
+.activity-block .mod-visits-block,
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles.circle-size-large
+.activity-block .action-html-card {
+    margin-left: 280px;
+}
+.format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles .activity-block .mod-visits-block p {
+    text-align: left;
+}
+
+@media (min-width: 1441px) {
+    .format-designer .designer .section.img-text.horizontal-circles-layout li.horizontal_circles .activity-block .action-html-card {
+        position: absolute;
+        left: auto;
+        right: 0;
+        bottom: 10px;
+    }
+}
+
+@media (max-width: 1440px) {
+    .format-designer .designer .section .content .section.img-text.horizontal-circles-layout
+    li.activity.horizontal_circles .mod-visits-block {
+        margin-bottom: 0;
+    }
+}
+
+@media (max-width: 767px) {
+    .format-designer .designer .section .content .section.link-layout li.activity.videotime
+    .activity-block.designer .contentwithoutlink {
+        width: 100%;
+    }
+    .format-designer .designer .section.img-text.circles-layout li.circles .badge.badge-completion {
+        text-align: center;
+    }
+}
+
+@media (max-width: 575px) {
+    .format-designer .designer .section .content .section.link-layout li.activity.videotime
+    .activity-block.designer .contentwithoutlink {
+        width: 90%;
+    }
+    .format-designer .designer .section .content .section.img-text.card-layout li.activity .mod-visits-block,
+    .format-designer .designer .section.img-text.card-layout .activity.videotime.preview_mode li.activity-block .mod-icon-url,
+    .format-designer .designer .section.img-text.card-layout .activity.videotime.preview_mode .activity-block .mod-icon-url {
+        position: static;
+    }
+    .format-designer .designer .section .content .section.img-text.card-layout li.activity .action-html-card,
+    .format-designer .designer .section.img-text.card-layout .activity.videotime.preview_mode
+    .activity-block .badge.video-duration {
+        float: right;
+        position: static;
+    }
+    .format-designer .designer .section .content .section.card-layout li.activity .completion-html-card {
+        display: block;
+    }
+}
+
+/*Flow layout*/
+
+.format-designer .course-content ul.course-type-flow.designer .section.main .section-header-content {
+    min-height: 400px;
+    width: 400px;
+    display: inline-block;
+    vertical-align: top;
+    background-color: #f0f0f0;
+    border-radius: 3px;
+    padding: 20px;
+    margin-left: 20px;
+    margin-bottom: 30px;
+    transition: all .5s ease;
+}
+.format-designer .course-content ul.course-type-flow.designer .section.main .section-header-content.flow-stack.collapsed {
+    width: 400px;
+}
+
+/* Single section flow layout */
+.format-designer .course-content .single-section-layout ul.course-type-flow.designer li.section .right,
+.format-designer .course-content .single-section-layout ul.course-type-flow.designer li.section .content {
+    display: none;
+}
+.format-designer .course-content .single-section-layout ul.course-type-flow.designer
+.section.main + .section.main.section-flow-none .section-header-content,
+.format-designer .course-content .single-section-layout ul.course-type-flow.designer
+.section.main.section-flow-none + .section.main.section-flow-none .section-header-content {
+    margin-right: 0;
+}
+/* End of Single section flow layout */
+
+
+.format-designer .designer.course-type-flow .section .content .section.card-layout li.activity .card.card-list {
+    min-height: 400px;
+}
+.format-designer .course-content ul.designer.course-type-flow .section.main .card-body .mod-indent-outer > div {
+    display: block;
+}
+.format-designer .course-content ul.designer.course-type-flow .section.main .card-body
+.mod-indent-outer > div:last-child .contentwithoutlink {
+    display: block;
+}
+.format-designer:not(.editing) .course-content ul.designer .section.main.section-header-image
+.section-header-content.flow-stack .flow-stack-header {
+    top: 10px;
+    left: 10px;
+    z-index: -2;
+}
+.format-designer:not(.editing) .course-content ul.designer .section.main.section-header-image
+.section-header-content.flow-stack .section-background-color,
+.format-designer:not(.editing) .course-content ul.designer .section.main.section-background-color
+.section-header-content.flow-stack .section-background-color {
+    top: 5px;
+    left: 5px;
+    z-index: -1;
+}
+.format-designer:not(.editing) .course-content ul.designer .section.main.section-header-image
+.section-header-content.flow-stack.bg-mask .section-background-color,
+.format-designer:not(.editing) .course-content ul.designer .section.main.section-background-color
+.section-header-content.flow-stack.bg-mask .section-background-color {
+    top: 0;
+    left: 0;
+}
+.format-designer:not(.editing) .course-content ul.designer.course-type-flow li.section.section-background-overlay
+.section-header-content.flow-stack .flow-stack-header {
+    top: 10px;
+    left: 10px;
+    z-index: -2;
+}
+.format-designer:not(.editing) .course-content ul.designer.course-type-flow li.section.section-background-overlay
+.section-header-content.flow-stack .section-background-style.sectiondesign-header {
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+.format-designer .course-content ul.designer .section.main .section-header-content.flow-stack .flow-stack-header {
+    width: 100%;
+    height: 100%;
+    border-radius: 3px;
+    background: #f0f0f0;
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    transition: all .5s ease;
+}
+.format-designer .course-content ul.designer .section.main .section-header-content.flow-stack .section-background-color {
+    width: 100%;
+    height: 100%;
+    border-radius: 3px;
+    background: #f9f9f9;
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    z-index: -2;
+    transition: all .5s ease;
+}
+.format-designer .course-content ul.designer li.section .section-header-content.flow-stack
+.section-background-style.sectiondesign-header {
+    width: 100%;
+    height: 100%;
+    border-radius: 3px;
+    background: #f0f0f0;
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: -3;
+    transition: all .5s ease;
+}
+.format-designer:not(.editing) .course-content ul.designer.course-type-flow li.section.section-background-color.bg-mask
+.section-header-content.flow-stack .flow-stack-header:before,
+.format-designer:not(.editing) .course-content ul.designer.course-type-flow
+.section.main.bg-mask:not(.section-background-overlay) .section-header-content.flow-stack .flow-stack-header:before {
+    content: '';
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    background: #f9f9f9;
+    border-radius: 3px;
+    z-index: 1;
+}
+.format-designer:not(.editing) .course-content ul.designer .section.main .section-header-content.flow-stack:not(.collapsed)
+.flow-stack-header,
+.format-designer:not(.editing) .course-content ul.designer .section.main .section-header-content.flow-stack:not(.collapsed)
+.section-background-color,
+.format-designer:not(.editing) .course-content ul.designer .section.main .section-header-content.flow-stack:not(.collapsed)
+.section-background-style.sectiondesign-header {
+    display: none;
+}
+.format-designer .course-content ul.designer.course-type-flow .section.main.section-background-overlay
+.section-header-content.flow-stack:not(.collapsed) .section-background-style.sectiondesign-header,
+.format-designer .course-content ul.designer.course-type-flow .section.main.section-header-image
+.section-header-content.flow-stack:not(.collapsed) .section-background-style.sectiondesign-header {
+    display: block;
+    top: 0;
+    left: 0;
+}
+.format-designer:not(.editing) .course-content ul.designer.course-type-flow
+.section.main.bg-mask:not(.section-background-overlay) .section-header-content.flow-stack .section-background-color {
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+.format-designer:not(.editing) .course-content ul.designer.course-type-flow
+.section.main.bg-mask:not(.section-background-overlay) .section-header-content.flow-stack .flow-stack-header {
+    top: 10px;
+    left: 10px;
+}
+.format-designer:not(.editing) .course-content ul.designer.course-type-flow li.section.section-design-header.bg-mask
+.section-header-content.flow-stack .section-background-style.sectiondesign-header {
+    z-index: -1;
+}
+.format-designer.editing .course-content ul.designer .section.main .section-header-content.flow-stack
+.section-background-color,
+.format-designer.editing .course-content ul.designer li.section .section-header-content.flow-stack
+.section-background-style.sectiondesign-header {
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+.format-designer .course-content ul.course-type-flow.designer .section.main + .section.main
+.section-header-content.flow-stack {
+    margin-left: 20px;
+}
+.format-designer .course-content ul.course-type-flow.designer .section.main + .section.main.section-flow-none
+.section-header-content,
+.format-designer .course-content ul.course-type-flow.designer
+.section.main.section-flow-none + .section.main.section-flow-none .section-header-content {
+    margin-right: 10px;
+}
+.format-designer .course-content ul.course-type-flow.designer .section.main.section-flow-none + .section.main
+.section-header-content.flow-stack {
+    margin-right: 0;
+}
+.format-designer .course-content ul.course-type-flow.designer .section.main .section-header-content .section-collapse-icon {
+    display: none;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .categorise-section-block {
+    margin-left: 0;
+    margin-bottom: 10px;
+    display: block;
+}
+.format-designer .course-content ul.course-type-flow.designer .section.main .section-header-content.flow-head-hide {
+    display: none;
+}
+.format-designer .course-content ul.course-type-flow.designer .section.main {
+    display: contents;
+    margin-right: 15px;
+}
+.format-designer .course-content ul.course-type-flow.designer .section.main.stack-header-collapsing {
+    width: 100%;
+    margin-top: 0;
+    background-color: transparent;
+}
+.format-designer .course-content ul.course-type-flow.designer .section.main.section-flow-none.stack-header-collapsing {
+    width: 31.7%;
+}
+.format-designer .course-content ul.course-type-flow.designer .section.main.stack-header-collapsing .content.flow-open.collapsing {
+    width: 100%;
+    height: auto;
+}
+.format-designer .course-content ul.designer.course-type-flow {
+    margin-top: 30px;
+    display: flex;
+    flex-wrap: wrap;
+}
+.format-designer .course-content ul.course-type-flow.designer .section.main .section-content-wrapper {
+    display: contents;
+    position: relative;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section ul.section.img-text li.activity {
+    width: 400px;
+    display: inline-block;
+    vertical-align: top;
+    padding: 0;
+    margin-top: 0;
+    margin-left: 20px;
+    margin-right: 0;
+    margin-bottom: 30px;
+    background-color: #fff;
+    float: none;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section ul.section.img-text li.activity .activity-block.designer {
+    padding: 0;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section ul.section.img-text,
+.format-designer .course-content ul.designer.course-type-flow li.section .content.flow-open.show,
+.format-designer .course-content ul.designer.course-type-flow li.section .content.collapsing {
+    display: contents;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .section-header-content.flow-none .content.flow-open.show {
+    display: none;
+}
+.format-designer .course-content ul.course-type-flow.designer .section.main:after {
+    display: none;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .section-header-content .section-progress-info {
+    max-width: none;
+    width: 90%;
+    float: none;
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .section-header-content
+.section-progress-info + .goto-section {
+    margin-bottom: 20px;
+}
+.format-designer.editing .course-content ul.designer li.section .section-header-content.flow-stack .section-progress-info {
+    max-width: none;
+    float: none;
+}
+.format-designer.editing .course-content ul.designer li.section .section-header-content.flow-stack
+.section-progress-info .progress-bar {
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: 15px;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .section-header-content
+.section-progress-info > div:not(.progress-donut) .progress {
+    height: 12px;
+    background: #fff;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .section-header-content .section-progress-info
+.section-progress-completed {
+    text-align: left;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .section-header-content .section-progress-info
+.section-progress-completed span.badge-success {
+    font-size: 13px;
+    padding: 5px 10px;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .content .section li.activity:not(.videotime):not(.poster)
+.mod-indent-outer .completion-html-card {
+    margin-bottom: 10px;
+    position: absolute;
+    left: 0;
+    bottom: 5px;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .content .section li.activity
+.mod-indent-outer .completion-html-card .completion-html-card,
+.format-designer .course-content ul.designer.course-type-flow li.section .content .section li.activity
+.activity-background-style + .mod-indent-outer .completion-html-card .completion-html-card {
+    position: static;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .content .section li.activity
+.mod-indent-outer .completion-html-card,
+.format-designer .course-content ul.designer.course-type-flow li.section .content .section li.activity
+.mod-indent-outer .completion-html-card .completion-info,
+.format-designer .course-content ul.designer.course-type-flow li.section .content .section li.activity
+.mod-indent-outer .completion-html-card .completion-info form {
+    width: 100%;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .content .section li.activity.videotime
+.activity-background-style + .mod-indent-outer .completion-html-card {
+    padding-right: 20px;
+    margin-bottom: 10px;
+    position: absolute;
+    left: 5px;
+    bottom: 10px;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .content .section li.activity.videotime.label_mode
+.mod-indent-outer .completion-html-card {
+    padding-right: 10px;
+    margin-bottom: 20px;
+    position: static;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .content .section li.activity
+.activity-background-style + .mod-indent-outer .completion-html-card button.badge-success {
+    border-color: #28a744;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .content .section li.activity
+div:not(.activity-background-style) + .mod-indent-outer .completion-html-card .completion-info form button {
+    width: 100%;
+    color: #333;
+    border: 1px solid #999;
+    border-radius: 3px;
+    background: none;
+    padding: 10px;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .content .section li.activity
+.mod-indent-outer .completion-html-card .completion-info form button i {
+    display: none;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .content .section li.activity .card .card-body {
+    height: 100%;
+    padding: 15px;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .content .section li.activity .mod-indent-outer {
+    width: 100%;
+}
+.format-designer ul.designer .section .content .section.card-layout li.activity.videotime .card-list
+.card-body.bg-overlay:before {
+    content: '';
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, .7), rgba(0, 0, 0, 0.01));
+    z-index: 0;
+}
+.format-designer ul.designer.course-type-flow.designer li.activity.videotime .card.card-list.notstarted {
+    border-left: 0;
+}
+.format-designer:not(.editing) .course-content ul.designer .section.main.section-background-color
+.section-header-content.flow-stack .flow-stack-header {
+    top: 10px;
+    left: 10px;
+    z-index: -2;
+}
+.format-designer:not(.editing) .course-content ul.designer.course-type-flow li.section.section-background-color
+.section-header-content.flow-stack .section-background-color {
+    top: 0;
+    left: 0;
+}
+.format-designer:not(.editing) .course-content ul.designer.course-type-flow li.section.section-background-color
+.section-header-content.flow-stack .section-background-style.sectiondesign-header {
+    background: #f9f9f9;
+    top: 5px;
+    left: 5px;
+    z-index: -2;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section.section-header-image .section-header-content
+.section-background-style.sectiondesign-header {
+    border-radius: 3px;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section.section-background-color
+.section-header-content .bg-overlay {
+    border-radius: 5px;
+}
+.format-designer:not(.editing) .course-content ul.designer.course-type-flow
+li.section.main.section-background-color:not(.section-background-overlay)
+.section-header-content.collapsed .section-background-style.sectiondesign-header,
+.format-designer:not(.editing) .course-content ul.designer.course-type-flow
+li.section.main.section-background-color:not(.section-header-image)
+.section-header-content.collapsed .section-background-style.sectiondesign-header {
+    top: 5px;
+    left: 5px;
+    z-index: -2;
+}
+.format-designer:not(.editing) .course-content ul.designer.course-type-flow
+li.section.main.section-background-color:not(.section-background-overlay)
+.section-header-content.collapsed .section-background-color,
+.format-designer:not(.editing) .course-content ul.designer.course-type-flow
+li.section.main.section-background-color:not(.section-header-image)
+.section-header-content.collapsed .section-background-color {
+    top: 0;
+    left: 0;
+}
+.format-designer:not(.editing) .course-content ul.designer.course-type-flow li.section.section-background-color:not(.bg-mask)
+.section-header-content.collapsed .section-background-color,
+.format-designer:not(.editing) .course-content ul.designer.course-type-flow li.section.section-header-image:not(.bg-mask)
+.section-header-content.collapsed .section-background-color {
+    top: 5px;
+    left: 5px;
+}
+.format-designer:not(.editing) .course-content ul.designer.course-type-flow li.section.section-background-color:not(.bg-mask)
+.section-header-content.collapsed .section-background-style.sectiondesign-header,
+.format-designer:not(.editing) .course-content ul.designer.course-type-flow li.section.section-header-image:not(.bg-mask)
+.section-header-content.collapsed .section-background-style.sectiondesign-header {
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+.format-designer .course-content ul.course-type-flow.designer .section.main.section-background-color .section-header-content:before,
+.format-designer .course-content ul.course-type-flow.designer .section.main.section-header-image .section-header-content:before {
+    z-index: -2;
+}
+.format-designer .course-content ul.course-type-flow.designer .section.main.section-background-color .section-header-content:after,
+.format-designer .course-content ul.course-type-flow.designer .section.main.section-header-image .section-header-content:after {
+    z-index: -3;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .content .section li.activity .mod-indent-outer
+.completion-html-card .completion-info form button {
+    width: 100%;
+    border-radius: 3px;
+    padding: 7px 10px;
+}
+.format-designer .course-content ul.designer.course-type-flow li.section .content .section li.activity .mod-indent-outer
+.completion-html-card .completion-info form button.border-badge-notstarted {
+    color: #333;
+    border: 1px solid #999;
+    background: none;
+}
+
+@media (min-width: 992px) {
+    .format-designer .course-content ul.course-type-flow.designer .section.main .section-header-content.flow-card-small,
+    .format-designer .course-content ul.course-type-flow.designer .section.main
+    .section-header-content.flow-card-small.flow-stack.collapsed {
+        width: 320px;
+        min-height: 320px;
+    }
+    .format-designer .course-content ul.course-type-flow.designer .section.main .section-header-content.flow-card-medium,
+    .format-designer .course-content ul.course-type-flow.designer .section.main
+    .section-header-content.flow-card-medium.flow-stack.collapsed {
+        width: 360px;
+        min-height: 360px;
+    }
+    .format-designer .course-content ul.course-type-flow.designer .section.main .section-header-content.flow-card-large,
+    .format-designer .course-content ul.course-type-flow.designer .section.main
+    .section-header-content.flow-card-large.flow-stack.collapsed {
+        width: 400px;
+        min-height: 400px;
+    }
+    .format-designer .course-content ul.designer.course-type-flow li.section ul.section.img-text li.activity.flow-card-small {
+        width: 320px;
+        max-width: 320px;
+    }
+    .format-designer .course-content ul.designer.course-type-flow li.section ul.section.img-text li.activity.flow-card-medium {
+        width: 360px;
+        max-width: 360px;
+    }
+    .format-designer .course-content ul.designer.course-type-flow li.section ul.section.img-text li.activity.flow-card-large {
+        width: 400px;
+        max-width: 400px;
+    }
+    .format-designer .designer.course-type-flow .section .content .section.card-layout li.activity.flow-card-small .card.card-list {
+        min-height: 320px;
+    }
+    .format-designer .designer.course-type-flow .section .content .section.card-layout li.activity.flow-card-medium
+    .card.card-list {
+        min-height: 360px;
+    }
+    .format-designer .designer.course-type-flow .section .content .section.card-layout li.activity.flow-card-large .card.card-list {
+        min-height: 400px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .format-designer .course-content ul.course-type-flow.designer .section.main .section-header-content.flow-card-small.flow-stack,
+    .format-designer .course-content ul.course-type-flow.designer .section.main .section-header-content.flow-card-medium.flow-stack,
+    .format-designer .course-content ul.course-type-flow.designer .section.main .section-header-content.flow-card-large.flow-stack,
+    .format-designer .course-content .single-section-layout ul.course-type-flow.designer
+    .section.main + .section.main.section-flow-none .section-header-content,
+    .format-designer .course-content .single-section-layout ul.course-type-flow.designer
+    .section.main.section-flow-none + .section.main.section-flow-none .section-header-content {
+        width: 47%;
+    }
+    .format-designer .course-content ul.designer.course-type-flow li.section ul.section.img-text li.activity.flow-card-small {
+        width: 47%;
+    }
+    .format-designer .course-content ul.designer.course-type-flow li.section ul.section.img-text li.activity.flow-card-medium {
+        width: 47%;
+    }
+    .format-designer .course-content ul.designer.course-type-flow li.section ul.section.img-text li.activity.flow-card-large {
+        width: 47%;
+    }
+}
+
+@media (max-width: 767px) {
+    .format-designer .course-content ul.course-type-flow.designer .section.main .section-header-content.flow-card-small.flow-stack,
+    .format-designer .course-content ul.course-type-flow.designer .section.main .section-header-content.flow-card-medium.flow-stack,
+    .format-designer .course-content ul.course-type-flow.designer .section.main .section-header-content.flow-card-large.flow-stack,
+    .format-designer .course-content .single-section-layout ul.course-type-flow.designer
+    .section.main + .section.main.section-flow-none .section-header-content,
+    .format-designer .course-content .single-section-layout ul.course-type-flow.designer
+    .section.main.section-flow-none + .section.main.section-flow-none .section-header-content {
+        width: 97%;
+    }
+    .format-designer .course-content ul.designer.course-type-flow li.section ul.section.img-text li.activity.flow-card-small
+    .activity-block {
+        width: 97%;
+    }
+    .format-designer .course-content ul.designer.course-type-flow li.section ul.section.img-text li.activity.flow-card-medium
+    .activity-block {
+        width: 97%;
+    }
+    .format-designer .course-content ul.designer.course-type-flow li.section ul.section.img-text li.activity.flow-card-large
+    .activity-block {
+        width: 97%;
+    }
+}
+
+.flow-animation {
+    -webkit-animation-duration: 1s;
+    animation-duration: 1s;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
+    -webkit-animation-name: fadeInLeft;
+    animation-name: fadeInLeft;
+}
+
+@-webkit-keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        -webkit-transform: translate3d(-100%, 0, 0);
+        transform: translate3d(-100%, 0, 0);
+        transform-origin: center;
+    }
+    to {
+        opacity: 1;
+        -webkit-transform: translate3d(0, 0, 0);
+        transform: translate3d(0, 0, 0);
+        transform-origin: center;
+    }
+}
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        -webkit-transform: translate3d(-100%, 0, 0);
+        transform: translate3d(-100%, 0, 0);
+        transform-origin: center;
+    }
+    to {
+        opacity: 1;
+        -webkit-transform: translate3d(0, 0, 0);
+        transform: translate3d(0, 0, 0);
+    }
+}

@@ -1,0 +1,121 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+
+    @template tool_supporter/create_new_course
+    Template which outputs a form to create a new course in a selected course category.
+
+    Classes required for JS:
+    * none
+
+    Context variables required for this template:
+    * categories - array of arrays: path, id and name of categories.
+
+Example context (json):
+{
+    "categories": [
+        {
+            "id": "4",
+            "path": "4",
+            "name": " \/ Top Level 1"
+        },
+        {
+            "id": "7",
+            "path": "4\/7",
+            "name": " \/ Top Level 1 \/ Level 1.1"
+        },
+        {
+            "id": "5",
+            "path": "5",
+            "name": " \/ Top Level 2"
+        },
+        {
+            "id": "6",
+            "path": "5\/6",
+            "name": " \/ Top Level 2 \/ Level 2.1"
+        }
+    ],
+    "config": {
+        "startdate": "01.10.2018",
+        "enddate": "31.04.2019"
+    }
+}
+
+}}
+
+<div data-region="create_new_course_section" id="create_new_course_section" style="display: none;">
+	<form>
+		<div class="form-group row">
+			<label for="new_course_full_name_input" class="col-sm-4 col-form-label">{{#str}}fullnamecourse{{/str}}:</label>
+			<div class="col-sm-8">
+				<input type="text" class="form-control" id="new_course_full_name_input" placeholder="{{#str}}fullnamecourse{{/str}}">
+			</div>
+		</div>
+		<div class="form-group row">
+			<label for="new_course_short_name_input" class="col-sm-4 col-form-label">{{#str}}shortnamecourse{{/str}}:</label>
+			<div class="col-sm-8">
+				<input type="text" class="form-control" id="new_course_short_name_input" placeholder="{{#str}}shortnamecourse{{/str}}">
+			</div>
+		</div>
+		<div class="form-group row">
+			<label for="new_course_category_input" class="col-sm-4 col-form-label">{{#str}}categories{{/str}}:</label>
+			<div class="col-sm-8">
+			<select class="form-control" id="new_course_category_input">
+				{{#categories}}
+				<option value="{{id}}">{{name}}</option>
+				{{/categories}}
+			</select>
+			</div>
+		</div>
+		<div class="form-group row">
+			<label for="new_course_is_visible" class="col-sm-4 col-form-label">{{#str}}visible{{/str}}:</label>
+			<input class="form-control-input col-sm-1" type="checkbox" value="" id="new_course_is_visible">
+	    </div>
+	    <div class="form-group row">
+	    	<label for="new_course_is_visible" class="col-sm-4 col-form-label">{{#str}}enable_selfenrolment, tool_supporter{{/str}}:</label>
+	    	<input class="form-control-input col-sm-1" type="checkbox" value="" id="new_course_enable_self">
+	    	<input type="text" class="form-contro col-sm-6" id="new_course_self_password" placeholder="{{#str}}password{{/str}}" disabled>
+	    </div>
+		<div class="form-group row">
+			<div class="col-md-12 text-left"> 
+				<input type="button" class="btn btn-primary" id="create_new_course_button" value="{{#str}}addnewcourse{{/str}}"/>
+			</div>
+		</div>
+        {{#config}}
+            <div class="form-group row">
+                <label class="col-sm-4 col-form-label" for="new_course_startdate_input">{{#str}}startdate{{/str}}:</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control" id="new_course_startdate_input" placeholder="{{#str}}startdate{{/str}}" value={{startdate}}>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="new_course_enddate_input" class="col-sm-4 col-form-label">{{#str}}enddate{{/str}}:</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control" id="new_course_enddate_input" placeholder="{{#str}}enddate{{/str}}" value={{enddate}}>
+                </div>
+            </div>
+        {{/config}}
+		
+	</form>
+</div>
+
+{{#js}}
+require(['tool_supporter/create_new_course'], function(createNewCourse) {
+    createNewCourse.createNewCourse();
+    createNewCourse.togglePasswordInput();
+});
+{{/js}}

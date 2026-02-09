@@ -1,0 +1,255 @@
+.search-results .result {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.search-results .result .filename {
+    font-style: italic;
+}
+
+.simplesearchform {
+    position: relative;
+    border: 0;
+    max-width: 320px;
+
+    .block & {
+      z-index: 0;
+    }
+
+    .block-myoverview & {
+      max-width: 100%;
+    }
+
+    @include media-breakpoint-between(xs,sm) {
+    max-width: 100%;
+    }
+
+    .rui-icon-menu & {
+      transition: $transition-base;
+
+      .show & {
+        width: 300px;
+      }
+    }
+
+    input:focus {
+      outline: none;
+    }
+
+    .form-control {
+      border-radius: $btn-border-radius 0 0 $border-radius!important;
+      border: none;
+    }
+
+    .btn {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    .btn .icon {
+        margin: 0;
+
+        .rui-topbar & {
+          color: $white;
+        }
+    }
+    .show .btn .icon {
+      color: inherit;
+    }
+
+    .btn-close,
+    .btn-clear {
+        position: absolute;
+        top: calc(50% - 23px);
+        right: 6px;
+        z-index: 4;
+    }
+    .btn-close {
+        padding: 0;
+
+        background-color: $gray-100;
+        color: $gray-800;
+
+        width: 30px;
+        height: 30px;
+        border-radius: $btn-border-radius-lg;
+
+        top: calc(50% - 15px);
+        right: 40px;
+
+        .theme-dark & {
+          background-color: $dm-gray-300;
+          color: $dm-gray-900;
+        }
+
+        &:hover {
+          background-color: #ffc2c2;
+          color: $red-700;
+        }
+    }
+    .btn-submit {
+        background-color: $gray-100;
+
+        .theme-dark & {
+          background-color: $dm-gray-100;
+        }
+    }
+
+    .withclear {
+        margin: 0;
+        width: 220px;
+        height: 44px;
+        padding-right: 50px;
+    }
+
+    .searchinput {
+        display: flex;
+        flex: 1 1 auto;
+    }
+    .collapsing {
+        height: inherit;
+        transition: none;
+        width: inherit;
+    }
+}
+
+.simplesearchform + .rui-title-container {
+  margin-top: 20px!important;
+  margin-bottom: 20px;
+}
+
+  .searchform-navbar {
+    position: absolute;
+    right: 0;
+
+    @include media-breakpoint-only(md) {
+    right: -45px;
+    }
+    @include media-breakpoint-between(xs,sm) {
+    right: -40px;
+    }
+  }
+
+
+@include media-breakpoint-down(md) {
+    .simplesearchform .collapse.show,
+    .simplesearchform .collapsing {
+        width: 100%;
+        display: flex;
+        background-color: $white;
+        z-index: $zindex-popover;
+
+        .theme-dark & {
+          background-color: $black;
+        }
+
+        .form-inline {
+            width: auto;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    }
+}
+.search-areas-actions {
+    margin-bottom: $spacer;
+}
+
+.search-areas-actions > div {
+    margin-right: $spacer;
+    display: inline-block;
+}
+
+#core-search-areas .lastcol li {
+    margin-left: 24px;
+    text-indent: -24px;
+}
+#core-search-areas .lastcol li > i {
+    text-indent: 0;
+}
+
+
+/* Search results */
+// ---- URL:  /search/index.php
+
+  .search-results {
+    margin-top: $page-padding-global;
+
+    hr {
+      margin: 2rem 0;
+    }
+
+    .result-title {
+      display: inline-flex;
+      align-items: center;
+
+      font-size: 1.15rem;
+      font-weight: $font-weight-bold;
+      color: $body-color;
+
+      .theme-dark & {
+        color: $dm-body-color;
+      }
+
+      a {
+        color: inherit;
+
+        &:hover {
+          text-decoration: none;
+          color: $link-color;
+
+          .theme-dark & {
+            color: $dm-link-color;
+          }
+        }
+      }
+
+      .icon {
+        margin-right: 15px;
+        width: 18px;
+      }
+
+    }
+
+    .result-content {
+      margin: 10px 0 10px 34px!important;
+
+      font-size: $font-size-sm;
+      color: $body-color-secondary;
+
+      .theme-dark & {
+        color: $dm-body-color-secondary;
+      }
+    }
+
+    .result-context-info {
+      margin: 10px 0 10px 34px;
+
+      font-size: $font-size-sm;
+      font-weight: $font-weight-bold;
+      color: $body-color;
+
+      .theme-dark & {
+        color: $dm-body-color;
+      }
+
+      a {
+        color: inherit;
+
+        &:hover {
+          text-decoration: none;
+        }
+      }
+    }
+
+  }
+
+  #page-search-index  {
+    .search-results + nav .pagination {
+      margin-top: 2rem!important;
+      margin-bottom: 0!important;
+    }
+
+    .pagination {
+      margin-left: 34px;
+    }
+
+  }

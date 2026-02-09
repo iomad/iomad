@@ -1,0 +1,13 @@
+Documentation:
+https://rosea.gitbook.io/moon
+
+Photos:
+Unsplash https://unsplash.com
+
+Scripts:
+Swiper https://swiperjs.com/
+
+Icons:
+https://iconoir.com/
+https://iconic.app
+https://css.gg

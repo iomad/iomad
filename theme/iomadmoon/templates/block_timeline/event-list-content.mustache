@@ -1,0 +1,74 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template block_timeline/event-list-content
+
+    This template renders a group of event list items for the timeline block.
+
+    Example context (json):
+    {
+        "events": [
+            {
+                "name": "Assignment due 1",
+                "url": "https://www.google.com",
+                "timesort": 1490320388,
+                "course": {
+                    "fullnamedisplay": "Course 1"
+                },
+                "action": {
+                    "name": "Submit assignment",
+                    "url": "https://www.google.com",
+                    "itemcount": 1,
+                    "actionable": true
+                },
+                "icon": {
+                    "key": "icon",
+                    "component": "mod_assign",
+                    "alttext": "Assignment icon"
+                }
+            },
+            {
+                "name": "Assignment due 2",
+                "url": "https://www.google.com",
+                "timesort": 1490320388,
+                "course": {
+                    "fullnamedisplay": "Course 1"
+                },
+                "action": {
+                    "name": "Submit assignment",
+                    "url": "https://www.google.com",
+                    "itemcount": 1,
+                    "actionable": true
+                },
+                "icon": {
+                    "key": "icon",
+                    "component": "mod_assign",
+                    "alttext": "Assignment icon"
+                }
+            }
+        ]
+    }
+}}
+<div class="pb-2" data-region="event-list-wrapper">
+    {{#eventsbyday}}
+        <h5 class="rui-timeline-date mt-3 mb-0" data-region="event-list-content-date" data-timestamp="{{dayTimestamp}}">
+            <svg width="20" height="20" stroke-width="2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" color="currentColor"><path d="M15 4V2M15 4V6M15 4H10.5M3 10V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V10H3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M3 10V6C3 4.89543 3.89543 4 5 4H7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M7 2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M21 10V6C21 4.89543 20.1046 4 19 4H18.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            <span class="ml-1 rui-timeline-date-txt {{^courseview}}font-weight-bold{{/courseview}}">{{#userdate}} {{dayTimestamp}}, {{#str}} strftimedaydate, core_langconfig {{/str}}  {{/userdate}}</span>
+        </h5>
+        {{> block_timeline/event-list-items }}
+    {{/eventsbyday}}
+</div>

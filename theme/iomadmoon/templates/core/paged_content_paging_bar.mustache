@@ -1,0 +1,143 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core/paged_content_paging_bar
+
+    This template renders the bootstrap style paging bar to control a paged
+    content section.
+
+    Example context (json):
+    {
+        "showitemsperpageselector": true,
+        "itemsperpage": [
+            { "value": 5, "active": false },
+            { "value": 10, "active": true },
+            { "value": 15, "active": false }
+        ],
+        "previous": true,
+        "next": true,
+        "first": true,
+        "last": true,
+        "activepagenumber": 1,
+        "pages": [
+            {
+                "url": "#",
+                "page": "1",
+                "active": true
+            },
+            {
+                "url": "#",
+                "page": "2"
+            }
+        ]
+    }
+}}
+<div data-region="paging-control-container" class="d-flex">
+    {{#showitemsperpageselector}}
+        <div id="paging-control-limit-container-{{uniqid}}" data-region="paging-control-limit-container" class="d-inline-flex align-items-center" title="{{#str}} show {{/str}}">
+
+            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-action="limit-toggle" {{#arialabels.itemsperpage}} aria-label="{{.}}" {{/arialabels.itemsperpage}} {{^arialabels.itemsperpage}} aria-label="{{#str}} pagedcontentpagingbaritemsperpage, core, {{#itemsperpage}}{{#active}}{{#value}}{{.}}{{/value}}{{^value}}{{#str}} all, core {{/str}}{{/value}}{{/active}}{{/itemsperpage}}{{/str}}" {{/arialabels.itemsperpage}}>
+                <svg class="mr-2" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.25 12C19.25 13 17.5 18.25 12 18.25C6.5 18.25 4.75 13 4.75 12C4.75 11 6.5 5.75 12 5.75C17.5 5.75 19.25 11 19.25 12Z"></path>
+                    <circle cx="12" cy="12" r="2.25" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></circle>
+                </svg>
+                {{#itemsperpage}}
+                    {{#active}}
+                        {{#value}}{{.}}{{/value}}
+                        {{^value}}{{#str}} all, core {{/str}}{{/value}}
+                    {{/active}}
+                {{/itemsperpage}}
+            </button>
+            <div role="menu" class="dropdown-menu" data-show-active-item data-skip-active-class="true" {{#arialabels.itemsperpagecomponents}} data-active-item-button-aria-label-components="{{.}}" {{/arialabels.itemsperpagecomponents}} {{^arialabels.itemsperpagecomponents}} data-active-item-button-aria-label-components="pagedcontentpagingbaritemsperpage, core" {{/arialabels.itemsperpagecomponents}}>
+                {{#itemsperpage}}
+                    <a class="dropdown-item {{#active}}active{{/active}}" href="#" data-limit="{{value}}" role="menuitem" {{#active}}aria-current="true" {{/active}}>
+                        {{#value}}{{.}}{{/value}}
+                        {{^value}}{{#str}} all, core {{/str}}{{/value}}
+                    </a>
+                {{/itemsperpage}}
+            </div>
+
+        </div>
+    {{/showitemsperpageselector}}
+
+    <nav id="{{$pagingbarid}}paging-bar-{{uniqid}}{{/pagingbarid}}" class="{{#showitemsperpageselector}}ml-auto{{/showitemsperpageselector}}" data-region="paging-bar" data-ignore-control-while-loading="{{ignorecontrolwhileloading}}" data-hide-control-on-single-page="{{hidecontrolonsinglepage}}" {{#activepagenumber}} data-active-page-number="{{.}}" {{/activepagenumber}} {{^activepagenumber}} data-active-page-number="1" {{/activepagenumber}} {{#itemsperpage}} {{#active}} data-items-per-page="{{value}}" {{/active}} {{/itemsperpage}} {{#arialabels.paginationnav}} aria-label="{{.}}" {{/arialabels.paginationnav}} {{^arialabels.paginationnav}} aria-label="{{#str}} pagedcontentnavigation, core {{/str}}" {{/arialabels.paginationnav}} {{#arialabels.paginationnavitemcomponents}} data-aria-label-components-pagination-item="{{.}}" {{/arialabels.paginationnavitemcomponents}} {{^arialabels.paginationnavitemcomponents}} data-aria-label-components-pagination-item="pagedcontentnavigationitem, core" {{/arialabels.paginationnavitemcomponents}} {{#arialabels.paginationactivenavitemcomponents}} data-aria-label-components-pagination-active-item="{{.}}" {{/arialabels.paginationactivenavitemcomponents}} {{^arialabels.paginationactivenavitemcomponents}} data-aria-label-components-pagination-active-item="pagedcontentnavigationactiveitem, core" {{/arialabels.paginationactivenavitemcomponents}} {{#barsize}} data-bar-size="{{.}}" {{/barsize}}>
+
+        <ul class="pagination">
+            {{#previous}}
+                {{< core/paged_content_paging_bar_item }}
+                {{$linkattributes}}aria-label="{{#str}}previouspage{{/str}}"{{/linkattributes}}
+                {{$item-content}}
+                <svg width="24" height="24" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" color="currentColor">
+                    <path d="M18.5 12H6m0 0l6-6m-6 6l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+                {{/item-content}}
+                {{$attributes}}data-control="previous"{{/attributes}}
+                {{/ core/paged_content_paging_bar_item }}
+            {{/previous}}
+            {{#first}}
+                {{< core/paged_content_paging_bar_item }}
+                {{$linkattributes}}aria-label="{{#str}}firstpage{{/str}}"{{/linkattributes}}
+                {{$item-content}}
+                {{#str}}first{{/str}}
+                {{/item-content}}
+                {{$attributes}}data-control="first"{{/attributes}}
+                {{/ core/paged_content_paging_bar_item }}
+            {{/first}}
+            {{#barsize}}
+                {{< core/paged_content_paging_bar_item }}
+                {{$linkattributes}}aria-hidden="true"{{/linkattributes}}
+                {{$item-content}}
+                &hellip;
+                {{/item-content}}
+                {{$attributes}}data-dots="beginning"{{/attributes}}
+                {{/ core/paged_content_paging_bar_item }}
+            {{/barsize}}
+            {{#pages}}
+                {{< core/paged_content_paging_bar_item }}
+                {{$attributes}}data-page="true"{{/attributes}}
+                {{/ core/paged_content_paging_bar_item }}
+            {{/pages}}
+            {{#barsize}}
+                {{< core/paged_content_paging_bar_item }}
+                {{$linkattributes}}aria-hidden="true"{{/linkattributes}}
+                {{$item-content}}
+                &hellip;
+                {{/item-content}}
+                {{$attributes}}data-dots="ending"{{/attributes}}
+                {{/ core/paged_content_paging_bar_item }}
+            {{/barsize}}
+            {{#last}}
+                {{< core/paged_content_paging_bar_item }}
+                {{$linkattributes}}aria-label="{{#str}}lastpage{{/str}}"{{/linkattributes}}
+                {{$item-content}}
+                {{#str}}last{{/str}}
+                {{/item-content}}
+                {{$attributes}}data-control="last"{{/attributes}}
+                {{/ core/paged_content_paging_bar_item }}
+            {{/last}}
+            {{#next}}
+                {{< core/paged_content_paging_bar_item }}
+                {{$linkattributes}}aria-label="{{#str}}nextpage{{/str}}"{{/linkattributes}}
+                {{$item-content}}
+                <svg width="24" height="24" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" color="currentColor"><path d="M6 12h12.5m0 0l-6-6m6 6l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                {{/item-content}}
+                {{$attributes}}data-control="next"{{/attributes}}
+                {{/ core/paged_content_paging_bar_item }}
+            {{/next}}
+        </ul>
+    </nav>
+</div>

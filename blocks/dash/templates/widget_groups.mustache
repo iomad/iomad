@@ -1,0 +1,114 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template block_dash/widget_groups
+
+    Example context (json):
+    {
+        "sitefullname": "Moodle - 311",
+		"courseurl": "https://localhost/moodle/course/view.php?id=2"
+    }
+}}
+
+{{#headermenu}}
+<!--Group heading block -->
+<div class="heading-block">
+    <!--Groups Edit block -->
+    <div class="edit-block">
+        {{#creategroup}}
+        <div class="dropdown">
+            <!--Groups Edit button block -->
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="icon fa fa-ellipsis-h fa-fw "></i>
+            </button>
+            <!--Groups dropdown block -->
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <a class="dropdown-item create-group" href="javascript::void(0);" > {{#str}} widget:groups:creategroup, block_dash {{/str}} </a>
+            </div>
+        </div>
+        {{/creategroup}}
+    </div>
+</div>
+{{/headermenu}}
+{{^headermenu}}
+<div class="block_dash-community-block">
+    <div class="group-block">
+        {{{#data.viewgroups}}}
+        <div class="group-element">
+            {{#data.groups}}
+            <div class="list-block">
+                <div class="left-block">
+                    <h6>{{{course}}}</h6>
+                    <h3>{{name}}</h3>
+                </div>
+                <div class="right-block">
+                    <div class="img-element">
+                        {{#data.viewmembers}}
+                        {{#members}}
+                        <div class="img-block">
+                            <a href="{{{profileurl}}}">
+                                <img src="{{{profileimage}}}" alt="{{{fullname}}}" title="{{{fullname}}}" role="presentation">
+                            </a>
+                        </div>
+                        {{/members}}
+                        {{#membercount}}
+                        <div class="img-block">
+                            <a href="javascript::void(0);">
+                                <span class="group-members-count">{{{membercount}}}</span>
+                            </a>
+                        </div>
+                        {{/membercount}}
+                        {{/data.viewmembers}}
+                    </div>
+
+                    <div class="edit-block">
+                        <div class="dropdown">
+                            <button class="btn btn-secondary dropdown-toggle" type="button" id="group-action-{{id}}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="icon fa fa-ellipsis-h fa-fw "></i>
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="group-action-{{id}}">
+                                {{#chaturl}}
+                                <a class="dropdown-item" href="{{{chaturl}}}"> {{#str}} widget:groups:chat, block_dash {{/str}} </a>
+                                {{/chaturl}}
+                                {{#data.adduser}}
+                                <a class="dropdown-item add-group-users" data-group="{{id}}" href="#"> {{#str}} widget:groups:adduser, block_dash {{/str}} </a>
+                                {{/data.adduser}}
+                                {{#data.viewmembers}}
+                                <a class="dropdown-item group-widget-viewmembers" data-group="{{id}}" href="javascript::void(0);">
+                                    {{#str}} widget:groups:groupmembers, block_dash {{/str}}
+                                </a>
+                                {{/data.viewmembers}}
+                                {{#data.leavegroup}}
+                                <a class="dropdown-item group-widget-leavegroup" data-groupname="{{{name}}}" data-group="{{id}}" href="#">
+                                    {{#str}} widget:groups:leavegroup, block_dash {{/str}}
+                                </a>
+                                {{/data.leavegroup}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            {{/data.groups}}
+            {{^data.groups}}
+                {{#noresult}} {{{noresult}}} {{/noresult}}
+            {{/data.groups}}
+        </div>
+        {{{/data.viewgroups}}}
+    </div>
+</div>
+{{/headermenu}}

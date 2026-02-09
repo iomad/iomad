@@ -1,0 +1,108 @@
+<div class="rui-course-card rui-progress-{{progress}}" role="listitem" data-region="course-content" data-course-id="{{{id}}}">
+
+    {{#hasenrolmenticons}}
+        <div class="rui-course-card-icons">
+            {{#enrolmenticons}}
+                <div class="rui-icon-container">
+                    {{{.}}}
+                </div>
+            {{/enrolmenticons}}
+        </div>
+    {{/hasenrolmenticons}}
+
+    {{#forcedlanguage}}
+    <div class="rui-course-card-icons--right rui-course-lang">
+        <div class="rui-icon-container">{{forcedlanguage}}</div>
+    </div>
+    {{/forcedlanguage}}
+
+    <div class="rui-course-card-wrapper position-relative">
+
+        <a href="{{config.wwwroot}}/course/view.php?id={{{id}}}" tabindex="-1" class="text-decoration-none">
+            <figure class="rui-course-card-img-top" style="background-image: url({{{image}}});" alt="{{#str}}courseoverviewfiles, moodle {{/str}}"><span class="sr-only">{{#str}}courseoverviewfiles, moodle {{/str}}" {{{fullname}}}</span></figure>
+        </a>
+
+        <div class="rui-course-card-body">
+            <div class="d-flex flex-wrap">
+                <span class="sr-only">
+                    {{#str}}courseoverviewfiles, moodle{{/str}}
+                </span>
+
+                {{^visible}}
+                    <div class="d-inline-flex flex-wrap mb-2">
+                        <span class="rui-course-hidden-badge">
+                            <svg class="mr-1" width="16" height="16" fill="none" viewBox="0 0 24 24">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.6247 10C19.0646 10.8986 19.25 11.6745 19.25 12C19.25 13 17.5 18.25 12 18.25C11.2686 18.25 10.6035 18.1572 10 17.9938M7 16.2686C5.36209 14.6693 4.75 12.5914 4.75 12C4.75 11 6.5 5.75 12 5.75C13.7947 5.75 15.1901 6.30902 16.2558 7.09698"></path>
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.25 4.75L4.75 19.25"></path>
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.409 13.591C9.53033 12.7123 9.53033 11.2877 10.409 10.409C11.2877 9.5303 12.7123 9.5303 13.591 10.409"></path>
+                            </svg>
+                            {{#str}} hiddenfromstudents {{/str}}
+                        </span>
+                    </div>
+                {{/visible}}
+
+            </div>
+            <div class="d-flex mb-1">
+                <h3 class="rui-course-card-title mb-1">
+                    <a href="{{config.wwwroot}}/course/view.php?id={{{id}}}" class="aalink coursename">
+                        <span class="sr-only">
+                            {{#str}}aria:coursename, core_course{{/str}}
+                        </span>
+                        {{{fullname}}}
+                    </a>
+                </h3>
+            </div>
+
+            {{#cccsummary}}
+            <div class="rui-course-card-text">
+                <span class="sr-only">{{#str}}aria:coursesummary, block_myoverview{{/str}}</span>
+                {{#shortentext}}{{coursecarddesclimit}}, {{{summary}}}{{/shortentext}}
+            </div>
+            {{/cccsummary}}
+
+            {{#category}}
+            <div class="d-inline-flex mt-2">
+                <div class="rui-course-cat-badge">
+                    <div class="text-truncate">{{{category}}}</div>
+                </div>
+            </div>
+            {{/category}}
+
+        </div>
+    </div>
+
+    {{#cccteachers}}
+    {{#hascontacts}}
+        <div class="rui-card-course-contacts">
+            {{#contacts}}
+                <a href="{{config.wwwroot}}/user/profile.php?id={{{id}}}" class="rui-tooltip rui-card-contact rui-user-{{{role}}} text-decoration-none" data-placement="top" role="button" data-title="{{{fullname}}} - {{{role}}}">
+                    <img src="{{{userpicture}}}" class="rui-card-avatar" alt="{{{fullname}}}" />
+                </a>
+            {{/contacts}}
+        </div>
+    {{/hascontacts}}
+    {{/cccteachers}}
+
+    {{#hasprogress}}
+        <div class="rui-course-card-progress-bar">
+            {{> block_myoverview/progress-bar}}
+        </div>
+    {{/hasprogress}}
+
+    {{#showcustomfields}}
+    {{{customfields}}}
+    {{/showcustomfields}}
+
+    {{#cccfooter}}
+        <div class="rui-course-card-footer">
+            <a href="{{config.wwwroot}}/course/view.php?id={{{id}}}" class="rui-course-card-link btn btn-primary">
+                <span class="rui-course-card-link-text">{{{stringaccess}}}</span>
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.75 6.75L19.25 12L13.75 17.25"></path>
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H4.75"></path>
+                </svg>
+            </a>
+        </div>
+    {{/cccfooter}}
+
+</div>

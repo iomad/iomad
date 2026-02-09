@@ -1,0 +1,1865 @@
+/* UI elements */
+
+.table-overflow {
+    overflow-x: auto;
+}
+
+// Delete/Unistall button
+.table-btn-uninstall {
+    display: inline-block;
+    padding: .5rem 1rem .5rem 2.5rem;
+    margin: 1px 4px 1px 1px;
+
+    background-color: $red-100;
+    color: $red-800;
+
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    text-align: center;
+    border-radius: $btn-border-radius-lg;
+    position: relative;
+
+    &:after {
+        content: '';
+        width: 100%;
+        height: 100%;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='#{url-friendly-colour($red-700)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6.75 7.75L7.59115 17.4233C7.68102 18.4568 8.54622 19.25 9.58363 19.25H14.4164C15.4538 19.25 16.319 18.4568 16.4088 17.4233L17.25 7.75'%3E%3C/path%3E%3Cpath stroke='#{url-friendly-colour($red-700)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9.75 7.5V6.75C9.75 5.64543 10.6454 4.75 11.75 4.75H12.25C13.3546 4.75 14.25 5.64543 14.25 6.75V7.5'%3E%3C/path%3E%3Cpath stroke='#{url-friendly-colour($red-700)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M5 7.75H19'%3E%3C/path%3E%3C/svg%3E%0A");
+        background-repeat: no-repeat;
+        background-size: 18px;
+        background-position: top left 13px;
+
+        position: absolute;
+        left: 1px;
+        top: calc(50% - 10px);
+
+        .dir-rtl & {
+            background-position: top right 13px;
+        }
+    }
+
+    transition: $transition-base;
+
+    &:hover {
+        background-color: $red-200;
+        text-decoration: none;
+    }
+}
+
+.table,
+.generaltable,
+.userenrolment,
+#categoryquestions,
+.grading-report,
+.gradereport-grader-table,
+#completion-progress {
+    width: 100%;
+    margin-bottom: $spacer;
+    color: $table-color;
+    background-color: $table-bg; // Reset for nesting within parents with `background-color`.
+
+    .theme-dark & {
+        color: $dm-table-color;
+        background-color: $dm-table-bg;
+    }
+
+    td {
+        max-width: 600px;
+        border-color: $border-color;
+        font-size: $font-size-sm;
+    }
+
+    th,
+    td {
+        border: 0;
+        padding: $table-cell-padding;
+        vertical-align: middle;
+
+        .theme-dark & {
+            border-color: $dm-border-color !important;
+        }
+
+        &.column-leader {
+            padding: 0;
+        }
+
+        a {
+            font-weight: $font-weight-medium;
+            word-break: normal;
+        }
+    }
+
+    th {
+        vertical-align: top;
+        align-items: flex-start;
+
+        .commands {
+            display: inline-flex;
+            line-height: 1.3;
+
+            a {
+                .icon {
+                    margin-left: 0.25rem;
+                }
+
+                &:before,
+                &:after {
+                    display: none;
+                }
+
+            }
+        }
+    }
+
+    thead th {
+        border-bottom: (2 * $table-border-width) solid $table-border-color;
+        color: $gray-700;
+
+        .theme-dark & {
+            border-color: $dm-table-border-color;
+            color: $dm-gray-700;
+        }
+    }
+
+    tbody th,
+    thead th {
+        font-size: $font-size-xs;
+        font-weight: $font-weight-medium;
+
+        a:not(.btn) {
+            position: relative;
+        }
+    }
+
+    tbody+tbody {
+        border-top: (2 * $table-border-width) solid $table-border-color;
+    }
+
+    tbody tr:nth-of-type(#{$table-striped-order}) {
+        background-color: transparent;
+    }
+
+    &.table-sm {
+
+        th,
+        td {
+            padding: $table-cell-padding-sm;
+        }
+    }
+
+    tbody tr {
+        background-color: transparent;
+        border-bottom: 1px solid $border-color;
+
+        .theme-dark & {
+            border-color: $dm-border-color;
+        }
+
+        @include hover {
+            background-color: $gray-100;
+
+            .theme-dark & {
+                background-color: $dm-gray-100;
+            }
+        }
+    }
+
+    .license-status {
+        a {
+            &:hover {
+                text-decoration: none;
+            }
+        }
+    }
+
+    .icon.sorticon {
+        padding: 6px;
+
+        width: 18px;
+        height: 18px;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: $btn-border-radius-lg;
+
+        background-color: $gray-200;
+        font-size: $font-size-xs;
+        color: $gray-800;
+
+        transition: $transition-base;
+
+        .theme-dark & {
+            background-color: $dm-gray-400;
+            color: $dm-gray-900;
+        }
+
+        &:hover {
+            background-color: $blue-200;
+            color: $blue-700 !important;
+
+            .theme-dark & {
+                background-color: $gray-700;
+                color: $gray-200 !important;
+            }
+        }
+    }
+
+    .move-down,
+    .move-up,
+    .action-icon,
+    .license-status {
+        display: inline-flex;
+        margin: 2px;
+        text-decoration: none;
+
+        .icon:not(.spacer) {
+            padding: 6px;
+
+            width: 18px;
+            height: 18px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: $btn-border-radius-lg;
+
+            background-color: $gray-200;
+            font-size: $font-size-xs;
+            color: $gray-800;
+
+            transition: $transition-base;
+
+            .theme-dark & {
+                background-color: $dm-gray-400;
+                color: $dm-gray-900;
+            }
+        }
+
+        &:hover {
+            text-decoration: none;
+
+            &:before {
+                display: none;
+            }
+
+            .icon:not(.spacer) {
+                background-color: $blue-200!important;
+                color: $blue-700 !important;
+
+                .theme-dark & {
+                    background-color: $gray-700!important;
+                    color: $gray-200 !important;
+                }
+            }
+        }
+
+        .fa-spacer {
+            display: none !important;
+        }
+    }
+
+    span.action-icon {
+        display: none;
+    }
+
+    .userpicture {
+        margin-right: .5rem;
+    }
+
+    .btn,
+    .dropdown-btn {
+        padding: .35rem .65rem;
+        font-size: .8rem;
+    }
+
+    .dropdown-btn {
+        padding: 4px 8px 4px 4px;
+        background-color: $gray-200;
+        text-decoration: none;
+
+        .theme-dark & {
+            background-color: $dm-gray-400;
+        }
+    }
+}
+
+#completion-progress {
+    .criteriaicon {
+        .icon {
+            width: 40px;
+            height: 40px;
+        }
+    }
+}
+
+table {
+    caption {
+        font-size: 1.15rem;
+        font-weight: $font-weight-bold;
+        padding: 0;
+        text-align: left;
+        caption-side: top;
+    }
+}
+
+.table-dynamic {
+    &+div {
+        overflow-x: auto;
+    }
+
+    .page-context-header {
+        display: inline-flex;
+        align-items: center;
+    }
+}
+
+.table-dynamic .loading-icon {
+    position: absolute;
+    left: calc(50% - 1.5rem);
+    top: 200px;
+
+    .icon:not(.spacer) {
+        height: 3rem;
+        width: 3rem;
+        font-size: 3rem;
+    }
+}
+
+/* Theme Mod */
+h2+table {
+    margin-top: 1.25rem; //20px
+}
+
+
+/* Scrollable tables */
+
+#page-admin-tool-task-scheduledtasks {
+    .main-content {
+        overflow-x: auto;
+        position: relative;
+    }
+
+    .generaltable {
+        width: max-content;
+    }
+}
+
+.main-content {
+    .form-inline+.no-overflow {
+        margin-top: 1.25rem; //20px
+    }
+}
+
+#report-eventlist-table {
+    overflow-x: auto;
+}
+
+#thirdpartylibs {
+
+    .c1,
+    .c3 {
+        font-size: $font-size-xs;
+        color: $gray-800;
+
+        .theme-dark & {
+            color: $dm-gray-800;
+        }
+    }
+
+    .c2 {
+        font-family: $font-family-monospace;
+        font-size: $font-size-xs;
+        color: $gray-800;
+
+        .theme-dark & {
+            color: $dm-gray-800;
+        }
+    }
+}
+
+
+// ---- URL:   /tag/manage.php
+// ---- URL: /course/customfield.php
+// ---- URL: mod/lesson/edit.php
+.tag-areas-table .c2 a .icon:not(.spacer),
+.fieldslist .table-buttons a .icon:not(.spacer),
+#page-admin-tool-filetypes-index .c1 a .icon:not(.spacer),
+#page-mod-lesson-edit .generaltable .c0 a .icon:not(.spacer),
+#page-mod-lesson-edit .generaltable .c3 a .icon:not(.spacer),
+#mediaplayerplugins .c4 a .icon:not(.spacer),
+#mediaplayerplugins .c5 a .icon:not(.spacer),
+#repositoriessetting a .icon:not(.spacer),
+#page-admin-tool-oauth2-issuers .generaltable .c4 a .icon:not(.spacer),
+#page-admin-tool-oauth2-issuers .generaltable .c5 a .icon:not(.spacer),
+.recordauthor a .icon:not(.fa-spacer),
+.recordauthor a .icon:not(.spacer),
+#compatibleblockstable a .icon:not(.spacer),
+#backpacklist a .icon,
+#roles a .icon,
+#manage-licenses a .icon {
+    margin: 1px;
+    padding: 7px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: $btn-border-radius-lg;
+
+    background-color: $gray-200;
+    font-size: $font-size-xs;
+    color: $gray-800;
+
+    transition: $transition-base;
+
+    .theme-dark & {
+        background-color: $dm-gray-400;
+        color: $dm-gray-900;
+    }
+}
+
+.tag-areas-table .c2 a:hover,
+.fieldslist .table-buttons a:hover,
+#page-admin-tool-filetypes-index .c1 a:hover,
+#page-mod-lesson-edit .generaltable .c0 a:hover,
+#page-mod-lesson-edit .generaltable .c3 a:hover,
+#mediaplayerplugins .c4 a:hover,
+#mediaplayerplugins .c5 a:hover,
+#repositoriessetting a:hover,
+#page-admin-tool-oauth2-issuers .generaltable .c4 a:hover,
+#page-admin-tool-oauth2-issuers .generaltable .c5 a:hover,
+.recordauthor a:hover,
+#compatibleblockstable a:hover,
+#backpacklist a:hover,
+#roles a:hover,
+#manage-licenses a:hover {
+    text-decoration: none;
+}
+
+.tag-areas-table .c2 a:hover .icon:not(.spacer),
+.fieldslist .table-buttons a:hover .icon:not(.spacer),
+#page-admin-tool-filetypes-index .c1 a:hover .icon:not(.spacer),
+#page-mod-lesson-edit .generaltable .c0 a:hover .icon:not(.spacer),
+#page-mod-lesson-edit .generaltable .c3 a:hover .icon:not(.spacer),
+#mediaplayerplugins .c4 a:hover .icon:not(.spacer),
+#mediaplayerplugins .c5 a:hover .icon:not(.spacer),
+#repositoriessetting a:hover .icon:not(.spacer),
+#page-admin-tool-oauth2-issuers .generaltable .c4 a:hover .icon:not(.spacer),
+#page-admin-tool-oauth2-issuers .generaltable .c5 a:hover .icon:not(.spacer),
+.recordauthor a:hover .icon:not(.fa-spacer),
+.recordauthor a:hover .icon:not(.spacer),
+#compatibleblockstable a:hover .icon,
+#backpacklist a:hover .icon,
+#roles a:hover .icon,
+#manage-licenses a:hover .icon {
+    background-color: $blue-200;
+    color: $blue-700;
+
+    .theme-dark & {
+        background-color: $gray-700;
+        color: $gray-200;
+    }
+}
+
+
+// with delete button
+.fieldslist .table-buttons,
+#page-mod-lesson-edit .generaltable .c0,
+#page-mod-lesson-edit .generaltable .c3,
+#mediaplayerplugins .c4,
+#mediaplayerplugins .c5,
+#page-admin-tool-oauth2-issuers .generaltable .c4,
+#page-admin-tool-oauth2-issuers .generaltable .c5 {
+    a:hover {
+        text-decoration: none;
+    }
+}
+
+
+
+// ---- URL: /course/recommendations.php
+// ----      /admin/settings.php?section=editorsettingsatto
+table {
+    /*i.pluginicon {
+        margin-right: 0.35rem;
+
+        background-color: $white;
+        border-radius: $btn-border-radius-lg;
+        border: 1px solid $border-color;
+
+        font-size: 16px;
+        width: 38px;
+        height: 38px;
+        line-height: 38px;
+
+        .theme-dark & {
+            background-color: $black;
+            border-color: $dm-border-color;
+        }
+
+        &.noicon {
+            opacity: 0;
+        }
+    }*/
+
+    img.pluginicon {
+        padding: 6px;
+        margin-right: 0.35rem;
+
+        background-color: $white;
+        border-radius: $btn-border-radius;
+        border: 1px solid $border-color;
+
+        &.noicon {
+            opacity: 0;
+        }
+    }
+}
+
+
+// ---- URL: admin/settings.php?section=managemediaplayers
+#mediaplayerplugins {
+    .c0 {
+        .pluginicon {
+            padding: 10px;
+            margin-right: 0.35rem;
+            background-color: $white;
+            border-radius: $btn-border-radius-lg;
+            border: 1px solid $border-color;
+
+            .theme-dark & {
+                background-color: $black;
+                border-color: $dm-border-color;
+            }
+        }
+    }
+
+    .c2 {
+        font-size: $font-size-xs;
+        color: $gray-800;
+
+        .theme-dark & {
+            color: $dm-gray-800;
+        }
+    }
+}
+
+
+// ---- URL: /admin/settings.php?section=managepaymentgateways
+#page-admin-setting-managepaymentgateways {
+    .generaltable {
+        td a {
+
+            .icon:not(.spacer),
+            .icon:not(.noicon) {
+                margin: 1px;
+                padding: 10px;
+
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+
+                border-radius: $btn-border-radius-lg;
+
+                background-color: $gray-200;
+                font-size: $font-size-xs;
+                color: $gray-800;
+
+                transition: $transition-base;
+
+                .theme-dark & {
+                    background-color: $dm-gray-400;
+                    color: $dm-gray-900;
+                }
+            }
+
+        }
+    }
+}
+
+#mediaplayerplugins .c6 a,
+#page-admin-setting-managepaymentgateways .generaltable td:nth-of-type(6) a,
+#reportplugins .c3 a,
+#toolplugins .c2 a,
+.manageformattable .c3 a,
+#localplugins .c2 a,
+.managecustomfieldtable .c2 a,
+#commentstable .c3 a,
+#page-admin-setting-editorsettingsatto .admintable .c4 a,
+#plugins-control-panel .c4 a,
+#assignfeedbackplugins .c5 a,
+#assignsubmissionplugins .c5 a,
+#modules .c5 a,
+#filterssetting .c5 a,
+#repositoriessetting .c4 a,
+.tinymcesubplugins .lastcol a,
+#editormanagement .lastcol a,
+#courseenrolmentplugins .lastcol a,
+#logstoreplugins .lastcol a,
+#manageauthtable .lastcol a,
+#compatibleblockstable .c6 a,
+.attosubplugins .admintable .lastcol a,
+#qtypes .c6 a,
+#qbehaviours .c5 a,
+#mediaplayerplugins .c6 a,
+.managecontentbanktable .lastcol a {
+    @extend .table-btn-uninstall;
+}
+
+
+// ---- URL: /user/index.php?id=7
+// ---- URL: /admin/modules.php
+// ---- URL: /admin/settings.php?section=editorsettingstinymce
+// ---- URL: /admin/settings.php?section=manageeditors
+// ---- URL: /admin/settings.php?section=webserviceprotocols
+// ---- URL: /admin/settings.php?section=manageenrols
+// ---- URL: /admin/settings.php?section=managelogging
+// ---- URL: /admin/settings.php?section=managefileconverterplugins
+// ---- URL: /admin/settings.php?section=managecustomfields
+// ---- URL: /admin/settings.php?section=manageformats
+// ---- URL: /admin/tool/availabilityconditions/
+// ---- URL: /admin/settings.php?section=manageantiviruses
+// ---- URL: /admin/settings.php?section=manageauths
+#participants,
+#modules,
+.tinymcesubplugins,
+#editormanagement,
+#webserviceprotocols,
+#courseenrolmentplugins,
+#logstoreplugins,
+#page-admin-setting-managefileconverterplugins .admintable.generaltable,
+.managecustomfieldtable,
+.manageformattable,
+#availabilityconditions,
+#manageauthtable,
+#antivirusmanagement,
+#mediaplayerplugins,
+.managecontentbanktable {
+    td a {
+        display: inline-block;
+
+        .icon:not(.spacer),
+        .icon:not(.noicon) {
+            margin: 1px;
+            padding: 10px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: $btn-border-radius-lg;
+
+            background-color: $gray-200;
+            font-size: $font-size-md;
+            color: $gray-800;
+
+            transition: $transition-base;
+
+            .theme-dark & {
+                background-color: $dm-gray-400;
+                color: $dm-gray-900;
+            }
+        }
+
+        &:hover {
+            text-decoration: none;
+        }
+    }
+}
+
+//Mod Forum
+.discussion-list {
+    td {
+
+        a,
+        span {
+
+            .icon:not(.spacer),
+            .icon:not(.noicon) {
+                margin: 1px;
+                padding: 10px;
+
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+
+                border-radius: $btn-border-radius-lg;
+
+                background-color: $gray-200;
+                font-size: $font-size-xs;
+                color: $gray-800;
+
+                transition: $transition-base;
+
+                .theme-dark & {
+                    background-color: $dm-gray-400;
+                    color: $dm-gray-900;
+                }
+            }
+
+            &:hover {
+                text-decoration: none;
+
+                .icon:not(.spacer),
+                .icon:not(.noicon) {
+                    background-color: $gray-300;
+
+                    .theme-dark & {
+                        background-color: $dm-gray-400;
+                    }
+                }
+            }
+
+        }
+    }
+
+    th {
+        span {
+
+            .icon:not(.spacer),
+            .icon:not(.noicon) {
+                margin: 1px 1px 1px 5px;
+                padding: 4px;
+
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+
+                background-color: $yellow-200;
+                border-radius: $btn-border-radius-lg;
+                font-size: $font-size-xs;
+                color: $body-color;
+
+                width: 18px;
+                height: 18px;
+
+                .theme-dark & {
+                    background-color: #998341;
+                    color: $yellow-100;
+                }
+            }
+        }
+    }
+
+}
+
+
+// ---- URL: /admin/reports.php
+#repositoriessetting {
+    .c3 {
+        .mdl-left br {
+            display: none;
+        }
+    }
+}
+
+
+#page-admin-tool-oauth2-issuers {
+    .generaltable {
+        .c0 {
+            img {
+                padding: 0.25rem;
+                background-color: $white;
+                border-radius: $btn-border-radius-lg;
+                border: 1px solid $border-color;
+
+                .theme-dark & {
+                    background-color: $black;
+                    border-color: $dm-border-color;
+                }
+            }
+        }
+    }
+}
+
+
+.rolecap {
+    @extend .generaltable;
+
+    .allowmore {
+        display: inline-flex;
+        margin-left: 4px;
+    }
+
+    .allowedroles .allowed {
+        background-color: $white;
+        width: inherit;
+        margin: .25rem 0;
+        padding: 1px 1px 1px 10px;
+        font-size: $font-size-sm;
+        border: 1px solid $border-color;
+        border-radius: $btn-border-radius-lg;
+
+        .theme-dark & {
+            background-color: $black;
+            border-color: $dm-border-color;
+        }
+    }
+
+    .forbidden {
+        display: inline-flex;
+        background-color: $white;
+        width: inherit;
+        margin: .25rem 0;
+        padding: 1px 1px 1px 10px;
+
+        font-size: $font-size-xs;
+        border: 1px solid $border-color;
+        border-radius: $btn-border-radius-lg;
+
+        .theme-dark & {
+            background-color: $black;
+            border-color: $dm-border-color;
+        }
+    }
+
+    .allowlink,
+    .prohibitlink,
+    .preventlink,
+    .forbiddenroles {
+        .icon:not(.spacer) {
+            margin: 1px;
+            padding: 10px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: $btn-border-radius-lg;
+
+            background-color: $gray-200;
+            font-size: $font-size-xs;
+
+            transition: $transition-base;
+        }
+
+        &:hover {
+            text-decoration: none;
+
+            .icon:not(.spacer) {
+                background-color: $blue-200;
+
+                .theme-dark & {
+                    background-color: $yellow-800;
+                }
+            }
+        }
+    }
+
+    .allow {
+        background-color: $green-200;
+        color: $green-800;
+
+        .theme-dark & {
+            background-color: $green-800;
+            color: $green-100;
+        }
+    }
+
+    .forbiddenroles {
+        background-color: $red-200;
+        color: $red-800;
+
+        .theme-dark & {
+            color: $red-200;
+            background-color: $red-800;
+        }
+    }
+}
+
+#page-grade-report-overview-index {
+    .main-content {
+        .no-overflow {
+            margin-bottom: 2rem;
+        }
+    }
+}
+
+#page-admin-tool-usertours-configure {
+    .admintable {
+        .c3 {
+            a {
+                &:hover {
+                    text-decoration: none;
+                }
+
+                .icon:not(.spacer) {
+                    margin: 1px;
+                    padding: 10px;
+
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+
+                    border-radius: $btn-border-radius-lg;
+
+                    background-color: $gray-200;
+                    font-size: $font-size-xs;
+                    color: $gray-800;
+
+                    transition: $transition-base;
+
+                    .theme-dark & {
+                        background-color: $dm-gray-400;
+                        color: $dm-gray-900;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+// ---- URL: /cohort/index.php?contextid=1
+#cohorts {
+    p {
+        margin-bottom: 0;
+    }
+
+    .c5,
+    .c6 {
+        a {
+            &:hover {
+                text-decoration: none;
+            }
+
+            .icon:not(.spacer) {
+                margin: 1px;
+                padding: 10px;
+
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+
+                border-radius: $btn-border-radius-lg;
+
+                background-color: $gray-200;
+                font-size: $font-size-xs;
+                color: $gray-800;
+
+                transition: $transition-base;
+
+                .theme-dark & {
+                    background-color: $dm-gray-400;
+                    color: $dm-gray-900;
+                }
+            }
+
+            &:hover {
+                .icon:not(.spacer) {
+                    background-color: $blue-200;
+                    color: $blue-700;
+
+                    .theme-dark & {
+                        background-color: $blue-700;
+                        color: $blue-200;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+// ---- URL: /admin/user.php
+
+#users {
+    .c5 {
+        a {
+            &:hover {
+                text-decoration: none;
+            }
+
+            .icon:not(.spacer) {
+                margin: 1px;
+                padding: 10px;
+
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+
+                border-radius: $btn-border-radius-lg;
+
+                background-color: $gray-200;
+                font-size: $font-size-xs;
+                color: $gray-800;
+
+                transition: $transition-base;
+
+                .theme-dark & {
+                    background-color: $dm-gray-400;
+                    color: $dm-gray-900;
+                }
+            }
+
+            &:hover {
+                .icon:not(.spacer) {
+                    background-color: $blue-200;
+                    color: $blue-700;
+
+                    .theme-dark & {
+                        background-color: $blue-700;
+                        color: $blue-200;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ---- URL: admin/tool/monitor/managerules.php?courseid=0
+#toolmonitorrules_table {
+    margin: $spacer 0;
+}
+
+#page-admin-tool-monitor-managerules {
+
+    .main-content {
+        .no-overflow+a {
+            display: inline-flex;
+            margin-bottom: 2rem;
+        }
+    }
+
+    .urlselect {
+        margin-bottom: 0 !important;
+    }
+
+    .c1 {
+        max-width: 400px;
+    }
+
+}
+
+
+
+// ---- URL: /admin/plugins.php
+#plugins-control-panel {
+    width: max-content;
+
+    img.pluginicon {
+        margin-right: 13px;
+    }
+}
+
+
+// ---- URL:  /admin/tool/policy/user.php?userid=3&returnurl=%2Fadmin%2Ftool%2Fpolicy%2Facceptances.php
+#page-admin-tool-policy-user {
+    .generaltable {
+        td {
+            font-size: $font-size-sm;
+        }
+    }
+}
+
+// ---- URL:  /admin/tool/policy/managedocs.php
+#tool-policy-managedocs-wrapper {
+    margin-top: $page-padding-global;
+    margin-bottom: 0;
+
+    small {
+        color: $body-color-secondary;
+    }
+
+}
+
+
+
+// ---- URL:  /group/groupings.php?id=10
+.groupmanagementtable {
+    tr {
+        background-color: transparent !important;
+
+        &:hover {
+            box-shadow: none !important;
+        }
+    }
+
+    td {
+        padding: 0 !important;
+
+        &#backcell {
+            padding-top: 10px;
+        }
+    }
+
+    select {
+        min-height: 165px;
+        max-height: 300px;
+
+        margin-bottom: 10px;
+    }
+}
+
+#page-mod-data-field-,
+#page-admin-tool-dataprivacy-defaults,
+#page-group-groupings {
+
+    table,
+    .table,
+    .generaltable {
+        .lastcol {
+            text-align: left !important;
+
+            a {
+                display: inline-flex;
+
+                .icon:not(.fa-spacer),
+                .icon:not(.spacer) {
+                    margin: 1px;
+                    padding: 10px;
+
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+
+                    border-radius: $btn-border-radius-lg;
+
+                    background-color: $gray-200;
+                    font-size: $font-size-xs;
+                    color: $gray-800;
+
+                    transition: $transition-base;
+
+                    .theme-dark & {
+                        background-color: $dm-gray-400;
+                        color: $dm-gray-900;
+                    }
+                }
+
+                &:hover {
+                    text-decoration: none;
+
+                    .icon:not(.fa-spacer),
+                    .icon:not(.spacer) {
+                        background-color: $blue-200;
+                        color: $blue-700;
+
+                        .theme-dark & {
+                            background-color: $blue-700;
+                            color: $blue-200;
+                        }
+                    }
+                }
+            }
+
+            a.dropdown-item {
+                display: flex;
+            }
+        }
+    }
+}
+
+// ---- URL:  /user/profile/index.php
+.admintable,
+.profilefield {
+    .lastcol {
+        a {
+            &:hover {
+                text-decoration: none;
+            }
+
+            .icon {
+                margin: 1px;
+                padding: 10px;
+
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+
+                border-radius: $btn-border-radius-lg;
+
+                background-color: $gray-200;
+                font-size: $font-size-xs;
+                color: $gray-800;
+
+                transition: $transition-base;
+
+                .theme-dark & {
+                    background-color: $dm-gray-400;
+                    color: $dm-gray-900;
+                }
+            }
+
+            &:hover {
+                .icon {
+                    background-color: $blue-200;
+                    color: $blue-700;
+
+                    .theme-dark & {
+                        background-color: $blue-700;
+                        color: $blue-200;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+// ---- URL:  /admin/tool/policy/acceptances.php
+.tool_policy-user_agreement-actions {
+    margin-left: 0.35rem;
+
+    a {
+        padding: 0.25rem 0.35rem;
+
+        small {
+            font-size: $font-size-sm;
+            font-weight: $font-weight-medium;
+        }
+    }
+}
+
+.tool_policy-user_agreement-status {
+    margin-left: 0.25rem;
+
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+}
+
+
+// ---- URL:  /report/outline/index.php?id=10
+#page-report-outline-index {
+    .section {
+        td {
+            text-align: left;
+        }
+    }
+
+    td.numviews {
+        text-align: left;
+    }
+}
+
+
+// ---- URL:  /admin/roles/assign.php?contextid=120&roleid=1
+#assigningrole {
+    tr {
+        background-color: transparent;
+
+        &:hover {
+            box-shadow: none;
+        }
+    }
+}
+
+// ---- URL:  /admin/tool/monitor/index.php?courseid=1
+.toolmonitor {
+    .c1 {
+        max-width: 400px;
+    }
+}
+
+#page-admin-tool-monitor-index {
+    .singleselect+h3 {
+        margin: 1rem 0;
+    }
+
+    .no-overflow+div {
+        margin-top: 1rem;
+    }
+}
+
+// ---- URL:  /admin/tool/policy/acceptances.php
+#page-admin-tool-policy-acceptances .colselect {
+    width: auto;
+}
+
+// ---- URL:  /mod/feedback/show_entries.php?id=77
+#showentrytable {
+    .userpic {
+        min-width: 150px;
+    }
+}
+
+// ---- URL:  /admin/tool/lp/plans.php?userid=2
+[data-region="plans"] {
+    .float-left {
+        float: none !important;
+    }
+}
+
+.path-admin-tool-lp [data-region] .generaltable.fullwidth {
+    margin: 2rem 0;
+}
+
+.path-admin-tool-lp [data-region="competencylinktree"] ul li>span,
+.path-badges [data-region="competencylinktree"] ul li>span,
+.path-admin-tool-lp [data-region="competencymovetree"] ul li>span,
+.path-admin-tool-lp [data-region="plans"] ul li>span,
+.path-admin-tool-lp [data-region="managecompetencies"] ul li>span {
+    width: calc(100% - 40px);
+    display: inline-flex;
+    padding: 0;
+}
+
+.path-admin-tool-lp [data-region="competencylinktree"] ul [aria-selected="true"]>span,
+.path-badges [data-region="competencylinktree"] ul [aria-selected="true"]>span,
+.path-admin-tool-lp [data-region="competencymovetree"] ul [aria-selected="true"]>span,
+.path-admin-tool-lp [data-region="plans"] ul [aria-selected="true"]>span,
+.path-admin-tool-lp [data-region="managecompetencies"] ul [aria-selected="true"]>span {
+    background-color: var(--primary-color-100);
+}
+
+.theme-dark.path-admin-tool-lp [data-region="competencylinktree"] ul [aria-selected="true"]>span,
+.theme-dark.path-badges [data-region="competencylinktree"] ul [aria-selected="true"]>span,
+.theme-dark.path-admin-tool-lp [data-region="competencymovetree"] ul [aria-selected="true"]>span,
+.theme-dark.path-admin-tool-lp [data-region="plans"] ul [aria-selected="true"]>span,
+.theme-dark.path-admin-tool-lp [data-region="managecompetencies"] ul [aria-selected="true"]>span {
+    border-color: $dm-border-color;
+    background-color: $dm-gray-400;
+}
+
+.path-admin-tool-lp [data-region="managecompetencies"] ul[data-enhance="tree"],
+.path-admin-tool-lp [data-region="plans"] ul[data-enhance="tree"],
+.path-admin-tool-lp [data-region="competencylinktree"] ul[data-enhance="linktree"],
+.path-badges [data-region="competencylinktree"] ul[data-enhance="linktree"],
+.path-admin-tool-lp [data-region="competencymovetree"] ul[data-enhance="movetree"] {
+    border-color: $border-color;
+}
+
+.theme-dark.path-admin-tool-lp [data-region="managecompetencies"] ul[data-enhance="tree"],
+.theme-dark.path-admin-tool-lp [data-region="plans"] ul[data-enhance="tree"],
+.theme-dark.path-admin-tool-lp [data-region="competencylinktree"] ul[data-enhance="linktree"],
+.theme-dark.path-badges [data-region="competencylinktree"] ul[data-enhance="linktree"],
+.theme-dark.path-admin-tool-lp [data-region="competencymovetree"] ul[data-enhance="movetree"] {
+    border-color: $dm-border-color;
+}
+
+.path-admin-tool-lp [data-region="managecompetencies"] ul li:focus {
+    outline: none;
+}
+
+.moodle-dialogue-base .moodle-dialogue .moodle-dialogue-bd .competency-tree li img,
+.path-admin-tool-lp [data-region="managecompetencies"] ul li img {
+    padding: 4px;
+    width: 26px;
+}
+
+.theme-dark.moodle-dialogue-base .moodle-dialogue .moodle-dialogue-bd .competency-tree li img,
+.theme-dark.path-admin-tool-lp [data-region="managecompetencies"] ul li img {
+    filter: invert(1)
+}
+
+.moodle-dialogue-base .moodle-dialogue .moodle-dialogue-bd .competency-tree li,
+.path-admin-tool-lp [data-region="managecompetencies"] ul li {
+    ul li {
+        font-size: $font-size-sm;
+    }
+}
+
+[data-region="managecompetencies"] div,
+[data-region="managetemplates"] div {
+    dl {
+        font-size: $font-size-xs;
+    }
+
+    &:empty {
+        display: none;
+    }
+}
+
+.path-admin-tool-lp [data-region="filtercompetencies"] input {
+    margin: 0;
+}
+
+.path-admin-tool-lp .competency-rule-points input[type="number"] {
+    width: 70px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+//Edit competency page
+[data-action="deleterelation"],
+#id_parentcompetencybutton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 30px;
+    height: 30px;
+    padding: 5px;
+    background-color: $gray-100;
+    border-radius: $btn-border-radius-lg;
+    color: $body-color;
+
+    font-size: $font-size-sm;
+
+    .theme-dark & {
+        background-color: $dm-gray-400;
+        color: $dm-gray-800;
+    }
+
+    .icon {
+        margin: 0;
+    }
+
+    &::before {
+        display: none;
+    }
+
+    &:hover {
+        background-color: var(--primary-color-100);
+        color: var(--main-theme-color);
+
+        .theme-dark & {
+            background-color: var(--primary-color-700);
+            color: var(--primary-color-200);
+        }
+    }
+}
+
+.moodle-dialogue-base .moodle-dialogue .moodle-dialogue-bd ul li:focus {
+    outline: none;
+}
+
+// Table Mod
+#page-report-progress-index {
+    .modicon {
+        .icon {
+            width: 30px;
+            height: 30px;
+            font-size: 30px;
+        }
+    }
+
+    .rotated-text-container {
+        width: auto;
+    }
+
+    .rotated-text {
+        display: inline-flex;
+        transform: none;
+
+        &:after {
+            margin-top: 0;
+        }
+    }
+
+    .completion-header {
+        padding: 0;
+    }
+
+    .urlselect {
+        margin: 0 !important;
+    }
+
+    .include-activity-selector {
+        margin: 0 !important;
+    }
+
+    .activity-order-selector {
+        margin: 0 0 0 2rem !important;
+    }
+
+    #page {
+        .initialbar {
+            margin: 10px 0 !important;
+        }
+    }
+}
+
+
+// Module Activity Survey
+table.surveytable {
+    width: 100%;
+    margin-top: 10px !important;
+    margin-bottom: 30px;
+
+    border-radius: $btn-border-radius;
+    background-color: $gray-100;
+
+    .theme-dark & {
+        background-color: $dm-gray-100;
+    }
+}
+
+
+// ---- Table elements admin roles
+#explaincaps {
+    .rolecapheading {
+        background-color: $gray-200;
+        font-size: 1rem;
+
+        .theme-dark & {
+            background-color: $dm-gray-400;
+        }
+    }
+
+    .cap-name {
+        color: $body-color-light;
+
+        .theme-dark & {
+            color: $dm-body-color-light;
+        }
+    }
+}
+
+
+// ---- URL: /admin/settings.php?section=webservicetokens
+.webservicestokenui {
+    padding-top: 0 !important;
+
+    div {
+        margin-bottom: 1rem;
+    }
+}
+
+#webservicetokens {
+    .missingcaps {
+        max-width: 300px;
+        font-size: $font-size-xs;
+        color: $body-color-secondary;
+
+        .theme-dark & {
+            color: $dm-body-color-secondary;
+        }
+    }
+}
+
+
+// ---- URL: /admin/settings.php?section=externalservices
+#builtinservices {
+    margin-bottom: 2rem;
+}
+
+#onesystemcontrol,
+#userasclients {
+    .description {
+        max-width: 600px;
+    }
+}
+
+
+// ---- URL: /admin/tool/messageinbound/index.php
+#page-admin-tool-messageinbound-index .handler-function {
+    padding: 0;
+    font-size: $font-size-xs;
+}
+
+.messageinboundhandlers {
+    td {
+        vertical-align: top;
+    }
+}
+
+#backpacklist {
+    caption {
+        font-size: $font-size-base;
+        margin-top: 2rem;
+        margin-bottom: .5rem;
+    }
+}
+
+// ---- URL: /admin/tool/analytics/index.php
+#predictionmodelslist {
+    margin-top: $page-padding-global;
+}
+
+// ---- URL: /blocks/rss_client/managefeeds.php?rssid=0
+#rssfeeds {
+    width: 100%;
+    margin-bottom: 1rem;
+
+    .title {
+        font-size: 1.15rem;
+    }
+
+    .url {
+        font-size: $font-size-sm;
+        font-weight: $font-weight-medium;
+    }
+
+    .description {
+        margin-top: .5rem;
+        font-size: $font-size-base;
+    }
+}
+
+
+// ---- Report Activity Progress Table
+#completion-progress {
+
+    th[scope="row"],
+    .completion-sortchoice {
+        position: sticky;
+        top: 0;
+        left: 0;
+        z-index: 3;
+
+        background-color: rgba($white, .2);
+        backdrop-filter: blur(7px);
+        -webkit-backdrop-filter: blur(7px);
+    }
+}
+
+#page-report-progress-index #completion-progress th,
+#page-report-progress-index #completion-progress td {
+    min-width: 140px;
+    width: 140px;
+
+    a {
+        display: block;
+        text-align: left;
+    }
+}
+
+#page-report-progress-index #completion-progress td {
+    padding: 10px;
+}
+
+#page-report-progress-index #completion-progress tbody th,
+#page-report-progress-index #completion-progress tbody td {
+    vertical-align: middle;
+}
+
+#page-report-progress-index .rotated-text {
+    margin: 0 0 0 10px;
+    display: block;
+    font-size: $font-size-xs;
+    line-height: 1.3;
+    transform: none;
+    white-space: normal;
+    word-break: break-word;
+}
+
+#page-report-progress-index .rotated-text-container {
+    display: block;
+}
+
+#page-report-progress-index .modicon {
+    padding-top: 0;
+
+    .icon {
+        margin: 0 0 0 10px;
+        width: 30px;
+        height: 30px;
+    }
+}
+
+// Dark mode.
+#page-report-progress-index.theme-dark .modicon {
+    img.icon {
+        filter: invert(.9);
+    }
+}
+
+.completion-expired .completion-expected {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 2px 4px;
+    margin: 3px 0 !important;
+
+    @include font-size($badge-font-size);
+    font-weight: $badge-font-weight;
+    text-align: left;
+    border-radius: 5px;
+
+    // Badge Light
+    background-color: $blue-100;
+    color: $blue-600;
+
+    .theme-dark & {
+        background-color: $blue-600;
+        color: $blue-100;
+    }
+}
+
+.completion-header {
+    min-width: 100px;
+    max-width: 100px;
+
+    a {
+        display: flow-root;
+    }
+}
+
+#completion-progress {
+    .completion-progresscell a {
+        display: flex !important;
+        align-content: center;
+        justify-content: center;
+    }
+}
+
+#page-report-progress-index #completion-progress thead th a,
+#page-report-progress-index #completion-progress thead td a {
+    display: inline-flex;
+    width: 100%;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+// ---- URL: /report/outline/index.php?id=5
+#outlinetable {
+    .activity {
+        display: flex;
+        align-items: center;
+        width: 300px;
+
+        .icon {
+            display: flex;
+            margin-right: 10px;
+            margin-bottom: 0;
+
+            width: 40px;
+            height: 40px;
+        }
+    }
+
+    td {
+        min-width: 200px;
+    }
+}
+
+// ---- URL: /admin/roles/manage.php
+#roles {
+    .c1 {
+        max-width: 260px;
+        font-size: $font-size-xs;
+        color: $body-color-secondary;
+
+        .theme-dark & {
+            color: $dm-body-color-secondary;
+        }
+    }
+}
+
+// -- Aditional Icons UI
+.iconsort {
+    margin: 2px;
+    padding: 5px;
+
+    width: 20px;
+    height: 20px;
+
+    background-color: $gray-100;
+    border-radius: $btn-border-radius-lg;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+        background-color: var(--primary-color-100);
+
+        .theme-dark & {
+            background-color: var(--primary-color-700);
+        }
+    }
+}
+
+// ---- URL: /admin/tool/monitor/index.php
+.toolmonitor {
+    margin-top: 1rem;
+}
+
+#page-admin-tool-monitor-index {
+    .main-content {
+        .singleselect {
+            margin-bottom: 1rem;
+        }
+    }
+}
+
+
+// Dark mode.
+.theme-dark {
+    table {
+
+        th,
+        td {
+            border-color: $dm-border-color;
+        }
+    }
+}
+
+#participants {
+    width: max-content;
+
+    thead {
+        position: sticky;
+        top: $navbar-height;
+        z-index: $zindex-fixed;
+        background-color: $container-bg;
+
+        .theme-dark & {
+            background-color: $dm-container-bg;
+        }
+    }
+
+    td {
+        font-size: $font-size-xs;
+    }
+}
+
+.theme-dark {
+    th {
+        .img {
+            filter: invert(1);
+        }
+    }
+}
+
+.userlist .no-overflow {
+    overflow: initial;
+}
+
+.preferences-container {
+    .preference-table {
+        th {
+            font-size: $font-size-sm;
+            font-weight: $font-weight-bold;
+        }
+
+        .custom-control {
+            min-height: auto;
+        }
+
+        .custom-switch {
+            margin: 0;
+        }
+    }
+}
+
+table {
+    a {
+        .fa-eye {
+            background-color: $green-100!important;
+            color: $green-800!important;
+        }
+    
+        .fa-trash,
+        .fa-eye-slash {
+            background-color: $red-100!important;
+            color: $red-800!important;
+        }
+
+        &:hover {
+            .fa-eye {
+                background-color: $green-200!important;
+                color: $green-900!important;
+            }
+        
+            .fa-trash,
+            .fa-eye-slash {
+                background-color: $red-200!important;
+                color: $red-900!important;
+            }
+        }
+
+        &.dropdown-item {
+            .fa-eye,
+            .fa-trash,
+            .fa-eye-slash {
+                background-color: transparent!important;
+                color: inherit!important;;
+            }
+        }
+    }
+
+}

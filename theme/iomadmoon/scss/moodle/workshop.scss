@@ -1,0 +1,357 @@
+//---- Workshop
+//---- Module Activity
+
+.path-mod-workshop {
+
+    .perpagewidget {
+        text-align: left;
+    }
+}
+
+.path-mod-workshop div.singlebutton {
+  margin: 0 0.25rem;
+}
+
+/**
+ * User plan
+ */
+.path-mod-workshop .userplan {
+    margin: 1rem auto;
+    border: 1px solid $border-color;
+    border-radius: $btn-border-radius;
+    font-size: $font-size-sm;
+
+    @include media-breakpoint-down(md) {
+    overflow-x: auto;
+    }
+}
+
+@include media-breakpoint-down(md) {
+.rui-userplan-container {
+width: max-content;
+}
+}
+
+.theme-dark.path-mod-workshop .userplan {
+    border-color: $dm-border-color;
+}
+
+.path-mod-workshop .userplan dt {
+    height: auto;
+    color: $body-color;
+    border-bottom: 2px solid $gray-500;
+    padding: .5rem;
+}
+
+.theme-dark.path-mod-workshop .userplan dt {
+    color: $dm-body-color;
+    border-color: $dm-gray-500;
+}
+
+    .path-mod-workshop .userplan dt.active {
+      border-left: 2px solid $green-600;
+      border-right: 2px solid $green-600;
+      border-top: 2px solid $green-600;
+
+      border-radius: $btn-border-radius $btn-border-radius 0 0 ;
+
+      background-color: $green-100;
+    }
+
+    .theme-dark.path-mod-workshop .userplan dd.active,
+    .theme-dark.path-mod-workshop .userplan dt.active {
+        background-color: transparent;
+        color: $dm-body-color;
+        border-color: $green-500;
+    }
+
+    .path-mod-workshop .userplan dt.active .phasetitle {
+        font-size: $font-size-base;
+        color: $green-800;
+    }
+
+.path-mod-workshop .userplan dl {
+    width: 20%;
+    float: inherit;
+    display: inline-grid;
+}
+
+@media only screen and (max-width: 768px) {
+    .path-mod-workshop .userplan {
+        border-right: none;
+        border-top: none;
+    }
+
+    .path-mod-workshop .userplan dl {
+        width: 20%;
+        border-right: none;
+    }
+
+    .path-mod-workshop .userplan dt {
+        float: left;
+        width: 100%;
+        border-bottom: none;
+        border-top: 1px solid $border-color;
+    }
+
+    .theme-dark.path-mod-workshop .userplan dt {
+        border-color: $dm-border-color;
+    }
+
+    .path-mod-workshop .userplan dt.active {
+        border: none;
+    }
+
+    .path-mod-workshop .userplan dd {
+        float: left;
+        width: 100%;
+        border-left: 1px solid $border-color;
+        border-top: 1px solid $border-color;
+    }
+
+    .theme-dark.path-mod-workshop .userplan dd {
+        border-color: $dm-border-color;
+    }
+}
+
+@media only screen and (max-width: 420px) {
+    .path-mod-workshop .userplan {
+        border-bottom: none;
+    }
+
+    .path-mod-workshop .userplan dt {
+        float: left;
+        width: 100%;
+        border-bottom: none;
+        border-right: 1px solid $border-color;
+        border-left: 1px solid $border-color;
+        margin: 0;
+        padding: 5px;
+    }
+
+    .path-mod-workshop .userplan dd {
+        float: left;
+        width: 100%;
+        border-left: 1px solid $border-color;
+        border-top: 1px solid $border-color;
+        border-bottom: 1px solid $border-color;
+    }
+
+    .theme-dark.path-mod-workshop .userplan dt,
+    .theme-dark.path-mod-workshop .userplan dd {
+        border-color: $dm-border-color;
+    }
+}
+
+.path-mod-workshop .userplan dd {
+    border-right: 1px solid $gray-300;
+    background-color: $gray-100;
+    padding: .5rem;
+
+    &:last-child {
+      border-right: 0;
+    }
+}
+
+.theme-dark.path-mod-workshop .userplan dd {
+    border-color: $dm-border-color;
+    background-color: $dm-gray-100;
+}
+
+
+.path-mod-workshop .userplan dd,
+.path-mod-workshop .userplan dd a,
+.path-mod-workshop .userplan dd a:link,
+.path-mod-workshop .userplan dd a:hover,
+.path-mod-workshop .userplan dd a:visited,
+.path-mod-workshop .userplan dd a:active {
+    color: $gray-800;
+}
+
+        .theme-dark.path-mod-workshop .userplan dd,
+        .theme-dark.path-mod-workshop .userplan dd a,
+        .theme-dark.path-mod-workshop .userplan dd a:link,
+        .theme-dark.path-mod-workshop .userplan dd a:hover,
+        .theme-dark.path-mod-workshop .userplan dd a:visited,
+        .theme-dark.path-mod-workshop .userplan dd a:active {
+            color: $dm-gray-800;
+        }
+
+.path-mod-workshop .userplan dd.active,
+.path-mod-workshop .userplan dd.active a,
+.path-mod-workshop .userplan dd.active a:link,
+.path-mod-workshop .userplan dd.active a:hover,
+.path-mod-workshop .userplan dd.active a:visited,
+.path-mod-workshop .userplan dd.active a:active {
+    color: $body-color;
+}
+
+        .theme-dark.path-mod-workshop .userplan dd.active,
+        .theme-dark.path-mod-workshop .userplan dd.active a,
+        .theme-dark.path-mod-workshop .userplan dd.active a:link,
+        .theme-dark.path-mod-workshop .userplan dd.active a:hover,
+        .theme-dark.path-mod-workshop .userplan dd.active a:visited,
+        .theme-dark.path-mod-workshop .userplan dd.active a:active {
+            color: $dm-body-color;
+        }
+
+
+
+.path-mod-workshop .grading-report {
+    border-color: $border-color;
+}
+
+        .theme-dark.path-mod-workshop .grading-report {
+            border-color: $dm-border-color;
+        }
+
+
+.path-mod-workshop .userplan dd.lastcol {
+    border-right: 0;
+}
+
+.path-mod-workshop .userplan dd.active {
+    border-left: 2px solid $green-600;
+    border-right: 2px solid $green-600;
+    border-bottom: 2px solid $green-600;
+    border-radius: 0 0 $border-radius $border-radius;
+    background-color: $green-100;
+}
+
+
+.path-mod-workshop .userplan dt .actions {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+
+    .icon {
+      margin-left: 0.35rem;
+      width: auto;
+      height: auto;
+      font-size: 12px;
+    }
+}
+
+.theme-dark.path-mod-workshop .userplan dt .actions .icon {
+    filter: invert(1);
+}
+
+.path-mod-workshop .userplan dd.phasetasks li {
+    background-image: url([[pix:theme|mod/workshop/userplan/task-todo]]);
+    background-size: 14px;
+    background-position: 0 2px;
+    background-repeat: no-repeat;
+    list-style-type: none;
+    min-height: 16px;
+    margin: .5rem 0;
+}
+
+.dir-rtl.path-mod-workshop .userplan dd.phasetasks li {
+    background-image: url([[pix:theme|mod/workshop/userplan/task-todo-rtl]]);
+}
+
+.dir-rtl.path-mod-workshop .userplan dd.phasetasks li {
+    background-position: top right;
+}
+
+.path-mod-workshop .userplan dd.phasetasks li.completed {
+    background-image: url([[pix:theme|mod/workshop/userplan/task-done]]);
+    background-size: 14px;
+    background-position: 0 2px;
+    color: $green-700;
+
+    a {
+      color: $green-700;
+    }
+}
+
+.dir-rtl.path-mod-workshop .userplan dd.phasetasks li.completed {
+    background-image: url([[pix:theme|mod/workshop/userplan/task-done-rtl]]);  
+}
+
+.path-mod-workshop .userplan dd.phasetasks li.fail {
+    background-image: url([[pix:theme|mod/workshop/userplan/task-fail]]);
+    background-size: 10px;
+    background-position: 7px;
+    padding: 0.25rem;
+    margin: 0.25rem 0;
+
+    background-color: $red-200;
+    border: 2px solid $red-400;
+    border-radius: $btn-border-radius;
+
+    color: $red-800;
+    line-height: 1.3;
+
+    a {
+      color: $red-800!important;
+    }
+}
+
+.path-mod-workshop .userplan dd.phasetasks li.info {
+    background-image: url([[pix:mod_workshop|userplan/task-info]]);
+    background-position: 4px;
+    padding: 0.25rem;
+    margin: 0.25rem 0;
+    background-color: $yellow-200;
+    border-radius: $btn-border-radius;
+    line-height: 1.3;
+    font-size: $font-size-xs;
+}
+
+.theme-dark.path-mod-workshop .userplan dd.phasetasks li.info {
+    color: $body-color;
+}
+
+.path-mod-workshop .userplan dd.phasetasks .tasks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.path-mod-workshop .userplan dd.phasetasks .title {
+    padding: 0 10px 0 20px;
+    font-weight: $font-weight-medium;
+}
+
+.dir-rtl.path-mod-workshop .userplan dd.phasetasks .title {
+    padding: 0 20px 0 10px;
+}
+
+.path-mod-workshop .userplan dd.phasetasks .details {
+    padding: 0 10px 0 21px;
+    font-size: $font-size-xs;
+    opacity: .8;
+}
+
+.dir-rtl.path-mod-workshop .userplan dd.phasetasks .details {
+    padding: 0 21px 0 10px;
+    font-size: $font-size-xs;
+    opacity: .8;
+}
+
+// Heading
+#mod_workshop-userplanheading {
+    margin-top: 2rem;
+}
+
+// Page title mod for page where is modal-in-page
+[id^="workshop-viewlet-"] {
+    .box {
+        padding: 0!important;
+    }
+
+    .alert {
+        margin: 0!important;
+    }
+}
+
+.path-mod-workshop .perpagewidget {
+    margin: 0!important;
+}
+
+.groupwidget {
+    &:empty {
+        display: none;
+    }
+}

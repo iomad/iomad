@@ -1,0 +1,402 @@
+// Base class
+//
+// Kickstart any navigation component with a set of style resets. Works with
+// `<nav>`s, `<ul>`s or `<ol>`s.
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  padding-left: 0;
+  margin-left: 0;
+  margin-bottom: 0;
+  list-style: none;
+}
+
+.nav-link {
+  text-decoration: if($link-decoration==none, null, none);
+
+  @include hover-focus() {
+    text-decoration: none;
+  }
+
+  // Disabled state lightens text
+  &.disabled {
+    color: $nav-link-disabled-color;
+    pointer-events: none;
+    cursor: default;
+
+    .theme-dark & {
+      color: $dm-nav-link-disabled-color;
+    }
+  }
+}
+
+.nav-tabs {
+  padding: 0;
+  margin: 0;
+
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+
+  background-color: $gray-100;
+  border-radius: $btn-border-radius;
+  width: fit-content;
+  max-width: 100%;
+
+  .theme-dark & {
+      background-color: $dm-gray-100;
+  }
+
+  +.nav-tabs {
+    margin-top: .25rem;
+  }
+
+  .nav-item {
+    display: flex;
+
+    &:focus {
+      outline: none;
+      box-shadow: none;
+    }
+  }
+
+  .nav-item {
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+
+  .nav-link {
+    padding: 8px 16px;
+
+    display: inline-flex;
+    position: relative;
+
+    border-radius: $btn-border-radius;
+
+    font-weight: $font-weight-medium;
+    color: $gray-900;
+
+    transition: $transition-base;
+
+    .theme-dark & {
+      color: $dm-gray-900;
+    }
+
+    &:hover {
+      background-color: $nav-tabs-link-hover-bg;
+      color: $nav-tabs-link-hover-color;
+      text-decoration: none;
+
+      .theme-dark & {
+        color: $dm-nav-tabs-link-hover-color;
+        background-color: $dm-nav-tabs-link-hover-bg;
+      }
+
+      &:before {
+        opacity: 1;
+      }
+    }
+
+    &.active {
+      &::before {
+        opacity: 0;
+      }
+    }
+
+    &.disabled {
+      color: $nav-link-disabled-color;
+      opacity: 0.4;
+
+      .theme-dark & {
+        color: $dm-nav-link-disabled-color;
+      }
+
+    }
+  }
+
+  .nav-link.active,
+  .nav-item.show .nav-link {
+    background-color: $nav-tabs-link-active-bg;
+    color: $nav-tabs-link-active-color;
+
+    &:hover {
+      background-color: $nav-tabs-link-hover-bg;
+      color: $nav-tabs-link-hover-color;
+    }
+
+    .theme-dark & {
+      background-color: $dm-nav-tabs-link-active-bg;
+      color: $dm-nav-tabs-link-active-color;
+    }
+  }
+
+  // .dropdown-menu {
+  //   // Make dropdown border overlap tab border
+  //   margin-top: -$nav-tabs-border-width;
+  //   // Remove the top rounded corners here since there is a hard edge above the menu
+  //   //@include border-top-radius(0);
+  // }
+}
+
+.dropdown .nav-item {
+  margin-right: 0 !important;
+}
+
+//
+// Pills
+//
+
+.nav-pills {
+  .nav-link {
+    @include border-radius($nav-pills-border-radius);
+    color: $nav-pills-link-active-color;
+    font-weight: $font-weight-medium;
+
+    .theme-dark & {
+      color: $dm-nav-pills-link-active-color;
+    }
+  }
+
+  .nav-link.active,
+  .show>.nav-link {
+    color: $body-color;
+    background-color: $nav-pills-link-active-bg;
+
+    .theme-dark & {
+      color: $dm-body-color;
+      background-color: $dm-nav-pills-link-active-bg;
+    }
+  }
+}
+
+
+//
+// Justified variants
+//
+
+.nav-fill {
+
+  >.nav-link,
+  .nav-item {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+}
+
+.nav-justified {
+
+  >.nav-link,
+  .nav-item {
+    flex-basis: 0;
+    flex-grow: 1;
+    text-align: center;
+  }
+}
+
+
+// Tabbable tabs
+//
+// Hide tabbable panes to start, show them when `.active`
+
+.tab-content {
+  >.tab-pane {
+    display: none;
+
+    .list-unstyled {
+      line-height: 2;
+    }
+  }
+
+  >.active {
+    display: block;
+    padding: 0;
+  }
+}
+
+
+/* Space Theme */
+@include media-breakpoint-down(md) {
+  .main-nav-container-overflow {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+}
+
+
+.main-nav-container {
+  .header-link-item {
+    padding: .65rem 0;
+    margin-right: 1rem;
+  }
+}
+
+
+
+.nav-column {
+  margin: 0;
+  padding: 0 20px 0 0;
+
+  border-right: 1px solid $border-color;
+
+  .theme-dark & {
+    border-right: 1px solid $dm-border-color;
+  }
+
+  @include media-breakpoint-between(xs, sm) {
+    padding: 0;
+    border-right: none;
+  }
+
+  li {
+    a {
+      padding: 16px 0;
+
+      display: block;
+      border-bottom: 1px solid $border-color;
+
+      color: $body-color;
+      font-weight: $font-weight-medium;
+
+      position: relative;
+
+      .theme-dark & {
+        border-bottom: 1px solid $dm-border-color;
+        color: $dm-body-color;
+      }
+
+      @include media-breakpoint-between(xs, sm) {
+        padding: 16px;
+      }
+
+      &.active,
+      &:hover {
+        color: $link-color;
+        border-color: $link-color;
+
+        .theme-dark & {
+          border-color: $dm-link-color;
+          color: $dm-link-color;
+        }
+
+        &:before {
+          content: '';
+          background-color: rgba($link-color, .05);
+
+          position: absolute;
+          z-index: -1;
+          width: calc(100% + 12px);
+          top: 4px;
+          bottom: 4px;
+          left: -6px;
+          border-radius: $btn-border-radius;
+
+          .theme-dark & {
+            background-color: $dm-gray-400;
+          }
+        }
+      }
+
+      &:before {
+        display: none;
+      }
+
+    }
+  }
+}
+
+// CSS like moremenu but with less classes
+.rui-tabs {
+  .nav-item a {
+    display: flex;
+    align-items: center;
+
+    &.focus,
+    &:focus {
+      position: relative;
+    }
+
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    border-radius: $btn-border-radius-lg;
+  }
+
+  .nav-tabs {
+    background-color: $gray-100;
+    border-radius: $btn-border-radius;
+
+    @include media-breakpoint-up(lg) {
+      margin-left: 0;
+    }
+
+    @include media-breakpoint-between(xs, md) {
+      margin: 0 auto;
+    }
+
+    @include media-breakpoint-up(md) {
+      width: max-content;
+      max-width: 100%;
+    }
+
+    @include media-breakpoint-between(xs, sm) {
+      width: 100%;
+      padding: 10px;
+    }
+
+    .theme-dark & {
+      background-color: #06090c;
+    }
+
+    a {
+      padding: 7px 16px;
+
+      display: inline-flex;
+      position: relative;
+
+      border-radius: $btn-border-radius;
+
+      font-weight: $font-weight-medium;
+      color: $gray-900;
+
+      transition: $transition-base;
+
+      .theme-dark & {
+        color: $dm-gray-900;
+      }
+
+      &:hover {
+        background-color: $nav-tabs-link-hover-bg;
+        color: $nav-tabs-link-hover-color;
+        text-decoration: none;
+
+        .theme-dark & {
+          color: #fff;
+        }
+
+        &:before {
+          opacity: 1;
+        }
+      }
+
+      &.active {
+        &::before {
+          opacity: 0;
+        }
+      }
+
+      &.disabled {
+        color: $nav-link-disabled-color;
+        opacity: 0.4;
+
+        .theme-dark & {
+          color: $dm-nav-link-disabled-color;
+        }
+
+      }
+    }
+
+  }
+}

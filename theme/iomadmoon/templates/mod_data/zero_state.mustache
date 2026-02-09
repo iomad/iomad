@@ -1,0 +1,98 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_data/zero_state
+
+    Form containing all database presets displayed within a table.
+
+    Context variables required for this template:
+    * noitemsimgurl - The image url.
+    * importpresetbutton stdClass - Import preset single button to be rendered
+    * createfieldbutton stdClass - Create a field action menu to be rendered
+    * usepresetbutton stdClass - Use a preset single button to be rendered
+
+    Example context (json):
+    {
+        "noitemsimgurl": "https://moodlesite/theme/image.php/boost/mod_data/1535727318/nofields",
+        "title": "Title",
+        "importpresetbutton": {
+            "id" : "id1",
+            "method" : "get",
+            "url" : "#",
+            "primary" : false,
+            "tooltip" : "This is a tooltip",
+            "label" : "Button1",
+            "attributes": [
+                {
+                  "name": "data-attribute",
+                  "value": "no"
+                }
+            ]
+        },
+        "createfieldbutton": {
+            "id" : "id2",
+            "method" : "get",
+            "url" : "#",
+            "primary" : true,
+            "tooltip" : "This is a tooltip",
+            "label" : "Button2",
+            "attributes": [
+                {
+                  "name": "data-attribute",
+                  "value": "yeah"
+                }
+            ]
+        },
+        "usepresetbutton": {
+            "id" : "id3",
+            "method" : "get",
+            "url" : "#",
+            "primary" : false,
+            "tooltip" : "This is a tooltip",
+            "label" : "Button3",
+            "attributes": [
+                {
+                  "name": "data-attribute",
+                  "value": "perhaps"
+                }
+            ]
+        }
+    }
+}}
+<div class="mt-4" data-region="empty-message">
+    <hr />
+    <h3 class="h3 mt-4 mb-0">{{{ title }}}</h5>
+    {{#intro}}
+        <p class="mt-1 mb-4">{{{ intro }}}</p>
+    {{/intro}}
+    <hr />
+    <div class="mt-5 mb-0 d-flex flex-wrap w-100" id="action_bar">
+        {{#createfieldbutton}}
+            {{>core/action_menu}}
+        {{/createfieldbutton}}
+        <div class="w-100 mt-3">
+            {{#importpresetbutton}}
+            {{>core/single_button}}
+            {{/importpresetbutton}}
+            {{#usepresetbutton}}
+                {{>core/single_button}}
+            {{/usepresetbutton}}
+        </div>
+    </div>
+{{#js}}
+    require(['mod_data/importpresets'], function(importPresetsModal) {
+        importPresetsModal.init();
+    });
+{{/js}}
+</div>

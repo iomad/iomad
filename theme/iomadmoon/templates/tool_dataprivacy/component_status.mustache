@@ -1,0 +1,108 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more comments.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tool_dataprivacy/component_status
+
+    Data registry main page.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * none
+
+    Example context (json):
+    {
+        "compliant" : "True",
+        "raw_component" : "core_comment",
+        "component" : "Core comment",
+        "external" : "True",
+        "metadata" : {
+            "name" : "comments",
+            "type" : "database_table",
+            "summary" : "Stores comments of users",
+            "fields" : {
+                "field_name" : "content",
+                "field_summary" : "Stores the text of the content."
+            }
+        }
+    }
+}}
+
+<div class="list-group-item py-1">
+    <div class="row">
+        {{#compliant}}
+            <a class="component-expand" data-component="{{raw_component}}" href='#'>
+            <h5 class="d-flex align-items-center py-3 pl-5 my-0" id="{{raw_component}}">{{#pix}}t/collapsed, moodle, {{#str}}expandplugin, tool_dataprivacy{{/str}}{{/pix}}<span class="pl-1">{{component}}</span></h5>
+            </a>
+        {{/compliant}}
+        {{^compliant}}
+            <h5 class="d-inline pl-6 " id="{{raw_component}}">{{component}}</h5>
+            <span>{{#pix}}i/risk_xss, moodle, {{#str}}requiresattention, tool_dataprivacy{{/str}}{{/pix}}</span>
+        {{/compliant}}
+        {{#external}}
+            <span class="mx-2 badge badge-sm badge-info">{{#str}}external, tool_dataprivacy{{/str}}</span>
+        {{/external}}
+        {{#deprecated}}
+            <span class="mx-2 badge badge-sm badge-warning">{{#str}}deprecated, tool_dataprivacy{{/str}}</span>
+        {{/deprecated}}
+        {{#userlistnoncompliance}}
+            <span class="mx-2 badge badge-sm badge-warning">{{#str}}userlistnoncompliant, tool_dataprivacy{{/str}}</span>
+        {{/userlistnoncompliance}}
+    </div>
+
+    {{#compliant}}
+        <div class="hide" data-section="{{raw_component}}" aria-expanded="false" role="contentinfo">
+            {{#metadata}}
+                <div class="pl-6 py-3">
+                    <dl class="p-0 m-0">
+                        <dt>
+                            {{#link}}
+                                <a href="#{{name}}"><strong style="word-wrap:break-word">{{name}}</strong></a>
+                            {{/link}}
+                            {{^link}}
+                                <strong style="word-wrap:break-word">{{name}}</strong>
+                            {{/link}}
+                            <div class="small text-muted" style="word-wrap:break-word">{{type}}</div>
+                        </dt>
+                        <dd class="small mt-2">{{summary}}</dd>
+                    </dl>
+
+                    {{#fields}}
+                    <dl class="py-3 m-0">
+                        <dt style="word-wrap:break-word">{{field_name}}</dt>
+                        <dd class="small mt-2">{{field_summary}}</dd>
+                    </dl>
+                    {{/fields}}
+
+                </div>
+            {{/metadata}}
+            {{#nullprovider}}
+                <div class="pl-6">
+                    <div class="row">
+                        <div class="pb-2 pl-2">
+                            {{nullprovider}}
+                        </div>
+                    </div>
+                </div>
+            {{/nullprovider}}
+        </div>
+    {{/compliant}}
+</div>

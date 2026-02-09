@@ -1,0 +1,442 @@
+/* user.less */
+.userprofile .fullprofilelink {
+    text-align: center;
+    margin: 10px;
+}
+
+.userprofile .description {
+    margin-top: $page-padding-global;
+    margin-bottom: $page-padding-global;
+}
+
+.page-context-header + .profile_tree {
+    margin-top: 20px;
+}
+
+.userprofile .profile_tree {
+    column-count: 2;
+    grid-gap: 1rem;
+ 
+    @include media-breakpoint-up(xl) {
+        column-count: 3;
+    }
+
+    @include media-breakpoint-between(xs,sm) {
+        column-count: 1;
+    }
+}
+
+.userprofile dl.list {
+    // Copied from dl.row.
+    > dd + dt {
+        clear: left;
+    }
+}
+
+.user-box {
+    margin: 8px;
+    width: 115px;
+    height: 160px;
+    text-align: center;
+    float: left;
+    clear: none;
+}
+
+.profile_tree .node_category {
+    ul {
+        margin: 0;
+        list-style: none;
+        padding-left: 0;
+    }
+
+    dl {
+        margin: .25rem 0;
+    }
+
+    dd {
+        font-size: $font-size-sm;
+        color: $body-color-secondary;
+
+        .theme-dark & {
+            color: $dm-body-color-secondary;
+        }
+    }
+
+    li {
+        padding: .5rem 0;
+        border-bottom: 1px solid $border-color;
+
+        .theme-dark & {
+            border-color: $dm-border-color;
+        }
+
+        &:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        a {
+            font-weight: $font-weight-medium;
+
+            &:hover {
+                color: $link-hover-color;
+                text-decoration: none;
+
+                &:after {
+                    display: none;
+                }
+
+                .theme-dark & {
+                    color: $dm-link-hover-color;
+                }
+            }
+
+            .theme-dark & {
+                color: $dm-link-color;
+            }
+        }
+    }
+
+    .editprofile,
+    .viewmore {
+        text-align: right;
+    }
+}
+
+.ajax-contact-button {
+    box-sizing: border-box;
+    position: relative;
+
+    &.loading {
+        .loading-icon {
+            display: block;
+        }
+    }
+
+    .loading-icon {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.7);
+
+        .icon {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .userprofile .profile_tree {
+        /** Display the profile on one column on phones@mixin  */
+        column-count: 1;
+    }
+}
+
+.userlist #showall {
+    margin: 10px 0;
+}
+
+.userlist .buttons {
+    text-align: center;
+}
+
+.userlist .buttons label {
+    padding: 0 3px;
+}
+
+
+.userlist {
+    table.controls {
+        width: 100%;
+
+        tr {
+            vertical-align: top;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .groupselector {
+            margin-bottom: 0;
+            margin-top: 0;
+
+            label {
+                display: block;
+            }
+        }
+    }
+}
+
+.userinfobox {
+    width: 100%;
+    border: 1px solid;
+    border-collapse: separate;
+    padding: 10px;
+}
+
+.userinfobox .left,
+.userinfobox .side {
+    width: 100px;
+    vertical-align: top;
+}
+
+
+// Global
+.userpicture {
+    width: 40px;
+    height: 40px;
+    border-radius: $btn-border-radius;
+}
+
+.userinfobox .userpicture {
+    width: 100px;
+    height: 100px;
+    border-radius: 100px;
+}
+
+.userinfobox .content {
+    vertical-align: top;
+}
+
+.userinfobox .links {
+    width: 100px;
+    padding: 5px;
+    vertical-align: bottom;
+}
+
+.userinfobox .links a {
+    display: block;
+}
+
+.userinfobox .list td {
+    padding: 3px;
+}
+
+.userinfobox .username {
+    padding-bottom: 20px;
+    font-weight: $font-weight-bold;
+    text-decoration: none;
+}
+
+.userinfobox td.label {
+    text-align: right;
+    white-space: nowrap;
+    vertical-align: top;
+    font-weight: $font-weight-bold;
+}
+
+.rui-group-edit {
+    position: relative;
+}
+
+.rui-group-image {
+    display: block;
+    float: left;
+    margin-right: 1em;
+
+    .rui-grouppicture {
+        border-radius: $btn-border-radius-xl;
+    }
+}
+
+#page-group-overview {
+    .main-content {
+        .singleselect {
+            label {
+                &:first-of-type {
+                    margin-left: 2rem;
+                }
+            }
+        }
+
+        .generaltable {
+            margin: 1rem 0;
+        }
+
+        .groupdisplay + h3,
+        .singleselect + h3,
+        .generaltable + h3 {
+            margin: 2rem 0;
+        }
+    }
+}
+
+
+#page-group-overview {
+    .yui3-overlay-content.yui3-widget-stdmod {
+        max-width: 600px;
+        padding: 1rem;
+        border-radius: $btn-border-radius;
+        background-color: var(--primary-color-100);
+        font-size: $font-size-sm;
+    }
+}
+
+
+.course-participation #showall {
+    text-align: center;
+    margin: 10px 0;
+}
+
+#user-policy .noticebox {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 10px;
+    width: 80%;
+    height: 250px;
+}
+
+#user-policy #policyframe {
+    width: 100%;
+    height: 100%;
+}
+
+.iplookup #map {
+    margin: auto;
+}
+
+.userselector select {
+    width: 100%;
+}
+
+.userselector div label {
+    margin-right: 0.3em;
+}
+/* Next style does not work in all browsers but looks nicer when it does */
+.userselector .userselector-infobelow {
+    font-size: 0.8em;
+}
+
+#userselector_options p {
+    margin: 0.2em 0;
+    text-align: left;
+}
+/** user full profile */
+#page-user-profile .messagebox {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+/** user course profile */
+#page-course-view-weeks .messagebox {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+// Remove buttons
+#page-user-profile {
+    #settingsMenu {
+        .singlebutton {
+            display: none;
+        }
+    }
+}
+
+.profileeditor {
+    > .singleselect {
+        margin: 0 0.5em 0 0;
+    }
+
+    > .singlebutton {
+        display: inline-block;
+        margin: 0 0 0 0.5em;
+
+        div,
+        input {
+            margin: 0;
+        }
+    }
+}
+
+// Remove the little cog from participants page because we are putting a cog menu there.
+.userlist h3 .action-icon {
+    display: none;
+}
+
+#page-enrol-users .popover {
+    max-width: none;
+}
+
+.user-enroller-panel {
+    width: 600px;
+}
+
+[data-filterverbfor],
+[data-filterregion="filter"]:last-child [data-filterregion="joinadverb"] {
+    display: none;
+}
+
+[data-filterverb="0"] [data-filterverbfor="0"],
+[data-filterverb="1"] [data-filterverbfor="1"],
+[data-filterverb="2"] [data-filterverbfor="2"] {
+    display: inline-block;
+}
+
+[data-region="participant-count"] {
+    display: inline-flex;
+    margin: 1rem auto;
+    padding: $badge-padding-y $badge-padding-x;
+
+    background-color: $gray-100;
+
+    @include font-size($badge-font-size);
+    font-weight: $badge-font-weight;
+    color: $body-color;
+    text-align: left;
+    border-radius: $btn-border-radius;
+
+    .theme-dark & {
+        background-color: $dm-gray-100;
+        color: $dm-gray-700;
+    }
+}
+
+// Participants filter
+.filter-group {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid $border-color;
+    border-radius: $btn-border-radius;
+
+    .theme-dark & {
+        border-color: $dm-border-color;
+    }
+
+    // [data-filterregion="filters"] {
+    //     margin-top: 3px;
+    //     padding: .35rem;
+    //     background-color: transparent;
+    //     border: 2px solid $border-color;
+    //     border-radius: $btn-border-radius;
+
+    //     .theme-dark & {
+    //         border-color: $dm-border-color;
+    //     }
+    // }
+
+    @include media-breakpoint-only(sm) {
+      .btn {
+        width: 100%;
+      }
+
+      [data-filteraction="remove"] {
+        margin: 10px auto 7px;
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+  }
+
+  #user-result-listbox {
+    margin: 0!important;
+    padding: 0!important;
+  }

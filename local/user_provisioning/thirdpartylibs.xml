@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<libraries>
+    <library>
+        <location>.extlib/OAuth2</location>
+        <name>Oauth2</name>
+        <version>1.0</version>
+        <license>MIT</license>
+        <licenseversion></licenseversion>
+    </library>
+    <library>
+        <location>scim/lib/AltoRouter.php</location>
+        <name>AltoRouter</name>
+        <version>1.0</version>
+        <license>MIT</license>
+        <licenseversion></licenseversion>
+    </library>
+</libraries>

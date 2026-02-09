@@ -1,0 +1,53 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template gradereport_singleview/page_toggler
+
+    The small selector at the top right of the page to switch between zero states.
+
+    Example context (json):
+    {
+        "displaylabel": true,
+        "userzerolink": "http://foo.bar/gradereport/?userid=25",
+        "userselectactive": "false",
+        "gradepagepage": "http://foo.bar/gradereport/?userid=25",
+        "gradeselectactive": "true"
+    }
+}}
+<div class="page-toggler d-block d-sm-flex text-nowrap">
+    {{#displaylabel}}
+        <label class="my-auto mr-3 label small">{{#str}}viewby, gradereport_singleview{{/str}}</label>
+    {{/displaylabel}}
+    <div class="btn-group align-items-center" role="group" aria-label="{{#str}}ariareporttype, gradereport_singleview{{/str}}">
+        <a href="{{userzerolink}}"
+           role="button"
+           class="btn btn-sm {{^userselectactive}}btn-outline-secondary{{/userselectactive}} {{#userselectactive}}btn-secondary active{{/userselectactive}}"
+           {{#userselectactive}}aria-pressed="true"{{/userselectactive}}
+           {{^userselectactive}}aria-pressed="false"{{/userselectactive}}
+        >
+            {{#str}}users{{/str}}
+        </a>
+        <a href="{{gradezerolink}}"
+           role="button"
+           class="btn btn-sm {{^gradeselectactive}}btn-outline-secondary{{/gradeselectactive}} {{#gradeselectactive}}btn-secondary active{{/gradeselectactive}}"
+           {{#gradeselectactive}}aria-pressed="true"{{/gradeselectactive}}
+           {{^gradeselectactive}}aria-pressed="false"{{/gradeselectactive}}
+        >
+            {{#str}}gradeitems, grades{{/str}}
+        </a>
+    </div>
+</div>

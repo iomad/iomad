@@ -1,0 +1,36 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core/filemanager_processexistingfilemultiple
+
+    This template renders the popup dialogue window asking for action when file with the same name already exists
+     * (multiple-file version).
+
+    Example context (json):
+    {}
+}}
+<div class="file-picker fp-dlg px-3">
+    <p class="fp-dlg-text text-left"></p>
+    <a class="fp-dlg-butoverwrite btn btn-primary w-100 mb-1 mx-0" href="#">{{#str}}overwrite, repository{{/str}}</a>
+    <a class="fp-dlg-butrename btn btn-outline-secondary w-100 mb-1 mx-0" href="#"></a>
+    <a class="fp-dlg-butcancel btn btn-outline-danger w-100 mb-1 mx-0" href="#">{{#str}}cancel{{/str}}</a>
+
+    <div class="row mt-3 px-3 pt-3 border-top justify-content-between">
+        <a class="col fp-dlg-butoverwriteall btn btn-outline-primary" href="#">{{#str}}overwriteall, repository{{/str}}</a>
+        <a class="col fp-dlg-butrenameall btn btn-outline-secondary" href="#">{{#str}}renameall, repository{{/str}}</a>
+    </div>
+</div>

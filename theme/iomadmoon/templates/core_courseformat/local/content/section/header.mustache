@@ -1,0 +1,98 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_courseformat/local/content/section/header
+
+    Displays a course section header.
+
+    Example context (json):
+    {
+        "id": 123,
+        "name": "Section title",
+        "title": "<a href=\"http://moodle/course/view.php?id=5#section-0\">Section title</a>",
+        "url": "#",
+        "headerdisplaymultipage": true,
+        "sectionbulk": true,
+        "editing": 0
+    }
+}}
+{{#sectionbulk}}
+{{$ core_courseformat/local/content/section/bulkselect }}
+    {{> core_courseformat/local/content/section/bulkselect }}
+{{/ core_courseformat/local/content/section/bulkselect }}
+{{/sectionbulk}}
+{{#headerdisplaymultipage}}
+    <h3 id="sectionid-{{id}}-title" class="rui-course-format-card sectionname">
+        {{{title}}}
+    </h3>
+{{/headerdisplaymultipage}}
+{{^headerdisplaymultipage}}
+    {{#sitehome}}
+        <h2 id="sectionid-{{id}}-title" class="sectionname">
+            {{{title}}}
+        </h2>
+    {{/sitehome}}
+    {{^sitehome}}
+        <div class="rui-course-header-btn d-flex align-items-start position-relative col">
+
+            {{#editing}}
+            <h3 class="sectionname course-content-item d-flex align-self-stretch align-items-center mb-0 pl-2 w-100"
+                id="sectionid-{{id}}-title" data-for="section_title" data-id="{{id}}" data-number="{{num}}">
+                {{{title}}}
+            </h3>
+            {{/editing}}
+
+            <a role="button" data-toggle="collapse"
+                data-toggle="collapse"
+                data-for="sectiontoggler"
+               href="#coursecontentcollapse{{num}}"
+               id="collapssesection{{num}}"
+               aria-expanded="{{^contentcollapsed}}true{{/contentcollapsed}}{{#contentcollapsed}}false{{/contentcollapsed}}"
+               aria-controls="coursecontentcollapse{{num}}"
+               class="rui-course-header-btn-icon icons-collapse-expand justify-content-center
+                   {{^editing}} stretched-link {{/editing}}
+                   {{#contentcollapsed}} collapsed {{/contentcollapsed}}"
+               aria-label="{{name}}">
+                    
+                    {{^editing}}
+                    <h3 class="sectionname course-content-item d-flex align-self-stretch align-items-center mb-0"
+                        id="sectionid-{{id}}-title" data-for="section_title" data-id="{{id}}" data-number="{{num}}">
+                        {{{title}}}
+                    </h3>
+                    {{/editing}}
+
+                    <span class="ml-auto icon expanded-icon" title="{{#str}} collapse, core {{/str}}">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 15.25L16.25 9.75H7.75L12 15.25Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span class="ml-auto icon collapsed-icon" title="{{#str}} expand, core {{/str}}">
+                        <span class="dir-rtl-hide">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M14.25 12L8.75 7.75V16.25L14.25 12Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </span>
+                        <span class="dir-ltr-hide">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8.75 12L14.25 7.75V16.25L8.75 12Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </span>
+                    </span>
+            </a>
+        </div>
+    {{/sitehome}}
+{{/headerdisplaymultipage}}

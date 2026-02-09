@@ -1,0 +1,1004 @@
+//---- IOMAD
+div.rui-iomadlink-container,
+.iomadlink_container {
+    padding: 0 !important;
+    border: 0 !important;
+    background-color: transparent !important;
+}
+
+.rui-iomadlink-container,
+.iomadlink_container {
+    padding: 0 !important;
+    background-color: transparent !important;
+    border: 0 !important;
+
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(calc(242px - 40px), 1fr));
+    grid-template-rows: masonry;
+}
+
+.iomadlink_container>a,
+.rui-iomadlink-container>a {
+    margin: 0;
+    min-height: 115px;
+    height: 100%;
+    display: grid;
+    opacity: 1 !important;
+
+    &:before {
+        display: none;
+    }
+}
+
+.iomadlink_container {
+    background-color: transparent !important;
+    border: 0 !important;
+    padding: 0 !important;
+}
+
+div.iomadlink,
+div.iomadlinkreports {
+    width: 100%;
+
+    padding: 20px;
+
+    background: #FCFCFC;
+    border: 1px solid #C7C6CF;
+    border-radius: $btn-border-radius;
+
+    box-shadow: none;
+
+    transition: $transition-base;
+
+    .actiondescription {
+        color: $body-color;
+        font-size: $font-size-sm;
+        font-weight: $font-weight-bold;
+    }
+
+    .fa {
+        color: $body-color;
+        opacity: .6;
+        transition: $transition-base;
+    }
+
+    &:hover {
+        border-color: $body-color;
+
+        .fa {
+            opacity: 1;
+        }
+    }
+
+    .theme-dark & {
+        filter: invert(1);
+        mix-blend-mode: exclusion;
+    }
+}
+
+.iomadlink {
+    .iomadicon {
+        width: 60px;
+        height: 60px;
+        position: relative;
+        margin: 0 auto 10px;
+        font-size: 36px;
+
+        .fa-action {
+            width: 20px;
+            height: 20px;
+            border-radius: 20px;
+
+            position: absolute;
+            top: -5px;
+            right: -5px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 4px;
+            font-size: 16px;
+            background-color: $white;
+            color: $body-color-light;
+        }
+    }
+}
+
+.iomadlink_container .iomadlink .iomadicon .fa-topic,
+.iomadlink_container .iomadlinkreports .iomadicon .fa-topic {
+    color: $body-color;
+}
+
+#blocks-dashboardmiddleblock .nav-item {
+    i {
+        display: none;
+    }
+}
+
+.dep_tree {
+    margin: 0 !important;
+    padding: 0;
+    background-color: $container-bg;
+    border: none;
+
+    .theme-dark & {
+        background-color: $dm-container-bg;
+    }
+
+    .tree_item {
+        padding: 16px;
+        margin: 10px 0 !important;
+
+        background-color: $container-bg;
+        background-position: calc(100% - 20px);
+        border-radius: $btn-border-radius;
+        border: 1px solid $border-color;
+
+        .theme-dark & {
+            background-color: $dm-container-bg;
+            border-color: $dm-border-color;
+        }
+    }
+}
+
+
+// Progress bar block
+.block_iomad_progress .iomad_progressBarCell img {
+    width: 12px;
+    height: 12px;
+}
+
+
+#page-blocks-iomad_company_admin-iomad_courses_form .reporttablecontrolscontrol {
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+
+    margin-bottom: 30px;
+}
+
+.block_iomad_progress .iomad_progressEventInfo {
+    white-space: normal;
+
+    .dropdown-item-text {
+        font-size: $font-size-xs;
+        font-weight: $font-weight-medium;
+        color: $body-color;
+    }
+
+    .rui-icon-container {
+        .icon:not(.moduleIcon) {
+            width: 9px;
+            height: 9px;
+        }
+    }
+}
+
+.iomad_progressBarHeader {
+    .icon {
+        width: 9px;
+        height: 9px;
+    }
+}
+
+// URL: /iomad/admin/tool/iomadmerge/index.php
+.merge_progress {
+    font-size: $font-size-xs;
+
+    .sep {
+        margin: 0 10px;
+    }
+}
+
+// URL: /blocks/iomad_company_admin/company_capabilities.php
+.rui-iomadtable {
+    div {
+        padding: 5px;
+        display: inline-flex;
+        align-items: center;
+    }
+}
+
+
+.rui-iomadtable--title {
+    font-size: $font-size-base;
+    font-weight: $font-weight-bold;
+    display: flex;
+    margin-bottom: 5px;
+}
+
+.rui-iomadtable--desc {
+    font-size: $font-size-xs;
+    color: $body-color-secondary;
+}
+
+.rui-iomadtablebox {
+    width: 100%;
+    padding: 0 !important;
+    background-color: $container-bg;
+    border: 1px solid $border-color;
+    border-radius: $btn-border-radius;
+    overflow: hidden;
+    display: flex;
+    // align-items: center;
+}
+
+.rui-iomadtablebox--content {
+    padding: 10px 20px;
+}
+
+.rui-iomadtablebox--footer {
+    padding: 5px 20px;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: $gray-100;
+}
+
+// Block: Company selector
+.block_iomad_company_selector {
+    .custom-select {
+        margin: 5px 0 0 !important;
+    }
+}
+
+.reporttablecontrolscontrol>#iomad_company_selector {
+    padding-top: 0;
+}
+
+// URL: blocks/iomad_company_admin/company_managers_form.php
+.switch {
+    min-width: 32px;
+    width: 32px;
+    height: 20px;
+    margin: 0;
+}
+
+.slider {
+    background-color: #EEE;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 12px;
+    width: 12px;
+    left: 4px;
+    bottom: 4px;
+    background-color: $white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked+.slider {
+    background-color: #5FB86B;
+}
+
+input:focus+.slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked+.slider:before {
+    -webkit-transform: translateX(12px);
+    -ms-transform: translateX(12px);
+    transform: translateX(12px);
+}
+
+#ReportTable {
+    .lastcol {
+
+        .col-md-3,
+        .col-md-9 {
+            padding: 0;
+            text-align: left !important;
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        label {
+            margin-bottom: 5px;
+        }
+    }
+}
+
+.iomadclear+.mform {
+    width: 100%;
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+// URL: iomad/local/iomad_learningpath/courselist.php?id=1
+.pathbox .courselink {
+    position: relative;
+}
+
+.pathcourselist {
+    margin: 0 5px;
+    display: inline-flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+
+    flex-wrap: wrap;
+
+    li {
+        list-style: none;
+        margin: 0 10px 10px 10px;
+        width: 100%;
+    }
+}
+
+.pathcourselist,
+#prospectivelist {
+    width: 100%;
+    padding: 15px 10px 5px;
+    border: 1px solid $border-color;
+    border-radius: $btn-border-radius;
+}
+
+#page-local-iomad_learningpath-editgroup {
+    .mform {
+        .text-md-right {
+            padding: 0 0 5px 0 !important;
+            text-align: left !important;
+        }
+    }
+}
+
+
+.addremovetable {
+    td {
+        vertical-align: top;
+    }
+}
+
+
+// Checkboxes
+:root label.checkbox-bootstrap input[type=checkbox]+span.checkbox-placeholder {
+    width: 14px;
+    height: 14px;
+    border: 1px solid;
+    border-radius: 3px;
+    /*checkbox border color*/
+    border-color: var(--main-theme-color);
+    display: inline-block;
+    cursor: pointer;
+    margin: 0 7px 0 -20px;
+    vertical-align: middle;
+    text-align: center;
+}
+
+:root label.checkbox-bootstrap input[type=checkbox]:checked+span.checkbox-placeholder {
+    background: var(--main-theme-color);
+    border-color: var(--main-theme-color);
+}
+
+:root label.checkbox-bootstrap input[type=checkbox]:checked+span.checkbox-placeholder:before {
+    display: inline-block;
+    position: relative;
+    vertical-align: text-top;
+    width: 5px;
+    height: 9px;
+    /*checkmark arrow color*/
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    /*can be done with post css autoprefixer*/
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+    transform: rotate(45deg);
+    content: "";
+}
+
+:root label.checkbox-bootstrap input[type=checkbox]:checked:disabled+span.checkbox-placeholder {
+    background: #d6d6d6;
+    border-color: $gray-900;
+
+    &:hover {
+        border-color: var(--main-theme-color);
+    }
+}
+
+:root label.checkbox-bootstrap.checkbox-lg input[type=checkbox]+span.checkbox-placeholder {
+    width: 18px;
+    height: 18px;
+    border: 2px solid;
+    border-radius: 5px;
+    /*checkbox border color*/
+    border-color: var(--main-theme-color);
+}
+
+:root label.checkbox-bootstrap.checkbox-lg input[type=checkbox]:checked+span.checkbox-placeholder:before {
+    width: 6px;
+    height: 11px;
+    /*checkmark arrow color*/
+    border: solid white;
+    border-width: 0 3px 3px 0;
+}
+
+#page-local-report_user_license_allocations-index .mform fieldset {
+    width: 100%;
+}
+
+// My Overview mods
+.box-wrapper .box {
+    flex-flow: column nowrap;
+    align-items: stretch;
+}
+
+// Dropdowns mods
+.mySelectOptions {}
+
+#page-local-report_completion_monthly-index #iomad_course_selector select,
+#page-local-report_completion_monthly-index .felement {
+    background-color: transparent;
+}
+
+// IOMAD Custom Blocks
+.search-mainBlock {
+    width: 100%;
+
+    display: inline-flex;
+    justify-content: space-between;
+
+
+    .search_bar {
+        margin: .5rem 0;
+        position: relative;
+
+        flex-basis: 0%;
+        flex-grow: 1;
+        max-width: 100%;
+        margin-right: 24px;
+
+        input {
+            padding-left: 38px !important;
+            border-radius: 30px;
+        }
+
+        .fa-search {
+            position: absolute;
+            top: 12px;
+
+            font-size: 12px;
+            color: #DDDCE5;
+        }
+    }
+
+    .dropdown-block {
+        display: inline-flex;
+        align-items: center;
+
+        .form-group {
+            margin: .25rem .5rem .25rem 0;
+        }
+    }
+}
+
+.sort-Icon {
+    display: inline-flex;
+    align-items: center;
+}
+
+
+.synccoursesubmit {
+    background-color: var(--main-theme-color);
+    color: $white;
+    border: var(--main-theme-color);
+    border-radius: 30px !important;
+    padding: 8px 10px !important;
+}
+
+.block {
+    ul {
+        li.button-item {
+            flex: 1;
+            text-align: end;
+        }
+    }
+}
+
+// block_mycertificates
+.block_mycertificates {
+    .card-text a {
+        display: flex;
+        font-weight: $font-weight-bold;
+        color: $body-color;
+    }
+
+    h6 {
+        font-weight: $font-weight-medium;
+        color: $body-color-light;
+        margin-left: 27px;
+    }
+
+    .card-block {
+        .card-body {
+            padding: 0;
+        }
+    }
+
+    .rui-icon-container {
+        margin-right: 7px;
+    }
+
+    .view-all-btn {
+        margin: 0 27px 10px;
+    }
+}
+
+// IOMAD block, course cards
+.box-wrapper {
+    padding-top: 20px;
+    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(274px, 1fr));
+    gap: 24px;
+    display: grid;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.box-wrapper .box {
+    width: auto;
+}
+
+.box-wrapper .box .box-footer {
+    background-color: transparent;
+    padding: 0 10px 10px 10px !important;
+}
+
+// My courses Block
+#page-my-index .dropdown-block .form-group select.form-select {
+    padding: 0.375rem 1rem !important;
+}
+
+// Progressbar Block
+.progress {
+    height: 16px;
+}
+
+
+// radio-button start
+.radio-item {
+    display: inline-block;
+    position: relative;
+    padding: 0 10px !important;
+
+    input[type='radio'] {
+        display: none;
+    }
+
+    label {
+        color: #666;
+        font-weight: normal;
+        font-size: .85rem;
+
+        &:before {
+            content: " ";
+            display: inline-block;
+            position: relative;
+            top: 4px;
+            margin: 0 5px 0 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 11px;
+            border: 2px solid #ef7f31;
+            background-color: transparent;
+        }
+    }
+
+    input[type=radio] {
+        &:checked+label {
+            &:after {
+                border-radius: 11px;
+                width: 8px;
+                height: 8px;
+                position: absolute;
+                top: 8px;
+                left: 14px;
+                content: " ";
+                display: block;
+                background: #ef7f31;
+            }
+        }
+    }
+}
+
+// radio-button End
+
+
+// searchform-block
+.searchform {
+    fieldset {
+        position: relative;
+
+        input {
+            padding-left: 40px;
+        }
+
+        .fa-search {
+            position: absolute;
+            top: 17px;
+            left: 15px;
+        }
+    }
+}
+
+.search-mainBlock {
+    display: flex;
+
+    @media only screen and (max-device-width: 580px) {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+.search_bar {
+    position: relative;
+    max-width: 250px;
+    margin-top: 26px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+
+    i {
+        position: absolute;
+        top: 12px;
+        left: 9px;
+        color: #dddce5;
+    }
+
+    input {
+        padding: 0.5rem 1rem !important;
+        padding-left: 26px !important;
+        border-radius: 30px !important;
+        border: 1px solid #DDDCE5 !important;
+        box-shadow: none !important;
+    }
+}
+
+.dropdown-block {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 26px;
+    margin-left: 10px;
+    margin-top: 0;
+
+    @media only screen and (max-device-width: 580px) {
+        margin-left: 0;
+    }
+
+    .form-group {
+        margin-right: 10px;
+        margin-bottom: 0;
+        margin-bottom: 0;
+        margin-top: 26px;
+
+        select.form-select {
+            border-radius: 30px;
+            padding: 0 5px;
+            height: 35px;
+        }
+    }
+}
+
+.selectBox {
+    position: relative;
+
+    select {
+        width: 100%;
+    }
+}
+
+.selectBox select {
+    width: 100%;
+}
+
+.overSelect {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.mySelectOptions {
+    display: none;
+    max-height: 150px;
+    overflow-y: scroll;
+    border: 0.5px #ededed solid !important;
+    background-color: #ffffff;
+    overflow-y: auto;
+    background-color: #2c2b36 !important;
+    color: #fff;
+    border-radius: 10px;
+    padding: 10px;
+    left: auto;
+    right: 0;
+    position: absolute;
+    z-index: 9;
+    padding: 10px;
+    @include thin-scrolls($white);
+
+    div {
+        display: block;
+        align-items: center;
+        width: 100%;
+    }
+
+    label {
+        margin: 0;
+        display: block;
+        font-weight: normal;
+        display: block;
+        white-space: nowrap;
+        min-height: 1.2em;
+        background-color: #ffffff00;
+        padding: 0 2.25rem 0 .75rem;
+
+        &:hover {
+            background-color: transparent;
+        }
+    }
+}
+
+.multiselect {
+    width: 100%;
+    position: relative;
+}
+
+// searchform-block end
+
+// learningpath-block
+.learningpath-block {
+    .img-txt-block {
+        display: flex;
+    }
+
+    .img-block {
+        margin-right: 20px;
+    }
+
+    .learningpath-txt-details {
+        .learningpath-title {
+            display: flex;
+
+            h3 {
+                flex: 1;
+                font-size:
+                    20px;
+                font-weight: 700;
+                color: #2C2B36;
+                margin-bottom: 0;
+            }
+
+            .Complete-status {
+                color: #1DBF7C;
+                font-size: 14px;
+                font-weight: 600;
+            }
+        }
+
+        .learningpath-txt-details {
+            color: #3F3E4D;
+        }
+
+        span.learningpath-time {
+            font-size: 12px;
+            font-weight: 400;
+        }
+
+        .learningpath-txt {
+            max-width: 600px;
+            font-size: 16px;
+            font-weight: 400;
+        }
+    }
+}
+
+.launch-btn {
+    background: transparent;
+    border: 0;
+    color: #888799;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.phase-block {
+    padding: 45px 0 15px;
+}
+
+.top-space {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.block-mycourses {
+    .nav-tabs {
+        padding-top: 0;
+    }
+
+    .nav {
+        margin: 10px 0 20px;
+    }
+}
+
+.fa-group::before {
+    content: "\f500";
+}
+
+.fa-check-square-o::before {
+    content: "\f0ae";
+}
+
+.fa-bar-chart-o::before {
+    content: "\f080";
+}
+
+.fa-clock-o::before {
+    content: "\f274";
+}
+
+.fa-money::before {
+    content: "\f4b9";
+}
+
+#fgroup_id_searcharray {
+    margin: 0 !important;
+}
+
+.reporttablecontrols,
+.reporttablecontrolscontrol {
+    padding-left: 0 !important;
+}
+
+.reporttablecontrolscontrol #id_searchbutton {
+    padding-right: $btn-padding-x !important;
+}
+
+#manage_learningpaths {
+    div {
+        padding: 5px 10px;
+        margin: 0;
+        align-items: center;
+    }
+}
+
+.manage_list {
+    margin: 0 0 3px!important;
+    border: 1px solid $border-color;
+
+    .col-sm-4 {
+        font-weight: $font-weight-bold;
+        line-height: 1.2;
+    }
+
+    .col-sm-4 .small {
+        font-weight: normal;
+    }
+
+    div {
+        padding: 5px 10px;
+    }
+
+    .theme-dark & {
+        border-color: $dm-border-color;
+    }
+}
+
+#manage_learningpaths {
+    .col-sm-3 {
+        a {
+            margin: 2px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            width: 32px;
+            height: 32px;
+            font-size: 12px;
+            color: $body-color;
+            background-color: $gray-100;
+            border-radius: $btn-border-radius;
+
+            .theme-dark & {
+                background-color: $dm-gray-200;
+                color: $dm-body-color;
+            }
+
+            &.lp_copy {
+                background-color: $yellow-100;
+                color: $body-color;
+            }
+
+            &.lp_delete {
+                background-color: $red-100;
+            }
+
+            &::before {
+                display: none;
+            }
+        }
+    }
+}
+
+.btn {
+     .fa-plus {
+        margin-right: .5rem;
+     }
+}
+
+#completion_overview_forms {
+    width: 100%;
+
+    form {
+        width: 49%;
+    }
+}
+
+#page-local-report_users-index,
+#page-local-report_user_logins-index,
+#page-local-report_emails-index {
+    .no-overflow {
+        overflow: initial;
+
+        .table {
+            width: max-content;
+
+            thead {
+                background-color: $container-bg;
+                position: sticky;
+                top: $navbar-height;
+                z-index: 3;
+            }
+        }
+    }
+}
+
+.theme-dark#page-local-report_users-index,
+.theme-dark#page-local-report_user_logins-index,
+.theme-dark#page-local-report_emails-index {
+    .no-overflow .table thead {
+        background-color: $dm-container-bg;
+    }
+}
+
+// Empty breadcrumbs.
+#page-local-report_users-index,
+#page-local-report_attendance-index,
+#page-local-report_completion-index,
+#page-local-report_companies-index {
+    .rui-breadcrumbs {
+        display: none;
+    }
+
+    .page-header-content {
+        margin-bottom: 0;
+    }
+}
+
+// Top bar Logo for students
+.companymenu {
+    span.companybutton {
+        display: none;
+    }
+    
+    a span.companybutton {
+        display: block;
+    }
+
+    .dropdown-toggle {
+        margin-right: 10px;
+    }
+
+    .dropdown .rui-logo-box {
+        gap: 10px;
+    }
+}
+

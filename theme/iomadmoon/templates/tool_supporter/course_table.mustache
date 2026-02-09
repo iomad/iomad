@@ -1,0 +1,267 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+
+    @template tool_supporter/course_table
+    Template which outputs a table of courses.
+
+    Classes required for JS:
+    * dataTables
+
+    Context variables required for this template:
+    * courses - array of arrays: course details to be displayed in a table.
+
+Example context (json):
+{
+  "courses": [
+        {
+      "id": 8,
+      "startdate": "27/08/2022, 11:00:00",
+      "shortname": "Kurs level 2",
+      "fullname": "Kurs level 2",
+      "level_two": "",
+      "level_one": "Top Level 2",
+      "visible": 1
+    },
+    {
+      "id": 9,
+      "startdate": "24/12/2022, 00:00:00",
+      "shortname": "Kurs level 2.1",
+      "fullname": "Kurs level 2.1",
+      "level_two": "Level 2.1",
+      "level_one": "Top Level 2",
+      "visible": 1
+    },
+    {
+      "id": 17,
+      "startdate": "31/12/2022, 00:00:00",
+      "shortname": "eee",
+      "fullname": "eee",
+      "level_two": "Level 2.1",
+      "level_one": "Top Level 2",
+      "visible": 0
+    },
+    {
+      "id": 19,
+      "startdate": "01/07/2022, 09:00:00",
+      "shortname": "Ebene 3 Kurs",
+      "fullname": "Ebene 3 Kurs",
+      "level_two": "Verschiedenes 1",
+      "level_one": "Verschiedenes",
+      "visible": 0
+    },
+    {
+      "id": 21,
+      "startdate": "22/07/2022, 09:00:00",
+      "shortname": "FB 01 Kurs im WS 17 18",
+      "fullname": "FB 01 Kurs im WS 17 18",
+      "level_two": "FB 01",
+      "level_one": "WiSe 2017/2018",
+      "visible": 1
+    },
+    {
+      "id": 30,
+      "startdate": "05/03/2022, 10:00:00",
+      "shortname": "test",
+      "fullname": "test",
+      "level_two": "",
+      "level_one": "Verschiedenes",
+      "visible": 0
+    }
+  ],
+  "uniqueleveltwoes": [
+    "Verschiedenes 1",
+    "Testbereich mit (Klammern)",
+    "Level 1.1",
+    "Level 2.1",
+    "FB 01",
+    "FB 02",
+    "FB 03"
+  ],
+  "uniquelevelones": [
+    "Verschiedenes",
+    "Top Level 1",
+    "Top Level 2",
+    "SoSe 2018",
+    "WiSe 2017/2018",
+    "Semesteruebergreifende Kurse",
+    "HRZ / E-Learning - Weiterbildung",
+    "WiSe 2018/19",
+    "SoSe 2019"
+  ],
+  "label_level_1": "Semester",
+  "label_level_2": "Fachbereich",
+  "searchname": "Suchen",
+  "refreshname": "Aktualisieren"
+}
+
+}}
+<div data-region="course_table" class="card rui-supporter-table">
+	<div class = "card-header">
+		<div class="row">
+		    <div class="col">
+          <h4 class="card-title">{{#str}}courses{{/str}}
+          <button class="ml-4 btn btn-xs p-1 btn-secondary" id="btn_refresh_courses">{{#pix}} a/refresh, core, {{refreshname}} {{/pix}}</button>
+          </h4>
+        </div>
+		</div>
+	</div>
+
+    <div id="course_table_filtering" style="visibility: hidden;">
+        <div class="btn-toolbar ml-3 mt-1" role="toolbar">
+            <div class="btn-group" role="group">
+                <select id="course_table_column_chooser" class="form-control custom-select mr-1">
+                    <!-- Additional Options will be added later with javascript -->
+                    <option selected value="-1">{{#str}}all{{/str}}</option>
+                </select>
+            </div>
+            <div class="btn-group" role="group" style="width: 55%">
+                <input type="text" id="course_table_search_input" class="form-control form-control-sm" placeholder={{searchname}}>
+            </div>
+            <button type="button" class="btn btn-sm btn-danger" id="courses_clear_filters" style="visibility: hidden">&times; {{#str}}removeall, filters{{/str}}</button>
+        </div>
+
+        <!-- Filtering for course table -->
+        <div id ="course_filtering" data-region = "course_filtering">
+           <ul class="nav nav-tabs nav-justified">
+             <!-- Filter course list by selecting first level category-->
+             <li class="nav-item dropdown" {{^showlevel1}}hidden{{/showlevel1}}>
+               <a class = "nav-link dropdown-toggle" href="javascript:void(0)" data-toggle="dropdown">{{label_level_1}}<span class="caret"></span></a>
+
+               <ul class="dropdown-menu" id="courses_levelonedropdown">
+                 {{#uniquelevelones}}
+                    <li class = "dropdown-item" style="padding: 0 0 0 1.5rem"> <!-- padding: top, right, bottom, left -->
+                        <label><input type="checkbox" value="{{{.}}}" name="courses_levelonecheckbox"> {{{.}}}</label>
+                    </li>
+                 {{/uniquelevelones}}
+               </ul>
+             </li>
+            <!-- Filter course list by selecting second level category -->
+             <li class="nav-item dropdown" {{^showlevel2}}hidden{{/showlevel2}}>
+               <a class = "nav-link dropdown-toggle" href="javascript:void(0)" data-toggle="dropdown">{{label_level_2}}<span class="caret"></span></a>
+               <ul class="dropdown-menu" id="courses_leveltwodropdown">
+                 {{#uniqueleveltwoes}}
+                    <li class = "dropdown-item" style="padding: 0 0 0 1.5rem"> <!-- padding: top, right, bottom, left -->
+                        <label><input type="checkbox" value="{{{.}}}" name="courses_leveltwocheckbox"> {{{.}}}</label>
+                    </li>
+                 {{/uniqueleveltwoes}}
+               </ul>
+             </li>
+               <!-- Filter course list by selecting third level category -->
+               <li class="nav-item dropdown" {{^showlevel3}}hidden{{/showlevel3}}>
+                   <a class = "nav-link dropdown-toggle" href="javascript:void(0)" data-toggle="dropdown">{{label_level_3}}<span class="caret"></span></a>
+                   <ul class="dropdown-menu" id="courses_levelthreedropdown">
+                       {{#uniquelevelthrees}}
+                           <li class = "dropdown-item" style="padding: 0 0 0 1.5rem"> <!-- padding: top, right, bottom, left -->
+                               <label><input type="checkbox" value="{{{.}}}" name="courses_levelthreecheckbox"> {{{.}}}</label>
+                           </li>
+                       {{/uniquelevelthrees}}
+                   </ul>
+               </li>
+               <!-- Filter course list by selecting fourth level category -->
+               <li class="nav-item dropdown" {{^showlevel4}}hidden{{/showlevel4}}>
+                   <a class = "nav-link dropdown-toggle" href="javascript:void(0)" data-toggle="dropdown">{{label_level_4}}<span class="caret"></span></a>
+                   <ul class="dropdown-menu" id="courses_levelfourdropdown">
+                       {{#uniquelevelfours}}
+                           <li class = "dropdown-item" style="padding: 0 0 0 1.5rem"> <!-- padding: top, right, bottom, left -->
+                               <label><input type="checkbox" value="{{{.}}}" name="courses_levelfourcheckbox"> {{{.}}}</label>
+                           </li>
+                       {{/uniquelevelfours}}
+                   </ul>
+               </li>
+               <!-- Filter course list by selecting fifth level category -->
+               <li class="nav-item dropdown" {{^showlevel5}}hidden{{/showlevel5}}>
+                   <a class = "nav-link dropdown-toggle" href="javascript:void(0)" data-toggle="dropdown">{{label_level_5}}<span class="caret"></span></a>
+                   <ul class="dropdown-menu" id="courses_levelfivedropdown">
+                       {{#uniquelevelfives}}
+                           <li class = "dropdown-item" style="padding: 0 0 0 1.5rem"> <!-- padding: top, right, bottom, left -->
+                               <label><input type="checkbox" value="{{{.}}}" name="courses_levelfivecheckbox"> {{{.}}}</label>
+                           </li>
+                       {{/uniquelevelfives}}
+                   </ul>
+               </li>
+          </ul>
+        </div>
+    </div>
+
+	<div class = "table table-responsive">
+	  <table id = "courseTable" class="stripe hover row-border">
+	    <thead>
+	      <tr>
+              <th>ID</th>
+              <th>{{#str}}shortnamecourse{{/str}}</th>
+              <th>{{#str}}fullnamecourse{{/str}}</th>
+              <th {{^showlevel1}}hidden{{/showlevel1}}>{{label_level_1}}</th>
+              <th {{^showlevel2}}hidden{{/showlevel2}}>{{label_level_2}}</th>
+              <th {{^showlevel3}}hidden{{/showlevel3}}>{{label_level_3}}</th>
+              <th {{^showlevel4}}hidden{{/showlevel4}}>{{label_level_4}}</th>
+              <th {{^showlevel5}}hidden{{/showlevel5}}>{{label_level_5}}</th>
+              <th>{{#str}}startdate{{/str}}</th>
+              <th>{{#str}}visible{{/str}}</th>
+	      </tr>
+	    </thead>
+	    <tbody>
+	    </tbody>
+	  </table>
+	</div>
+
+	<span class="loading-icon text-center" id="courseTable-loadingIcon">{{#pix}} i/loading, core, {{#str}} loading {{/str}} {{/pix}}</span>
+</div>
+
+{{#js}}
+require(['tool_supporter/load_information', 'jquery', 'core/ajax', 'core/notification', 'core/templates',
+         'tool_supporter/datatables', 'tool_supporter/table_filter'],
+    function(loadInformation, $, ajax, notification, templates, datatables, tableFilter) {
+
+        var columns1 = [
+            {data: 'id', "searchable": true, name: 'ID'},
+            {data: 'shortname', "searchable": true, name: '{{#str}}shortnamecourse{{/str}}',
+                "visible": {{#showshortname}}true{{/showshortname}}{{^showshortname}}false{{/showshortname}}},
+            {data: 'fullname', name: '{{#str}}fullnamecourse{{/str}}',
+                "visible": {{#showfullname}}true{{/showfullname}}{{^showfullname}}false{{/showfullname}}},
+            {data: 'level_one', name: '{{label_level_1}}',
+                "visible": {{#showlevel1}}true{{/showlevel1}}{{^showlevel1}}false{{/showlevel1}}},
+            {data: 'level_two', name: '{{label_level_2}}',
+                "visible": {{#showlevel2}}true{{/showlevel2}}{{^showlevel2}}false{{/showlevel2}}},
+            {data: 'level_three', name: '{{label_level_3}}',
+                "visible": {{#showlevel3}}true{{/showlevel3}}{{^showlevel3}}false{{/showlevel3}}},
+            {data: 'level_four', name: '{{label_level_4}}',
+                "visible": {{#showlevel4}}true{{/showlevel4}}{{^showlevel4}}false{{/showlevel4}}},
+            {data: 'level_five', name: '{{label_level_5}}',
+                "visible": {{#showlevel5}}true{{/showlevel5}}{{^showlevel5}}false{{/showlevel5}}},
+            {data: 'startdate', name: '{{#str}}startdate{{/str}}',
+                "visible": {{#showstartdate}}true{{/showstartdate}}{{^showstartdate}}false{{/showstartdate}}},
+            {data: 'visible', name: '{{#str}}visible{{/str}}',
+                "visible": {{#showvisible}}true{{/showvisible}}{{^showvisible}}false{{/showvisible}}}
+                       ];
+
+        // Convert the table to dataTable and apply Filtering.
+        datatables.dataTableAjax('#courseTable', 'tool_supporter_get_courses', {}, 'courses', columns1);
+
+        // Refresh this table.
+        loadInformation.clickOnRefresh('#courseTable', 'tool_supporter_get_courses', {}, 'courses', columns1);
+
+        // Load detailed information about the clicked course.
+        loadInformation.clickOnCourse('#courseTable');
+
+        // Search the table.
+        tableFilter.searchTable('#courseTable', '#course_table_column_chooser', '#course_table_search_input', columns1);
+
+        // Clear filters when button is clicked.
+        tableFilter.coursesClearFilters('#courseTable');
+  });
+{{/js}}

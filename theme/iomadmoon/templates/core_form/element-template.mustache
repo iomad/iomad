@@ -1,0 +1,77 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_form/element-template
+
+    Template for the form element wrapper template.
+
+    Context variables required for this template:
+    * label
+    * required
+    * advanced
+    * helpbutton
+    * error
+    * element
+        * id
+        * name
+
+    Example context (json):
+    {
+        "label": "Course full name",
+        "required": true,
+        "advanced": false,
+        "error": null,
+        "element": {
+            "wrapperid": "fitem_id_fullname",
+            "id": "id_fullname",
+            "name": "fullname"
+        }
+    }
+}}
+<div id="{{element.wrapperid}}" class="form-group row px-0 mt-1 mb-3 mt-md-2 {{#error}}has-danger{{/error}} fitem {{#element.emptylabel}}femptylabel col-12{{/element.emptylabel}} {{#advanced}}advanced{{/advanced}} {{{element.extraclasses}}} {{{element.parentclasses}}}" {{#element.groupname}}data-groupname="{{.}}"{{/element.groupname}}>
+    <div class="col-form-label col-md-3 mb-sm-1 mb-md-0 pl-0 text-md-right">
+        {{# label}}{{$ label }}
+        {{^element.staticlabel}}
+        <label id="{{element.id}}_label" class="d-inline {{#element.hiddenlabel}}sr-only{{/element.hiddenlabel}}" for="{{element.id}}">
+            {{{label}}}
+        </label>
+        {{/element.staticlabel}}
+        {{#element.staticlabel}}
+        <label class="d-inline-block {{#element.hiddenlabel}}sr-only{{/element.hiddenlabel}}">
+            {{{label}}}
+        </label>
+        {{/element.staticlabel}}
+        {{/ label }}{{/ label}}
+        <sup class="sup">
+            {{#required}}<span title="{{#str}}required{{/str}}" class="rui-req-icon">{{#pix}}req, core, {{#str}}required{{/str}}{{/pix}}</span>{{/required}}
+            {{{helpbutton}}}
+        </sup>
+    </div>
+    <div class="col-md-9 form-inline felement px-0" data-fieldtype="{{element.type}}">
+        {{$ element }}
+            <!-- Element goes here -->
+        {{/ element }}
+        <div class="form-control-feedback invalid-feedback" id="{{element.iderror}}" {{#error}} style="display: block;"{{/error}}>
+            {{{error}}}
+        </div>
+    </div>
+</div>
+{{#js}}
+require(['theme_iomadmoon/form-display-errors'], function(module) {
+    module.enhance({{#quote}}{{element.id}}{{/quote}});
+});
+{{/js}}

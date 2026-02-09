@@ -1,0 +1,153 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tool_dataprivacy/purposes
+
+    Manage purposes.
+
+    Classes required for JS:
+
+    Data attributes required for JS:
+
+    Context variables required for this template:
+    * purposes - array of objects
+    * actions - array of actions (already in HTML).
+
+    Example context (json):
+    {
+        "purposesexist": 1,
+        "purposes": [
+            {
+                "name" : "Purpose 1",
+                "description": "<strong>Purpose 1 description</strong>",
+                "retentionperiod": 86400,
+                "protected": 1,
+                "formattedretentionperiod": "1 day",
+                "actions": [
+                ]
+            }, {
+                "name" : "Purpose 2",
+                "description": "<strong>Purpose 2 description</strong>",
+                "retentionperiod": 7200,
+                "protected": 0,
+                "formattedretentionperiod": "2 hours",
+                "actions": [
+                ]
+            }
+        ]
+    }
+
+}}
+
+{{#navigation}}
+    <div class="my-3">
+        {{> core/action_link}}
+    </div>
+{{/navigation}}
+
+<p class="lead-2">
+  {{#str}}purposeoverview, tool_dataprivacy{{/str}}
+</p>
+
+<div data-region="purposes" class="mb-1">
+    <div class="my-1">
+        <button class="btn btn-secondary" data-add-element="purpose" title="{{#str}}addpurpose, tool_dataprivacy{{/str}}">
+            {{#pix}}t/add, moodle, {{#str}}addpurpose, tool_dataprivacy{{/str}}{{/pix}} <span class="ml-2">{{#str}}addpurpose, tool_dataprivacy{{/str}}</span>
+        </button>
+    </div>
+
+    <div class="overflow-auto">
+        <table class="table table-striped table-hover" style="min-width: max-content">
+            <caption class="accesshide">{{#str}}purposeslist, tool_dataprivacy{{/str}}</caption>
+            <thead>
+                <tr>
+                    <th scope="col" style="max-width: 300px">{{#str}}name{{/str}}</th>
+                    <th scope="col" style="max-width: 300px">{{#str}}lawfulbases, tool_dataprivacy{{/str}}</th>
+                    <th scope="col" style="max-width: 300px">{{#str}}sensitivedatareasons, tool_dataprivacy{{/str}}</th>
+                    <th scope="col">{{#str}}retentionperiod, tool_dataprivacy{{/str}}</th>
+                    <th scope="col">{{#str}}protected, tool_dataprivacy{{/str}}</th>
+                    <th scope="col">{{#str}}roleoverrides, tool_dataprivacy{{/str}}</th>
+                    <th scope="col">{{#str}}actions{{/str}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#purposes}}
+                <tr data-purposeid="{{id}}">
+                    <td style="max-width: 300px">
+                        <dl>
+                            <dt>
+                                {{{name}}}
+                            </dt>
+                            <dd class="small">
+                                {{{description}}}
+                            </dd>
+                        </dl>
+                    </td>
+                    <td style="max-width: 300px">
+                        <ul class="small">
+                            {{#formattedlawfulbases}}
+                                <li class="py-2 mb-1">
+                                    <span class="mr-1">{{name}}</span> {{# pix }} i/info, core, {{description}} {{/ pix }}
+                                </li>
+                            {{/formattedlawfulbases}}
+                        </ul>
+                    </td>
+                    <td style="max-width: 300px">
+                        <ul class="small">
+                            {{#formattedsensitivedatareasons}}
+                                <li class="py-2 mb-1">
+                                    <span class="mr-1">{{name}}</span>{{# pix }} i/info, core, {{description}} {{/ pix }}
+                                </li>
+                            {{/formattedsensitivedatareasons}}
+                        </ul>
+                    </td>
+                    <td>{{formattedretentionperiod}}</td>
+                    <td class="text-align: center">
+                        {{#protected}}
+                            <span class="badge badge-success">{{#pix}}i/checked, core, {{#str}}yes{{/str}}{{/pix}}</span>
+                        {{/protected}}
+                        {{^protected}}
+                            <span class="badge badge-warning">{{#str}}no{{/str}}</span>
+                        {{/protected}}
+                    </td>
+                    <td>
+                        {{#roleoverrides}}
+                            <span class="badge badge-success">{{#str}}yes{{/str}}</span>
+                        {{/roleoverrides}}
+                        {{^roleoverrides}}
+                            <span class="badge badge-warning">{{#str}}no{{/str}}</span>
+                        {{/roleoverrides}}
+                    </td>
+                    <td>
+                        {{#actions}}
+                            {{> core/action_menu}}
+                        {{/actions}}
+                    </td>
+                </tr>
+                {{/purposes}}
+            </tbody>
+        </table>
+    </div>
+
+    {{^purposes}}
+        <span class="badge badge-warning">
+            {{#str}}nopurposes, tool_dataprivacy{{/str}}
+        </span>
+    {{/purposes}}
+
+
+</div>

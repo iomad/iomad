@@ -1,0 +1,146 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_designer/courseheader.
+
+    Template for the form course header template.
+
+    Example context (json):
+    {
+        "title": "Course full name"
+    }
+}}
+
+{{#courseheader}}
+<!-- Course header block -->
+<div class="course-header {{headerclass}}" style="{{#style}} {{{style}}} {{/style}}">
+    <div class="course-header-content-block" style="{{#minheight}} {{minheight}} {{/minheight}}">
+        <div class="course-head-info">
+            <div class="course-title-block">
+                {{#title}}
+                <!-- Course title -->
+                    <div class="course-title"><h2>{{title}}</h2></div>
+                <!-- End of Course title -->
+                {{/title}}
+                {{#summary}}
+                <!-- Course Summary -->
+                <div class="course-summary">
+                    {{{summary}}}
+                </div>
+                <!-- End of Course Summary -->
+                {{/summary}}
+            </div>
+            {{#courseprogresstypestatus}}
+            <!-- Course Progress -->
+            <div class="course-progress-blocks">
+                <div class="progress-bar-small">
+                    {{{progress}}}
+                </div>
+
+                {{#showindicatorstatus}}
+                    {{#indicatorstatus}}
+                    <div class="course-indicator-status">
+                        <p> <b> {{#str}} courseindicator, format_designer{{/str}} </b> <span class="status-{{indicatorclass}}"> {{indicatorstatus}} </span> </p>
+                    </div>
+                    {{/indicatorstatus}}
+                {{/showindicatorstatus}}
+            </div>
+            <!-- End of Course Progress -->
+            {{/courseprogresstypestatus}}
+        </div>
+
+        {{#courseinfoelements}}
+        <!-- Course Info Elements -->
+        <div class="course-info-elements">
+            <!-- Course info collapse block -->
+            <div class="collapse {{#iscoursemainpage}}show{{/iscoursemainpage}}" id="courseinfoBlock">
+                <div class="card card-body">
+                    <!-- Course info listing -->
+                    {{> local_designer/coursefields}}
+                    <!-- Course info additional description -->
+                    {{#additionalcontent}}
+                    <div class="course-desc-block">
+                        <p>{{{additionalcontent}}}</p>
+                    </div>
+                    {{/additionalcontent}}
+                    <!-- End of Course info additional description -->
+                    <!-- Course staffs and course criteria percent. -->
+                    {{> local_designer/coursestaffs }}
+                </div>
+            </div>
+            <!-- End of Course info collapse block -->
+        </div>
+        <!-- Enf of Course Info Elements -->
+        {{/courseinfoelements}}
+
+        {{#fullscreen}}
+        <div class="course-header-scroll-arrow hide cursor-pointer">
+            <div class="scroll-arrow-wrapper">
+                <div class="scroll-arrow-parent">
+                    <i class="fa fa-angle-double-down"></i>
+                </div>
+                <div class="scroll-glow-border zoomin"></div>
+            </div>
+        </div>
+        {{/fullscreen}}
+    </div>
+</div>
+
+{{/courseheader}}
+
+{{#js}}
+require(['jquery', 'local_designer/staffusers'], function($, StaffUsers) {
+    {{#fullscreen}}
+    var downIconContainer = document.querySelector('.course-header-scroll-arrow');
+    setTimeout(() => downIconContainer.classList.remove('hide'), 3000);
+    downIconContainer.onclick = (e) => document.querySelector('#page-header').nextElementSibling.scrollIntoView({behavior:"smooth"});
+    {{/fullscreen}}
+
+    // Collapse and expand course header.
+    var toggleBtn = document.querySelector('#course-info-toggle-btn');
+    var fullScreen = document.querySelector('.course-header.course-header-full-screen');
+
+    if (toggleBtn === null || toggleBtn === undefined) {
+        return;
+    }
+
+    var toggleIcon = toggleBtn.querySelector('i');
+    // Expand/collapse course header on toggleBtn clicked.
+    toggleBtn.onclick = function() {
+        var infoBlock = document.querySelector('#courseinfoBlock');
+        infoBlock.classList.toggle('show');
+
+        window.dispatchEvent(new Event('resize')); // Fix the slick js staff slider widht issue.
+
+        // Change the toggle icon direction.
+        toggleIcon.classList.toggle('fa-angle-double-up');
+        toggleIcon.classList.toggle('fa-angle-double-down');
+
+        if (fullScreen !== null) {
+            if (infoBlock.classList.contains('show')) {
+                fullScreen.classList.add('fullheight');
+            } else {
+                fullScreen.classList.remove('fullheight');
+            }
+        }
+    };
+    StaffUsers.init();
+});
+{{/js}}
+
+
+

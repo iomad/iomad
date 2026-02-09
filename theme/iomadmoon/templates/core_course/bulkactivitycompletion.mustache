@@ -1,0 +1,124 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_course/bulkactivitycompletion
+
+    Activity completion selector.
+
+    Example context (json):
+    {
+        "courseid": "2",
+        "sesskey": "AAAAAA",
+        "sections": [{
+            "sectionnumber": "0",
+            "name": "General",
+            "activities": [{
+                "cmid": "4",
+                "modname": "Test activity",
+                "icon": "https://raw.githubusercontent.com/moodle/moodle/master/mod/feedback/pix/monologo.png",
+                "completionstatus": {
+                    "string": "Manual",
+                    "icon": "https://raw.githubusercontent.com/moodle/moodle/master/pix/i/completion-manual-enabled.png"
+                }
+            }]
+        }]
+    }
+}}
+<fieldset class="fieldset-styled">
+    <legend>{{#str}}bulkactivitydetail, core_completion{{/str}}</legend>
+    <form method="post" action="editbulkcompletion.php" class="mform" id="theform">
+        <div class="row mb-4">
+            <div class="col">
+                <input type="submit" value="{{#str}}edit{{/str}}" class="btn btn-sm btn-secondary" name="submitbutton" aria-label="{{#str}}updateactivities, completion{{/str}}" disabled/>
+            </div>
+        </div>
+        <div class="row mb-1 rounded">
+            <div class="col-6">
+                <input type="checkbox" class="mastercheck mr-1" aria-label="{{#str}}checkall, completion{{/str}}">
+                <label class="font-weight-bold">{{#str}}activitieslabel, core_completion{{/str}}</label>
+            </div>
+            <div class="col-6">
+                <label class="font-weight-bold">{{#str}}completion, core_completion{{/str}}</label>
+                <span>{{{helpicon}}}</span>
+            </div>
+        </div>
+        <hr class="row">
+        <div class="topics">
+            {{#sections}}
+                <div class="mb-4 pt-2 px-2 pb-1 border rounded">
+                    <div class="row mb-1">
+                        <div class="col-sm-12">
+                            <input type="checkbox" data-section-master="{{sectionnumber}}"
+                            class="mr-1" aria-label="{{#str}}checkallsection, completion, {{{name}}}{{/str}}">
+                            <h3 class="d-inline-block my-2">{{{name}}}</h3>
+                        </div>
+                    </div>
+                    {{> core_course/activityinstance}}
+                </div>
+            {{/sections}}
+        </div>
+        <input type="hidden" name="id" value="{{courseid}}" />
+        <input type="hidden" name="sesskey" value="{{sesskey}}" />
+        <div class="row">
+            <div class="col">
+                <input type="submit" value="{{#str}}edit{{/str}}" class="btn btn-primary" name="submitbutton" disabled/>
+            </div>
+        </div>
+    </form>
+</fieldset>
+
+{{#js}}
+require([
+    'jquery',
+], function($) {
+    $('.mastercheck').click(function() {
+        var checked = $('.mastercheck').is(':checked');
+        $('input[type=checkbox]').each(function() {
+            $(this).prop('checked', checked);
+            $(this).trigger('change'); // Hmmm. Could be smarter about this and only trigger once for the first checkbox.
+        });
+    });
+    var mastersection = $('input[data-section-master]');
+    mastersection.click(function() {
+        var checked = $(this).is(':checked');
+        var dataid = $(this).attr('data-section-master');
+        $('input[type=checkbox][data-section=\'' + dataid + '\']').each(function() {
+            $(this).prop('checked', checked);
+            $(this).trigger('change'); // Hmmm. Could be smarter about this and only trigger once for the first checkbox.
+        });
+    });
+
+    $('input[type=checkbox][id^=selectactivity_]').change(function() {
+        if ($(this).is(':checked')) {
+            $('[name=submitbutton]').removeAttr('disabled');
+        } else {
+            // Is this the last activity checkbox to be un-checked? If so, disable the edit button.
+            var somechecked = false;
+            $('input[type=checkbox][id^=selectactivity_]').each(function() {
+                if ($(this).is(':checked')) {
+                    somechecked = true;
+                    return false;
+                }
+                return true;
+            });
+            if (!somechecked) {
+                $('[name=submitbutton]').attr('disabled', 'disabled');
+            }
+        }
+    });
+});
+{{/js}}
