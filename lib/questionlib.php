@@ -501,7 +501,7 @@ function question_delete_activity($cm, $notused = false, bool $coursedeletion = 
  * @param context $newcontext The Moodle context the questions are being moved to, must be module context.
  */
 function question_move_question_tags_to_new_context(array $questions, context $newcontext): void {
-
+    global $DB;
     if ($newcontext->contextlevel !== CONTEXT_MODULE) {
         debugging("Invalid contextlevel: {$newcontext->contextlevel}", DEBUG_DEVELOPER);
     }
@@ -512,11 +512,12 @@ function question_move_question_tags_to_new_context(array $questions, context $n
     }, $questions);
     $questionstagobjects = core_tag_tag::get_items_tags('core_question', 'question', $questionids);
 
+    $transaction = $DB->start_delegated_transaction();
     foreach ($questions as $question) {
         $tagobjects = $questionstagobjects[$question->id] ?? [];
 
         foreach ($tagobjects as $tagobject) {
-            $tagid = $tagobject->taginstanceid;
+            $taginstanceid = $tagobject->taginstanceid;
             $tagcontextid = $tagobject->taginstancecontextid;
             $istaginnewcontext = $tagcontextid == $newcontext->id;
 
@@ -526,7 +527,15 @@ function question_move_question_tags_to_new_context(array $questions, context $n
                 continue;
             }
 
-            $instancesfornewcontext[] = $tagid;
+            $instancekey = implode('-', ['core_question', 'question', $question->id, $tagobject->tiuserid, $tagobject->id]);
+            if (array_key_exists($instancekey, $instancesfornewcontext)) {
+                // We have an identical instance that we are already moving to the new context. This instance will be a duplicate,
+                // so delete it.
+                $DB->delete_records('tag_instance', ['id' => $taginstanceid]);
+                continue;
+            }
+
+            $instancesfornewcontext[$instancekey] = $taginstanceid;
         }
     }
 
@@ -534,6 +543,7 @@ function question_move_question_tags_to_new_context(array $questions, context $n
         // Update the tag instances to the new context id.
         core_tag_tag::change_instances_context($instancesfornewcontext, $newcontext);
     }
+    $transaction->allow_commit();
 }
 
 /**
@@ -1416,14 +1426,33 @@ function question_extend_settings_navigation(navigation_node $navigationnode, $c
 
     $iscourse = $context->contextlevel === CONTEXT_COURSE;
 
-    if ($iscourse && has_capability('moodle/course:manageactivities', $context)) {
-        return $navigationnode->add(
-            get_string('questionbank_plural', 'question'),
-            new moodle_url($baseurl, ['courseid' => $context->instanceid]),
-            navigation_node::TYPE_CONTAINER,
-            null,
-            'questionbank'
-        );
+    if ($iscourse) {
+        $viewquestionbanks = has_capability('moodle/course:manageactivities', $context);
+        if (!$viewquestionbanks) {
+            // If the user can view any activities with shared questions, display the Question banks node.
+            // If they can access activities with private questions (such as quiz) they can be accessed elsewhere on the course.
+            $modtypes = \core_question\local\bank\question_bank_helper::get_activity_types_with_shareable_questions();
+            $modinfo = get_fast_modinfo($context->instanceid);
+            foreach ($modtypes as $modtype) {
+                foreach ($modinfo->get_instances_of($modtype) as $mod) {
+                    if (has_capability("mod/{$modtype}:view", $mod->context)) {
+                        $viewquestionbanks = true;
+                        break 2;
+                    }
+                }
+            }
+        }
+        if ($viewquestionbanks) {
+            return $navigationnode->add(
+                get_string('questionbank_plural', 'question'),
+                new moodle_url($baseurl, ['courseid' => $context->instanceid]),
+                navigation_node::TYPE_CONTAINER,
+                null,
+                'questionbank',
+            );
+        } else {
+            return;
+        }
     } else if ($context->contextlevel == CONTEXT_MODULE) {
         $params = ['cmid' => $context->instanceid];
     } else {
@@ -1936,20 +1965,7 @@ function get_question_version($questionid): array {
  * @throws dml_exception
  */
 function get_next_version(int $questionbankentryid): int {
-    global $DB;
-
-    $sql = "SELECT MAX(qv.version)
-              FROM {question_versions} qv
-              JOIN {question_bank_entries} qbe ON qbe.id = qv.questionbankentryid
-             WHERE qbe.id = :id";
-
-    $nextversion = $DB->get_field_sql($sql, ['id' => $questionbankentryid]);
-
-    if ($nextversion) {
-        return (int)$nextversion + 1;
-    }
-
-    return 1;
+    return \core_question\versions::get_next_version($questionbankentryid);
 }
 
 /**

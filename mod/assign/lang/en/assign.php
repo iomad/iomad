@@ -79,6 +79,11 @@ $string['assignmentduesoonhtml'] = '<p>Hi {$a->firstname},</p>
 <p>The assignment <strong>{$a->assignmentname}</strong> in course {$a->coursename} is due soon.</p>
 <p><strong>Due: {$a->duedate}</strong></p>
 <p><a href="{$a->url}">Go to activity</a></p>';
+$string['assignmentduesoonofflinehtml'] = '<p>Hi {$a->firstname},</p>
+<p>The assignment <strong>{$a->assignmentname}</strong> in course {$a->coursename} is due soon.</p>
+<p>If you have already submitted your work, no further action is required.</p>
+<p><strong>Due: {$a->duedate}</strong></p>
+<p><a href="{$a->url}">Go to activity</a></p>';
 $string['assignmentduesoonsms'] = 'Your assignment {$a->assignmentname} is due on {$a->duedate}: {$a->url}';
 $string['assignmentoverduehtml'] = '<p>Hi {$a->firstname},</p>
 <p><strong>{$a->assignmentname}</strong> in course {$a->coursename} was due on <strong>{$a->duedate}</strong>.</p>
@@ -692,8 +697,8 @@ $string['userextensiondate'] = 'Extension granted until: {$a}';
 $string['userassignmentdefaults'] = 'User assignment defaults';
 $string['useridlistnotcached'] = 'The grade changes were NOT saved, as it was not possible to determine which submission they were for.';
 $string['useroverrides'] = 'User overrides';
+$string['usersnone'] = 'There are no users enrolled in this course or no users can access the assignment.';
 $string['usersubmissioncannotberemoved'] = 'The submission of {$a} cannot be removed.';
-$string['usersnone'] = 'There are no users enrolled in this course.';
 $string['userswhoneedtosubmit'] = 'Users who need to submit: {$a}';
 $string['usergrade'] = 'User grade';
 $string['validmarkingworkflowstates'] = 'Valid marking workflow states';

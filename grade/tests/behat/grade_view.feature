@@ -1,4 +1,4 @@
-@core @core_grades @javascript
+@core @core_grades
 Feature: We can enter in grades and view reports from the gradebook
   In order to check the expected results are displayed
   As a teacher
@@ -46,6 +46,7 @@ Feature: We can enter in grades and view reports from the gradebook
     And I give the grade "90.00" to the user "Student 1" for the grade item "Test assignment name 2"
     And I press "Save changes"
 
+  @javascript
   Scenario: Grade a grade item and ensure the results display correctly in the gradebook
     When I navigate to "View > User report" in the course gradebook
     And the "Gradebook navigation menu" select menu should contain "Grader report"
@@ -68,6 +69,7 @@ Feature: We can enter in grades and view reports from the gradebook
     And "Course 1" row "Grade" column of "overview-grade" table should contain "170.00"
     And "Course 1" row "Grade" column of "overview-grade" table should not contain "90.00"
 
+  @javascript
   Scenario: We can add a weighting to a grade item and it is displayed properly in the user report
     When I navigate to "Setup > Gradebook setup" in the course gradebook
     And I set the following settings for grade item "Course 1" of type "course" on "setup" page:
@@ -92,3 +94,8 @@ Feature: We can enter in grades and view reports from the gradebook
       | Test assignment name 1 | 0.72% | 0.72% |
       | Test assignment name 2 | 1.00% | 1.00% |
       | Course total | 1.00% | 1.00% |
+
+  Scenario: User not enrolled in any course should not see the grades report
+    Given I log in as "admin"
+    When I follow "Grades" in the user menu
+    Then I should see "You are not enrolled in, nor teaching any courses on this site."
