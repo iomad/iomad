@@ -42,11 +42,13 @@ use required_capability_exception;
 class iomad {
 
     /**
-     * Registers the IOMAD site
-     * @param $parms - (array)
+     *  Register the IOMAD site
+     *
+     * @param array $data
+     * @return void
      */
-    public static function register_site($data) {
-        global $CFG;
+    public static function register_site(array $data) {
+        global $CFG, $DB;
 
         // Add in the missing data.
         $data['siteurl'] = $CFG->wwwroot;
@@ -72,10 +74,12 @@ class iomad {
      * Gets the current users company ID depending on
      * if the user is an admin and editing a company or is a
      * company user tied to a company.
-     * @param $context - stdclass()
-     * @return int
+     *
+     * @param object $context
+     * @param bool $required
+     * @return integer
      */
-    public static function get_my_companyid($context, $required = true) {
+    public static function get_my_companyid(object $context, bool $required = true): int {
         global $SESSION, $USER, $DB, $CFG;
 
         // Are we logged in?
@@ -124,10 +128,10 @@ class iomad {
     /**
      * Check to see if a user is associated to a company.
      *
-     * Returns int or false;
-     *
-     **/
-    public static function is_company_user($user = null) {
+     * @param object|null $user
+     * @return bool|integer
+     */
+    public static function is_company_user(object $user): bool|int {
         global $USER, $DB, $SESSION;
 
         // Are we being passed a user?
@@ -159,10 +163,10 @@ class iomad {
     /**
      * Check to see if a user is a manager in a company.
      *
-     * Returns int or false;
-     *
-     **/
-    public static function is_company_admin($user = null) {
+     * @param object|null $user
+     * @return bool|integer
+     */
+    public static function is_company_admin(object $user): bool|int {
         global $USER, $DB;
 
         // Are we being passed a user?
@@ -182,12 +186,11 @@ class iomad {
     }
 
     /**
-     * Get a users company id.
-     *
-     * Returns int;
-     *
-     **/
-    public static function companyid() {
+     * Get a users company id
+     *      *
+     * @return integer
+     */
+    public static function companyid(): int {
         global $USER;
 
         if (self::is_company_user()) {
@@ -198,12 +201,11 @@ class iomad {
     }
 
     /**
-     * Get a users company shortname.
+     * Get a users company shortname
      *
-     * Returns text;
-     *
-     **/
-    public static function companyshortname() {
+     * @return string
+     */
+    public static function companyshortname(): string {
         global $USER;
 
         if (self::is_company_user()) {
@@ -214,9 +216,10 @@ class iomad {
     }
 
     /**
-     * Set up a users company in their profile.
+     * Set up a users company in their profile
      *
-     **/
+     * @return void
+     */
     public static function load_company() {
         global $USER;
 
@@ -235,13 +238,12 @@ class iomad {
     }
 
     /**
-     * Get the company Custom CSS given an ID.
+     * Get the company Custom CSS given an ID
      *
-     * Parameters = $companyid = int;
-     *
-     * Returns text;
-     **/
-    public static function get_company_customcss($companyid) {
+     * @param int $companyid
+     * @return string
+     */
+    public static function get_company_customcss(int $companyid): string {
         global $DB;
 
         if ($companycustomcss = $DB->get_field('company', 'customcss', ['id' => $companyid])) {
@@ -252,13 +254,12 @@ class iomad {
     }
 
     /**
-     * Get the company main colour given an ID.
+     * Get the company main colour given an ID
      *
-     * Parameters = $companyid = int;
-     *
-     * Returns text;
-     **/
-    public static function get_company_maincolor($companyid) {
+     * @param integer $companyid
+     * @return string
+     */
+    public static function get_company_maincolor(int $companyid): string {
         global $DB;
 
         if ($companyothercss = $DB->get_field('company', 'maincolor', ['id' => $companyid])) {
@@ -269,13 +270,12 @@ class iomad {
     }
 
     /**
-     * Get the company heading colour given an ID.
+     * Get the company heading colour given an ID
      *
-     * Parameters = $companyid = int;
-     *
-     * Returns text;
-     **/
-    public static function get_company_headingcolor($companyid) {
+     * @param integer $companyid
+     * @return string
+     */
+    public static function get_company_headingcolor(int $companyid): string {
         global $DB;
 
         if ($companyothercss = $DB->get_field('company', 'headingcolor', ['id' => $companyid])) {
@@ -286,13 +286,12 @@ class iomad {
     }
 
     /**
-     * Get the company link colour given an ID.
+     * Get the company link colour given an ID
      *
-     * Parameters = $companyid = int;
-     *
-     * Returns text;
-     **/
-    public static function get_company_linkcolor($companyid) {
+     * @param integer $companyid
+     * @return string
+     */
+    public static function get_company_linkcolor(int $companyid): string {
         global $DB;
 
         if ($companyothercss = $DB->get_field('company', 'linkcolor', ['id' => $companyid])) {
@@ -305,12 +304,10 @@ class iomad {
     /**
      * SQL text processing to add a company course table join
      *
-     * Parameters - $alias = text;
-     *
-     * Returns text;
-     *
-     **/
-    public static function join_company_course($alias = "{course}") {
+     * @param string $alias
+     * @return void
+     */
+    public static function join_company_course(string $alias = "{course}"): string {
         $companyid = self::companyid();
         if ($companyid > 0) {
             return " INNER JOIN {company_course} ON $alias.id = {company_course}.courseid
@@ -323,12 +320,10 @@ class iomad {
     /**
      * SQL text processing to add a company user table join
      *
-     * Parameters - $alias = text;
-     *
-     * Returns text;
-     *
-     **/
-    public static function join_company_user($alias = "{user}") {
+     * @param string $alias
+     * @return void
+     */
+    public static function join_company_user(string $alias = "{user}"): string {
         if ($companyshortname = self::companyshortname()) {
             return " INNER JOIN {user_info_data} uid ON (
                         uid.userid = $alias.id
@@ -343,12 +338,12 @@ class iomad {
     }
 
     /**
-     * Add license courses to the list of my courses
+     * Add available licensed courses to list of courses
      *
-     * Parameters - &$mycourses = [];
-     *
-     **/
-    public static function iomad_add_license_courses(&$mycourses) {
+     * @param array $mycourses
+     * @return void
+     */
+    public static function iomad_add_license_courses(array &$mycourses) {
         global $DB, $CFG, $USER;
         // Get the list of courses the user has a valid license for but not already enroled in.
         $currentcourses = $DB->get_records_select(
@@ -363,16 +358,15 @@ class iomad {
         if ($licensecourses = $currentcourses) {
             $mycourses = $mycourses + $licensecourses;
         }
-        return;
     }
 
     /**
-     * Add shared courses to the list of courses
+     * Add shared courses to a list of courses
      *
-     * Parameters - &$courses = [];
-     *
-     **/
-    public static function iomad_add_shared_courses(&$courses) {
+     * @param array $courses
+     * @return void
+     */
+    public static function iomad_add_shared_courses(array &$courses) {
         global $DB, $CFG, $USER;
 
         if (!empty($USER->profile['company'])) {
@@ -410,17 +404,18 @@ class iomad {
             }
             $courses = $courses + $sharedcourses;
         }
-        return;
     }
 
     /**
-     * IOMAD:
      * Filter profile field categories to only show 'company' categories for the
      * current user. All other pass through as normal
-     * @param array $categories list of category objects
-     * @return array filtered list of categories
+     *
+     * @param array $categories
+     * @param integer $userid
+     * @param integer $companyid
+     * @return array
      */
-    public static function iomad_filter_profile_categories($categories, $userid = 0, $companyid = 0) {
+    public static function iomad_filter_profile_categories(array $categories, int $userid = 0, int $companyid = 0): array {
         global $DB, $USER;
 
         if (empty($userid) || $userid == -1) {
@@ -455,13 +450,13 @@ class iomad {
     }
 
     /**
-     * IOMAD:
      * Filter categories to only show 'company' categories for the
      * current user. All other pass through as normal
-     * @param array $categories list of category objects
-     * @return array filtered list of categories
+     *
+     * @param array $categories
+     * @return array
      */
-    public static function iomad_filter_categories($categories) {
+    public static function iomad_filter_categories(array $categories): array {
         global $DB, $USER;
 
         $contextsystem = context_system::instance();
@@ -595,13 +590,13 @@ class iomad {
     }
 
     /**
-     * IOMAD:
      * Filter courses to only show 'company' courses for the
      * current user. All other pass through as normal
-     * @param array $courses list of courses objects
-     * @return array filtered list of courses
+     *
+     * @param array $courses
+     * @return array
      */
-    public static function iomad_filter_courses($courses) {
+    public static function iomad_filter_courses(array $courses): array {
         global $DB, $USER;
 
         $contextsystem = context_system::instance();
@@ -638,13 +633,13 @@ class iomad {
     }
 
     /**
-     * IOMAD:
      * Add in potential courses for the current user
      * so they can see the calendar events in their calendar
-     * @param array $courses list of courses objects
-     * @return array filtered list of courses
+     *
+     * @param array $courses
+     * @return array
      */
-    public static function add_calendar_trainingevent_courses($courses) {
+    public static function add_calendar_trainingevent_courses(array $courses): array {
         global $DB, $USER;
 
         $context = context_system::instance();
@@ -781,13 +776,12 @@ class iomad {
     }
 
     /**
-     * IOMAD:
-     * Filter objects to only show 'company' objects for the
-     * current user. All other pass through as normal
-     * @param array $objects list of competency objects
-     * @return array filtered list of objects.
+     * Get a list of competency frameworks assigned to the company id
+     *
+     * @param integer $companyid
+     * @return array
      */
-    public static function get_company_frameworkids($companyid) {
+    public static function get_company_frameworkids(int $companyid): array {
         global $DB;
 
         $companyframeworks = $DB->get_records('company_comp_frameworks', ['companyid' => $companyid]);
@@ -807,13 +801,12 @@ class iomad {
     }
 
     /**
-     * IOMAD:
-     * Filter objects to only show 'company' objects for the
-     * current user. All other pass through as normal
-     * @param array $objects list of competency objects
-     * @return array filtered list of objects.
+     * Get a list of competency templates assigned to the company id
+     *
+     * @param integer $companyid
+     * @return array
      */
-    public static function get_company_templateids($companyid) {
+    public static function get_company_templateids(int $companyid): array {
         global $DB;
 
         $companytemplates = $DB->get_records('company_comp_templates', ['companyid' => $companyid]);
@@ -832,12 +825,13 @@ class iomad {
         return $return;
     }
 
-    /** IOMAD:
-     * Check if a category is attached to a company AND
-     * the user belongs to a different company.
-     * Otherwise, return true
+    /**
+     * Check if the category is visible to the current user/company
+     *
+     * @param object $category
+     * @return bool
      */
-    public static function iomad_check_category($category) {
+    public static function iomad_check_category(object $category): bool {
         global $CFG, $DB, $USER;
 
         // If we are installing this will be called to build
@@ -862,12 +856,12 @@ class iomad {
     }
 
     /**
-     * Check if a course category can be seen by a user.
+     * Check if a course category id can be seen by a user.
      *
-     * @param int $categoryid
+     * @param integer $categoryid
      * @return bool
      */
-    public static function iomad_check_categoryid($categoryid) {
+    public static function iomad_check_categoryid(int $categoryid): bool {
         global $CFG, $DB, $USER;
 
         // If we are installing this will be called to build
@@ -898,15 +892,15 @@ class iomad {
      * @param integer $checkid course id
      * @param string $name course shortname
      * @param string $idnumber course idnumber
-     * @param boolean $checkhidden don't strip hidden courses
-     * @return boolean
+     * @param bool $checkhidden don't strip hidden courses
+     * @return bool
      */
     public static function iomad_check_course(
-        $checkid = 0,
-        $name = '',
-        $idnumber = '',
-        $checkhidden = false
-    ) {
+        int $checkid = 0,
+        string $name = '',
+        string $idnumber = '',
+        bool $checkhidden = false
+    ): bool {
         global $DB, $USER;
 
         // If we are installing this will be called to build
@@ -967,13 +961,12 @@ class iomad {
     }
 
     /**
-     * Sets up a new user filter form.
+     * Sets up a new user filter form
      *
-     * Parameters - $companyid = int;
-     *
-     * Returns form;
-     **/
-    public static function add_user_filter_form($companyid) {
+     * @param integer $companyid
+     * @return object
+     */
+    public static function add_user_filter_form(int $companyid): object {
         require_once('userfilterform.php');
 
         $mform = new user_filter_form(null, ['companyid' => $companyid]);
@@ -982,13 +975,13 @@ class iomad {
     }
 
     /**
-     * Add the parameters which would be passed by the user filter form
+     * Add the parameters which would be passed from the user filter form
      *
-     * Parameters - &$params = array;
-     *              $companyid = int;
-     *
-     **/
-    public static function add_user_filter_params(&$params, $companyid) {
+     * @param array $params
+     * @param integer $companyid
+     * @return object
+     */
+    public static function add_user_filter_params(array &$params, int $companyid): object {
         global $DB, $CFG;
 
         $firstname = optional_param('firstname', 0, PARAM_CLEAN);
@@ -1112,23 +1105,24 @@ class iomad {
     }
 
     /**
-     * Get a list of users provided a list of parameters
+     * Generate search SQL, parameters etc
      *
-     * Parameters - &$params = [];
-     *              $idlist = [];
-     *              $sort = text;
-     *              $dir = text;
-     *              $departmentid = int;
-     *
-     * Return [];
-     **/
-    public static function get_user_sqlsearch($params,
-                                              $idlist = '',
-                                              $sort = "",
-                                              $dir = "ASC",
-                                              $departmentid = 0,
-                                              $nogrades = false,
-                                              $allcourse = false) {
+     * @param array $params
+     * @param array $idlist
+     * @param string $sort
+     * @param string $dir
+     * @param integer $departmentid
+     * @param bool $nogrades
+     * @param bool $allcourse
+     * @return object
+     */
+    public static function get_user_sqlsearch(array $params,
+                                              array $idlist = [],
+                                              string $sort = "",
+                                              string $dir = "ASC",
+                                              int $departmentid = 0,
+                                              bool $nogrades = false,
+                                              bool $allcourse = false): object {
         global $DB, $CFG;
 
         if ($allcourse) {
@@ -1369,12 +1363,12 @@ class iomad {
     /**
      * Get completion summary info for a course
      *
-     * Parameters - $departmentid = int;
-     *              $courseid = int;
-     *
-     * Return [];
-     **/
-    public static function get_course_summary_info($departmentid, $courseid = 0, $showsuspended = 1) {
+     * @param integer $departmentid
+     * @param integer $courseid
+     * @param integer $showsuspended
+     * @return array
+     */
+    public static function get_course_summary_info(int $departmentid, int $courseid = 0, bool $showsuspended = true): array {
         global $DB;
 
         // Create a temporary table to hold the userids.
@@ -1453,8 +1447,12 @@ class iomad {
 
     /**
      * Get users into temporary table
+     *
+     * @param string $temptablename
+     * @param string $searchinfo
+     * @return array
      */
-    private static function populate_temporary_users($temptablename, $searchinfo) {
+    private static function populate_temporary_users(string $temptablename, string $searchinfo): array {
         global $DB;
 
         // Create a temporary table to hold the userids.
@@ -1484,14 +1482,19 @@ class iomad {
     /**
      * Get user completion info for a course
      *
-     * Parameters - $departmentid = int;
-     *              $courseid = int;
-     *              $page = int;
-     *              $perpade = int;
-     *
-     * Return [];
-     **/
-    public static function get_user_course_completion_data($searchinfo, $courseid, $page = 0, $perpage = 0, $completiontype = 0) {
+     * @param object $searchinfo
+     * @param integer $courseid
+     * @param integer $page
+     * @param integer $perpage
+     * @param integer $completiontype
+     * @return object
+     */
+    public static function get_user_course_completion_data(
+        object $searchinfo,
+        int $courseid,
+        int $page = 0,
+        int $perpage = 0,
+        int $completiontype = 0): object {
         global $DB;
 
         $completiondata = (object) [];
@@ -1561,13 +1564,17 @@ class iomad {
     /**
      * Get all users completion info regardless of course
      *
-     * Parameters - $departmentid = int;
-     *              $page = int;
-     *              $perpade = int;
-     *
-     * Return [];
-     **/
-    public static function get_all_user_course_completion_data($searchinfo, $page = 0, $perpage = 0, $completiontype = 0) {
+     * @param object $searchinfo
+     * @param integer $page
+     * @param integer $perpage
+     * @param integer $completiontype
+     * @return object
+     */
+    public static function get_all_user_course_completion_data(
+        object $searchinfo,
+        int $page = 0,
+        int $perpage = 0,
+        int $completiontype = 0): object {
         global $DB;
 
         $completiondata = (object) [];
@@ -1642,22 +1649,22 @@ class iomad {
     }
 
     /**
-     * Get a list of users provided a list of parameters
+     * Generate SQL search text and parameters for users and licenses
      *
-     * Parameters - &$params = [];
-     *              $idlist = [];
-     *              $sort = text;
-     *              $dir = text;
-     *              $departmentid = int;
-     *
-     * Return [];
-     **/
-    public static function get_user_license_sqlsearch($params,
-                                                      $idlist = '',
-                                                      $sort = 'lastname',
-                                                      $dir = 'ASC',
-                                                      $departmentid = null,
-                                                      $licenses = false) {
+     * @param array $params
+     * @param array $idlist
+     * @param string $sort
+     * @param string $dir
+     * @param integer|null $departmentid
+     * @param bool $licenses
+     * @return object
+     */
+    public static function get_user_license_sqlsearch(array $params,
+                                                      array $idlist = [],
+                                                      string $sort = 'lastname',
+                                                      string $dir = 'ASC',
+                                                      int $departmentid = 0,
+                                                      bool $licenses = false): object {
         global $DB, $CFG;
 
         if (!empty($params['courseid']) && $params['courseid'] == 1) {
@@ -1738,12 +1745,15 @@ class iomad {
     /**
      * Get license summary info for a course
      *
-     * Parameters - $departmentid = int;
-     *              $courseid = int;
-     *
-     * Return [];
-     **/
-    public static function get_course_license_summary_info($departmentid, $courseid = 0, $showsuspended = false) {
+     * @param integer $departmentid
+     * @param integer $courseid
+     * @param bool $showsuspended
+     * @return array
+     */
+    public static function get_course_license_summary_info(
+        int $departmentid,
+        int $courseid = 0,
+        bool $showsuspended = false): array {
         global $DB;
 
         // Create a temporary table to hold the userids.
@@ -1822,20 +1832,22 @@ class iomad {
     }
 
     /**
-     * Get all users completion info regardless of course
+     * Get all users license info regardless of course
      *
-     * Parameters - $departmentid = int;
-     *              $page = int;
-     *              $perpade = int;
-     *
-     * Return [];
-     **/
-    public static function get_all_user_course_license_data($searchinfo,
-                                                            $page = 0,
-                                                            $perpage = 0,
-                                                            $completiontype = 0,
-                                                            $showsuspended = false,
-                                                            $showused = false) {
+     * @param array $searchinfo
+     * @param integer $page
+     * @param integer $perpage
+     * @param integer $completiontype
+     * @param bool $showsuspended
+     * @param bool $showused
+     * @return array
+     */
+    public static function get_all_user_course_license_data(array $searchinfo,
+                                                            int $page = 0,
+                                                            int $perpage = 0,
+                                                            int $completiontype = 0,
+                                                            bool $showsuspended = false,
+                                                            bool $showused = false): object {
         global $DB;
 
         $completiondata = (object) [];
@@ -1931,16 +1943,16 @@ class iomad {
      * @return array
      */
     public static function get_companies_listing(
-        $sort = 'name',
-        $dir = 'ASC',
-        $page = 0,
-        $recordsperpage = 0,
-        $search = '',
-        $firstinitial = '',
-        $lastinitial = '',
-        $extraselect = '',
+        string $sort = 'name',
+        string $dir = 'ASC',
+        int $page = 0,
+        int $recordsperpage = 0,
+        string $search = '',
+        string $firstinitial = '',
+        string $lastinitial = '',
+        string $extraselect = '',
         array $extraparams = []
-    ) {
+    ): array {
         global $DB;
 
         $params = [];
@@ -1978,20 +1990,22 @@ class iomad {
     /**
      * Get user completion info for a course
      *
-     * Parameters - $departmentid = int;
-     *              $courseid = int;
-     *              $page = int;
-     *              $perpade = int;
-     *
-     * Return [];
-     **/
-    public static function get_user_course_license_data($searchinfo,
-                                                        $courseid,
-                                                        $page = 0,
-                                                        $perpage = 0,
-                                                        $completiontype = 0,
-                                                        $showsuspended = false,
-                                                        $showused = false) {
+     * @param array $searchinfo
+     * @param integer $courseid
+     * @param integer $page
+     * @param integer $perpage
+     * @param integer $completiontype
+     * @param bool $showsuspended
+     * @param bool $showused
+     * @return object
+     */
+    public static function get_user_course_license_data(array $searchinfo,
+                                                        int $courseid,
+                                                        int $page = 0,
+                                                        int $perpage = 0,
+                                                        int $completiontype = 0,
+                                                        bool $showsuspended = false,
+                                                        bool $showused = false): object {
         global $DB;
 
         $completiondata = (object) [];
@@ -2062,12 +2076,17 @@ class iomad {
     /**
      * Copied from similarly named function in accesslib.php
      * modified to check iomad restrictions database.
-     * @param unknown $capability
+     * @param int $companyid
+     * @param string $capability
      * @param context $context
      * @param array $accessdata
-     * @return boolean
+     * @return bool
      */
-    private static function has_capability_in_accessdata($companyid, $capability, context $context, array &$accessdata) {
+    private static function has_capability_in_accessdata(
+        int $companyid,
+        string $capability,
+        context $context,
+        array &$accessdata): bool {
         global $CFG, $DB;
 
         // Build $paths as a list of current + all parent "paths" with order bottom-to-top.
@@ -2143,12 +2162,12 @@ class iomad {
 
     /**
      * IOMAD version
-     * @param unknown $capability
+     * @param string $capability
      * @param context $context
      * @param int $companyid (optional) check for different company (and right to access same).
      * @return bool
      */
-    public static function has_capability($capability, context $context, $companyid = 0) {
+    public static function has_capability(string $capability, context $context, int $companyid = 0): bool {
         global $USER, $DB;
 
         // If original version says no then it's no.
@@ -2186,12 +2205,12 @@ class iomad {
 
     /**
      * Iomad version of require_capability
-     * @param unknown $capability
+     * @param string $capability
      * @param context $context
      * @param int $companyid (optional) check for different company (and right to access same).
      * @throws required_capability_exception
      */
-    public static function require_capability($capability, context $context, $companyid = 0) {
+    public static function require_capability(string $capability, context $context, int $companyid = 0) {
         if (!self::has_capability($capability, $context, $companyid)) {
             throw new required_capability_exception($context, $capability, 'nopermissions', 'local_iomad');
         }
@@ -2207,8 +2226,11 @@ class iomad {
     /**
      * Redirect on company URL matching
      *
+     * @param array $wwwroot
+     * @param array $rurl
+     * @return void
      */
-    public static function check_redirect($wwwroot, $rurl) {
+    public static function check_redirect(array $wwwroot, array $rurl) {
         global $CFG, $DB;
 
         // If we are installing then do nothing.
@@ -2233,8 +2255,11 @@ class iomad {
 
     /**
      * Fix the passed URL to use the tenant one.
-     **/
-    public static function fix_url($url) {
+     *
+     * @param string $url
+     * @return string
+     */
+    public static function fix_url(string $url): string {
         global $CFG;
 
         $myurlarray = parse_url($CFG->wwwroot);
@@ -2249,8 +2274,11 @@ class iomad {
     /**
      * Unparse a URL array and send back the whole thing.
      * Found script on PHP.net by thomas at gielfeldt dot com
-     **/
-    private static function unparse_url($parsedurl) {
+     *
+     * @param array $parsedurl
+     * @return string
+     */
+    private static function unparse_url(array $parsedurl): string {
 
         $scheme = isset($parsedurl['scheme']) ? $parsedurl['scheme'] . '://' : '';
         $host = isset($parsedurl['host']) ? $parsedurl['host'] : '';
@@ -2266,12 +2294,12 @@ class iomad {
     }
 
     /**
-     * Wrapper function for core Moodle get_config()
+     * Wrapper function for core get_config
      *
      * @param string $plugin
      * @param string $name
      * @param int $companyid
-     * @return boolean|object|string
+     * @return bool|object|string
      */
     public static function get_config($plugin, $name = null, $companyid = 0) {
 
