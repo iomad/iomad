@@ -25,7 +25,7 @@
 
 use core\moodlenet\utilities;
 use core_contentbank\contentbank;
-use local_iomad\iomad;
+use local_iomad\{company_user, iomad};
 
 defined('MOODLE_INTERNAL') || die();
 
