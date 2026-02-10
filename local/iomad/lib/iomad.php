@@ -100,7 +100,7 @@ class iomad {
         $companyid = 0;
         if (!empty($SESSION->currenteditingcompany)) {
             $companyid = $SESSION->currenteditingcompany;
-        } else if (self::is_company_user()) {
+        } else if (self::is_company_user($USER)) {
             $companyid = self::companyid();
         } else if (!self::has_capability('block/iomad_company_admin:company_view_all', $context) && $required) {
             if (self::has_capability('block/iomad_company_admin:company_edit', $context)) {
@@ -131,16 +131,11 @@ class iomad {
     /**
      * Check to see if a user is associated to a company.
      *
-     * @param object|null $user
+     * @param object $user
      * @return bool|integer
      */
     public static function is_company_user(object $user): bool|int {
-        global $USER, $DB, $SESSION;
-
-        // Are we being passed a user?
-        if (empty($user)) {
-            $user = $USER;
-        }
+        global $DB, $SESSION, $USER;
 
         if (empty($user->id) && empty($SESSION->currenteditingcompany)) {
             // We are installing.  Go no further.
@@ -196,7 +191,7 @@ class iomad {
     public static function companyid(): int {
         global $USER;
 
-        if (self::is_company_user()) {
+        if (self::is_company_user($USER)) {
             self::load_company();
             return $USER->company->id;
         }
@@ -211,7 +206,7 @@ class iomad {
     public static function companyshortname(): string {
         global $USER;
 
-        if (self::is_company_user()) {
+        if (self::is_company_user($USER)) {
             self::load_company();
             return $USER->company->shortname;
         }
@@ -227,7 +222,7 @@ class iomad {
         global $USER;
 
         if (!isset($USER->company->id)) {
-            if (self::is_company_user()) {
+            if (self::is_company_user($USER)) {
                 $company = company::by_userid($USER->id);
                 $fields = ['id', 'shortname', 'name'];
                 if ($company->cssfields) {
