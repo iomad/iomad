@@ -115,7 +115,7 @@ if (!$companycount = $DB->count_records('company')) {
 // If we don't have one selected pick the first of these.
 if (empty($SESSION->currenteditingcompany) &&
     !iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
-    if (iomad::is_company_user()) {
+    if (company_user::is_company_user()) {
         $company = iomad::companyid();
         $SESSION->currenteditingcompany = $company;
     } else {

@@ -21,7 +21,7 @@ use core\context\course as context_course;
 use core\context_helper;
 use core\url;
 use moodle_page;
-use local_iomad\iomad;
+use local_iomad\{company_user, iomad};
 
 /**
  * The global navigation class used especially for AJAX requests.
@@ -188,7 +188,7 @@ class global_navigation_for_ajax extends global_navigation {
             $limit = (int)$CFG->navcourselimit;
         }
 
-        if (iomad::is_company_user()) {
+        if (company_user::is_company_user()) {
             $companyid = iomad::get_my_companyid(context_system::instance());
             $sharedsql = " AND ( cc.id IN (
                                SELECT category FROM {company}

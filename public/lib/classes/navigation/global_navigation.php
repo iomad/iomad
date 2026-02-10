@@ -36,7 +36,7 @@ use core_course_category;
 use course_modinfo;
 use moodle_page;
 use stdClass;
-use local_iomad\iomad;
+use local_iomad\{company_user, iomad};
 
 /**
  * The global navigation class used for... the global navigation
@@ -570,7 +570,7 @@ class global_navigation extends navigation_node {
             if (!isloggedin()) {
                 return array();
             }
-            if (iomad::is_company_user()) {
+            if (company_user::is_company_user()) {
                 $companyid = iomad::get_my_companyid(context_system::instance());
                 $sharedsql = " AND ( c.id IN (
                                    SELECT courseid FROM {company_course}
@@ -719,7 +719,7 @@ class global_navigation extends navigation_node {
         } else {
             // Prepare the SQL to load the courses and their contexts.
             // IOMAD addition.
-            if (iomad::is_company_user()) {
+            if (company_user::is_company_user()) {
                 $companyid = iomad::get_my_companyid(context_system::instance());
                 $sharedsql = " AND ( c.id IN (
                                    SELECT courseid FROM {company_course}
