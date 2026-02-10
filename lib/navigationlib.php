@@ -1812,7 +1812,7 @@ class global_navigation extends navigation_node {
             if (!isloggedin()) {
                 return array();
             }
-            if (iomad::is_company_user()) {
+            if (company_user::is_company_user()) {
                 $companyid = iomad::get_my_companyid(context_system::instance());
                 $sharedsql = " AND ( c.id IN (
                                    SELECT courseid FROM {company_course}
@@ -1954,7 +1954,7 @@ class global_navigation extends navigation_node {
         } else {
             // Prepare the SQL to load the courses and their contexts
             // IOMAD addition.
-            if (iomad::is_company_user()) {
+            if (company_user::is_company_user()) {
                 $companyid = iomad::get_my_companyid(context_system::instance());
                 $sharedsql = " AND ( c.id IN (
                                    SELECT courseid FROM {company_course}
@@ -3761,7 +3761,7 @@ class global_navigation_for_ajax extends global_navigation {
             $limit = (int)$CFG->navcourselimit;
         }
 
-        if (iomad::is_company_user()) {
+        if (company_user::is_company_user()) {
             $companyid = iomad::get_my_companyid(context_system::instance());
             $sharedsql = " AND ( cc.id IN (
                                SELECT category FROM {company}
