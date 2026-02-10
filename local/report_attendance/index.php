@@ -223,7 +223,7 @@ if (!empty($courseid)) {
                                            AND userid IN ('.$allowedlist.') AND waitlisted=0')) {
             foreach ($users as $user) {
                 $fulluserdata = $DB->get_record('user', array('id' => $user->id));
-                $fulluserdata->department = company_user::get_department_name($user->id);
+                $fulluserdata->department = company_user::get_department_name($user->id, $companyid);
                 $fullname = "$fulluserdata->firstname $fulluserdata->lastname";
                 echo "\"$fullname\", \"$fulluserdata->department\", \"$fulluserdata->email\"\n";
             }

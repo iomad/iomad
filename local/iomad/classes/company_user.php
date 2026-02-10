@@ -49,12 +49,14 @@ require_once(__DIR__.'/../../../enrol/locallib.php');
 class company_user {
 
     /**
-     * Creates a user using company user defaults and attaches it to a company
-     * User will be emailed a password when the cron job has run
+     *  Creates a user using company user defaults and attaches it to a company
+     * If required a password will be emailed when the cron job runs
+     *
      * @param object $data
-     * @return userid
+     * @param integer $companyid
+     * @return integer
      */
-    public static function create($data, $companyid = 0) {
+    public static function create(object $data, int $companyid = 0): int {
         global $DB, $CFG, $USER;
 
         if (!empty($companyid)) {
@@ -260,11 +262,14 @@ class company_user {
     }
 
     /**
-     * Removes a user's details from all company assignments and marks them as deleted
-     * @param int userid
-     * @return boolean
+     * Completely remove a user from a tenant and delete
+     * the account if is no longer assigned to any other tennant
+     *
+     * @param integer $userid
+     * @param integer $companyid
+     * @return bool
      */
-    public static function delete($userid, $companyid = 0) {
+    public static function delete(int $userid, int $companyid = 0): bool {
         global $DB;
 
         if (!$user = $DB->get_record('user', ['id' => $userid, 'deleted' => 0])) {
@@ -314,11 +319,14 @@ class company_user {
     }
 
     /**
-     * Suspends a user and keeps the company details as was.
-     * @param int userid
-     * @return boolean
+     * Suspend the user in the tenant
+     * suspend the user on the system if they are not in any other tenant
+     *
+     * @param integer $userid
+     * @param integer $companyid
+     * @return void
      */
-    public static function suspend($userid, $companyid = 0) {
+    public static function suspend(int $userid, int $companyid = 0) {
         global $DB;
 
         // Get the company details for the user.
@@ -327,8 +335,6 @@ class company_user {
         } else {
             $company = new company($companyid);
         }
-        $systemcontext = context_system::instance();
-        $companycontext = context_company::instance($company->id);
 
         // Get the users company record.
         $DB->set_field('company_users', 'suspended', 1, [
@@ -359,7 +365,7 @@ class company_user {
             }
         }
 
-        // Only really delete the user if they aren't in any other company.
+        // Only really suspend the user if they aren't in any other company.
         if (!$DB->get_records('company_users', ['userid' => $userid, 'suspended' => 0])) {
             // Mark user as suspended.
             $DB->set_field('user', 'suspended', 1, ['id' => $userid]);
@@ -370,11 +376,13 @@ class company_user {
     }
 
     /**
-     * Unsuspends a user and keeps the company details as was.
-     * @param int userid
-     * @return boolean
+     * Unsuspend a user within a tenant
+     *
+     * @param integer $userid
+     * @param integer $companyid
+     * @return void
      */
-    public static function unsuspend($userid, $companyid = 0) {
+    public static function unsuspend(int $userid, int $companyid = 0) {
         global $DB;
 
         // Get the company details for the user.
@@ -395,13 +403,13 @@ class company_user {
     }
 
     /**
-     * Perform signup form validation for a new user.
-     * @param  array $data  the sign-up data
-     * @param  array $files files among the data
-     * @return array list of errors, being the key the data element name and the value the error itself
-     * @since Moodle 3.2
+     * Perform tenant signup form validation for a new user.
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
      */
-    public static function signup_validate_data($data, $files) {
+    public static function signup_validate_data(array $data, array $files): array {
         global $CFG, $DB, $SESSION;
 
         $companyid = $SESSION->currenteditingcompany;
@@ -458,12 +466,22 @@ class company_user {
     }
 
     /**
-     * Enrol a user in courses
+     * Enrol a user into a list of courses
+     *
      * @param object $user
-     * @param array $courseids
+     * @param integer|array $courseids
+     * @param integer $companyid
+     * @param integer $rid
+     * @param integer $groupid
+     * @param int $today
      * @return void
      */
-    public static function enrol($user, $courseids, $companyid = null, $rid = 0, $groupid = 0, $today = null) {
+    public static function enrol(object $user,
+                                 int|array $courseids,
+                                 int $companyid = 0,
+                                 int $rid = 0,
+                                 int $groupid = 0,
+                                 int $today = 0) {
         global $DB;
 
         // Did we get passed a user id?
@@ -476,8 +494,9 @@ class company_user {
             $courseids = [$courseids];
         }
 
+        // Deal with the timestamp.
         if (empty($today)) {
-            $today = time();
+            $today = time;
         }
 
         $manualcache  = []; // Cache of used manual enrol plugins in each course.
@@ -609,13 +628,15 @@ class company_user {
     }
 
     /**
-     * Unenrol a user from a courses
+     * Unenrol a user from a list of courses
+     *
      * @param object $user
-     * @param array $courseids
-     * @param int $companyid
+     * @param array|integer $courseids
+     * @param integer $companyid
+     * @param bool $all
      * @return void
      */
-    public static function unenrol($user, $courseids, $companyid = null, $all = true) {
+    public static function unenrol(object $user, array|int $courseids, int $companyid = 0, bool $all = true) {
         global $DB, $PAGE;
 
         $studentrole = $DB->get_record('role', ['shortname' => 'student']);
@@ -634,42 +655,41 @@ class company_user {
         // Did we get passed a course id in the user (Comes from a selector)?
         if (!empty($user->courseid)) {
             // Skip if course is licensed.
-            if ($DB->get_record('iomad_courses', ['courseid' => $user->courseid, 'licensed' => true])) {
-                return;
-            }
-            $coursecontext = context_course::instance($user->courseid);
-            $roles = get_user_roles($coursecontext, $user->id, false);
-            foreach ($roles as $role) {
-                if (!$all && $role->roleid == $studentrole->id) {
-                    $isstudent = true;
-                } else {
-                    role_unassign($role->roleid, $user->id, $coursecontext->id);
-                }
-            }
-            if (!$isstudent) {
-                if (!$DB->get_record('iomad_courses', ['courseid' => $user->courseid, 'shared' => 0])) {
-                    $shared = true;
-                } else {
-                    $shared = false;
-                }
-                $course = $DB->get_record('course', ['id' => $user->courseid]);
-                $courseenrolmentmanager = new course_enrolment_manager($PAGE, $course);
-
-                $ues = $courseenrolmentmanager->get_user_enrolments($user->id);
-
-                foreach ($ues as $ue) {
-                    if ($ue->enrolmentinstance->courseid == $user->courseid) {
-                        list($instance, $plugin) = $courseenrolmentmanager->get_user_enrolment_components($ue);
-                        $plugin->unenrol_user($instance, $ue->userid);
+            if (!$DB->get_record('iomad_courses', ['courseid' => $user->courseid, 'licensed' => true])) {
+                $coursecontext = context_course::instance($user->courseid);
+                $roles = get_user_roles($coursecontext, $user->id, false);
+                foreach ($roles as $role) {
+                    if (!$all && $role->roleid == $studentrole->id) {
+                        $isstudent = true;
+                    } else {
+                        role_unassign($role->roleid, $user->id, $coursecontext->id);
                     }
                 }
-                if ($shared) {
-                    if (!empty($companyid)) {
-                        company::remove_user_from_shared_course(
-                            $user->courseid,
-                            $user->id,
-                            $companyid
-                        );
+                if (!$isstudent) {
+                    if (!$DB->get_record('iomad_courses', ['courseid' => $user->courseid, 'shared' => 0])) {
+                        $shared = true;
+                    } else {
+                        $shared = false;
+                    }
+                    $course = $DB->get_record('course', ['id' => $user->courseid]);
+                    $courseenrolmentmanager = new course_enrolment_manager($PAGE, $course);
+
+                    $ues = $courseenrolmentmanager->get_user_enrolments($user->id);
+
+                    foreach ($ues as $ue) {
+                        if ($ue->enrolmentinstance->courseid == $user->courseid) {
+                            list($instance, $plugin) = $courseenrolmentmanager->get_user_enrolment_components($ue);
+                            $plugin->unenrol_user($instance, $ue->userid);
+                        }
+                    }
+                    if ($shared) {
+                        if (!empty($companyid)) {
+                            company::remove_user_from_shared_course(
+                                $user->courseid,
+                                $user->id,
+                                $companyid
+                            );
+                        }
                     }
                 }
             }
@@ -748,11 +768,13 @@ class company_user {
     }
 
     /**
-     * Generate a username based on the email address of the user.
-     * @param text $email
-     * @return textDear nick@connectedshopping.com,
+     * Generate a username based on the email address of the user
+     *
+     * @param string $email
+     * @param bool $useemail
+     * @return string
      */
-    public static function generate_username($email, $useemail = false) {
+    public static function generate_username(string $email, $useemail = false): string {
         global $DB;
 
         if (empty($useemail)) {
@@ -783,10 +805,13 @@ class company_user {
     /**
      * Creates a temporary password for the user and keeps track of whether to
      * email it to the user or not
-     * @param stdclass $user
-     * @param boolean $sendemail
+     *
+     * @param object $user
+     * @param bool $sendemail
+     * @param bool $reset
+     * @return void
      */
-    public static function generate_temporary_password($user, $sendemail = false, $reset = false) {
+    public static function generate_temporary_password(object $user, $sendemail = false, $reset = false) {
         global $DB;
 
         if (get_user_preferences('create_password', false, $user) || $reset) {
@@ -805,16 +830,27 @@ class company_user {
     }
 
     /**
-     * Store the temporary password for the user
-     * @param stdclass $user
-     * @param boolean $sendemail
-     * @param text $temppassword
+     * Store the temporary password for the user and email if required
+     *
+     * @param object $user
+     * @param bool $sendemail
+     * @param string $temppassword
+     * @param bool $reset
+     * @param integer $due
+     * @return void
      */
-    public static function store_temporary_password($user, $sendemail, $temppassword, $reset = false, $due = 0) {
-        global $CFG, $DB, $USER;
+    public static function store_temporary_password(object $user,
+                                                    bool $sendemail,
+                                                    string $temppassword,
+                                                    bool $reset = false,
+                                                    int $due = 0) {
+        global $CFG, $USER;
+
+        // Deal with the timestamp.
         if (empty($due)) {
-            $due = time();
+            $due = time;
         }
+
         unset_user_preference('create_password', $user);
         if ($sendemail) {
             if ($reset) {
@@ -877,12 +913,17 @@ class company_user {
     /**
      * Check to see if a user can see a company
      * @param stdclass $company
-     * @return boolean
+     * @return bool
      */
-    public static function can_see_company($company) {
+    public static function can_see_company(int|object $company): bool {
         global $USER;
 
-        $systemcontext = context_system::instance();
+        // If companyid was passed in, retrieve the company object.
+        if (is_integer($company) &&
+            $company > 0) {
+            $company = new company($company);
+        }
+
         $companycontext = context_company::instance($company->id);
 
         if (!isset($company)) {
@@ -895,11 +936,6 @@ class company_user {
             iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)
         ) {
             return true;
-        }
-
-        // If companyid was passed in, retrieve the company object.
-        if (is_integer($company)) {
-            $company = new company($company);
         }
 
         // If company object, retrieve the shortname, otherwise assume the shortname was passed in.
@@ -919,10 +955,12 @@ class company_user {
     /**
      * Check is the user is associated to a company
      *
-     * @return boolean
+     * @return bool
      */
     public static function is_company_user() {
-        return iomad::is_company_user();
+        global $USER;
+
+        return iomad::is_company_user($USER);
     }
 
     /**
@@ -962,35 +1000,38 @@ class company_user {
     }
 
     /**
-     * Get the department name the user is assigned to.
-     * @param int $userid
-     * @return text
+     * Get the department name(s) the user is assigned to
+     *
+     * @param integer $userid
+     * @param integer $companyid
+     * @return string
      */
-    public static function get_department_name($userid) {
+    public static function get_department_name(int $userid, int $companyid): string {
         global $DB;
-        if (!$userdepartment = $DB->get_field_sql(
+
+        $userdepartments = $DB->get_field_sql(
             "SELECT d.name
-             FROM {department} d,
-             {company_users} cu
+             FROM {department} d
+             JOIN {company_users} cu ON cu.departmentid = d.id
              WHERE
-             d.id = cu.departmentid
-             AND
-             cu.userid = :userid",
-            ['userid' => $userid]
-        )) {
-            $userdepartment = "";
-        }
-        return $userdepartment;
+             cu.userid = :userid
+             AND cu.companyid = :companyid",
+            ['userid' => $userid,
+             'companyid' => $companyid]);
+
+        return implode(',', array_values($userdepartments));
     }
 
     /**
-     * Assign a user to a course group.
+     * Assign a user to a course group
+     *
      * @param object $user
-     * @param id $courseid
-     * @param id $groupid
+     * @param integer $courseid
+     * @param integer $groupid
+     * @param bool $move
      * @return void
      */
-    public static function assign_group($user, $courseid, $groupid, $move = true) {
+    public static function assign_group(object $user, int $courseid = 0, int $groupid = 0, $move = true) {
         global $DB;
 
         // Deal with any licenses.
@@ -1012,13 +1053,15 @@ class company_user {
     }
 
     /**
-     * Un assign a user from a course group.
+     * Unassign a user from a course group
+     *
+     * @param integer $companyid
      * @param object $user
-     * @param id $courseid
-     * @param id $groupid
+     * @param integer $courseid
+     * @param integer $groupid
      * @return void
      */
-    public static function unassign_group($companyid, $user, $courseid, $groupid) {
+    public static function unassign_group(int $companyid, object $user, int $courseid, int $groupid) {
         global $DB;
 
         groups_remove_member($groupid, $user->id);
@@ -1028,7 +1071,7 @@ class company_user {
 
         // Check if the user already belongs to one of the company groups or not still.
         $companygroups = $company->get_course_groups_menu($courseid);
-        if ($currentgroups = $DB->get_records_sql(
+        if (!$DB->get_records_sql(
             "SELECT id FROM {groups_members}
              WHERE userid = :userid
              AND groupid IN (:groups)",
@@ -1037,8 +1080,6 @@ class company_user {
                 'groups' => implode(',', array_keys($companygroups)),
             ]
         )) {
-            return;
-        } else {
 
             // Get the company group.
             $companygroup = company::get_company_group($companyid, $courseid);
@@ -1054,11 +1095,15 @@ class company_user {
     }
 
     /**
-     * 'Delete' user from course
-     * @param int userid
-     * @param int courseid
+     * Clear down a user from a course and/or reporting data
+     *
+     * @param object $userid
+     * @param integer $courseid
+     * @param string $action
+     * @param integer $litid
+     * @return void
      */
-    public static function delete_user_course($userid, $courseid, $action = '', $litid = 0) {
+    public static function delete_user_course(object $userid, int $courseid, string $action = '', int $litid = 0) {
         global $DB, $CFG;
 
         $rebuildcache = false;
@@ -1322,7 +1367,7 @@ class company_user {
      * @param int $courseid
      * @return void
      */
-    public static function auto_allocate_license($userid, $companyid, $courseid) {
+    public static function auto_allocate_license(int $userid, int $companyid, int $courseid) {
         global $DB;
 
         // Can we get a newer license?
@@ -1365,7 +1410,7 @@ class company_user {
      *
      * @return string
      */
-    public static function generate_token() {
+    public static function generate_token(): string {
         global $DB, $USER, $CFG;
 
         // Do clear up of old tokens.
@@ -1391,11 +1436,9 @@ class company_user {
      * in the user_get_user_navigation_info() function
      * in usr/lib.php
      *
-     * returns passed object $returnobject.
-     *
+     * @return object|bool
      **/
-    public static function add_user_popup_selector() {
-        global $OUTPUT;
+    public static function add_user_popup_selector(): object|bool {
 
         $returnobject = (object) [];
 
@@ -1449,10 +1492,10 @@ class company_user {
      * in the user_get_user_navigation_info() function
      * in usr/lib.php
      *
-     * returns passed object $returnobject.
-     *
+     * @param string search
+     * @return object
      **/
-    public static function get_all_user_companies($search) {
+    public static function get_all_user_companies(string $search): object {
 
         $returnobject = (object) [];
 
