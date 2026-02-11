@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD dashboard company search form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,20 +25,24 @@
 
 namespace block_iomad_company_admin\forms;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
- * User Filter form used on the Iomad pages.
+ * IOMAD dashboard company search form class
  *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class iomad_company_filter_form extends \moodleform {
-    protected $companyid;
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
-        global $CFG, $DB, $USER, $SESSION;
 
         $mform =& $this->_form;
-        $filtergroup = array();
         $mform->addElement('header', '', format_string(get_string('companysearchfields', 'local_iomad')));
         $mform->addElement('text', 'name', get_string('name'), 'size="20"');
         $mform->addElement('text', 'city', get_string('companycity', 'block_iomad_company_admin'), 'size="20"');
@@ -77,4 +83,3 @@ class iomad_company_filter_form extends \moodleform {
         $mform->addGroup($buttonarray, 'buttonar', '', ' ', false);
     }
 }
-

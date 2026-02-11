@@ -25,7 +25,9 @@
 
 namespace block_iomad_company_admin\event;
 
-defined('MOODLE_INTERNAL') || die();
+use core\exception\coding_exception;
+use core\event\base;
+use moodle_url;
 
 /**
  * The block_iomad_company_admin company course updated event.
@@ -43,7 +45,7 @@ defined('MOODLE_INTERNAL') || die();
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class company_course_updated extends \core\event\base {
+class company_course_updated extends base {
 
     /**
      * Init method.
@@ -77,26 +79,31 @@ class company_course_updated extends \core\event\base {
     /**
      * Get URL related to the action.
      *
-     * @return \moodle_url
+     * @return moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/blocks/iomad_company_admin/iomad_courses_form.php');
+        return new moodle_url('/block/iomad_company_admin/iomad_courses_form.php');
     }
 
     /**
      * Custom validation.
      *
-     * @throws \coding_exception
+     * @throws coding_exception
      * @return void
      */
     protected function validate_data() {
         parent::validate_data();
 
         if (!isset($this->other['iomadcourse'])) {
-            throw new \coding_exception('The \'iomadcourse\' value must be set in other.');
+            throw new coding_exception('The \'iomadcourse\' value must be set in other.');
         }
     }
 
+    /**
+     * Other mappings
+     *
+     * @return void
+     */
     public static function get_other_mapping() {
         $othermapped = array();
 

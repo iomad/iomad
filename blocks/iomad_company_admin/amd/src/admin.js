@@ -27,9 +27,10 @@ define(['jquery', 'theme_boost/bootstrap/tab'], function($) {
                 setTimeout(async function(){
                     var tabs = $(".iomad_company_admin").children(".nav-tabs").children(".nav-item");
                     var id = sessionStorage.getItem("iomad-dashboard-tab");
-                    //Check if the id is not equal to null
+                    // Check if the id is not equal to null
                     if(id !== null){
-                        //Check if the variable id doesn't include the string 'http' - Remove once the function for the click is fixed
+                        // Check if the variable id doesn't include the string 'http'
+                        // Remove once the function for the click is fixed
                         var hasTab = false;
                         tabs.each(function(index, element){
                             if($(element).find("a").attr("href") == id){
@@ -59,13 +60,15 @@ define(['jquery', 'theme_boost/bootstrap/tab'], function($) {
                             }
                         });
                     }
-                    //Set a function to run after 500ms to validate whether a company is selected and if not then reset the tabs to the first tab
+                    // Set a function to run after 500ms to validate whether a
+                    // company is selected and if not then reset the tabs to the first tab
                     setTimeout(async function(){
                         if($(".form-autocomplete-selection").length === 0){
                             return;
                         }
                         //Proceed with the if statement if a company is not selected
-                        if($(".form-autocomplete-selection").find("span").text().replace(/\s+/g, '').includes($('#id_company_label').text().replace(/\s+/g, ''))){
+                        if ($(".form-autocomplete-selection").find("span").text().replace(/\s+/g, '').includes(
+                            $('#id_company_label').text().replace(/\s+/g, ''))) {
                             var tabs = $(".iomad_company_admin").children(".nav-tabs").children(".nav-item");
                             //Loop through each .nav-item element
                             tabs.each(function(index, element){
@@ -77,7 +80,7 @@ define(['jquery', 'theme_boost/bootstrap/tab'], function($) {
                                 element.removeClass("active");
                                 $(element.attr("href")).removeClass("active");
                             });
-                            //Set the first tab as active and visible
+                            // Set the first tab as active and visible
                             var element = $(tabs[0]).find("a");
                             element.attr("aria-selected", false);
                             element.addClass("active");

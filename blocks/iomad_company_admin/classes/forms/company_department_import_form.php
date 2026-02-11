@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard import departments from file form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,28 +25,36 @@
 
 namespace block_iomad_company_admin\forms;
 
-use \moodleform;
+use moodleform;
 
 /**
- * Script to let a user import departments to a particular company.
+ * IOMAD Dashboard import departments from file form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class company_department_import_form extends moodleform {
 
-    function definition() {
-        global $CFG;
+    /**
+     * Form definition
+     *
+     * @return void
+     */
+    public function definition() {
 
-        // thing you have to do
+        // Set up the form.
         $mform =& $this->_form;
 
-        // header for main bit
-        $mform->addElement( 'header', 'general', get_string('departmentimport','block_iomad_company_admin'));
+        // Header for main bit.
+        $mform->addElement( 'header', 'general', get_string('departmentimport', 'block_iomad_company_admin'));
 
-        // file picker
-        $mform->addElement('filepicker', 'importfile', get_string('file'), null, array( 'accepted_types'=>'json'));
+        // Add the file picker.
+        $mform->addElement('filepicker', 'importfile', get_string('file'), null, ['accepted_types' => 'json']);
         $mform->addRule('importfile', null, 'required');
 
-        // buttons
+        // Finally buttons.
         $this->add_action_buttons();
     }
 }

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD dashboard authentication options form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,20 +25,34 @@
 
 namespace block_iomad_company_admin\forms;
 
-defined('MOODLE_INTERNAL') || die;
-
+use html_writer;
 use moodleform;
 
+/**
+ * IOMAD dashboard authentication options form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class company_auth_options_form extends moodleform {
+
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
         global $CFG;
 
+        // Set up the form.
         $mform = & $this->_form;
 
         $mform->addElement('hidden', 'action');
         $mform->setType('action', PARAM_ALPHA);
 
-        $mform->addElement('html', "<h2>" . get_string('authentication', 'admin') . "</h2>");
+        $mform->addElement('html', html_writer::tag('h2', get_string('authentication', 'admin')));
 
         // Get the list of available self signup authentication plugins.
         $availableauths = [];
@@ -49,7 +65,7 @@ class company_auth_options_form extends moodleform {
                 continue;
             }
 
-            // Get the auth title (from core or own auth lang files)
+            // Get the auth title (from core or own auth lang files).
             $availableauths[$auth] = $authplugin->get_title();
         }
 
@@ -74,13 +90,15 @@ class company_auth_options_form extends moodleform {
         $mform->addElement('static', 'guestloginbuttondesc', '', get_string('showguestlogin', 'auth'));
         $mform->setDefault('guestloginbutton', $CFG->guestloginbutton);
 
-
         $mform->addElement(
             'text',
             'alternateloginurl',
             get_string('alternateloginurl', 'auth')
         );
-        $mform->addElement('static', 'alternateloginurldesc', '', get_string('alternatelogin', 'auth', htmlspecialchars(get_login_url(), ENT_COMPAT)));
+        $mform->addElement('static',
+                           'alternateloginurldesc',
+                           '',
+                           get_string('alternatelogin', 'auth', htmlspecialchars(get_login_url(), ENT_COMPAT)));
         $mform->setDefault('alternateloginurl', '');
 
         $mform->addElement(
@@ -173,7 +191,12 @@ class company_auth_options_form extends moodleform {
         $actionbuttons = [];
         $actionbuttons[] = $mform->createElement('submit', 'submitbutton', get_string('savechanges'));
         $actionbuttons[] = $mform->createElement('cancel');
-        $actionbuttons[] = $mform->createElement('submit', 'resetbutton', get_string('resetdefault', 'block_iomad_company_admin'), ['class' => 'dangerbutton']);
+        $actionbuttons[] = $mform->createElement('submit',
+                                                 'resetbutton',
+                                                 get_string('resetdefault', 'block_iomad_company_admin'),
+                                                 [
+                                                     'class' => 'dangerbutton',
+                                                 ]);
         $mform->addGroup($actionbuttons, 'buttonar', '', ' ', false);
 
         $mform->hideIF('resetbutton', 'allowreset', 'eq', 0);

@@ -6,7 +6,7 @@
  }}
 
 <p>name: {{ license.name }}</p>
-<select id="licensecourseselector" name="licensecourses[]" multiple="multiple">
+<select id="licensecourseselector" name="licensecourses[]" multiple="multiple" style="width: 75%;">
     {{# courses }}
         <option value="{{ id }}" {{# license.program }}selected disabled{{/ license.program }}>{{ fullname }}</option>
     {{/ courses }}

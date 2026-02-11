@@ -25,7 +25,9 @@
 
 namespace block_iomad_company_admin\event;
 
-defined('MOODLE_INTERNAL') || die();
+use core\exception\coding_exception;
+use core\event\base;
+use moodle_url;
 
 /**
  * The block_iomad_company_admin user license assigned event.
@@ -43,7 +45,7 @@ defined('MOODLE_INTERNAL') || die();
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class user_license_assigned extends \core\event\base {
+class user_license_assigned extends base {
 
     /**
      * Init method.
@@ -71,37 +73,43 @@ class user_license_assigned extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "The user with id '$this->userid' was assigned a license from license id'" . s($this->other['licenseid']) . "' to course id " .
-            $this->courseid;
+        return "The user with id '$this->userid' was assigned a license from license id'" .
+                s($this->other['licenseid']) . "' to course id " .
+                $this->courseid;
     }
 
     /**
      * Get URL related to the action.
      *
-     * @return \moodle_url
+     * @return moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/blocks/iomad_company_admin/company_users_licenses_form.php');
+        return new moodle_url('/block/iomad_company_admin/company_users_licenses_form.php');
     }
 
     /**
      * Custom validation.
      *
-     * @throws \coding_exception
+     * @throws coding_exception
      * @return void
      */
     protected function validate_data() {
         parent::validate_data();
 
         if (!isset($this->other['licenseid'])) {
-            throw new \coding_exception('The \'licenseid\' value must be set in other.');
+            throw new coding_exception('The \'licenseid\' value must be set in other.');
         }
 
         if (!isset($this->other['duedate'])) {
-            throw new \coding_exception('The \'duedate\' value must be set in other.');
+            throw new coding_exception('The \'duedate\' value must be set in other.');
         }
     }
 
+    /**
+     * Get other mapped items
+     *
+     * @return void
+     */
     public static function get_other_mapping() {
         $othermapped = array();
 

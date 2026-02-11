@@ -25,7 +25,9 @@
 
 namespace block_iomad_company_admin\event;
 
-defined('MOODLE_INTERNAL') || die();
+use core\exception\coding_exception;
+use core\event\base;
+use moodle_url;
 
 /**
  * The block_iomad_company_admin company license updated event.
@@ -44,7 +46,7 @@ defined('MOODLE_INTERNAL') || die();
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class company_license_updated extends \core\event\base {
+class company_license_updated extends base {
 
     /**
      * Init method.
@@ -78,30 +80,35 @@ class company_license_updated extends \core\event\base {
     /**
      * Get URL related to the action.
      *
-     * @return \moodle_url
+     * @return moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/blocks/iomad_company_admin/company_license_edit_form.php');
+        return new moodle_url('/block/iomad_company_admin/company_license_edit_form.php');
     }
 
     /**
      * Custom validation.
      *
-     * @throws \coding_exception
+     * @throws coding_exception
      * @return void
      */
     protected function validate_data() {
         parent::validate_data();
 
         if (!isset($this->other['licenseid'])) {
-            throw new \coding_exception('The \'licenseid\' value must be set in other.');
+            throw new coding_exception('The \'licenseid\' value must be set in other.');
         }
 
         if (!isset($this->other['parentid'])) {
-            throw new \coding_exception('The \'parentid\' value must be set in other.');
+            throw new coding_exception('The \'parentid\' value must be set in other.');
         }
     }
 
+    /**
+     * Other mapped items
+     *
+     * @return void
+     */
     public static function get_other_mapping() {
         $othermapped = array();
 
