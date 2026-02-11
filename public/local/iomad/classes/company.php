@@ -1555,7 +1555,7 @@ class company {
                     'userid' => $userid,
                     'departmentid' => $departmentid,
                 ];
-                $DB->delete_records_select('company_users', $selectsql, '', $selectparams);
+                $DB->delete_records_select('company_users', $selectsql, $selectparams);
             }
             if ($managertype == 0 &&
                 $DB->get_records_select(

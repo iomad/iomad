@@ -476,7 +476,7 @@ class company_user {
      * @param int $today
      * @return void
      */
-    public static function enrol(object $user,
+    public static function enrol(object|int $user,
                                  int|array $courseids,
                                  int $companyid = 0,
                                  int $rid = 0,
@@ -496,7 +496,7 @@ class company_user {
 
         // Deal with the timestamp.
         if (empty($today)) {
-            $today = time;
+            $today = time();
         }
 
         $manualcache  = []; // Cache of used manual enrol plugins in each course.
@@ -636,7 +636,7 @@ class company_user {
      * @param bool $all
      * @return void
      */
-    public static function unenrol(object $user, array|int $courseids, int $companyid = 0, bool $all = true) {
+    public static function unenrol(object|int $user, array|int $courseids, int $companyid = 0, bool $all = true) {
         global $DB, $PAGE;
 
         $studentrole = $DB->get_record('role', ['shortname' => 'student']);
@@ -848,7 +848,7 @@ class company_user {
 
         // Deal with the timestamp.
         if (empty($due)) {
-            $due = time;
+            $due = time();
         }
 
         unset_user_preference('create_password', $user);
