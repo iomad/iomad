@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard assign users to company course groups form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,30 +25,77 @@
 
 namespace block_iomad_company_admin\forms;
 
-use context_coursecat;
-use context_system;
+use html_writer;
 use local_iomad\{company, company_user, iomad};
 use local_iomad\user_selector\{current_group, potential_group};
 use moodleform;
 use stdclass;
 
+/**
+ * IOMAD Dashboard assign users to company course groups form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class course_group_users_form extends moodleform {
-    protected $context = null;
-    protected $selectedcompany = 0;
-    protected $potentialusers = null;
-    protected $currentusers = null;
-    protected $courseid = null;
-    protected $departmentid = 0;
-    protected $companydepartment = 0;
-    protected $subhierarchieslist = null;
-    protected $parentlevel = null;
-    protected $groupid = null;
-    protected $company = null;
-    protected $selectedgroup = 0;
-    protected $selectedcourse = 0;
-    protected $isdefault = false;
-    protected $defaultgroup = array();
 
+    /** @var object context */
+    protected $context = null;
+
+    /** @var object company ID */
+    protected $selectedcompany = 0;
+
+    /** @var object potential group user selector */
+    protected $potentialusers = null;
+
+    /** @var object current group user selector */
+    protected $currentusers = null;
+
+    /** @var int course ID */
+    protected $courseid = null;
+
+    /** @var int department ID */
+    protected $departmentid = 0;
+
+    /** @var oint top level company department ID */
+    protected $companydepartment = 0;
+
+    /** @var array list of department */
+    protected $subhierarchieslist = null;
+
+    /** @var object top level department */
+    protected $parentlevel = null;
+
+    /** @var int group ID */
+    protected $groupid = null;
+
+    /** @var object company */
+    protected $company = null;
+
+    /** @var int group ID */
+    protected $selectedgroup = 0;
+
+    /** @var int course ID */
+    protected $selectedcourse = 0;
+
+    /** @var bool is this the default group */
+    protected $isdefault = false;
+
+    /** @var array default group */
+    protected $defaultgroup = [];
+
+    /**
+     * Constructor function
+     *
+     * @param moodle_url $actionurl
+     * @param object $companycontext
+     * @param int $companyid
+     * @param int $departmentid
+     * @param int $courseid
+     * @param int $groupid
+     */
     public function __construct($actionurl, $companycontext, $companyid, $departmentid, $courseid, $groupid) {
         global $USER;
 
@@ -80,15 +129,22 @@ class course_group_users_form extends moodleform {
         parent::__construct($actionurl);
     }
 
+    /**
+     * Create the user selectors
+     *
+     * @return void
+     */
     public function create_user_selectors() {
         if (!empty ($this->groupid)) {
-            $options = array('context' => $this->context,
-                             'companyid' => $this->selectedcompany,
-                             'courseid' => $this->courseid,
-                             'groupid' => $this->groupid,
-                             'departmentid' => $this->departmentid,
-                             'subdepartments' => $this->subhierarchieslist,
-                             'parentdepartmentid' => $this->parentlevel);
+            $options = [
+                'context' => $this->context,
+                'companyid' => $this->selectedcompany,
+                'courseid' => $this->courseid,
+                'groupid' => $this->groupid,
+                'departmentid' => $this->departmentid,
+                'subdepartments' => $this->subhierarchieslist,
+                'parentdepartmentid' => $this->parentlevel,
+            ];
             if (empty($this->potentialusers)) {
                  $this->potentialusers = new potential_group('potentialgroupusers', $options);
             }
@@ -101,6 +157,11 @@ class course_group_users_form extends moodleform {
 
     }
 
+    /**
+     * Default form definition
+     *
+     * @return void
+     */
     public function definition() {
         $this->_form->addElement('hidden', 'companyid', $this->selectedcompany);
         $this->_form->addElement('hidden', 'departmentid', $this->departmentid);
@@ -114,11 +175,17 @@ class course_group_users_form extends moodleform {
         $this->_form->setType('groupid', PARAM_INT);
         $this->_form->setType('selectedgroup', PARAM_INT);
         $this->_form->setType('selectedcourse', PARAM_INT);
-   }
+    }
 
+    /**
+     * Form definition after data is set
+     *
+     * @return void
+     */
     public function definition_after_data() {
         global $DB, $output;
 
+        // Set up the form.
         $mform =& $this->_form;
 
         $this->create_user_selectors();
@@ -132,8 +199,8 @@ class course_group_users_form extends moodleform {
             die('No group selected.');
         }
 
-        $course = $DB->get_record('course', array('id' => $this->courseid));
-        $group = $DB->get_record('groups', array('id' => $this->groupid));
+        $course = $DB->get_record('course', ['id' => $this->courseid]);
+        $group = $DB->get_record('groups', ['id' => $this->groupid]);
 
         $company = $this->company;
         $mform->addElement('static', 'departmenttitle', get_string('department', 'block_iomad_company_admin'));
@@ -146,55 +213,107 @@ class course_group_users_form extends moodleform {
                             $stringobj));
 
         if ($this->isdefault) {
-            $mform->addElement('html', '<p><strong>' . get_string('isdefaultgroupusers', 'block_iomad_company_admin') . '</strong></p>');
+            $mform->addElement(
+                'html',
+                html_writer::tag(
+                    'p',
+                    html_writer::tag(
+                        'string',
+                        get_string('isdefaultgroupusers', 'block_iomad_company_admin')
+                    )
+                ));
         }
 
-        $mform->addElement('html', '<table summary="" class="companygroupuserstable'.
-                                   ' addremovetable generaltable generalbox'.
-                                   ' boxaligncenter" cellspacing="0">
-            <tr>
-              <td id="existingcell">');
+        $mform->addElement(
+            'html',
+            html_writer::start_tag(
+                'table',
+                [
+                    'summary' => '',
+                    'class' => 'generaltable generalbox groupmanagementtable boxaligncenter',
+                    'cellspacing' => 0,
+                ]
+            ) .
+                html_writer::start_tag('tr') .
+                html_writer::start_tag('td', ['id' => 'existingcell'])
+        );
 
         $mform->addElement('html', $this->currentusers->display(true));
 
-        $mform->addElement('html', '
-              </td>
-              <td id="buttonscell">
-              <p class="arrow_button">
-                  <input name="add" id="add" type="submit" value="' .
-                   $output->larrow().'&nbsp;'.get_string('add') .
-                   '" title="'.get_string('add') .'" 
-                   class="btn btn-secondary"/><br />
-                  <input name="move" id="move" type="submit" value="' .
-                   $output->larrow().'&nbsp;'.get_string('move') .
-                   '" title="'.get_string('move') .'" 
-                   class="btn btn-secondary"/><br />');
+        $mform->addElement(
+            'html',
+            html_writer::end_tag('td') .
+                html_writer::start_tag('td', ['id' => 'buttonscell']) .
+                html_writer::start_tag('p', ['class' => 'arrow_button']) .
+                html_writer::empty_tag(
+                    'input',
+                    [
+                        'name' => 'add',
+                        'id' => 'add',
+                        'type' => 'submit',
+                        'value' => $output->larrow() . ' ' . get_string('add'),
+                        'title' => get_string('add'),
+                        'class' => 'btn btn-secondary',
+                    ]
+                ) .
+                html_writer::empty_tag('br') .
+                html_writer::empty_tag(
+                    'input',
+                    [
+                        'name' => 'move',
+                        'id' => 'move',
+                        'type' => 'submit',
+                        'value' => get_string('move') . ' ' . $output->rarrow(),
+                        'title' => get_string('move'),
+                        'class' => 'btn btn-secondary',
+                    ]
+                ) .
+                html_writer::empty_tag('br')
+        );
 
         if (!$this->isdefault) {
 
-            $mform->addElement('html', '
-                  <input name="remove" id="remove" type="submit" value="' .
-                   get_string('remove') . '&nbsp;' . $output->rarrow() .
-                   '" title="'.get_string('remove') .'" 
-                   class="btn btn-secondary" /><br>');
+            $mform->addElement(
+                'html',
+                html_writer::empty_tag('br') .
+                    html_writer::empty_tag(
+                        'input',
+                        [
+                            'name' => 'remove',
+                            'id' => 'remove',
+                            'type' => 'submit',
+                            'value' => get_string('remove') . ' ' . $output->rarrow(),
+                            'title' => get_string('remove'),
+                            'class' => 'btn btn-secondary',
+                        ]
+                    )
+            );
         }
 
-        $mform->addElement('html', '
-              </p>
-              </td>
-              <td id="potentialcell">');
+        $mform->addElement(
+            'html',
+            html_writer::end_tag('p') .
+                html_writer::end_tag('td') .
+                html_writer::start_tag('td', ['id' => 'potencialcell'])
+        );
 
         $mform->addElement('html', $this->potentialusers->display(true));
 
-        $mform->addElement('html', '
-              </td>
-            </tr>
-          </table>');
+        $mform->addElement(
+            'html',
+            html_writer::end_tag('td') .
+            html_writer::end_tag('tr') .
+            html_writer::end_tag('table'));
 
         // Disable the onchange popup.
         $mform->disable_form_change_checker();
     }
 
+    /**
+     * Process the form
+     *
+     * @return void
+     */
     public function process() {
         global $DB, $CFG;
 

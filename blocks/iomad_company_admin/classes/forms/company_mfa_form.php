@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard company MFA settings form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -34,7 +36,21 @@ use tool_mfa;
 
 require_once($CFG->libdir . '/adminlib.php');
 
+/**
+ * IOMAD Dashboard company MFA settings form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class company_mfa_form extends moodleform {
+
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
         global $CFG, $PAGE, $DB, $postfix;
 
@@ -45,8 +61,13 @@ class company_mfa_form extends moodleform {
         $mform->addElement('hidden', 'action');
         $mform->setType('action', PARAM_ALPHA);
 
-        $mform->addElement('html', "<h2>" . format_string(get_string('mfasettings', 'tool_mfa') . " : " .
-                                                          get_string('settings', 'moodle')) . "</h2>");
+        $mform->addElement(
+            'html',
+            html_writer::tag(
+                'h2',
+                format_string(get_string('mfasettings', 'tool_mfa') . " : " .
+                              get_string('settings', 'moodle'))
+            ));
 
         // Get the tool table and details.
         $managemfa = new tool_mfa\local\admin_setting_managemfa(true);

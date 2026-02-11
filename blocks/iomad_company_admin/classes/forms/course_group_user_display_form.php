@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard assign users to course groups form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,21 +25,49 @@
 
 namespace block_iomad_company_admin\forms;
 
+use company_moodleform;
 use context_coursecat;
-use context_system;
-use local_iomad\{company, company_user, iomad};
+use html_writer;
+use local_iomad\company;
 use local_iomad\custom_context\context_company;
-use local_iomad\user_selector\{current_group, potential_group};
 
+/**
+ * IOMAD Dashboard assign users to course groups form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class course_group_user_display_form extends company_moodleform {
+
+    /** @var int course ID */
     protected $courseid = 0;
+
+    /** @var object context */
     protected $context = null;
+
+    /** @var object company */
     protected $company = null;
+
+    /** @var object company context */
     protected $companycontext;
+
+    /** @var object output */
     protected $output;
 
+    /**
+     * Constructor function
+     *
+     * @param moodle_url $actionurl
+     * @param int $companyid
+     * @param int $courseid
+     * @param object $output
+     * @param int $chosenid
+     * @param int $action
+     */
     public function __construct($actionurl, $companyid, $courseid, $output, $chosenid=0, $action=0) {
-        global $CFG, $USER;
+        global $CFG;
 
         $this->selectedcompany = $companyid;
         $this->context = context_coursecat::instance($CFG->defaultrequestcategory);
@@ -49,10 +79,15 @@ class course_group_user_display_form extends company_moodleform {
         parent::__construct($actionurl);
     }
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
-        global $CFG,$DB;
 
         $mform =& $this->_form;
+
         $company = $this->company;
         if (!empty($this->courseid)) {
             $coursegroups = $company->get_course_groups_menu($this->courseid);
@@ -60,20 +95,23 @@ class course_group_user_display_form extends company_moodleform {
             $coursegroups = array();
         }
 
-
         // Then show the fields about where this block appears.
         $mform->addElement('header', 'header',
                             get_string('companygroupsusers', 'block_iomad_company_admin').
                            $company->get_name());
 
         if (empty($coursegroups)) {
-            $mform->addElement('html', "<h3>" . get_string('nogroups', 'block_iomad_company_admin') . "</h3><br>");
+            $mform->addElement('html', html_writer::tag('h3', get_string('nogroups', 'block_iomad_company_admin')));
         } else {
-            $autooptions = array('setmultiple' => false,
-                                 'noselectionstring' => '',
-                                 'onchange' => 'this.form.submit()');
-            $mform->addElement('autocomplete', 'selectedgroup', get_string('selectgroup', 'block_iomad_company_admin'), $coursegroups, $autooptions);
-
+            $autooptions = ['setmultiple' => false,
+                            'noselectionstring' => '',
+                            'onchange' => 'this.form.submit()'];
+            $mform->addElement(
+                'autocomplete',
+                'selectedgroup',
+                get_string('selectgroup', 'block_iomad_company_admin'),
+                $coursegroups,
+                $autooptions);
         }
 
         $mform->addElement('hidden', 'selectedcourse', $this->courseid);
@@ -82,30 +120,4 @@ class course_group_user_display_form extends company_moodleform {
         // Disable the onchange popup.
         $mform->disable_form_change_checker();
     }
-
-    public function create_user_selectors() {
-        if (!empty ($this->course)) {
-            $options = array('context' => $this->companycontext,
-                             'companyid' => $this->selectedcompany,
-                             'courseid' => $this->course,
-                             'departmentid' => $this->departmentid,
-                             'subdepartments' => $this->subhierarchieslist,
-                             'parentdepartmentid' => $this->parentlevel);
-            if (empty($this->potentialusers)) {
-                $this->potentialusers = new potential_group('potentialgroupusers', $options);
-            }
-            if (empty($this->currentusers)) {
-                $this->currentusers = new current_group('currentgroupusers', $options);
-            }
-        } else {
-            return;
-        }
-
-    }
-
-    public function get_data() {
-        $data = parent::get_data();
-        return $data;
-    }
-
 }

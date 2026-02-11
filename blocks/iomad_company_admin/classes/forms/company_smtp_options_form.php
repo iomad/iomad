@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard company SMTP options form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,21 +25,35 @@
 
 namespace block_iomad_company_admin\forms;
 
-defined('MOODLE_INTERNAL') || die;
-
 use moodleform;
 use core\oauth2\api;
+use html_writer;
 
+/**
+ * IOMAD Dashboard company SMTP options form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class company_smtp_options_form extends moodleform {
+
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
         global $CFG;
 
+        // Set up the form.
         $mform = &$this->_form;
 
         $mform->addElement('hidden', 'action');
         $mform->setType('action', PARAM_ALPHA);
 
-        $mform->addElement('html', "<h2>" . get_string('outgoingmailconfig', 'admin') . "</h2>");
+        $mform->addElement('html', html_writer::tag('h2', get_string('outgoingmailconfig', 'admin')));
         $mform->addElement(
             'text',
             'smtphosts',

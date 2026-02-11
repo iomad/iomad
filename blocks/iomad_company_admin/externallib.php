@@ -2851,12 +2851,16 @@ class block_iomad_company_admin_external extends external_api {
         iomad::require_capability('block/iomad_company_admin:allocate_licenses', $context);
 
         // Get license courses (with extra)
-        $sql = 'SELECT co.id AS id, co.fullname AS fullname
-            FROM {course} co JOIN {companylicense_courses} clc
-            ON co.id = clc.courseid
+        $sql = "SELECT co.id AS id, co.fullname AS fullname
+            FROM {course} co
+            JOIN {companylicense_courses} clc ON co.id = clc.courseid
             WHERE clc.licenseid = :licenseid
-            ORDER BY co.fullname';
+            ORDER BY co.fullname";
         $liccourses = $DB->get_records_sql($sql, ['licenseid' => $params['licenseid']]);
+        $license->humanused = $license->used;
+        if (!empty($license->program) && count($liccourses) > 0) {
+            $license->humanused = $license->used / count($liccourses);
+        }
 
         // Licenses used?
         $license->allallocated = $license->used >= $license->allocation;
@@ -2877,6 +2881,7 @@ class block_iomad_company_admin_external extends external_api {
                 'id' => new external_value(PARAM_INT, 'License ID'),
                 'name' => new external_value(PARAM_TEXT, 'License name'),
                 'allocation' => new external_value(PARAM_INT, 'Allocation'),
+                'humanallocation' => new external_value(PARAM_INT, 'Human allocation if program'),
                 'validlength' => new external_value(PARAM_INT, 'Valid length'),
                 'startdate' => new external_value(PARAM_INT, 'Start date'),
                 'expirydate' => new external_value(PARAM_INT, 'Expiry date'),
@@ -2887,6 +2892,7 @@ class block_iomad_company_admin_external extends external_api {
                 'program' => new external_value(PARAM_BOOL, 'Program'),
                 'reference' => new external_value(PARAM_TEXT, 'Reference'),
                 'instant' => new external_value(PARAM_BOOL, 'Instant'),
+                'humanused' => new external_value(PARAM_INT, 'Human used count if program license'),
                 'allallocated' => new external_value(PARAM_BOOL, 'All licenses allocated'),
             ]),
             'courses' => new external_multiple_structure(

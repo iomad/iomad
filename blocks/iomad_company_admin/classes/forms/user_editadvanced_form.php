@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard user edit form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -32,13 +34,21 @@ use local_iomad\{company, company_user, iomad};
 use moodleform;
 use webservice;
 
+/**
+ * IOMAD Dashboard user edit form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class user_editadvanced_form extends moodleform {
 
     /**
      * Define the form.
      */
     public function definition() {
-        global $USER, $CFG, $COURSE;
+        global $CFG, $COURSE;
 
         $mform = $this->_form;
         $editoroptions = null;
@@ -54,7 +64,6 @@ class user_editadvanced_form extends moodleform {
 
         // Accessibility: "Required" is bad legend text.
         $strgeneral  = get_string('general');
-        $strrequired = get_string('required');
 
         // Add some extra hidden fields.
         $mform->addElement('hidden', 'id');
@@ -68,9 +77,9 @@ class user_editadvanced_form extends moodleform {
         $auths = core_component::get_plugin_list('auth');
         $enabled = get_string('pluginenabled', 'core_plugin');
         $disabled = get_string('plugindisabled', 'core_plugin');
-        $authoptions = array($enabled => array(), $disabled => array());
-        $cannotchangepass = array();
-        $cannotchangeusername = array();
+        $authoptions = [$enabled => [], $disabled => []];
+        $cannotchangepass = [];
+        $cannotchangeusername = [];
         foreach ($auths as $auth => $unused) {
             $authinst = get_auth_plugin($auth);
 
@@ -80,10 +89,7 @@ class user_editadvanced_form extends moodleform {
 
             $passwordurl = $authinst->change_password_url();
             if (!($authinst->can_change_password() && empty($passwordurl))) {
-                if ($userid < 1 and $authinst->is_internal()) {
-                    // This is unlikely but we can not create account without password
-                    // when plugin uses passwords, we need to set it initially at least.
-                } else {
+                if ($userid > 1 || $authinst->is_internal()) {
                     $cannotchangepass[] = $auth;
                 }
             }
@@ -122,7 +128,7 @@ class user_editadvanced_form extends moodleform {
         $mform->disabledIf('newpassword', 'auth', 'in', $cannotchangepass);
 
         // Check if the user has active external tokens.
-        if ($userid and empty($CFG->passwordchangetokendeletion)) {
+        if ($userid &&  empty($CFG->passwordchangetokendeletion)) {
             if ($tokens = webservice::get_active_tokens($userid)) {
                 $services = '';
                 foreach ($tokens as $token) {
@@ -163,7 +169,7 @@ class user_editadvanced_form extends moodleform {
      * Extend the form definition after data has been parsed.
      */
     public function definition_after_data() {
-        global $USER, $CFG, $DB, $OUTPUT;
+        global $USER, $DB, $OUTPUT;
 
         $mform = $this->_form;
 
@@ -173,7 +179,7 @@ class user_editadvanced_form extends moodleform {
         }
 
         if ($userid = $mform->getElementValue('id')) {
-            $user = $DB->get_record('user', array('id' => $userid));
+            $user = $DB->get_record('user', ['id' => $userid]);
         } else {
             $user = false;
         }
@@ -199,13 +205,13 @@ class user_editadvanced_form extends moodleform {
             }
         }
 
-        if ($user and is_mnet_remote_user($user)) {
+        if ($user &&  is_mnet_remote_user($user)) {
             // Only local accounts can be suspended.
             if ($mform->elementExists('suspended')) {
                 $mform->removeElement('suspended');
             }
         }
-        if ($user and ($user->id == $USER->id or is_siteadmin($user))) {
+        if ($user &&  ($user->id == $USER->id || is_siteadmin($user))) {
             // Prevent self and admin mess ups.
             if ($mform->elementExists('suspended')) {
                 $mform->hardFreeze('suspended');
@@ -217,9 +223,10 @@ class user_editadvanced_form extends moodleform {
             if ($user) {
                 $context = context_user::instance($user->id, MUST_EXIST);
                 $fs = get_file_storage();
-                $hasuploadedpicture = ($fs->file_exists($context->id, 'user', 'icon', 0, '/', 'f2.png') || $fs->file_exists($context->id, 'user', 'icon', 0, '/', 'f2.jpg'));
+                $hasuploadedpicture = ($fs->file_exists($context->id, 'user', 'icon', 0, '/', 'f2.png') ||
+                                       $fs->file_exists($context->id, 'user', 'icon', 0, '/', 'f2.jpg'));
                 if (!empty($user->picture) && $hasuploadedpicture) {
-                    $imagevalue = $OUTPUT->user_picture($user, array('courseid' => SITEID, 'size' => 64));
+                    $imagevalue = $OUTPUT->user_picture($user, ['courseid' => SITEID, 'size' => 64]);
                 } else {
                     $imagevalue = get_string('none');
                 }
@@ -250,10 +257,10 @@ class user_editadvanced_form extends moodleform {
         $usernew = (object)$usernew;
         $usernew->username = trim($usernew->username);
 
-        $user = $DB->get_record('user', array('id' => $usernew->id));
-        $err = array();
+        $user = $DB->get_record('user', ['id' => $usernew->id]);
+        $err = [];
 
-        if (!$user and !empty($usernew->createpassword)) {
+        if (!$user &&  !empty($usernew->createpassword)) {
             if ($usernew->suspended) {
                 // Show some error because we can not mail suspended users.
                 $err['suspended'] = get_string('error');
@@ -276,9 +283,9 @@ class user_editadvanced_form extends moodleform {
         if (empty($usernew->username)) {
             // Might be only whitespace.
             $err['username'] = get_string('required');
-        } else if (!$user or $user->username !== $usernew->username) {
+        } else if (!$user || $user->username !== $usernew->username) {
             // Check new username does not exist.
-            if ($DB->record_exists('user', array('username' => $usernew->username, 'mnethostid' => $CFG->mnet_localhost_id))) {
+            if ($DB->record_exists('user', ['username' => $usernew->username, 'mnethostid' => $CFG->mnet_localhost_id])) {
                 $err['username'] = get_string('usernameexists');
             }
             // Check allowed characters.
@@ -291,11 +298,11 @@ class user_editadvanced_form extends moodleform {
             }
         }
 
-        if (!$user or (isset($usernew->email) && $user->email !== $usernew->email)) {
+        if (!$user || (isset($usernew->email) && $user->email !== $usernew->email)) {
             if (!validate_email($usernew->email)) {
                 $err['email'] = get_string('invalidemail');
             } else if (empty($CFG->allowaccountssameemail)
-                    and $DB->record_exists('user', array('email' => $usernew->email, 'mnethostid' => $CFG->mnet_localhost_id))) {
+                    &&  $DB->record_exists('user', ['email' => $usernew->email, 'mnethostid' => $CFG->mnet_localhost_id])) {
                 $err['email'] = get_string('emailexists');
             }
         }

@@ -107,6 +107,12 @@ class dashboard_page_viewed extends base {
         return $othermapped;
     }
 
+    /**
+     * Create and fire the event given a URL
+     *
+     * @param moodle_url $url
+     * @return void
+     */
     public static function create_from_url($url) {
         global $USER, $companyid;
 

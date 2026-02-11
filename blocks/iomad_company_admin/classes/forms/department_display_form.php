@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD dashboard department display form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,24 +25,66 @@
 
 namespace block_iomad_company_admin\forms;
 
+use company_moodleform;
 use context_system;
 use context_coursecat;
 use local_iomad\{company, company_user, iomad};
 use local_iomad\custom_context\context_company;
 
+/**
+ * IOMAD dashboard department display form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class department_display_form extends company_moodleform {
-    protected $selectedepartmentdcompany = 0;
+
+    /** @var int company ID */
+    protected $selectedcompany = 0;
+
+    /** @var object context */
     protected $context = null;
+
+    /** @var object company */
     protected $company = null;
+
+    /** @var object company context */
+    protected $companycontext = null;
+
+    /** @var int parent department ID */
     protected $parentlevel = 0;
+
+    /** @var string information */
     protected $notice = '';
-    protected $companycontext;
+
+    /** @var object company department */
     protected $companydepartment;
+
+    /** @var int department ID */
     protected $departmentid;
+
+    /** @var object output */
     protected $output;
+
+    /** @var int chosen department ID */
     protected $chosenid;
+
+    /** @var string action */
     protected $action;
 
+    /**
+     * Constructor function
+     *
+     * @param [type] $actionurl
+     * @param [type] $companyid
+     * @param [type] $departmentid
+     * @param [type] $output
+     * @param integer $chosenid
+     * @param integer $action
+     * @param string $notice
+     */
     public function __construct($actionurl, $companyid, $departmentid, $output, $chosenid=0, $action=0, $notice='') {
         global $CFG, $USER;
 
@@ -68,11 +112,17 @@ class department_display_form extends company_moodleform {
         parent::__construct($actionurl);
     }
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
         global $CFG, $output;
 
+        // Set up the form.
         $mform =& $this->_form;
-        if (!$parentnode = company::get_company_parentnode($this->company->id)) {
+        if (!company::get_company_parentnode($this->company->id)) {
             // Company has not been set up, possibly from before an upgrade.
             company::initialise_departments($this->company->id);
         }
@@ -89,7 +139,6 @@ class department_display_form extends company_moodleform {
             $department = company::get_company_parentnode($this->selectedcompany);
         }
         $subdepartmentslist = company::get_subdepartments_list($department);
-        $subdepartments = company::get_subdepartments($department);
 
         // Create the sub department checkboxes html.
         $subdepartmenthtml = "";
@@ -98,22 +147,27 @@ class department_display_form extends company_moodleform {
             $subdepartmenthtml = "";
             foreach ($subdepartmentslist as $key => $value) {
 
-                $subdepartmenthtml .= '<input type = "checkbox" name = "departmentids[]" value="'.
-                                       $key.'" /> '.$value.'<br>';
+                $subdepartmenthtml .= html_writer::empty_tag(
+                    'input',
+                    [
+                        'type' => 'checkbox',
+                        'name' => 'departmentids[]',
+                        'value' => $key,
+                    ]) . $value .
+                    html_writer::empty_tag('br');
             }
         }
 
         if (count($departmentslist) == 1) {
-            $mform->addElement('html', "<h3>" . get_string('nodepartments', 'block_iomad_company_admin') . "</h3><br>");
+            $mform->addElement('html', html_writer::tag('h3', get_string('nodepartments', 'block_iomad_company_admin')));
         }
 
         if (!empty($this->action)) {
-            $mform->addElement('html', '<p>' . get_string('parentdepartment', 'block_iomad_company_admin') . '</p>');
+            $mform->addElement('html', html_writer::tag('p', get_string('parentdepartment', 'block_iomad_company_admin')));
         }
 
         if (!empty($this->notice)) {
-            $mform->addElement('html', '<div class="alert alert-warning">');
-            $mform->addElement('html', $this->notice . '</div>');
+            $mform->addElement('html', html_writer::tag('div', $this->notice, ['class' => 'alert alert-warning']));
         }
 
         $output->display_tree_selector_form($this->company, $mform);
@@ -136,11 +190,6 @@ class department_display_form extends company_moodleform {
                                         get_string('importdepartment', 'block_iomad_company_admin'));
             }
         }
-        $mform->addGroup($buttonarray, 'buttonarray', '', array(' '), false);
-    }
-
-    public function get_data() {
-        $data = parent::get_data();
-        return $data;
+        $mform->addGroup($buttonarray, 'buttonarray', '', [' '], false);
     }
 }

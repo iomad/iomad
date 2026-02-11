@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard company SAML2 mappings form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,22 +25,33 @@
 
 namespace block_iomad_company_admin\forms;
 
-defined('MOODLE_INTERNAL') || die;
-
 use auth_iomadsaml2\utils;
 use context_system;
 use core_text;
 use local_iomad\{company, company_user, iomad};
 use moodle_url;
 use moodleform;
-
+use html_writer;
+/**
+ * IOMAD Dashboard company SAML2 mappings form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class company_iomadsaml2_mappings_form extends moodleform {
+
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
-        global $CFG, $PAGE, $DB, $postfix;
+        global $DB, $postfix;
 
+        // Set up the form.
         $mform = & $this->_form;
-
-        $strrequired = get_string('required');
 
         $mform->addElement('hidden', 'action');
         $mform->setType('action', PARAM_ALPHA);
@@ -52,27 +65,43 @@ class company_iomadsaml2_mappings_form extends moodleform {
 
         $mapremotefields = true;
         $updateremotefields = false;
-        // get all of the profile field categories.
+        // Get all of the profile field categories.
         $profilecategories = iomad::iomad_filter_profile_categories($DB->get_records('user_info_category'));
         $customfields = [];
         if (!empty($profilecategories)) {
             $insql = $DB->get_in_or_equal($profilecategories);
-            $customfields = $DB->get_records_select_menu('user_info_field', 'categoryid', $insql, '', "id,concat('profile_field_',shortname)");
+            $customfields = $DB->get_records_select_menu(
+                'user_info_field',
+                'categoryid',
+                $insql,
+                '',
+                "id,concat('profile_field_',shortname)");
             $customfields = array_values($customfields);
         }
 
         // Introductory explanation and help text.
-        $mform->addElement('html', "<h2>" . format_string(get_string('pluginname', 'auth_iomadsaml2') . " : " .
-                                                          get_string('auth_data_mapping', 'auth')) . "</h2>");
+        $mform->addElement(
+            'html',
+            html_writer::tag(
+                'h2',
+                format_string(get_string('pluginname', 'auth_iomadsaml2') . " : " .
+                              get_string('auth_data_mapping', 'auth'))
+            ));
 
         // Generate the list of options.
-        $lockoptions = array ('unlocked'        => get_string('unlocked', 'auth_iomadsaml2'),
-                              'unlockedifempty' => get_string('unlockedifempty', 'auth_iomadsaml2'),
-                              'locked'          => get_string('locked', 'auth_iomadsaml2'));
-        $updatelocaloptions = array('oncreate'  => get_string('update_oncreate', 'auth_iomadsaml2'),
-                                    'onlogin'   => get_string('update_onlogin', 'auth_iomadsaml2'));
-        $updateextoptions = array('0'  => get_string('update_never', 'auth_iomadsaml2'),
-                                  '1'  => get_string('update_onupdate', 'auth_iomadsaml2'));
+        $lockoptions = [
+            'unlocked'        => get_string('unlocked', 'auth_iomadsaml2'),
+            'unlockedifempty' => get_string('unlockedifempty', 'auth_iomadsaml2'),
+            'locked'          => get_string('locked', 'auth_iomadsaml2'),
+        ];
+        $updatelocaloptions = [
+            'oncreate'  => get_string('update_oncreate', 'auth_iomadsaml2'),
+            'onlogin'   => get_string('update_onlogin', 'auth_iomadsaml2'),
+        ];
+        $updateextoptions = [
+            '0'  => get_string('update_never', 'auth_iomadsaml2'),
+            '1'  => get_string('update_onupdate', 'auth_iomadsaml2'),
+        ];
 
         // Generate the list of profile fields to allow updates / lock.
         if (!empty($customfields)) {

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard company edit form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,28 +25,73 @@
 
 namespace block_iomad_company_admin\forms;
 
-defined('MOODLE_INTERNAL') || die;
-
 use context_system;
+use core\exception\moodle_exception;
 use moodle_url;
-use local_iomad\{company, company_user, iomad};
+use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-class company_edit_form extends company_moodleform {
+/**
+ * IOMAD Dashboard company edit form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class company_edit_form extends \company_moodleform {
+
+    /** @var bool is this the first company ever */
     protected $firstcompany;
+
+    /** @var bool are we adding a new company */
     protected $isadding;
+
+    /** @var string form title */
     protected $title = '';
-    protected $description = '';
+
+    /** @var int company ID */
     protected $companyid;
+
+    /** @var array company record */
     protected $companyrecord;
+
+    /** @var int parent company ID */
     protected $parentcompanyid;
+
+    /** @var int previous role template ID */
     protected $previousroletemplateid;
+
+    /** @var int previous email template ID */
     protected $previousemailtemplateid;
+
+    /** @var bool is this a child company */
     protected $child;
+
+    /** @var object context */
     protected $context;
+
+    /** @var object parent company */
     protected $parentcompany;
 
-    public function __construct($actionurl, $isadding, $companyid, $companyrecord, $firstcompany = false, $parentcompanyid = 0, $child = false) {
+    /**
+     * Constructor function
+     *
+     * @param moodle_url $actionurl
+     * @param bool $isadding
+     * @param int $companyid
+     * @param array $companyrecord
+     * @param bool $firstcompany
+     * @param integer $parentcompanyid
+     * @param bool $child
+     */
+    public function __construct($actionurl,
+                                $isadding,
+                                $companyid,
+                                $companyrecord,
+                                $firstcompany = false,
+                                $parentcompanyid = 0,
+                                $child = false) {
         global $DB, $CFG;
 
         $this->isadding = $isadding;
@@ -75,8 +122,13 @@ class company_edit_form extends company_moodleform {
         parent::__construct($actionurl);
     }
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
-        global $CFG, $PAGE, $DB;
+        global $CFG, $DB;
         $systemcontext = context_system::instance();
 
         $mform = & $this->_form;
@@ -93,7 +145,14 @@ class company_edit_form extends company_moodleform {
 
         // If this is the first company then some extra help is displayed.
         if ($this->firstcompany) {
-            $mform->addElement('html', '<div class="alert alert-info">' . get_string('firstcompany', 'block_iomad_company_admin') . '</div>');
+            $mform->addElement(
+                'html',
+                html_writer::tag(
+                    'div',
+                    get_string('firstcompany', 'block_iomad_company_admin'),
+                    [
+                        'class' => 'alert alert-info',
+                    ]));
         }
 
         $mform->addElement('text', 'name',
@@ -141,39 +200,44 @@ class company_edit_form extends company_moodleform {
                             get_string('postcode', 'block_iomad_company_admin'), ['size' => 20, 'maxlength' => 20]);
         $mform->setType('postcode', PARAM_NOTAGS);
 
-        /* copied from user/editlib.php */
         $choices = get_string_manager()->get_list_of_countries();
-        $choices = array('' => get_string('selectacountry').'...') + $choices;
+        $choices = ['' => format_string(get_string('selectacountry').'...')] + $choices;
         $mform->addElement('select', 'country', get_string('selectacountry'), $choices);
         $mform->addRule('country', $strrequired, 'required', null, 'client');
         if (!empty($CFG->country)) {
             $mform->setDefault('country', $CFG->country);
         }
 
-        /* === Company email notifications === */
+        // Company email notifications.
         $mform->addElement('header', 'manageremails', get_string('manageremails', 'block_iomad_company_admin'));
         $mform->setExpanded('manageremails', false);
 
-        $emailchoices = array('0' => get_string('none'),
+        $emailchoices = ['0' => get_string('none'),
                               '1' => get_string('reminderemails', 'block_iomad_company_admin'),
                               '2' => get_string('completionemails', 'block_iomad_company_admin'),
-                              '3' => get_string('allemails', 'block_iomad_company_admin'));
+                              '3' => get_string('allemails', 'block_iomad_company_admin')];
 
         $mform->addElement('select', 'managernotify', get_string('managernotify', 'block_iomad_company_admin'), $emailchoices);
         $mform->setDefault('managernotify', 0);
         $mform->addHelpButton('managernotify', 'managernotify', 'block_iomad_company_admin');
 
         // Add in the release frequency scheduler.
-        $daysofweek = array(get_string('none'),
-                            get_string('sunday', 'calendar'),
-                            get_string('monday', 'calendar'),
-                            get_string('tuesday', 'calendar'),
-                            get_string('wednesday', 'calendar'),
-                            get_string('thursday', 'calendar'),
-                            get_string('friday', 'calendar'),
-                            get_string('saturday', 'calendar'));
+        $daysofweek = [
+                get_string('none'),
+                get_string('sunday', 'calendar'),
+                get_string('monday', 'calendar'),
+                get_string('tuesday', 'calendar'),
+                get_string('wednesday', 'calendar'),
+                get_string('thursday', 'calendar'),
+                get_string('friday', 'calendar'),
+                get_string('saturday', 'calendar'),
+            ];
 
-        $mform->addElement('select', 'managerdigestday', get_string('managerdigestday', 'block_iomad_company_admin'), $daysofweek);
+            $mform->addElement(
+            'select',
+            'managerdigestday',
+            get_string('managerdigestday', 'block_iomad_company_admin'),
+            $daysofweek);
         $mform->setDefault('managerdigestday', 0);
         $mform->addHelpButton('managerdigestday', 'managerdigestday', 'block_iomad_company_admin');
 
@@ -181,38 +245,67 @@ class company_edit_form extends company_moodleform {
             // Add in the company email template selector.
             $emailtemplates = company::get_email_templates($this->companyid);
             if (!empty($emailtemplates[$this->previousemailtemplateid])) {
-                $mform->addElement('select', 'emailtemplate', get_string('applyemailtemplate', 'block_iomad_company_admin', $emailtemplates[$this->previousemailtemplateid]), $emailtemplates);
+                $mform->addElement(
+                    'select',
+                    'emailtemplate',
+                    get_string(
+                        'applyemailtemplate',
+                        'block_iomad_company_admin',
+                        $emailtemplates[$this->previousemailtemplateid]),
+                     $emailtemplates);
             } else {
-                $mform->addElement('select', 'emailtemplate', get_string('applyemailtemplate', 'block_iomad_company_admin', get_string('none')), $emailtemplates);
+                $mform->addElement(
+                    'select',
+                    'emailtemplate',
+                    get_string(
+                        'applyemailtemplate',
+                        'block_iomad_company_admin',
+                        get_string('none')),
+                    $emailtemplates);
             }
             $mform->addHelpButton('emailtemplate', 'applyemailtemplate', 'block_iomad_company_admin');
         }
 
         // Get the company profile choices.
-        $globalfields = $DB->get_records_sql_menu("SELECT id,name from {user_info_field} WHERE
-                                              categoryid NOT IN (
-                                                SELECT profileid from {company}
-                                              )");
+        $globalfields = $DB->get_records_sql_menu(
+            "SELECT id, name
+             FROM {user_info_field}
+             WHERE categoryid NOT IN (
+                 SELECT profileid from {company}
+             )");
         if (!$this->isadding) {
             // Get the company info.
-            $companyfields = $DB->get_records_sql_menu("SELECT id,name from {user_info_field} WHERE
-                                                  categoryid = (
-                                                    SELECT profileid from {company}
-                                                    WHERE id = :companyid
-                                                  )", array('companyid' => $this->companyid));
+            $companyfields = $DB->get_records_sql_menu(
+                "SELECT id,name
+                 FROM {user_info_field}
+                 WHERE categoryid = (
+                     SELECT profileid
+                     FROM {company}
+                     WHERE id = :companyid
+                 )",
+                ['companyid' => $this->companyid]);
         } else {
             $companyfields = array();
         }
-        $profilefields = array('0' => get_string('none')) + $globalfields + $companyfields;
+        $profilefields = ['0' => get_string('none')] + $globalfields + $companyfields;
 
-        $mform->addElement('select', 'emailprofileid', get_string('emailprofileid', 'block_iomad_company_admin'), $profilefields);
+        $mform->addElement(
+            'select',
+            'emailprofileid',
+            get_string('emailprofileid', 'block_iomad_company_admin'),
+            $profilefields);
         $mform->setDefault('emailprofileid', 0);
         $mform->addHelpButton('emailprofileid', 'emailprofileid', 'block_iomad_company_admin');
 
-        /* === end company email notifications === */
+        // End of company email notifications.
+        // Company advanced section.
          $mform->addElement('header', 'companyadvanced', get_string('companyadvanced', 'block_iomad_company_admin'));
 
-        $mform->addElement('textarea', 'companydomains', get_string('companydomains', 'block_iomad_company_admin'), array('display' => 'noofficial'));
+        $mform->addElement(
+            'textarea',
+            'companydomains',
+            get_string('companydomains', 'block_iomad_company_admin'),
+            ['display' => 'noofficial']);
         $mform->setType('companydomains', PARAM_NOTAGS);
         $mform->addHelpButton('companydomains', 'companydomains', 'block_iomad_company_admin');
 
@@ -232,25 +325,46 @@ class company_edit_form extends company_moodleform {
 
         // Add in the company role template selector.
         $templates = company::get_role_templates($this->companyid);
-        $mform->addElement('select', 'roletemplate', get_string('applyroletemplate', 'block_iomad_company_admin', $templates[$this->previousroletemplateid]), $templates);
+        $mform->addElement(
+            'select',
+            'roletemplate',
+            get_string(
+                'applyroletemplate',
+                'block_iomad_company_admin',
+                $templates[$this->previousroletemplateid]),
+                $templates);
         $mform->addHelpButton('roletemplate', 'roletemplate', 'block_iomad_company_admin');
 
         if (iomad::has_capability('block/iomad_company_admin:company_add', $this->context)) {
             // Add in the template selector for the company.
-            $templates = $DB->get_records_menu('company_role_templates', array(), 'name', 'id,name');
-            $mform->addElement('autocomplete', 'templates', get_string('availabletemplates', 'block_iomad_company_admin'), $templates, array('multiple' => true));
+            $templates = $DB->get_records_menu('company_role_templates', [], 'name', 'id,name');
+            $mform->addElement(
+                'autocomplete',
+                'templates',
+                get_string('availabletemplates', 'block_iomad_company_admin'),
+                $templates,
+                ['multiple' => true]);
             $mform->addHelpButton('templates', 'availabletemplates', 'block_iomad_company_admin');
 
             // Add the parent company selector.
-            $companies = $DB->get_records_sql_menu("SELECT id,name FROM {company}
-                                            WHERE id != :companyid
-                                            ORDER by name", array('companyid' => $this->companyid));
-            $allcompanies = array('0' => get_string('none')) + $companies;
-            $mform->addElement('select', 'parentid', get_string('parentcompany', 'block_iomad_company_admin'), $allcompanies, array('onchange' => 'this.form.submit()'));
+            $companies = $DB->get_records_sql_menu(
+                "SELECT id,name
+                 FROM {company}
+                 WHERE id != :companyid
+                 ORDER BY name",
+                ['companyid' => $this->companyid]);
+            $allcompanies = ['0' => get_string('none')] + $companies;
+            $mform->addElement(
+                'select',
+                'parentid',
+                get_string('parentcompany', 'block_iomad_company_admin'),
+                $allcompanies,
+                ['onchange' => 'this.form.submit()']);
             $mform->setDefault('parentid', 0);
             $mform->addHelpButton('parentid', 'parentcompany', 'block_iomad_company_admin');
 
-        } else if (iomad::has_capability('block/iomad_company_admin:company_add_child', $this->context) && !empty($this->parentcompanyid)) {
+        } else if (iomad::has_capability('block/iomad_company_admin:company_add_child', $this->context) &&
+                   !empty($this->parentcompanyid)) {
             // Add it as a hidden field.
             $mform->addElement('hidden', 'parentid', $this->parentcompanyid);
             if (!empty($this->companyrecord->templates)) {
@@ -269,7 +383,8 @@ class company_edit_form extends company_moodleform {
         }
 
         // Add the ecommerce selector.
-        if (empty($CFG->commerce_admin_enableall) && iomad::has_capability('block/iomad_company_admin:company_add', $this->context)) {
+        if (empty($CFG->commerce_admin_enableall) &&
+            iomad::has_capability('block/iomad_company_admin:company_add', $this->context)) {
             $mform->addElement('selectyesno', 'ecommerce', get_string('enableecommerce', 'block_iomad_company_admin'));
             $mform->setDefault('ecommerce', 0);
             $accounts = \core_payment\helper::get_payment_accounts_menu($systemcontext);
@@ -279,10 +394,13 @@ class company_edit_form extends company_moodleform {
                 } else {
                     $usedefaultpaymentaccountvalue = "";
                 }
-                $mform->addElement('checkbox', 'usedefaultpaymentaccount', get_string('usedefaultpayment', 'block_iomad_company_admin'));
+                $mform->addElement(
+                    'checkbox',
+                    'usedefaultpaymentaccount',
+                    get_string('usedefaultpayment', 'block_iomad_company_admin'));
                 $mform->setDefault('usedefaultpaymentaccount', $usedefaultpaymentaccountvalue);
                 if ($accounts) {
-                   $accounts = ((count($accounts) > 1) ? ['' => ''] : []) + $accounts;
+                    $accounts = ((count($accounts) > 1) ? ['' => ''] : []) + $accounts;
                 }
                 $mform->addElement('select', 'paymentaccount', get_string('paymentaccount', 'payment'), $accounts);
                 $mform->hideIf('paymentaccount', 'usedefaultpaymentaccount', 'checked');
@@ -298,31 +416,46 @@ class company_edit_form extends company_moodleform {
         if (!empty($plugins['iomadcustompage'])) {
             // Get all of the custom pages the user can see.
             $iomadcustompagesql = "";
+            $sqlparams = [];
             if (!iomad::has_capability('local/iomadcustompage:editall', $this->context)) {
                 $myiomadcustompages = \local_iomadcustompage\local\helpers\audience::user_pages_list();
                 if (!empty($myiomadcustompages)) {
-                    $iomadcustompagesql = " AND lcp.id in (" . implode(',', $myiomadcustompages) . ")";
+                    [$insql, $sqlparams] = $DB->get_in_or_equal($myiomadcustompages,
+                                                               SQL_PARAMS_NAMED,
+                                                               'lcpids');
+                    $iomadcustompagesql = " AND lcp.id {$insql}";
                 } else {
                     $iomadcustompagesql = " AND 1=2 ";
                 }
             }
 
             // Only get the custom pages which are in the company context.
-            $iomadcustompages = $DB->get_records_sql_menu("SELECT lcp.id,lcp.name FROM {local_iomadcustompages} lcp
-                                                      JOIN {context} c ON lcp.contextid = c.id
-                                                      WHERE " . $DB->sql_like('c.path', ':path') . "
-                                                      $iomadcustompagesql
-                                                      ORDER BY lcp.name",
-                                                     ['path' => "/" . SYSCONTEXTID . "/" . $this->context->id . "/%"]);
+            $sqlparams['path'] = "/" . SYSCONTEXTID . "/" . $this->context->id . "/%";
+            $iomadcustompages = $DB->get_records_sql_menu(
+                "SELECT lcp.id,lcp.name
+                 FROM {local_iomadcustompages} lcp
+                 JOIN {context} c ON lcp.contextid = c.id
+                 WHERE " . $DB->sql_like('c.path', ':path') . "
+                 $iomadcustompagesql
+                 ORDER BY lcp.name",
+                $sqlparams);
             if (!empty($iomadcustompages)) {
                 $iomadcustompages = ['0' => get_string('none', 'admin')] + $iomadcustompages;
-                $mform->addElement('select', 'dashboard', get_string('customdashboard', 'block_iomad_company_admin'), $iomadcustompages);
+                $mform->addElement(
+                    'select',
+                    'dashboard',
+                    get_string('customdashboard', 'block_iomad_company_admin'),
+                    $iomadcustompages);
             }
         }
 
         // Valid to and suspend after are restricted.
         if (iomad::has_capability('block/iomad_company_admin:company_edit_restricted', $this->context)) {
-            $mform->addElement('date_time_selector', 'validto', get_string('companyvalidto', 'block_iomad_company_admin'), array('optional' => true));
+            $mform->addElement(
+                'date_time_selector',
+                'validto',
+                get_string('companyvalidto', 'block_iomad_company_admin'),
+                ['optional' => true]);
             $mform->addElement('duration', 'suspendafter', get_string('companyterminateafter', 'block_iomad_company_admin'));
             $mform->addHelpButton('validto', 'companyvalidto', 'block_iomad_company_admin');
             $mform->addHelpButton('suspendafter', 'companyterminateafter', 'block_iomad_company_admin');
@@ -356,26 +489,36 @@ class company_edit_form extends company_moodleform {
         // Add in the auto department signup profile field.
         if (!empty($this->companyid)) {
             // Get the company profile choices.
-            $globalmenufields = $DB->get_records_sql_menu("SELECT id,name from {user_info_field} WHERE
-                                                           datatype = :datatype
-                                                           AND categoryid NOT IN (
-                                                           SELECT profileid from {company}
-                                                           )",
-                                                           ['datatype' => 'menu']);
-            $companymenufields = $DB->get_records_sql_menu("SELECT id,name from {user_info_field} WHERE
-                                                            datatype = :datatype
-                                                            AND categoryid = (
-                                                              SELECT profileid from {company}
-                                                              WHERE id = :companyid
-                                                            )",
-                                                            ['companyid' => $this->companyid, 'datatype' => 'menu']);
+            $globalmenufields = $DB->get_records_sql_menu(
+                "SELECT id,name
+                 FROM {user_info_field}
+                 WHERE datatype = :datatype
+                 AND categoryid NOT IN (
+                     SELECT profileid FROM {company}
+                 )",
+                ['datatype' => 'menu']);
+            $companymenufields = $DB->get_records_sql_menu(
+                "SELECT id, name
+                 FROM {user_info_field}
+                 WHERE datatype = :datatype
+                 AND categoryid = (
+                     SELECT profileid FROM {company}
+                     WHERE id = :companyid
+                 )",
+                ['companyid' => $this->companyid,
+                 'datatype' => 'menu']);
 
             $allmenufields = array_merge(['0' => get_string('none')], $companymenufields, $globalmenufields);
-            $mform->addElement('select', 'departmentprofileid', get_string('departmentprofileid', 'block_iomad_company_admin'), $allmenufields, ['optional' => true]);
+            $mform->addElement(
+                'select',
+                'departmentprofileid',
+                get_string('departmentprofileid', 'block_iomad_company_admin'),
+                $allmenufields,
+                ['optional' => true]);
             $mform->addHelpButton('departmentprofileid', 'departmentprofileid', 'block_iomad_company_admin');
         }
 
-        /* === User defaults === */
+        // User defaults.
         $mform->addElement('header', 'userdefaults',
                             get_string('userdefaults', 'block_iomad_company_admin'));
 
@@ -440,7 +583,7 @@ class company_edit_form extends company_moodleform {
                                              get_string_manager()->get_list_of_translations());
         $mform->setDefault('lang', $CFG->lang);
 
-        /* === end user defaults === */
+        // Company appearance.
         $companytheme = $this->companyrecord->theme;
         $ischild = false;
         $isiomadtheme = false;
@@ -450,21 +593,23 @@ class company_edit_form extends company_moodleform {
                 !empty($theme->isiomadtheme)) {
                 $isiomadtheme = true;
             }
-            $iomadthemes = array('iomad', 'iomadboost', 'iomadbootstrap');
+            $iomadthemes = ['iomad', 'iomadboost', 'iomadbootstrap'];
             foreach ($theme->parents as $parentstheme) {
-                if (in_array($parentstheme, $iomadthemes)){
+                if (in_array($parentstheme, $iomadthemes)) {
                     $ischild = true;
                     break;
                 }
             }
         } catch (Exception $e) {
-            // Bad theme
+            throw moodle_exception($e);
         }
         // Only show the Appearence section if the theme is iomad or you have abilities
         // to change that.
         if (iomad::has_capability('block/iomad_company_admin:company_edit_appearance', $this->context)) {
-            $mform->addElement('header', 'appearance',
-                                    get_string('appearance', 'block_iomad_company_admin'));
+            $mform->addElement(
+                'header',
+                'appearance',
+                get_string('appearance', 'block_iomad_company_admin'));
 
             // If has the edit all companies capability we want to add a theme selector.
             if (iomad::has_capability('block/iomad_company_admin:company_add', $this->context)) {
@@ -528,11 +673,23 @@ class company_edit_form extends company_moodleform {
                                     get_string('customcss', 'block_iomad_company_admin'),
                                     'wrap="virtual" rows="20" cols="75"');
                 $mform->setType('customcss', PARAM_RAW);
-                $mform->addElement('iomad_colourpicker', 'headingcolor', get_string('headingcolor', 'block_iomad_company_admin'), ['size' => 20, 'maxlength' => 20]);
+                $mform->addElement(
+                    'iomad_colourpicker',
+                    'headingcolor',
+                    get_string('headingcolor', 'block_iomad_company_admin'),
+                    ['size' => 20, 'maxlength' => 20]);
                 $mform->setType('headingcolor', PARAM_CLEAN);
-                $mform->addElement('iomad_colourpicker', 'maincolor', get_string('maincolor', 'block_iomad_company_admin'), ['size' => 20, 'maxlength' => 20]);
+                $mform->addElement(
+                    'iomad_colourpicker',
+                    'maincolor',
+                    get_string('maincolor', 'block_iomad_company_admin'),
+                    ['size' => 20, 'maxlength' => 20]);
                 $mform->setType('maincolor', PARAM_CLEAN);
-                $mform->addElement('iomad_colourpicker', 'linkcolor', get_string('linkcolor', 'block_iomad_company_admin'), ['size' => 20, 'maxlength' => 20]);
+                $mform->addElement(
+                    'iomad_colourpicker',
+                    'linkcolor',
+                     get_string('linkcolor', 'block_iomad_company_admin'),
+                     ['size' => 20, 'maxlength' => 20]);
                 $mform->setType('linkcolor', PARAM_CLEAN);
             } else {
                 $mform->addElement('hidden', 'id_companylogo', $this->companyrecord->companylogo);
@@ -568,43 +725,73 @@ class company_edit_form extends company_moodleform {
         if (iomad::has_capability('block/iomad_company_admin:company_edit_certificateinfo', $this->context)) {
             $mform->addElement('header', 'certificatedesign', get_string('certificatedesign', 'block_iomad_company_admin'));
 
-            $mform->addElement('advcheckbox', 'uselogo', get_string('company_uselogo', 'block_iomad_company_admin'), null, null, array(0,1));
+            $mform->addElement(
+                'advcheckbox',
+                'uselogo',
+                get_string('company_uselogo', 'block_iomad_company_admin'),
+                null,
+                null,
+                [0, 1]);
             $mform->addElement('filemanager', 'companycertificateseal',
                                 get_string('companycertificateseal', 'block_iomad_company_admin'), null,
-                                array('subdirs' => 0,
+                                ['subdirs' => 0,
                                       'maxbytes' => 150 * 1024,
                                       'maxfiles' => 1,
-                                      'accepted_types' => array('*.jpg', '*.gif', '*.png')));
+                                      'accepted_types' => ['*.jpg', '*.gif', '*.png']]);
             $mform->disabledIf('companycertificateseal', 'uselogo');
 
-            $mform->addElement('advcheckbox', 'usesignature', get_string('company_usesignature', 'block_iomad_company_admin'), null, null, array(0,1));
+            $mform->addElement(
+                'advcheckbox',
+                'usesignature',
+                get_string('company_usesignature', 'block_iomad_company_admin'),
+                null,
+                null,
+                [0, 1]);
             $mform->addElement('filemanager', 'companycertificatesignature',
                                 get_string('companycertificatesignature', 'block_iomad_company_admin'), null,
-                                array('subdirs' => 0,
+                                ['subdirs' => 0,
                                       'maxbytes' => 150 * 1024,
                                       'maxfiles' => 1,
-                                      'accepted_types' => array('*.jpg', '*.gif', '*.png')));
+                                      'accepted_types' => ['*.jpg', '*.gif', '*.png']]);
             $mform->disabledIf('companycertificatesignature', 'usesignature');
 
-            $mform->addElement('advcheckbox', 'useborder', get_string('company_useborder', 'block_iomad_company_admin'), null, null, array(0,1));
+            $mform->addElement(
+                'advcheckbox',
+                'useborder',
+                get_string('company_useborder', 'block_iomad_company_admin'),
+                null,
+                null,
+                [0, 1]);
             $mform->addElement('filemanager', 'companycertificateborder',
                                 get_string('companycertificateborder', 'block_iomad_company_admin'), null,
-                                array('subdirs' => 0,
+                                ['subdirs' => 0,
                                       'maxbytes' => 150 * 1024,
                                       'maxfiles' => 1,
-                                      'accepted_types' => array('*.jpg', '*.gif', '*.png')));
+                                      'accepted_types' => ['*.jpg', '*.gif', '*.png']]);
             $mform->disabledIf('companycertificateborder', 'useborder');
 
-            $mform->addElement('advcheckbox', 'usewatermark', get_string('company_usewatermark', 'block_iomad_company_admin'), null, null, array(0,1));
+            $mform->addElement(
+                'advcheckbox',
+                'usewatermark',
+                get_string('company_usewatermark', 'block_iomad_company_admin'),
+                null,
+                null,
+                [0, 1]);
             $mform->addElement('filemanager', 'companycertificatewatermark',
                                 get_string('companycertificatewatermark', 'block_iomad_company_admin'), null,
-                                array('subdirs' => 0,
+                                ['subdirs' => 0,
                                       'maxbytes' => 150 * 1024,
                                       'maxfiles' => 1,
-                                      'accepted_types' => array('*.jpg', '*.gif', '*.png')));
+                                      'accepted_types' => ['*.jpg', '*.gif', '*.png']]);
             $mform->disabledIf('companycertificatewatermark', 'usewatermark');
 
-            $mform->addElement('advcheckbox', 'showgrade', get_string('company_showgrade', 'block_iomad_company_admin'), null, null, array(0,1));
+            $mform->addElement(
+                'advcheckbox',
+                'showgrade',
+                get_string('company_showgrade', 'block_iomad_company_admin'),
+                null,
+                null,
+                [0, 1]);
 
             $mform->addHelpButton('companycertificateseal', 'companycertificateseal', 'block_iomad_company_admin');
             $mform->addHelpButton('companycertificatesignature', 'companycertificatesignature', 'block_iomad_company_admin');
@@ -655,6 +842,11 @@ class company_edit_form extends company_moodleform {
         $this->add_action_buttons(true, $submitlabel);
     }
 
+    /**
+     * Get the form data
+     *
+     * @return void
+     */
     public function get_data() {
         $data = parent::get_data();
         if ($data) {
@@ -664,15 +856,18 @@ class company_edit_form extends company_moodleform {
             if ($this->title) {
                 $data->title = $this->title;
             }
-
-            if ($this->description) {
-                $data->description = $this->description;
-            }
         }
+
         return $data;
     }
 
-    // Perform some extra moodle validation.
+    /**
+     * Form validation
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
     public function validation($data, $files) {
         global $DB, $CFG, $SESSION;
 
@@ -690,7 +885,7 @@ class company_edit_form extends company_moodleform {
             die;
         }
 
-        if ($foundcompanies = $DB->get_records('company', array('name' => $data['name']))) {
+        if ($foundcompanies = $DB->get_records('company', ['name' => $data['name']])) {
             if (!empty($this->companyid)) {
                 unset($foundcompanies[$this->companyid]);
             }
@@ -707,7 +902,7 @@ class company_edit_form extends company_moodleform {
         if (!preg_match('/^[A-Za-z0-9_]+$/', $data['shortname'])) {
             // Check allowed pattern (numbers, letters and underscore).
             $errors['shortname'] = get_string('invalidshortnameerror', 'core_customfield');
-        } else if ($foundcompanies = $DB->get_records('company', array('shortname' => trim($data['shortname'])))) {
+        } else if ($foundcompanies = $DB->get_records('company', ['shortname' => trim($data['shortname'])])) {
             if (!empty($this->companyid)) {
                 unset($foundcompanies[$this->companyid]);
             }
@@ -723,7 +918,7 @@ class company_edit_form extends company_moodleform {
         }
 
         if (!empty($data['code']) &&
-            $foundcompanies = $DB->get_records('company', array('code' => $data['code']))) {
+            $foundcompanies = $DB->get_records('company', ['code' => $data['code']])) {
             if (!empty($this->companyid)) {
                 unset($foundcompanies[$this->companyid]);
             }
@@ -738,7 +933,7 @@ class company_edit_form extends company_moodleform {
             }
         }
 
-        if (!empty($data['hostname']) && $foundcompanies = $DB->get_records('company', array('hostname' => $data['hostname']))) {
+        if (!empty($data['hostname']) && $foundcompanies = $DB->get_records('company', ['hostname' => $data['hostname']])) {
             if (!empty($this->companyid)) {
                 unset($foundcompanies[$this->companyid]);
             }
