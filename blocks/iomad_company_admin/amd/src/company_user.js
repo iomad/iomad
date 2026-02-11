@@ -8,8 +8,8 @@
   * @module block_iomad_company_admin/company_user
   */
 
-define(['jquery', 'core/ajax', 'core/notification', 'core/modal_factory', 'core/modal_events', 'core/str', 'core/templates'],
-    function($, ajax, notification, ModalFactory, ModalEvents, str, templates) {
+define(['jquery', 'core/ajax', 'core/notification', 'core/templates'],
+    function($, ajax, notification, templates) {
     return {
         init: function() {
 
@@ -17,7 +17,8 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/modal_factory', 'core/
             $('#licenseidselector').on('change', function() {
                 var licenseid = $(this).val();
                 if (licenseid == 0) {
-                    $('#licensecoursescontainer').addClass('invisible');
+                    $('#licensecoursescontainer').css('display', 'none');
+                    $('#licensedetails').css('display', 'none');
                     return;
                 }
 
@@ -28,18 +29,25 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/modal_factory', 'core/
                         licenseid: licenseid
                     },
                     done: function(licensedata) {
-                        $('#licensecoursescontainer').removeClass('invisible');
+
+                        $('#licensedetails').css('display', 'block');
+
+                        templates.render('block_iomad_company_admin/licensedetails', licensedata)
+                            .then(function(html) {
+                                $("#licensedetails").html(html);
+                            })
+                            .fail(notification.exception);
+
+                        if (!licensedata.license.program) {
+                            $('#licensecoursescontainer').css('display', 'block');
+                        } else {
+                            $('#licensecoursescontainer').css('display', 'none');
+                        }
 
                         templates.render('block_iomad_company_admin/licensecourseselector', licensedata)
                             .then(function(html) {
                                 $("#licensecourseselector").html(html);
 
-                            })
-                            .fail(notification.exception);
-
-                        templates.render('block_iomad_company_admin/licensedetails', licensedata)
-                            .then(function(html) {
-                                $("#licensedetails").html(html);
                             })
                             .fail(notification.exception);
 
