@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard save company roles form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,11 +25,31 @@
 
 namespace block_iomad_company_admin\forms;
 
-defined('MOODLE_INTERNAL') || die;
+use moodle_form;
 
-// Set up the save form.
-class company_role_save_form extends \moodleform {
+/**
+ * IOMAD Dashboard save company roles form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class company_role_save_form extends moodleform {
 
+    /** @var int company ID */
+    protected $companyid;
+
+    /** @var int template ID */
+    protected $templateid;
+
+    /**
+     * Constructor function
+     *
+     * @param moodle_url $actionurl
+     * @param int $companyid
+     * @param int $templateid
+     */
     public function __construct($actionurl, $companyid, $templateid) {
 
         $this->companyid = $companyid;
@@ -36,7 +58,14 @@ class company_role_save_form extends \moodleform {
         parent::__construct($actionurl);
     }
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
+
+        // Set up the form.
         $mform = $this->_form;
 
         $mform->addElement('hidden', 'companyid', $this->companyid);
@@ -54,12 +83,19 @@ class company_role_save_form extends \moodleform {
         $this->add_action_buttons(true, get_string('saveroletemplate', 'block_iomad_company_admin'));
     }
 
+    /**
+     * Form validation
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
     public function validation($data, $files) {
         global $DB;
 
         $errors = parent::validation($data, $files);
 
-        if ($DB->get_record('company_role_templates', array('name' => $data['name']))) {
+        if ($DB->get_record('company_role_templates', ['name' => $data['name']])) {
             $errors['name'] = get_string('templatenamealreadyinuse', 'block_iomad_company_admin');
         }
 

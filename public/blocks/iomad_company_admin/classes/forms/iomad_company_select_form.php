@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard company select form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,13 +25,30 @@
 
 namespace block_iomad_company_admin\forms;
 
-use \moodleform;
+use moodleform;
 
+/**
+ * IOMAD Dashboard company select form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class iomad_company_select_form extends moodleform {
-    protected $companies = array();
 
-    public function __construct($actionurl, $companies = array(), $selectedcompany = 0) {
-        global $USER, $DB;
+    /** @var array list of companies */
+    protected $companies = [];
+
+    /**
+     * Constructor class
+     *
+     * @param moodle_url $actionurl
+     * @param array $companies
+     * @param int $selectedcompany
+     */
+    public function __construct($actionurl, $companies = [], $selectedcompany = 0) {
+
         if (empty($selectedcompany) || empty($companies[$selectedcompany])) {
             $this->companies = [0 => get_string('selectacompany', 'block_iomad_company_selector')] + $companies;
         } else {
@@ -40,11 +59,23 @@ class iomad_company_select_form extends moodleform {
         parent::__construct($actionurl);
     }
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
+
+        // Set up the form.
         $mform =& $this->_form;
         $autooptions = ['onchange' => 'this.form.submit()',
                         'placeholder' => get_string('search')];
-        $mform->addElement('autocomplete', 'company', get_string('selectacompany', 'block_iomad_company_selector'), $this->companies, $autooptions);
+        $mform->addElement(
+            'autocomplete',
+            'company',
+            get_string('selectacompany', 'block_iomad_company_selector'),
+            $this->companies,
+            $autooptions);
         $mform->addElement('hidden', 'showsuspendedcompanies');
         $mform->setType('showsuspendedcompanies', PARAM_BOOL);
 
@@ -53,6 +84,5 @@ class iomad_company_select_form extends moodleform {
 
         // Disable the onchange popup.
         $mform->disable_form_change_checker();
-
     }
 }

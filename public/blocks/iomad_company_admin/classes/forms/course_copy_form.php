@@ -15,18 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Course copy form class.
+ * IOMAD Dashboard copy company course form class
  *
- * @package     core_backup
- * @copyright   2020 onward The Moodle Users Association <https://moodleassociation.org/>
- * @author      Matt Porritt <mattp@catalyst-au.net>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   block_iomad_company_admin
+ * @copyright 2024 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace block_iomad_company_admin\forms;
 
+use copy_helper;
+use DateTime;
+use html_writer;
 use local_iomad\custom_context\context_company;
 use local_iomad\iomad;
+use moodle_url;
+use moodleform;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -36,14 +41,14 @@ require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
 require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
 
 /**
- * Course copy form class.
+ * IOMAD Dashboard copy company course form class
  *
- * @package     core_backup
- * @copyright  2020 onward The Moodle Users Association <https://moodleassociation.org/>
- * @author     Matt Porritt <mattp@catalyst-au.net>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   block_iomad_company_admin
+ * @copyright 2024 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class course_copy_form extends \moodleform {
+class course_copy_form extends moodleform {
 
     /**
      * Build form for the course copy settings.
@@ -83,9 +88,9 @@ class course_copy_form extends \moodleform {
         $mform->setConstant('companyid', $company->id);
 
         // Notifications of current copies.
-        $copies = \copy_helper::get_copies($USER->id, $course->id);
+        $copies = copy_helper::get_copies($USER->id, $course->id);
         if (!empty($copies)) {
-            $progresslink = new \moodle_url('/backup/copyprogress.php?', array('id' => $course->id));
+            $progresslink = new moodle_url('/backup/copyprogress.php?', ['id' => $course->id]);
             $notificationmsg = get_string('copiesinprogress', 'backup', $progresslink->out());
             $notification = $OUTPUT->notification($notificationmsg, 'notifymessage');
             $mform->addElement('html', $notification);
@@ -119,17 +124,17 @@ class course_copy_form extends \moodleform {
         // Course start date.
         $mform->addElement('date_time_selector', 'startdate', get_string('startdate'));
         $mform->addHelpButton('startdate', 'startdate');
-        $date = (new \DateTime())->setTimestamp(usergetmidnight(time()));
+        $date = (new DateTime())->setTimestamp(usergetmidnight(time()));
         $date->modify('+1 day');
         $mform->setDefault('startdate', $date->getTimestamp());
 
         // Course enddate.
-        $mform->addElement('date_time_selector', 'enddate', get_string('enddate'), array('optional' => true));
+        $mform->addElement('date_time_selector', 'enddate', get_string('enddate'), ['optional' => true]);
         $mform->addHelpButton('enddate', 'enddate');
 
         if (!empty($CFG->enablecourserelativedates)) {
             $attributes = [
-                'aria-describedby' => 'relativedatesmode_warning'
+                'aria-describedby' => 'relativedatesmode_warning',
             ];
             if (!empty($course->id)) {
                 $attributes['disabled'] = true;
@@ -141,7 +146,7 @@ class course_copy_form extends \moodleform {
             $relativedatesmodegroup = [];
             $relativedatesmodegroup[] = $mform->createElement('select', 'relativedatesmode', get_string('relativedatesmode'),
                 $relativeoptions, $attributes);
-            $relativedatesmodegroup[] = $mform->createElement('html', \html_writer::span(get_string('relativedatesmode_warning'),
+            $relativedatesmodegroup[] = $mform->createElement('html', html_writer::span(get_string('relativedatesmode_warning'),
                 '', ['id' => 'relativedatesmode_warning']));
             $mform->addGroup($relativedatesmodegroup, 'relativedatesmodegroup', get_string('relativedatesmode'), null, false);
             $mform->addHelpButton('relativedatesmodegroup', 'relativedatesmode');
@@ -176,14 +181,14 @@ class course_copy_form extends \moodleform {
         $errors = parent::validation($data, $files);
 
         // Add field validation check for duplicate shortname.
-        $courseshortname = $DB->get_record('course', array('shortname' => $data['shortname']), 'fullname', IGNORE_MULTIPLE);
+        $courseshortname = $DB->get_record('course', ['shortname' => $data['shortname']], 'fullname', IGNORE_MULTIPLE);
         if ($courseshortname) {
             $errors['shortname'] = get_string('shortnametaken', '', $courseshortname->fullname);
         }
 
         // Add field validation check for duplicate idnumber.
         if (!empty($data['idnumber'])) {
-            $courseidnumber = $DB->get_record('course', array('idnumber' => $data['idnumber']), 'fullname', IGNORE_MULTIPLE);
+            $courseidnumber = $DB->get_record('course', ['idnumber' => $data['idnumber']], 'fullname', IGNORE_MULTIPLE);
             if ($courseidnumber) {
                 $errors['idnumber'] = get_string('courseidnumbertaken', 'error', $courseidnumber->fullname);
             }
@@ -196,5 +201,4 @@ class course_copy_form extends \moodleform {
 
         return $errors;
     }
-
 }

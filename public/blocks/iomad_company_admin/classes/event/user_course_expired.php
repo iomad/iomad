@@ -25,7 +25,9 @@
 
 namespace block_iomad_company_admin\event;
 
-defined('MOODLE_INTERNAL') || die();
+use core\exception\coding_exception;
+use core\event\base;
+use moodle_url;
 
 /**
  * The block_iomad_company_admin user course expired event.
@@ -41,7 +43,7 @@ defined('MOODLE_INTERNAL') || die();
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class user_course_expired extends \core\event\base {
+class user_course_expired extends base {
 
     /**
      * Init method.
@@ -75,23 +77,17 @@ class user_course_expired extends \core\event\base {
     /**
      * Get URL related to the action.
      *
-     * @return \moodle_url
+     * @return moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/course/view.php');
+        return new moodle_url('/course/view.php');
     }
 
     /**
-     * Custom validation.
+     * Get other mapped items
      *
-     * @throws \coding_exception
      * @return void
      */
-    protected function validate_data() {
-        parent::validate_data();
-
-    }
-
     public static function get_other_mapping() {
         $othermapped = array();
 

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard compani OIDC mappings form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,21 +25,32 @@
 
 namespace block_iomad_company_admin\forms;
 
-defined('MOODLE_INTERNAL') || die;
-
 use moodle_url;
 use core_text;
 use moodleform;
 use local_iomad\iomad;
 use html_writer;
 
+/**
+ * IOMAD Dashboard compani OIDC mappings form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class company_iomadoidc_mappings_form extends moodleform {
+
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
-        global $CFG, $PAGE, $DB, $postfix;
+        global $DB, $postfix;
 
+        // Set up the form.
         $mform = & $this->_form;
-
-        $strrequired = get_string('required');
 
         $mform->addElement('hidden', 'action');
         $mform->setType('action', PARAM_ALPHA);
@@ -45,15 +58,20 @@ class company_iomadoidc_mappings_form extends moodleform {
         $authplugin = get_auth_plugin('iomadoidc');
         $auth = $authplugin->authtype;
         $userfields = $authplugin->userfields;
-        $helptext = get_string('cfg_field_mapping_desc', 'auth_iomadoidc');
         $mapremotefields = true;
         $updateremotefields = false;
-        // get all of the profile field categories.
+
+        // Get all of the profile field categories.
         $profilecategories = iomad::iomad_filter_profile_categories($DB->get_records('user_info_category'));
         $customfields = [];
-	if (!empty($profilecategories)) {
+        if (!empty($profilecategories)) {
             $insql = $DB->get_in_or_equal($profilecategories);
-            $customfields = $DB->get_records_select_menu('user_info_field', 'categoryid', $insql, '', "id,concat('profile_field_',shortname)");
+            $customfields = $DB->get_records_select_menu(
+                'user_info_field',
+                'categoryid',
+                $insql,
+                '',
+                "id,concat('profile_field_',shortname)");
             $customfields = array_values($customfields);
         }
 

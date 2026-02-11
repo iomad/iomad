@@ -15,30 +15,49 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard classroom edit form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/**
- * Script to let a user edit the properties of a particular email template.
- */
-
 namespace block_iomad_company_admin\forms;
 
-use moodleform;
-use context_system;
-use local_iomad\{company, iomad};
+ use moodleform;
 
+/**
+ * IOMAD Dashboard classroom edit form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class classroom_edit_form extends moodleform {
+
+    /** @var bool are we creating a new one */
     protected $isadding;
-    protected $subject = '';
-    protected $body = '';
+
+    /** @var int classroom id */
     protected $classroomid;
+
+    /** @var int company id */
     protected $companyid;
+
+    /** @var array editor options */
     protected $editoroptions;
 
+    /**
+     * Constructor function
+     *
+     * @param moodle_url $actionurl
+     * @param bool $isadding
+     * @param int $companyid
+     * @param int $classroomid
+     * @param array $editoroptions
+     */
     public function __construct($actionurl, $isadding, $companyid, $classroomid, $editoroptions) {
         $this->isadding = $isadding;
         $this->classroomid = $classroomid;
@@ -48,10 +67,14 @@ class classroom_edit_form extends moodleform {
         parent::__construct($actionurl);
     }
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
-        global $CFG, $PAGE, $DB;
-        $context = context_system::instance();
 
+        // Setup the form.
         $mform =& $this->_form;
 
         $strrequired = get_string('required');
@@ -84,7 +107,7 @@ class classroom_edit_form extends moodleform {
         $mform->setType('postcode', PARAM_NOTAGS);
 
         $choices = get_string_manager()->get_list_of_countries();
-        $choices = array('' => get_string('selectacountry').'...') + $choices;
+        $choices = ['' => format_string(get_string('selectacountry').'...')] + $choices;
         $mform->addElement('select', 'country', get_string('selectacountry'), $choices);
 
         $mform->addElement('text', 'capacity',
@@ -107,9 +130,16 @@ class classroom_edit_form extends moodleform {
         $this->add_action_buttons();
     }
 
+    /**
+     * Form validation
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
     public function validation($data, $files) {
-        global $CFG, $DB;
 
+        // Set up default response.
         $errors = [];
 
         if (empty($data['isvirtual'])) {

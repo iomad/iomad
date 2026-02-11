@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard company import form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2025 Derick Turner
  * @author    Derick Turner
@@ -23,27 +25,37 @@
 
 namespace block_iomad_company_admin\forms;
 
-use \moodleform;
-use \csv_import_reader;
-use \core_text;
+use moodleform;
+use csv_import_reader;
+use core_text;
+
+defined('MOODLE_INTERNAL') || die;
 
 /**
- * Script to let a user import departments to a particular company.
+ * IOMAD Dashboard company import form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2025 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class company_import_form extends moodleform {
 
-    function definition() {
-        global $CFG;
+    /**
+     * Form definition
+     *
+     * @return void
+     */
+    public function definition() {
 
-        // thing you have to do
+        // Set up the form.
         $mform =& $this->_form;
 
-        // header for main bit
-        $mform->addElement( 'header', 'general', get_string('companyimportfromfile','block_iomad_company_admin'));
+        // Add a header.
+        $mform->addElement( 'header', 'general', get_string('companyimportfromfile', 'block_iomad_company_admin'));
 
-        // file picker
-        $mform->addElement('filepicker', 'importfile', get_string('file'), null, array( 'accepted_types'=>'csv'));
+        // Add a file picker.
+        $mform->addElement('filepicker', 'importfile', get_string('file'), null, ['accepted_types' => 'csv']);
         $mform->addRule('importfile', null, 'required');
 
         $mform->addElement('hidden', 'fileimport');
@@ -63,28 +75,35 @@ class company_import_form extends moodleform {
         $mform->addElement('select', 'encoding', get_string('encoding', 'tool_uploaduser'), $choices);
         $mform->setDefault('encoding', 'UTF-8');
 
-        // buttons
+        // Add buttons.
         $this->add_action_buttons();
     }
 }
 
+/**
+ * Second import form after upload.
+ */
 class company_import_form2 extends moodleform {
 
-    function definition() {
-        global $CFG;
+    /**
+     * Form defintion
+     *
+     * @return void
+     */
+    public function definition() {
 
-        // thing you have to do
+        // Set up the form.
         $mform =& $this->_form;
 
-        // header for main bit
-        $mform->addElement( 'header', 'general', get_string('companyimportfromfile','block_iomad_company_admin'));
+        // Add the header.
+        $mform->addElement( 'header', 'general', get_string('companyimportfromfile', 'block_iomad_company_admin'));
 
         $mform->addElement('hidden', 'iid');
         $mform->setType('iid', PARAM_BOOL);
         $mform->setType('fileimport', PARAM_BOOL);
         $mform->addElement('hidden', 'fileimport');
 
-        // buttons
+        // Add buttons.
         $this->add_action_buttons();
     }
 }

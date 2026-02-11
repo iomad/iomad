@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard group edit form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,17 +25,45 @@
 
 namespace block_iomad_company_admin\forms;
 
-use local_iomad\{company, company_user, iomad};
+use company_moodleform;
+use local_iomad\company;
 
+/**
+ * IOMAD Dashboard group edit form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class group_edit_form extends company_moodleform {
+
+    /** @var int company ID */
     protected $selectedcompany = 0;
+
+    /** @var object company */
     protected $company = null;
+
+    /** @var int course ID */
     protected $courseid = 0;
+
+    /** @var int group ID */
     protected $groupid = 0;
+
+    /** @var object output */
     protected $output = null;
 
+    /**
+     * Constructor function
+     *
+     * @param moodle_url $actionurl
+     * @param int $companyid
+     * @param int $courseid
+     * @param int $groupid
+     * @param object $output
+     * @param integer $action
+     */
     public function __construct($actionurl, $companyid, $courseid, $groupid, $output, $action = 0) {
-        global $CFG;
 
         $this->selectedcompany = $companyid;
         $this->courseid = $courseid;
@@ -45,8 +75,14 @@ class group_edit_form extends company_moodleform {
         parent::__construct($actionurl);
     }
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
-        global $CFG;
+
+        // Set up the form.
         $mform =& $this->_form;
 
         // Then show the fields about where this block appears.
@@ -80,5 +116,4 @@ class group_edit_form extends company_moodleform {
 
         $this->add_action_buttons();
     }
-
 }

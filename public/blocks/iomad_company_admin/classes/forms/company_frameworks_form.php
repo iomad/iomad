@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard company frameworks assignment form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -24,29 +26,56 @@
 namespace block_iomad_company_admin\forms;
 
 use context_system;
-use local_iomad\{company, company_user, iomad};
+use html_writer;
+use local_iomad\company;
 use local_iomad\framework_selector\{current_company, potential_company};
 use moodleform;
 
+/**
+ * IOMAD Dashboard company frameworks assignment form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class company_frameworks_form extends moodleform {
+
+    /** @var object context */
     protected $context = null;
+
+    /** @var int company ID */
     protected $selectedcompany = 0;
+
+    /** @var object potential framework selector */
     protected $potentialframeworks = null;
+
+    /** @var object current framework selector */
     protected $currentframeworks = null;
+
+    /** @var object company */
     protected $company = null;
 
+    /**
+     * Constructor function
+     *
+     * @param moodle_url $actionurl
+     * @param object $context
+     * @param int $companyid
+     */
     public function __construct($actionurl, $context, $companyid) {
-        global $USER;
+
         $this->selectedcompany = $companyid;
         $this->context = $context;
 
         $this->company = new company($this->selectedcompany);
-        $syscontext = context_system::instance();
 
-        $options = array('context' => $this->context,
-                         'companyid' => $this->selectedcompany,
-                         'shared' => false,
-                         'partialshared' => true);
+        $options = [
+            'context' => $this->context,
+            'companyid' => $this->selectedcompany,
+            'shared' => false,
+            'partialshared' => true,
+        ];
         $this->potentialframeworks = new potential_company('potentialframeworks',
                                                                          $options);
         $this->currentframeworks = new current_company('currentframeworks', $options);
@@ -54,14 +83,25 @@ class company_frameworks_form extends moodleform {
         parent::__construct($actionurl);
     }
 
+    /**
+     * Default form definition
+     *
+     * @return void
+     */
     public function definition() {
         $this->_form->addElement('hidden', 'companyid', $this->selectedcompany);
         $this->_form->setType('companyid', PARAM_INT);
     }
 
+    /**
+     * Form definition after data is set
+     *
+     * @return void
+     */
     public function definition_after_data() {
         global $OUTPUT;
 
+        // Set up the form.
         $mform =& $this->_form;
 
         // Adding the elements in the definition_after_data function rather than in the
@@ -71,37 +111,68 @@ class company_frameworks_form extends moodleform {
 
         $context = context_system::instance();
 
-        $mform->addElement('html', '<table summary="" class="companyframeworktable addremovetable'.
-                                   ' generaltable generalbox boxaligncenter" cellspacing="0">
-            <tr>
-              <td id="existingcell">');
+        $mform->addElement(
+            'html',
+            html_writer::start_tag(
+                'table',
+                [
+                    'summary' => '',
+                    'class' => 'generaltable generalbox groupmanagementtable boxaligncenter',
+                    'cellspacing' => 0,
+                ]) .
+            html_writer::start_tag('tr') .
+            html_writer::start_tag('td', ['id' => 'existingcell']));
 
         $mform->addElement('html', $this->currentframeworks->display(true));
 
-        $mform->addElement('html', '
-              </td>
-              <td id="buttonscell">
-                  <p class="arrow_button">
-                    <input name="add" id="add" type="submit" value="' . $OUTPUT->larrow().'&nbsp;'.get_string('add') . '"
-                           title="' . print_string('add') .'" class="btn btn-secondary"/><br />
-                    <input name="remove" id="remove" type="submit" value="'. get_string('remove').'&nbsp;'.$OUTPUT->rarrow(). '"
-                           title="'. print_string('remove') .'" class="btn btn-secondary"/><br />
-                 </p>
-              </td>
-              <td id="potentialcell">');
+        $mform->addElement(
+            'html',
+            html_writer::end_tag('td') .
+            html_writer::start_tag('td', ['id' => 'buttonscell']) .
+            html_writer::start_tag('p', ['class' => 'arrow_button']) .
+            html_writer::empty_tag(
+                'input',
+                [
+                    'name' => 'add',
+                    'id' => 'add',
+                    'type' => 'submit',
+                    'value' => $output->larrow() . ' ' . get_string('add'),
+                    'title' => get_string('add'),
+                    'class' => 'btn btn-secondary',
+                ]) .
+                html_writer::empty_tag('br') .
+                            html_writer::empty_tag(
+                'input',
+                [
+                    'name' => 'remove',
+                    'id' => 'remove',
+                    'type' => 'submit',
+                    'value' => get_string('remove') . ' ' . $output->rarrow(),
+                    'title' => get_string('remove'),
+                    'class' => 'btn btn-secondary',
+                ]) .
+            html_writer::end_tag('p') .
+            html_writer::end_tag('td') .
+            html_writer::start_tag('td', ['id' => 'potencialcell']));
 
         $mform->addElement('html', $this->potentialframeworks->display(true));
 
-        $mform->addElement('html', '
-              </td>
-            </tr>
-          </table>');
+        $mform->addElement(
+            'html',
+            html_writer::end_tag('td') .
+            html_writer::end_tag('tr') .
+            html_writer::end_tag('table'));
+
+        // Disable the onchange popup.
+        $mform->disable_form_change_checker();
     }
 
+    /**
+     * Process the form
+     *
+     * @return void
+     */
     public function process() {
-        global $DB;
-
-        $context = context_system::instance();
 
         // Process incoming assignments.
         if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
@@ -123,7 +194,7 @@ class company_frameworks_form extends moodleform {
             if (!empty($frameworkstounassign)) {
 
                 foreach ($frameworkstounassign as $removeframework) {
-                    company::remove_competency_framework($this->selectedcompany,$removeframework->id);
+                    company::remove_competency_framework($this->selectedcompany, $removeframework->id);
                 }
 
                 $this->potentialframeworks->invalidate_selected_frameworks();

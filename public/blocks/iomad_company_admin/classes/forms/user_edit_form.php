@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard user edit form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,33 +25,70 @@
 
 namespace block_iomad_company_admin\forms;
 
-defined('MOODLE_INTERNAL') || die;
-
 use context_coursecat;
 use core_text;
 use core_user;
 use local_iomad\{company, company_user, iomad};
 use moodleform;
+use html_writer;
 
+/**
+ * IOMAD Dashboard user edit form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class user_edit_form extends moodleform {
 
-    protected $title = '';
-    protected $description = '';
+    /** @var int company ID */
     protected $context = null;
+
+    /** @var object user course selector */
     protected $courseselector = null;
+
+    /** @var int company ID */
     protected $company = null;
+
+    /** @var int company ID */
     protected $departmentid = 0;
+
+    /** @var int company ID */
     protected $companyname = '';
+
+    /** @var int company ID */
     protected $licenseid = 0;
-    protected $licensecourses = [];
+
+    /** @var int company ID */
     protected $subhierarchieslist = [];
+
+    /** @var int company ID */
     protected $selectedcompany;
+
+    /** @var int company ID */
     protected $companycontext;
+
+    /** @var int company ID */
     protected $companydepartment;
+
+    /** @var int company ID */
     protected $treehtml;
+
+    /** @var int company ID */
     protected $userdepartment;
+
+    /** @var int company ID */
     protected $companycourses;
 
+    /**
+     * Constructor function
+     *
+     * @param moodle_url $actionurl
+     * @param int $companyid
+     * @param int $departmentid
+     * @param int $licenseid
+     */
     public function __construct($actionurl, $companyid, $departmentid, $licenseid=0) {
         global $CFG, $USER, $output, $companycontext;
 
@@ -90,15 +129,19 @@ class user_edit_form extends moodleform {
         parent::__construct($actionurl);
     }
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
-        global $CFG, $DB, $output;
+        global $CFG, $DB;
 
+        // Set up the form.
         $mform =& $this->_form;
 
         $mform->addElement('hidden', 'companyid', $this->selectedcompany);
         $mform->setType('companyid', PARAM_INT);
-
-        /* copied from /user/editlib.php */
         $strrequired = get_string('required');
 
         // Deal with the name order sorting and required fields.
@@ -110,7 +153,7 @@ class user_edit_form extends moodleform {
         }
 
         // Do not show email field if change confirmation is pending.
-        if (!empty($CFG->emailchangeconfirmation) and !empty($user->preference_newemail)) {
+        if (!empty($CFG->emailchangeconfirmation) && !empty($user->preference_newemail)) {
             $notice = get_string('auth_emailchangepending', 'auth_email', $user);
             $notice .= '<br /><a href="edit.php?cancelemailchange=1&amp;id='.$user->id.'">'
                     . get_string('auth_emailchangecancel', 'auth_email') . '</a>';
@@ -126,14 +169,17 @@ class user_edit_form extends moodleform {
             $mform->setType('username', PARAM_RAW);
             $mform->disabledif('username', 'use_email_as_username', 'eq', 1);
         }
-        $mform->addElement('advcheckbox', 'use_email_as_username', get_string('iomad_use_email_as_username', 'local_iomad'));
+        $mform->addElement(
+            'advcheckbox',
+            'use_email_as_username',
+            get_string('iomad_use_email_as_username', 'local_iomad_settings'));
         if (!empty(get_config('local_iomad', 'use_email_as_username'))) {
             $mform->setDefault('use_email_as_username', 1);
         } else {
             $mform->setDefault('use_email_as_username', 0);
         }
 
-        /* /copied from /user/editlib.php */
+        // Copied from /user/editlib.php.
 
         $mform->addElement('static', 'blankline', '', '');
         if (!empty($CFG->passwordpolicy)) {
@@ -158,14 +204,18 @@ class user_edit_form extends moodleform {
         $mform->disabledIf('due', 'sendnewpasswordemails', 'eq', '0');
         $mform->addHelpButton('due', 'senddate', 'block_iomad_company_admin');
 
-
         // Deal with company optional fields.
         $mform->addElement('header', 'category_id', get_string('advanced'));
         $mform->addElement('static', 'departmenttext', get_string('department', 'block_iomad_company_admin'));
         $mform->addElement('html', $this->treehtml);
-        $mform->addElement('select', 'deptid', get_string('department', 'block_iomad_company_admin'), $this->subhierarchieslist, 0);
-        $mform->addElement('html', '<br>');
-        
+        $mform->addElement(
+            'select',
+            'deptid',
+            get_string('department', 'block_iomad_company_admin'),
+            $this->subhierarchieslist,
+            0);
+        $mform->addElement('html', html_writer::empty_tag('br'));
+
         // Add in company/department manager checkboxes.
         // Deal with role selector.
         $usertypeselect = ['0' => get_string('user', 'block_iomad_company_admin')];
@@ -181,18 +231,35 @@ class user_edit_form extends moodleform {
         if (!get_config('local_iomad', 'autoenrol_managers')) {
             $usertypeselect[1] = get_string('educator', 'block_iomad_company_admin');
             if (iomad::has_capability('block/iomad_company_admin:assign_company_manager', $this->companycontext)) {
-                $usertypeselect[11] = get_string('companymanager', 'block_iomad_company_admin') . ' + ' . get_string('educator', 'block_iomad_company_admin');
+                $usertypeselect[11] = format_string(
+                    get_string('companymanager', 'block_iomad_company_admin') .
+                    ' + ' .
+                    get_string('educator', 'block_iomad_company_admin')
+                );
             }
             if (iomad::has_capability('block/iomad_company_admin:assign_department_manager', $this->companycontext)) {
-                $usertypeselect[21] = get_string('departmentmanager', 'block_iomad_company_admin') . ' + ' . get_string('educator', 'block_iomad_company_admin');
+                $usertypeselect[21] = format_string(
+                    get_string('departmentmanager', 'block_iomad_company_admin') .
+                    ' + ' .
+                    get_string('educator', 'block_iomad_company_admin')
+                );
             }
             if (iomad::has_capability('block/iomad_company_admin:assign_company_reporter', $this->companycontext)) {
-                $usertypeselect[41] = get_string('companyreporter', 'block_iomad_company_admin') . ' + ' . get_string('educator', 'block_iomad_company_admin');
+                $usertypeselect[41] = format_string(
+                    get_string('companyreporter', 'block_iomad_company_admin') .
+                    ' + ' .
+                    get_string('educator', 'block_iomad_company_admin')
+                );
             }
         }
         ksort($usertypeselect);
         if (!empty($usertypeselect)) {
-            $mform->addElement('select', 'managertype', get_string('managertype', 'block_iomad_company_admin'), $usertypeselect, 0);
+            $mform->addElement(
+                'select',
+                'managertype',
+                get_string('managertype', 'block_iomad_company_admin'),
+                $usertypeselect,
+                0);
         } else {
             $mform->addElement('hidden', 'managertype', 0);
         }
@@ -231,59 +298,134 @@ class user_edit_form extends moodleform {
         // Deal with licenses.
         if (iomad::has_capability('block/iomad_company_admin:allocate_licenses', $this->companycontext)) {
             $mform->addElement('header', 'licenses', get_string('assignlicenses', 'block_iomad_company_admin'));
-            $foundlicenses = $DB->get_records_sql_menu("SELECT id, name FROM {companylicense}
-                                                        WHERE expirydate >= :timestamp
-                                                        AND companyid = :companyid
-                                                        AND used < allocation",
-                                                       ['timestamp' => time(),
-                                                        'companyid' => $this->selectedcompany]);
+            $foundlicenses = $DB->get_records_sql_menu(
+                "SELECT id, name
+                 FROM {companylicense}
+                 WHERE expirydate >= :timestamp
+                 AND companyid = :companyid
+                 AND used < allocation",
+                ['timestamp' => time(),
+                 'companyid' => $this->selectedcompany]);
             $licenses = ['0' => get_string('nolicense', 'block_iomad_company_admin')] + $foundlicenses;
             $licensecourses = [];
             if (count($foundlicenses) == 0) {
                 // No valid licenses.
-                $mform->addElement('html', '<div id="licensedetails"><b>' . get_string('nolicenses', 'block_iomad_company_admin') . '</b></div>');
+                $mform->addElement(
+                    'html',
+                    html_writer::tag(
+                        'div',
+                        html_writer::tag(
+                            'b',
+                            get_string('nolicenses', 'block_iomad_company_admin')
+                        ),
+                        [
+                            'id' => 'licensedetails',
+                        ]
+                        )
+                    );
             } else {
-                $mform->addElement('html', "<div class='fitem'><div class='fitemtitle'>" .
-                                            get_string('selectlicensecourse', 'block_iomad_company_admin') .
-                                            "</div><div class='felement'>");
-                $mform->addElement('select', 'licenseid', get_string('select_license', 'block_iomad_company_admin'), $licenses, ['id' => 'licenseidselector']);
+                $mform->addElement(
+                    'select',
+                    'licenseid',
+                    get_string('select_license', 'block_iomad_company_admin'),
+                    $licenses,
+                    ['id' => 'licenseidselector']);
                 $mylicenseid = $this->licenseid;
-                if (empty($this->licenseid)) {
-                    $mform->addElement('html', '<div id="licensedetails"></div>');
-                } else {
+
+                if (!empty($this->licenseid)) {
                     $mylicensedetails = $DB->get_record('companylicense', ['id' => $this->licenseid]);
-                    $licensestring = get_string('licensedetails', 'block_iomad_company_admin', $mylicensedetails);
-                    $licensestring2 = get_string('licensedetails2', 'block_iomad_company_admin', $mylicensedetails);
-                    $licensestring3 = get_string('licensedetails3', 'block_iomad_company_admin', $mylicensedetails);
-                    $mform->addElement('html', '<div id="    "><b>You have ' . ((intval($licensestring3, 0)) - (intval($licensestring2, 0))) . ' courses left to allocate on this license </b></div>');
+                    $usedcount = $mylicensedetails->used;
+                    // Is this a program license?
+                    if (!empty($mylicense->program) && !empty($usedcount)) {
+                        $licensecourses = $DB->count_records('companylicense_courses', ['licenseid' => $this->licenseid]);
+                        if (!empty($licensecourses)) {
+                            $usedcount = $usedcount / $licensecourses;
+                        } else {
+                            $usedcount = 0;
+                        }
+                    }
+                    $remainder = $mylicensedetails->humanallocation - $usedcount;
+                    $mform->addElement(
+                        'html',
+                        html_writer::tag(
+                            'div',
+                            html_writer::tag(
+                                'b',
+                                format_string(
+                                    get_string('licenseleft1', 'block_iomad_company_admin') .
+                                    $remainder .
+                                    get_string('licenseleft2', 'block_iomad_company_admin')
+                                    ),
+                            ),
+                            [
+                                'id' => 'licensedetails',
+
+                            ]
+                            ));
+                } else {
+                    $mform->addElement(
+                        'html',
+                        html_writer::tag(
+                            'div',
+                            '',
+                            [
+                                'id' => "licensedetails",
+                                'style' => 'display: none;',
+                            ]
+                        ));
                 }
 
-                // Is this a program of courses?
-                if (!empty($mylicensedetails->program)) {
-                     $mform->addElement('html', "<div style='display:none'>");
-                }
-                if (!$licensecourses = $DB->get_records_sql_menu("SELECT c.id, c.fullname FROM {companylicense_courses} clc
-                                                             JOIN {course} c ON (clc.courseid = c.id
-                                                             AND clc.licenseid = :licenseid)
-                                                             ORDER BY c.fullname",
-                                                             ['licenseid' => $mylicenseid])) {
+                // Get the license courses.
+                if (!$licensecourses = $DB->get_records_sql_menu(
+                    "SELECT c.id, c.fullname
+                     FROM {companylicense_courses} clc
+                     JOIN {course} c ON (clc.courseid = c.id
+                     AND clc.licenseid = :licenseid)
+                     ORDER BY c.fullname",
+                    ['licenseid' => $mylicenseid])) {
                     $licensecourses = [];
                 }
             }
 
-            $mform->addElement('html', '<div id="licensecoursescontainer" class="invisible">');
-            $licensecourseselect = $mform->addElement('select', 'licensecourses',
-                                                      get_string('select_license_courses', 'block_iomad_company_admin'),
-                                                      $licensecourses, ['id' => 'licensecourseselector']);
+            // Is this a program of courses?
+            if (!empty($mylicensedetails->program)) {
+                 $mform->addElement('html', html_writer::start_tag('div', ['style' => 'display:none']));
+            }
+
+            // Add the license course selector.
+            $mform->addElement(
+                'html',
+                html_writer::start_tag(
+                    'div',
+                    [
+                        'id' => "licensecoursescontainer",
+                        'style' => 'display: none;',
+                    ]
+                ));
+            $licensecourseselect = $mform->addElement(
+                'select',
+                'licensecourses',
+                get_string('select_license_courses', 'block_iomad_company_admin'),
+                $licensecourses,
+                ['id' => 'licensecourseselector']);
             $licensecourseselect->setMultiple(true);
-            $mform->addElement('html', '</div>');
+            $mform->addElement('html', html_writer::end_tag('div'));
+
+            // Set the selected courses.
             if (!empty($mylicensedetails->program)) {
                 $licensecourseselect->setSelected($licensecourses);
             } else {
                 $licensecourseselect->setSelected([]);
             }
+
+            // If this is a program of courses - end the hidden div.
+            if (!empty($mylicensedetails->program)) {
+                $mform->addElement('html', html_writer::end_tag('div'));
+            }
+
         }
 
+        // Deal with manual enrolment courses.
         if (iomad::has_capability('block/iomad_company_admin:company_course_users', $this->companycontext)) {
             $mform->addElement('header', 'courses', get_string('assigncourses', 'block_iomad_company_admin'));
             $autooptions = ['multiple' => true,
@@ -295,7 +437,10 @@ class user_edit_form extends moodleform {
                                $autooptions);
         }
 
-        // add action buttons
+        // Disable the onchange popup.
+        $mform->disable_form_change_checker();
+
+        // Add action buttons.
         $buttonarray = [];
         $buttonarray[] = &$mform->createElement('submit', 'submitbutton',
                             get_string('createuseragain', 'block_iomad_company_admin'));
@@ -304,9 +449,13 @@ class user_edit_form extends moodleform {
         $buttonarray[] = &$mform->createElement('cancel');
         $mform->addGroup($buttonarray, 'buttonar', '', [' '], false);
         $mform->closeHeaderBefore('buttonar');
-
     }
 
+    /**
+     * Get the form data
+     *
+     * @return array
+     */
     public function get_data() {
         $data = parent::get_data();
 
@@ -329,8 +478,13 @@ class user_edit_form extends moodleform {
         return $data;
     }
 
-    // Perform some extra moodle validation.
-    /* copied from /user/edit_form.php */
+    /**
+     * Form validation
+     *
+     * @param array $usernew
+     * @param array $files
+     * @return void
+     */
     public function validation($usernew, $files) {
         global $CFG, $DB;
 
@@ -384,22 +538,28 @@ class user_edit_form extends moodleform {
 
         // It is insecure to send passwords by email without forcing them to be changed on first login.
         if (!$usernew->preference_auth_forcepasswordchange && $usernew->sendnewpasswordemails) {
-            $errors['preference_auth_forcepasswordchange'] = get_string('sendemailsforcepasswordchange', 'block_iomad_company_admin',
-                                                             ['forcechange' => get_string('forcepasswordchange'),
-                                                                   'sendemail' => get_string('sendnewpasswordemails', 'block_iomad_company_admin')]);
+            $errors['preference_auth_forcepasswordchange'] = get_string(
+                'sendemailsforcepasswordchange',
+                'block_iomad_company_admin',
+                [
+                    'forcechange' => get_string('forcepasswordchange'),
+                    'sendemail' => get_string('sendnewpasswordemails',
+                    'block_iomad_company_admin')]);
         }
 
-        //  Check numbers of licensed courses against license.
+        // Check numbers of licensed courses against license.
         if (!empty($usernew->licenseid)) {
             $license = $DB->get_record('companylicense', ['id' => $usernew->licenseid]);
 
             // Are we dealing with a program license?
             if (!empty($license->program)) {
                 // If so the courses are not passed automatically.
-                $usernew->licensecourses =  $DB->get_records_sql_menu("SELECT c.id, c.fullname FROM {companylicense_courses} clc
-                                                                       JOIN {course} c ON (clc.courseid = c.id
-                                                                       AND clc.licenseid = :licenseid)",
-                                                                       ['licenseid' => $license->id]);
+                $usernew->licensecourses = $DB->get_records_sql_menu(
+                    "SELECT c.id, c.fullname
+                     FROM {companylicense_courses} clc
+                     JOIN {course} c ON (clc.courseid = c.id
+                     AND clc.licenseid = :licenseid)",
+                    ['licenseid' => $license->id]);
             }
 
             if (!empty($usernew->licensecourses)) {

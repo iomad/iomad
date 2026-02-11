@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard company OIDC settings form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,27 +25,44 @@
 
 namespace block_iomad_company_admin\forms;
 
-defined('MOODLE_INTERNAL') || die;
-
 use auth_iomadoidc\utils;
 use context_system;
 use local_iomad\{company, company_user, iomad};
 use moodle_url;
 use moodleform;
+use html_writer;
 
+/**
+ * IOMAD Dashboard company OIDC settings form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class company_iomadoidc_form extends moodleform {
+
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
-        global $CFG, $PAGE, $DB, $postfix;
+        global $CFG, $postfix;
 
+        // Set up the form.
         $mform = & $this->_form;
-
-        $strrequired = get_string('required');
 
         $mform->addElement('hidden', 'action');
         $mform->setType('action', PARAM_ALPHA);
 
-        $mform->addElement('html', "<h2>" . format_string(get_string('pluginname', 'auth_iomadoidc') . " : " .
-                                                          get_string('settings', 'moodle')) . "</h2>");
+        $mform->addElement(
+            'html',
+            html_writer(
+                'h2',
+                format_string(get_string('pluginname', 'auth_iomadoidc') . " : " .
+                              get_string('settings', 'moodle'))
+            ));
 
         $mform->addElement('static',
                            'redirecturi' . $postfix,
@@ -53,11 +72,19 @@ class company_iomadoidc_form extends moodleform {
 
         // Link to authentication options.
         $authenticationconfigurationurl = new moodle_url('/auth/iomadoidc/manageapplication.php', ['companyonly' => true]);
-        $mform->addElement('static', 'managelink', '', '<a href="' . $authenticationconfigurationurl->out() .'">' .
-                                    get_string('settings_page_application', 'auth_iomadoidc') . '</a>');
+        $mform->addElement(
+            'static',
+            'managelink',
+            '',
+            html_writer::tag(
+                'a',
+                get_string('settings_page_application', 'auth_iomadoidc'),
+                [
+                    'href' => $authenticationconfigurationurl->out(),
+                ]));
 
         // Additional options heading.
-        $mform->addElement('html', "<h3>" . get_string('heading_additional_options', 'auth_iomadoidc') . "</h3>");
+        $mform->addElement('html', html_writer::tag('h3', get_string('heading_additional_options', 'auth_iomadoidc')));
         $mform->addelement('static', 'headingces', '', get_string('heading_additional_options_desc', 'auth_iomadoidc'));
 
         // Force redirect.
@@ -67,7 +94,11 @@ class company_iomadoidc_form extends moodleform {
         // Silent login mode.
         $forceloginconfigurl = new moodle_url('/admin/settings.php', ['section' => 'sitepolicies']);
         $mform->addElement('advcheckbox', 'silentloginmode' . $postfix, get_string('cfg_silentloginmode_key', 'auth_iomadoidc'));
-        $mform->addElement('static', 'silientloginmodedesc', '', get_string('cfg_silentloginmode_desc', 'auth_iomadoidc', $forceloginconfigurl->out(false)));
+        $mform->addElement(
+            'static',
+            'silientloginmodedesc',
+            '',
+            get_string('cfg_silentloginmode_desc', 'auth_iomadoidc', $forceloginconfigurl->out(false)));
 
         // Auto-append.
         $mform->addElement('text', 'autoappend'. $postfix, get_string('cfg_autoappend_key', 'auth_iomadoidc'));
@@ -81,17 +112,39 @@ class company_iomadoidc_form extends moodleform {
 
         // Login flow.
         $loginflowarray = [];
-        $logiflowarray[] = $mform->addElement('radio', 'loginflow' . $postfix, get_string('cfg_loginflow_key', 'auth_iomadoidc'), get_string('cfg_loginflow_authcode', 'auth_iomadoidc'), 0);
-        $logiflowarray[] = $mform->addElement('static', 'loginflow_authcode_desc', '', get_string('cfg_loginflow_authcode_desc', 'auth_iomadoidc'));
-        $logiflowarray[] = $mform->addElement('radio', 'loginflow' . $postfix, '', get_string('cfg_loginflow_rocreds', 'auth_iomadoidc'), 1);
-        $logiflowarray[] = $mform->addElement('static', 'loginflow_rocreds_desc', '', get_string('cfg_loginflow_rocreds_desc', 'auth_iomadoidc'));
+        $logiflowarray[] = $mform->addElement(
+            'radio',
+            'loginflow' . $postfix,
+            get_string('cfg_loginflow_key', 'auth_iomadoidc'),
+            get_string('cfg_loginflow_authcode', 'auth_iomadoidc'),
+            0);
+        $logiflowarray[] = $mform->addElement(
+            'static',
+            'loginflow_authcode_desc',
+            '',
+            get_string('cfg_loginflow_authcode_desc', 'auth_iomadoidc'));
+        $logiflowarray[] = $mform->addElement(
+            'radio',
+            'loginflow' . $postfix,
+            '',
+            get_string('cfg_loginflow_rocreds', 'auth_iomadoidc'),
+            1);
+        $logiflowarray[] = $mform->addElement(
+            'static',
+            'loginflow_rocreds_desc',
+            '',
+            get_string('cfg_loginflow_rocreds_desc', 'auth_iomadoidc'));
 
         $mform->addGroup($loginflowarray, 'loginflowarray', '');
         $mform->setDefault('loginflow', 0);
 
         // User restrictions heading.
-        $mform->addElement('html', "<h3>" . get_string('heading_user_restrictions', 'auth_iomadoidc') . "</h3>");
-        $mform->addElement('static', 'user_restrictions_heading_desc', '', get_string('heading_user_restrictions_desc', 'auth_iomadoidc'));
+        $mform->addElement('html', html_writer::tag('h3', get_string('heading_user_restrictions', 'auth_iomadoidc')));
+        $mform->addElement(
+            'static',
+            'user_restrictions_heading_desc',
+            '',
+            get_string('heading_user_restrictions_desc', 'auth_iomadoidc'));
 
         // User restrictions.
         $mform->addElement('textarea', 'userrestrictions'. $postfix, get_string('cfg_userrestrictions_key', 'auth_iomadoidc'));
@@ -99,17 +152,31 @@ class company_iomadoidc_form extends moodleform {
         $mform->setType('userrestrictions' . $postfix, PARAM_TEXT);
 
         // User restrictions case sensitivity.
-        $mform->addElement('advcheckbox', 'userrestrictionscasesensitive'. $postfix, get_string('cfg_userrestrictionscasesensitive_key', 'auth_iomadoidc'));
-        $mform->addElement('static', 'userrestrictionscasesensitivedesc', '', get_string('cfg_userrestrictionscasesensitive_desc', 'auth_iomadoidc'));
+        $mform->addElement(
+            'advcheckbox',
+            'userrestrictionscasesensitive'. $postfix,
+            get_string('cfg_userrestrictionscasesensitive_key', 'auth_iomadoidc'));
+        $mform->addElement(
+            'static',
+            'userrestrictionscasesensitivedesc',
+            '',
+            get_string('cfg_userrestrictionscasesensitive_desc', 'auth_iomadoidc'));
         $mform->setDefault('userrestrictionscasesensitive' . $postfix, 1);
 
         // Sign out integration heading.
-        $mform->addElement('html', "<h3>" . get_string('heading_sign_out', 'auth_iomadoidc') . "</h3>");
+        $mform->addElement('html', html_writer::tag('h3', get_string('heading_sign_out', 'auth_iomadoidc')));
         $mform->addElement('static', 'sign_out_heading_desc', '', get_string('heading_sign_out_desc', 'auth_iomadoidc'));
 
         // Single sign out from Moodle to IdP.
-        $mform->addElement('advcheckbox', 'single_sign_off'. $postfix, get_string('cfg_signoffintegration_key', 'auth_iomadoidc'));
-        $mform->addElement('static', 'single_sign_off_desc', '', get_string('cfg_signoffintegration_desc', 'auth_iomadoidc', $CFG->wwwroot));
+        $mform->addElement(
+            'advcheckbox',
+            'single_sign_off' . $postfix,
+            get_string('cfg_signoffintegration_key', 'auth_iomadoidc'));
+        $mform->addElement(
+            'static',
+            'single_sign_off_desc',
+            '',
+            get_string('cfg_signoffintegration_desc', 'auth_iomadoidc', $CFG->wwwroot));
 
         // IdP logout endpoint.
         $mform->addElement('text', 'logouturi'. $postfix, get_string('cfg_logoutendpoint_key', 'auth_iomadoidc'));
@@ -124,7 +191,7 @@ class company_iomadoidc_form extends moodleform {
         $mform->setType('logoutendpoint' . $postfix, PARAM_URL);
 
         // Display heading.
-        $mform->addElement('html', "<h3>" . get_string('heading_display', 'auth_iomadoidc') . "</h3>");
+        $mform->addElement('html', html_writer::tag('h3', get_string('heading_display', 'auth_iomadoidc')));
         $mform->addElement('static', 'display_heading_desc', '', get_string('heading_display_desc', 'auth_iomadoidc'));
 
         // Provider Name (opname).
@@ -160,7 +227,7 @@ class company_iomadoidc_form extends moodleform {
         $mform->addElement('static', 'customicondesc', '', get_string('cfg_customicon_desc', 'auth_iomadoidc'));
 
         // Debugging heading.
-        $mform->addElement('html', "<h3>" . get_string('heading_debugging', 'auth_iomadoidc') . "</h3>");
+        $mform->addElement('html', html_writer::tag('h3', get_string('heading_debugging', 'auth_iomadoidc')));
         $mform->addElement('static', 'debugging_heading_desc', '', get_string('heading_debugging_desc', 'auth_iomadoidc'));
 
         // Record debugging messages.

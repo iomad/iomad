@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard course edit/create form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,41 +25,66 @@
 
 namespace block_iomad_company_admin\forms;
 
-defined('MOODLE_INTERNAL') || die;
-
-use context_system;
 use context_coursecat;
 use core_course;
 use DateTime;
-use local_iomad\{company, company_user, iomad};
+use local_iomad\iomad;
 use local_iomad\custom_context\context_company;
 use moodle_url;
 use moodleform;
 
+/**
+ * IOMAD Dashboard course edit/create form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class course_edit_form extends moodleform {
-    protected $title = '';
-    protected $description = '';
+
+    /** @var int company ID */
     protected $selectedcompany = 0;
+
+    /** @var object context */
     protected $context = null;
+
+    /** @var array editor options */
     protected $editoroptions;
+
+    /** @var array company */
     protected $companyrec;
+
+    /** @var onject context */
     protected $companycontext;
 
+    /**
+     * Constructor function
+     *
+     * @param moodle_url $actionurl
+     * @param int $companyid
+     * @param array $editoroptions
+     */
     public function __construct($actionurl, $companyid, $editoroptions) {
         global $CFG, $DB;
 
         $this->selectedcompany = $companyid;
         $this->context = context_coursecat::instance($CFG->defaultrequestcategory);
         $this->editoroptions = $editoroptions;
-        $this->companyrec = $DB->get_record('company', array('id' => $companyid));
+        $this->companyrec = $DB->get_record('company', ['id' => $companyid]);
         $this->companycontext = context_company::instance($companyid);
 
         parent::__construct($actionurl);
     }
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
-        global $CFG;
 
+        // Set up the form.
         $mform =& $this->_form;
 
         $mform->addElement('text', 'fullname', get_string('fullnamecourse'),
@@ -95,7 +122,12 @@ class course_edit_form extends moodleform {
         $mform->setType('summary_editor', PARAM_RAW);
 
         if ($overviewfilesoptions = course_overviewfiles_options(null)) {
-            $mform->addElement('filemanager', 'overviewfiles_filemanager', get_string('courseoverviewfiles'), null, $overviewfilesoptions);
+            $mform->addElement(
+                'filemanager',
+                'overviewfiles_filemanager',
+                get_string('courseoverviewfiles'),
+                null,
+                $overviewfilesoptions);
             $mform->addHelpButton('overviewfiles_filemanager', 'courseoverviewfiles');
         }
 
@@ -105,12 +137,12 @@ class course_edit_form extends moodleform {
         $date->modify('+1 day');
         $mform->setDefault('startdate', $date->getTimestamp());
 
-        $mform->addElement('date_time_selector', 'enddate', get_string('enddate'), array('optional' => true));
+        $mform->addElement('date_time_selector', 'enddate', get_string('enddate'), ['optional' => true]);
         $mform->addHelpButton('enddate', 'enddate');
 
         // Add custom fields to the form.
         $handler = core_course\customfield\course_handler::create();
-        $handler->set_parent_context(context_coursecat::instance($this->companyrec->category)); // For course handler only.
+        $handler->set_parent_context(context_coursecat::instance($this->companyrec->category));
         $handler->instance_form_definition($mform, 0);
 
         // Add action buttons.
@@ -120,11 +152,16 @@ class course_edit_form extends moodleform {
         $buttonarray[] = &$mform->createElement('submit', 'submitandviewbutton',
                             get_string('createandvisitcourse', 'block_iomad_company_admin'));
         $buttonarray[] = &$mform->createElement('cancel');
-        $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
+        $mform->addGroup($buttonarray, 'buttonar', '', [' '], false);
         $mform->closeHeaderBefore('buttonar');
 
     }
 
+    /**
+     * Get the form data
+     *
+     * @return void
+     */
     public function get_data() {
         $data = parent::get_data();
         if ($data) {
@@ -142,12 +179,18 @@ class course_edit_form extends moodleform {
         return $data;
     }
 
-    // Perform some extra moodle validation.
+    /**
+     * Form validation
+     *
+     * @param array $data
+     * @param array $files
+     * @return void
+     */
     public function validation($data, $files) {
         global $DB, $CFG;
 
         $errors = parent::validation($data, $files);
-        if ($foundcourses = $DB->get_records('course', array('shortname' => $data['shortname']))) {
+        if ($foundcourses = $DB->get_records('course', ['shortname' => $data['shortname']])) {
             if (!empty($data['id'])) {
                 unset($foundcourses[$data['id']]);
             }
@@ -162,7 +205,7 @@ class course_edit_form extends moodleform {
 
         // Check start end dates are sensible.
         if (!empty($data['startdate']) && !empty($data['enddate']) && $data['enddate'] < $data['startdate']) {
-            $errors['startdate'] =  get_string('enddatebeforestartdate', 'error');
+            $errors['startdate'] = get_string('enddatebeforestartdate', 'error');
         }
 
         return $errors;

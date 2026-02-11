@@ -131,20 +131,14 @@ if ($coursesform->is_cancelled() || $usersform->is_cancelled() ||
         if (!in_array('-1', $selectedcourses, true)) {
             if ($data = $coursesform->get_data() || empty($selectedcourses)) {
                  if (count($courses) > 0) {
-                    $usersform->set_course(array($courses));
                     $usersform->process();
                     $usersform = new \block_iomad_company_admin\forms\company_course_users_form($PAGE->url, $companycontext, $companyid, $departmentid, $selectedcourses);
-                    $usersform->set_course(array($courses));
                     $usersform->set_data(array('groupid' => $groupid));
-                } else if (!empty($selectedcourses)) {
-                    $usersform->set_course($selectedcourses);
                 }
                 echo $usersform->display();
             } else if (count($courses) > 0) {
-                $usersform->set_course(array($courses));
                 $usersform->process();
                 $usersform = new \block_iomad_company_admin\forms\company_course_users_form($PAGE->url, $companycontext, $companyid, $departmentid, $selectedcourses);
-                $usersform->set_course(array($courses));
                 $usersform->set_data(array('groupid' => $groupid));
                 echo $usersform->display();
             }

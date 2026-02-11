@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard company course group selector form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -25,20 +27,43 @@ namespace block_iomad_company_admin\forms;
 
 use company_moodleform;
 use context_coursecat;
-use context_system;
-use local_iomad\{company, company_user, iomad};
+use html_writer;
+use local_iomad\company;
 
+/**
+ * IOMAD Dashboard company course group selector form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class course_group_display_form extends company_moodleform {
+
+    /** @var int course ID */
     protected $courseid = 0;
+
+    /** @var object context */
     protected $context = null;
+
+    /** @var object company */
     protected $company = null;
 
+    /**
+     * Constructor function
+     *
+     * @param moodle_url $actionurl
+     * @param int $companyid
+     * @param int $courseid
+     * @param object $output
+     * @param integer $chosenid
+     * @param integer $action
+     */
     public function __construct($actionurl, $companyid, $courseid, $output, $chosenid=0, $action=0) {
-        global $CFG, $USER;
+        global $CFG;
 
         $this->selectedcompany = $companyid;
         $this->context = context_coursecat::instance($CFG->defaultrequestcategory);
-        $syscontext = context_system::instance();
 
         $this->company = new company($this->selectedcompany);
         $this->courseid = $courseid;
@@ -46,8 +71,12 @@ class course_group_display_form extends company_moodleform {
         parent::__construct($actionurl);
     }
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
-        global $CFG,$DB;
 
         $mform =& $this->_form;
         $company = $this->company;
@@ -61,12 +90,17 @@ class course_group_display_form extends company_moodleform {
         $coursegrouphtml = "";
         unset($coursegroups[0]);
         if (!empty($coursegroups)) {
-            $coursegrouphtml = "<p>".get_string('group').
-                               "</p>";
+            $coursegrouphtml = html_writer::tag('p', get_string('group'));
             foreach ($coursegroups as $key => $value) {
-
-                $coursegrouphtml .= '<input type = "radio" name = "groupids[]" value="'.
-                                       $key.'" /> '.$value.'<br>';
+                $coursegrouphtml .= html_writer::empty_tag(
+                    'input',
+                    [
+                        'type' => 'radio',
+                        'name' => 'groupids[]',
+                        'value' => $key,
+                    ]) .
+                    $value .
+                    html_writer::empty_tag('br');
             }
         }
         // Then show the fields about where this block appears.
@@ -75,7 +109,7 @@ class course_group_display_form extends company_moodleform {
                            $company->get_name());
 
         if (empty($coursegroups)) {
-            $mform->addElement('html', "<h3>" . get_string('nogroups', 'block_iomad_company_admin') . "</h3><br>");
+            $mform->addElement('html', html_writer::tag('h3', get_string('nogroups', 'block_iomad_company_admin')));
         }
         $mform->addElement('html', $coursegrouphtml);
         $mform->addElement('hidden', 'selectedcourse', $this->courseid);
@@ -90,15 +124,9 @@ class course_group_display_form extends company_moodleform {
             $buttonarray[] = $mform->createElement('submit', 'delete',
                                 get_string('deletegroup', 'block_iomad_company_admin'));
         }
-        $mform->addGroup($buttonarray, 'buttonarray', '', array(' '), false);
+        $mform->addGroup($buttonarray, 'buttonarray', '', [' '], false);
 
         // Disable the onchange popup.
         $mform->disable_form_change_checker();
     }
-
-    public function get_data() {
-        $data = parent::get_data();
-        return $data;
-    }
-
 }

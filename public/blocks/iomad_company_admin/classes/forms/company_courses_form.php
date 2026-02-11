@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard assign courses to company form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,51 +25,87 @@
 
 namespace block_iomad_company_admin\forms;
 
-use context_system;
-use course_enrolment_manager;
-use local_iomad\{company, company_user, iomad};
-use local_iomad\course_selector\{current_company, potential_company};
 use moodleform;
+use local_iomad\{company, iomad};
+use local_iomad\course_selector\{current_company, potential_company};
 use stdclass;
 
+/**
+ * IOMAD Dashboard assign courses to company form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class company_courses_form extends moodleform {
-    protected $context = null;
-    protected $selectedcompany = 0;
-    protected $potentialcourses = null;
-    protected $currentcourses = null;
-    protected $departmentid = 0;
-    protected $subhierarchieslist = null;
-    protected $companydepartment = 0;
 
+    /** @var object context */
+    protected $context = null;
+
+    /** @var object context */
+    protected $selectedcompany = 0;
+
+    /** @var object potential company courses selector */
+    protected $potentialcourses = null;
+
+    /** @var object current company courses selector */
+    protected $currentcourses = null;
+
+    /** @var object context */
+    protected $departmentid = 0;
+
+    /**
+     * Constructor function
+     *
+     * @param moodle_url $actionurl
+     * @param object $companycontext
+     * @param int $companyid
+     * @param int $departmentid
+     * @param int $parentlevel
+     */
     public function __construct($actionurl, $companycontext, $companyid, $departmentid, $parentlevel) {
-        global $USER;
         $this->selectedcompany = $companyid;
         $this->context = $companycontext;
         $this->departmentid = $departmentid;
 
-        $options = array('context' => $this->context,
-                         'companyid' => $this->selectedcompany,
-                         'departmentid' => $departmentid,
-                         'subdepartments' => $this->subhierarchieslist,
-                         'parentdepartmentid' => $parentlevel,
-                         'shared' => false,
-                         'licenses' => true,
-                         'partialshared' => true);
-        $this->potentialcourses = new potential_company('potentialcourses',
-                                                                         $options);
+        $options = [
+            'context' => $this->context,
+            'companyid' => $this->selectedcompany,
+            'departmentid' => $departmentid,
+            'parentdepartmentid' => $parentlevel,
+            'shared' => false,
+            'licenses' => true,
+            'partialshared' => true,
+        ];
+        $this->potentialcourses = new potential_company('potentialcourses', $options);
         $this->currentcourses = new current_company('currentcourses', $options);
 
         parent::__construct($actionurl);
     }
 
+    /**
+     * Default form definition
+     *
+     * @return void
+     */
     public function definition() {
         $this->_form->addElement('hidden', 'companyid', $this->selectedcompany);
         $this->_form->setType('companyid', PARAM_INT);
+        $this->_form->addElement('hidden', 'deptid', $this->departmentid);
+        $this->_form->setType('deptid', PARAM_INT);
+
     }
 
+    /**
+     * Form definition after data is set
+     *
+     * @return void
+     */
     public function definition_after_data() {
-        global $OUTPUT;
+        global $output;
 
+        // Set up the form.
         $mform =& $this->_form;
 
         // Adding the elements in the definition_after_data function rather than in the
@@ -75,35 +113,60 @@ class company_courses_form extends moodleform {
         // in the process function, the changes get displayed, rather than the lists as they
         // are before processing.
 
-        $company = new company($this->selectedcompany);
-        $mform->addElement('hidden', 'deptid', $this->departmentid);
-        $mform->setType('deptid', PARAM_INT);
-
-        $mform->addElement('html', '<table summary="" class="companycoursetable addremovetable'.
-                                   ' generaltable generalbox groupmanagementtable boxaligncenter" cellspacing="0">
-            <tr>
-              <td id="existingcell">');
+        $mform->addElement(
+            'html',
+            html_writer::start_tag(
+                'table',
+                [
+                    'summary' => '',
+                    'class' => 'generaltable generalbox groupmanagementtable boxaligncenter',
+                    'cellspacing' => 0,
+                ]) .
+            html_writer::start_tag('tr') .
+            html_writer::start_tag('td', ['id' => 'existingcell']));
 
         $mform->addElement('html', $this->currentcourses->display(true));
 
-        $mform->addElement('html', '
-              </td>
-              <td id="buttonscell">
-                  <p class="arrow_button">
-                    <input name="add" id="add" type="submit" value="' . $OUTPUT->larrow().'&nbsp;'.get_string('add') . '"
-                           title="' . get_string('add') .'" class="btn btn-secondary"/><br />
-                    <input name="remove" id="remove" type="submit" value="'. get_string('remove').'&nbsp;'.$OUTPUT->rarrow(). '"
-                           title="'. get_string('remove') .'" class="btn btn-secondary"/><br />
-                 </p>
-              </td>
-              <td id="potentialcell">');
+        $mform->addElement(
+            'html',
+            html_writer::end_tag('td') .
+            html_writer::start_tag('td', ['id' => 'buttonscell']) .
+            html_writer::start_tag('p', ['class' => 'arrow_button']) .
+            html_writer::empty_tag(
+                'input',
+                [
+                    'name' => 'add',
+                    'id' => 'add',
+                    'type' => 'submit',
+                    'value' => $output->larrow() . ' ' . get_string('add'),
+                    'title' => get_string('add'),
+                    'class' => 'btn btn-secondary',
+                ]) .
+                html_writer::empty_tag('br') .
+                            html_writer::empty_tag(
+                'input',
+                [
+                    'name' => 'remove',
+                    'id' => 'remove',
+                    'type' => 'submit',
+                    'value' => get_string('remove') . ' ' . $output->rarrow(),
+                    'title' => get_string('remove'),
+                    'class' => 'btn btn-secondary',
+                ]) .
+            html_writer::end_tag('p') .
+            html_writer::end_tag('td') .
+            html_writer::start_tag('td', ['id' => 'potencialcell']));
 
         $mform->addElement('html', $this->potentialcourses->display(true));
 
-        $mform->addElement('html', '
-              </td>
-            </tr>
-          </table>');
+        $mform->addElement(
+            'html',
+            html_writer::end_tag('td') .
+            html_writer::end_tag('tr') .
+            html_writer::end_tag('table'));
+
+        // Disable the onchange popup.
+        $mform->disable_form_change_checker();
 
         // Can this user move courses with existing enrollments
         // (which unenrolls those users as a result)?
@@ -118,6 +181,11 @@ class company_courses_form extends moodleform {
         }
     }
 
+    /**
+     * Process the form
+     *
+     * @return void
+     */
     public function process() {
         global $DB;
 
@@ -127,7 +195,6 @@ class company_courses_form extends moodleform {
         // Process incoming assignments.
         if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
             $coursestoassign = $this->potentialcourses->get_selected_courses();
-            $allroles = $DB->get_records('role', [], '', 'id');
 
             if (!empty($coursestoassign)) {
 
@@ -138,8 +205,8 @@ class company_courses_form extends moodleform {
                     if ($DB->get_record_sql("SELECT id FROM {iomad_courses}
                                              WHERE courseid=$addcourse->id
                                              AND shared != 0")) {
-                        if ($companycourserecord = $DB->get_record('company_course', array('companyid' => $this->selectedcompany,
-                                                                                           'courseid' => $addcourse->id))) {
+                        if ($companycourserecord = $DB->get_record('company_course', ['companyid' => $this->selectedcompany,
+                                                                                      'courseid' => $addcourse->id])) {
                             // Already assigned to the company so we are just moving it within it.
                             $companycourserecord->departmentid = $this->departmentid;
                             $DB->update_record('company_course', $companycourserecord);
@@ -169,7 +236,6 @@ class company_courses_form extends moodleform {
         // Process incoming unassignments.
         if (optional_param('remove', false, PARAM_BOOL) && confirm_sesskey()) {
             $coursestounassign = $this->currentcourses->get_selected_courses();
-            $didnothing = false;
 
             if (!empty($coursestounassign)) {
 
