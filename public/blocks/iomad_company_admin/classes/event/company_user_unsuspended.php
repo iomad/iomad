@@ -84,7 +84,7 @@ class company_user_unsuspended extends base {
      * @return moodle_url
      */
     public function get_url() {
-        return new moodle_url('/block/iomad_company_admin/company_users_form.php');
+        return new moodle_url('/blocks/iomad_company_admin/company_users_form.php');
     }
 
     /**
