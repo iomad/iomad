@@ -125,7 +125,7 @@ class iomad_courses_table extends table_sql {
             'a',
             format_string($row->coursename, true, 1),
             [
-                new moodle_url($courseurl, ['id' => $row->courseid]),
+                'href' => new moodle_url($courseurl, ['id' => $row->courseid]),
             ]
         );
 

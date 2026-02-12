@@ -100,7 +100,7 @@ class company_competency_templates_form extends moodleform {
      * @return void
      */
     public function definition_after_data() {
-        global $output;
+        global $OUTPUT;
 
         // Set up the form.
         $mform =& $this->_form;
@@ -135,7 +135,7 @@ class company_competency_templates_form extends moodleform {
                     'name' => 'add',
                     'id' => 'add',
                     'type' => 'submit',
-                    'value' => $output->larrow() . ' ' . get_string('add'),
+                    'value' => $OUTPUT->larrow() . ' ' . get_string('add'),
                     'title' => get_string('add'),
                     'class' => 'btn btn-secondary',
                 ]) .
@@ -146,7 +146,7 @@ class company_competency_templates_form extends moodleform {
                     'name' => 'remove',
                     'id' => 'remove',
                     'type' => 'submit',
-                    'value' => get_string('remove') . ' ' . $output->rarrow(),
+                    'value' => get_string('remove') . ' ' . $OUTPUT->rarrow(),
                     'title' => get_string('remove'),
                     'class' => 'btn btn-secondary',
                 ]) .

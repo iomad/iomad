@@ -15,38 +15,38 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard manage tenant role capabilities main page
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/**
- * Control company capabilities.
-*/
-
+use block_iomad_company_admin\event\dashboard_page_viewed;
 use block_iomad_company_admin\iomad_company_admin;
+use block_iomad_company_admin\output\{capabilities, capabilitiesroles, roletemplates};
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-require_once(dirname(__FILE__) . '/../../config.php');
-require_once(dirname(__FILE__) . '/lib.php');
+require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/lib.php');
 
-// parameters
 $roleid = optional_param('roleid', 0, PARAM_INT);
 $templateid = optional_param('templateid', 0, PARAM_INT);
 $manage = optional_param('manage', 0, PARAM_INT);
 $templatesaved = optional_param('templatesaved', 0, PARAM_INT);
 
+// Login and set up $PAGE.
 require_login();
 
+// Set the companyid.
 $systemcontext = context_system::instance();
-
-// Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
+// Are  we allowed to do anything?
 iomad::require_capability('block/iomad_company_admin:restrict_capabilities', $companycontext);
 
 // Set the name for the page.
@@ -58,8 +58,9 @@ if (empty($templateid)) {
 }
 
 // Set the url.
-$linkurl = new moodle_url('/blocks/iomad_company_admin/company_capabilities.php', array('templateid' => $templateid));
+$linkurl = new moodle_url('/blocks/iomad_company_admin/company_capabilities.php', ['templateid' => $templateid]);
 
+// Finish setting up $PAGE.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
@@ -68,18 +69,27 @@ $PAGE->set_title($linktext);
 // Set the page heading.
 $PAGE->set_heading($linktext);
 
-// Require javascript
-$PAGE->requires->js_call_amd('block_iomad_company_admin/company_capabilities', 'init', [$companyid, $templateid, $roleid]);
+// Require javascript for capabilities.
+$PAGE->requires->js_call_amd(
+    'block_iomad_company_admin/company_capabilities',
+    'init',
+    [
+        $companyid,
+        $templateid,
+        $roleid,
+    ]
+);
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
-// get output renderer
+// Get output renderer.
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
-// Set up the page buttons.
+// Set up the default page buttons.
 $buttons = "";
 
+// Did we get passed a role?
 if ($roleid) {
 
     // Display the list of capabilities (template or company).
@@ -89,28 +99,36 @@ if ($roleid) {
         $caps = iomad_company_admin::get_iomad_template_capabilities($roleid, $templateid);
     }
 
-    $capabilities = new \block_iomad_company_admin\output\capabilities($caps, $roleid, $companyid, $templateid, $linkurl);
-    $buttons .= $output->single_button($linkurl, get_string('listroles', 'block_iomad_company_admin'), 'get');
+    // Set up the capabilities output class.
+    $capabilities = new capabilities($caps, $roleid, $companyid, $templateid, $linkurl);
 
+    // Add required buttons.
+    $buttons .= $output->single_button($linkurl, get_string('listroles', 'block_iomad_company_admin'), 'get');
     $PAGE->set_button($buttons);
 
+    // Display the page.
     echo $OUTPUT->header();
+
+    // Display the capabilities.
     echo $output->render_capabilities($capabilities);
 } else if ($manage) {
 
     // Display the list of templates.
-    $templates = $DB->get_records('company_role_templates', array(), 'name');
-    $roletemplates = new \block_iomad_company_admin\output\roletemplates($templates, $linkurl);
-    $buttons .= $output->single_button($linkurl, get_string('back'), 'get');
+    $templates = $DB->get_records('company_role_templates', [], 'name');
+    $roletemplates = new roletemplates($templates, $linkurl);
 
+    // Add required buttons.
+    $buttons .= $output->single_button($linkurl, get_string('back'), 'get');
     $PAGE->set_button($buttons);
 
+    // Display the page.
     echo $OUTPUT->header();
+
+    // Display the templates.
     echo $output->render_roletemplates($roletemplates);
 } else {
 
-    // get the list of roles to choose from
-    $roles = iomad_company_admin::get_roles();
+    // Add required buttons.
     $saveurl = new moodle_url('/blocks/iomad_company_admin/save_template.php', ['templateid' => $templateid]);
     $manageurl = new moodle_url('/blocks/iomad_company_admin/company_capabilities.php', ['manage' => 1]);
     $backurl = empty($templateid) ? '' : $backurl = new moodle_url('/blocks/iomad_company_admin/company_capabilities.php');
@@ -119,12 +137,25 @@ if ($roleid) {
     if (!empty($templateid)) {
         $buttons .= $output->single_button($backurl, get_string('backtocompanytemplate', 'block_iomad_company_admin'), 'get');
     }
-
     $PAGE->set_button($buttons);
 
+    // Get the list of roles to choose from.
+    $roles = iomad_company_admin::get_roles();
+    $capabilitiesroles = new capabilitiesroles($roles,
+                                               $companyid,
+                                               $templateid,
+                                               $linkurl,
+                                               $saveurl,
+                                               $manageurl,
+                                               $backurl,
+                                               $templatesaved);
+
+    // Display the page.
     echo $OUTPUT->header();
-    $capabilitiesroles = new \block_iomad_company_admin\output\capabilitiesroles($roles, $companyid, $templateid, $linkurl, $saveurl, $manageurl, $backurl, $templatesaved);
+
+    // Display the list of roles.
     echo $output->render_capabilitiesroles($capabilitiesroles);
 }
 
+// Display the footer.
 echo $OUTPUT->footer();

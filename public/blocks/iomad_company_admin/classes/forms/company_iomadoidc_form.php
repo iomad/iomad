@@ -58,7 +58,7 @@ class company_iomadoidc_form extends moodleform {
 
         $mform->addElement(
             'html',
-            html_writer(
+            html_writer::tag(
                 'h2',
                 format_string(get_string('pluginname', 'auth_iomadoidc') . " : " .
                               get_string('settings', 'moodle'))

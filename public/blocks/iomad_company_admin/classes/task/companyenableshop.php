@@ -15,20 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * An adhoc task for local Iomad track
+ * IOMAD Dashboard adhoc task to enable ecommerce for a tenant
  *
- * @package    local_iomad_track
+ * @package    block_iomad_company_admin
  * @copyright  2020 E-Learn Design https://www.e-learndesign.co.uk
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 namespace block_iomad_company_admin\task;
 
-defined('MOODLE_INTERNAL') || die();
-
-use core\task\adhoc_task;
+use core\task\{adhoc_task, manager};
 use local_iomad\company;
+use iomad_commerce;
 
+/**
+ * IOMAD Dashboard adhoc task to enable ecommerce for a tenant
+ *
+ * @package    block_iomad_company_admin
+ * @copyright  2020 E-Learn Design https://www.e-learndesign.co.uk
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class companyenableshop extends adhoc_task {
 
     /**
@@ -50,24 +57,23 @@ class companyenableshop extends adhoc_task {
 
         $data = $this->get_custom_data();
         $company = new company($data->companyid);
-        $companyrecord = $DB->get_record('company', array('id' => $data->companyid));
-        \iomad_commerce::update_company($companyrecord, $companyrecord);
+        $companyrecord = $DB->get_record('company', ['id' => $data->companyid]);
+        iomad_commerce::update_company($companyrecord, $companyrecord);
 
-        // get the company user ids.
-        //$userids = array();
+        // Get the company user ids.
         $userids = $company->get_all_user_ids();
 
-        // fire the user update.
+        // Fire the user update.
         foreach (array_keys($userids) as $userid) {
-            if ($user = $DB->get_record('user', array('id' => $userid, 'suspended' => 0, 'deleted' => 0))) {
+            if ($user = $DB->get_record('user', ['id' => $userid, 'suspended' => 0, 'deleted' => 0])) {
                 $user->company = $companyrecord->name;
-                $compuser = $DB->get_record('company_users', array('userid' => $userid, 'companyid' => $data->companyid));
+                $compuser = $DB->get_record('company_users', ['userid' => $userid, 'companyid' => $data->companyid]);
                 if ($compuser->managertype == 1 ) {
                     $user->manager = 'yes';
                 } else {
                     $user->manager = 'no';
                 }
-                \iomad_commerce::update_user($user, $data->companyid);
+                iomad_commerce::update_user($user, $data->companyid);
             }
         }
 
@@ -82,9 +88,9 @@ class companyenableshop extends adhoc_task {
         global $USER;
 
         // Let's set up the adhoc task.
-        $task = new \block_iomad_company_admin\task\companyenableshop();
-        $task->set_custom_data(array('companyid' => $companyid));
+        $task = new self();
+        $task->set_custom_data(['companyid' => $companyid]);
         $task->set_userid($USER->id);
-        \core\task\manager::queue_adhoc_task($task, true);
+        manager::queue_adhoc_task($task, true);
     }
 }

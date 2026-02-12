@@ -276,7 +276,7 @@ class company_license_table extends table_sql {
             }
         }
 
-        // Set up the allocate button
+        // Set up the allocate button.
         if (iomad::has_capability('block/iomad_company_admin:allocate_licenses', $companycontext)) {
             $allocateurl = new moodle_url('company_license_users_form.php', ['licenseid' => $row->id]);
             $allocatebutton = html_writer::tag(

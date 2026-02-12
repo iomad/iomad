@@ -209,7 +209,7 @@ class iomad_company_admin {
         global $PAGE;
 
         // Set up the form.
-        $mform = new compancompany_iomadoidc_mappings_formy_iomadoidc_form($PAGE->url);
+        $mform = new company_iomadoidc_mappings_form($PAGE->url);
 
         // Set the form data.
         $formdata = get_config('auth_iomadoidc');

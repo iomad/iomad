@@ -15,136 +15,155 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard assign users to courses main page
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_company_admin\event\dashboard_page_viewed;
+use block_iomad_company_admin\forms\{company_ccu_courses_form, company_course_users_form};
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
-require_once('lib.php');
+require_once(__DIR__ . '/../../config.php'); // Creates $PAGE.
+require_once(__DIR__ . '/lib.php');
 require_once($CFG->libdir . '/formslib.php');
 
-$returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
-$companyid = optional_param('companyid', 0, PARAM_INTEGER);
-$courses = optional_param_array('courses', array(), PARAM_INTEGER);
+$courses = optional_param_array('courses', [], PARAM_INTEGER);
 $departmentid = optional_param('deptid', 0, PARAM_INTEGER);
 $groupid = optional_param('groupid', 0, PARAM_INTEGER);
 
+// Fudge for dealing with optional_param_array dot taking default values.
 if (isset($_POST['selectedcourses']) && is_array($_POST['selectedcourses'])) {
     $selectedcourses = optional_param_array('selectedcourses', null, PARAM_INTEGER);
 } else {
     $selectedcourses = ['-1'];
 }
 
+// Set the courses to the selected one.
 if (empty($courses) && !empty($selectedcourses)) {
     $courses = $selectedcourses;
 }
 
-$params = array('companyid' => $companyid,
-                'courses' => $courses,
-                'deptid' => $departmentid,
-                'selectedcourses' => $selectedcourses,
-                'groupid' => $groupid);
+$params = [
+    'courses' => $courses,
+    'deptid' => $departmentid,
+    'selectedcourses' => $selectedcourses,
+    'groupid' => $groupid,
+];
 
-$urlparams = array('companyid' => $companyid);
-if ($returnurl) {
-    $urlparams['returnurl'] = $returnurl;
-}
+// Add the courses to the params.
+$urlparams = [];
 if (!empty($courses)) {
-    foreach ($courses as $a => $b)
-    $urlparams["courses[$a]"] = $b;
+    foreach ($courses as $a => $b) {
+        $urlparams["courses[$a]"] = $b;
+    }
 }
 if (!empty($selectedcourses)) {
-    foreach ($selectedcourses as $a => $b)
-    $urlparams["selectedcourses[$a]"] = $b;
+    foreach ($selectedcourses as $a => $b) {
+        $urlparams["selectedcourses[$a]"] = $b;
+    }
 }
 
+// Log in and set up $PAGE.
 require_login();
 
+// Set the companyid.
 $systemcontext = context_system::instance();
-
-// Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 $parentlevel = company::get_company_parentnode($companyid);
 $companydepartment = $parentlevel->id;
 
+// Can we even do anything?
 iomad::require_capability('block/iomad_company_admin:company_course_users', $companycontext);
 
-// Correct the navbar.
 // Set the name for the page.
 $linktext = get_string('company_course_users_title', 'block_iomad_company_admin');
+
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_course_users_form.php');
 
-// Print the page header.
+// Finish setting up PAGE.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
 $PAGE->set_title($linktext);
+
 // Set the page heading.
 $PAGE->set_heading($linktext);
+$PAGE->navbar->add($linktext, $linkurl);
 
-// get output renderer
+// Get output renderer.
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Javascript for fancy select.
 // Parameter is name of proper select form element followed by 1=submit its form
-$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', 1, optional_param('deptid', 0, PARAM_INT)));
-$PAGE->navbar->add($linktext, $linkurl);
+$PAGE->requires->js_call_amd(
+    'block_iomad_company_admin/department_select',
+    'init',
+    [
+        'deptid',
+        1,
+        optional_param('deptid', 0, PARAM_INT),
+    ]);
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Set up the forms.
-$coursesform = new \block_iomad_company_admin\forms\company_ccu_courses_form($PAGE->url, $companycontext, $companyid, $departmentid, $selectedcourses, $parentlevel);
-$coursesform->set_data(array('selectedcourses' => $selectedcourses, 'courses' => $courses));
-$usersform = new \block_iomad_company_admin\forms\company_course_users_form($PAGE->url, $companycontext, $companyid, $departmentid, $selectedcourses);
+$coursesform = new company_ccu_courses_form($PAGE->url, $companycontext, $companyid, $departmentid, $selectedcourses, $parentlevel);
+$coursesform->set_data(['selectedcourses' => $selectedcourses, 'courses' => $courses]);
+$usersform = new company_course_users_form($PAGE->url, $companycontext, $companyid, $departmentid, $selectedcourses);
 
 // Check the department is valid.
 if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
     throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
 }
 
+// Were the forms cancelled?
 if ($coursesform->is_cancelled() || $usersform->is_cancelled() ||
      optional_param('cancel', false, PARAM_BOOL) ) {
-    if ($returnurl) {
-        redirect($returnurl);
-    } else {
-        redirect(new moodle_url($CFG->wwwroot .'/blocks/iomad_company_admin/index.php'));
-    }
-} else {
-    echo $output->header();
 
-    // Display the department selector.
-    echo $output->display_tree_selector($company, $parentlevel, $linkurl, $urlparams, $departmentid);
+    // Go back to the dashboard.
+    redirect(new moodle_url($CFG->wwwroot .'/blocks/iomad_company_admin/index.php'));
+}
 
-    echo html_writer::start_tag('div', array('class' => 'iomadclear'));
-    if ($companyid > 0) {
-        $coursesform->set_data($params);
-        echo $coursesform->display();
-        if (!in_array('-1', $selectedcourses, true)) {
-            if ($data = $coursesform->get_data() || empty($selectedcourses)) {
-                 if (count($courses) > 0) {
-                    $usersform->process();
-                    $usersform = new \block_iomad_company_admin\forms\company_course_users_form($PAGE->url, $companycontext, $companyid, $departmentid, $selectedcourses);
-                    $usersform->set_data(array('groupid' => $groupid));
-                }
-                echo $usersform->display();
-            } else if (count($courses) > 0) {
+// Display the page.
+echo $output->header();
+
+// Display the department selector.
+echo $output->display_tree_selector($company, $parentlevel, $linkurl, $urlparams, $departmentid);
+
+echo html_writer::start_tag('div', ['class' => 'iomadclear']);
+if ($companyid > 0) {
+
+    // Set the course select data and display it.
+    $coursesform->set_data($params);
+    echo $coursesform->display();
+
+    // Conditionally display the user selectors.
+    if (!in_array('-1', $selectedcourses, true)) {
+        if ($data = $coursesform->get_data() || empty($selectedcourses)) {
+            if (count($courses) > 0) {
                 $usersform->process();
-                $usersform = new \block_iomad_company_admin\forms\company_course_users_form($PAGE->url, $companycontext, $companyid, $departmentid, $selectedcourses);
-                $usersform->set_data(array('groupid' => $groupid));
-                echo $usersform->display();
+                $usersform = new company_course_users_form($PAGE->url, $companycontext, $companyid, $departmentid, $selectedcourses);
+                $usersform->set_data(['groupid' => $groupid]);
             }
+            echo $usersform->display();
+        } else if (count($courses) > 0) {
+            $usersform->process();
+            $usersform = new company_course_users_form($PAGE->url, $companycontext, $companyid, $departmentid, $selectedcourses);
+            $usersform->set_data(['groupid' => $groupid]);
+            echo $usersform->display();
         }
     }
-    echo html_writer::end_tag('div');
-
-    echo $output->footer();
 }
+echo html_writer::end_tag('div');
+
+// Display the footer.
+echo $output->footer();
