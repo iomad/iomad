@@ -40,7 +40,7 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($context);
+$companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
@@ -165,7 +165,7 @@ if ($coursesform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL))
                                 $licenselist[$license->id] = $license->name . " (" . get_string('licensevalidfrom', 'block_iomad_company_admin', userdate($license->startdate, get_config('local_iomad', 'date_format'))) . ")";
                                 if ($licenseid == $license->id) {
                                     $availablewarning = get_string('licensevalidfromwarning', 'block_iomad_company_admin', userdate($license->startdate, get_config('local_iomad', 'date_format')));
-                                }  
+                                }
                             } else {
                                 $licenselist[$license[$deptlicenseid->licenseid]->id]  = $license[$deptlicenseid->licenseid]->name;
                             }

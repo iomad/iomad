@@ -28,6 +28,7 @@ namespace block_iomad_company_admin\forms;
 use company_moodleform;
 use context_system;
 use context_coursecat;
+use html_writer;
 use local_iomad\{company, company_user, iomad};
 use local_iomad\custom_context\context_company;
 
