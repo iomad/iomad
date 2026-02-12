@@ -34,6 +34,7 @@ use context_system;
 use tool_mfa;
 use moodleform;
 use admin_setting;
+use html_writer;
 
 require_once($CFG->libdir . '/adminlib.php');
 
