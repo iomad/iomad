@@ -30,6 +30,7 @@ use company;
 use moodle_url;
 use context_system;
 use core\exception\moodle_exception;
+use html_writer;
 
 /**
  * IOMAD Dashboard company edit form class

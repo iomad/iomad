@@ -30,6 +30,7 @@ use company;
 use iomad;
 use context_system;
 use context_coursecat;
+use html_writer;
 
 /**
  * IOMAD dashboard department display form class
