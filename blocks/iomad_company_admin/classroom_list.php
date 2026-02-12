@@ -28,7 +28,7 @@ use block_iomad_company_admin\event\dashboard_page_viewed;
 use block_iomad_company_admin\tables\teaching_locations_table;
 
 require_once(__DIR__ . '/../../config.php');
-require_once('lib.php');
+require_once(__DIR__ . '/lib.php');
 require_once($CFG->dirroot . '/local/iomad/lib/user.php');
 
 $delete = optional_param('delete', 0, PARAM_INT);
@@ -177,6 +177,7 @@ if (!empty($search)) {
     $sqlparams['postcodesearch'] = '%' . $DB->sql_like_escape($search) . '%';
 }
 
+// Set up the table.
 $table->set_sql("*", "{classroom}", "companyid = :companyid $searchsql", $sqlparams);
 $table->define_baseurl($baseurl);
 $table->define_columns($tablecolumns);
@@ -185,6 +186,7 @@ $table->sort_default_column = 'name DESC';
 $table->no_sorting('actions');
 $table->no_sorting('address');
 
+// Conditionally add a button to add a new location.
 if (iomad::has_capability('block/iomad_company_admin:classrooms_add', $companycontext)) {
     $buttonlink = new moodle_url($CFG->wwwroot . "/blocks/iomad_company_admin/classroom_edit_form.php");
     $buttoncaption = get_string('classrooms_add', 'block_iomad_company_admin');
