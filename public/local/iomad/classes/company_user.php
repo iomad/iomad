@@ -1097,13 +1097,13 @@ class company_user {
     /**
      * Clear down a user from a course and/or reporting data
      *
-     * @param object $userid
+     * @param int $userid
      * @param integer $courseid
      * @param string $action
      * @param integer $litid
      * @return void
      */
-    public static function delete_user_course(object $userid, int $courseid, string $action = '', int $litid = 0) {
+    public static function delete_user_course(int $userid, int $courseid, string $action = '', int $litid = 0) {
         global $DB, $CFG;
 
         $rebuildcache = false;
