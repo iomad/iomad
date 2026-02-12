@@ -163,7 +163,7 @@ class company_users_course_form extends moodleform {
      * @return void
      */
     public function definition_after_data() {
-        global $output;
+        global $OUTPUT;
 
         // Set up the form.
         $mform =& $this->_form;
@@ -210,7 +210,7 @@ class company_users_course_form extends moodleform {
                     'name' => 'add',
                     'id' => 'add',
                     'type' => 'submit',
-                    'value' => $output->larrow() . ' ' . get_string('enrol', 'block_iomad_company_admin'),
+                    'value' => $OUTPUT->larrow() . ' ' . get_string('enrol', 'block_iomad_company_admin'),
                     'title' => get_string('enrol', 'block_iomad_company_admin'),
                     'class' => 'btn btn-secondary',
                 ]) .
@@ -221,7 +221,7 @@ class company_users_course_form extends moodleform {
                     'name' => 'remove',
                     'id' => 'remove',
                     'type' => 'submit',
-                    'value' => get_string('unenrol', 'block_iomad_company_admin') . ' ' . $output->rarrow(),
+                    'value' => get_string('unenrol', 'block_iomad_company_admin') . ' ' . $OUTPUT->rarrow(),
                     'title' => get_string('unenrol', 'block_iomad_company_admin'),
                     'class' => 'btn btn-secondary',
                 ]) .

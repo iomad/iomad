@@ -29,6 +29,7 @@ defined('MOODLE_INTERNAL') || die;
 
 use admin_setting;
 use context_system;
+use html_writer;
 use local_iomad\{company, company_user, iomad};
 use moodle_url;
 use moodleform;
