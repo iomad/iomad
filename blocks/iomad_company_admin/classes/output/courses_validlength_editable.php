@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard course valid length in-place editable class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -29,16 +31,18 @@ use core_external;
 use coding_exception;
 use company;
 use iomad;
-
-defined('MOODLE_INTERNAL') || die();
+use core\output\inplace_editable;
+use block_iomad_company_admin\event\company_course_updated;
 
 /**
+ * IOMAD Dashboard course valid length in-place editable class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class courses_validlength_editable extends \core\output\inplace_editable {
+class courses_validlength_editable extends inplace_editable {
 
     /** @var $context */
     private $context = null;
@@ -91,7 +95,6 @@ class courses_validlength_editable extends \core\output\inplace_editable {
     public function export_for_template(\renderer_base $output) {
         $currentvalue = json_decode($this->value);
 
-        
         $this->value = $currentvalue;
         $this->displayvalue = $currentvalue;
 
@@ -141,10 +144,12 @@ class courses_validlength_editable extends \core\output\inplace_editable {
 
         // Fire an event for this.
         $eventother = ['iomadcourse' => (array) $courserec];
-        $event = \block_iomad_company_admin\event\company_course_updated::create(array('context' => $companycontext,
-                                                                                       'objectid' => $courseid,
-                                                                                       'userid' => $USER->id,
-                                                                                       'other' => $eventother));
+        $event = company_course_updated::create([
+            'context' => $companycontext,
+            'objectid' => $courseid,
+            'userid' => $USER->id,
+            'other' => $eventother,
+        ]);
         $event->trigger();
 
         return new self($company, $companycontext, $courserec, $validlength);

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard course shared options in-place editable class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -30,16 +32,18 @@ use coding_exception;
 use company;
 use iomad;
 use cache_helper;
-
-defined('MOODLE_INTERNAL') || die();
+use core\output\inplace_editable;
+use block_iomad_company_admin\event\company_course_updated;
 
 /**
+ * IOMAD Dashboard course shared options in-place editable class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class courses_shared_editable extends \core\output\inplace_editable {
+class courses_shared_editable extends inplace_editable {
 
     /** @var $context */
     private $context = null;
@@ -128,12 +132,12 @@ class courses_shared_editable extends \core\output\inplace_editable {
             throw new coding_exception('Course is not under IOMAD control');
         }
 
-        // Store the previous value for this course. 
-        $previousshared = $courserec->shared
-;
+        // Store the previous value for this course.
+        $previousshared = $courserec->shared;
+
         // Check if we are sharing a course for the first time.
         if ($previousshared == 0 && $shared != 0) { // Turning sharing on.
-            $courseinfo = $DB->get_record('course', array('id' => $courseid));
+            $courseinfo = $DB->get_record('course', ['id' => $courseid]);
 
             // Set the shared options on.
             $courseinfo->groupmode = 1;
@@ -143,7 +147,7 @@ class courses_shared_editable extends \core\output\inplace_editable {
             $DB->update_record('iomad_courses', $courserec);
 
             // Deal with any current enrolments.
-            if ($companycourses = $DB->get_records('company_course', array('courseid' => $courseid))) {
+            if ($companycourses = $DB->get_records('company_course', ['courseid' => $courseid])) {
                 foreach ($companycourses as $companycourse) {
                     if ($shared == 2) {
                         $sharingrecord = (object) [];
@@ -154,15 +158,15 @@ class courses_shared_editable extends \core\output\inplace_editable {
                     company::company_users_to_company_course_group($companycourse->companyid, $courseid);
                 }
             }
-        } else if ($shared == 0 and $previousshared != 0) { // Turning sharing off.
-            $courseinfo = $DB->get_record('course', array('id' => $courseid));
+        } else if ($shared == 0 && $previousshared != 0) { // Turning sharing off.
+            $courseinfo = $DB->get_record('course', ['id' => $courseid]);
             // Set the shared options on.
             $courseinfo->groupmode = 0;
             $courseinfo->groupmodeforce = 0;
             $DB->update_record('course', $courseinfo);
 
             // Deal with enrolments.
-            if ($companygroups = $DB->get_records('company_course_groups', array('courseid' => $courseid))) {
+            if ($companygroups = $DB->get_records('company_course_groups', ['courseid' => $courseid])) {
                 // Got companies using it.
                 $count = 1;
 
@@ -178,7 +182,7 @@ class courses_shared_editable extends \core\output\inplace_editable {
             }
         } else {
             // Changing from open sharing to closed sharing.
-            if ($companygroups = $DB->get_records('company_course_groups', array('courseid' => $courseid))) {
+            if ($companygroups = $DB->get_records('company_course_groups', ['courseid' => $courseid])) {
                 // Got companies using it.
                 foreach ($companygroups as $companygroup) {
                     $sharingrecord = (object) [];
@@ -194,10 +198,12 @@ class courses_shared_editable extends \core\output\inplace_editable {
 
         // Fire an event for this.
         $eventother = ['iomadcourse' => (array) $courserec];
-        $event = \block_iomad_company_admin\event\company_course_updated::create(array('context' => $companycontext,
-                                                                                       'objectid' => $courseid,
-                                                                                       'userid' => $USER->id,
-                                                                                       'other' => $eventother));
+        $event = company_course_updated::create([
+            'context' => $companycontext,
+            'objectid' => $courseid,
+            'userid' => $USER->id,
+            'other' => $eventother,
+        ]);
         $event->trigger();
 
         // Clear the caches.

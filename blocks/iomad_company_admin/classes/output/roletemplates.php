@@ -18,37 +18,48 @@
  * Output class for company role templates
  *
  * @package    block_iomad_company_admin
- * @copyright  2019 Howard Miller <howardsmiller@gmail.com>
+ * @copyright  2019 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Howard Miller <howardsmiller@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace block_iomad_company_admin\output;
 
-defined('MOODLE_INTERNAL') || die;
-
 use renderable;
 use renderer_base;
 use templatable;
+use moodle_url;
 
 /**
- * Class contains data for company capabilties 
+ * Output class for company role templates
  *
- * @copyright  2019 Howard Miller <howardsmiller@gmail.com>
+ * @package    block_iomad_company_admin
+ * @copyright  2019 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Howard Miller <howardsmiller@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class roletemplates implements renderable, templatable {
 
+    /** @var array list of role templates */
     protected $templates;
 
+    /**@var string link url */
     protected $linkurl;
 
     /**
+     * Constructor function
+     *
      * @param array $templates
      * @param string $linkurl
      */
     public function __construct($templates, $linkurl) {
         array_walk($templates, function(&$template) use ($linkurl) {
-            $template->editlink = new \moodle_url('/blocks/iomad_company_admin/company_capabilities.php', ['templateid' => $template->id, 'action' => 'edit']);
+            $template->editlink = new moodle_url(
+                '/blocks/iomad_company_admin/company_capabilities.php',
+                [
+                    'templateid' => $template->id,
+                    'action' => 'edit',
+                    ]);
         });
         $this->templates = $templates;
         $this->linkurl = $linkurl;
@@ -58,9 +69,9 @@ class roletemplates implements renderable, templatable {
      * Export this data so it can be used as the context for a mustache template.
      *
      * @param \renderer_base $output
-     * @return stdClass
+     * @return array
      */
-    public function export_for_template(renderer_base $output) {
+    public function export_for_template(renderer_base $output): array {
         global $DB;
 
         return [
@@ -69,5 +80,4 @@ class roletemplates implements renderable, templatable {
             'linkurl' => $this->linkurl,
         ];
     }
-
 }
