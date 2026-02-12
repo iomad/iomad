@@ -15,54 +15,59 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard create or edit a department main page
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/**
- * Script to let a user create a department for a particular company.
- */
+use block_iomad_company_admin\event\dashboard_page_viewed;
+use block_iomad_company_admin\forms\department_edit_form;
+use core\output\notification;
 
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-require_once(dirname(__FILE__) . '/../../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
-require_once('lib.php');
-require_once(dirname(__FILE__) . '/../../course/lib.php');
+require_once(__DIR__ . '/lib.php');
+require_once(__DIR__ . '/../../course/lib.php');
 
-$returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
 $departmentid = optional_param('departmentid', 0, PARAM_INT);
 $deptid = optional_param('deptid', 0, PARAM_INT);
 $confirm = optional_param('confirm', null, PARAM_ALPHANUM);
 $moveid = optional_param('moveid', 0, PARAM_INT);
 
+// Log in and set up $PAGE.
 require_login();
 
+// Set the companyid.
 $systemcontext = context_system::instance();
-
-// Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
+// Can we even do anything?
 iomad::require_capability('block/iomad_company_admin:edit_departments', $companycontext);
 
-$departmentlist = new moodle_url('/blocks/iomad_company_admin/company_departments.php', array('deptid' => $departmentid));
+// Set the main department list URL.
+$departmentlist = new moodle_url('/blocks/iomad_company_admin/company_departments.php', ['deptid' => $departmentid]);
 
+// Set up the link text.
 $linktext = get_string('editdepartment', 'block_iomad_company_admin');
 
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_department_create_form.php');
 
+// Finish setting up PAGE.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
 $PAGE->set_title($linktext);
 
-// get output renderer
+// Get output renderer.
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Set the page heading.
@@ -70,7 +75,7 @@ $PAGE->set_heading(get_string('myhome') . " - $linktext");
 $PAGE->navbar->add($linktext, $departmentlist);
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Did we get a move request?
 // Delete any valid departments.
@@ -84,22 +89,25 @@ if ($moveid && confirm_sesskey() && $confirm == md5($moveid)) {
                                $moveshortname,
                                $moveparent);
     $redirectmessage = get_string('departmentupdatedok', 'block_iomad_company_admin');
-    redirect($departmentlist, $redirectmessage, null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect($departmentlist, $redirectmessage, null, notification::NOTIFY_SUCCESS);
     die;
 }
 
-// Set up the initial forms.
+// Set up the initial form.
+$editform = new department_edit_form($PAGE->url, $companyid, $departmentid, $output);
+
+// Set the form data.
 if (!empty($departmentid)) {
-    $department = $DB->get_record('department', array('id' => $departmentid));
+    // Existing department.
+    $department = $DB->get_record('department', ['id' => $departmentid]);
     $department->fullname = $department->name;
     $department->deptid = $department->parent;
-    $editform = new \block_iomad_company_admin\forms\department_edit_form($PAGE->url, $companyid, $departmentid, $output);
     $editform->set_data($department);
 } else {
-    $editform = new \block_iomad_company_admin\forms\department_edit_form($PAGE->url, $companyid, $departmentid, $output);
-    $editform->set_data(array('deptid' => $deptid));
+    $editform->set_data(['deptid' => $deptid]);
 }
 
+// Process the form.
 if ($editform->is_cancelled()) {
     redirect($departmentlist);
     die;
@@ -110,7 +118,7 @@ if ($editform->is_cancelled()) {
     $createdata->shortname = trim($createdata->shortname);
 
     // What are we doing here?
-    $current = $DB->get_record('department', array('id' => $createdata->departmentid));
+    $current = $DB->get_record('department', ['id' => $createdata->departmentid]);
     if (empty($current)) {
         // We are creating a new department.
         company::create_department($createdata->departmentid,
@@ -128,37 +136,45 @@ if ($editform->is_cancelled()) {
                                    $createdata->deptid);
         $redirectmessage = get_string('departmentupdatedok', 'block_iomad_company_admin');
     } else {
-        $parentdept = $DB->get_record('department', array('id' => $createdata->deptid));
+        $parentdept = $DB->get_record('department', ['id' => $createdata->deptid]);
         echo $output->header();
         echo $output->heading(get_string('movedepartment', 'block_iomad_company_admin'));
-        $optionsyes = array('moveid' => $departmentid,
-                            'confirm' => md5($departmentid),
-                            'companyid' => $companyid,
-                            'movefullname' => $createdata->fullname,
-                            'moveshortname' => $createdata->shortname,
-                            'moveparent' => $createdata->deptid,
-                            'sesskey' => sesskey());
-        $deptstring = (object) array('current' => $createdata->fullname, 'newparent' => $parentdept->name);
+        $optionsyes = [
+            'moveid' => $departmentid,
+            'confirm' => md5($departmentid),
+            'companyid' => $companyid,
+            'movefullname' => $createdata->fullname,
+            'moveshortname' => $createdata->shortname,
+            'moveparent' => $createdata->deptid,
+            'sesskey' => sesskey(),
+        ];
+        $deptstring = (object) ['current' => $createdata->fullname, 'newparent' => $parentdept->name];
         echo $output->confirm(get_string('movedepartmentcheckfull', 'block_iomad_company_admin', $deptstring),
                               new moodle_url('company_department_create_form.php', $optionsyes), 'company_departments.php');
         die;
     }
 
-    redirect($departmentlist, $redirectmessage, null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect($departmentlist, $redirectmessage, null, notification::NOTIFY_SUCCESS);
     die;
-} else {
-    // Javascript for fancy select.
-    // Parameter is name of proper select form element.
-    $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', '', $departmentid));
-
-    echo $output->header();
-    // Check the department is valid.
-    if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
-        throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
-    }
-
-    $editform->display();
-
-    echo $output->footer();
 }
 
+// Javascript for fancy select.
+// Parameter is name of proper select form element.
+$PAGE->requires->js_call_amd(
+    'block_iomad_company_admin/department_select',
+    'init',
+    ['deptid', '', $departmentid]);
+
+// Display the page.
+echo $output->header();
+
+// Check the department is valid.
+if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+    throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
+}
+
+// Display the form.
+$editform->display();
+
+// Display the footer.
+echo $output->footer();

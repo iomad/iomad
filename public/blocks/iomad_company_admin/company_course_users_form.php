@@ -102,7 +102,7 @@ $PAGE->navbar->add($linktext, $linkurl);
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Javascript for fancy select.
-// Parameter is name of proper select form element followed by 1=submit its form
+// Parameter is name of proper select form element followed by 1=submit its form.
 $PAGE->requires->js_call_amd(
     'block_iomad_company_admin/department_select',
     'init',
@@ -139,6 +139,7 @@ echo $output->header();
 // Display the department selector.
 echo $output->display_tree_selector($company, $parentlevel, $linkurl, $urlparams, $departmentid);
 
+// Display the forms.
 echo html_writer::start_tag('div', ['class' => 'iomadclear']);
 if ($companyid > 0) {
 
@@ -151,13 +152,21 @@ if ($companyid > 0) {
         if ($data = $coursesform->get_data() || empty($selectedcourses)) {
             if (count($courses) > 0) {
                 $usersform->process();
-                $usersform = new company_course_users_form($PAGE->url, $companycontext, $companyid, $departmentid, $selectedcourses);
+                $usersform = new company_course_users_form($PAGE->url,
+                                                           $companycontext,
+                                                           $companyid,
+                                                           $departmentid,
+                                                           $selectedcourses);
                 $usersform->set_data(['groupid' => $groupid]);
             }
             echo $usersform->display();
         } else if (count($courses) > 0) {
             $usersform->process();
-            $usersform = new company_course_users_form($PAGE->url, $companycontext, $companyid, $departmentid, $selectedcourses);
+            $usersform = new company_course_users_form($PAGE->url,
+                                                       $companycontext,
+                                                       $companyid,
+                                                       $departmentid,
+                                                       $selectedcourses);
             $usersform->set_data(['groupid' => $groupid]);
             echo $usersform->display();
         }

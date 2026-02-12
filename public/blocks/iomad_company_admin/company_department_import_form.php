@@ -15,51 +15,53 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard import department from JSON main page.
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/**
- * Script to let a user import departments to a particular company.
- */
+use block_iomad_company_admin\event\dashboard_page_viewed;
+use block_iomad_company_admin\forms\company_department_import_form;
 
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-require_once('../../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir.'/formslib.php');
-require_once('lib.php');
+require_once(__DIR__ . '/lib.php');
 
-$returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
 $departmentid = optional_param('departmentid', 0, PARAM_INT);
 $deptid = optional_param('deptid', 0, PARAM_INT);
 
+// Login and set up $PAGE.
 require_login();
 
+// Set the companyid.
 $systemcontext = context_system::instance();
-
-// Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
+// Can we even do anything?
 iomad::require_capability('block/iomad_company_admin:import_departments', $companycontext);
 
-$departmentlist = new moodle_url('/blocks/iomad_company_admin/company_departments.php', array('deptid' => $departmentid));
-
-$linktext = get_string('importdepartment', 'block_iomad_company_admin');
+// Set the main department management URL.
+$departmentlist = new moodle_url('/blocks/iomad_company_admin/company_departments.php', ['deptid' => $departmentid]);
 
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_department_import_form.php');
+$linktext = get_string('importdepartment', 'block_iomad_company_admin');
 
+// Finish setting up PAGE.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
 $PAGE->set_title($linktext);
 
-// get output renderer
+// Get output renderer.
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Set the page heading.
@@ -67,24 +69,26 @@ $PAGE->set_heading(get_string('myhome') . " - $linktext");
 $PAGE->navbar->add($linktext, $departmentlist);
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Set up the form.
-$importform = new \block_iomad_company_admin\forms\company_department_import_form($PAGE->url);
+$importform = new company_department_import_form($PAGE->url);
 $errors = "";
 
+// Process the form.
 if ($importform->is_cancelled()) {
     redirect($departmentlist);
     die;
 } else if ($data = $importform->get_data()) {
     // Create or update the department.
     $jsonraw = $importform->get_file_content('importfile');
-
     $jsondecode = json_decode($jsonraw);
+
     // Check that the top of the json file matches the company top level department.
     $parentlevel = company::get_company_parentnode($companyid);
-    if ($jsondecode->name != $parentlevel->name || $jsondecode->shortname != $parentlevel->shortname) {
-        //  Doesn't match.  Set an error.
+    if ($jsondecode->name != $parentlevel->name ||
+        $jsondecode->shortname != $parentlevel->shortname) {
+        // Doesn't match.  Set an error.
         $error = get_string('invaliddepartmentjson', 'block_iomad_company_admin');
     } else {
         // Import the departments.
@@ -94,16 +98,16 @@ if ($importform->is_cancelled()) {
     }
 }
 
-// Display the form.
+// Display the page.
 echo $output->header();
 
-// Was there any errors?
+// Were there any errors?
 if (!empty($error)) {
-    echo html_writer::start_tag('div', array('class' => "alert alert-warning"));
-    echo $error;
-    echo "</div>";
+    echo html_writer::tag('div', $error, ['class' => "alert alert-warning"]);
 }
 
+// Display the form.
 $importform->display();
 
+// Display the footer.
 echo $output->footer();
