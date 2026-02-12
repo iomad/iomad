@@ -15,65 +15,64 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard create edit company course groups main page
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/**
- * Script to let a user create course groups within a particular company.
- */
+use block_iomad_company_admin\event\dashboard_page_viewed;
+use block_iomad_company_admin\forms\{company_groups_form, course_group_display_form, group_edit_form};
 
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-require_once(dirname(__FILE__) . '/../../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
-require_once('lib.php');
-require_once(dirname(__FILE__) . '/../../course/lib.php');
+require_once(__DIR__ . '/lib.php');
+require_once(__DIR__ . '/../../course/lib.php');
 
-$returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
 $courseid = optional_param('courseid', 0, PARAM_INT);
 $deleteids = optional_param_array('courseids', null, PARAM_INT);
 $createnew = optional_param('createnew', 0, PARAM_INT);
 $selectedcourse = optional_param('selectedcourse', 0, PARAM_INTEGER);
 $groupids = optional_param_array('groupids', 0, PARAM_INTEGER);
 
+// Set the default group id.
 if (!empty($groupids)) {
     $groupid = $groupids[0];
 } else {
     $groupid = 0;
 }
 
+// Login and set up $PAGE.
 require_login();
 
+// Set the companyid.
 $systemcontext = context_system::instance();
-
-// Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
+// Can we even do anything?
 iomad::require_capability('block/iomad_company_admin:edit_groups', $companycontext);
 
-$urlparams = array();
-if ($returnurl) {
-    $urlparams['returnurl'] = $returnurl;
-}
-$companylist = new moodle_url($CFG->wwwroot .'/blocks/iomad_company_admin/index.php', $urlparams);
-
-$linktext = get_string('managegroups', 'block_iomad_company_admin');
+// Set the dashboard URL.
+$companylist = new moodle_url($CFG->wwwroot .'/blocks/iomad_company_admin/index.php');
 
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_groups_create_form.php');
+$linktext = get_string('managegroups', 'block_iomad_company_admin');
 
+// Finish setting up PAGE.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
 $PAGE->set_title($linktext);
 
-// get output renderer
+// Get output renderer.
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Set the page heading.
@@ -81,20 +80,24 @@ $PAGE->set_heading($linktext);
 
 // Javascript for fancy select.
 // Parameter is name of proper select form element.
-$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid'));
+$PAGE->requires->js_call_amd(
+    'block_iomad_company_admin/department_select',
+    'init',
+    ['deptid']);
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Set up the form.
-$groupsform = new \block_iomad_company_admin\forms\company_groups_form($PAGE->url, $companycontext, $companyid, $selectedcourse);
+$groupsform = new company_groups_form($PAGE->url, $companycontext, $companyid, $selectedcourse);
 if (!empty($selectedcourse)) {
     $defaultgroup = company::get_company_group($companyid, $selectedcourse);
-    $mform = new \block_iomad_company_admin\forms\course_group_display_form($PAGE->url, $companyid, $selectedcourse, $output);
-    $editform = new \block_iomad_company_admin\forms\group_edit_form($PAGE->url, $companyid, $selectedcourse, $groupid, $output);
+    $mform = new course_group_display_form($PAGE->url, $companyid, $selectedcourse, $output);
+    $editform = new group_edit_form($PAGE->url, $companyid, $selectedcourse, $groupid, $output);
 }
-$groupsform->set_data(array('selectedcourse' => $selectedcourse));
+$groupsform->set_data(['selectedcourse' => $selectedcourse]);
 
+// If we have a selected course id - process the course group form.
 if (!empty($selectedcourse)) {
     if ($mform->is_cancelled()) {
         redirect($companylist);
@@ -106,45 +109,61 @@ if (!empty($selectedcourse)) {
             } else {
                 $chosenid = 0;
             }
-            $editform = new \block_iomad_company_admin\forms\group_edit_form($PAGE->url, $companyid, $selectedcourse, $groupid, $output);
-            echo $output->header();
 
+            // Set up the group edit form and display it.
+            $editform = new group_edit_form($PAGE->url, $companyid, $selectedcourse, $groupid, $output);
+            echo $output->header();
             $editform->display();
             echo $output->footer();
             die;
         } else if (isset($data->delete)) {
+            // Process group deletions.
             $shownotice = false;
             if (empty($groupid)) {
                 $shownotice = true;
                 $noticestring = get_string('groupnoselect', 'block_iomad_company_admin');
             } else {
+                // If it's not the default company group...
                 if ($groupid != $defaultgroup->id) {
-                    $course = $DB->get_record('course', array('id' => $selectedcourse));
+                    // Delete it.
+                    $course = $DB->get_record('course', ['id' => $selectedcourse]);
                     company::delete_company_course_group($companyid, $course, false, $groupid);
                 } else {
                     $shownotice = true;
                     $noticestring = get_string('isdefaultgroupdelete', 'block_iomad_company_admin');
                 }
             }
-            $mform = new \block_iomad_company_admin\forms\course_group_display_form($PAGE->url, $companyid, $selectedcourse, $output);
+
             // Redisplay the form.
+            $mform = new course_group_display_form($PAGE->url, $companyid, $selectedcourse, $output);
             echo $output->header();
             $groupsform->display();
+
+            // Display any notices.
             if ($shownotice) {
-                notice($noticestring, new moodle_url($PAGE->url, array('selectedcourse' => $selectedcourse)));
+                notice($noticestring, new moodle_url($PAGE->url, ['selectedcourse' => $selectedcourse]));
             }
+
+            // Didplay the form.
             $mform->display();
+
+            // Display the footer.
             echo $output->footer();
             die;
 
         } else if (isset($data->edit)) {
             // Editing an existing group..
             if (!empty($groupid)) {
-                $grouprecord = $DB->get_record('groups', array('id' => $groupid));
-                $editform = new \block_iomad_company_admin\forms\group_edit_form($PAGE->url, $companyid, $selectedcourse, $groupid, $output);
-                $editform->set_data(array('groupid' => $grouprecord->id,
-                                          'name' => $grouprecord->name,
-                                          'description' => $grouprecord->description));
+                // Get the group info and set up the form with it.
+                $grouprecord = $DB->get_record('groups', ['id' => $groupid]);
+                $editform = new group_edit_form($PAGE->url, $companyid, $selectedcourse, $groupid, $output);
+                $editform->set_data([
+                    'groupid' => $grouprecord->id,
+                    'name' => $grouprecord->name,
+                    'description' => $grouprecord->description,
+                    ]);
+
+                // Display the page.
                 echo $output->header();
 
                 // Check the department is valid.
@@ -152,17 +171,20 @@ if (!empty($selectedcourse)) {
                     throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
                 }
 
+                // Display the edit form.
                 $editform->display();
-
                 echo $output->footer();
                 die;
             } else {
+                // Not selected a department.
                 echo $output->header();
+
                 // Check the department is valid.
                 if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
                     throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
                 }
 
+                // Display the rest of the page.
                 echo get_string('departmentnoselect', 'block_iomad_company_admin');
                 $mform->display();
                 echo $output->footer();
@@ -177,8 +199,8 @@ if (!empty($selectedcourse)) {
                                              $selectedcourse,
                                              $createdata);
 
-        $mform = new \block_iomad_company_admin\forms\course_group_display_form($PAGE->url, $companyid, $selectedcourse, $output);
         // Redisplay the form.
+        $mform = new course_group_display_form($PAGE->url, $companyid, $selectedcourse, $output);
         echo $output->header();
 
         // Check the department is valid.
@@ -193,16 +215,21 @@ if (!empty($selectedcourse)) {
         die;
     }
 }
+
+// Display the page.
 echo $output->header();
 
 // Check the department is valid.
 if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
     throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
 }
-
+// Display the course group form.
 $groupsform->display();
+
+// Display the groups form.
 if (!empty($selectedcourse)) {
     $mform->display();
 }
 
+// Display the footer.
 echo $output->footer();

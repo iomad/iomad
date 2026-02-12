@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,12 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard license create/edit main page.
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_company_admin\event\{company_license_created, company_license_updated, dashboard_page_viewed};
+use block_iomad_company_admin\forms\company_license_form;
+use core\output\notification;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
@@ -29,22 +33,23 @@ require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once('lib.php');
 require_once($CFG->libdir . '/formslib.php');
 
-$returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
-$companyid = optional_param('companyid', 0, PARAM_INTEGER);
 $courseid = optional_param('courseid', 0, PARAM_INTEGER);
 $departmentid = optional_param('departmentid', 0, PARAM_INTEGER);
 $licenseid = optional_param('licenseid', 0, PARAM_INTEGER);
 $parentid = optional_param('parentid', 0, PARAM_INTEGER);
 
+$urlparams = ['courseid' => $courseid];
+
+// Log in and set up $PAGE.
 require_login();
 
+// Set the companyid.
 $systemcontext = context_system::instance();
-
-// Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
+// Conditionally check what we are allowed to do.
 if (empty($parentid)) {
     if (!empty($licenseid) && $company->is_child_license($licenseid)) {
         iomad::require_capability('block/iomad_company_admin:edit_my_licenses', $companycontext);
@@ -55,15 +60,6 @@ if (empty($parentid)) {
     iomad::require_capability('block/iomad_company_admin:edit_my_licenses', $companycontext);
 }
 
-$urlparams = array('companyid' => $companyid);
-if ($returnurl) {
-    $urlparams['returnurl'] = $returnurl;
-}
-if ($courseid) {
-    $urlparams['courseid'] = $courseid;
-}
-
-// Correct the navbar .
 // Set the name for the page.
 if (!empty($licenseid)) {
     $linktext = get_string('edit_licenses_title', 'block_iomad_company_admin');
@@ -74,11 +70,12 @@ if (!empty($parentid)) {
     $linktext = get_string('split_licenses', 'block_iomad_company_admin');
 }
 $listtext = get_string('company_license_list_title', 'block_iomad_company_admin');
-// Set the url.
+
+// Set the URLs.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_license_edit_form.php');
 $listurl = new moodle_url('/blocks/iomad_company_admin/company_license_list.php');
 
-// Print the page header.
+// Finish setting up PAGE.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
@@ -86,18 +83,20 @@ $PAGE->set_title($linktext);
 $PAGE->set_heading($linktext);
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // If we are editing a license, check that the parent id is set.
 if (!empty($licenseid)) {
-    $licenseinfo = $DB->get_record('companylicense', array('id' => $licenseid));
+    $licenseinfo = $DB->get_record('companylicense', ['id' => $licenseid]);
     $parentid = $licenseinfo->parentid;
 }
 
 // Set up the form.
-$mform = new block_iomad_company_admin\forms\company_license_form($PAGE->url, $companycontext, $companyid, $departmentid, $licenseid, $parentid);
-if ($licenseinfo = $DB->get_record('companylicense', array('id' => $licenseid))) {
-    if ($currentcourses = $DB->get_records('companylicense_courses', array('licenseid' => $licenseid), null, 'courseid')) {
+$mform = new company_license_form($PAGE->url, $companycontext, $companyid, $departmentid, $licenseid, $parentid);
+
+// Get any passed license information.
+if ($licenseinfo = $DB->get_record('companylicense', ['id' => $licenseid])) {
+    if ($currentcourses = $DB->get_records('companylicense_courses', ['licenseid' => $licenseid], null, 'courseid')) {
         foreach ($currentcourses as $currentcourse) {
             $licenseinfo->licensecourses[] = $currentcourse->courseid;
         }
@@ -108,32 +107,41 @@ if ($licenseinfo = $DB->get_record('companylicense', array('id' => $licenseid)))
         $licenseinfo->allocation = $licenseinfo->allocation / count($currentcourses);
     }
 
+    // Set the form data.
     $mform->set_data($licenseinfo);
 } else {
-    $licenseinfo = new stdclass();
+    // We are creating a new license.
+    $licenseinfo = (object) [];
     $licenseinfo->expirydate = strtotime('+ 1 year');
+
+    // Are we splitting a current license?
     if (!empty($parentid)) {
-        if ($currentcourses = $DB->get_records('companylicense_courses', array('licenseid' => $parentid), null, 'courseid')) {
+        // Get the courses from that.
+        if ($currentcourses = $DB->get_records('companylicense_courses', ['licenseid' => $parentid], null, 'courseid')) {
             foreach ($currentcourses as $currentcourse) {
                 $licenseinfo->licensecourses[] = $currentcourse->courseid;
             }
         }
     }
+
+    // Set the form data.
     $mform->set_data($licenseinfo);
 }
 
+// Process the form.
 if ( $mform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL) ) {
     redirect(new moodle_url('/blocks/iomad_company_admin/company_license_list.php'));
 } else {
     if ( $data = $mform->get_data() ) {
-        global $DB, $USER;
 
+        // Set some defaults.
         if (empty($data->instant)) {
             $data->instant = 0;
         }
-
         $new = false;
-        $licensedata = array();
+        $licensedata = [];
+
+        // Sanitise the data.
         $licensedata['name'] = trim($data->name);
         $licensedata['reference'] = trim($data->reference);
         if (empty($data->program)) {
@@ -147,9 +155,11 @@ if ( $mform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL) ) {
         $licensedata['instant'] = $data->instant;
         $licensedata['expirydate'] = $data->expirydate;
         $licensedata['startdate'] = $data->startdate;
+
         if (empty($data->languages)) {
             $data->languages = array();
         }
+
         if (empty($data->parentid)) {
             $licensedata['companyid'] = $data->companyid;
         } else {
@@ -171,40 +181,43 @@ if ( $mform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL) ) {
             $licensedata['clearonexpire'] = $data->clearonexpire;
         }
 
-        if ( !empty($licenseid) && $currlicensedata = $DB->get_record('companylicense', array('id' => $licenseid))) {
-            $new = false;
+        if (!empty($licenseid) &&
+            $currlicensedata = $DB->get_record('companylicense', ['id' => $licenseid])) {
             // Already in the table update it.
+            $new = false;
             $licensedata['id'] = $currlicensedata->id;
             $licensedata['used'] = $currlicensedata->used;
             $DB->update_record('companylicense', $licensedata);
         } else {
-            $new = true;
             // New license being created.
+            $new = true;
             $licensedata['used'] = 0;
             $licenseid = $DB->insert_record('companylicense', $licensedata);
         }
 
         // Deal with course allocations if there are any.
         // Capture them for checking.
-        $oldcourses = $DB->get_records('companylicense_courses', array('licenseid' => $licenseid), null, 'courseid');
+        $oldcourses = $DB->get_records('companylicense_courses', ['licenseid' => $licenseid], null, 'courseid');
         // Clear down all of them initially.
-        $DB->delete_records('companylicense_courses', array('licenseid' => $licenseid));
+        $DB->delete_records('companylicense_courses', ['licenseid' => $licenseid]);
         if (!empty($data->licensecourses)) {
             // Add the course license allocations.
             foreach ($data->licensecourses as $selectedcourse) {
-                $DB->insert_record('companylicense_courses', array('licenseid' => $licenseid, 'courseid' => $selectedcourse));
+                $DB->insert_record('companylicense_courses', ['licenseid' => $licenseid, 'courseid' => $selectedcourse]);
             }
         }
 
         // Create an event to deal with an parent license allocations.
-        $eventother = array('licenseid' => $licenseid,
-                            'parentid' => $data->parentid);
+        $eventother = ['licenseid' => $licenseid,
+                       'parentid' => $data->parentid];
 
         if ($new) {
-            $event = \block_iomad_company_admin\event\company_license_created::create(array('context' => $companycontext,
-                                                                                            'userid' => $USER->id,
-                                                                                            'objectid' => $licenseid,
-                                                                                            'other' => $eventother));
+            $event = company_license_created::create([
+                'context' => $companycontext,
+                'userid' => $USER->id,
+                'objectid' => $licenseid,
+                'other' => $eventother,
+            ]);
             $returnmessage = get_string('licensecreatedok', 'block_iomad_company_admin');
         } else {
             $eventother['oldcourses'] = json_encode($oldcourses);
@@ -217,29 +230,37 @@ if ( $mform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL) ) {
             if ($currlicensedata->type != $data->type) {
                 $eventother['educatorchange'] = true;
             }
-            $event = \block_iomad_company_admin\event\company_license_updated::create(array('context' => $companycontext,
-                                                                                            'userid' => $USER->id,
-                                                                                            'objectid' => $licenseid,
-                                                                                            'other' => $eventother));
+            $event = company_license_updated::create([
+                'context' => $companycontext,
+                'userid' => $USER->id,
+                'objectid' => $licenseid,
+                'other' => $eventother,
+            ]);
             $returnmessage = get_string('licenseupdatedok', 'block_iomad_company_admin');
         }
+
+        // Fire the event and redirect.
         $event->trigger();
-        redirect(new moodle_url('/blocks/iomad_company_admin/company_license_list.php'), $returnmessage, null, \core\output\notification::NOTIFY_SUCCESS);
+        redirect(
+            new moodle_url('/blocks/iomad_company_admin/company_license_list.php'),
+            $returnmessage,
+            null,
+            notification::NOTIFY_SUCCESS);
     }
-
-    // Display the form.
-    echo $OUTPUT->header();
-
-    // Check the department is valid.
-    if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
-        throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
-    }
-
-    // Check the license is valid.
-    if (!empty($licenseid) && !company::check_valid_company_license($companyid, $licenseid)) {
-        throw new moodle_exception('invalidlicense', 'block_iomad_company_admin');
-    }
-
-    $mform->display();
-    echo $OUTPUT->footer();
 }
+
+// Display the form.
+echo $OUTPUT->header();
+
+// Check the department is valid.
+if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+    throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
+}
+
+// Check the license is valid.
+if (!empty($licenseid) && !company::check_valid_company_license($companyid, $licenseid)) {
+    throw new moodle_exception('invalidlicense', 'block_iomad_company_admin');
+}
+
+$mform->display();
+echo $OUTPUT->footer();
