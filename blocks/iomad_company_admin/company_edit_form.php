@@ -15,39 +15,43 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard company edit/create main page
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/**
- * Script to let a user edit the properties of a particular company.
- */
+use block_iomad_company_admin\event\{company_created, company_updated, dashboard_page_viewed};
+use block_iomad_company_admin\forms\company_edit_form;
+use core\output\notification;
 
 use local_iomad\{company, company_user, iomad};
 use local_iomad\custom_context\context_company;
 
-require_once(dirname(__FILE__) . '/../../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
-require_once(dirname(__FILE__) . '/includes/colourpicker.php');
-require_once('lib.php');
+require_once(__DIR__ . '/includes/colourpicker.php');
+require_once(__DIR__ . '/lib.php');
 
-\MoodleQuickForm::registerElementType('iomad_colourpicker',
-    $CFG->dirroot . '/blocks/iomad_company_admin/includes/colourpicker.php', 'MoodleQuickForm_iomad_colourpicker');
+// Set up the custom colour picker.
+MoodleQuickForm::registerElementType(
+    'iomad_colourpicker',
+    $CFG->dirroot . '/blocks/iomad_company_admin/includes/colourpicker.php',
+    'MoodleQuickForm_iomad_colourpicker');
 
-
-$returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
 $companyid = optional_param('companyid', 0, PARAM_INT);
 $parentid = optional_param('parentid', 0, PARAM_INT);
 $new = optional_param('createnew', 0, PARAM_INT);
 $parentchanged = optional_param('parentchanged', 0, PARAM_INT);
 
-$systemcontext = context_system::instance();
+// Login and set up $PAGE.
 require_login();
 
-// Correct the navbar.
-// Set the name for the page.
+// We need the system context.
+$systemcontext = context_system::instance();
+
+// Condtionally set up the name for the page.
 if (!$new) {
     $linktext = get_string('editcompany', 'block_iomad_company_admin');
 } else {
@@ -61,18 +65,22 @@ if (!$new) {
 // What type of company is this?
 $child = false;
 if (!$new) {
-    // Set the companyid
+    // Set the companyid.
     $companyid = iomad::get_my_companyid($systemcontext);
     $companycontext =  context_company::instance($companyid);
 
+    // Are we alled to do this?
     iomad::require_capability('block/iomad_company_admin:company_edit', $companycontext);
 
+    // Set adding to false and get the company record.
     $isadding = false;
-    $companyrecord = $DB->get_record('company', array('id' => $companyid), '*', MUST_EXIST);
+    $companyrecord = $DB->get_record('company', ['id' => $companyid], '*', MUST_EXIST);
+
+    // Set the role template value so it displays nicely on the form.
     if ($companyrecord->previousroletemplateid == -1 ) {
         $companyrecord->previousroletemplateid = 'i';
     }
-    // Sanitise some data
+    // Sanitise some data.
     if (empty($companyrecord->usesignature)) {
         $companyrecord->usesignature = false;
     }
@@ -88,8 +96,10 @@ if (!$new) {
     if (empty($companyrecord->showgrade)) {
         $companyrecord->showgrade = false;
     }
-    $companyrecord->templates = array();
-    if ($companytemplates = $DB->get_records('company_role_templates_ass', array('companyid' => $companyid), null, 'templateid')) {
+
+    // Deal with email templates.
+    $companyrecord->templates = [];
+    if ($companytemplates = $DB->get_records('company_role_templates_ass', ['companyid' => $companyid], null, 'templateid')) {
         $companyrecord->templates = array_keys($companytemplates);
     }
 
@@ -98,6 +108,7 @@ if (!$new) {
         $companyrecord->dashboard = $companydashboard->pageid;
     }
 } else {
+    // We are adding a new company. Set up some defaults.
     $isadding = true;
     $companyid = 0;
     $companyrecord = new stdClass;
@@ -106,10 +117,13 @@ if (!$new) {
     $companyrecord->previousemailtemplateid = 0;
     $companyrecord->maxusers = 0;
     $companycontext = $systemcontext;
+
+    // Get any default email templates.
     if ($emailtemplateset = $DB->get_record('email_templateset', ['isdefault' => 1])) {
         $companyrecord->emailtemplate = $emailtemplateset->id;
     }
 
+    // Do we have a parent company or has it changed?
     if (!empty($parentid) || $parentchanged) {
         if (!empty($parentid)) {
             $companycontext = context_company::instance($parentid);
@@ -117,10 +131,15 @@ if (!$new) {
 
             // We are adding a child company.
             $child = true;
+
             // Can this user manage this parentid?
             if (!iomad::has_capability('block/iomad_company_admin:company_add', $companycontext) &&
-                !$DB->get_record('company_users', array('companyid' => $parentid, 'userid' => $USER->id, 'managertype' => 1))) {
-                throw new moodle_exception(get_string('invalidcompany', 'block_iomad_company_admin'), 'error', new moodle_url($CFG->wwwroot .'/blocks/iomad_company_admin/index.php'));
+                !$DB->get_record('company_users', ['companyid' => $parentid, 'userid' => $USER->id, 'managertype' => 1])) {
+                // No.
+                throw new moodle_exception(
+                    get_string('invalidcompany', 'block_iomad_company_admin'),
+                    'error',
+                     new moodle_url($CFG->wwwroot .'/blocks/iomad_company_admin/index.php'));
                 die;
             }
         }
@@ -165,18 +184,19 @@ if (!$new) {
             unset($SESSION->current_editing_company_data);
         }
     } else {
+        // Check we can add a new company.
         iomad::require_capability('block/iomad_company_admin:company_add', $companycontext);
     }
 }
 
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_edit_form.php', [
-    'returnurl' => $returnurl,
     'companyid' => $companyid,
     'parentid' => $parentid,
     'createnew' => $new,
 ]);
 
+// Finish setting up PAGE.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
@@ -186,16 +206,13 @@ $PAGE->set_title($linktext);
 $PAGE->set_heading($linktext);
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Are there any existing companies?
 $firstcompany = !$DB->record_exists('company', array());
 
-$urlparams = array('companyid' => $companyid);
-if ($returnurl) {
-    $urlparams['returnurl'] = $returnurl;
-}
-$companylist = new moodle_url('/blocks/iomad_company_admin/index.php', $urlparams);
+// Set the dashboard URL as default.
+$companylist = new moodle_url('/blocks/iomad_company_admin/index.php');
 
 // Get the company logos etc.
 $draftcompanylogoid = file_get_submitted_draft_itemid('companylogo');
@@ -203,7 +220,7 @@ file_prepare_draft_area($draftcompanylogoid,
                         $systemcontext->id,
                         'core_admin',
                         'logo' . $companyid, 0,
-                        array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
+                        ['subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1]);
 $companyrecord->companylogo = $draftcompanylogoid;
 
 $draftcompanylogocompactid = file_get_submitted_draft_itemid('companylogocompact');
@@ -238,32 +255,32 @@ if (!empty($new) && !empty($parentid)) {
                             $systemcontext->id,
                             'local_iomad',
                             'companycertificateseal', $parentid,
-                            array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
+                            ['subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1]);
     $companyrecord->companycertificateseal = $draftcompanycertificatesealid;
     $draftcompanycertificatesignatureid = file_get_submitted_draft_itemid('companycertificatesignature');
     file_prepare_draft_area($draftcompanycertificatesignatureid,
                             $systemcontext->id,
                             'local_iomad',
                             'companycertificatesignature', $parentid,
-                            array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
+                            ['subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1]);
     $companyrecord->companycertificatesignature = $draftcompanycertificatesignatureid;
     $draftcompanycertificateborderid = file_get_submitted_draft_itemid('companycertificateborder');
     file_prepare_draft_area($draftcompanycertificateborderid,
                             $systemcontext->id,
                             'local_iomad',
                             'companycertificateborder', $parentid,
-                            array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
+                            ['subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1]);
     $companyrecord->companycertificateborder = $draftcompanycertificateborderid;
     $draftcompanycertificatewatermarkid = file_get_submitted_draft_itemid('companycertificatewatermark');
     file_prepare_draft_area($draftcompanycertificatewatermarkid,
                             $systemcontext->id,
                             'local_iomad',
                             'companycertificatewatermark', $parentid,
-                            array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
+                            ['subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1]);
     $companyrecord->companycertificatewatermark = $draftcompanycertificatewatermarkid;
 
     // Deal with the image display options.
-    $parentcompanyoptions = $DB->get_record('companycertificate', array('companyid' => $parentid));
+    $parentcompanyoptions = $DB->get_record('companycertificate', ['companyid' => $parentid]);
     $companyrecord->uselogo = $parentcompanyoptions->uselogo;
     $companyrecord->usesignature = $parentcompanyoptions->usesignature;
     $companyrecord->useborder = $parentcompanyoptions->useborder;
@@ -301,7 +318,7 @@ if (!empty($new) && !empty($parentid)) {
                             $systemcontext->id,
                             'core_admin',
                             'logo' . $parentid, 0,
-                            array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
+                            ['subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1]);
     $companyrecord->companylogo = $draftcompanylogoid;
 
     $draftcompanylogocompactid = file_get_submitted_draft_itemid('companylogocompact');
@@ -329,31 +346,31 @@ if (!empty($new) && !empty($parentid)) {
                             $systemcontext->id,
                             'local_iomad',
                             'companycertificateseal', $companyid,
-                            array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
+                            ['subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1]);
     $companyrecord->companycertificateseal = $draftcompanycertificatesealid;
     $draftcompanycertificatesignatureid = file_get_submitted_draft_itemid('companycertificatesignature');
     file_prepare_draft_area($draftcompanycertificatesignatureid,
                             $systemcontext->id,
                             'local_iomad',
                             'companycertificatesignature', $companyid,
-                            array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
+                            ['subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1]);
     $companyrecord->companycertificatesignature = $draftcompanycertificatesignatureid;
     $draftcompanycertificateborderid = file_get_submitted_draft_itemid('companycertificateborder');
     file_prepare_draft_area($draftcompanycertificateborderid,
                             $systemcontext->id,
                             'local_iomad',
                             'companycertificateborder', $companyid,
-                            array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
+                            ['subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1]);
     $companyrecord->companycertificateborder = $draftcompanycertificateborderid;
     $draftcompanycertificatewatermarkid = file_get_submitted_draft_itemid('companycertificatewatermark');
     file_prepare_draft_area($draftcompanycertificatewatermarkid,
                             $systemcontext->id,
                             'local_iomad',
                             'companycertificatewatermark', $companyid,
-                            array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
+                            ['subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1]);
     $companyrecord->companycertificatewatermark = $draftcompanycertificatewatermarkid;
 }
-if ($domains = $DB->get_records('company_domains', array('companyid' => $companyid))) {
+if ($domains = $DB->get_records('company_domains', ['companyid' => $companyid])) {
     $companyrecord->companydomains = '';
     foreach ($domains as $domain) {
         $companyrecord->companydomains .= $domain->domain ."\n";
@@ -361,8 +378,8 @@ if ($domains = $DB->get_records('company_domains', array('companyid' => $company
 }
 
 // Set up the form.
-$mform = new block_iomad_company_admin\forms\company_edit_form($PAGE->url, $isadding, $companyid, $companyrecord, $firstcompany, $parentid, $child);
-$companyrecord->templates = array();
+$mform = new company_edit_form($PAGE->url, $isadding, $companyid, $companyrecord, $firstcompany, $parentid, $child);
+$companyrecord->templates = [];
 
 // Set the parent company id if it's being passed.
 if (!empty($companyrecord->parentid)) {
@@ -373,37 +390,47 @@ if (!empty($companyrecord->parentid)) {
 if (!empty($parentid)) {
     $companyrecord->parentid = $parentid;
 }
-if ($companytemplates = $DB->get_records('company_role_templates_ass', array('companyid' => $companyid), null, 'templateid')) {
+
+// Get email template info.
+if ($companytemplates = $DB->get_records('company_role_templates_ass', ['companyid' => $companyid], null, 'templateid')) {
     $companyrecord->templates = array_keys($companytemplates);
 }
-if ($certificateinfo = $DB->get_record('companycertificate', array('companyid' => $companyid))) {
+
+// Get certificate info.
+if ($certificateinfo = $DB->get_record('companycertificate', ['companyid' => $companyid])) {
     $companyrecord->uselogo = $certificateinfo->uselogo;
     $companyrecord->usesignature = $certificateinfo->usesignature;
     $companyrecord->useborder = $certificateinfo->useborder;
     $companyrecord->usewatermark = $certificateinfo->usewatermark;
     $companyrecord->showgrade = $certificateinfo->showgrade;
 }
+
+// Set the form data.
 $mform->set_data($companyrecord);
 
+// Process the form.
 if ($mform->is_cancelled()) {
     redirect($companylist);
 
 } else if ($data = $mform->get_data()) {
+
+    // Set some initial data.
     $data->userid = $USER->id;
     $createcompany = true;
-
     if (empty($data->validto)) {
         $data->validto = null;
     }
+
+    // Add a new company.
     if ($isadding) {
         if (!empty($data->submitbutton)) {
             // Set up a profiles field category for this company.
-            $catdata = new stdclass();
+            $catdata = (object) [];
             $catdata->sortorder = $DB->count_records('user_info_category') + 1;
             $catdata->name = $data->shortname;
             $data->profileid = $DB->insert_record('user_info_category', $catdata);
 
-            // Deal with leading/trailing spaces
+            // Deal with leading/trailing spaces.
             $data->name = trim($data->name);
             $data->shortname = trim($data->shortname);
             $data->code = trim($data->code);
@@ -417,12 +444,14 @@ if ($mform->is_cancelled()) {
             $companyid = $DB->insert_record('company', $data);
             $company = new company($companyid);
 
-            $eventother = array('companyid' => $companyid);
+            $eventother = ['companyid' => $companyid];
 
-            $event = \block_iomad_company_admin\event\company_created::create(array('context' => $systemcontext,
-                                                                                    'userid' => $USER->id,
-                                                                                    'objectid' => $companyid,
-                                                                                    'other' => $eventother));
+            $event = company_created::create([
+                'context' => $systemcontext,
+                'userid' => $USER->id,
+                'objectid' => $companyid,
+                'other' => $eventother,
+            ]);
             $event->trigger();
 
             // Set up default department.
@@ -430,7 +459,7 @@ if ($mform->is_cancelled()) {
             $data->id = $companyid;
 
             // Set up course category for company.
-            $coursecat = new stdclass();
+            $coursecat = (object) [];
             $coursecat->name = $data->name;
             $coursecat->sortorder = 999;
             $coursecat->id = $DB->insert_record('course_categories', $coursecat);
@@ -439,7 +468,7 @@ if ($mform->is_cancelled()) {
             $categorycontext->mark_dirty();
             $DB->update_record('course_categories', $coursecat);
             fix_course_sortorder();
-            $companydetails = $DB->get_record('company', array('id' => $companyid));
+            $companydetails = $DB->get_record('company', ['id' => $companyid]);
             $companydetails->category = $coursecat->id;
             $DB->update_record('company', $companydetails);
             $redirectmessage = get_string('companycreatedok', 'block_iomad_company_admin');
@@ -456,28 +485,38 @@ if ($mform->is_cancelled()) {
             }
 
             // Deal with certificate info.
-            $certificateinforec = array('companyid' => $companyid,
-                                        'uselogo' => $data->uselogo,
-                                        'usesignature' => $data->usesignature,
-                                        'useborder' => $data->useborder,
-                                        'usewatermark' => $data->usewatermark,
-                                        'showgrade' => $data->showgrade);
+            $certificateinforec = [
+                'companyid' => $companyid,
+                'uselogo' => $data->uselogo,
+                'usesignature' => $data->usesignature,
+                'useborder' => $data->useborder,
+                'usewatermark' => $data->usewatermark,
+                'showgrade' => $data->showgrade,
+            ];
             $DB->insert_record('companycertificate', $certificateinforec);
         } else {
+            // Stash the current form information to use when it reloads.
             $redirectmessage = "";
             $SESSION->createcompanyform = $data;
             $SESSION->createcompanyform->timecreated = time();
-            $companylist = new moodle_url('/blocks/iomad_company_admin/company_edit_form.php', ['createnew' => true, 'parentid' => $data->parentid]);
+            $companylist = new moodle_url(
+                '/blocks/iomad_company_admin/company_edit_form.php',
+                [
+                    'createnew' => true,
+                    'parentid' => $data->parentid,
+                ]);
             $createcompany = false;
         }
     } else {
+        // Updating an existing company.
         $data->id = $companyid;
+
+        // Set some defaults.
         if (!empty($data->usedefaultpaymentaccount)) {
             $data->paymentaccount = '';
         }
-
         $company = new company($companyid);
-        $oldcompany = $DB->get_record('company', array('id' => $companyid));
+        $oldcompany = $DB->get_record('company', ['id' => $companyid]);
         $oldtheme = $company->get_theme();
         $themechanged = $oldtheme != $data->theme;
 
@@ -488,11 +527,12 @@ if ($mform->is_cancelled()) {
             }
         }
 
+        // Was the theme changed?
         if ($themechanged) {
             $company->update_theme($data->theme);
         }
 
-        //  Has the company name changed?
+        // Has the company name changed?
         if ($topdepartment = $company->get_company_parentnode($companyid)) {
             if ($topdepartment->name != $data->name) {
                 $topdepartment->name = $data->name;
@@ -501,6 +541,7 @@ if ($mform->is_cancelled()) {
             }
         }
 
+        // Set the default response.
         $redirectmessage = get_string('companysavedok', 'block_iomad_company_admin');
 
         // Has the company parentid changed?
@@ -521,7 +562,7 @@ if ($mform->is_cancelled()) {
             }
         }
 
-        // Did we apply a template?
+        // Did we apply a role template?
         if (!empty($data->roletemplate)) {
             if ($data->roletemplate != 'i') {
                 $data->previousroletemplateid = $data->roletemplate;
@@ -537,18 +578,20 @@ if ($mform->is_cancelled()) {
 
         $DB->update_record('company', $data);
         // Fire an event for this.
-        $eventother = array('companyid' => $companyid,
-                            'oldcompany' => json_encode($oldcompany));
+        $eventother = ['companyid' => $companyid,
+                            'oldcompany' => json_encode($oldcompany)];
 
-        $event = \block_iomad_company_admin\event\company_updated::create(array('context' => $companycontext,
-                                                                                'userid' => $USER->id,
-                                                                                'objectid' => $companyid,
-                                                                                'other' => $eventother));
+        $event = company_updated::create([
+            'context' => $companycontext,
+            'userid' => $USER->id,
+            'objectid' => $companyid,
+            'other' => $eventother,
+        ]);
         $event->trigger();
 
         // Deal with certificate info.
-        $certificateinforec = (array) $DB->get_record('companycertificate', array('companyid' => $companyid));
-            if (!empty($certificateinforec['id'])) {
+        $certificateinforec = (array) $DB->get_record('companycertificate', ['companyid' => $companyid]);
+        if (!empty($certificateinforec['id'])) {
             $certificateinforec['uselogo'] = $data->uselogo;
             $certificateinforec['usesignature'] = $data->usesignature;
             $certificateinforec['useborder'] = $data->useborder;
@@ -556,12 +599,14 @@ if ($mform->is_cancelled()) {
             $certificateinforec['showgrade'] = $data->showgrade;
             $DB->update_record('companycertificate', $certificateinforec);
         } else {
-            $certificateinforec = array('companyid' => $companyid,
-                                        'uselogo' => $data->uselogo,
-                                        'usesignature' => $data->usesignature,
-                                        'useborder' => $data->useborder,
-                                        'usewatermark' => $data->usewatermark,
-                                        'showgrade' => $data->showgrade);
+            $certificateinforec = [
+                'companyid' => $companyid,
+                'uselogo' => $data->uselogo,
+                'usesignature' => $data->usesignature,
+                'useborder' => $data->useborder,
+                'usewatermark' => $data->usewatermark,
+                'showgrade' => $data->showgrade,
+            ];
             $DB->insert_record('companycertificate', $certificateinforec);
         }
 
@@ -571,6 +616,7 @@ if ($mform->is_cancelled()) {
             $DB->insert_record('company_pages', ['companyid' => $companyid, 'pageid' => $data->dashboard, 'type' => 'dashboard']);
         }
 
+        // Is the current user in the company?
         if (company_user::is_company_user()) {
             company_user::reload_company();
         }
@@ -627,6 +673,8 @@ if ($mform->is_cancelled()) {
                 set_config('logo' . $data->id, '', 'core_admin');
             }
         }
+
+        // Deal with logos.
         if (!empty($data->companylogocompact)) {
             file_save_draft_area_files($data->companylogocompact,
                                        $systemcontext->id,
@@ -647,6 +695,8 @@ if ($mform->is_cancelled()) {
                 set_config('logocompact' . $data->id, '', 'core_admin');
             }
         }
+
+        // Deal with favicons.
         if (!empty($data->companyfavicon)) {
             file_save_draft_area_files($data->companyfavicon,
                                        $systemcontext->id,
@@ -667,13 +717,15 @@ if ($mform->is_cancelled()) {
                 set_config('favicon' . $data->id, '', 'core_admin');
             }
         }
+
+        // Deal with certificates.
         if (!empty($data->companycertificateseal)) {
             file_save_draft_area_files($data->companycertificateseal,
                                        $systemcontext->id,
                                        'local_iomad',
                                        'companycertificateseal',
                                        $data->id,
-                                       array('subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1));
+                                       ['subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1]);
         }
         if (!empty($data->companycertificatesignature)) {
             file_save_draft_area_files($data->companycertificatesignature,
@@ -681,7 +733,7 @@ if ($mform->is_cancelled()) {
                                        'local_iomad',
                                        'companycertificatesignature',
                                        $data->id,
-                                       array('subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1));
+                                       ['subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1]);
         }
         if (!empty($data->companycertificateborder)) {
             file_save_draft_area_files($data->companycertificateborder,
@@ -689,7 +741,7 @@ if ($mform->is_cancelled()) {
                                        'local_iomad',
                                        'companycertificateborder',
                                        $data->id,
-                                       array('subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1));
+                                       ['subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1]);
         }
         if (!empty($data->companycertificatewatermark)) {
             file_save_draft_area_files($data->companycertificatewatermark,
@@ -697,27 +749,31 @@ if ($mform->is_cancelled()) {
                                        'local_iomad',
                                        'companycertificatewatermark',
                                        $data->id,
-                                       array('subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1));
+                                       ['subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1]);
         }
+
         // Delete any recorded domains for this company.
-        $DB->delete_records('company_domains', array('companyid' => $companyid));
+        $DB->delete_records('company_domains', ['companyid' => $companyid]);
 
         // Add any new ones back in.
         if (!empty($data->companydomains)) {
             $domainsarray = preg_split('/[\r\n]+/', $data->companydomains, -1, PREG_SPLIT_NO_EMPTY);
             foreach ($domainsarray as $domain) {
                 if (!empty($domain)) {
-                    $DB->insert_record('company_domains', array('companyid' => $companyid, 'domain' => $domain));
+                    $DB->insert_record('company_domains', ['companyid' => $companyid, 'domain' => $domain]);
                 }
             }
         }
     }
 
-    redirect($companylist, $redirectmessage, \core\output\notification::NOTIFY_SUCCESS);
+    redirect($companylist, $redirectmessage, notification::NOTIFY_SUCCESS);
 }
 
+// Display the page.
 echo $OUTPUT->header();
 
+// Display the form.
 $mform->display();
 
+// Display the footer.
 echo $OUTPUT->footer();
