@@ -3771,6 +3771,8 @@ class company {
                 $DB->delete_records('company_course_groups', ['groupid' => $groupid]);
             }
         }
+        
+        return true;
     }
 
     /**
