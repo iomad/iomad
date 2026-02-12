@@ -15,42 +15,45 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard assign competency templates to tenant main page
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_company_admin\event\dashboard_page_viewed;
+use block_iomad_company_admin\forms\company_competency_templates_form;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
-require_once('lib.php');
+require_once(__DIR__ . '/../../config.php'); // Creates $PAGE.
+require_once(__DIR__ . '/lib.php');
 require_once($CFG->libdir . '/formslib.php');
 
 $returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
-$companyid = optional_param('companyid', 0, PARAM_INTEGER);
 
+// Login and set up $PAGE.
 require_login();
 
+// Set the companyid.
 $systemcontext = context_system::instance();
-
-// Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
+// Can we even do anything?
 iomad::require_capability('block/iomad_company_admin:company_template', $companycontext);
 
-$urlparams = array('companyid' => $companyid);
-if ($returnurl) {
-    $urlparams['returnurl'] = $returnurl;
-}
+$urlparams = [
+    'returnurl' => $returnurl,
+];
 
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_competency_templates_form.php');
 
-// Print the page header.
+// Finish setting up PAGE.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
@@ -63,23 +66,28 @@ $PAGE->set_title($linktext);
 $PAGE->set_heading($linktext);
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Set up the form.
-$mform = new \block_iomad_company_admin\forms\company_competency_templates_form($PAGE->url, $companycontext, $companyid);
+$mform = new company_competency_templates_form($PAGE->url, $companycontext, $companyid);
 
+// Was the form cancelled?
 if ($mform->is_cancelled()) {
     if ($returnurl) {
         redirect($returnurl);
     } else {
         redirect(new moodle_url($CFG->wwwroot .'/blocks/iomad_company_admin/index.php'));
     }
-} else {
-    $mform->process();
-
-    echo $OUTPUT->header();
-
-    $mform->display();
-
-    echo $OUTPUT->footer();
 }
+
+// Process the form.
+$mform->process();
+
+// Display the page.
+echo $OUTPUT->header();
+
+// Display the form.
+$mform->display();
+
+// Display the footer.
+echo $OUTPUT->footer();

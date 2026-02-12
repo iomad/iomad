@@ -100,7 +100,7 @@ class company_users_form extends moodleform {
      * @return void
      */
     public function definition_after_data() {
-        global $output;
+        global $OUTPUT;
 
         // Set up the form.
         $mform = &$this->_form;
@@ -136,7 +136,7 @@ class company_users_form extends moodleform {
                     'name' => 'add',
                     'id' => 'add',
                     'type' => 'submit',
-                    'value' => $output->larrow() . ' ' . get_string('add'),
+                    'value' => $OUTPUT->larrow() . ' ' . get_string('add'),
                     'title' => get_string('add'),
                     'class' => 'btn btn-secondary',
                 ]) .
@@ -145,16 +145,13 @@ class company_users_form extends moodleform {
         if ($this->allusers) {
             $mform->addElement(
             'html',
-            html_writer::end_tag('td') .
-            html_writer::start_tag('td', ['id' => 'buttonscell']) .
-            html_writer::start_tag('p', ['class' => 'arrow_button']) .
             html_writer::empty_tag(
                 'input',
                 [
                     'name' => 'import',
                     'id' => 'import',
                     'type' => 'submit',
-                    'value' => $output->larrow() . ' ' . get_string('import'),
+                    'value' => $OUTPUT->larrow() . ' ' . get_string('import'),
                     'title' => get_string('import'),
                     'class' => 'btn btn-secondary',
                 ]) .
@@ -163,20 +160,16 @@ class company_users_form extends moodleform {
 
         $mform->addElement(
             'html',
-            html_writer::end_tag('td') .
-            html_writer::start_tag('td', ['id' => 'buttonscell']) .
-            html_writer::start_tag('p', ['class' => 'arrow_button']) .
             html_writer::empty_tag(
                 'input',
                 [
                     'name' => 'remove',
                     'id' => 'remove',
                     'type' => 'submit',
-                    'value' => get_string('remove'). ' ' . $output->larrow(),
+                    'value' => get_string('remove'). ' ' . $OUTPUT->rarrow(),
                     'title' => get_string('remove'),
                     'class' => 'btn btn-secondary',
                 ]) .
-            html_writer::empty_tag('br') .
             html_writer::end_tag('p') .
             html_writer::end_tag('td') .
             html_writer::start_tag('td', ['id' => 'potencialcell']));

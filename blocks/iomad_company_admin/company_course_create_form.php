@@ -15,39 +15,38 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard create course main page
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/**
- * Script to let a user create a course for a particular company.
- */
+use block_iomad_company_admin\event\dashboard_page_viewed;
+use block_iomad_company_admin\forms\course_edit_form;
+use core\output\notification;
 
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-require_once(dirname(__FILE__) . '/../../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
-require_once('lib.php');
-require_once(dirname(__FILE__) . '/../../course/lib.php');
+require_once(__DIR__ . '/lib.php');
+require_once(__DIR__ . '/../../course/lib.php');
 
-$returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
-$companyid = optional_param('companyid', 0, PARAM_INTEGER);
-
+// Login and set up $PAGE.
 require_login();
 
+// Set the companyid.
 $systemcontext = context_system::instance();
-
-// Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
+// Can we even do anything?
 iomad::require_capability('block/iomad_company_admin:createcourse', $companycontext);
 
-// Correct the navbar.
 // Set the name for the page.
 $linktext = get_string('createcourse_title', 'block_iomad_company_admin');
 
@@ -64,22 +63,21 @@ $PAGE->set_title($linktext);
 $PAGE->set_heading($linktext);
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
-$urlparams = array('companyid' => $companyid);
-if ($returnurl) {
-    $urlparams['returnurl'] = $returnurl;
-}
-$dashboardurl = new moodle_url('/blocks/iomad_company_admin/index.php', $urlparams);
+// Set up the dashboard URL.
+$dashboardurl = new moodle_url('/blocks/iomad_company_admin/index.php');
 
-/* next line copied from /course/edit.php */
-$editoroptions = array('maxfiles' => EDITOR_UNLIMITED_FILES,
+// Default editor options.
+$editoroptions = ['maxfiles' => EDITOR_UNLIMITED_FILES,
                        'maxbytes' => $CFG->maxbytes,
                        'trusttext' => false,
-                       'noclean' => true);
+                       'noclean' => true];
 
-$mform = new block_iomad_company_admin\forms\course_edit_form($PAGE->url, $companyid, $editoroptions);
+// Set up the form.
+$mform = new course_edit_form($PAGE->url, $companyid, $editoroptions);
 
+// Process the form.
 if ($mform->is_cancelled()) {
     redirect($dashboardurl);
 
@@ -88,7 +86,7 @@ if ($mform->is_cancelled()) {
     $data->userid = $USER->id;
 
     // Merge data with course defaults.
-    $company = $DB->get_record('company', array('id' => $companyid));
+    $company = $DB->get_record('company', ['id' => $companyid]);
     if (!empty($company->category)) {
         $data->category = $company->category;
     } else {
@@ -100,6 +98,7 @@ if ($mform->is_cancelled()) {
     // Turn on restricted modules.
     $mergeddata->restrictmodules = 1;
 
+    // Try and create the course.
     if (!$course = create_course($mergeddata, $editoroptions)) {
         $this->verbose("Error inserting a new course in the database!");
         if (!$this->get('ignore_errors')) {
@@ -110,55 +109,52 @@ if ($mform->is_cancelled()) {
     // If licensed course, turn off all enrolments apart from license enrolment as
     // default  Moving this to a separate page.
     if ($data->selfenrol == 0 ) {
-        if ($instances = $DB->get_records('enrol', array('courseid' => $course->id))) {
+        if ($instances = $DB->get_records('enrol', ['courseid' => $course->id])) {
             foreach ($instances as $instance) {
                 $updateinstance = (array) $instance;
-                if ($instance->enrol == 'self') {
-                    $updateinstance['status'] = 0;
-                } else if ($instance->enrol == 'license') {
+                if ($instance->enrol == 'license') {
                     $updateinstance['status'] = 1;
-                } else if ($instance->enrol == 'manual') {
+                } else {
                     $updateinstance['status'] = 0;
                 }
                 $DB->update_record('enrol', $updateinstance);
             }
         }
     } else if ($data->selfenrol == 1 ) {
-        if ($instances = $DB->get_records('enrol', array('courseid' => $course->id))) {
+        // Manual only.
+        if ($instances = $DB->get_records('enrol', ['courseid' => $course->id])) {
             foreach ($instances as $instance) {
                 $updateinstance = (array) $instance;
-                if ($instance->enrol == 'self') {
+                if ($instance->enrol == 'manual') {
                     $updateinstance['status'] = 1;
-                } else if ($instance->enrol == 'license') {
-                    $updateinstance['status'] = 1;
-                } else if ($instance->enrol == 'manual') {
+                } else {
                     $updateinstance['status'] = 0;
                 }
                 $DB->update_record('enrol', $updateinstance);
             }
         }
     } else if ($data->selfenrol == 2 ) {
-        if ($instances = $DB->get_records('enrol', array('courseid' => $course->id))) {
+        // Self or manual.
+        if ($instances = $DB->get_records('enrol', ['courseid' => $course->id])) {
             foreach ($instances as $instance) {
                 $updateinstance = (array) $instance;
-                if ($instance->enrol == 'self') {
+                if ($instance->enrol == 'self' ||
+                    $instance->enrol == 'manual') {
                     $updateinstance['status'] = 1;
-                } else if ($instance->enrol == 'license') {
+                } else {
                     $updateinstance['status'] = 0;
-                } else if ($instance->enrol == 'manual') {
-                    $updateinstance['status'] = 1;
                 }
                 $DB->update_record('enrol', $updateinstance);
             }
         }
     }
 
-    // Associate the company with the course.
-    $company = new company($companyid);
+    // Assign the course to the company.
     // Check if we are a company manager.
-    if ($data->selfenrol != 2 && $DB->get_record('company_users', array('companyid' => $companyid,
-                                                   'userid' => $USER->id,
-                                                   'managertype' => 1))) {
+    if ($data->selfenrol != 2 &&
+        $DB->get_record('company_users', ['companyid' => $companyid,
+                                          'userid' => $USER->id,
+                                          'managertype' => 1])) {
         $company->add_course($course, 0, true);
     } else if ($data->selfenrol == 2) {
         $company->add_course($course, 0, false, true);
@@ -166,17 +162,19 @@ if ($mform->is_cancelled()) {
         $company->add_course($course);
     }
 
+    // Where are we going after this?
     if (isset($data->submitandviewbutton)) {
-        // We are going to the course instead.
-        redirect(new moodle_url('/course/view.php', array('id' => $course->id)), get_string('coursecreatedok', 'block_iomad_company_admin'), null, \core\output\notification::NOTIFY_SUCCESS);
-    } else {
-        redirect($dashboardurl, get_string('coursecreatedok', 'block_iomad_company_admin'), null, \core\output\notification::NOTIFY_SUCCESS);
+        // We are going to the course.
+        $dashboardurl = new moodle_url('/course/view.php', ['id' => $course->id]);
     }
-} else {
-
-    echo $OUTPUT->header();
-
-    $mform->display();
-
-    echo $OUTPUT->footer();
+    redirect($dashboardurl, get_string('coursecreatedok', 'block_iomad_company_admin'), null, notification::NOTIFY_SUCCESS);
 }
+
+// Display the page.
+echo $OUTPUT->header();
+
+// Display the form.
+$mform->display();
+
+// Display the footer.
+echo $OUTPUT->footer();
