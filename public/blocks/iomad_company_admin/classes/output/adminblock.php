@@ -18,35 +18,42 @@
  * Main class for course listing
  *
  * @package    block_iomad_company_admin
- * @copyright  2018 Howard Miller <howardsmiller@gmail.com>
+ * @copyright  2018 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Howard Miller <howardsmiller@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace block_iomad_company_admin\output;
-
-defined('MOODLE_INTERNAL') || die;
 
 use renderable;
 use renderer_base;
 use templatable;
 
 /**
- * Class contains data for course_overview
+ * Main class for course listing
  *
- * @copyright  2017 Howard Miller <howardsmiller@gmail.com>
+ * @package    block_iomad_company_admin
+ * @copyright  2018 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Howard Miller <howardsmiller@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class adminblock implements renderable, templatable {
 
+    /** @var string logo UAR */
     protected $logourl;
 
+    /** @var object company selector */
     protected $companyselect;
 
+    /** @var array list of available tabs */
     protected $tabs;
 
+    /** @var array list of panes */
     protected $panes;
 
     /**
+     * Constructor function
+     *
      * @param string $logourl
      * @param string $companyselect
      * @param array $tabs
@@ -62,10 +69,10 @@ class adminblock implements renderable, templatable {
     /**
      * Export this data so it can be used as the context for a mustache template.
      *
-     * @param \renderer_base $output
-     * @return stdClass
+     * @param renderer_base $output
+     * @return array
      */
-    public function export_for_template(renderer_base $output) {
+    public function export_for_template(renderer_base $output): array {
         return [
             'logourl' => $this->logourl,
             'companyselect' => $this->companyselect,

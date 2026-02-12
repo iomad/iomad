@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard user department select in-place editable class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -26,28 +28,28 @@ namespace block_iomad_company_admin\output;
 use coding_exception;
 use core_user;
 use core_external;
-use context_course;
+use core\output\inplace_editable;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
+ * IOMAD Dashboard user department select in-place editable class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class user_departments_editable extends \core\output\inplace_editable {
+class user_departments_editable extends inplace_editable {
 
     /** @var $context */
     private $context = null;
 
-    /** @var \stdClass[] $coursedepartments */
-    private $coursedepartments;
+    /** @var array $userdepartments */
+    private $userdepartments;
 
-    /** @var \stdClass[] $profiledepartments */
-    private $profiledepartments;
+    /** @var array $departments */
+    private $departments;
 
     /** @var \stdClass[] $viewabledepartments */
     private $viewabledepartments;
@@ -58,16 +60,13 @@ class user_departments_editable extends \core\output\inplace_editable {
     /**
      * Constructor.
      *
-     * @param \stdClass $course The current course
-     * @param \context $context The course context
-     * @param \stdClass $user The current user
-     * @param \stdClass[] $coursedepartments The list of course departments.
-     * @param \stdClass[] $assignabledepartments The list of assignable departments in this course.
-     * @param \stdClass[] $profiledepartments The list of departments that should be visible in a users profile.
-     * @param \stdClass[] $userdepartments The list of user departments.
+     * @param object $company
+     * @param object $context
+     * @param object $user
+     * @param array $userdepartments
+     * @param array $departments The list of assignable departments in this course.
+     * @param array $assignabledepartments
      */
-    protected $userdepartments;
-    protected $departments;
     public function __construct($company, $companycontext, $user, $userdepartments, $departments, $assignabledepartments = null) {
         if (empty($assignabledepartments)) {
             debugging('Constructor for user_departments_editable now needs to be passed the departments available to the manager');
@@ -170,7 +169,7 @@ class user_departments_editable extends \core\output\inplace_editable {
         $alldepartments = $DB->get_records('department', ['company' => $companyid]);
         $parentlevel = company::get_company_parentnode($companyid);
         if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
-            $userlevels = array($parentlevel->id => $parentlevel->id);
+            $userlevels = [$parentlevel->id => $parentlevel->id];
         } else {
             $userlevels = $company->get_userlevel($USER);
         }
@@ -182,12 +181,17 @@ class user_departments_editable extends \core\output\inplace_editable {
 
         $assignabledepartments = company::array_flatten(company::get_department_list($departmenttree[0]));
 
-        $userdepartmentsbyid = $DB->get_records_sql("SELECT d.id, d.name FROM {department} d
-                                                     JOIN {company_users} cu ON (d.id = cu.departmentid AND d.company = cu.companyid)
-                                                     WHERE cu.companyid = :companyid
-                                                     AND cu.userid = :userid
-                                                     ORDER BY d.name",
-                                                     ['companyid' => $companyid, 'userid' => $userid]);
+        $userdepartmentsbyid = $DB->get_records_sql(
+            "SELECT d.id, d.name
+             FROM {department} d
+             JOIN {company_users} cu ON (
+                 d.id = cu.departmentid
+                 AND d.company = cu.companyid
+             )
+             WHERE cu.companyid = :companyid
+             AND cu.userid = :userid
+             ORDER BY d.name",
+            ['companyid' => $companyid, 'userid' => $userid]);
 
         // Set an array where the index is the departmentid.
         $userdepartments = array();
@@ -228,11 +232,13 @@ class user_departments_editable extends \core\output\inplace_editable {
         foreach ($userdepartments as $departmentid => $departmentname) {
             if (isset($userdepartments[$departmentid]) && !isset($departmentstoprocess[$departmentid])) {
                 // Remove them.
-                $DB->delete_records('company_users', ['userid' => $userid, 'companyid' => $company->id, 'departmentid' => $departmentid]);
+                $DB->delete_records('company_users', ['userid' => $userid,
+                                                      'companyid' => $company->id,
+                                                      'departmentid' => $departmentid]);
                 unset($userdepartments[$departmentid]);
             }
         }
-        //  Has the user been removed from all departments?
+        // Has the user been removed from all departments?
         if (empty($userdepartments)) {
             // Assign them to the top level department.
             company::upsert_company_user($userid, $company->id, $parentlevel->id, $managertype, $educator, false);

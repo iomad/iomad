@@ -2,20 +2,20 @@
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public license as published by
-// the Free Software Foundation, either version 3 of the license, or
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public license for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public license
+// You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Course mandatory inplace editable class
+ * IOMAD Dashboard course mandatory inplace editable class
  *
  * @package   block_iomad_company_admin
  * @copyright 2026 Derick Turner
@@ -33,10 +33,8 @@ use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 use renderer_base;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
- * Course mandatory inplace editable class
+ * IOMAD Dashboard course mandatory inplace editable class
  *
  * @package   block_iomad_company_admin
  * @copyright 2026 Derick Turner
@@ -137,7 +135,7 @@ class courses_mandatory_editable extends inplace_editable {
 
         // If this course isn't already in the company_course_options table, add it.
         if (!$currentrec = $DB->get_record('company_course_options', ['companyid' => $companyid, 'courseid' => $courseid])) {
-            $currentrec = (object) ['companyid' =>  $companyid, 'courseid' => $courseid, 'mandatory' => 0];
+            $currentrec = (object) ['companyid' => $companyid, 'courseid' => $courseid, 'mandatory' => 0];
             $currentrec->id = $DB->insert_record('company_course_options', $currentrec);
         }
 

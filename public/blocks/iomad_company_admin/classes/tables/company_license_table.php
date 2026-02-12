@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Base class for the table used by a {@link quiz_attempts_report}.
+ * IOMAD Dashboard company licenses table class
  *
- * @package   local_report_user_license_allocations
+ * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -29,10 +29,19 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/tablelib.php');
 
-use \table_sql;
+use html_writer;
 use local_iomad\iomad;
-use \moodle_url;
+use moodle_url;
+use table_sql;
 
+/**
+ * IOMAD Dashboard company licenses table class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class company_license_table extends table_sql {
 
     /**
@@ -41,11 +50,13 @@ class company_license_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_type($row) {
-        $licensetypes = [0 => get_string('standard', 'block_iomad_company_admin'),
-                         1 => get_string('reusable', 'block_iomad_company_admin'),
-                         2 => get_string('educator', 'block_iomad_company_admin'),
-                         3 => get_string('educatorreusable', 'block_iomad_company_admin'),
-                         4 => get_string('blanket', 'block_iomad_company_admin')];
+        $licensetypes = [
+            0 => get_string('standard', 'block_iomad_company_admin'),
+            1 => get_string('reusable', 'block_iomad_company_admin'),
+            2 => get_string('educator', 'block_iomad_company_admin'),
+            3 => get_string('educatorreusable', 'block_iomad_company_admin'),
+            4 => get_string('blanket', 'block_iomad_company_admin'),
+        ];
 
         return $licensetypes[$row->type];
     }
@@ -56,8 +67,6 @@ class company_license_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_program($row) {
-        global $output;
-
         if (!empty($row->program)) {
             return get_string('yes');
         } else {
@@ -71,8 +80,6 @@ class company_license_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_instant($row) {
-        global $output;
-
         if (!empty($row->instant)) {
             return get_string('yes');
         } else {
@@ -86,41 +93,47 @@ class company_license_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_coursesname($row) {
-        global $OUTPUT, $DB;
+        global $DB;
 
-        $licensecourses = $DB->get_records('companylicense_courses', array('licenseid' => $row->id));
+        // Get all of the license courses.
+        $licensecourses = $DB->get_records('companylicense_courses', ['licenseid' => $row->id]);
+
+        // Set up the return string.
         $coursestring = "";
+        $courselisting = [];
+
+        // Can we see the course links?
         if (is_siteadmin()) {
             $issiteadmin = true;
         } else {
             $issiteadmin = false;
         }
-        $coursestring = "";
-        $first = true;
+
+        // If there are more than 5 courses we want to hide them.
         if (count($licensecourses) > 5) {
-            $coursestring = "<details><summary>" . get_string('view') . "</summary>";
+            $coursestring = html_writer::start_tag('details') .
+                            html_writer::tag('summary', get_string('view'));
         }
+
+        // Process the courses.
         foreach ($licensecourses as $licensecourse) {
-            $coursename = $DB->get_record('course', array('id' => $licensecourse->courseid));
-            if ($first) {
-                if ($issiteadmin) {
-                    $coursestring .= "<a href='".new moodle_url('/course/view.php',
-                                       array('id' => $licensecourse->courseid))."'>".format_string($coursename->fullname, true, 1)."</a>";
-                    $first = false;
-                } else {
-                    $coursestring .= format_string($coursename->fullname, true, 1);
-                }
+            $coursename = $DB->get_record('course', ['id' => $licensecourse->courseid]);
+            $courseurl = new moodle_url('/course/view.php', ['id' => $licensecourse->courseid]);
+
+            // Set up the course listing array.
+            if ($issiteadmin) {
+                $courselisting[] = html_writer::tag('a', format_string($coursename->fullname, true, 1), ['href' => $courseurl]);
             } else {
-                if ($issiteadmin) {
-                    $coursestring .= ",<br><a href='".new moodle_url('/course/view.php',
-                                   array('id' => $licensecourse->courseid))."'>".format_string($coursename->fullname, true, 1)."</a>";
-                } else {
-                    $coursestring .= ",<br>". format_string($coursename->fullname, true, 1);
-                }
+                $courselisting[] = format_string($coursename->fullname, true, 1);
             }
         }
+
+        // Add the courses to the return string.
+        $coursestring .= implode(',' . html_writer::empty_tag('br'), $courselisting);
+
+        // Close off HTML if there are more than 5 courses.
         if (count($licensecourses) > 5) {
-            $coursestring .= "</details>";
+            $coursestring .= html_writer::end_tag('details');
         }
 
         return $coursestring;
@@ -132,7 +145,7 @@ class company_license_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_expirydate($row) {
-        global $CFG, $output;
+        global $CFG;
 
         return userdate($row->expirydate, get_config('local_iomad', 'date_format'));
     }
@@ -143,7 +156,6 @@ class company_license_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_validlength($row) {
-        global $output;
 
         // Deal with valid length if a subscription.
         if ($row->type == 1) {
@@ -159,9 +171,10 @@ class company_license_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_used($row) {
-        global $DB, $output;
+        global $DB;
 
-        $licensecourses = $DB->get_records('companylicense_courses', array('licenseid' => $row->id));
+        // Get the license courses.
+        $licensecourses = $DB->get_records('companylicense_courses', ['licenseid' => $row->id]);
 
         // Deal with allocation numbers if a program.
         if (!empty($row->program)) {
@@ -177,7 +190,6 @@ class company_license_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_companyname($row) {
-
         return format_string($row->companyname);
     }
 
@@ -187,8 +199,9 @@ class company_license_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_actions($row) {
-        global $OUTPUT, $DB, $USER, $params, $companycontext, $gotchildren, $departmentid;
+        global $DB, $USER, $companycontext, $gotchildren, $departmentid;
 
+        // Get the string values.
         $stredit   = get_string('edit');
         $strdelete = get_string('delete');
         $strallocate = get_string('licenseallocate', 'block_iomad_company_admin');
@@ -198,46 +211,86 @@ class company_license_table extends table_sql {
         $deletebutton = "";
         $editbutton = "";
         $allocatebutton = "";
-
-    // Set up the edit buttons.
-    if ((iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext) ||
-        iomad::has_capability('block/iomad_company_admin:edit_my_licenses', $companycontext) ||
-        iomad::has_capability('block/iomad_company_admin:split_my_licenses', $companycontext)) &&
-        $row->used < $row->allocation &&
-        $gotchildren) {
-        $splitbutton = "<a class='btn btn-primary' href='" . new moodle_url('company_license_edit_form.php',
-                       array("parentid" => $row->id)) . "'>$strsplit</a>";
-    } else {
         $splitbutton = "";
-    }
+        $allocatebutton = "";
+
+        // Set up the split button.
+        if ((iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext) ||
+                iomad::has_capability('block/iomad_company_admin:edit_my_licenses', $companycontext) ||
+                iomad::has_capability('block/iomad_company_admin:split_my_licenses', $companycontext)) &&
+            $row->used < $row->allocation &&
+            $gotchildren) {
+            $spliturl = new moodle_url('company_license_edit_form.php', ["parentid" => $row->id]);
+            $splitbutton = html_writer::tag(
+                'a',
+                $strsplit,
+                [
+                    'class' => 'btn btn-primary',
+                    'href' => $spliturl,
+                ]
+            );
+        }
+
+        // Set up the delete and edit buttons.
         if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext) ||
             (iomad::has_capability('block/iomad_company_admin:edit_my_licenses', $companycontext) && !empty($row->parentid))) {
-                // Is this above the user's company allocation?
-                if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext) ||
-                    $DB->get_record_sql("SELECT id FROM {company_users}
-                                         WHERE userid = :userid
-                                         AND companyid = (
-                                            SELECT companyid FROM {companylicense}
-                                            WHERE id = :parentid)",
-                                         array('userid' => $USER->id,
-                                               'parentid' => $row->parentid))) {
-                $deletebutton = "<a class='btn btn-primary' href='".
-                                 new moodle_url('company_license_list.php', array('delete' => $row->id,
-                                                                                  'sesskey' => sesskey())) ."'>$strdelete</a>";
-                $editbutton = "<a class='btn btn-primary' href='" . new moodle_url('company_license_edit_form.php',
-                               array("licenseid" => $row->id, 'departmentid' => $departmentid)) . "'>$stredit</a>";
+            // Is this above the user's company allocation?
+            if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext) ||
+                $DB->get_record_sql(
+                    "SELECT id FROM {company_users}
+                     WHERE userid = :userid
+                     AND companyid = (
+                         SELECT companyid FROM {companylicense}
+                         WHERE id = :parentid)",
+                    [
+                        'userid' => $USER->id,
+                        'parentid' => $row->parentid,
+                    ]
+                )) {
+
+                $deleteurl = new moodle_url('company_license_list.php', [
+                    'delete' => $row->id,
+                    'sesskey' => sesskey(),
+                ]);
+                $editurl = new moodle_url('company_license_edit_form.php', [
+                    'license' => $row->id,
+                    'departmentid' => $departmentid,
+                ]);
+
+                $deletebutton = html_writer::tag(
+                    'a',
+                    $strdelete,
+                    [
+                        'class' => 'btn btn-primary',
+                        'href' => $deleteurl,
+                    ]
+                );
+                $editbutton = html_writer::tag(
+                    'a',
+                    $stredit,
+                    [
+                        'class' => 'btn btn-primary',
+                        'href' => $editurl,
+                    ]
+                );
             }
         }
 
+        // Set up the allocate button
         if (iomad::has_capability('block/iomad_company_admin:allocate_licenses', $companycontext)) {
-            $allocatebutton = "<a class='btn btn-primary' href='".
-                                 new moodle_url('company_license_users_form.php', array('licenseid' => $row->id)) ."'>$strallocate</a>";
-        } else {
-            $allocatebutton = "";
+            $allocateurl = new moodle_url('company_license_users_form.php', ['licenseid' => $row->id]);
+            $allocatebutton = html_writer::tag(
+                'a',
+                $strallocate,
+                [
+                    'class' => 'btn btn-primary',
+                    'href' => $allocateurl,
+                ]
+            );
         }
 
         $actionsoutput = $editbutton . ' ' . $splitbutton . ' ' . $deletebutton . ' ' . $allocatebutton;
-        return $actionsoutput;
 
+        return $actionsoutput;
     }
 }

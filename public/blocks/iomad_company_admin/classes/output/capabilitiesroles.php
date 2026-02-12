@@ -18,13 +18,12 @@
  * Output class for company capabilities role select
  *
  * @package    block_iomad_company_admin
- * @copyright  2019 Howard Miller <howardsmiller@gmail.com>
+ * @copyright  2019 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Howard Miller <howardsmiller@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace block_iomad_company_admin\output;
-
-defined('MOODLE_INTERNAL') || die;
 
 use renderable;
 use renderer_base;
@@ -33,28 +32,39 @@ use templatable;
 /**
  * Class contains data for company capabilties role select
  *
- * @copyright  2019 Howard Miller <howardsmiller@gmail.com>
+ * @copyright  2019 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Howard Miller <howardsmiller@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class capabilitiesroles implements renderable, templatable {
 
+    /** @var array list of roles */
     protected $roles;
 
+    /** @var int company ID */
     protected $companyid;
 
+    /** @var int template ID */
     protected $templateid;
 
+    /** @var string link URL */
     protected $linkurl;
 
+    /** @var string save URL */
     protected $saveurl;
 
+    /** @var string manage URL */
     protected $manageurl;
 
+    /** @var string back URL */
     protected $backurl;
- 
+
+    /** @var bool template was saved */
     protected $templatesaved;
 
     /**
+     * Constructor function
+     *
      * @param array $roles
      * @param int $companyid
      * @param int $templateid
@@ -78,9 +88,9 @@ class capabilitiesroles implements renderable, templatable {
      * Export this data so it can be used as the context for a mustache template.
      *
      * @param \renderer_base $output
-     * @return stdClass
+     * @return array
      */
-    public function export_for_template(renderer_base $output) {
+    public function export_for_template(renderer_base $output): array {
         global $DB;
 
         // Get company info for heading.

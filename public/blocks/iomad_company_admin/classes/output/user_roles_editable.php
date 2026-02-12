@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard user role select in-place editable class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2022 Derick Turner
  * @author    Derick Turner
@@ -24,21 +26,21 @@
 namespace block_iomad_company_admin\output;
 
 use coding_exception;
-use context_course;
 use core_user;
 use core_external;
+use core\output\inplace_editable;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
+ * IOMAD Dashboard user role select in-place editable class
+ *
  * @package   block_iomad_company_admin
- * @copyright 2021 Derick Turner
+ * @copyright 2022 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class user_roles_editable extends \core\output\inplace_editable {
+class user_roles_editable extends inplace_editable {
 
     /** @var $context */
     private $context = null;
@@ -56,15 +58,13 @@ class user_roles_editable extends \core\output\inplace_editable {
     private $assignableroles;
 
     /**
-     * Constructor.
+     * Undocumented function
      *
-     * @param \stdClass $course The current course
-     * @param \context $context The course context
-     * @param \stdClass $user The current user
-     * @param \stdClass[] $courseroles The list of course roles.
-     * @param \stdClass[] $assignableroles The list of assignable roles in this course.
-     * @param \stdClass[] $profileroles The list of roles that should be visible in a users profile.
-     * @param \stdClass[] $userroles The list of user roles.
+     * @param object $company
+     * @param object $companycontext
+     * @param object $user
+     * @param int $currentvalue
+     * @param array $assignableroles
      */
     public function __construct($company, $companycontext, $user, $currentvalue, $assignableroles = null) {
         if (empty($assignableroles)) {
@@ -180,7 +180,9 @@ class user_roles_editable extends \core\output\inplace_editable {
                 } else {
                     unset($usertypeselect[10]);
                 }
-                $usertypeselect[11] = get_string('companymanager', 'block_iomad_company_admin') . ' + ' . get_string('educator', 'block_iomad_company_admin');
+                $usertypeselect[11] = get_string('companymanager', 'block_iomad_company_admin') .
+                                      ' + ' .
+                                      get_string('educator', 'block_iomad_company_admin');
             }
             if (iomad::has_capability('block/iomad_company_admin:assign_department_manager', $companycontext)) {
                 if ($canassigneducators) {
@@ -188,7 +190,9 @@ class user_roles_editable extends \core\output\inplace_editable {
                 } else {
                     unset($usertypeselect[20]);
                 }
-                $usertypeselect[21] = get_string('departmentmanager', 'block_iomad_company_admin') . ' + ' . get_string('educator', 'block_iomad_company_admin');
+                $usertypeselect[21] = get_string('departmentmanager', 'block_iomad_company_admin') .
+                                      ' + ' .
+                                      get_string('educator', 'block_iomad_company_admin');
             }
             if (iomad::has_capability('block/iomad_company_admin:assign_company_reporter', $companycontext)) {
                 if ($canassigneducators) {
@@ -196,7 +200,9 @@ class user_roles_editable extends \core\output\inplace_editable {
                 } else {
                     unset($usertypeselect[40]);
                 }
-                $usertypeselect[41] = get_string('companyreporter', 'block_iomad_company_admin') . ' + ' . get_string('educator', 'block_iomad_company_admin');
+                $usertypeselect[41] = get_string('companyreporter', 'block_iomad_company_admin') .
+                                     ' + ' .
+                                     get_string('educator', 'block_iomad_company_admin');
             }
         }
 
@@ -205,7 +211,15 @@ class user_roles_editable extends \core\output\inplace_editable {
         }
 
         // Remove company manager roles if the user is not elligible.
-        $userdepartments = array_keys($DB->get_records('company_users', ['companyid' => $companyid, 'userid' => $userid], '', 'departmentid'));
+        $userdepartments = array_keys($DB->get_records(
+            'company_users',
+            [
+                'companyid' => $companyid,
+                'userid' => $userid,
+            ],
+            '',
+            'departmentid'
+        ));
         if (count($userdepartments) > 1 ||
             $userdepartments[0] != $parentlevel->id) {
             unset($usertypeselect[10]);

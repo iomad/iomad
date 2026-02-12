@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard default class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -22,8 +24,6 @@
  */
 
 namespace block_iomad_company_admin;
-
-defined('MOODLE_INTERNAL') || die;
 
 use context_system;
 use block_iomad_company_admin\forms\{
@@ -33,21 +33,30 @@ use block_iomad_company_admin\forms\{
     company_iomadsaml2_form,
     company_iomadsaml2_mappings_form,
     company_mfa_form,
-    company_smtp_options_form};
+    company_smtp_options_form,
+    submit_user_department_form};
 
+/**
+ * IOMAD Dashboard default class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class iomad_company_admin {
 
     /**
      * Get the roles for the company_capabilties screen
      */
-    public static function get_roles() {
+    public static function get_roles(): array {
         global $DB;
 
         $roles = $DB->get_records_sql("SELECT r.* FROM {role} r
                                        JOIN {role_context_levels} rcl ON r.id = rcl.roleid
                                        WHERE rcl.contextlevel = :contextlevel
                                        ORDER BY name",
-                                       ['contextlevel' => CONTEXT_COMPANY]);
+                                      ['contextlevel' => CONTEXT_COMPANY]);
 
         return $roles;
     }
@@ -58,37 +67,35 @@ class iomad_company_admin {
      * so we can fish them out of the role_capabilities table
      * directly)
      */
-    public static function get_iomad_capabilities($roleid, $companyid) {
+    public static function get_iomad_capabilities(int $roleid, int $companyid) {
         global $DB;
 
-        // We need capabilities defined in the site context
+        // We need capabilities defined in the site context.
         $context = context_system::instance();
-        $capabilities = $DB->get_records('role_capabilities', array('roleid' => $roleid, 'contextid' => $context->id));
+        $capabilities = $DB->get_records('role_capabilities', ['roleid' => $roleid, 'contextid' => $context->id]);
 
-        // Filter out caps. Only want 'local/report' and ones containing 'iomad'
-        $filtered_capabilities = array();
+        // Filter out caps. Only want 'local/report' and ones containing 'iomad'.
+        $filteredcapabilities = [];
         foreach ($capabilities as $capability) {
-            if ((strpos($capability->capability, 'local/report')===false)
-                    && (strpos($capability->capability, 'iomad')===false)
-                    && (strpos($capability->capability, 'local/email')===false)
+            if ((strpos($capability->capability, 'local/report') === false)
+                    && (strpos($capability->capability, 'iomad') === false)
+                    && (strpos($capability->capability, 'local/email') === false)
                     ) {
                 continue;
             }
 
-            // add the iomad restriction info
-            if ($restriction = $DB->get_record('company_role_restriction', array(
-                            'roleid' => $roleid,
-                            'companyid' => $companyid,
-                            'capability' => $capability->capability
-            ))) {
+            // Add the iomad restriction info.
+            if ($DB->get_record('company_role_restriction', ['roleid' => $roleid,
+                                                             'companyid' => $companyid,
+                                                             'capability' => $capability->capability])) {
                 $capability->iomad_restriction = true;
             } else {
                 $capability->iomad_restriction = false;
             }
-            $filtered_capabilities[$capability->id] = $capability;
+            $filteredcapabilities[$capability->id] = $capability;
         }
 
-        return $filtered_capabilities;
+        return $filteredcapabilities;
     }
 
     /**
@@ -97,48 +104,50 @@ class iomad_company_admin {
      * so we can fish them out of the role_capabilities table
      * directly)
      */
-    public static function get_iomad_template_capabilities($roleid, $templateid) {
+    public static function get_iomad_template_capabilities(int $roleid, int $templateid): array {
         global $DB;
 
-        // We need capabilities defined in the site context
+        // We need capabilities defined in the site context.
         $context = context_system::instance();
-        $capabilities = $DB->get_records('role_capabilities', array('roleid' => $roleid, 'contextid' => $context->id));
+        $capabilities = $DB->get_records('role_capabilities', ['roleid' => $roleid, 'contextid' => $context->id]);
 
-        // Filter out caps. Only want 'local/report' and ones containing 'iomad'
-        $filtered_capabilities = array();
+        // Filter out caps. Only want 'local/report' and ones containing 'iomad'.
+        $filteredcapabilities = [];
         foreach ($capabilities as $capability) {
-            if ((strpos($capability->capability, 'local/report')===false)
-                    && (strpos($capability->capability, 'iomad')===false)
-                    && (strpos($capability->capability, 'local/email')===false)
+            if ((strpos($capability->capability, 'local/report') === false)
+                    && (strpos($capability->capability, 'iomad') === false)
+                    && (strpos($capability->capability, 'local/email') === false)
                     ) {
                 continue;
             }
 
-            // add the iomad restriction info
-            if ($restriction = $DB->get_record('company_role_templates_caps', array(
-                            'roleid' => $roleid,
-                            'templateid' => $templateid,
-                            'capability' => $capability->capability
-            ))) {
+            // Add the iomad restriction info.
+            if ($DB->get_record('company_role_templates_caps', ['roleid' => $roleid,
+                                                                'templateid' => $templateid,
+                                                                'capability' => $capability->capability])) {
                 $capability->iomad_restriction = true;
             } else {
                 $capability->iomad_restriction = false;
             }
-            $filtered_capabilities[$capability->id] = $capability;
+            $filteredcapabilities[$capability->id] = $capability;
         }
 
-        return $filtered_capabilities;
+        return $filteredcapabilities;
     }
 
     /**
      * Rearrange list of companies into parent/child order
+     *
      * @param array $companies complete list of companies
      * @param array $newlist (partial) ordered list
      * @param int $parentid
      * @param int $depth
      * @return array
      */
-    public static function order_companies_by_parent($companies, &$newlist = [], $parentid = 0, $depth = 0) {
+    public static function order_companies_by_parent(array $companies,
+                                                     array &$newlist = [],
+                                                     int $parentid = 0,
+                                                     int $depth = 0): array {
 
         foreach ($companies as $company) {
             $companyid = $company->id;
@@ -155,38 +164,6 @@ class iomad_company_admin {
         }
 
         return $newlist;
-    }
-
-    /**
-     * Serve the new group form as a fragment.
-     *
-     * @param array $args List of named arguments for the fragment loader.
-     * @return string
-     */
-    function output_fragment_new_submit_user_department_form($args) {
-        global $CFG;
-
-        $args = (object) $args;
-        $context = $args->context;
-
-        $formdata = [];
-        $error = new stdClass();
-
-        list($ignored, $course) = get_context_info_array($context->id);
-
-        //require_capability('block/report_error:reporterror', $context);
-
-        $mform = new \block_iomad_company_admin\forms\submit_user_department_form(null, [], 'post', '', null, true, $formdata);
-
-        // Used to set the courseid.
-        //$mform->set_data(['courseid' => $course->id]);
-
-        if (!empty($args->jsonformdata)) {
-            // If we were passed non-empty form data we want the mform to call validation functions and show errors.
-            $mform->is_validated();
-        }
-
-        return $mform->render();
     }
 
     /**
@@ -320,7 +297,7 @@ class iomad_company_admin {
                 if ($authoption == 'auth_instructions') {
                     $formdata->$authoption = [
                         'text' => $CFG->$field,
-                        'format' => 1
+                        'format' => 1,
                     ];
                 } else {
                     $formdata->$authoption = $CFG->$field;
@@ -368,7 +345,7 @@ class iomad_company_admin {
         // Set up the form.
         $mform = new company_smtp_options_form($PAGE->url);
 
-        // Set the form data
+        // Set the form data.
         $mform->set_data($formdata);
 
         // Return the form.
@@ -587,8 +564,9 @@ class iomad_company_admin {
             foreach ($authoptions as $authoption) {
                 $field = $authoption . $postfix;
                 if ($authoption == 'auth_instructions') {
-                    if (!empty($data->$authoption['text'])) {
-                        set_config($field, $data->$authoption['text']);
+                    if (!empty($data->{$authoption}['text'])) {
+                        $value = $data->{$authoption}['text'];
+                        set_config($field, $value);
                     } else {
                         set_config($field, '');
                     }

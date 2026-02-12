@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard course enrolment expire after in-place editable class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -25,17 +27,14 @@ namespace block_iomad_company_admin\output;
 
 use block_iomad_company_admin\event\company_course_updated;
 use coding_exception;
-use context_course;
 use core\output\inplace_editable;
-use core_user;
 use core_external;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
-use render_base;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
+ * IOMAD Dashboard course enrolment expire after in-place editable class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -94,7 +93,6 @@ class enrolment_expireafter_editable extends inplace_editable {
     public function export_for_template(renderer_base $output) {
         $currentvalue = json_decode($this->value);
 
-        
         $this->value = $currentvalue;
         $this->displayvalue = $currentvalue;
 
@@ -139,10 +137,12 @@ class enrolment_expireafter_editable extends inplace_editable {
 
         // Fire an event for this.
         $eventother = ['iomadcourse' => (array) $courserec];
-        $event = company_course_updated::create(array('context' => $companycontext,
-                                                      'objectid' => $courseid,
-                                                      'userid' => $USER->id,
-                                                      'other' => $eventother));
+        $event = company_course_updated::create([
+            'context' => $companycontext,
+            'objectid' => $courseid,
+            'userid' => $USER->id,
+            'other' => $eventother,
+        ]);
         $event->trigger();
 
         return new self($company, $companycontext, $courserec, $expireafter);

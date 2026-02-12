@@ -18,13 +18,12 @@
  * Main class for course listing
  *
  * @package    block_iomad_company_admin
- * @copyright  2018 Howard Miller <howardsmiller@gmail.com>
+ * @copyright  2018 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Howard Miller <howardsmiller@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace block_iomad_company_admin\output;
-
-defined('MOODLE_INTERNAL') || die;
 
 use renderable;
 use renderer_base;
@@ -33,14 +32,18 @@ use templatable;
 /**
  * Class contains data for editcompanies filter/form
  *
- * @copyright  2018 Howard Miller <howardsmiller@gmail.com>
+ * @copyright  2018 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Howard Miller <howardsmiller@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class editcompanies implements renderable, templatable {
 
+    /** @var array params */
     protected $params = [];
 
     /**
+     * Constructor function
+     *
      * @param array $params
      */
     public function __construct($params) {
@@ -53,7 +56,7 @@ class editcompanies implements renderable, templatable {
      * @param \renderer_base $output
      * @return stdClass
      */
-    public function export_for_template(renderer_base $output) {
+    public function export_for_template(renderer_base $output): array {
         return [
             'form' => $this->params['form'],
             'table' => $this->params['table'],
@@ -62,5 +65,4 @@ class editcompanies implements renderable, templatable {
             'companycountplural' => $this->params['companycountplural'],
         ];
     }
-
 }
