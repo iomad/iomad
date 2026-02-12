@@ -2,44 +2,43 @@
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public autoenrol as published by
-// the Free Software Foundation, either version 3 of the autoenrol, or
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public autoenrol for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public autoenrol
-// along with Moodle.  If not, see <http://www.gnu.org/autoenrols/>.
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard courses autoenrolment in-place editable class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @autoenrol   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace block_iomad_company_admin\output;
 
 use block_iomad_company_admin\event\company_course_updated;
-use context_course;
 use core_external;
-use core_user;
 use coding_exception;
 use core\output\inplace_editable;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
-use render_base;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
+ * IOMAD Dashboard courses autoenrolment in-place editable class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @autoenrol   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class courses_autoenrol_editable extends inplace_editable {
 
@@ -130,20 +129,21 @@ class courses_autoenrol_editable extends inplace_editable {
         }
 
         if (!$currentrec = $DB->get_record('company_course_options', ['companyid' => $companyid, 'courseid' => $courseid])) {
-            $currentrec = (object) ['companyid' =>  $companyid, 'courseid' => $courseid, 'autoenrol' => 0];
+            $currentrec = (object) ['companyid' => $companyid, 'courseid' => $courseid, 'autoenrol' => 0];
             $currentrec->id = $DB->insert_record('company_course_options', $currentrec);
         }
 
         // Process changes.
         $DB->set_field('company_course_options', 'autoenrol', $autoenrol, ['id' => $currentrec->id]);
 
-
         // Fire an event for this.
         $eventother = ['iomadcourse' => (array) $courserec];
-        $event = company_course_updated::create(array('context' => $companycontext,
-                                                      'objectid' => $courseid,
-                                                      'userid' => $USER->id,
-                                                      'other' => $eventother));
+        $event = company_course_updated::create([
+            'context' => $companycontext,
+            'objectid' => $courseid,
+            'userid' => $USER->id,
+            'other' => $eventother,
+        ]);
         $event->trigger();
 
         return new self($company, $companycontext, $courserec, $autoenrol);

@@ -24,8 +24,6 @@
 
 namespace block_iomad_company_admin\output;
 
-defined('MOODLE_INTERNAL') || die;
-
 use renderable;
 use renderer_base;
 use templatable;
@@ -39,9 +37,15 @@ use local_iomad\company_user;
  */
 class full_companies_select implements renderable, templatable {
 
+    /** @var array params */
     protected $params = [];
 
+    /** @var string search */
+    protected $search = '';
+
     /**
+     * Constructor function
+     *
      * @param array $params
      */
     public function __construct($params) {
@@ -51,12 +55,11 @@ class full_companies_select implements renderable, templatable {
     /**
      * Export this data so it can be used as the context for a mustache template.
      *
-     * @param renderer_base $output
-     * @return stdClass
+     * @param \renderer_base $output
+     * @return object
      */
-    public function export_for_template(renderer_base $output) {
+    public function export_for_template(renderer_base $output): object {
         $mycompanies = company_user::get_all_user_companies($this->search);
         return $mycompanies;
     }
-
 }

@@ -15,16 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Output class for company capabilities 
+ * Output class for company capabilities
  *
  * @package    block_iomad_company_admin
- * @copyright  2019 Howard Miller <howardsmiller@gmail.com>
+ * @copyright  2019 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Howard Miller <howardsmiller@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace block_iomad_company_admin\output;
-
-defined('MOODLE_INTERNAL') || die;
 
 use renderable;
 use renderer_base;
@@ -32,24 +31,33 @@ use templatable;
 use local_iomad\iomad;
 
 /**
- * Class contains data for company capabilties 
+ * Output class for company capabilities
  *
- * @copyright  2019 Howard Miller <howardsmiller@gmail.com>
+ * @package    block_iomad_company_admin
+ * @copyright  2019 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Howard Miller <howardsmiller@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class capabilities implements renderable, templatable {
 
+    /** @var array list of capabilities */
     protected $capabilities;
 
+    /** @var int role ID */
     protected $roleid;
 
+    /** @var int company ID */
     protected $companyid;
 
+    /** @var int template ID */
     protected $templateid;
 
+    /** @var string link URL */
     protected $linkurl;
 
     /**
+     * Constructor function
+     *
      * @param array $capabilities
      * @param int $roleid
      * @param int $companyid
@@ -73,13 +81,13 @@ class capabilities implements renderable, templatable {
      * Export this data so it can be used as the context for a mustache template.
      *
      * @param \renderer_base $output
-     * @return stdClass
+     * @return array
      */
-    public function export_for_template(renderer_base $output) {
+    public function export_for_template(renderer_base $output): array {
         global $DB;
 
-        // Role info
-        $role = $DB->get_record('role', array('id' => $this->roleid), '*', MUST_EXIST);
+        // Role info.
+        $role = $DB->get_record('role', ['id' => $this->roleid], '*', MUST_EXIST);
 
         return [
             'role' => $role,
@@ -88,5 +96,4 @@ class capabilities implements renderable, templatable {
             'linkurl' => $this->linkurl,
         ];
     }
-
 }

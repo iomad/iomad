@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard course is licensed in-place editable class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -25,17 +27,15 @@ namespace block_iomad_company_admin\output;
 
 use block_iomad_company_admin\event\company_course_updated;
 use coding_exception;
-use context_course;
 use core\output\inplace_editable;
-use core_user;
 use core_external;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 use renderer_base;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
+ * IOMAD Dashboard course is licensed in-place editable class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -137,7 +137,7 @@ class courses_license_editable extends inplace_editable {
 
         if (empty($licensed) || $licensed == 3) {
             // Changing to manual enrolment type only.
-            if ($instances = $DB->get_records('enrol', array('courseid' => $courseid))) {
+            if ($instances = $DB->get_records('enrol', ['courseid' => $courseid])) {
                 foreach ($instances as $instance) {
                     $updateinstance = (array) $instance;
                     if ($licensed == 0) {
@@ -158,7 +158,7 @@ class courses_license_editable extends inplace_editable {
             }
         } else {
             // Changing to license enrolment type only.
-            if ($instances = $DB->get_records('enrol', array('courseid' => $courseid))) {
+            if ($instances = $DB->get_records('enrol', ['courseid' => $courseid])) {
                 $gotlicense = false;
                 foreach ($instances as $instance) {
                     $updateinstance = (array) $instance;
@@ -171,15 +171,22 @@ class courses_license_editable extends inplace_editable {
                     $DB->update_record('enrol', $updateinstance);
                 }
                 if (!$gotlicense) {
-                    $courserecord = $DB->get_record('course', array('id' => $courseid));
+                    $courserecord = $DB->get_record('course', ['id' => $courseid]);
                     $plugin = enrol_get_plugin('license');
-                    $plugin->add_instance($courserecord, array('status' => 0,
-                                                               'name' => '',
-                                                               'password' => null,
-                                                               'customint1' => 0,
-                                                               'customint2' => 0,
-                    'customint3' => 0, 'customint4' => 0, 'customtext1' => '',
-                    'roleid' => 5, 'enrolperiod' => 0, 'enrolstartdate' => 0, 'enrolenddate' => 0));
+                    $plugin->add_instance($courserecord, [
+                        'status' => 0,
+                        'name' => '',
+                        'password' => null,
+                        'customint1' => 0,
+                        'customint2' => 0,
+                        'customint3' => 0,
+                        'customint4' => 0,
+                        'customtext1' => '',
+                        'roleid' => 5,
+                        'enrolperiod' => 0,
+                        'enrolstartdate' => 0,
+                        'enrolenddate' => 0,
+                    ]);
                 }
             }
         }
@@ -194,13 +201,14 @@ class courses_license_editable extends inplace_editable {
         // Process changes.
         $DB->set_field('iomad_courses', 'licensed', $licensevalue, ['courseid' => $courseid]);
 
-
         // Fire an event for this.
         $eventother = ['iomadcourse' => (array) $courserec];
-        $event = company_course_updated::create(array('context' => $companycontext,
-                                                      'objectid' => $courseid,
-                                                      'userid' => $USER->id,
-                                                      'other' => $eventother));
+        $event = company_course_updated::create([
+            'context' => $companycontext,
+            'objectid' => $courseid,
+            'userid' => $USER->id,
+            'other' => $eventother,
+        ]);
         $event->trigger();
 
         return new self($company, $companycontext, $courserec, $licensed);

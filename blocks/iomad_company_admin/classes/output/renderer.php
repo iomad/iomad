@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard default renderer class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,9 +25,6 @@
 
 namespace block_iomad_company_admin\output;
 
-defined('MOODLE_INTERNAL') || die();
-
-use context_system;
 use html_writer;
 use html_table;
 use local_iomad\{company, iomad};
@@ -34,6 +33,14 @@ use moodle_url;
 use plugin_renderer_base;
 use single_select;
 
+/**
+ * IOMAD Dashboard default renderer class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class renderer extends plugin_renderer_base {
 
     /**
@@ -42,23 +49,44 @@ class renderer extends plugin_renderer_base {
     public function role_templates($templates, $backlink) {
         global $DB;
 
-        // get heading
-        $out = '<h3>' . get_string('roletemplates', 'block_iomad_company_admin') . '</h3>';
+        // Get heading.
+        $out = html_writer::tag('h3', get_string('roletemplates', 'block_iomad_company_admin'));
 
-        $out .= '<a class="btn btn-primary" href="'.$backlink.'">' .
-                                           get_string('back') . '</a>';
+        $out .= html_writer::tag(
+            'a',
+            get_string('back'),
+            [
+                'class' => 'btn btn-primary',
+                'href' => $backlink,
+            ]
+        );
         $table = new html_table();
         foreach ($templates as $template) {
             $deletelink = new moodle_url('/blocks/iomad_company_admin/company_capabilities.php',
-                                          array('templateid' => $template->id,
+                                          ['templateid' => $template->id,
                                                 'action' => 'delete',
-                                                'sesskey' => sesskey()));
+                                                'sesskey' => sesskey()]);
             $editlink = new moodle_url('/blocks/iomad_company_admin/company_capabilities.php',
-                                        array('templateid' => $template->id, 'action' => 'edit'));
-            $row = array($template->name, '<a class="btn btn-primary" href="'.$deletelink.'">' .
-                                           get_string('deleteroletemplate', 'block_iomad_company_admin') . '</a> ' .
-                                           '<a class="btn btn-primary" href="'.$editlink.'">' .
-                                           get_string('editroletemplate', 'block_iomad_company_admin') . '</a>');
+                                        ['templateid' => $template->id, 'action' => 'edit']);
+            $row = [
+                $template->name,
+                html_writer::tag(
+                    'a',
+                    get_string('deleteroletemplate', 'block_iomad_company_admin'),
+                 [
+                    'class' => 'btn btn-primary',
+                    'href' => $deletelink,
+                    ]
+                    ) .
+                html_writer::tag(
+                        'a',
+                        get_string('editroletemplate', 'block_iomad_company_admin'),
+                        [
+                            'class' => 'btn btn-primary',
+                            'href' => $editlink,
+                        ]
+                    ),
+                ];
 
             $table->data[] = $row;
         }
@@ -96,33 +124,50 @@ class renderer extends plugin_renderer_base {
      */
     private function department_leaf($leaf, $depth, $selected) {
         $haschildren = !empty($leaf->children);
-        $style = 'style="margin-left: ' . $depth * 5 . 'px;"';
+        $style = 'margin-left: ' . $depth * 5 . 'px;';
         $class = 'tree_item';
         $aria = '';
         if ($haschildren) {
             $class .= ' haschildren';
-            $aria = 'aria-expanded="false"';
+            $aria = 'false';
         } else {
             $class .= ' nochildren';
         }
         if ($leaf->id == $selected) {
-            $aria_selected = 'aria-selected="true"';
-            $name = '<b>' . $leaf->name . ' ' . $leaf->id . ' ' . $selected . '</b>';
+            $ariaselected = 'true';
+            $aria = 'true';
+            $name = html_writer::tag('b', format_string($leaf->name));
         } else {
-            $aria_selected = 'aria-selected="false"';
-            $name = $leaf->name . ' ' . $leaf->id . ' ' . $selected;
+            $ariaselected = 'false';
+            $name = format_string($leaf->name);
         }
-        $data = 'data-id="' . $leaf->id . '"';
-        $html = '<div role="treeitem" ' . $aria . ' ' . $aria_selected . ' class="' . $class .'" ' . $style . '>';
-        $html .= '<span class="tree_dept_name" ' . $data . '>' . $leaf->name . '</span>';
+        $html = html_writer::start_tag(
+            'div',
+            [
+                'role' => 'treeitem',
+                'aria-selected' => $ariaselected,
+                'aria-expanded' => $aria,
+                'class' => $class,
+                'style' => $style,
+
+            ]);
+
+        $html .= html_writer::tag(
+            'span',
+            $name,
+            [
+                'class' => 'tree_dept_name',
+                'data-id' => $leaf->id,
+            ]
+        );
         if ($haschildren) {
-            $html .= '<div role="group">';
-            foreach($leaf->children as $child) {
-                $html .= $this->department_leaf($child, $depth+1, $selected);
+            $html .= html_writer::start_tag('div', ['role' => 'group']);
+            foreach ($leaf->children as $child) {
+                $html .= $this->department_leaf($child, $depth + 1, $selected);
             }
-            $html .= '</div>';
+            $html .= html_writer::end_tag('div');
         }
-        $html .= '</div>';
+        $html .= html_writer::end_tag('div');
 
         return $html;
     }
@@ -134,13 +179,13 @@ class renderer extends plugin_renderer_base {
      * @return string HTML markup
      */
     public function department_tree($trees, $selected) {
-        $html = '';
-        $html .= '<div class="dep_tree">';
-        $html .= '<div role="tree" id="department_tree">';
+        $html = html_writer::start_tag('div', ['class' => 'dep_tree']);
+        $html .= html_writer::start_tag('div', ['role' => 'tree', 'id' => 'department_tree']);
         foreach ($trees as $tree) {
             $html .= $this->department_leaf($tree, 1, $selected);
         }
-        $html .= '</div></div>';
+        $html .= html_writer::end_tag('div') .
+                 html_writer::end_tag('div');
 
         return $html;
     }
@@ -163,10 +208,12 @@ class renderer extends plugin_renderer_base {
 
     /**
      * Render full_companies_select page
-     * @param full_companies_select $full_companies_select
+     * @param full_companies_select $fullcompaniesselect
      */
-    public function render_full_companies_select(full_companies_select $full_companies_select) {
-        return $this->render_from_template('block_iomad_company_admin/full_companies_select', $full_companies_select->export_for_template($this));
+    public function render_full_companies_select(full_companies_select $fullcompaniesselect) {
+        return $this->render_from_template(
+            'block_iomad_company_admin/full_companies_select',
+            $fullcompaniesselect->export_for_template($this));
     }
 
     /**
@@ -174,7 +221,9 @@ class renderer extends plugin_renderer_base {
      * @param capabilitiesroles $capabilitiesroles
      */
     public function render_capabilitiesroles(capabilitiesroles $capabilitiesroles) {
-        return $this->render_from_template('block_iomad_company_admin/capabilitiesroles', $capabilitiesroles->export_for_template($this));
+        return $this->render_from_template(
+            'block_iomad_company_admin/capabilitiesroles',
+            $capabilitiesroles->export_for_template($this));
     }
 
     /**
@@ -193,13 +242,18 @@ class renderer extends plugin_renderer_base {
         return $this->render_from_template('block_iomad_company_admin/roletemplates', $roletemplates->export_for_template($this));
     }
 
-    protected $_elements;
+    /**
+     * Create a date/time form element class
+     *
+     * @param string $name
+     * @param int $id
+     * @param int $timestamp
+     * @return string
+     */
     public function render_datetime_element($name, $id, $timestamp) {
 
         // Get the calendar type used - see MDL-18375.
         $calendartype = \core_calendar\type_factory::get_calendar_instance();
-
-        $this->_elements = array();
 
         $dateformat = $calendartype->get_date_order();
         // Reverse date element (Day, Month, Year), in RTL mode.
@@ -207,93 +261,143 @@ class renderer extends plugin_renderer_base {
             $dateformat = array_reverse($dateformat);
         }
 
-        $checkboxcommand =  "var dmy = ['day','month','year'];";
-        $checkboxcommand .= "for (var i = 0; i < dmy.length; i++) {";
-        $checkboxcommand .= "    if (document.getElementById('id_".$id."_calender_enabled').getAttribute('checked')) {"; // Checkbox *was* checked, and now needs to be un-checked
-        $checkboxcommand .= "        document.getElementById('".$id."_'.concat(dmy[i])).setAttribute('disabled', 'disabled');";
-        $checkboxcommand .= "        if (i == dmy.length-1) {";
-        $checkboxcommand .= "            document.getElementById('id_".$id."_calender_enabled').removeAttribute('checked');";
-        $checkboxcommand .= "        }";
-        $checkboxcommand .= "    } else {"; // Checkbox *was*n't checked, and now needs to be checked
-        $checkboxcommand .= "        document.getElementById('".$id."_'.concat(dmy[i])).removeAttribute('disabled');";
-        $checkboxcommand .= "        if (i == dmy.length-1) {";
-        $checkboxcommand .= "            document.getElementById('id_".$id."_calender_enabled').setAttribute('checked', 'checked');";
-        $checkboxcommand .= "        }";
-        $checkboxcommand .= "    }";
-        $checkboxcommand .= "}";
-        //$checkboxcommand .= "this.form.submit()";
+        $checkboxcommand =
+        "var dmy = ['day','month','year'];
+        for (var i = 0; i < dmy.length; i++) {
+            if (document.getElementById('id_".$id."_calender_enabled').getAttribute('checked')) {
+                document.getElementById('".$id."_'.concat(dmy[i])).setAttribute('disabled', 'disabled');
+                if (i == dmy.length-1) {
+                    document.getElementById('id_".$id."_calender_enabled').removeAttribute('checked');
+                }
+            } else {
+                document.getElementById('".$id."_'.concat(dmy[i])).removeAttribute('disabled');
+                if (i == dmy.length-1) {
+                    document.getElementById('id_".$id."_calender_enabled').setAttribute('checked', 'checked');
+                }
+            }
+        }";
 
         if (!empty($timestamp)) {
             $dayvalue = date('d', $timestamp);
             $monvalue = date('n', $timestamp);
             $yearvalue = date('Y', $timestamp);
-            $selectarray = array('class' => 'customselect', 'onchange' => "this.form.submit()");
-            $checkboxarray = array('type' => 'checkbox', 'name' => $name."[enabled]", 'onchange' => $checkboxcommand, 'class' => 'form-check-input datecontrolswitch checkbox', 'id' => 'id_'.$id.'_calender_enabled', 'checked' => 'checked');
+            $selectarray = [
+                'class' => 'custom-select singleselect',
+                'onchange' => "this.form.submit()",
+            ];
+            $checkboxarray = [
+                'type' => 'checkbox',
+                'name' => $name . "[enabled]",
+                'onchange' => $checkboxcommand,
+                'class' => 'form-check-input datecontrolswitch checkbox',
+                'id' => 'id_' . $id . '_calender_enabled',
+                'checked' => 'checked',
+            ];
         } else {
             $dayvalue = date('d', time());
             $monvalue = date('n', time());
             $yearvalue = date('Y', time());
-            $selectarray = array('class' => 'customselect', 'onchange' => "this.form.submit()", 'disabled' => 'disabled');
-            $checkboxarray = array('type' => 'checkbox', 'name' => $name."[enabled]", 'onchange' => $checkboxcommand, 'class' => 'form-check-input datecontrolswitch checkbox', 'id' => 'id_'.$id.'_calender_enabled');
+            $selectarray = [
+                'class' => 'custom-select singleselect',
+                'onchange' => "this.form.submit()",
+                'disabled' => 'disabled',
+            ];
+            $checkboxarray = [
+                'type' => 'checkbox',
+                'name' => $name . "[enabled]",
+                'onchange' => $checkboxcommand,
+                'class' => 'form-check-input datecontrolswitch checkbox',
+                'id' => 'id_' . $id . '_calender_enabled',
+            ];
         }
 
-        $html = html_writer::start_tag('span', array('class' => 'fdate_selector d-flex'));
-        $html .= html_writer::start_tag('span', array('data-fieldtype' => 'select'));
-        $html .= html_writer::start_tag('select', $selectarray + array('name' => $name."[day]", 'id' => $id."_day"));
-        foreach ($dateformat['day'] as $key => $value)
-        if ($dayvalue == $key) {
-            $html .= html_writer::tag('option', $value, array('value' => $key, 'selected' => true));
-        } else {
-            $html .= html_writer::tag('option', $value, array('value' => $key));
+        $html = html_writer::start_tag('span', ['class' => 'fdate_selector d-flex']);
+        $html .= html_writer::start_tag('span', ['data-fieldtype' => 'select']);
+        $html .= html_writer::start_tag('select', $selectarray + ['name' => $name."[day]", 'id' => $id."_day"]);
+        foreach ($dateformat['day'] as $key => $value) {
+            if ($dayvalue == $key) {
+                $html .= html_writer::tag('option', $value, ['value' => $key, 'selected' => true]);
+            } else {
+                $html .= html_writer::tag('option', $value, ['value' => $key]);
+            }
         }
         $html .= html_writer::end_tag('select');
-        $html .= html_writer::end_tag('span') . " ";
-        $html .= html_writer::start_tag('span', array('data-fieldtype' => 'select'));
-        $html .= html_writer::start_tag('select', $selectarray + array('name' => $name."[month]", 'id' => $id."_month"));
-        foreach ($dateformat['month'] as $key => $value)
-        if ($monvalue == $key) {
-            $html .= html_writer::tag('option', $value, array('value' => $key, 'selected' => true));
-        } else {
-            $html .= html_writer::tag('option', $value, array('value' => $key));
+        $html .= html_writer::end_tag('span') . "&nbsp;";
+        $html .= html_writer::start_tag('span', ['data-fieldtype' => 'select']);
+        $html .= html_writer::start_tag('select', $selectarray + ['name' => $name."[month]", 'id' => $id."_month"]);
+        foreach ($dateformat['month'] as $key => $value) {
+            if ($monvalue == $key) {
+                $html .= html_writer::tag('option', $value, ['value' => $key, 'selected' => true]);
+            } else {
+                $html .= html_writer::tag('option', $value, ['value' => $key]);
+            }
         }
         $html .= html_writer::end_tag('select');
-        $html .= html_writer::end_tag('span') . " ";
-        $html .= html_writer::start_tag('span', array('data-fieldtype' => 'select'));
-        $html .= html_writer::start_tag('select', $selectarray + array('name' => $name."[year]", 'id' => $id."_year"));
-        foreach ($dateformat['year'] as $key => $value)
-        if ($yearvalue == $key) {
-            $html .= html_writer::tag('option', $value, array('value' => $key, 'selected' => true));
-        } else {
-            $html .= html_writer::tag('option', $value, array('value' => $key));
+        $html .= html_writer::end_tag('span') . "&nbsp;";
+        $html .= html_writer::start_tag('span', ['data-fieldtype' => 'select']);
+        $html .= html_writer::start_tag('select', $selectarray + ['name' => $name."[year]", 'id' => $id."_year"]);
+        foreach ($dateformat['year'] as $key => $value) {
+            if ($yearvalue == $key) {
+                $html .= html_writer::tag('option', $value, ['value' => $key, 'selected' => true]);
+            } else {
+                $html .= html_writer::tag('option', $value, ['value' => $key]);
+            }
         }
         $html .= html_writer::end_tag('select');
-        $html .= html_writer::end_tag('span') . " ";
-        $html .= html_writer::start_tag('a', array('class' => "visibleifjs", 'name' => $name."[calendar]", 'href'=>"#", 'id'=>"id_" . $id ."_calendar"));
-        $html .= html_writer::tag('i', '', array('class'=>"icon fa fa-calendar fa-fw ", 'title'=>"Calendar", 'aria-label'=>"Calendar"));
-        $html .= html_writer::end_tag('a');
+        $html .= html_writer::end_tag('span') . "&nbsp;";
+        $html .= html_writer::empty_tag(
+            'input',
+            [
+                'class' => "visibleifjs btn btn-default fas fa-share-alt",
+                'name' => $name . "[calendar]",
+                'type' => "button",
+                'id' => "id_" . $id . "_calendar",
+                'value' => '&#xf073;',
+            ]
+        );
         $html .= html_writer::end_tag('span');
         if (empty($timestamp)) {
-            $html .= html_writer::start_tag('label', array('class' => 'form-check fitem'));
+            $html .= html_writer::start_tag('label', ['class' => 'form-check fitem']);
             $html .= html_writer::tag('input', '', $checkboxarray);
             $html .= get_string('enable');
             $html .= html_writer::end_tag('label');
         }
-        $html .= html_writer::tag('input',
-                                       '',
-                                       array('name' => 'orig'.$name,
-                                             'type' => 'hidden',
-                                             'value' => $timestamp,
-                                             'id' => 'orig'.$id));
+        $html .= html_writer::tag(
+            'input',
+            '',
+            [
+                'name' => 'orig' . $name,
+                'type' => 'hidden',
+                'value' => $timestamp,
+                'id' => 'orig' . $id,
+            ]
+        );
 
         return $html;
     }
 
-    public function display_tree_selector($company, $parentlevel, $linkurl, $urlparams, $departmentid = 0, $addchildcompanies = false) {
+    /**
+     * Display department structure tree selector
+     *
+     * @param object $company
+     * @param int $parentlevel
+     * @param string $linkurl
+     * @param array $urlparams
+     * @param int $departmentid
+     * @param bool $addchildcompanies
+     * @return void
+     */
+    public function display_tree_selector($company,
+                                          $parentlevel,
+                                          $linkurl,
+                                          $urlparams,
+                                          $departmentid = 0,
+                                          $addchildcompanies = false) {
         global $DB, $USER;
 
         $companycontext = context_company::instance($company->id);
         if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
-            $userlevels = array($parentlevel->id => $parentlevel->id);
+            $userlevels = [$parentlevel->id => $parentlevel->id];
         } else {
             $userlevels = $company->get_userlevel($USER);
         }
@@ -331,10 +435,10 @@ class renderer extends plugin_renderer_base {
             $departmentrec = $DB->get_record('department', ['id' => $departmentid]);
             $returnhtml = html_writer::tag('h4', get_string('departmentwithname', 'block_iomad_company_admin', $departmentrec));
         }
-        $returnhtml .=  html_writer::start_tag('div', array('class' => 'iomadclear'));
-        $returnhtml .= html_writer::start_tag('div', array('class' => 'fitem'));
+        $returnhtml .= html_writer::start_tag('div', ['class' => 'iomadclear']);
+        $returnhtml .= html_writer::start_tag('div', ['class' => 'fitem']);
         $returnhtml .= $treehtml;
-        $returnhtml .= html_writer::start_tag('div', array('style' => 'display:none'));
+        $returnhtml .= html_writer::start_tag('div', ['style' => 'display:none']);
         $returnhtml .= $this->render($departmentselect);
         $returnhtml .= html_writer::end_tag('div');
         $returnhtml .= html_writer::end_tag('div');
@@ -343,14 +447,30 @@ class renderer extends plugin_renderer_base {
         return $returnhtml;
     }
 
-    public function display_tree_selector_form($company, &$mform, $parentid = 0, $before = '', $addchildcompanies = false, $disableonchange = false) {
+    /**
+     * Display the department structure tree selector in a form
+     *
+     * @param object $company
+     * @param object $mform
+     * @param integer $parentid
+     * @param string $before
+     * @param boolean $addchildcompanies
+     * @param boolean $disableonchange
+     * @return void
+     */
+    public function display_tree_selector_form($company,
+                                               &$mform,
+                                               $parentid = 0,
+                                               $before = '',
+                                               $addchildcompanies = false,
+                                               $disableonchange = false) {
         global $USER;
 
         // Get the available departments.
         $parentlevel = company::get_company_parentnode($company->id);
         $companycontext = context_company::instance($company->id);
         if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
-            $userlevels = array($parentlevel->id => $parentlevel->id);
+            $userlevels = [$parentlevel->id => $parentlevel->id];
         } else {
             $userlevels = $company->get_userlevel($USER);
         }
@@ -363,7 +483,7 @@ class renderer extends plugin_renderer_base {
             $departmenttree[] = company::get_all_subdepartments_raw($userlevelid, false, $addchildcompanies);
         }
 
-        // Set up the tree HTML.        
+        // Set up the tree HTML.
         if (empty($parentid)) {
             $initialdepartment = optional_param('deptid', 0, PARAM_INT);
         } else {
@@ -373,24 +493,26 @@ class renderer extends plugin_renderer_base {
 
         // Add it to the form.
         if (empty($before)) {
-            $mform->addElement('html', "<h4>" . get_string('department', 'block_iomad_company_admin') . "</h4>");
+            $mform->addElement('html', html_writer::tag('h4', get_string('department', 'block_iomad_company_admin')));
             $mform->addElement('html', $treehtml);
         } else {
-            $mform->insertElementBefore($mform->addElement('html', "<h4>" . get_string('department', 'block_iomad_company_admin') . "</h4>"), $before);
+            $mform->insertElementBefore(
+                $mform->addElement('html', html_writer::tag('h4', get_string('department', 'block_iomad_company_admin'))),
+                $before);
             $mform->insertElementBefore($mform->addElement('html', $treehtml), $before);
         }
 
-        // This is getting hidden anyway, so no need for label
-        $mform->addElement('html', '<div class="display:none;">');
+        // This is getting hidden anyway, so no need for label.
+        $mform->addElement('html', html_writer::start_tag('div', ['class' => 'display:none;']));
         if (!$disableonchange) {
             $mform->addElement('select', 'deptid', ' ',
-                                $subhierarchieslist, array('class' => 'iomad_department_select', 'onchange' => 'this.form.submit()'));
+                                $subhierarchieslist, ['class' => 'iomad_department_select', 'onchange' => 'this.form.submit()']);
         } else {
             $mform->addElement('select', 'deptid', ' ',
-                                $subhierarchieslist, array('class' => 'iomad_department_select'));
+                                $subhierarchieslist, ['class' => 'iomad_department_select']);
         }
         $mform->disabledIf('deptid', 'action', 'eq', 1);
-        $mform->addElement('html', '</div>');
+        $mform->addElement('html', html_writer::end_tag('div'));
 
         // Disable the onchange popup.
         $mform->disable_form_change_checker();

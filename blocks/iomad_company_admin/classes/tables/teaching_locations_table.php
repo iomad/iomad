@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Base class for the table used by a {@link quiz_attempts_report}.
+ * IOMAD Dashboard teaching location listing table class
  *
- * @package   local_report_user_license_allocations
+ * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -29,12 +29,20 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/tablelib.php');
 
-use \table_sql;
+use html_writer;
 use local_iomad\iomad;
-use \moodle_url;
+use moodle_url;
+use table_sql;
 
+/**
+ * IOMAD Dashboard teaching location listing table class
+ *
+ * @package   local_report_user_license_allocations
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class teaching_locations_table extends table_sql {
-
 
     /**
      * Generate the display of the teaching location name
@@ -61,16 +69,24 @@ class teaching_locations_table extends table_sql {
 
         $address = "";
         if (!empty($row->address)) {
-            $address .= "<b>" . get_string('address') . ":</b> " . format_string($row->address) . "<br>";
+            $address .= html_writer::tag('b', format_string(get_string('address') . ':')).
+                        format_string($row->address) .
+                        html_writer::empty_tag('br');
         }
         if (!empty($row->city)) {
-            $address .= "<b>" . get_string('city') . ":</b> " . format_string($row->city) . "<br>";
+            $address .= html_writer::tag('b', format_string(get_string('city') . ':')) .
+                        format_string($row->city) .
+                        html_writer::empty_tag('br');
         }
         if (!empty($row->country)) {
-            $address .= "<b>" . get_string('country') . ":</b> " . get_string($row->country, 'countries') . "<br>";
+            $address .= html_writer::tag('b', format_string(get_string('country') . ':')) .
+                        get_string($row->country, 'countries') .
+                        html_writer::empty_tag('br');
         }
         if (!empty($row->postcode)) {
-            $address .= "<b>" . get_string('postcode', 'block_iomad_commerce') . ":</b> " . format_string($row->postcode) . "<br>";
+            $address .= html_writer::tag('b', format_string(get_string('postcode', 'block_iomad_commerce') . ':')) .
+                        format_string($row->postcode) .
+                        html_writer::empty_tag('br');
         }
         return $address;
     }
@@ -81,27 +97,23 @@ class teaching_locations_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_capacity($row) {
-        global $output;
-
         if (!empty($row->isvirtual)) {
             return get_string('virtual', 'block_iomad_company_admin');
         }
 
         return format_string($row->capacity);
     }
-    
-    
+
+
     /**
      * Generate column to show whether location is public or private.
      * @param object $row the table row being output.
      * @return string HTML content to go inside the td.
      */
     public function col_ispublic($row) {
-        global $output;
-
         if (empty($row->ispublic)) {
             return get_string('locationnotpublic', 'block_iomad_company_admin');
-        } elseif(!empty($row->ispublic)) {
+        } else if (!empty($row->ispublic)) {
             return get_string('locationpublic', 'block_iomad_company_admin');
         }
 
@@ -114,7 +126,7 @@ class teaching_locations_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_actions($row) {
-        global $CFG, $OUTPUT, $DB, $USER, $params, $companycontext;
+        global $CFG, $companycontext;
 
         $deletebutton = "";
         $editbutton = "";
@@ -124,13 +136,43 @@ class teaching_locations_table extends table_sql {
             $deleteurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/classroom_list.php',
                                         ['delete' => $row->id,
                                         'sesskey' => $sesskey]);
-            $deletebutton = "<a href='" . $deleteurl . "'><i class='icon fa fa-trash fa-fw' title='" . get_string('delete') . "' role='img' aria-label='" . get_string('delete') . "'></i></a>";
+            $deletebutton = html_writer::tag(
+                'a',
+                html_writer::tag(
+                    'i',
+                    '',
+                    [
+                        'class' => 'icon fa fa-trash fa-fw',
+                        'title' => get_string('delete'),
+                        'role' => 'img',
+                        'aria-label' => get_string('delete'),
+                    ]
+                ),
+                [
+                    'href' => $deleteurl,
+                ]
+            );
         }
 
         if (iomad::has_capability('block/iomad_company_admin:classrooms_edit', $companycontext)) {
             $editurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/classroom_edit_form.php',
                                       ['id' => $row->id]);
-            $editbutton = "<a href='" . $editurl . "'><i class='icon fa fa-cog fa-fw' title='" . get_string('edit') . "' role='img' aria-label='" . get_string('edit') . "'></i></a>";
+            $editbutton = html_writer::tag(
+                'a',
+                html_writer::tag(
+                    'i',
+                    '',
+                    [
+                        'class' => 'icon fa fa-cog fa-fw',
+                        'title' => get_string('edit'),
+                        'role' => 'img',
+                        'aria-label' => get_string('edit'),
+                    ]
+                ),
+                [
+                    'href' => $editurl,
+                ]
+            );
         }
 
         return $editbutton . "&nbsp" . $deletebutton;
