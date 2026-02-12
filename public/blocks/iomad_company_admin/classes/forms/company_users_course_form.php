@@ -163,6 +163,7 @@ class company_users_course_form extends moodleform {
      * @return void
      */
     public function definition_after_data() {
+        global $output;
 
         // Set up the form.
         $mform =& $this->_form;

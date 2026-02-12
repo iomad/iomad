@@ -187,7 +187,7 @@ class company_users_licenses_form extends moodleform {
      * @return void
      */
     public function definition_after_data() {
-        global $DB, $OUTPUT;
+        global $DB, $output;
 
         // Set up the form.
         $mform =& $this->_form;
