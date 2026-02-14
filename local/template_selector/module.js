@@ -150,7 +150,8 @@ M.local_template_selector.init_template_selector = function (Y, name, hash, extr
             });
 
             this.lastsearch = value;
-            this.listbox.setStyle('background','url(' + M.util.image_url('i/loading', 'moodle') + ') no-repeat center center');
+            this.listbox.setStyle('background', 'url(' + M.util.image_url('i/loading', 'moodle') + ') no-repeat center center');
+            this.listbox.setStyle('background-size', '3em');
         },
         /**
          * Handle what happens when we get some data back from the search.

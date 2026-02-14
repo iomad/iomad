@@ -49,7 +49,7 @@ abstract class company_template_selector_base extends template_selector_base {
 class current_company_templates_selector extends company_template_selector_base {
     /**
      * Company templates
-     * @param <type> $search
+     * @param string $search
      * @return array
      */
     protected $shared;
@@ -81,33 +81,20 @@ class current_company_templates_selector extends company_template_selector_base 
         $fields      = 'SELECT DISTINCT ' . $this->required_fields_sql('ct');
         $countfields = 'SELECT COUNT(1)';
 
-
-        // Deal with shared templates.
-        if ($this->shared) {
-            $sharedsql = " FROM {competency_template} ct
-                           INNER JOIN {iomad_templates} it
-                           ON ct.id=it.templateid
-                           WHERE it.shared = 1";
-        } else {
-            $sharedsql = " FROM {competency_template} ct WHERE 1 = 2";
-        }
-
         $sql = " FROM {competency_template} ct
-                INNER JOIN {company_comp_templates} cct ON (ct.id = cct.templateid AND cct.companyid = :companyid)
+                JOIN {company_comp_templates} cct ON (ct.id = cct.templateid AND cct.companyid = :companyid)
                 WHERE $wherecondition";
 
         $order = ' ORDER BY ct.shortname ASC';
 
         if (!$this->is_validating()) {
-            $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params) +
-                                     $DB->count_records_sql($countfields . $sharedsql, $params);
-            if ($potentialmemberscount >  $CFG->iomad_max_select_templates) {
-                return $this->too_many_results($search, $potentialmemberscount);
+            $currentmemberscount = $DB->count_records_sql($countfields . $sql, $params);
+            if ($currentmemberscount >  $CFG->iomad_max_select_templates) {
+                return $this->too_many_results($search, $currentmemberscount);
             }
         }
 
-        $availabletemplates = $DB->get_records_sql($fields . $sql . $order, $params) +
-                            $DB->get_records_sql($fields . $sharedsql . $order, $params);
+        $availabletemplates = $DB->get_records_sql($fields . $sql . $order, $params);
 
         if (empty($availabletemplates)) {
             return [];
@@ -172,7 +159,7 @@ class potential_company_templates_selector extends company_template_selector_bas
         $sharedsql = " AND ct.id NOT IN (SELECT cct.templateid FROM {company_comp_templates} cct
                                          LEFT JOIN {iomad_templates} it
                                          ON (cct.templateid = it.templateid)
-                                         WHERE it.shared=1 ) ";
+                                         WHERE it.shared <> 1 ) ";
 
         $fields      = 'SELECT ' . $this->required_fields_sql('ct');
         $countfields = 'SELECT COUNT(1)';
