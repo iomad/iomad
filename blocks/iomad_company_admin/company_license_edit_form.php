@@ -29,7 +29,7 @@ use core\output\notification;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
+require_once(__DIR__ . '/../../config.php');
 require_once('lib.php');
 require_once($CFG->libdir . '/formslib.php');
 
@@ -157,7 +157,7 @@ if ( $mform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL) ) {
         $licensedata['startdate'] = $data->startdate;
 
         if (empty($data->languages)) {
-            $data->languages = array();
+            $data->languages = [];
         }
 
         if (empty($data->parentid)) {

@@ -33,6 +33,7 @@ use local_iomad\forms\company_search_form;
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
 require_once($CFG->dirroot . '/local/iomad/lib/user.php');
+require_once($CFG->libdir . '/formslib.php');
 
 $delete = optional_param('delete', 0, PARAM_INT);
 $confirm = optional_param('confirm', '', PARAM_ALPHANUM);

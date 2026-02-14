@@ -15,783 +15,759 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard capabilities
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Capability definitions for the iomad_company_admin block.
-//
-// The capabilities are loaded into the database table when the block is
-// installed or updated. Whenever the capability definitions are updated,
-// the module version number should be bumped up.
-//
-// The system has four possible values for a capability:
-// CAP_ALLOW, CAP_PREVENT, CAP_PROHIBIT, and inherit (not set).
-//
-//
-// CAPABILITY NAMING CONVENTION
-//
-// It is important that capability names are unique. The naming convention
-// for capabilities that are specific to modules and blocks is as follows:
-//   [mod/block]/<plugin_name>:<capabilityname>
-//
-// component_name should be the same as the directory name of the mod or block.
-//
-// Core moodle capabilities are defined thus:
-//    moodle/<capabilityclass>:<capabilityname>
-//
-// Examples: mod/forum:viewpost
-//           block/recent_activity:view
-//           moodle/site:deleteuser
-//
-// The variable name for the capability definitions array is $capabilities.
+defined('MOODLE_INTERNAL') || die();
 
+$capabilities = [
 
-$capabilities = array(
-
-    'block/iomad_company_admin:addinstance' => array(
+    'block/iomad_company_admin:addinstance' => [
 
         'captype' => 'read',
-        'contextlevel' => CONTEXT_BLOCK
-    ),
+        'contextlevel' => CONTEXT_BLOCK,
+    ],
 
-    'block/iomad_company_admin:myaddinstance' => array(
+    'block/iomad_company_admin:myaddinstance' => [
 
         'captype' => 'read',
-        'contextlevel' => CONTEXT_BLOCK
-    ),
+        'contextlevel' => CONTEXT_BLOCK,
+    ],
 
-    'block/iomad_company_admin:companymanagement_view' => array(
+    'block/iomad_company_admin:companymanagement_view' => [
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:usermanagement_view' => array(
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:coursemanagement_view' => array(
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:licensemanagement_view' => array(
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:competencymanagement_view' => array(
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:assign_company_manager' => array(
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:assign_department_manager' => array(
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:assign_educator' => array(
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:assign_company_reporter' => array(
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:view_my_company_email' => array(
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:company_add' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:company_add_child' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:company_edit' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:company_edit_appearance' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:company_edit_restricted' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:company_edit_smtp' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:company_delete' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:company_view' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:company_view_all' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
             'clientadministrator' => CAP_ALLOW,
-            'clientreporter' => CAP_ALLOW
-        ),
-    ),
+        ],
+    ],
 
-    'block/iomad_company_admin:company_user' => array(
+    'block/iomad_company_admin:usermanagement_view' => [
 
-        'captype' => 'write',
+        'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:company_manager' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_company_admin:company_course' => array(
+    'block/iomad_company_admin:coursemanagement_view' => [
 
-        'captype' => 'write',
+        'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:company_course_unenrol' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:createcourse' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:delegatecourse' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:deletecourses' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:deleteallcourses' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:destroycourses' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:hideshowcourses' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:hideshowallcourses' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:managecourses' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:manageallcourses' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:viewcourses' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:viewallsharedcourses' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:user_create' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_company_admin:user_upload' => array(
+    'block/iomad_company_admin:licensemanagement_view' => [
 
-        'captype' => 'write',
+        'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_company_admin:company_course_users' => array(
-        'captype' => 'write',
+    'block/iomad_company_admin:competencymanagement_view' => [
+
+        'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:assign_company_manager' => [
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:assign_department_manager' => [
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_company_admin:company_license_users' => array(
+    'block/iomad_company_admin:assign_educator' => [
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:assign_company_reporter' => [
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:view_my_company_email' => [
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:company_add' => [
+
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:company_add_child' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:company_edit' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:company_edit_appearance' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:company_edit_restricted' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:company_edit_smtp' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:company_delete' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:company_view' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:company_view_all' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+            'clientreporter' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:company_user' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:company_manager' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_company_admin:editusers' => array(
+    'block/iomad_company_admin:company_course' => [
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:company_course_unenrol' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:createcourse' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:delegatecourse' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:deletecourses' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:deleteallcourses' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:destroycourses' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:hideshowcourses' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:hideshowallcourses' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:managecourses' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:manageallcourses' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:viewcourses' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:viewallsharedcourses' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:user_create' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_company_admin:edituserpassword' => array(
+    'block/iomad_company_admin:user_upload' => [
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_company_admin:deleteuser' => array(
-
+    'block/iomad_company_admin:company_course_users' => [
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_company_admin:suspenduser' => array(
-
+    'block/iomad_company_admin:company_license_users' => [
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_company_admin:editmanagers' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:editallusers' => array(
+    'block/iomad_company_admin:editusers' => [
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:company_user_profiles' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:allcompany_user_profiles' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:export_departments' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:import_departments' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:edit_all_departments' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:edit_departments' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:assign_groups' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:edit_groups' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:edit_licenses' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:split_my_licenses' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:edit_my_licenses' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:view_licenses' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_company_admin:allocate_licenses' => array(
+    'block/iomad_company_admin:edituserpassword' => [
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_company_admin:unallocate_licenses' => array(
+    'block/iomad_company_admin:deleteuser' => [
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_company_admin:classrooms' => array(
+    'block/iomad_company_admin:suspenduser' => [
+
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-    'block/iomad_company_admin:classrooms_add' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-    'block/iomad_company_admin:classrooms_edit' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-    'block/iomad_company_admin:classrooms_delete' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-    'block/iomad_company_admin:viewsuspendedusers' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-    'block/iomad_company_admin:suspendcompanies' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-    'block/iomad_company_admin:restrict_capabilities' => array(
-                    'captype' => 'write',
-                    'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-    'block/iomad_company_admin:competencyview' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-    'block/iomad_company_admin:manageframeworks' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-    'block/iomad_company_admin:templateview' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-    'block/iomad_company_admin:company_framework' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-    'block/iomad_company_admin:company_template' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-    'block/iomad_company_admin:managetemplates' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-    'block/iomad_company_admin:company_edit_certificateinfo' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-    'block/iomad_company_admin:canviewchildren' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_company_admin:downloadcertificates' => array(
+    'block/iomad_company_admin:editmanagers' => [
+
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:editallusers' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:company_user_profiles' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:allcompany_user_profiles' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:export_departments' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:import_departments' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:edit_all_departments' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:edit_departments' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:assign_groups' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:edit_groups' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:edit_licenses' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:split_my_licenses' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:edit_my_licenses' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:view_licenses' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_company_admin:downloadmycertificates' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'user' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:editpubliclocation' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:view_editusers' => array(
+    'block/iomad_company_admin:allocate_licenses' => [
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_company_admin:companyadvancedsettings' => array(
+    'block/iomad_company_admin:unallocate_licenses' => [
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'companydepartmentmanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:classrooms' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+    'block/iomad_company_admin:classrooms_add' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+    'block/iomad_company_admin:classrooms_edit' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+    'block/iomad_company_admin:classrooms_delete' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+    'block/iomad_company_admin:viewsuspendedusers' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'companydepartmentmanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+    'block/iomad_company_admin:suspendcompanies' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+    'block/iomad_company_admin:restrict_capabilities' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+    'block/iomad_company_admin:competencyview' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+    'block/iomad_company_admin:manageframeworks' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+    'block/iomad_company_admin:templateview' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+    'block/iomad_company_admin:company_framework' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+    'block/iomad_company_admin:company_template' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+    'block/iomad_company_admin:managetemplates' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+    'block/iomad_company_admin:company_edit_certificateinfo' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+    'block/iomad_company_admin:canviewchildren' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:downloadcertificates' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'companydepartmentmanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:downloadmycertificates' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'user' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:editpubliclocation' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:view_editusers' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'companydepartmentmanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:companyadvancedsettings' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
     'block/iomad_company_admin:companyauthsettings' => [
 
@@ -802,48 +778,48 @@ $capabilities = array(
         ],
     ],
 
-    'block/iomad_company_admin:configiomadoidc' => array(
+    'block/iomad_company_admin:configiomadoidc' => [
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_company_admin:configiomadsaml2' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:configiomadoidcsync' => array(
+    'block/iomad_company_admin:configiomadsaml2' => [
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_company_admin:configpolicies' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_company_admin:configmfa' => array(
+    'block/iomad_company_admin:configiomadoidcsync' => [
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-);
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:configpolicies' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_company_admin:configmfa' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+];

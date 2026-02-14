@@ -30,6 +30,7 @@ use block_iomad_company_admin\forms\iomad_company_select_form;
 defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ .'/lib.php');
+require_once($CFG->libdir.'/formslib.php');
 
 /**
  * IOMAD Dashboard block

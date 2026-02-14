@@ -204,7 +204,7 @@ class company_courses_form extends moodleform {
                     // Check if its a shared course.
                     if ($DB->get_record_sql("SELECT id FROM {iomad_courses}
                                              WHERE courseid=$addcourse->id
-                                             AND shared != 0")) {
+                                             AND shared <> 0")) {
                         if ($companycourserecord = $DB->get_record('company_course', ['companyid' => $this->selectedcompany,
                                                                                       'courseid' => $addcourse->id])) {
                             // Already assigned to the company so we are just moving it within it.

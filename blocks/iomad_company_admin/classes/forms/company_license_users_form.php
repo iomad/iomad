@@ -131,9 +131,9 @@ class company_license_users_form extends \moodleform {
         if (!empty($this->license)) {
             $courses = company::get_courses_by_license($this->license->id);
         } else {
-            $courses = array();
+            $courses = [];
         }
-        $courseselect = array();
+        $courseselect = [];
         $first = true;
         foreach ($courses as $courseid => $course) {
             $courseselect[$course->id] = $course->fullname;
@@ -424,7 +424,7 @@ class company_license_users_form extends \moodleform {
      */
     public function validation($data, $files) {
 
-        $errors = array();
+        $errors = [];
 
         // If we are removing we don't care about the date.
         if (optional_param('removeall', false, PARAM_BOOL) ||
@@ -455,7 +455,7 @@ class company_license_users_form extends \moodleform {
 
         if ($this->is_validated()) {
             $this->create_user_selectors();
-            $courses = array();
+            $courses = [];
             if (in_array(0, $this->selectedcourses)) {
                 $temp = $this->courseselect;
                 unset($temp[0]);
@@ -516,7 +516,7 @@ class company_license_users_form extends \moodleform {
                                     $recordarray['isusing'] = 0;
                                     $recordarray['id'] = $DB->insert_record('companylicense_users', $recordarray);
                                     $count++;
-                                    $due = optional_param_array('due', array(), PARAM_INT);
+                                    $due = optional_param_array('due', [], PARAM_INT);
                                     if (!empty($due)) {
                                         $duedate = strtotime(
                                             $due['year'] . '-' .
@@ -552,8 +552,8 @@ class company_license_users_form extends \moodleform {
 
             $removeall = false;;
             $remove = false;
-            $licensestounassign = array();
-            $licenserecords = array();
+            $licensestounassign = [];
+            $licenserecords = [];
 
             if (optional_param('removeall', false, PARAM_BOOL) && confirm_sesskey()) {
                 $search = optional_param('currentlyenrolledusers_searchtext', '', PARAM_RAW);
@@ -576,7 +576,7 @@ class company_license_users_form extends \moodleform {
                 $licenserecord = (array) $this->license;
 
                 if (!empty($licenserecord['program'])) {
-                    $userrecords = array();
+                    $userrecords = [];
                     foreach ($licensestounassign as $licenserecid) {
 
                         // Get the user from the initial license ID passed.
@@ -606,7 +606,7 @@ class company_license_users_form extends \moodleform {
                         }
                     }
                     if (!$canremove) {
-                        $licensestounassign = array();
+                        $licensestounassign = [];
                     }
                 }
 

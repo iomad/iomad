@@ -370,7 +370,7 @@ class company_users_licenses_form extends moodleform {
      */
     public function validation($data, $files) {
 
-        $errors = array();
+        $errors = [];
 
         // If we are removing we don't care about the date.
         if (optional_param('remove', false, PARAM_BOOL)) {
@@ -425,7 +425,7 @@ class company_users_licenses_form extends moodleform {
                         );
                         return;
                     } else {
-                        $due = optional_param_array('due', array(), PARAM_INT);
+                        $due = optional_param_array('due', [], PARAM_INT);
                         if (!empty($due)) {
                             $duedate = strtotime($due['year'] . '-' .
                                                  $due['month'] . '-' .
@@ -528,7 +528,7 @@ class company_users_licenses_form extends moodleform {
                                 ]
                             );
                         } else {
-                            $due = optional_param_array('due', array(), PARAM_INT);
+                            $due = optional_param_array('due', [], PARAM_INT);
                             if (!empty($due)) {
                                 $duedate = strtotime($due['year'] . '-' .
                                                      $due['month'] . '-' .

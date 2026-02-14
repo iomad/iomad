@@ -28,7 +28,7 @@ use block_iomad_company_admin\forms\company_courses_form;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-require_once(__DIR__ . '/../../config.php'); // Creates $PAGE.
+require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
 require_once($CFG->libdir . '/formslib.php');
 

@@ -259,7 +259,7 @@ class company_users_course_form extends moodleform {
                     $allow = true;
 
                     if ($allow) {
-                        $due = optional_param_array('due', array(), PARAM_INT);
+                        $due = optional_param_array('due', [], PARAM_INT);
                         if (!empty($due)) {
                             $duedate = strtotime(
                                 $due['year'] . '-' .

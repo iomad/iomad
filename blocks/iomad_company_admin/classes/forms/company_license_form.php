@@ -88,7 +88,7 @@ class company_license_form extends \company_moodleform {
                                 $departmentid = 0,
                                 $licenseid = 0,
                                 $parentid = 0,
-                                $courses=array()) {
+                                $courses=[]) {
         global $DB, $USER;
         $this->selectedcompany = $companyid;
         $this->context = $companycontext;
@@ -186,7 +186,6 @@ class company_license_form extends \company_moodleform {
 
             $company = new company($licenseinfo->companyid);
             $companylist = $company->get_child_companies_select(false);
-            $this->free = $licenseinfo->allocation - $licenseinfo->used;
             $mform->addElement(
                 'static',
                 'parentlicensename',
@@ -348,7 +347,7 @@ class company_license_form extends \company_moodleform {
     public function validation($data, $files) {
         global $CFG, $DB;
 
-        $errors = array();
+        $errors = [];
 
         $name = optional_param('name', '', PARAM_ALPHANUMEXT);
 

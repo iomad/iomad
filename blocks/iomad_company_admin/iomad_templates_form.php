@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Block IOMAD company admin
+ * IOMAD Dashboard manage tenant competency templates main page
  *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
@@ -23,23 +23,23 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_company_admin\event\dashboard_page_viewed;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-require_once('../../config.php');
-require_once(dirname('__FILE__').'/lib.php');
-require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
+require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/lib.php');
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 
-$company       = optional_param('company', 0, PARAM_CLEAN);
-$sort         = optional_param('sort', 'name', PARAM_ALPHA);
-$dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
-$page         = optional_param('page', 0, PARAM_INT);
-$perpage      = optional_param('perpage', $CFG->iomad_max_list_templates, PARAM_INT);        // How many per page.
-$acl          = optional_param('acl', '0', PARAM_INT);           // Id of user to tweak mnet ACL (requires $access).
-$search      = optional_param('search', '', PARAM_CLEAN);// Search string.
+$company = optional_param('company', 0, PARAM_CLEAN);
+$sort = optional_param('sort', 'name', PARAM_ALPHA);
+$dir = optional_param('dir', 'ASC', PARAM_ALPHA);
+$page = optional_param('page', 0, PARAM_INT);
+$perpage = optional_param('perpage', get_config('local_iomad', 'max_list_templates'), PARAM_INT);
+$acl = optional_param('acl', '0', PARAM_INT);
+$search = optional_param('search', '', PARAM_CLEAN);
 $templateid = optional_param('templateid', 0, PARAM_INTEGER);
 $update = optional_param('update', null, PARAM_ALPHA);
 $shared = optional_param('shared', 0, PARAM_INTEGER);
@@ -55,22 +55,23 @@ $params = [
 
 ];
 
+// Log in and set up $PAGE.
 require_login();
 
-$systemcontext = context_system::instance();
-
 // Set the companyid.
+$systemcontext = context_system::instance();
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $mycompany = new company($companyid);
 
+// Can we even do anything?
 iomad::require_capability('block/iomad_company_admin:managetemplates', $companycontext);
 
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/iomad_templates_form.php');
 $linktext = get_string('iomad_templates_title', 'block_iomad_company_admin');
 
-// Print the page header.
+// Finish setting up PAGE.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
@@ -80,7 +81,7 @@ $PAGE->set_title($linktext);
 $PAGE->set_heading($linktext);
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Is the users company set and no other company selected?
 if (empty($company) && !empty($companyid)) {
@@ -88,11 +89,12 @@ if (empty($company) && !empty($companyid)) {
     $params['company'] = $company;
 }
 
+// Do we need to change something?
 if (!empty($update)) {
-    // Need to change something.
     if (!$templatedetails = $DB->get_record('iomad_templates', ['templateid' => $templateid])) {
         throw new moodle_exception(get_string('invaliddetails', 'block_iomad_company_admin'));
     } else {
+        // Process shared changes.
         if ('shared' == $update) {
             $previousshared = $templatedetails->shared;
             // Check if we are sharing a template for the first time.
@@ -111,7 +113,6 @@ if (!empty($update)) {
                 // Deal with company groups.
                 if ($companygroups = $DB->get_records('company_shared_templates', ['templateid' => $templateid])) {
                     // Got companies using it.
-
                     // Skip the first company, it was the one who had it before anyone else so is
                     // assumed to be the owning company.
                     $first = true;
@@ -131,11 +132,6 @@ if (!empty($update)) {
     }
 }
 
-$baseurl = new moodle_url(basename(__FILE__), $params);
-$returnurl = $baseurl;
-
-echo $OUTPUT->header();
-
 // Get the list of companies and display it as a drop down select..
 $companyids = $DB->get_records_menu('company', [], 'id, name');
 $companyids['none'] = get_string('nocompanytemplates', 'block_iomad_company_admin');
@@ -144,7 +140,6 @@ ksort($companyids);
 $companyselect = new single_select($linkurl, 'company', $companyids, $company);
 $companyselect->label = get_string('company', 'block_iomad_company_admin');
 $companyselect->formid = 'choosecompany';
-echo html_writer::tag('div', $OUTPUT->render($companyselect), ['id' => 'iomad_company_selector']).'<br>';
 
 // Set default templates.
 $templates = [];
@@ -158,7 +153,10 @@ if (!empty($company)) {
             $select = $DB->sql_like('shortname', ':search', false) . " AND";
             $selectparams = ['search' => '%' . $search . '%'];
         }
-        $templates = $DB->get_records_select('competency_template', $select . " id NOT IN (SELECT templateid FROM {company_comp_templates})", $selectparams);
+        $templates = $DB->get_records_select(
+            'competency_template',
+            $select . " id NOT IN (SELECT templateid FROM {company_comp_templates})",
+            $selectparams);
     } else if ($company == 'all') {
         // Get every template.
         if (!empty($search)) {
@@ -208,7 +206,7 @@ foreach ($templates as $template) {
     $linkparams = $params;
     $linkparams['templateid'] = $template->id;
     $linkparams['update'] = 'shared';
-    $sharedurl = new moodle_url($baseurl, $linkparams);
+    $sharedurl = new moodle_url($linkurl, $linkparams);
     $sharedselect = new single_select($sharedurl, 'shared', $sharedselectbutton, $iomaddetails->shared);
     $sharedselect->label = '';
     $sharedselect->formid = 'sharedselect'.$template->id;
@@ -237,8 +235,17 @@ foreach ($templates as $template) {
                       $sharedselectoutput];
 }
 
+// Display the page.
+echo $OUTPUT->header();
+
+// Display the company selector.
+echo html_writer::tag('div', $OUTPUT->render($companyselect), ['id' => 'iomad_company_selector']);
+echo html_writer::empty_tag('br');
+
+// Display the table.
 if (!empty($table)) {
     echo html_writer::table($table);
 }
 
+// Displat the footer.
 echo $OUTPUT->footer();

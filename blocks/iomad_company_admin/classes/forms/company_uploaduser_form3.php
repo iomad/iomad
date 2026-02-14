@@ -15,22 +15,33 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   block_iomad_microlearning
+ * IOMAD Dashboard upload user form classes
+ *
+ * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once('lib.php');
+namespace block_iomad_company_admin\forms;
 
-$delete       = optional_param('delete', 0, PARAM_INT);
-$confirm      = optional_param('confirm', '', PARAM_ALPHANUM);   // Md5 confirmation hash.
-$sort         = optional_param('sort', 'name', PARAM_ALPHA);
-$dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
-$page         = optional_param('page', 0, PARAM_INT);
-$search       = optional_param('search', '', PARAM_CLEAN);
-$perpage      = optional_param('perpage', get_config('local_iomad', 'max_list_companies'), PARAM_INT);        // How many per page.
+use moodleform;
 
-require_login();
-
-throw new coding_exception('This page is deprecated');
+/**
+ * IOMAD Dashboard company upload user form3 class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class company_uploaduser_form3 extends moodleform {
+    /**
+     * Form definition
+     *
+     * @return void
+     */
+    public function definition() {
+        $this->add_action_buttons(false, get_string('uploadnewfile'));
+    }
+}

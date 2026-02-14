@@ -15,43 +15,44 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard add/remove users to a tenant
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_company_admin\event\dashboard_page_viewed;
+use block_iomad_company_admin\forms\company_users_form;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
-require_once('lib.php');
+require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/lib.php');
+require_once($CFG->libdir . '/formslib.php');
 
-$returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
 $allusers = optional_param('allusers', false, PARAM_BOOL);
 
+// Login and set up $PAGE.
 require_login();
 
+// Set the companyid.
 $systemcontext = context_system::instance();
-
-// Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
+// Can we even do anything?
 iomad::require_capability('block/iomad_company_admin:company_user', $companycontext);
 
-$urlparams = array();
-if ($returnurl) {
-    $urlparams['returnurl'] = $returnurl;
-}
-
-// Correct the navbar.
 // Set the name for the page.
 $linktext = get_string('assignusers', 'block_iomad_company_admin');
-// Set the url..
+
+// Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_users_form.php', ['allusers' => $allusers]);
 
+// Finish setting up PAGE.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
@@ -72,23 +73,24 @@ if (has_capability('block/iomad_company_admin:company_add', $systemcontext)) {
 $PAGE->set_button($buttons);
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Set up the form.
-$usersform = new \block_iomad_company_admin\forms\company_users_form($PAGE->url, $companycontext, $companyid, $allusers);
+$usersform = new company_users_form($PAGE->url, $companycontext, $companyid, $allusers);
 
+// Was the form cancelled?
 if ($usersform->is_cancelled()) {
-    if ($returnurl) {
-        redirect($returnurl);
-    } else {
-        redirect(new moodle_url('/blocks/iomad_company_admin/index.php'));
-    }
-} else {
-    $usersform->process();
-
-    echo $OUTPUT->header();
-
-    echo $usersform->display();
-
-    echo $OUTPUT->footer();
+    redirect(new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/index.php'));
 }
+
+// Process the form.
+$usersform->process();
+
+// Display the page.
+echo $OUTPUT->header();
+
+// Display the form.
+echo $usersform->display();
+
+// Display the footer.
+echo $OUTPUT->footer();

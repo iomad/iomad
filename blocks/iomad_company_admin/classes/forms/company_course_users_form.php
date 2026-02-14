@@ -345,7 +345,7 @@ class company_course_users_form extends moodleform {
                     }
 
                     if ($allow) {
-                        $due = optional_param_array('due', array(), PARAM_INT);
+                        $due = optional_param_array('due', [], PARAM_INT);
                         if (!empty($due)) {
                             $duedate = strtotime($due['year'] . '-' .
                                                  $due['month'] . '-' .
@@ -379,7 +379,7 @@ class company_course_users_form extends moodleform {
         }
         $removeall = false;;
         $remove = false;
-        $userstounassign = array();
+        $userstounassign = [];
 
         if (optional_param('removeall', false, PARAM_BOOL) && confirm_sesskey()) {
             $search = optional_param('currentlyenrolledusers_searchtext', '', PARAM_RAW);

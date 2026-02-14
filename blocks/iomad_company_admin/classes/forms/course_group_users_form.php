@@ -263,7 +263,7 @@ class course_group_users_form extends moodleform {
                         'name' => 'move',
                         'id' => 'move',
                         'type' => 'submit',
-                        'value' => get_string('move') . ' ' . $output->rarrow(),
+                        'value' => $output->larrow(). ' ' . get_string('move'),
                         'title' => get_string('move'),
                         'class' => 'btn btn-secondary',
                     ]
@@ -329,23 +329,19 @@ class course_group_users_form extends moodleform {
         // Process incoming adds.
         if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
             $userstoassign = $this->potentialusers->get_selected_users();
-            $moving = false;
         }
 
         // Do the work.
         if (!empty($userstoassign)) {
 
             foreach ($userstoassign as $adduser) {
-                $allow = true;
 
                 // Check the userid is valid.
                 if (!company::check_valid_user($this->selectedcompany, $adduser->id, $this->departmentid)) {
                     throw new moodle_exception('invaliduserdepartment', 'block_iomad_company_management');
                 }
 
-                if ($allow) {
-                    company_user::assign_group($adduser, $this->courseid, $this->groupid, $moving);
-                }
+                company_user::assign_group($this->selectedcompany, $adduser, $this->courseid, $this->groupid, $moving);
             }
 
             $this->potentialusers->invalidate_selected_users();

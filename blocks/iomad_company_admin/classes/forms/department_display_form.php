@@ -173,7 +173,7 @@ class department_display_form extends company_moodleform {
 
         $output->display_tree_selector_form($this->company, $mform);
 
-        $buttonarray = array();
+        $buttonarray = [];
         $buttonarray[] = $mform->createElement('submit', 'create',
                                 get_string('createdepartment', 'block_iomad_company_admin'));
         if (!empty($subdepartmentslist)) {

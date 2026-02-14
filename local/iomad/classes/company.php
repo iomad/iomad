@@ -3779,7 +3779,7 @@ class company {
                 $DB->delete_records('company_course_groups', ['groupid' => $groupid]);
             }
         }
-        
+
         return true;
     }
 
@@ -3804,7 +3804,7 @@ class company {
         // All current course enrolled users to this company group.
         if ($users = $DB->get_records_sql("SELECT ue.userid
                                            FROM {user_enrolments} ue
-                                           JOIN {enrol} ON (ue.enrolid = e.id)
+                                           JOIN {enrol} e ON (ue.enrolid = e.id)
                                            WHERE e.courseid = :courseid",
                                           ['courseid' => $courseid])) {
             foreach ($users as $user) {
@@ -3912,7 +3912,7 @@ class company {
                     $DB->update_record('user', $user);
                 }
                 if (!empty($suspend)) {
-                    \core\session\manager::kill_user_sessions($user->id);
+                    \core\session\manager::destroy_user_sessions($user->id);
                 }
             }
         }

@@ -99,7 +99,7 @@ class course_edit_form extends moodleform {
         $mform->addRule('shortname', get_string('missingshortname'), 'required', null, 'client');
         $mform->setType('shortname', PARAM_MULTILANG);
 
-        $selectarray = array();
+        $selectarray = [];
         $plugins = enrol_get_plugins(true);
         if (!empty($plugins['self'])) {
             $selectarray[0] = get_string('selfenrolled', 'block_iomad_company_admin');
@@ -146,7 +146,7 @@ class course_edit_form extends moodleform {
         $handler->instance_form_definition($mform, 0);
 
         // Add action buttons.
-        $buttonarray = array();
+        $buttonarray = [];
         $buttonarray[] = &$mform->createElement('submit', 'submitbutton',
                             get_string('createcourse', 'block_iomad_company_admin'));
         $buttonarray[] = &$mform->createElement('submit', 'submitandviewbutton',

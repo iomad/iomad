@@ -514,10 +514,10 @@ class company_iomadsaml2_form extends moodleform {
         global $DB, $companyid;
 
         $currentidpsrs = $DB->get_records('auth_iomadsaml2_idps', ['companyid' => $companyid]);
-        $oldidps = array();
+        $oldidps = [];
         foreach ($currentidpsrs as $idpentity) {
             if (!isset($oldidps[$idpentity->metadataurl])) {
-                $oldidps[$idpentity->metadataurl] = array();
+                $oldidps[$idpentity->metadataurl] = [];
             }
 
             $oldidps[$idpentity->metadataurl][$idpentity->entityid] = $idpentity;

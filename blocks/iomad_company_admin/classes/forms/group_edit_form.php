@@ -53,6 +53,9 @@ class group_edit_form extends company_moodleform {
     /** @var object output */
     protected $output = null;
 
+    /** @var string action */
+    protected $action = null;
+
     /**
      * Constructor function
      *
