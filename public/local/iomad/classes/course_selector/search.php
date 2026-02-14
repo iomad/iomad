@@ -23,6 +23,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+define('AJAX_SCRIPT', true);
+
 use local_iomad\custom_context\context_company;
 use local_iomad\iomad;
 

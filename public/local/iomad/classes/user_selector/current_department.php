@@ -142,7 +142,7 @@ class current_department extends company_base {
                  WHERE
                  $wherecondition
                  AND u.suspended = 0
-                 AND  u.id != :userid
+                 AND  u.id <> :userid
                  AND cu.departmentid = :departmentid
                  $othermanagersql
                  $rolesql";

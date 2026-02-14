@@ -101,8 +101,8 @@ class potential_company extends company_base {
                                     SELECT mcc.courseid
                                     FROM {company_course} mcc
                                     LEFT JOIN {iomad_courses} mic ON (mcc.courseid = mic.courseid)
-                                    WHERE mic.shared!=2
-                                    AND mcc.companyid != :companyid
+                                    WHERE mic.shared <> 2
+                                    AND mcc.companyid <> :companyid
                                 ) ";
             } else {
                 $company = new company($this->companyid);
@@ -111,8 +111,8 @@ class potential_company extends company_base {
                                     SELECT mcc.courseid
                                     FROM {company_course} mcc
                                     LEFT JOIN {iomad_courses} mic ON (mcc.courseid = mic.courseid)
-                                    WHERE mic.shared!=2
-                                    AND mcc.companyid != :companyid
+                                    WHERE mic.shared <> 2
+                                    AND mcc.companyid <> :companyid
                                 )
                                 AND c.id IN (
                                     SELECT courseid
@@ -150,15 +150,17 @@ class potential_company extends company_base {
 
         $sqldistinct = " FROM {course} c
                         WHERE $wherecondition
-                        AND c.id != :siteid
+                        AND c.id <> :siteid
                         $departmentcondition $sharedsql";
 
         $sql = " FROM {course} c
                 WHERE $wherecondition
-                AND c.id != :siteid
+                AND c.id <> :siteid
                 $departmentcondition $sharedsql";
 
         $order = ' ORDER BY c.fullname ASC';
+
+        // Do we get too many results?
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params) +
             $DB->count_records_sql($distinctcountfields . $sqldistinct, $params);
@@ -167,8 +169,9 @@ class potential_company extends company_base {
             }
         }
 
+        // Get the list of courses.
         $allcourses = $DB->get_records_sql($fields . $sql . $order, $params) +
-        $DB->get_records_sql($distinctfields . $sqldistinct . $order, $params);
+                      $DB->get_records_sql($distinctfields . $sqldistinct . $order, $params);
 
         // Only show one list of courses.
         $availablecourses = [];
@@ -176,14 +179,11 @@ class potential_company extends company_base {
             $availablecourses[$course->id] = $course;
         }
 
-        if (empty($availablecourses)) {
-            return [];
-        }
-
         // Have any of the courses got enrollments?
         $this->process_enrollments($availablecourses);
         $this->process_hidden_courses($availablecourses);
 
+        // Deal with any search text.
         if ($search) {
             $groupname = get_string('potcoursesmatching', 'block_iomad_company_admin', $search);
         } else {

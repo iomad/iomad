@@ -113,10 +113,10 @@ class potential_department extends company_base {
         if ($this->showothermanagers) {
             foreach (array_keys($userlist) as $id) {
                 $sql = "SELECT c.name FROM {company} c
-                        INNER JOIN {company_users} cu ON c.id = cu.companyid
+                        JOIN {company_users} cu ON c.id = cu.companyid
                         WHERE
                         cu.userid = $id
-                        AND c.id != :companyid
+                        AND c.id <> :companyid
                         ORDER BY cu.id";
                 if ($companies = $DB->get_records_sql($sql, ['companyid' => $this->companyid], 0, 1)) {
                     $userlist[$id]->email = $userlist[$id]->email .
@@ -183,9 +183,9 @@ class potential_department extends company_base {
         $userfilter .= " AND u.id NOT IN (
                             SELECT userid FROM {company_users}
                             WHERE companyid = :companyid
-                            AND managertype != 0
-                            AND departmentid != :departmentid
-                            AND managertype != :roleid
+                            AND managertype <> 0
+                            AND departmentid <> :departmentid
+                            AND managertype <> :roleid
                          )";
 
         $deptids = $this->subdepartments;
@@ -224,11 +224,11 @@ class potential_department extends company_base {
         $othermanagersql = " FROM {user} u where 1 = 2";
         if (!empty($this->showothermanagers)) {
             $othermanagersql = " FROM {user} u
-                                 INNER JOIN {company_users} du on du.userid = u.id
+                                 JOIN {company_users} du on du.userid = u.id
                                  WHERE $wherecondition
                                  AND u.suspended = 0
                                  AND du.managertype = 1
-                                 AND du.companyid != :companyid2
+                                 AND du.companyid <> :companyid2
                                  AND du.userid NOT IN (
                                      SELECT userid FROM {company_users}
                                      WHERE managertype = 1

@@ -55,6 +55,7 @@ class current_user extends company_base {
     public function find_courses($search) {
         global $DB;
 
+        // Deal with any search text.
         if ($search) {
             $groupname = get_string('coursesmatching', 'block_iomad_company_admin', $search);
         } else {
@@ -91,11 +92,6 @@ class current_user extends company_base {
         // Deal with hidden courses.
         $this->process_hidden_courses($coursearray);
 
-        // Do we have anything??
-        if (!empty($coursearray)) {
-            return [$groupname => $coursearray];
-        } else {
-            return [];
-        }
+        return [$groupname => $coursearray];
     }
 }

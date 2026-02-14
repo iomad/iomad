@@ -81,7 +81,7 @@ class potential_company extends company_base {
                            SELECT cct.templateid
                            FROM {company_comp_templates} cct
                            LEFT JOIN {iomad_templates} it ON (cct.templateid = it.templateid)
-                           WHERE it.shared = 1
+                           WHERE it.shared <> 1
                        ) ";
 
         $fields = 'SELECT ' . $this->required_fields_sql('ct');
@@ -117,11 +117,6 @@ class potential_company extends company_base {
         $availabletemplates = [];
         foreach ($alltemplates as $template) {
             $availabletemplates[$template->id] = $template;
-        }
-
-        // Do we have anything?
-        if (empty($availabletemplates)) {
-            return [];
         }
 
         // Set up the search text reference.

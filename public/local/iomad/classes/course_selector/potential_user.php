@@ -129,42 +129,23 @@ class potential_user extends company_base {
 
         // Deal with shared courses.
         if ($this->shared) {
-            if (!$this->licenses) {
-                $sharedsql = " FROM {course} c
-                               INNER JOIN {iomad_courses} pc ON c.id=pc.courseid
-                               WHERE $wherecondition
-                               AND pc.shared = 1
-                               AND pc.licensed = 0
-                               $currentcoursesql";
-                $partialsharedsql = " FROM {course} c
-                                    WHERE $wherecondition
-                                    AND c.id IN (
-                                        SELECT pc.courseid
-                                        FROM {iomad_courses} pc
-                                        INNER JOIN {company_shared_courses} csc ON pc.courseid=csc.courseid
-                                        WHERE pc.shared = 2
-                                        AND pc.licensed = 0
-                                        AND csc.companyid = :companyid
-                                    )
-                                    $currentcoursesql";
-            } else {
-                $sharedsql = " FROM {course} c
-                               INNER JOIN {iomad_courses} pc ON c.id=pc.courseid
-                               WHERE $wherecondition
-                               AND pc.shared = 1
-                               AND pc.licensed = 0
-                               $currentcoursesql";
-                $partialsharedsql = " FROM {course} c
-                                      WHERE $wherecondition
-                                      AND c.id IN (
-                                          SELECT pc.courseid
-                                          FROM {iomad_courses} pc
-                                          INNER JOIN {company_shared_courses} csc ON pc.courseid=csc.courseid
-                                          WHERE pc.shared=2 AND pc.licensed = 0
-                                          AND csc.companyid = :companyid
-                                      )
-                                      $currentcoursesql";
-            }
+            $sharedsql = " FROM {course} c
+                           JOIN {iomad_courses} pc ON c.id=pc.courseid
+                           WHERE $wherecondition
+                           AND pc.shared = 1
+                           AND pc.licensed = 0
+                           $currentcoursesql";
+            $partialsharedsql = " FROM {course} c
+                                WHERE $wherecondition
+                                AND c.id IN (
+                                    SELECT pc.courseid
+                                    FROM {iomad_courses} pc
+                                    JOIN {company_shared_courses} csc ON pc.courseid=csc.courseid
+                                    WHERE pc.shared = 2
+                                    AND pc.licensed = 0
+                                    AND csc.companyid = :companyid
+                                )
+                                $currentcoursesql";
         } else {
             $sharedsql = " FROM {course} c WHERE 1 = 2";
             $partialsharedsql = " FROM {course} c WHERE 1 = 2";
@@ -186,11 +167,6 @@ class potential_user extends company_base {
         $availablecourses = $DB->get_records_sql($fields . $sql . $order, $params) +
                             $DB->get_records_sql($fields . $sharedsql . $order, $params) +
                             $DB->get_records_sql($fields . $partialsharedsql . $order, $params);
-
-        // Did we get anything back?
-        if (empty($availablecourses)) {
-            return [];
-        }
 
         // Mark any hidden courses.
         $this->process_hidden_courses($availablecourses);

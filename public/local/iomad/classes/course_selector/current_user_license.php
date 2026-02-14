@@ -25,9 +25,8 @@
 
 namespace local_iomad\course_selector;
 
-use context_course;
 use context_system;
-use local_iomad\{company, iomad};
+use local_iomad\iomad;
 use local_iomad\custom_context\context_company;
 
 /**
@@ -72,36 +71,38 @@ class current_user_license extends company_base {
         $fields      = 'SELECT clu.id, c.fullname ';
         $countfields = 'SELECT COUNT(clu.id)';
 
-        $sql = " FROM {course} c,
-                        {companylicense} cl,
-                        {companylicense_users} clu
-                        WHERE clu.licensecourseid = c.id
-                        AND clu.licenseid = cl.id
-                        AND $wherecondition
-                        AND clu.userid = :userid
-                        AND clu.licenseid = :licenseid
-                        AND clu.timecompleted IS NULL";
+        $sql = " FROM {course} c
+                JOIN {companylicense_users} clu ON (c.id = clu.licensecourseid)
+                JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+                WHERE $wherecondition
+                AND clu.userid = :userid
+                AND clu.licenseid = :licenseid
+                AND clu.timecompleted IS NULL";
 
         $order = ' ORDER BY c.fullname ASC';
+
+        // Are there too many results?
         if (!$this->is_validating()) {
             $availablememberscount = $DB->count_records_sql($countfields . $sql, $params);
             if ($availablememberscount > get_config('local_iomad', 'max_select_courses')) {
                 return $this->too_many_results($search, $availablememberscount);
             }
         }
+
+        // Get the available courses.
         $availablecourses = $DB->get_records_sql($fields . $sql . $order, $params);
 
-        if (empty($availablecourses)) {
-            return [];
-        }
         $this->process_license_allocations($availablecourses, $this->user->id);
         $this->process_hidden_courses($availablecourses, true);
 
+        // Deal with any search text.
         if ($search) {
             $groupname = get_string('curlicensecoursesmatching', 'block_iomad_company_admin', $search);
         } else {
             $groupname = get_string('curlicensecourses', 'block_iomad_company_admin');
         }
+
+        // Return the results.
         return [$groupname => $availablecourses];
     }
 
@@ -191,15 +192,13 @@ class current_user_license extends company_base {
         }
 
         // Add some additional sensible conditions.
-        if (
-            !iomad::has_capability('moodle/course:viewhiddencourses', context_system::instance()) &&
+        if (!iomad::has_capability('moodle/course:viewhiddencourses', context_system::instance()) &&
             !iomad::has_capability(
                 'moodle/course:viewhiddencourses',
                 context_company::instance(
                     iomad::get_my_companyid(context_system::instance())
                 )
-            )
-        ) {
+            )) {
             $tests[] = $u . 'visible = 1';
         }
 
@@ -214,7 +213,8 @@ class current_user_license extends company_base {
         // If we are validating a set list of courseids, add an id IN (...) test.
         if (!empty($this->validatingcourseids)) {
             list($coursetest, $courseparams) = $DB->get_in_or_equal($this->validatingcourseids,
-                                               SQL_PARAMS_NAMED, 'val000');
+                                                                    SQL_PARAMS_NAMED,
+                                                                    'val000');
             $tests[] = 'clu.id ' . $coursetest;
             $params = array_merge($params, $courseparams);
         }
