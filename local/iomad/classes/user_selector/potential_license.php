@@ -132,7 +132,7 @@ class potential_license extends company_base {
 
         if (!$DB->get_records_sql("SELECT pc.id
                                    FROM {iomad_courses} pc
-                                   INNER JOIN {companylicense_courses} clc
+                                   JOIN {companylicense_courses} clc
                                    ON clc.courseid = pc.courseid
                                    WHERE clc.licenseid = :licenseid
                                    AND pc.shared = 1",
@@ -144,7 +144,7 @@ class potential_license extends company_base {
             foreach ($courses as $course) {
                 if ($DB->get_record_select(
                     'iomad_courses',
-                    "courseid = :courseid AND shared!= 0",
+                    "courseid = :courseid AND shared <> 0",
                     ['courseid' => $course->courseid])) {
                     $shared = true;
                 }

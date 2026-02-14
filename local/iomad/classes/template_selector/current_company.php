@@ -79,18 +79,8 @@ class current_company extends company_base {
         $fields = 'SELECT DISTINCT ' . $this->required_fields_sql('ct');
         $countfields = 'SELECT COUNT(1)';
 
-        // Deal with shared templates.
-        if ($this->shared) {
-            $sharedsql = " FROM {competency_template} ct
-                           INNER JOIN {iomad_templates} it
-                           ON ct.id=it.templateid
-                           WHERE it.shared = 1";
-        } else {
-            $sharedsql = " FROM {competency_template} ct WHERE 1 = 2";
-        }
-
         $sql = " FROM {competency_template} ct
-                INNER JOIN {company_comp_templates} cct ON (
+                JOIN {company_comp_templates} cct ON (
                     ct.id = cct.templateid
                     AND cct.companyid = :companyid
                 )
@@ -100,20 +90,14 @@ class current_company extends company_base {
 
         // Are we getting back too many results?
         if (!$this->is_validating()) {
-            $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params) +
-                                     $DB->count_records_sql($countfields . $sharedsql, $params);
+            $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
             if ($potentialmemberscount > get_config('local_iomad', 'max_select_templates')) {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }
 
         // Get the available templates.
-        $availabletemplates = $DB->get_records_sql($fields . $sql . $order, $params) +
-                              $DB->get_records_sql($fields . $sharedsql . $order, $params);
-
-        if (empty($availabletemplates)) {
-            return [];
-        }
+        $availabletemplates = $DB->get_records_sql($fields . $sql . $order, $params);
 
         // Set up the search group text.
         if ($search) {
@@ -122,6 +106,6 @@ class current_company extends company_base {
             $groupname = get_string('currcompanytemplates', 'block_iomad_company_admin');
         }
 
-        return [$groupname => availabletemplates];
+        return [$groupname => $availabletemplates];
     }
 }

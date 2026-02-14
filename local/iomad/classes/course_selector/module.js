@@ -75,7 +75,7 @@ M.local_iomad_course_selector.init_course_selector = function (Y, name, hash, ex
 
             // Replace the Clear submit button with a clone that is not a submit button.
             var clearbtn = Y.one('#' + this.name + '_clearbutton');
-            this.clearbutton = Y.Node.create('<input type="button" value="' + clearbtn.get('value') + '" />');
+            this.clearbutton = Y.Node.create('<input type="button" value="' + clearbtn.get('value') + '" class="btn btn-secondary mx-1"/>');
             clearbtn.replace(Y.Node.getDOMNode(this.clearbutton));
             this.clearbutton.set('id', + this.name + "_clearbutton");
             this.clearbutton.on('click', this.handle_clear, this);
@@ -150,7 +150,8 @@ M.local_iomad_course_selector.init_course_selector = function (Y, name, hash, ex
             });
 
             this.lastsearch = value;
-            this.listbox.setStyle('background','url(' + M.util.image_url('i/loading', 'moodle') + ') no-repeat center center');
+            this.listbox.setStyle('background', 'url(' + M.util.image_url('i/loading', 'moodle') + ') no-repeat center center');
+            this.listbox.setStyle('background-size', '3em');
         },
         /**
          * Handle what happens when we get some data back from the search.

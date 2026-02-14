@@ -133,14 +133,14 @@ class potential_group extends company_base {
                      u.id IN (
                          SELECT DISTINCT(ue.userid)
                          FROM {user_enrolments} ue
-                         INNER JOIN {enrol} e ON ue.enrolid=e.id
+                         JOIN {enrol} e ON ue.enrolid=e.id
                          WHERE e.courseid=:courseid
                      )
                      OR u.id IN (
                          SELECT userid
                          FROM {companylicense_users}
                          WHERE licensecourseid = :liccourseid
-                         AND groupid != :licgroupid
+                         AND groupid <> :licgroupid
                      )
                  )";
 

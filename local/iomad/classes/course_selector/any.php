@@ -74,9 +74,6 @@ class any extends company_base {
 
         $availablecourses = $DB->get_records_sql($fields . $sql . $order, $params);
 
-        if (empty($availablecourses)) {
-            return [];
-        }
         $this->process_hidden_courses($availablecourses);
 
         if ($search) {

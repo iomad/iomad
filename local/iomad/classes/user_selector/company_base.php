@@ -189,7 +189,7 @@ abstract class company_base extends \user_selector_base {
         } else {
             $wheresqsl = "ui.fieldid = :profilefieldid
                           AND " . $DB->sql_like('ui.data', ":profilesearch", false, false) .
-                         " AND ui.data != ''";
+                         " AND ui.data <> ''";
             $params = ['profilefieldid' => $this->profilefieldid,
                        'profilesearch' => "%".$search."%"];
             return [$wheresqsl, $params];
@@ -242,7 +242,7 @@ abstract class company_base extends \user_selector_base {
                                                           JOIN {user_info_field} uif ON (uic.id = uif.categoryid)
                                                           WHERE uic.id NOT IN (
                                                               SELECT profileid FROM {company}
-                                                              WHERE id != :companyid
+                                                              WHERE id <> :companyid
                                                           )
                                                           ORDER BY uif.name DESC",
                                                           ['companyid' => $this->companyid]);

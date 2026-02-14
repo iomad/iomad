@@ -64,14 +64,13 @@ class current_company extends company_base {
         // Deal with shared frameworks.
         if ($this->shared) {
             $sharedsql = " FROM {competency_framework} cf
-                           INNER JOIN {iomad_frameworks} if
-                           ON cf.id=if.frameworkid
+                           JOIN {iomad_frameworks} if ON cf.id=if.frameworkid
                            WHERE if.shared = 1";
         } else {
             $sharedsql = " FROM {competency_framework} cf WHERE 1 = 2";
         }
         $sql = " FROM {competency_framework} cf
-                INNER JOIN {company_comp_frameworks} ccf ON (
+                JOIN {company_comp_frameworks} ccf ON (
                     cf.id = ccf.frameworkid
                     AND ccf.companyid = :companyid
                 )
@@ -91,11 +90,6 @@ class current_company extends company_base {
         // Get the list of frameworks.
         $availableframeworks = $DB->get_records_sql($fields . $sql . $order, $params) +
                                $DB->get_records_sql($fields . $sharedsql . $order, $params);
-
-        // If we got nothing return an empty array.
-        if (empty($availableframeworks)) {
-            return [];
-        }
 
         // Set up the return array.
         if ($search) {

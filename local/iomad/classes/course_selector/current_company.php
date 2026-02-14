@@ -92,8 +92,7 @@ class current_company extends company_base {
         if ($this->shared) {
             if ($this->licenses) {
                 $sharedsql = " FROM {course} c
-                               INNER JOIN {iomad_courses} pc
-                               ON c.id=pc.courseid
+                               JOIN {iomad_courses} pc ON c.id=pc.courseid
                                WHERE $wherecondition
                                AND pc.shared = 1
                                AND pc.licensed = 1";
@@ -102,29 +101,29 @@ class current_company extends company_base {
                                       AND c.id IN
                                        (SELECT pc.courseid
                                         FROM {iomad_courses} pc
-                                        INNER JOIN {company_shared_courses} csc
-                                        ON pc.courseid=csc.courseid
-                                        WHERE pc.shared= 2
+                                        JOIN {company_shared_courses} csc ON pc.courseid=csc.courseid
+                                        WHERE pc.shared = 2
                                         AND pc.licensed = 1
                                         AND csc.companyid = :companyid)";
             } else {
                 $sharedsql = " FROM {course} c
-                               INNER JOIN {iomad_courses} pc
-                               ON c.id=pc.courseid
+                               JOIN {iomad_courses} pc ON c.id=pc.courseid
                                WHERE $wherecondition
                                AND pc.shared = 1
                                AND pc.licensed = 0";
                 $partialsharedsql = " FROM {course} c
                                     WHERE $wherecondition
                                     AND c.id IN (
-                                     SELECT pc.courseid FROM {iomad_courses} pc
-                                     INNER JOIN {company_shared_courses} csc ON pc.courseid=csc.courseid
-                                     WHERE pc.shared = 2
-                                     AND pc.licensed = 0
-                                     AND csc.companyid = :companyid)
+                                        SELECT pc.courseid FROM {iomad_courses} pc
+                                        JOIN {company_shared_courses} csc ON pc.courseid=csc.courseid
+                                        WHERE pc.shared = 2
+                                        AND pc.licensed = 0
+                                        AND csc.companyid = :companyid
+                                    )
                                     AND c.id IN (
                                        SELECT courseid FROM {company_course}
-                                       WHERE departmentid = :departmentid)";
+                                       WHERE departmentid = :departmentid
+                                    )";
             }
         } else {
             $sharedsql = " FROM {course} c WHERE 1 = 2";
@@ -133,11 +132,17 @@ class current_company extends company_base {
         }
 
         $sql = " FROM {course} c
-                INNER JOIN {company_course} cc ON (c.id = cc.courseid AND cc.companyid = :companyid)
-                WHERE $wherecondition $departmentsql $licensesql";
+                JOIN {company_course} cc ON (
+                    c.id = cc.courseid
+                    AND cc.companyid = :companyid
+                )
+                WHERE $wherecondition
+                $departmentsql
+                $licensesql";
 
         $order = ' ORDER BY c.fullname ASC';
 
+        // Do we get too many results?
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params) +
                                      $DB->count_records_sql($countfields . $sharedsql, $params) +
@@ -147,29 +152,22 @@ class current_company extends company_base {
             }
         }
 
+        // Get the available courses.
         $availablecourses = $DB->get_records_sql($fields . $sql . $order, $params) +
                             $DB->get_records_sql($fields . $sharedsql . $order, $params) +
                             $DB->get_records_sql($fields . $partialsharedsql . $order, $params);
-
-        if (empty($availablecourses)) {
-            return [];
-        }
 
         // Have any of the courses got enrollments?
         $this->process_enrollments($availablecourses);
         $this->process_hidden_courses($availablecourses);
 
-        // Set up empty return.
-        $coursearray = [];
-        if (!empty($availablecourses)) {
-            if ($search) {
-                $groupname = get_string('companycoursesmatching', 'block_iomad_company_admin', $search);
-            } else {
-                $groupname = get_string('companycourses', 'block_iomad_company_admin');
-            }
-            $coursearray[$groupname] = $availablecourses;
+        // Deal with any search text.
+        if ($search) {
+            $groupname = get_string('companycoursesmatching', 'block_iomad_company_admin', $search);
+        } else {
+            $groupname = get_string('companycourses', 'block_iomad_company_admin');
         }
 
-        return $coursearray;
+        return [$groupname => $availablecourses];
     }
 }

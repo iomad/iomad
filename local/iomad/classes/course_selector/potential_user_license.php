@@ -120,10 +120,6 @@ class potential_user_license extends company_base {
         // Get the list of courses.
         $availablecourses = $DB->get_records_sql($distinctfields . $sql . $order, $params);
 
-        if (empty($availablecourses)) {
-            return [];
-        }
-
         // Mark hidden courses.
         $this->process_hidden_courses($availablecourses);
 

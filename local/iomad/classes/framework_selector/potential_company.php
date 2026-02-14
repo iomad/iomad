@@ -62,7 +62,7 @@ class potential_company extends company_base {
         $sharedsql = " AND cf.id NOT IN (
                            SELECT frameworkid
                            FROM {iomad_frameworks}
-                           WHERE shared = 1
+                           WHERE shared <> 1
                        )
                        AND cf.id NOT IN (
                            SELECT frameworkid
@@ -103,11 +103,6 @@ class potential_company extends company_base {
         $availableframeworks = [];
         foreach ($allframeworks as $framework) {
             $availableframeworks[$framework->id] = $framework;
-        }
-
-        // If we have nothing, return an empty array.
-        if (empty($availableframeworks)) {
-            return [];
         }
 
         // Deal with any search groupings.

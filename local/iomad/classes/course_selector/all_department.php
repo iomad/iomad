@@ -118,7 +118,7 @@ class all_department extends company_base {
         $params['gcompanyid'] = $this->companyid;
 
         $sql = " FROM {course} c
-                INNER JOIN {company_course} cc ON (
+                JOIN {company_course} cc ON (
                     c.id = cc.courseid
                     AND cc.companyid = :companyid
                 )
@@ -151,7 +151,7 @@ class all_department extends company_base {
 
         // Find global courses.
         $globalcoursesql = " FROM {course} c
-                             WHERE c.id !='1'
+                             WHERE c.id <> '1'
                              AND c.id IN (
                                  SELECT pc.courseid
                                  FROM {iomad_courses} pc
@@ -162,11 +162,6 @@ class all_department extends company_base {
         $params['pclicensedid'] = $this->license;
 
         $globalcourses = $DB->get_records_sql($fields . $globalcoursesql . $order, $params);
-
-        // Did we get anything?
-        if (empty($availablecourses) && empty($globalcourses)) {
-            return [];
-        }
 
         // Deal with hidden courses.
         $this->process_hidden_courses($availablecourses);

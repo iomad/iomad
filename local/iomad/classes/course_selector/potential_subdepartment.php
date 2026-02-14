@@ -98,13 +98,13 @@ class potential_subdepartment extends company_base {
         $sqldistinct = " FROM {course} c,
                         JOIN {company_course} cc ON (c.id = cc.courseid)
                         WHERE $wherecondition
-                        AND c.id != :siteid
+                        AND c.id <> :siteid
                         $licensesql
                         $departmentselect";
 
         $sql = " FROM {course} c
                 WHERE $wherecondition
-                AND c.id != :siteid
+                AND c.id <> :siteid
                 AND NOT EXISTS (
                     SELECT NULL FROM {company_course}
                     WHERE courseid = c.id
@@ -114,7 +114,7 @@ class potential_subdepartment extends company_base {
             $sqlopenshared = " FROM {course} c,
                             JOIN {iomad_courses} ic ON (c.id = ic.courseid)
                             WHERE $wherecondition
-                            AND c.id != :siteid
+                            AND c.id <> :siteid
                             AND ic.shared = 1
                             $licensesql";
         }
@@ -138,11 +138,6 @@ class potential_subdepartment extends company_base {
                                 $DB->get_records_sql($distinctfields . $sqlopenshared . $order, $params);
         }
 
-        // Did we find anything?
-        if (empty($availablecourses)) {
-            return [];
-        }
-
         // Deduplicate the list.
         $sanitisedcourses = [];
         foreach ($availablecourses as $key => $availablecourse) {
@@ -153,6 +148,7 @@ class potential_subdepartment extends company_base {
         $this->process_enrollments($sanitisedcourses);
         $this->process_hidden_courses($availablecourses);
 
+        // Deal with any search text.
         if ($search) {
             $groupname = get_string('potcoursesmatching', 'block_iomad_company_admin', $search);
         } else {
