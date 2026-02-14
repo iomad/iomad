@@ -27,7 +27,7 @@ use block_iomad_company_admin\event\{company_license_created, company_license_up
 use block_iomad_company_admin\forms\company_license_form;
 use core\output\notification;
 
-require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
+require_once(__DIR__ . '/../../config.php');
 require_once('lib.php');
 require_once($CFG->libdir . '/formslib.php');
 

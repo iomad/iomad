@@ -26,7 +26,7 @@
 use block_iomad_company_admin\event\dashboard_page_viewed;
 use block_iomad_company_admin\forms\company_courses_form;
 
-require_once(__DIR__ . '/../../config.php'); // Creates $PAGE.
+require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
 require_once($CFG->libdir . '/formslib.php');
 
