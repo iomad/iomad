@@ -67,7 +67,7 @@ $child = false;
 if (!$new) {
     // Set the companyid.
     $companyid = iomad::get_my_companyid($systemcontext);
-    $companycontext =  context_company::instance($companyid);
+    $companycontext = context_company::instance($companyid);
 
     // Are we alled to do this?
     iomad::require_capability('block/iomad_company_admin:company_edit', $companycontext);
@@ -178,7 +178,7 @@ if (!$new) {
             if (!empty($companyrecord->id)) {
                 $isadding = false;
                 $companyid = $companyrecord->id;
-                $companycontext =  context_company::instance($companyid);
+                $companycontext = context_company::instance($companyid);
                 $new = false;
             }
             unset($SESSION->current_editing_company_data);
@@ -209,7 +209,7 @@ $PAGE->set_heading($linktext);
 dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Are there any existing companies?
-$firstcompany = !$DB->record_exists('company', array());
+$firstcompany = !$DB->record_exists('company', []);
 
 // Set the dashboard URL as default.
 $companylist = new moodle_url('/blocks/iomad_company_admin/index.php');
@@ -647,7 +647,7 @@ if ($mform->is_cancelled()) {
 
         // Deal with any assigned templates.
         if (empty($data->templates)) {
-            $data->templates = array();
+            $data->templates = [];
         }
         $company->assign_role_templates($data->templates, true);
 

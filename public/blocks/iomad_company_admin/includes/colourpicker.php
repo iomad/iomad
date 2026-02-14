@@ -15,18 +15,29 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard custom colour picker form class
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   mod_customcert
- * @by        2013 Mark Nelson <markn@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+// This is based on code in mod_customcert
+// developed in 2013 by Mark Nelson <markn@moodle.com>.
 
 defined('MOODLE_INTERNAL') || die('Direct access to this script is forbidden.');
 
 require_once($CFG->dirroot . '/lib/form/editor.php');
 
+/**
+ * IOMAD Dashboard custom colour picker form class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class moodlequickform_iomad_colourpicker extends moodlequickform_editor {
 
     /**
@@ -35,7 +46,7 @@ class moodlequickform_iomad_colourpicker extends moodlequickform_editor {
      * @param string $value
      */
     public function setvalue($value) {
-        $this->updateAttributes(array('value' => $value));
+        $this->updateAttributes(['value' => $value]);
     }
 
     /**
@@ -53,13 +64,33 @@ class moodlequickform_iomad_colourpicker extends moodlequickform_editor {
     public function tohtml() {
         global $PAGE, $OUTPUT;
 
-        $PAGE->requires->js_init_call('M.util.init_colour_picker', array($this->getAttribute('id'), null));
-        $content = '<label class="accesshide" for="' . $this->getAttribute('id') . '" >' . $this->getLabel() . '</label>';
-        $content .= html_writer::start_tag('div', array('class' => 'form-colourpicker defaultsnext'));
-        $content .= html_writer::tag('div', $OUTPUT->pix_icon('i/loading', get_string('loading', 'admin'), 'moodle',
-            array('class' => 'loadingicon')), array('class' => 'admin_colourpicker clearfix'));
-        $content .= html_writer::empty_tag('input', array('type' => 'text', 'id' => $this->getAttribute('id'),
-            'name' => $this->getName(), 'value' => $this->getValue(), 'size' => '12'));
+        $PAGE->requires->js_init_call('M.util.init_colour_picker', [$this->getAttribute('id'), null]);
+        $content = html_writer::tag('label', $this->getLabel(), ['class' => "accesshide", 'for' => $this->getAttribute('id')]);
+        $content .= html_writer::start_tag('div', ['class' => 'form-colourpicker defaultsnext']);
+        $content .= html_writer::tag(
+            'div',
+            $OUTPUT->pix_icon(
+                'i/loading',
+                get_string('loading', 'admin'),
+                'moodle',
+                [
+                    'class' => 'loadingicon',
+                ]
+            ),
+            [
+                'class' => 'admin_colourpicker clearfix',
+            ]
+        );
+        $content .= html_writer::empty_tag(
+            'input',
+            [
+                'type' => 'text',
+                'id' => $this->getAttribute('id'),
+                'name' => $this->getName(),
+                'value' => $this->getValue(),
+                'size' => '12',
+            ]
+        );
         $content .= html_writer::end_tag('div');
 
         return $content;

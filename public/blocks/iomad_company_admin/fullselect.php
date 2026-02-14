@@ -15,34 +15,38 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard choose tenant from list of available main page
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_company_admin\event\dashboard_page_viewed;
+use block_iomad_company_admin\output\full_companies_select;
 use local_iomad\custom_context\context_company;
 
-require_once( '../../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
 
-// We always require users to be logged in for this page.
+$search = optional_param('search', '', PARAM_ALPHANUM);
+
+// Log in and set up $PAGE.
 require_login();
 
-// Get parameters.
-$search = optional_param('search', '', PARAM_ALPHANUM);
+// Do we have a company set up or.....?
 $systemcontext = context_system::instance();
 $companycontext = $systemcontext;
-
 $company = $SESSION->currenteditingcompany;
-
 if (!empty($company)) {
-    $companycontext =  context_company::instance($company);
+    $companycontext = context_company::instance($company);
 }
 
+// Set the URL.
 $url = new moodle_url('/blocks/iomad_company_admin/fullselect.php');
 
-// Page setup stuff.
+// Finish setting up PAGE.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($url);
 $PAGE->set_pagelayout('base');
@@ -50,27 +54,27 @@ $PAGE->set_title(get_string('dashboard', 'block_iomad_company_admin'));
 $PAGE->requires->js_call_amd('block_iomad_company_admin/admin', 'init');
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
-// Renderer
-$renderer = $PAGE->get_renderer('block_iomad_company_admin');
-
-// get output renderer
+// Get output renderer.
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Set the page heading.
 $PAGE->set_heading(get_string('selectacompany', 'block_iomad_company_admin'));
 
-$full_companies_select = new block_iomad_company_admin\output\full_companies_select(['search' => $search]);
+$fullcompaniesselect = new full_companies_select(['search' => $search]);
 $companysearchform = new local_iomad\forms\company_search_form($url, []);
 
+// Display the page.
 echo $output->header();
 
+// Display the form.
 echo html_writer::start_tag('p');
 $companysearchform->display();
 echo html_writer::end_tag('p');
 
+// Display the selector.
+echo $output->render($fullcompaniesselect);
 
-echo $output->render($full_companies_select);
-
+// Display the footer.
 echo $output->footer();

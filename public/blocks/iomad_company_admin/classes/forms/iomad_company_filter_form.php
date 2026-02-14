@@ -77,7 +77,7 @@ class iomad_company_filter_form extends \moodleform {
         $mform->closeHeaderBefore('buttonar');
 
         // Action buttons.
-        $buttonarray = array();
+        $buttonarray = [];
         $buttonarray[] = $mform->createElement('submit', 'submitbutton', get_string('companyfilter', 'local_iomad'));
         $buttonarray[] = $mform->createElement('submit', 'resetbutton', get_string('reset'), null, false);
         $mform->addGroup($buttonarray, 'buttonar', '', ' ', false);

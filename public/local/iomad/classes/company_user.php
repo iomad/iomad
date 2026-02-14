@@ -1025,26 +1025,40 @@ class company_user {
     /**
      * Assign a user to a course group
      *
+     * @param integer $companyid
      * @param object $user
      * @param integer $courseid
      * @param integer $groupid
      * @param bool $move
      * @return void
      */
-    public static function assign_group(object $user, int $courseid = 0, int $groupid = 0, $move = true) {
+    public static function assign_group(int $companyid, object $user, int $courseid = 0, int $groupid = 0, $move = false) {
         global $DB;
 
         // Deal with any licenses.
-        if ($licenseinfo = $DB->get_record('companylicense_users', ['licensecourseid' => $courseid, 'userid' => $user->id])) {
-            $DB->set_field('companylicense_users', 'groupid', $groupid, ['id' => $licenseinfo->id]);
+        if ($licenserecords = $DB->get_records_sql(
+            "SELECT clu.id
+             FROM {companylicense_users} clu
+             JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+             WHERE cl.companyid = :companyid
+             AND clu.licensecourseid = :licensecourseid
+             AND clu.userid = :userid
+             AND clu.timecompleted IS NULL",
+            ['licensecourseid' => $courseid,
+             'userid' => $user->id,
+             'companyid' => $companyid])) {
+            foreach ($licenserecords as $licenserecord) {
+                $DB->set_field('companylicense_users', 'groupid', $groupid, ['id' => $licenserecord->id]);
+            }
         }
 
         // Are we adding to another group or moving to another group?
         if ($move) {
-            // Clear down the user from all of the other course groups.
-            $currentgroups = groups_get_all_groups($courseid);
-            foreach ($currentgroups as $group) {
-                groups_remove_member($group->id, $user->id);
+            // Clear down the user from all of the other company course groups.
+            $companygroups = $DB->get_records('company_course_groups', ['companyid' => $companyid,
+                                                                        'courseid' => $courseid]);
+            foreach ($companygroups as $companygroup) {
+                groups_remove_member($companygroup->groupid, $user->id);
             }
         }
 
@@ -1071,15 +1085,15 @@ class company_user {
 
         // Check if the user already belongs to one of the company groups or not still.
         $companygroups = $company->get_course_groups_menu($courseid);
+        [$insql, $inparams] = $DB->get_in_or_equal(array_keys($companygroups),
+                                                   SQL_PARAMS_NAMED,
+                                                   'gids');
+        $inparams['userid'] = $user->id;
         if (!$DB->get_records_sql(
             "SELECT id FROM {groups_members}
              WHERE userid = :userid
-             AND groupid IN (:groups)",
-            [
-                'userid' => $user->id,
-                'groups' => implode(',', array_keys($companygroups)),
-            ]
-        )) {
+             AND groupid {$insql}",
+            $inparams)) {
 
             // Get the company group.
             $companygroup = company::get_company_group($companyid, $courseid);
@@ -1088,8 +1102,24 @@ class company_user {
             groups_add_member($companygroup->id, $user->id);
 
             // Deal with any licenses.
-            if ($licenseinfo = $DB->get_record('companylicense_users', ['licensecourseid' => $courseid, 'userid' => $user->id])) {
-                $DB->set_field('companylicense_users', 'groupid', $companygroup->id, ['id' => $licenseinfo->id]);
+            if ($licenserecords = $DB->get_records_sql(
+                "SELECT clu.id
+                 FROM {companylicense_users} clu
+                 JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+                 WHERE cl.companyid = :companyid
+                 AND clu.licensecourseid = :licensecourseid
+                 AND clu.userid = :userid
+                 AND clu.timecompleted IS NULL",
+                ['licensecourseid' => $courseid,
+                 'userid' => $user->id,
+                 'companyid' => $companyid])) {
+                foreach ($licenserecords as $licenserecord) {
+                    $DB->set_field(
+                        'companylicense_users',
+                        'groupid',
+                        $companygroup->id,
+                        ['id' => $licenserecord->id]);
+                }
             }
         }
     }

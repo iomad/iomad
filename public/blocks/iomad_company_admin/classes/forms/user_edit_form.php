@@ -151,18 +151,9 @@ class user_edit_form extends moodleform {
             $mform->addRule($necessaryname, $strrequired, 'required', null, 'client');
             $mform->setType($necessaryname, PARAM_NOTAGS);
         }
-
-        // Do not show email field if change confirmation is pending.
-        if (!empty($CFG->emailchangeconfirmation) && !empty($user->preference_newemail)) {
-            $notice = get_string('auth_emailchangepending', 'auth_email', $user);
-            $notice .= '<br /><a href="edit.php?cancelemailchange=1&amp;id='.$user->id.'">'
-                    . get_string('auth_emailchangecancel', 'auth_email') . '</a>';
-            $mform->addElement('static', 'emailpending', get_string('email'), $notice);
-        } else {
-            $mform->addElement('text', 'email', get_string('email'), 'maxlength="100" size="30"');
-            $mform->addRule('email', $strrequired, 'required', null, 'client');
-            $mform->setType('email', PARAM_EMAIL);
-        }
+        $mform->addElement('text', 'email', get_string('email'), 'maxlength="100" size="30"');
+        $mform->addRule('email', $strrequired, 'required', null, 'client');
+        $mform->setType('email', PARAM_EMAIL);
         if (!empty(get_config('local_iomad', 'allow_username'))) {
             $mform->addElement('text', 'username', get_string('username'), 'size="20"');
             $mform->addHelpButton('username', 'username', 'auth');
@@ -422,7 +413,6 @@ class user_edit_form extends moodleform {
             if (!empty($mylicensedetails->program)) {
                 $mform->addElement('html', html_writer::end_tag('div'));
             }
-
         }
 
         // Deal with manual enrolment courses.

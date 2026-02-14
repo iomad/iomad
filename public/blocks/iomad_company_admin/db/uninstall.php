@@ -15,20 +15,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard un-install function
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// This script is run after the dashboard has been installed.
-
+/**
+ * Block un-install function
+ *
+ * @return void
+ */
 function xmldb_block_iomad_company_admin_uninstall() {
 
-    global $DB;
-
-    // Remove table entries for this block in iomad_modules
-    // (yes, I know this isn't really what this is for!!).
-
+    // Nothing in this block to remove.
     return true;
 }

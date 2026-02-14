@@ -17,37 +17,50 @@
 /**
  * Test output mail configuration page
  *
- * @copyright 2019 Victor Deniz <victor@moodle.com>, based on Michael Milette <michael.milette@tngconsulting.ca> code
+ * @package   block_iomad_company_admin
+ * @copyright e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+// Based on code from Victor Deniz <victor@moodle.com> and Michael Milette <michael.milette@tngconsulting.ca>.
+
+use core_admin\form\testoutgoingmailconf_form;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
 
+// Log in and set up $PAGE.
 require_login();
 
+// Set the companyid.
 $systemcontext = context_system::instance();
-
-// Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
+// Can we even do anything?
 iomad::require_capability('block/iomad_company_admin:company_edit_smtp', $companycontext);
 
+// Set the page title.
 $headingtitle = get_string('testoutgoingmailconf', 'admin');
+
+// Set some URLs.
 $homeurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/company_advanced_settings.php');
 $returnurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/testoutgoingconf.php');
 
+// Finish setting up PAGE.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($returnurl);
 $PAGE->set_pagelayout('base');
 $PAGE->set_title($headingtitle);
 
-$form = new core_admin\form\testoutgoingmailconf_form(null, ['returnurl' => $returnurl]);
+// Define the form.
+$form = new testoutgoingmailconf_form(null, ['returnurl' => $returnurl]);
+
+// Is the form cancelled?
 if ($form->is_cancelled()) {
     redirect($homeurl);
 }
@@ -61,7 +74,7 @@ if (!empty($CFG->noemailever)) {
     $msg = get_string('noemaileverwarning', 'admin');
     echo $OUTPUT->notification($msg, \core\output\notification::NOTIFY_ERROR);
 }
-
+// Get the form data.
 $data = $form->get_data();
 if ($data) {
     $emailuser = new stdClass();
@@ -71,11 +84,11 @@ if ($data) {
     // Get the user who will send this email (From:).
     $emailuserfrom = $USER;
     if ($data->from) {
-        if (!$userfrom = \core_user::get_user_by_email($data->from)) {
-            $userfrom = \core_user::get_user_by_username($data->from);
+        if (!$userfrom = core_user::get_user_by_email($data->from)) {
+            $userfrom = core_user::get_user_by_username($data->from);
         }
         if (!$userfrom && validate_email($data->from)) {
-            $dummyuser = \core_user::get_user(\core_user::NOREPLY_USER);
+            $dummyuser = core_user::get_user(core_user::NOREPLY_USER);
             $dummyuser->id = -1;
             $dummyuser->email = $data->from;
             $dummyuser->firstname = $data->from;
@@ -143,5 +156,8 @@ if ($data) {
     echo $OUTPUT->notification($msg, $notificationtype);
 }
 
+// Display the form.
 $form->display();
+
+// Display the footer.
 echo $OUTPUT->footer();

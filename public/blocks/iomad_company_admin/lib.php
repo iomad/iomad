@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard local library functions
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,6 +25,14 @@
 
 use local_iomad\{company, company_user};
 
+/**
+ * Fix the page breadcrumb links and text
+ *
+ * @param object $PAGE
+ * @param string $linktext
+ * @param moodle_url $linkurl
+ * @return void
+ */
 function company_admin_fix_breadcrumb(&$PAGE, $linktext, $linkurl) {
 
     $PAGE->navbar->ignore_active();
@@ -41,43 +51,43 @@ function company_admin_fix_breadcrumb(&$PAGE, $linktext, $linkurl) {
  */
 function block_iomad_company_admin_inplace_editable($itemtype, $itemid, $newvalue) {
     if ($itemtype === 'courses_autoenrol') {
-        return \block_iomad_company_admin\output\courses_autoenrol_editable::update($itemid, $newvalue);
+        return block_iomad_company_admin\output\courses_autoenrol_editable::update($itemid, $newvalue);
     }
     if ($itemtype === 'courses_mandatory') {
         return block_iomad_company_admin\output\courses_mandatory_editable::update($itemid, $newvalue);
     }
     if ($itemtype === 'courses_license') {
-        return \block_iomad_company_admin\output\courses_license_editable::update($itemid, $newvalue);
+        return block_iomad_company_admin\output\courses_license_editable::update($itemid, $newvalue);
     }
     if ($itemtype === 'courses_hasgrade') {
-        return \block_iomad_company_admin\output\courses_hasgrade_editable::update($itemid, $newvalue);
+        return block_iomad_company_admin\output\courses_hasgrade_editable::update($itemid, $newvalue);
     }
     if ($itemtype === 'courses_notifyperiod') {
-        return \block_iomad_company_admin\output\courses_notifyperiod_editable::update($itemid, $newvalue);
+        return block_iomad_company_admin\output\courses_notifyperiod_editable::update($itemid, $newvalue);
     }
     if ($itemtype === 'courses_shared') {
-        return \block_iomad_company_admin\output\courses_shared_editable::update($itemid, $newvalue);
+        return block_iomad_company_admin\output\courses_shared_editable::update($itemid, $newvalue);
     }
     if ($itemtype === 'courses_validlength') {
-        return \block_iomad_company_admin\output\courses_validlength_editable::update($itemid, $newvalue);
+        return block_iomad_company_admin\output\courses_validlength_editable::update($itemid, $newvalue);
     }
     if ($itemtype === 'courses_warncompletion') {
-        return \block_iomad_company_admin\output\courses_warncompletion_editable::update($itemid, $newvalue);
+        return block_iomad_company_admin\output\courses_warncompletion_editable::update($itemid, $newvalue);
     }
     if ($itemtype === 'courses_warnexpire') {
-        return \block_iomad_company_admin\output\courses_warnexpire_editable::update($itemid, $newvalue);
+        return block_iomad_company_admin\output\courses_warnexpire_editable::update($itemid, $newvalue);
     }
     if ($itemtype === 'courses_warnnotstarted') {
-        return \block_iomad_company_admin\output\courses_warnnotstarted_editable::update($itemid, $newvalue);
+        return block_iomad_company_admin\output\courses_warnnotstarted_editable::update($itemid, $newvalue);
     }
     if ($itemtype === 'enrolment_expireafter') {
-        return \block_iomad_company_admin\output\enrolment_expireafter_editable::update($itemid, $newvalue);
+        return block_iomad_company_admin\output\enrolment_expireafter_editable::update($itemid, $newvalue);
     }
     if ($itemtype === 'user_departments') {
-        return \block_iomad_company_admin\output\user_departments_editable::update($itemid, $newvalue);
+        return block_iomad_company_admin\output\user_departments_editable::update($itemid, $newvalue);
     }
     if ($itemtype === 'user_roles') {
-        return \block_iomad_company_admin\output\user_roles_editable::update($itemid, $newvalue);
+        return block_iomad_company_admin\output\user_roles_editable::update($itemid, $newvalue);
     }
 }
 
@@ -92,7 +102,13 @@ function block_iomad_company_admin_inplace_editable($itemtype, $itemid, $newvalu
  * @param bool $embed Whether this file will be served embed into an iframe.
  * @todo MDL-31088 file serving improments
  */
-function block_iomad_company_admin_pluginfile($course, $birecord_or_cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
+function block_iomad_company_admin_pluginfile($course,
+                                              $birecordorcm,
+                                              $context,
+                                              $filearea,
+                                              $args,
+                                              $forcedownload,
+                                              array $options=[]) {
     global $DB, $CFG, $USER;
 
     if ($context->contextlevel != CONTEXT_SYSTEM) {
@@ -101,7 +117,7 @@ function block_iomad_company_admin_pluginfile($course, $birecord_or_cm, $context
 
     if ($filearea === 'classroom_description') {
         if ($CFG->forcelogin) {
-            // no login necessary - unless login forced everywhere
+            // No login necessary - unless login forced everywhere.
             require_login();
         }
 
@@ -109,7 +125,8 @@ function block_iomad_company_admin_pluginfile($course, $birecord_or_cm, $context
 
         $filename = array_pop($args);
         $filepath = $args ? '/'.implode('/', $args).'/' : '/';
-        if (!$file = $fs->get_file($context->id, 'block_iomad_company_admin', 'classroom_description', 0, $filepath, $filename) or $file->is_directory()) {
+        if (!$file = $fs->get_file($context->id, 'block_iomad_company_admin', 'classroom_description', 0, $filepath, $filename) ||
+            $file->is_directory()) {
             send_file_not_found();
         }
 

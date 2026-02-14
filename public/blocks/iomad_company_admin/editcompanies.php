@@ -15,19 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard tenant management main page
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_company_admin\event\{company_deleted, company_suspended, company_unsuspended, dashboard_page_viewed};
+use block_iomad_company_admin\forms\{company_delete_form, iomad_company_filter_form};
+use block_iomad_company_admin\output\editcompanies;
+use block_iomad_company_admin\iomad_company_admin;
+use core\notification;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
+require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
-require_once('lib.php');
+require_once(__DIR__ . '/lib.php');
 
 $delete = optional_param('delete', 0, PARAM_INT);
 $suspend = optional_param('suspend', 0, PARAM_INT);
@@ -78,37 +86,41 @@ $params = [
     'custom3' => $custom3,
 ];
 
-$context = context_system::instance();
-
+// Log on and set up $PAGE.
 require_login();
+
+// Can we even do anything?
+$context = context_system::instance();
 iomad::require_capability('block/iomad_company_admin:company_add_child', $context);
 
-// Correct the navbar.
+// Set the name for the page.
 $linktext = get_string('managecompanies', 'block_iomad_company_admin');
 if (!empty($delete)) {
     $linktext = get_string('deletecompany', 'block_iomad_company_admin');
 }
-$linkurl = new moodle_url('/blocks/iomad_company_admin/editcompanies.php', $params);
 
-// Print the page header.
+// Set the URLs.
+$linkurl = new moodle_url('/blocks/iomad_company_admin/editcompanies.php', $params);
+$returnurl = $linkurl;
+
+// Finish setting up PAGE.
 $PAGE->set_context($context);
 $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
 $PAGE->set_title($linktext);
+
+// Get the renderer.
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Set the page heading.
 $PAGE->set_heading($linktext);
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
-
-$baseurl = new moodle_url(basename(__FILE__), $params);
-$returnurl = $baseurl;
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Set up the filter form.
-$mform = new block_iomad_company_admin\forms\iomad_company_filter_form();
-$mform->set_data(array('companyid' => $companyid));
+$mform = new iomad_company_filter_form();
+$mform->set_data(['companyid' => $companyid]);
 $mform->set_data($params);
 $data = $mform->get_data();
 if (empty($data->showchild)) {
@@ -116,6 +128,7 @@ if (empty($data->showchild)) {
     $params['showchild'] = 0;
 }
 
+// Set some defaults.
 $strdelete = get_string('deletecompany', 'block_iomad_company_admin');
 $strsuspend = get_string('suspendcompany', 'block_iomad_company_admin');
 $strsuspendcheck = get_string('suspendcompanycheck', 'block_iomad_company_admin');
@@ -132,22 +145,26 @@ if ($resetbutton) {
     redirect(new moodle_url('/blocks/iomad_company_admin/editcompanies.php'));
 }
 
-// are we deleting something?
+// Are we deleting something?
 if (!empty($delete) && confirm_sesskey()) {
     iomad::require_capability('block/iomad_company_admin:company_delete', $context);
-    $deleteform = new \block_iomad_company_admin\forms\company_delete_form($baseurl, $delete);
+    $deleteform = new company_delete_form($baseurl, $delete);
     if (!$deleteform->is_cancelled()) {
+        // If we got something back from the form - do the action.
         if ($deletedata = $deleteform->get_data()) {
             // Create an event for this.  This handles the actual lifting.
-            $eventother = array('companyid' => $delete);
-            $event = \block_iomad_company_admin\event\company_deleted::create(array('context' => $context,
-                                                                                    'objectid' => $delete,
-                                                                                    'userid' => $USER->id,
-                                                                                    'other' => $eventother));
+            $eventother = ['companyid' => $delete];
+            $event = company_deleted::create([
+                'context' => $context,
+                'objectid' => $delete,
+                'userid' => $USER->id,
+                'other' => $eventother,
+            ]);
             $event->trigger();
 
-            \core\notification::success(get_string('companydeletescheduled', 'block_iomad_company_admin'));
+            notification::success(get_string('companydeletescheduled', 'block_iomad_company_admin'));
         } else {
+            // Display the delete form.
             echo $OUTPUT->header();
             echo $deleteform->display();
             echo $OUTPUT->footer();
@@ -156,7 +173,8 @@ if (!empty($delete) && confirm_sesskey()) {
     }
 }
 
-if ($suspend and confirm_sesskey()) {
+// Are we suspending a tenant?
+if ($suspend && confirm_sesskey()) {
 
     // Suspend a company, after confirmation.
     $company = $DB->get_record('company', ['id' => $suspend], '*', MUST_EXIST);
@@ -164,24 +182,27 @@ if ($suspend and confirm_sesskey()) {
         $fullname = $company->name;
         echo $OUTPUT->header();
         echo $OUTPUT->heading(get_string('suspendcompany', 'block_iomad_company_admin'). " " . $fullname);
-        $optionsyes = array('suspend' => $suspend,
-                            'confirm' => md5($suspend),
-                            'showsuspended' => $showsuspended,
-                            'sesskey' => sesskey());
+        $optionsyes = [
+            'suspend' => $suspend,
+            'confirm' => md5($suspend),
+            'showsuspended' => $showsuspended,
+            'sesskey' => sesskey(),
+        ];
 
         echo $OUTPUT->confirm(get_string('suspendcompanycheckfull', 'block_iomad_company_admin', "'$fullname'"),
                               new moodle_url('editcompanies.php', $optionsyes), 'editcompanies.php');
         echo $OUTPUT->footer();
         die;
     } else {
-
         // Suspend the company
         // Create an event for this.  This handles the actual lifting.
-        $eventother = array('companyid' => $company->id);
-        $event = \block_iomad_company_admin\event\company_suspended::create(array('context' => context_system::instance(),
-                                                                                      'objectid' => $company->id,
-                                                                                      'userid' => $USER->id,
-                                                                                      'other' => $eventother));
+        $eventother = ['companyid' => $company->id];
+        $event = company_suspended::create([
+            'context' => context_system::instance(),
+            'objectid' => $company->id,
+            'userid' => $USER->id,
+            'other' => $eventother,
+        ]);
         $event->trigger();
         $returnurl->param('suspend', 0);
         $returnurl->param('unsuspend', 0);
@@ -189,11 +210,11 @@ if ($suspend and confirm_sesskey()) {
         redirect($returnurl);
         die;
     }
-} else if ($unsuspend and confirm_sesskey()) {
+} else if ($unsuspend && confirm_sesskey()) {
 
     // Unsuspends a selected company, after confirmation.
     $company = $DB->get_record('company', ['id' => $unsuspend], '*', MUST_EXIST);
-    if (!empty($company->parentid) && $DB->get_record('company', array('id' => $company->parentid, 'suspended' => 1))) {
+    if (!empty($company->parentid) && $DB->get_record('company', ['id' => $company->parentid, 'suspended' => 1])) {
         throw new moodle_exception('parentcompanysuspended', 'block_iomad_company_admin');
     }
 
@@ -201,10 +222,10 @@ if ($suspend and confirm_sesskey()) {
         $fullname = $company->name;
         echo $OUTPUT->header();
         echo $OUTPUT->heading(get_string('unsuspendcompany', 'block_iomad_company_admin'). " " . $fullname);
-        $optionsno = array('unsuspend' => $unsuspend,
+        $optionsno = ['unsuspend' => $unsuspend,
                             'confirm' => md5($unsuspend),
                             'showsuspended' => $showsuspended,
-                            'sesskey' => sesskey());
+                            'sesskey' => sesskey()];
         echo $OUTPUT->confirm(get_string('unsuspendcompanycheckfull', 'block_iomad_company_admin', "'$fullname'"),
                               new moodle_url('editcompanies.php', $optionsno), 'editcompanies.php');
         echo $OUTPUT->footer();
@@ -212,11 +233,13 @@ if ($suspend and confirm_sesskey()) {
     } else {
         // Unsuspend the company
         // Create an event for this.  This handles the actual lifting.
-        $eventother = array('companyid' => $company->id);
-        $event = \block_iomad_company_admin\event\company_unsuspended::create(array('context' => context_system::instance(),
-                                                                                      'objectid' => $company->id,
-                                                                                      'userid' => $USER->id,
-                                                                                      'other' => $eventother));
+        $eventother = ['companyid' => $company->id];
+        $event = company_unsuspended::create([
+            'context' => context_system::instance(),
+            'objectid' => $company->id,
+            'userid' => $USER->id,
+            'other' => $eventother,
+        ]);
         $event->trigger();
         $returnurl->param('unsuspend', 0);
         $returnurl->param('suspend', 0);
@@ -225,14 +248,14 @@ if ($suspend and confirm_sesskey()) {
         die;
     }
 
-} else if ($enableecommerce and confirm_sesskey()) {
+} else if ($enableecommerce && confirm_sesskey()) {
 
     // Enables ecommerce for a selected company.
     $company = $DB->get_record('company', ['id' => $enableecommerce], '*', MUST_EXIST);
     $enableecommercecompany = new company($company->id);
     $enableecommercecompany->ecommerce(1);
 
-} else if ($disableecommerce and confirm_sesskey()) {
+} else if ($disableecommerce && confirm_sesskey()) {
 
     // Disables ecommerce for a selected company.
     $company = $DB->get_record('company', ['id' => $disableecommerce], '*', MUST_EXIST);
@@ -240,8 +263,8 @@ if ($suspend and confirm_sesskey()) {
     $enableecommercecompany->ecommerce(0);
 }
 
-// Carry on with the user listing.
-$columns = array("name", "city", "region", "country");
+// Carry on with the tenant listing.
+$columns = ["name", "city", "region", "country"];
 
 foreach ($columns as $column) {
     if ($column != "region") {
@@ -257,17 +280,28 @@ foreach ($columns as $column) {
             $columndir = "ASC";
         }
     } else {
-        $columndir = $dir == "ASC" ? "DESC":"ASC";
-        $columnicon = $dir == "ASC" ? "down":"up";
+        $columndir = $dir == "ASC" ? "DESC" : "ASC";
+        $columnicon = $dir == "ASC" ? "down" : "up";
         $columnicontitle = get_string(strtolower($dir));
-        $columnicon = " <i class='icon fa fa-arrow-" . $columnicon . "-short-wide fa-fw '
-                         title='" . $columnicontitle ."'
-                         role='img' aria-label='" . $columnicontitle ."'></i>";
-
+        $columnicon = html_writer::tag(
+            'i',
+            '',
+            [
+                'class' => 'icon fa fa-arrow-' . $columnicon . '-short-wide fa-fw ',
+                'title' => $columnicontitle,
+                'role' => 'img',
+                'aria-label' => $columnicontitle,
+            ]);
     }
     $params['sort'] = $column;
     $params['dir'] = $columndir;
-    $$column = "<a href= ". new moodle_url('editcompanies.php', $params).">".$string[$column]."</a>$columnicon";
+    $$column = html_writer::tag(
+        'a',
+        $string[$column],
+        [
+            'href' => new moodle_url('editcompanies.php', $params),
+        ]
+    ) . '&nbsp;' . $columnicon;
 }
 
 // Get all companies.
@@ -285,39 +319,39 @@ if (!empty($params['name'])) {
     $searchparams['name'] = '%'.$params['name'].'%';
 }
 if (!empty($params['city'])) {
-    $sqlsearch .=  " AND " . $DB->sql_like('city', ':city', false);
+    $sqlsearch .= " AND " . $DB->sql_like('city', ':city', false);
     $searchparams['city'] = '%'.$params['city'].'%';
 }
 if (!empty($params['country'])) {
-    $sqlsearch .=  " AND " . $DB->sql_like('country', ':country', false);
+    $sqlsearch .= " AND " . $DB->sql_like('country', ':country', false);
     $searchparams['country'] = '%'.$params['country'].'%';
 }
 if (!empty($params['region'])) {
-    $sqlsearch .=  " AND " . $DB->sql_like('region', ':region', false);
+    $sqlsearch .= " AND " . $DB->sql_like('region', ':region', false);
     $searchparams['region'] = '%'.$params['region'].'%';
 }
 if (!empty($params['postcode'])) {
-    $sqlsearch .=  " AND " . $DB->sql_like('postcode', ':postcode', false);
+    $sqlsearch .= " AND " . $DB->sql_like('postcode', ':postcode', false);
     $searchparams['postcode'] = '%'.$params['postcode'].'%';
 }
 if (!empty($params['address'])) {
-    $sqlsearch .=  " AND " . $DB->sql_like('address', ':address', false);
+    $sqlsearch .= " AND " . $DB->sql_like('address', ':address', false);
     $searchparams['address'] = '%'.$params['address'].'%';
 }
 if (!empty($params['code'])) {
-    $sqlsearch .=  " AND " . $DB->sql_like('code', ':code', false);
+    $sqlsearch .= " AND " . $DB->sql_like('code', ':code', false);
     $searchparams['code'] = '%'.$params['code'].'%';
 }
 if (!empty($params['custom1'])) {
-    $sqlsearch .=  " AND " . $DB->sql_like('custom1', ':custom1', false);
+    $sqlsearch .= " AND " . $DB->sql_like('custom1', ':custom1', false);
     $searchparams['custom1'] = '%'.$params['custom1'].'%';
 }
 if (!empty($params['custom2'])) {
-    $sqlsearch .=  " AND " . $DB->sql_like('custom2', ':custom2', false);
+    $sqlsearch .= " AND " . $DB->sql_like('custom2', ':custom2', false);
     $searchparams['custom2'] = '%'.$params['custom2'].'%';
 }
 if (!empty($params['custom3'])) {
-    $sqlsearch .=  " AND " . $DB->sql_like('custom3', ':custom3', false);
+    $sqlsearch .= " AND " . $DB->sql_like('custom3', ':custom3', false);
     $searchparams['custom3'] = '%'.$params['custom3'].'%';
 }
 
@@ -326,16 +360,16 @@ $companyrecords = $DB->get_fieldset_select('company', 'id', $sqlsearch, $searchp
 // Add in the parent companies if option is set.
 if (!empty($params['showchild']) && !empty($params['name'])) {
     foreach ($companyrecords as $companyrecord) {
-        $sqlsearch1 = " parentid  = $companyrecord";
-        $companyrecords1 = $DB->get_fieldset_select('company', 'id', $sqlsearch1);
-        foreach($companyrecords1 as $companyrecord1){
+        $sqlsearch1 = " parentid = :companyrecord";
+        $companyrecords1 = $DB->get_fieldset_select('company', 'id', $sqlsearch1, ['companyrecord' => $companyrecord]);
+        foreach ($companyrecords1 as $companyrecord1) {
             array_push($companyrecords, $companyrecord1);
         }
     }
     foreach ($companyrecords as $companyrecord) {
-        $sqlsearch1 = " id  = $companyrecord AND parentid  != 0";
-        $companyrecords1 = $DB->get_fieldset_select('company', 'parentid', $sqlsearch1);
-        foreach($companyrecords1 as $companyrecord1){
+        $sqlsearch1 = " id = :companyrecord AND parentid  <> 0";
+        $companyrecords1 = $DB->get_fieldset_select('company', 'parentid', $sqlsearch1, ['companyrecord' => $companyrecord]);
+        foreach ($companyrecords1 as $companyrecord1) {
             array_push($companyrecords, $companyrecord1);
         }
     }
@@ -344,51 +378,66 @@ if (!empty($params['showchild']) && !empty($params['name'])) {
 // Sort out the resulting list so we only have the distinct values.
 $companyrecords = array_unique($companyrecords);
 
-$companylist = "";
+$companylist = " 1 = 2 ";
+$companyparams = [];
 if (!empty($companyrecords)) {
-    if (iomad::has_capability('block/iomad_company_admin:company_add', $context)) {
-        $companylist = "id IN (". implode(',', array_values($companyrecords)).")";
-    } else {
+    [$insql, $companyparams] = $DB->get_in_or_equal($companyrecords,
+                                                    SQL_PARAMS_NAMED,
+                                                    'cids');
+    $companylist = "id {$insql} ";
+    if (!iomad::has_capability('block/iomad_company_admin:company_add', $context)) {
         $mycompanylist = company::get_companies_select(true);
-        $companylist = "id IN (". implode(',', array_values($companyrecords)).") AND
-                        id IN (". implode(',', array_keys($mycompanylist)).")";
+        [$insql, $inparams] = $DB->get_in_or_equal($companyrecords,
+                                                   SQL_PARAMS_NAMED,
+                                                   'mycids');
+        $companylist .= "AND id {$insql}";
+        $companyparams = $companyparams + $inparams;
     }
-} else {
-    $companylist = "1=2";
 }
+
 if (!empty($companylist)) {
-    $companies = iomad::get_companies_listing($sort, $dir, $page * $perpage, $perpage, '', '', '', $companylist);
+    $companies = iomad::get_companies_listing(
+        $sort,
+        $dir,
+        $page * $perpage,
+        $perpage,
+        '',
+        '',
+        '',
+        $companylist,
+        $companyparams);
 
     // Check to make sure if the first company is a child.
     if (!empty($showchild)) {
         foreach ($companies as $companycheck) {
             if ($companycheck->parentid != 0) {
-                $parentcompany = $DB->get_records_sql("SELECT *, 0 as depth
+                $parentcompany = $DB->get_records_sql("SELECT *, 0 AS depth
                                                        FROM {company}
                                                        WHERE id = :parentid",
-                                                       array('parentid' => $companycheck->parentid));
+                                                      ['parentid' => $companycheck->parentid]);
                 $companies = $parentcompany + $companies;
             }
             break;
         }
 
-        $companies = block_iomad_company_admin\iomad_company_admin::order_companies_by_parent($companies);
+        $companies = iomad_company_admin::order_companies_by_parent($companies);
     }
-    $allmycompanies = iomad::get_companies_listing($sort, $dir, 0, 0, '', '', '', $companylist);
+    $allmycompanies = iomad::get_companies_listing($sort, $dir, 0, 0, '', '', '', $companylist, $companyparams);
     $companycount = count($allmycompanies);
 } else {
-    $companies = array();
+    $companies = [];
     $companycount = 0;
 }
 
-$baseurl = new moodle_url('editcompanies.php', $params);
+$baseurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/editcompanies.php', $params);
 
+// Do we have anything to show?
 if ($companies) {
 
-    // set up the table.
+    // Set up the table.
     $table = new html_table();
-    $table->head = array ($name, $city, $region, $country, "");
-    $table->align = array ("left", "left", "left", "left", "left");
+    $table->head = [$name, $city, $region, $country, ""];
+    $table->align = ["left", "left", "left", "left", "left"];
     $table->width = "95%";
 
     foreach ($companies as $company) {
@@ -408,84 +457,132 @@ if ($companies) {
         $linkparams['sesskey'] = sesskey();
         $companycontext = context_company::instance($company->id);
         $strmanage = get_string('managecompany', 'block_iomad_company_admin');
+        [$pinsql, $pinparams] = $DB->get_in_or_equal($companies,
+                                                     SQL_PARAMS_NAMED,
+                                                     'pcids');
+        $pinparams['companyid'] = $company->id;
+        $pinparams['userid'] = $USER->id;
         if (iomad::has_capability('block/iomad_company_admin:company_add', $context)) {
             $primary = false;
-        } else if ($DB->get_records_sql("SELECT * FROM {company} c
-                                  JOIN {company_users} cu
-                                  ON (c.id = cu.companyid)
-                                  WHERE c.id = :companyid
-                                  AND c.parentid IN (". implode(',', array_keys($companies)) . ")
-                                  AND cu.userid = :userid",
-                                  array('companyid' => $company->id, 'userid' => $USER->id))) {
-            // primary company is either only company you are in or its any company in the list
+        } else if ($DB->get_records_sql(
+            "SELECT * FROM {company} c
+             JOIN {company_users} cu
+             ON (c.id = cu.companyid)
+             WHERE c.id = :companyid
+             AND cu.userid = :userid
+             AND c.parentid {$pinsql}",
+            $pinparams)) {
+            // Primary company is either only company you are in or its any company in the list
             // which doesn't have a parent in the list.
             $primary = false;
         }
-        if (!empty($company->suspended) && iomad::has_capability('block/iomad_company_admin:suspendcompanies', $companycontext)) {
-            if (!$primary) {
-                // is the parent suspended?
-                if (empty($company->parentid) || $DB->get_record('company', array('id' => $company->parentid, 'suspended' => 0))) {
+        if (!$primary) {
+            // Can we suspend the company?
+            if (!empty($company->suspended) &&
+                iomad::has_capability('block/iomad_company_admin:suspendcompanies', $companycontext)) {
+                // Is the parent suspended?
+                if (empty($company->parentid) ||
+                    $DB->get_record('company', ['id' => $company->parentid, 'suspended' => 0])) {
                     $linkparams['unsuspend'] = $company->id;
                     $suspendurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_company_admin/editcompanies.php",
                                                 $linkparams);
-                    $suspendbutton = "<a class='btn btn-sm btn-warning' href='$suspendurl'>$strunsuspend</a>";
+                    $suspendbutton = html_writer::tag(
+                        'a',
+                        $strunsuspend,
+                        [
+                            'class' => 'btn btn-sm btn-warning',
+                            'href' => $suspendurl,
+                        ]);
                 }
-            }
-        } else {
-            if (!$primary) {
-                if (iomad::has_capability('block/iomad_company_admin:suspendcompanies', $companycontext)) {
+            } else if (iomad::has_capability('block/iomad_company_admin:suspendcompanies', $companycontext)) {
+                // Is the parent suspended?
+                if (empty($company->parentid) ||
+                    $DB->get_record('company', ['id' => $company->parentid, 'suspended' => 0])) {
                     $linkparams['suspend'] = $company->id;
                     $suspendurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_company_admin/editcompanies.php",
                                                  $linkparams);
-                    $suspendbutton = "<a class='btn btn-sm btn-warning' href='$suspendurl'>$strsuspend</a>";
-                }
-                if (iomad::has_capability('block/iomad_company_admin:company_delete', $companycontext)) {
-                    $linkparams['delete'] = $company->id;
-                    unset($linkparams['suspend']);
-                    $deleteurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_company_admin/editcompanies.php", $linkparams);
-                    $deletebutton = "<a class='btn btn-sm btn-danger' href='$deleteurl'>$strdelete</a>";
+                    $suspendbutton = html_writer::tag(
+                        'a',
+                        $strsuspend,
+                        [
+                            'class' => 'btn btn-sm btn-warning',
+                            'href' => $suspendurl,
+                        ]);
                 }
             }
-            if (!iomad::has_capability('block/iomad_company_admin:companymanagement_view', $companycontext)) {
-                $strmanage = get_string('selectitem', 'moodle', get_string('company', 'block_iomad_company_admin'));
-            }
-            $manageurl = new moodle_url($CFG->wwwroot .'/blocks/iomad_company_admin/index.php', array('company' => $company->id));
-            $managebutton = "<a class='btn btn-sm btn-primary' href='$manageurl'>$strmanage</a>";
 
-            if (iomad::has_capability('block/iomad_company_admin:company_add_child', $context) &&
-                (iomad::has_capability('block/iomad_company_admin:company_add', $context) ||
-                 $DB->get_records('company_users', ['companyid' => $company->id, 'userid' => $USER->id, 'managertype' => 1]))) {
-                    $childurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_company_admin/company_edit_form.php",
-                                               array('createnew' => 1, 'parentid' => $company->id));
-                    $childbutton = "<a class='btn btn-sm btn-primary' href='$childurl'>$strcreatechild</a>";
+            // Can we delete the company?
+            if (iomad::has_capability('block/iomad_company_admin:company_delete', $companycontext)) {
+                $linkparams['delete'] = $company->id;
+                unset($linkparams['suspend']);
+                $deleteurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_company_admin/editcompanies.php", $linkparams);
+                $deletebutton = html_writer::tag('a', $strdelete, ['class' => 'btn btn-sm btn-danger', 'href' => $deleteurl]);
             }
         }
+        // Can we see the management report?
+        if (!iomad::has_capability('block/iomad_company_admin:companymanagement_view', $companycontext)) {
+            $strmanage = get_string('selectitem', 'moodle', get_string('company', 'block_iomad_company_admin'));
+            $manageurl = new moodle_url($CFG->wwwroot .'/blocks/iomad_company_admin/index.php', ['company' => $company->id]);
+            $managebutton = html_writer::tag('a', $strmanage, ['class' => 'btn btn-sm btn-primary', 'href' => $manageurl]);
+        }
 
+        // Can we add child companies?
+        if (iomad::has_capability('block/iomad_company_admin:company_add_child', $context) &&
+            (iomad::has_capability('block/iomad_company_admin:company_add', $context) ||
+             $DB->get_records('company_users', ['companyid' => $company->id, 'userid' => $USER->id, 'managertype' => 1]))) {
+            $childurl = new moodle_url(
+                $CFG->wwwroot . "/blocks/iomad_company_admin/company_edit_form.php",
+                ['createnew' => 1, 'parentid' => $company->id]
+            );
+            $childbutton = html_writer::tag(
+                'a',
+                $strcreatechild,
+                [
+                    'class' => 'btn btn-sm btn-primary',
+                    'href' => $childurl,
+                ]
+            );
+        }
+
+        // Remove some of the parameters.
         unset($linkparams['suspend']);
         unset($linkparams['unsuspend']);
         unset($linkparams['delete']);
 
-        if (empty($CFG->commerce_admin_enableall) && iomad::has_capability('block/iomad_company_admin:company_add', $context)) {
+        if (empty($CFG->commerce_admin_enableall) &&
+            iomad::has_capability('block/iomad_company_admin:company_add', $context)) {
             if (!empty($company->ecommerce)) {
                 unset($linkparams['suspend']);
                 $linkparams['disableecommerce'] = $company->id;
 
                 $ecommerceurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_company_admin/editcompanies.php",
                                             $linkparams);
-                $ecommercebutton = "<a class='btn btn-sm btn-primary' href='$ecommerceurl'>$strdisableecommerce</a>";
+                $ecommercebutton = html_writer::tag(
+                    'a',
+                    $strdisableecommerce,
+                    [
+                        'class' => 'btn btn-sm btn-primary',
+                        'href' => $ecommerceurl,
+                    ]);
             } else {
                 $linkparams['enableecommerce'] = $company->id;
                 $ecommerceurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_company_admin/editcompanies.php",
                                            $linkparams);
-                $ecommercebutton = "<a class='btn btn-sm btn-primary' href='$ecommerceurl'>$strenableecommerce</a>";
+                $ecommercebutton = html_writer::tag(
+                    'a',
+                    $strenableecommerce,
+                    [
+                        'class' => 'btn btn-sm btn-primary',
+                        'href' => $ecommerceurl,
+                    ]);
             }
         }
 
         if (iomad::has_capability('local/report_companies:view', $companycontext)) {
             $overviewurl = new moodle_url($CFG->wwwroot . "/local/report_companies/index.php",
-                                        array('companyid' => $company->id));
-            $overviewurl = "<a class='btn btn-sm btn-primary' href='$overviewurl'>$stroverview</a>";
-         }
+                                        ['companyid' => $company->id]);
+            $overviewurl = html_writer::tag('a', $stroverview, ['class' => 'btn btn-sm btn-primary', 'href' => $overviewurl]);
+        }
 
         // Is the company suspended?
         if (!empty($company->suspended)) {
@@ -496,31 +593,33 @@ if ($companies) {
             $table->rowclasses[] = '';
         }
 
-        // Indent child companies
+        // Indent child companies.
         if ($company->depth == 0) {
-            $fullname = "<b>$fullname</b>";
+            $fullname = html_writer::tag('b', format_string($fullname));
         } else {
-            $fullname = str_repeat('&emsp;&emsp;', $company->depth) . $fullname;
+            $fullname = str_repeat('&emsp;&emsp;', $company->depth) . format_string($fullname);
         }
 
-        $table->data[] = array ("$fullname",
-                            "$company->city",
-                            "$company->region",
-                            "$company->country",
-                            $overviewurl . ' ' .
-                            $managebutton . ' ' .
-                            $childbutton . ' ' .
-                            $ecommercebutton . ' ' .
-                            $suspendbutton . ' ' .
-                            $deletebutton);
+        $table->data[] = [
+            $fullname,
+            $company->city,
+            $company->region,
+            $company->country,
+            $overviewurl . '&nbsp;' .
+                $managebutton . '&nbsp;' .
+                $childbutton . '&nbsp;' .
+                $ecommercebutton . '&nbsp;' .
+                $suspendbutton . '&nbsp;' .
+                $deletebutton,
+        ];
     }
 } else {
     $table = null;
     $match = [];
 }
 
-// Render template
-$editcompanies = new block_iomad_company_admin\output\editcompanies([
+// Set up the template.
+$editcompanies = new editcompanies([
     'form' => $mform->render(),
     'table' => empty($table) ? null : html_writer::table($table),
     'pagingbar' => $output->paging_bar($companycount, $page, $perpage, $linkurl),
@@ -528,6 +627,11 @@ $editcompanies = new block_iomad_company_admin\output\editcompanies([
     'companycountplural' => $companycount != 1,
 ]);
 
+// Display the page.
 echo $OUTPUT->header();
+
+// Render the template.
 echo $output->render_editcompanies($editcompanies);
+
+// Display the footer.
 echo $OUTPUT->footer();

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard save as role template main page
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -26,32 +28,35 @@
  */
 
 use block_iomad_company_admin\iomad_company_admin;
+use block_iomad_company_admin\forms\company_role_save_form;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-require_once(dirname(__FILE__) . '/../../config.php');
-require_once(dirname(__FILE__) . '/lib.php');
+require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/lib.php');
+require_once($CFG->libdir . '/formslib.php');
 
-// parameters
 $templateid = required_param('templateid', PARAM_INT);
 
+// Log in and set up $PAGE.
 require_login();
 
+// Set the companyid.
 $systemcontext = context_system::instance();
-
-// Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
+// Can we even do anything?
 iomad::require_capability('block/iomad_company_admin:restrict_capabilities', $companycontext);
 
 // Set the name for the page.
 $linktext = get_string('savetemplate', 'block_iomad_company_admin');
 
 // Set the url.
-$linkurl = new moodle_url('/blocks/iomad_company_admin/save_template.php', array('templateid' => $templateid));
+$linkurl = new moodle_url('/blocks/iomad_company_admin/save_template.php', ['templateid' => $templateid]);
 
+// Finish setting up PAGE.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
@@ -59,10 +64,12 @@ $PAGE->set_title($linktext);
 
 // Set the page heading and nav.
 $PAGE->set_heading(get_string('myhome') . " - $linktext");
-    $PAGE->navbar->add($linktext, $linkurl);
+$PAGE->navbar->add($linktext, $linkurl);
 
-$mform = new \block_iomad_company_admin\forms\company_role_save_form($linkurl, $companyid, $templateid);
+// Set up the form.
+$mform = new company_role_save_form($linkurl, $companyid, $templateid);
 
+// Process the form.
 if ($mform->is_cancelled()) {
     redirect(new moodle_url('/blocks/iomad_company_admin/company_capabilities.php'));
 } else if ($data = $mform->get_data()) {
@@ -74,18 +81,23 @@ if ($mform->is_cancelled()) {
         $DB->insert_record('company_role_templates_caps', [
             'templateid' => $templateid,
             'roleid' => $restriction->roleid,
-            'capability' => $restriction->capability
+            'capability' => $restriction->capability,
         ]);
     }
     redirect(new moodle_url('/blocks/iomad_company_admin/company_capabilities.php', ['templatesaved' => 1]));
 }
 
+// Set the form data.
 if (!empty($templateid)) {
     $template = $DB->get_record('company_role_templates', ['id' => $templateid]);
     $mform->set_data($template);
 }
 
-// Display the form.
+// Display the page.
 echo $OUTPUT->header();
+
+// Display the form.
 $mform->display();
+
+// Display the footer.
 echo $OUTPUT->footer();

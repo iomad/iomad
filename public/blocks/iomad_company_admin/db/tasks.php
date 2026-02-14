@@ -24,6 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$tasks = array(
-);
+// No tasks.
+$tasks = [];
 

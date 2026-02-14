@@ -109,7 +109,7 @@ class course_copy_form extends moodleform {
         $mform->setType('shortname', PARAM_TEXT);
 
         // Course visibility.
-        $choices = array();
+        $choices = [];
         $choices['0'] = get_string('hide');
         $choices['1'] = get_string('show');
         $mform->addElement('select', 'visible', get_string('coursevisibility'), $choices);
@@ -163,7 +163,7 @@ class course_copy_form extends moodleform {
             $mform->setConstant('idnumber', '');
         }
 
-        $buttonarray = array();
+        $buttonarray = [];
         $buttonarray[] = $mform->createElement('submit', 'submitreturn', get_string('copyreturn', 'backup'));
         $buttonarray[] = $mform->createElement('cancel');
         $mform->addGroup($buttonarray, 'buttonar', '', ' ', false);

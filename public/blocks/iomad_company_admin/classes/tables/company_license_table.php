@@ -253,7 +253,7 @@ class company_license_table extends table_sql {
                     'sesskey' => sesskey(),
                 ]);
                 $editurl = new moodle_url('company_license_edit_form.php', [
-                    'license' => $row->id,
+                    'licenseid' => $row->id,
                     'departmentid' => $departmentid,
                 ]);
 

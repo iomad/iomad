@@ -15,49 +15,55 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard manage tenant optional user profiles main page
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_company_admin\event\dashboard_page_viewed;
+use core\output\notification;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-require('../../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/user/profile/lib.php');
-require_once('profiledefinelib.php');
-require_once('lib.php');
+require_once(__DIR__ .'/profiledefinelib.php');
+require_once(__DIR__ .'/lib.php');
 
 $action   = optional_param('action', '', PARAM_ALPHA);
 $companyid = optional_param('companyid', 0, PARAM_INTEGER);
 
+// Set some defaults.
 $redirect = new moodle_url($CFG->wwwroot.'/blocks/iomad_company_admin/company_user_profiles.php');
-
 $strchangessaved    = get_string('changessaved');
 $strcancelled       = get_string('cancelled');
 $strdefaultcategory = get_string('profiledefaultcategory', 'admin');
 $strnofields        = get_string('profilenofieldsdefined', 'admin');
 $strcreatefield     = get_string('profilecreatefield', 'admin');
 
+// Login and create $PAGE.
 require_login();
 
+// Set the companyid.
 $systemcontext = context_system::instance();
-
-// Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
+// Can we even do anything?
 iomad::require_capability('block/iomad_company_admin:company_user_profiles', $companycontext);
 
-// Correct the navbar.
 // Set the name for the page.
 $linktext = get_string('companyprofilefields', 'block_iomad_company_admin');
+
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_user_profiles.php');
 
+// Finish setting up PAGE.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
@@ -67,7 +73,7 @@ $PAGE->set_title($linktext);
 $PAGE->set_heading($linktext);
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url)->trigger();
 
 // Do we have any actions to perform before printing the header?
 switch ($action) {
@@ -78,20 +84,22 @@ switch ($action) {
         if (confirm_sesskey()) {
             profile_move_field($id, $dir);
         }
-        redirect($redirect, get_string('eventuserinfofieldupdated'), null, \core\output\notification::NOTIFY_SUCCESS);
+        redirect($redirect, get_string('eventuserinfofieldupdated'), null, notification::NOTIFY_SUCCESS);
         break;
     case 'deletefield':
         $id      = required_param('id', PARAM_INT);
         $confirm = optional_param('confirm', 0, PARAM_BOOL);
 
-        $datacount = $DB->count_records('user_info_data', array('fieldid' => $id));
-        if (data_submitted() and ($confirm and confirm_sesskey()) or $datacount === 0) {
+        $datacount = $DB->count_records('user_info_data', ['fieldid' => $id]);
+        if (data_submitted() &&
+            ($confirm && confirm_sesskey()) ||
+            $datacount === 0) {
             profile_delete_field($id);
-            redirect($redirect, get_string('eventuserinfofielddeleted'), null, \core\output\notification::NOTIFY_SUCCESS);
+            redirect($redirect, get_string('eventuserinfofielddeleted'), null, notification::NOTIFY_SUCCESS);
         }
 
         // Ask for confirmation.
-        $optionsyes = array ('id' => $id, 'confirm' => 1, 'action' => 'deletefield', 'sesskey' => sesskey());
+        $optionsyes = ['id' => $id, 'confirm' => 1, 'action' => 'deletefield', 'sesskey' => sesskey()];
         $strheading = get_string('profiledeletefield', 'admin');
         $PAGE->navbar->add($strheading);
         echo $OUTPUT->header();
@@ -113,20 +121,12 @@ switch ($action) {
         // Normal form.
 }
 
-$urlparams = array('companyid' => $companyid, 'action' => $action);
-if (!empty($returnurl)) {
-    $urlparams['returnurl'] = $returnurl;
-}
-
-
-require_login(null, false); // Adds to $PAGE, creates $OUTPUT.
-$context = $PAGE->context;
-
+// Display the page.
 echo $OUTPUT->header();
 
 // Check that we have at least one category defined.
 if ($DB->count_records('user_info_category') == 0) {
-    $defaultcategory = new stdClass();
+    $defaultcategory = (object) [];
     $defaultcategory->name = $strdefaultcategory;
     $defaultcategory->sortorder = 1;
     $DB->insert_record('user_info_category', $defaultcategory);
@@ -135,40 +135,41 @@ if ($DB->count_records('user_info_category') == 0) {
 
 // Check if we have a company ID, if so just pull that one back.
 if (!empty($companyid)) {
-    $company = $DB->get_record('company', array('id' => $companyid), '*', MUST_EXIST);
+    $company = $DB->get_record('company', ['id' => $companyid], '*', MUST_EXIST);
 
     // Get the company category.
-    $categories = array();
+    $categories = [];
     $profileinfo = new stdclass();
     $profileinfo->profileid = $company->profileid;
     $categories[$company->profileid] = $profileinfo;
 } else {
-    // Check if can view every company profile.
+    // Check what the user can see.
     if (!iomad::has_capability('block/iomad_company_admin:allcompany_user_profiles', $companycontext)) {
         // Get the company from the users profile.
-        $categories = $DB->get_records('company', array('id' => $companyid), 'sortorder ASC', 'profileid');
+        $categories = $DB->get_records('company', ['id' => $companyid], 'sortorder ASC', 'profileid');
     } else {
         // Get all the companies/categories.
         $categories = $DB->get_records_sql("SELECT id AS profileid FROM {user_info_category}");
     }
 }
 
+// Create the list of categories.
 foreach ($categories as $category) {
     $table = new html_table();
-    $table->head  = array(get_string('profilefield', 'admin'), get_string('edit'));
-    $table->align = array('left', 'right');
+    $table->head  = [get_string('profilefield', 'admin'), get_string('edit')];
+    $table->align = ['left', 'right'];
     $table->width = '95%';
     $table->attributes['class'] = 'generaltable profilefield';
-    $table->data = array();
+    $table->data = [];
 
-    if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->profileid), 'sortorder ASC')) {
+    if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->profileid], 'sortorder ASC')) {
         foreach ($fields as $field) {
-            $table->data[] = array(format_string($field->name), profile_field_icons($field));
+            $table->data[] = [format_string($field->name), profile_field_icons($field)];
         }
     }
 
     // Get the category name.
-    $categoryinfo = $DB->get_record('user_info_category', array('id' => $category->profileid));
+    $categoryinfo = $DB->get_record('user_info_category', ['id' => $category->profileid]);
 
     echo $OUTPUT->heading(format_string($categoryinfo->name));
     if (count($table->data)) {
@@ -179,8 +180,8 @@ foreach ($categories as $category) {
 
 } // End of $categories foreach.
 
-echo '<hr />';
-echo '<div class="profileeditor">';
+echo html_writer::empty_tag('hr');
+echo html_writer::start_tag('div', ['class' => "profileeditor"]);
 
 // Create a new field link.
 $options = profile_list_datatypes();
@@ -189,17 +190,17 @@ if (!empty($companyid)) {
     // Need to add the company ID tag to the edit URL.
     $popupurl = $popupurl . '&companyid='.$companyid;
 }
-echo $OUTPUT->single_select($popupurl, 'datatype', $options, '', array('' => $strcreatefield), 'newfieldform');
+echo $OUTPUT->single_select($popupurl, 'datatype', $options, '', ['' => $strcreatefield], 'newfieldform');
 
 // Add a div with a class so themers can hide, style or reposition the text.
-html_writer::start_tag('div', array('class' => 'adminuseractionhint'));
+html_writer::start_tag('div', ['class' => 'adminuseractionhint']);
 html_writer::end_tag('div');
 
-echo '</div>';
+html_writer::end_tag('div');
 
+// Display the footer.
 echo $OUTPUT->footer();
 die;
-
 
 /***** Some functions relevant to this script *****/
 
@@ -217,27 +218,53 @@ function profile_category_icons($category) {
     $stredit     = get_string('edit');
 
     $categorycount = $DB->count_records('user_info_category');
-    $fieldcount    = $DB->count_records('user_info_field', array('categoryid' => $category->id));
+    $fieldcount    = $DB->count_records('user_info_field', ['categoryid' => $category->id]);
 
     // Edit!
     $editurl = new moodle_url('/blocks/iomad_company_admin/company_user_profiles.php', ['id' => $category->id,
                                                                                         'action' => 'editcategory']);
-    $editstr = '<a title="' . $stredit . '" href="' . $editurl->out() .
-               '"><i class="icon fa fa-pen fa-fw " title="' . $stredit .
-               '" role="img" aria-label="' . $stredit .
-               '"></i></a>';
+    $editstr = html_writer::tag(
+        'a',
+        html_writer::tag(
+            'i',
+            '',
+            [
+                'class' => "icon fa fa-pen fa-fw",
+                'title' => $stredit,
+                'role' => 'img',
+                'aria-label' => $stredit,
+            ]
+        ),
+        [
+            'title' => $stredit,
+            'href' => $editurl,
+        ]
+    );
 
     // Delete!
     // Can only delete the last category if there are no fields in it.
-    if (($categorycount > 1) or ($fieldcount == 0)) {
+    if (($categorycount > 1) || ($fieldcount == 0)) {
         $deleteurl = new moodle_url('/blocks/iomad_company_admin/company_user_profiles.php', ['id' => $category->id,
                                                                                               'action' => 'deletecategory']);
-        $editstr .= '<a title="' . $strdelete.'" href="' . $deleteurl->out() .
-                    '"><i class="icon fa fa-trash-can fa-fw " title="' . $strdelete .
-                    '" role="img" aria-label="' . $strdelete .
-                    '"></i></a> ';
+        $editstr .= html_writer::tag(
+            'a',
+            html_writer::tag(
+                'i',
+                '',
+                [
+                    'class' => "icon fa fa-trash-can fa-fw",
+                    'title' => $strdelete,
+                    'role' => 'img',
+                    'aria-label' => $strdelete,
+                ]
+            ),
+            [
+                'title' => $strdelete,
+                'href' => $deleteurl,
+            ]
+        );
     } else {
-        $editstr .= '<img src="'.$OUTPUT->image_url('spacer') . '" alt="" class="iconsmall" /> ';
+        $editstr .= html_writer::empty_tag('img', ['src' => $OUTPUT->image_url('spacer'), 'alt' => '', 'class' => 'iconsmall']);
     }
 
     // Move up!
@@ -246,12 +273,25 @@ function profile_category_icons($category) {
                                                                                       'dir' => 'up',
                                                                                       'sesskey' => sesskey()]);
     if ($category->sortorder > 1) {
-        $editstr .= '<a title="' . $strmoveup . '" href="' . $upurl->out() .
-                    '"><i class="icon fa fa-arrow-up fa-fw " title="' . $strmoveup .
-                    '" role="img" aria-label="' . $strmoveup .
-                    '"></i></a> ';
+        $editstr .= html_writer::tag(
+            'a',
+            html_writer::tag(
+                'i',
+                '',
+                [
+                    'class' => "icon fa fa-arrow-up fa-fw",
+                    'title' => $strmoveup,
+                    'role' => 'img',
+                    'aria-label' => $strmoveup,
+                ]
+            ),
+            [
+                'title' => $strmoveup,
+                'href' => $upurl,
+            ]
+        );
     } else {
-        $editstr .= '<img src="'.$OUTPUT->image_url('spacer') . '" alt="" class="iconsmall" /> ';
+        $editstr .= html_writer::empty_tag('img', ['src' => $OUTPUT->image_url('spacer'), 'alt' => '', 'class' => 'iconsmall']);
     }
 
     // Move down!
@@ -260,12 +300,25 @@ function profile_category_icons($category) {
                                                                                         'dir' => 'down',
                                                                                         'sesskey' => sesskey()]);
     if ($category->sortorder < $categorycount) {
-        $editstr .= '<a title="' . $strmovedown . '" href="' . $downurl->out() .
-                    '"><i class="icon fa fa-arrow-up fa-fw " title="' . $strmovedown .
-                    '" role="img" aria-label="' . $strmovedown .
-                    '"></i></a> ';
+        $editstr .= html_writer::tag(
+            'a',
+            html_writer::tag(
+                'i',
+                '',
+                [
+                    'class' => "icon fa fa-arrow-down fa-fw",
+                    'title' => $strmovedown,
+                    'role' => 'img',
+                    'aria-label' => $strmovedown,
+                ]
+            ),
+            [
+                'title' => $strmovedown,
+                'href' => $downurl,
+            ]
+        );
     } else {
-        $editstr .= '<img src="'.$OUTPUT->image_url('spacer') . '" alt="" class="iconsmall" /> ';
+        $editstr .= html_writer::empty_tag('img', ['src' => $OUTPUT->image_url('spacer'), 'alt' => '', 'class' => 'iconsmall']);
     }
 
     return $editstr;
@@ -284,36 +337,76 @@ function profile_field_icons($field) {
     $strmovedown = get_string('movedown');
     $stredit     = get_string('edit');
 
-    $fieldcount = $DB->count_records('user_info_field', array('categoryid' => $field->categoryid));
-    $datacount  = $DB->count_records('user_info_data', array('fieldid' => $field->id));
+    $fieldcount = $DB->count_records('user_info_field', ['categoryid' => $field->categoryid]);
+    $datacount  = $DB->count_records('user_info_data', ['fieldid' => $field->id]);
 
     // Edit!
     $editurl = new moodle_url('/blocks/iomad_company_admin/company_user_profiles.php', ['id' => $field->id,
                                                                                         'action' => 'editfield']);
-    $editstr = '<a title="' . $stredit . '" href="' . $editurl->out() .
-               '"><i class="icon fa fa-pen fa-fw " title="' . $stredit . '" role="img" aria-label="' . $stredit .
-               '"></i></a>';
+    $editstr = html_writer::tag(
+        'a',
+        html_writer::tag(
+            'i',
+            '',
+            [
+                'class' => "icon fa fa-pen fa-fw",
+                'title' => $stredit,
+                'role' => 'img',
+                'aria-label' => $stredit,
+            ]
+        ),
+        [
+            'title' => $stredit,
+            'href' => $editurl,
+        ]
+    );
 
     // Delete!
     $deleteurl = new moodle_url('/blocks/iomad_company_admin/company_user_profiles.php', ['id' => $field->id,
                                                                                           'action' => 'deletefield']);
-    $editstr .= '<a title="' . $strdelete . '" href="' . $deleteurl->out() .
-                    '"><i class="icon fa fa-trash-can fa-fw " title="' . $strdelete .
-                    '" role="img" aria-label="' . $strdelete .
-                    '"></i></a> ';
+    $editstr .= html_writer::tag(
+        'a',
+        html_writer::tag(
+            'i',
+            '',
+            [
+                'class' => "icon fa fa-trash-can fa-fw",
+                'title' => $strdelete,
+                'role' => 'img',
+                'aria-label' => $strdelete,
+            ]
+        ),
+        [
+            'title' => $strdelete,
+            'href' => $deleteurl,
+        ]
+    );
 
     // Move up!
      $upurl = new moodle_url('/blocks/iomad_company_admin/company_user_profiles.php', ['id' => $field->id,
                                                                                       'action' => 'movefield',
                                                                                       'dir' => 'up',
                                                                                       'sesskey' => sesskey()]);
-   if ($field->sortorder > 1) {
-        $editstr .= '<a title="' . $strmoveup . '" href="' . $upurl->out() .
-                    '"><i class="icon fa fa-arrow-up fa-fw " title="' . $strmoveup .
-                    '" role="img" aria-label="' . $strmoveup .
-                    '"></i></a> ';
+    if ($field->sortorder > 1) {
+        $editstr .= html_writer::tag(
+            'a',
+            html_writer::tag(
+                'i',
+                '',
+                [
+                    'class' => "icon fa fa-arrow-up fa-fw",
+                    'title' => $strmoveup,
+                    'role' => 'img',
+                    'aria-label' => $strmoveup,
+                ]
+            ),
+            [
+                'title' => $strmoveup,
+                'href' => $upurl,
+            ]
+        );
     } else {
-        $editstr .= '<img src="'.$OUTPUT->image_url('spacer') . '" alt="" class="iconsmall" /> ';
+        $editstr .= html_writer::empty_tag('img', ['src' => $OUTPUT->image_url('spacer'), 'alt' => '', 'class' => 'iconsmall']);
     }
 
     // Move down!
@@ -322,12 +415,25 @@ function profile_field_icons($field) {
                                                                                         'dir' => 'down',
                                                                                         'sesskey' => sesskey()]);
     if ($field->sortorder < $fieldcount) {
-        $editstr .= '<a title="' . $strmovedown . '" href="' . $downurl->out() .
-                    '"><i class="icon fa fa-arrow-down fa-fw " title="' . $strmovedown .
-                    '" role="img" aria-label="' . $strmovedown .
-                    '"></i></a> ';
+        $editstr .= html_writer::tag(
+            'a',
+            html_writer::tag(
+                'i',
+                '',
+                [
+                    'class' => "icon fa fa-arrow-down fa-fw",
+                    'title' => $strmovedown,
+                    'role' => 'img',
+                    'aria-label' => $strmovedown,
+                ]
+            ),
+            [
+                'title' => $strmovedown,
+                'href' => $downurl,
+            ]
+        );
     } else {
-        $editstr .= '<img src="'.$OUTPUT->image_url('spacer') . '" alt="" class="iconsmall" /> ';
+        $editstr .= html_writer::empty_tag('img', ['src' => $OUTPUT->image_url('spacer'), 'alt' => '', 'class' => 'iconsmall']);
     }
 
     return $editstr;

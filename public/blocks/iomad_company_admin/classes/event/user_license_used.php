@@ -108,7 +108,7 @@ class user_license_used extends base {
      * @return void
      */
     public static function get_other_mapping() {
-        $othermapped = array();
+        $othermapped = [];
 
         return $othermapped;
     }

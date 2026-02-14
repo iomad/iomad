@@ -256,7 +256,7 @@ if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycon
 echo html_writer::end_tag('div');
 
 // Display the list of licenses.
-$table->out($CFG->iomad_max_list_licenses, true);
+$table->out(get_config('local_iomad', 'max_list_licenses'), true);
 
 // Display the footer.
 echo $OUTPUT->footer();

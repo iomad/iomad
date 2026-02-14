@@ -348,7 +348,7 @@ class editusers_table extends table_sql {
                     if ($DB->get_records_select(
                         'company_users',
                         "companyid = :company
-                         AND managertype != 0
+                         AND managertype <> 0
                          AND userid = :userid",
                         ['company' => $companyid,
                          'userid' => $row->id])
