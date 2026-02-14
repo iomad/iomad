@@ -187,7 +187,6 @@ class company_license_form extends \company_moodleform {
 
             $company = new company($licenseinfo->companyid);
             $companylist = $company->get_child_companies_select(false);
-            $this->free = $licenseinfo->allocation - $licenseinfo->used;
             $mform->addElement(
                 'static',
                 'parentlicensename',

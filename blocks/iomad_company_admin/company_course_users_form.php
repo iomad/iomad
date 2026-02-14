@@ -26,7 +26,7 @@
 use block_iomad_company_admin\event\dashboard_page_viewed;
 use block_iomad_company_admin\forms\{company_ccu_courses_form, company_course_users_form};
 
-require_once(__DIR__ . '/../../config.php'); // Creates $PAGE.
+require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
 require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot.'/local/email/lib.php');
@@ -35,11 +35,11 @@ $courses = optional_param_array('courses', [], PARAM_INTEGER);
 $departmentid = optional_param('deptid', 0, PARAM_INTEGER);
 $groupid = optional_param('groupid', 0, PARAM_INTEGER);
 
-// Fudge for dealing with optional_param_array dot taking default values.
+// Fudge for dealing with optional_param_array not taking default values.
 if (isset($_POST['selectedcourses']) && is_array($_POST['selectedcourses'])) {
     $selectedcourses = optional_param_array('selectedcourses', null, PARAM_INTEGER);
 } else {
-    $selectedcourses = ['-1'];
+    $selectedcourses = $courses;
 }
 
 // Set the courses to the selected one.

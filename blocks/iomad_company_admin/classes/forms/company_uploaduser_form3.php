@@ -15,30 +15,33 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Dashboard upload user form classes
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @basedon   mod_feedback
- * @writtenby Andreas Grabs
- * @license   http://www.gnu.org/copyleft/gpl.html GNU Public License
  */
 
-/*if (!defined('AJAX_SCRIPT')) {
-    define('AJAX_SCRIPT', true);
-}*/
+namespace block_iomad_company_admin\forms;
 
-require_once(dirname(__FILE__) . '/../../../config.php');
-require_once('../lib.php');
+use moodleform;
 
-$licenseid = required_param('licenseid', PARAM_INT);
-
-require_login();
-
-$return = 'none';
-
-if ($license = $DB->get_record('companylicense', array('id' => $licenseid))) {
-    $return = 'inline';
+/**
+ * IOMAD Dashboard company upload user form3 class
+ *
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class company_uploaduser_form3 extends moodleform {
+    /**
+     * Form definition
+     *
+     * @return void
+     */
+    public function definition() {
+        $this->add_action_buttons(false, get_string('uploadnewfile'));
+    }
 }
-echo $return;
-die;

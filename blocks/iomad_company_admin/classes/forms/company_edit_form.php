@@ -351,7 +351,7 @@ class company_edit_form extends \company_moodleform {
             $companies = $DB->get_records_sql_menu(
                 "SELECT id,name
                  FROM {company}
-                 WHERE id != :companyid
+                 WHERE id <> :companyid
                  ORDER BY name",
                 ['companyid' => $this->companyid]);
             $allcompanies = ['0' => get_string('none')] + $companies;

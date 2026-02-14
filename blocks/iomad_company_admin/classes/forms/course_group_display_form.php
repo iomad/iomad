@@ -68,7 +68,6 @@ class course_group_display_form extends company_moodleform {
 
         $this->company = new company($this->selectedcompany);
         $this->courseid = $courseid;
-        $this->output = $output;
         parent::__construct($actionurl);
     }
 
@@ -100,14 +99,17 @@ class course_group_display_form extends company_moodleform {
                         'name' => 'groupids[]',
                         'value' => $key,
                     ]) .
-                    $value .
+                    format_string('&nbsp;' . $value) .
                     html_writer::empty_tag('br');
             }
         }
         // Then show the fields about where this block appears.
-        $mform->addElement('header', 'header',
-                            get_string('companygroups', 'block_iomad_company_admin').
-                           $company->get_name());
+        $mform->addElement(
+            'html',
+            html_writer::tag(
+                'h3', format_string(get_string('companygroups', 'block_iomad_company_admin') . $company->get_name())
+            )
+        );
 
         if (empty($coursegroups)) {
             $mform->addElement('html', html_writer::tag('h3', get_string('nogroups', 'block_iomad_company_admin')));
