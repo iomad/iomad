@@ -92,7 +92,7 @@ M.core_user.init_user_selector = function (Y, name, hash, extrafields, lastsearc
          */
         handle_keyup : function(e) {
 			vl = '';
-			
+
 			if(document.getElementById(this.name + '[]_custom_srch').length>0){
 				//vl = document.querySelector('.custom_srch').value;
 				vl = document.getElementById(this.name + '[]_custom_srch').value;
@@ -172,7 +172,8 @@ M.core_user.init_user_selector = function (Y, name, hash, extrafields, lastsearc
             this.iotransactions[iotrans.id] = iotrans;
 
             this.lastsearch = value;
-            this.listbox.setStyle('background','url(' + M.util.image_url('i/loading', 'moodle') + ') no-repeat center center');
+            this.listbox.setStyle('background', 'url(' + M.util.image_url('i/loading', 'moodle') + ') no-repeat center center');
+            this.listbox.setStyle('background-size', '3em');
         },
         /**
          * Handle what happens when we get some data back from the search.

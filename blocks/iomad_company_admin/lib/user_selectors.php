@@ -37,6 +37,7 @@ abstract class company_user_selector_base extends user_selector_base {
     protected $searchoptionsoutput = false;
     protected $profilefieldid = 0;
     protected $allusers = false;
+    protected $groupid;
 
     /** @var array JavaScript YUI3 Module definition */
     protected static $jsmodule = array(
@@ -194,7 +195,7 @@ abstract class company_user_selector_base extends user_selector_base {
                                                           JOIN {user_info_field} uif ON (uic.id = uif.categoryid)
                                                           WHERE uic.id NOT IN (
                                                               SELECT profileid FROM {company}
-                                                              WHERE id != :companyid
+                                                              WHERE id <> :companyid
                                                           )
                                                           ORDER BY uif.name DESC",
                                                           array('companyid' => $this->companyid));
@@ -836,7 +837,7 @@ class potential_department_user_selector extends company_user_selector_base {
                     INNER JOIN {company_users} cu ON c.id = cu.companyid
                     WHERE
                     cu.userid = $id
-                    AND c.id != :companyid
+                    AND c.id <> :companyid
                     ORDER BY cu.id";
             if ($companies = $DB->get_records_sql($sql, array('companyid' => $this->companyid), 0, 1)) {
                 $company = array_shift($companies);
@@ -880,9 +881,9 @@ class potential_department_user_selector extends company_user_selector_base {
         $userfilter .= " AND u.id NOT IN (
                             SELECT userid FROM {company_users}
                             WHERE companyid = ".$this->companyid."
-                            AND managertype != 0
-                            AND departmentid != ".$this->departmentid."
-                            AND managertype != ".$this->roletype.")";
+                            AND managertype <> 0
+                            AND departmentid <> ".$this->departmentid."
+                            AND managertype <> ".$this->roletype.")";
 
         if ($this->roletype != 0) {
             // Dealing with management possibles could be from anywhere.
@@ -924,7 +925,7 @@ class potential_department_user_selector extends company_user_selector_base {
                                 WHERE $wherecondition
                                 AND u.suspended = 0
                                 AND du.managertype = 1
-                                AND du.companyid != " . $this->companyid."
+                                AND du.companyid <> " . $this->companyid."
                                 AND du.userid NOT IN (
                                   SELECT userid FROM {company_users}
                                   WHERE managertype = 1
@@ -1050,7 +1051,7 @@ class current_department_user_selector extends company_user_selector_base {
 
                  WHERE $wherecondition $othermanagersql AND u.suspended = 0
                  $rolesql
-                 AND  u.id != :userid
+                 AND  u.id <> :userid
                  AND cu.departmentid = :departmentid";
 
         $order = ' ORDER BY u.firstname ASC, u.lastname ASC';
@@ -1821,7 +1822,7 @@ class potential_company_group_user_selector extends company_user_selector_base {
                      SELECT userid
                      FROM {companylicense_users}
                      WHERE licensecourseid = :liccourseid
-                     AND groupid != :licgroupid
+                     AND groupid <> :licgroupid
                    )
                  )";
 
