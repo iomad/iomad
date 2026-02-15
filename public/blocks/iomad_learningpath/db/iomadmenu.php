@@ -24,7 +24,7 @@ function block_iomad_learningpath_menu() {
                 'tab' => 3,
                 'name' => get_string('learningpaths', 'block_iomad_learningpath'),
                 'url' => '/local/iomad_learningpath/manage.php',
-                'cap' => 'local/iomad_learningpath:view',
+                'cap' => 'block/iomad_learningpath:view_admin',
                 'icondefault' => 'learningpath',
                 'style' => 'company',
                 'icon' => 'fa-map-signs',

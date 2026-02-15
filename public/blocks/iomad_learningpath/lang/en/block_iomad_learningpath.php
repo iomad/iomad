@@ -68,6 +68,7 @@ $string['iomad_learningpath:assign'] = 'Assign users to a learning path';
 $string['iomad_learningpath:manage'] = 'Manage learning paths';
 $string['iomad_learningpath:myaddinstance'] = 'Add learning path block to Moodle Dashboard';
 $string['iomad_learningpath:view'] = 'View learning path';
+$string['iomad_learningpath:view_admin'] = 'View learning path admin pages';
 $string['learningpathedit'] = 'Edit learning path';
 $string['learningpathmanage'] = 'Learning path management';
 $string['learningpathnameused'] = 'Name is already used by another learning path';
