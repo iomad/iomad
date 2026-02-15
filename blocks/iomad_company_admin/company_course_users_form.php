@@ -40,7 +40,11 @@ $groupid = optional_param('groupid', 0, PARAM_INTEGER);
 if (isset($_POST['selectedcourses']) && is_array($_POST['selectedcourses'])) {
     $selectedcourses = optional_param_array('selectedcourses', null, PARAM_INTEGER);
 } else {
-    $selectedcourses = $courses;
+    if (!empty($courses)) {
+        $selectedcourses = $courses;
+    } else {
+        $selectedcourses = ['-1'];
+    }
 }
 
 // Set the courses to the selected one.
