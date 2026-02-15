@@ -26,6 +26,7 @@
 use block_iomad_company_admin\event\dashboard_page_viewed;
 use block_iomad_company_admin\output\full_companies_select;
 use local_iomad\custom_context\context_company;
+use local_iomad\forms\company_search_form;
 
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
@@ -64,7 +65,7 @@ $PAGE->set_heading(get_string('selectacompany', 'block_iomad_company_admin'));
 
 // Set up the select and form.
 $fullcompaniesselect = new full_companies_select(['search' => $search]);
-$companysearchform = new iomad_company_search_form($url, []);
+$companysearchform = new company_search_form($url, []);
 
 // Display the page.
 echo $output->header();
