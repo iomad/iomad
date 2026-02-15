@@ -79,7 +79,7 @@ function xmldb_block_iomad_learningpath_upgrade($oldversion) {
         // Set the list of capabilities we are changing from and to.
         $capabilites = [
             'local/iomad_learningpath:manage' => 'block/iomad_learningpath:manage',
-            'local/iomad_learningpath:view' => 'block/iomad_learningpath:view',
+            'local/iomad_learningpath:view' => 'block/iomad_learningpath:view_admin',
             'local/iomad_learningpath:assign' => 'block/iomad_learningpath:assign',
         ];
 

@@ -56,6 +56,17 @@ $capabilities = [
         ],
     ],
 
+    'local/iomad_learningpath:view_admin' => [
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'companydepartmentmanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW
+        ],
+    ],
+
     'block/iomad_learningpath:manage' => [
 
         'captype' => 'write',
