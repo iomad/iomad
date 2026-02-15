@@ -215,7 +215,6 @@ abstract class base {
             $search = '';
         }
         $groupedtemplates = $this->find_templates($search);
-error_log("grouped templates = " . print_r($groupedtemplates, true));
         // Output the select.
         $name = $this->name;
         $multiselect = '';
