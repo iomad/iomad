@@ -104,10 +104,19 @@ class check_enrolment extends external_api {
             if (is_enrolled(context_course::instance($courseid), $user, '', true)) {
                 $enrolled = true;
             } else {
-                // Check if they have an unused license for this course.
-                if ($DB->get_record('companylicense_users', ['userid' => $userid,
-                                                             'licensecourseid' => $courseid,
-                                                             'isusing' => 0])) {
+                // Check if they have an unused valid license for this course.
+                if ($DB->get_records_sql(
+                    "SELECT clu.id
+                     FROM {companylicense_users} clu
+                     JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+                     WHERE clu.userid = :userid
+                     AND clu.licensecourseid = :licensecourseid
+                     AND clu.isusing = 0
+                     AND clu.timecompleted IS NULL
+                     AND cl.expirydate > :currenttime",
+                    ['userid' => $userid,
+                     'licensecourseid' => $courseid,
+                     'currenttime' => time()])) {
                     $enrolled = true;
                 }
             }
