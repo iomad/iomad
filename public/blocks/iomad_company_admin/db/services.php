@@ -249,4 +249,10 @@ $functions = [
         'description' => 'Update Iomad course settings',
         'type' => 'write',
     ],
+
+    'block_iomad_company_admin_check_enrolment' => [
+        'classname' => block_iomad_company_admin\external\check_enrolment::class,
+        'description' => 'Check is a user is enrolled or has a valid license for a course',
+        'type' => 'read',
+    ],
 ];
