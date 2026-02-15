@@ -25,7 +25,6 @@
 
 namespace block_iomad_company_admin\forms;
 
-use company_moodleform;
 use core_text;
 use csv_import_reader;
 

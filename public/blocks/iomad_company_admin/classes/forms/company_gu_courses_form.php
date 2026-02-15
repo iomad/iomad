@@ -25,7 +25,6 @@
 
 namespace block_iomad_company_admin\forms;
 
-use company_moodleform;
 use local_iomad\company;
 use html_writer;
 

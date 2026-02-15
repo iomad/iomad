@@ -25,7 +25,6 @@
 
 namespace block_iomad_company_admin\forms;
 
-use company_moodleform;
 use context_system;
 use context_coursecat;
 use html_writer;
