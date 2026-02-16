@@ -29,6 +29,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD microlearning block settings
+ *
  * @package   block_iomad_microlearning
  * @copyright 2021 Derick Turner
  * @author    Derick Turner

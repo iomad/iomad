@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD microlearning upgrade function
+ *
  * @package   block_iomad_microlearning
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -22,22 +24,13 @@
  */
 
 /**
- * As of the implementation of this block and the general navigation code
- * in Moodle 2.0 the body of immediate upgrade work for this block and
- * settings is done in core upgrade {@see lib/db/upgrade.php}
+ * IOMAD microlearning upgrade function
  *
- * There were several reasons that they were put there and not here, both becuase
- * the process for the two blocks was very similar and because the upgrade process
- * was complex due to us wanting to remvoe the outmoded blocks that this
- * block was going to replace.
- *
- * @global moodle_database $DB
- * @param int $oldversion
- * @param object $block
+ * @package   block_iomad_microlearning
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
 function xmldb_block_iomad_microlearning_upgrade($oldversion) {
     global $CFG, $DB;
 
@@ -79,7 +72,6 @@ function xmldb_block_iomad_microlearning_upgrade($oldversion) {
 
         // Launch change of precision for field accesskey.
         $dbman->change_field_precision($table, $field);
-
 
         // Iomad_microlearning savepoint reached.
         upgrade_block_savepoint(true, 2019120800, 'iomad_microlearning');
@@ -181,14 +173,28 @@ function xmldb_block_iomad_microlearning_upgrade($oldversion) {
 
         // Changing type of field reminder1_delivered on table microlearning_thread_user to int.
         $table = new xmldb_table('microlearning_thread_user');
-        $field = new xmldb_field('reminder1_delivered', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, null, 'message_delivered');
+        $field = new xmldb_field('reminder1_delivered',
+                                 XMLDB_TYPE_INTEGER,
+                                 '1',
+                                 null,
+                                 XMLDB_NOTNULL,
+                                 null,
+                                 null,
+                                 'message_delivered');
 
         // Launch change of type for field reminder1_delivered.
         $dbman->change_field_type($table, $field);
 
         // Changing type of field reminder2_delivered on table microlearning_thread_user to int.
         $table = new xmldb_table('microlearning_thread_user');
-        $field = new xmldb_field('reminder2_delivered', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, null, 'reminder1_delivered');
+        $field = new xmldb_field('reminder2_delivered',
+                                 XMLDB_TYPE_INTEGER,
+                                 '1',
+                                 null,
+                                 XMLDB_NOTNULL,
+                                 null,
+                                 null,
+                                 'reminder1_delivered');
 
         // Launch change of type for field reminder2_delivered.
         $dbman->change_field_type($table, $field);
