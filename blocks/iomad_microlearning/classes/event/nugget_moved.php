@@ -25,23 +25,18 @@
 
 namespace block_iomad_microlearning\event;
 
-defined('MOODLE_INTERNAL') || die();
+use core\event\base;
+use moodle_url;
 
 /**
- * The block_iomad_microlearning nugget order moved event.
- *
- * @property-read array $other {
- *      Extra information about event.
- *
- * }
+ * The block_iomad_microlearning nugget moved event.
  *
  * @package    block_iomad_microlearning
- * @since      Moodle 3.3
- * @copyright  2017 E-Learn Design Ltd. http://www.e-learndesign.co.uk
+ * @copyright  2019 E-Learn Design Ltd. http://www.e-learndesign.co.uk
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class nugget_moved extends \core\event\base {
+class nugget_moved extends base {
 
     /**
      * Init method.
@@ -78,22 +73,16 @@ class nugget_moved extends \core\event\base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/blocks/iomad_microlearning/nuggets.php', $this->other['threadid']);
+        return new moodle_url('/blocks/iomad_microlearning/nuggets.php', $this->other['threadid']);
     }
 
     /**
-     * Custom validation.
+     * Define the mappings for the event other array
      *
-     * @throws \coding_exception
      * @return void
      */
-    protected function validate_data() {
-        parent::validate_data();
-
-    }
-
     public static function get_other_mapping() {
-        $othermapped = array();
+        $othermapped = [];
 
         return $othermapped;
     }

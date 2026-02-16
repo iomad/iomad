@@ -25,20 +25,26 @@
 
 namespace block_iomad_microlearning\privacy;
 
-use \core_privacy\local\request\deletion_criteria;
-use \core_privacy\local\request\helper;
-use \core_privacy\local\metadata\collection;
-use \core_privacy\local\request\transform;
-use \core_privacy\local\request\contextlist;
-use \core_privacy\local\request\userlist;
-use \core_privacy\local\request\approved_contextlist;
-use \core_privacy\local\request\approved_userlist;
-use \core_privacy\local\request\writer;
-use \context_system;
-use \context_user;
+use core_privacy\local\request\deletion_criteria;
+use core_privacy\local\request\helper;
+use core_privacy\local\metadata\collection;
+use core_privacy\local\request\transform;
+use core_privacy\local\request\contextlist;
+use core_privacy\local\request\userlist;
+use core_privacy\local\request\approved_contextlist;
+use core_privacy\local\request\approved_userlist;
+use core_privacy\local\request\writer;
+use context_system;
+use context_user;
 
-defined('MOODLE_INTERNAL') || die();
-
+/**
+ * Privacy Subsystem implementation for block_iomad_microlearning.
+ *
+ * @package    block_iomad_microlearning
+ * @copyright  2021 Derick Turner
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class provider implements
         \core_privacy\local\metadata\provider,
         \core_privacy\local\request\core_userlist_provider,
@@ -50,7 +56,7 @@ class provider implements
      * @param collection $items a reference to the collection to use to store the metadata.
      * @return collection the updated collection of metadata items.
      */
-    public static function get_metadata(collection $collection) : collection {
+    public static function get_metadata(collection $collection): collection {
         $collection->add_database_table(
             'microlearning_thread_user',
             [
@@ -83,7 +89,7 @@ class provider implements
      * @param int $userid the userid.
      * @return contextlist the list of contexts containing user info for the user.
      */
-    public static function get_contexts_for_userid(int $userid) : contextlist {
+    public static function get_contexts_for_userid(int $userid): contextlist {
         // System context only.
         $sql = "SELECT c.id
                   FROM {context} c
@@ -116,7 +122,7 @@ class provider implements
         $context = context_system::instance();
 
         // Get the microlearning_thread_user information.
-        if ($microlearnings = $DB->get_records('microlearning_thread_user', array('userid' => $user->id))) {
+        if ($microlearnings = $DB->get_records('microlearning_thread_user', ['userid' => $user->id])) {
             $microlearningout = (object) [];
             foreach ($microlearnings as $id => $microlearning) {
                 if (!empty($microlearning->schedule_date)) {
@@ -139,7 +145,7 @@ class provider implements
                 }
             }
             $microlearningout->microlearning = $microlearnings;
-            writer::with_context($context)->export_data(iarray(get_string('pluginname', 'block_iomad_microlearning')), $microlearningout);
+            writer::with_context($context)->export_data([get_string('pluginname', 'block_iomad_microlearning')], $microlearningout);
         }
     }
 
@@ -171,7 +177,7 @@ class provider implements
         }
 
         $userid = $contextlist->get_user()->id;
-        $DB->delete_records('microlearning_thread_user', array('userid' => $userid));
+        $DB->delete_records('microlearning_thread_user', ['userid' => $userid]);
     }
 
     /**
@@ -212,7 +218,7 @@ class provider implements
         $context = $userlist->get_context();
 
         if ($context instanceof context_user) {
-            $DB->delete_records('microlearning_thread_user', array('userid' => $context->id));
+            $DB->delete_records('microlearning_thread_user', ['userid' => $context->id]);
         }
     }
 }
