@@ -15,26 +15,34 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD approve access block IOMAD dashboard items
+ *
  * @package   block_iomad_approve_access
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once($CFG->dirroot . "/blocks/iomad_approve_access/lib.php");
+defined('MOODLE_INTERNAL') || die();
 
-// Define the Iomad menu items that are defined by this plugin
+use block_iomad_approve_access\iomad_approve_access;
+use core\notification;
 
+/**
+ * Define the Iomad menu items that are defined by this plugin
+ *
+ * @return array
+ */
 function block_iomad_approve_access_menu() {
     global $CFG;
 
     // Show any manager approval messages.
     if (iomad_approve_access::has_users()) {
-        \core\notification::info(get_string('userstoapprove', 'block_iomad_approve_access'));
+        notification::info(get_string('userstoapprove', 'block_iomad_approve_access'));
     }
 
-    return array(
-        'Iomadapproveaccess' => array(
+    return [
+        'Iomadapproveaccess' => [
             'category' => 'UserAdmin',
             'tab' => 2,
             'name' => get_string('approveusers', 'block_iomad_approve_access'),
@@ -43,7 +51,7 @@ function block_iomad_approve_access_menu() {
             'icondefault' => 'approve',
             'style' => 'micro',
             'icon' => 'fa-user',
-            'iconsmall' => 'fa-thumbs-up'
-        ),
-    );
+            'iconsmall' => 'fa-thumbs-up',
+        ],
+    ];
 }

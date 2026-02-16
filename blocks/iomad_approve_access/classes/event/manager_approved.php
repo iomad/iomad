@@ -25,25 +25,18 @@
 
 namespace block_iomad_approve_access\event;
 
-defined('MOODLE_INTERNAL') || die();
+use core\event\base;
+use moodle_url;
 
 /**
  * The block_iomad_approve_access manager approved event.
  *
- * @property-read array $other {
- *      Extra information about event.
- *
- *      - int licenseid: the id of the license.
- *      - int duedate: the timestamp of when to email.
- * }
- *
  * @package    block_iomad_approve_access
- * @since      Moodle 3.2
  * @copyright  2020 E-Learn Design Ltd. http://www.e-learndesign.co.uk
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class manager_approved extends \core\event\base {
+class manager_approved extends base {
 
     /**
      * Init method.
@@ -71,32 +64,27 @@ class manager_approved extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "The user with id '$this->userid' approved access to user id '$this->relateduserid' for trainingevent id '$this->objectid' in course id " .
-            $this->courseid;
+        return "The user with id '$this->userid' approved access to user id " .
+               "'$this->relateduserid' for trainingevent id '$this->objectid' in course id " .
+               $this->courseid;
     }
 
     /**
      * Get URL related to the action.
      *
-     * @return \moodle_url
+     * @return moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/blocks/iomad_approve_access/approve.php');
+        return new moodle_url('/block/iomad_approve_access/approve.php');
     }
 
     /**
-     * Custom validation.
+     * Get any mappings for event other values
      *
-     * @throws \coding_exception
-     * @return void
+     * @return array
      */
-    protected function validate_data() {
-        parent::validate_data();
-
-    }
-
     public static function get_other_mapping() {
-        $othermapped = array();
+        $othermapped = [];
 
         return $othermapped;
     }

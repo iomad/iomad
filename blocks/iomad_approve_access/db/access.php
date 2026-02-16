@@ -15,7 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    Block Iomad Approve Access
+ * IOMAD approve access block capabilities
+ *
+ * @package    block_iomad_approve_access
  * @copyright  2011 onwards E-Learn Design Limited
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,35 +25,35 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$capabilities = array(
-    'block/iomad_approve_access:addinstance' => array(
+$capabilities = [
+    'block/iomad_approve_access:addinstance' => [
         'riskbitmask' => RISK_SPAM | RISK_XSS,
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
-        'archetypes' => array(
-            'manager' => CAP_ALLOW
-        ),
-    ),
+        'archetypes' => [
+            'manager' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_approve_access:myaddinstance' => array(
+    'block/iomad_approve_access:myaddinstance' => [
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
-        'archetypes' => array(
-            'manager' => CAP_ALLOW
-        ),
-    ),
+        'archetypes' => [
+            'manager' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_approve_access:approve' => array(
+    'block/iomad_approve_access:approve' => [
         'riskbitmask' => RISK_SPAM | RISK_XSS,
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-);
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+];
