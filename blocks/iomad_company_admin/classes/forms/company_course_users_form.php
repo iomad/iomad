@@ -365,7 +365,7 @@ class company_course_users_form extends moodleform {
                                                 0,
                                                 $data->groupid,
                                                 $duedate);
-                            Emailtemplate::send('user_added_to_course',
+                            emailtemplate::send('user_added_to_course',
                                                  ['course' => $course,
                                                        'user' => $adduser,
                                                        'due' => $duedate]);
