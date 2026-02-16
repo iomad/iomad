@@ -25,25 +25,18 @@
 
 namespace block_iomad_approve_access\event;
 
-defined('MOODLE_INTERNAL') || die();
+use core\event\base;
+use moodle_url;
 
 /**
  * The block_iomad_approve_access request granted event.
  *
- * @property-read array $other {
- *      Extra information about event.
- *
- *      - int licenseid: the id of the license.
- *      - int duedate: the timestamp of when to email.
- * }
- *
  * @package    block_iomad_approve_access
- * @since      Moodle 3.2
  * @copyright  2020 E-Learn Design Ltd. http://www.e-learndesign.co.uk
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class request_granted extends \core\event\base {
+class request_granted extends base {
 
     /**
      * Init method.
@@ -71,8 +64,9 @@ class request_granted extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "The user with id '$this->userid' granted final access to user id '$this->relateduserid' for trainingevent id '$this->objectid' in course id " .
-            $this->courseid;
+        return "The user with id '$this->userid' granted final access to user id " .
+               "'$this->relateduserid' for trainingevent id '$this->objectid' in course id " .
+               $this->courseid;
     }
 
     /**
@@ -81,22 +75,16 @@ class request_granted extends \core\event\base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/blocks/iomad_approve_access/approve.php');
+        return new moodle_url('/block/iomad_approve_access/approve.php');
     }
 
     /**
-     * Custom validation.
+     * Event other mapping values
      *
-     * @throws \coding_exception
      * @return void
      */
-    protected function validate_data() {
-        parent::validate_data();
-
-    }
-
     public static function get_other_mapping() {
-        $othermapped = array();
+        $othermapped = [];
 
         return $othermapped;
     }

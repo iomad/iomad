@@ -23,9 +23,11 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_approve_access\iomad_approve_access;
+use block_iomad_company_admin\forms\iomad_company_select_form;
+use core\notification;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
-use block_iomad_company_admin\forms\iomad_company_select_form;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -153,9 +155,8 @@ class block_iomad_company_admin extends block_base {
         global $OUTPUT, $CFG, $SESSION, $USER;
 
         // Deal with Access approval notifications.
-        require_once($CFG->dirroot . '/blocks/iomad_approve_access/lib.php');
         if (iomad_approve_access::has_users() && empty($SESSION->approveaccesswarningshown)) {
-            \core\notification::add(get_string('userstoapprove', 'block_iomad_approve_access'), 'info');
+            notification::add(get_string('userstoapprove', 'block_iomad_approve_access'), 'info');
             $SESSION->approveaccesswarningshown = true;
         }
 

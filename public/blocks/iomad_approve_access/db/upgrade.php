@@ -15,16 +15,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    Block Approve Enroll
+ * IOMAD approve access block upgrade function
+ *
+ * @package    block_iomad_approve_access
  * @copyright  2011 onwards E-Learn Design Limited
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
+ * IOMAD approve access block upgrade function
  *
- * @param int $oldversion
- * @param object $block
+ * @package    block_iomad_approve_access
+ * @copyright  2011 onwards E-Learn Design Limited
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 function xmldb_block_iomad_approve_access_upgrade($oldversion) {
     global $CFG, $DB;

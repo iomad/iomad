@@ -15,44 +15,80 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * block approve access
+ * IOMAD approve access block
  *
- * @package    Block Iomad Approve Access
+ * @package    block_iomad_approve_access
  * @copyright  2021 Derick Turner
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_approve_access\iomad_approve_access;
+
+/**
+ * IOMAD approve access block
+ *
+ * @package    block_iomad_approve_access
+ * @copyright  2021 Derick Turner
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class block_iomad_approve_access extends block_base {
+
+    /**
+     * Initialisation function
+     *
+     * @return void
+     */
     public function init() {
         $this->title = get_string('title', 'block_iomad_approve_access' );
     }
 
+    /**
+     * Do we hide the header?
+     *
+     * @return void
+     */
     public function hide_header() {
         return false;
     }
 
+    /**
+     * Does the block have config?
+     *
+     * @return boolean
+     */
     public function has_config() {
         return false;
     }
 
+    /**
+     * Get the block content
+     *
+     * @return void
+     */
     public function get_content() {
-        global $CFG, $DB;
+        global $CFG;
 
-        require_once($CFG->dirroot . '/blocks/iomad_approve_access/lib.php');
         if ($this->content !== null) {
             return $this->content;
         }
 
-        $this->content = new stdClass;
+        $this->content = (object) [];
 
+        // Do we have users?
         if (iomad_approve_access::has_users()) {
-            $this->content->text   = '<a href="'.new moodle_url('/blocks/iomad_approve_access/approve.php').'">'.
-                                      get_string('userstoapprove', 'block_iomad_approve_access').'</a>';
+            $this->content->text   = html_writer::tag(
+                'a',
+                get_string('userstoapprove', 'block_iomad_approve_access'),
+                [
+                    'href' => new moodle_url($CFG->wwwroot . '/blocks/iomad_approve_access/approve.php'),
+                ]
+
+            );
         } else {
             $this->content->text = get_string('noonetoapprove', 'block_iomad_approve_access');
         }
         return $this->content;
     }
 }
-

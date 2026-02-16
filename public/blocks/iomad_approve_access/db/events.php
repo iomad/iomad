@@ -17,42 +17,43 @@
 /**
  * Add event handlers for the trainingevent
  *
- * @package    mod_trainingevent
- * @copyright  2022 Derick Turner
+ * @package    block_iomad_approve_access
+ * @copyright  2011 onwards E-Learn Design Limited
+ * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 // List of observers.
-$observers = array(
+$observers = [
 
-    array(
+    [
         'eventname'   => '\mod_trainingevent\event\trainingevent_reset',
         'callback'    => 'block_iomad_approve_access_observer::trainingevent_reset',
         'includefile' => '/blocks/iomad_approve_access/classes/observer.php',
         'internal'    => false,
-    ),
+    ],
 
-    array(
+    [
         'eventname'   => '\mod_trainingevent\event\user_removed',
         'callback'    => 'block_iomad_approve_access_observer::user_removed',
         'includefile' => 'blocks/iomad_approve_access/classes/observer.php',
         'internal'    => false,
-    ),
+    ],
 
-    array(
+    [
         'eventname'   => '\mod_trainingevent\event\attendance_requested',
         'callback'    => 'block_iomad_approve_access_observer::attendance_requested',
         'includefile' => 'blocks/iomad_approve_access/classes/observer.php',
         'internal'    => false,
-    ),
+    ],
 
-    array(
+    [
         'eventname'   => '\mod_trainingevent\event\attendance_withdrawn',
         'callback'    => 'block_iomad_approve_access_observer::attendance_withdrawn',
         'includefile' => 'blocks/iomad_approve_access/classes/observer.php',
         'internal'    => false,
-    ),
+    ],
 
-);
+];
