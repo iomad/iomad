@@ -108,7 +108,11 @@ class company_user {
             'lastname' => $user->lastname,
             'email' => $user->email,
         ])) {
-            $clashed = true;
+            // It only clashes if the existing user is in a different tenant.
+            if (!$DB->get_records('company_users', ['companyid' => $company->id,
+                                                    'userid' => $existinguser->id])) {
+                $clashed = true;
+            }
         }
 
         // Only create the user if there is no clash.
