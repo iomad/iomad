@@ -15,28 +15,30 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Base class for the table used by a {@link quiz_attempts_report}.
+ * IOMAD microlearning block nugget table class
  *
- * @package   local_report_user_license_allocations
+ * @package   block_iomad_microlearning
  * @copyright 2019 E-Learn Design Ltd. (https://www.e-learndesign.co.uk)
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace block_iomad_microlearning\forms;
 
+use html_writer;
 use local_iomad\iomad;
-
-require_once($CFG->libdir.'/tablelib.php');
+use moodle_url;
+use table_sql;
 
 /**
- * Base class for the table used by block/iomad_microlearning/threads.php
+ * IOMAD microlearning block nugget table class
  *
+ * @package   block_iomad_microlearning
  * @copyright 2019 E-Learn Design Ltd. (https://www.e-learndesign.co.uk)
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class block_iomad_microlearning_nugget_table extends table_sql {
+class nugget_table extends table_sql {
 
     /**
      * Generate the display of the user's firstname
@@ -44,8 +46,6 @@ class block_iomad_microlearning_nugget_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_name($row) {
-        global $output;
-
         return format_string($row->name, true, 1);
     }
 
@@ -55,8 +55,6 @@ class block_iomad_microlearning_nugget_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_target($row) {
-        global $CFG;
-
         if (!empty($row->active)) {
             return get_string('no');
         } else {
@@ -70,19 +68,48 @@ class block_iomad_microlearning_nugget_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_updown($row) {
-        global $CFG, $DB;
+        global $DB;
 
         $html = "";
-        $count=$DB->count_records('microlearning_nugget', array('threadid' => $row->threadid));
+        $count = $DB->count_records('microlearning_nugget', ['threadid' => $row->threadid]);
 
         if ($row->nuggetorder != 0) {
-            $uplink = new moodle_url('nuggets.php', array('action' => 'up', 'nuggetid' => $row->id, 'threadid' => $row->threadid));
-            $html .= '<a href=" '. $uplink . '"><i class="icon fa fa-arrow-up fa-fw " title="' . get_string('up') . '" aria-label="'. get_string('up') . '"></i></a>';
+            $uplink = new moodle_url('nuggets.php', ['action' => 'up', 'nuggetid' => $row->id, 'threadid' => $row->threadid]);
+            $html .= html_writer::tag(
+                'a',
+                html_writer::tag(
+                    'i',
+                    '',
+                    [
+                        'class' => "icon fa fa-arrow-up fa-fw ",
+                        'title' => get_string('up'),
+                        'aria-label' => get_string('up'),
+                    ]
+                ),
+                [
+                    'href' => $uplink,
+                ]
+            );
         }
-        if (($row->nuggetorder  + 1) < $count) {
-            $downlink = new moodle_url('nuggets.php', array('action' => 'down', 'nuggetid' => $row->id, 'threadid' => $row->threadid));
-            $html .= '<a href=" '. $downlink . '"><i class="icon fa fa-arrow-down fa-fw " title="' . get_string('down') . '" aria-label="'. get_string('down') . '"></i></a>';
+        if (($row->nuggetorder + 1) < $count) {
+            $downlink = new moodle_url('nuggets.php', ['action' => 'down', 'nuggetid' => $row->id, 'threadid' => $row->threadid]);
+            $html .= html_writer::tag(
+                'a',
+                html_writer::tag(
+                    'i',
+                    '',
+                    [
+                        'class' => "icon fa fa-arrow-down fa-fw ",
+                        'title' => get_string('down'),
+                        'aria-label' => get_string('down'),
+                    ]
+                ),
+                [
+                    'href' => $downlink,
+                ]
+            );
         }
+
         return $html;
     }
 
@@ -92,7 +119,6 @@ class block_iomad_microlearning_nugget_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_nuggetorder($row) {
-        global $CFG, $DB;
 
         return $row->nuggetorder + 1;
     }
@@ -118,19 +144,48 @@ class block_iomad_microlearning_nugget_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_actions($row) {
-        global $DB, $output, $companycontext;
+        global $companycontext;
 
         if ($this->is_downloading()) {
             return;
         }
 
         $html = "";
-        $deletelink = new moodle_url('nuggets.php', array('deleteid' => $row->id, 'threadid' => $row->threadid, 'sesskey' => sesskey()));
-        $editlink = new moodle_url('nugget_edit.php', array('nuggetid' => $row->id, 'threadid' => $row->threadid));
+        $deletelink = new moodle_url('nuggets.php', ['deleteid' => $row->id, 'threadid' => $row->threadid, 'sesskey' => sesskey()]);
+        $editlink = new moodle_url('nugget_edit.php', ['nuggetid' => $row->id, 'threadid' => $row->threadid]);
         if (iomad::has_capability('block/iomad_microlearning:edit_nuggets', $companycontext)) {
-            $html = '<a href="' . $editlink . '"><i class="icon fa fa-cog fa-fw " title="' . get_string('edit') . '" aria-label="'. get_string('edit') . '"></i></a>';
-            $html .= '<a href="' . $deletelink . '"><i class="icon fa fa-times fa-fw " title="' . get_string('delete') . '" aria-label="'. get_string('delete') . '"></i></a>';
+            $html .= html_writer::tag(
+                'a',
+                html_writer::tag(
+                    'i',
+                    '',
+                    [
+                        'class' => "icon fa fa-cog fa-fw ",
+                        'title' => get_string('edit'),
+                        'aria-label' => get_string('edit'),
+                    ]
+                ),
+                [
+                    'href' => $editlink,
+                ]
+            );
+            $html .= html_writer::tag(
+                'a',
+                html_writer::tag(
+                    'i',
+                    '',
+                    [
+                        'class' => "icon fa fa-trash fa-fw ",
+                        'title' => get_string('delete'),
+                        'aria-label' => get_string('delete'),
+                    ]
+                ),
+                [
+                    'href' => $deletelink,
+                ]
+            );
         }
+
         return $html;
     }
 }

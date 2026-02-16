@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Event observer for local iomad plugin.
+ * IOMAD microlearning block event observer
  *
  * @package    block_iomad_microlearning
  * @copyright  2019 E-Learn Design Ltd. (http://www.e-learndesign.co.uk)
@@ -23,10 +23,16 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+use block_iomad_microlearning\microlearning;
 
-require_once($CFG->dirroot.'/blocks/iomad_microlearning/lib.php');
-
+/**
+ * IOMAD microlearning block event observer
+ *
+ * @package    block_iomad_microlearning
+ * @copyright  2019 E-Learn Design Ltd. (http://www.e-learndesign.co.uk)
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class block_iomad_microlearning_observer {
 
     /**

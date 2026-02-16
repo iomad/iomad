@@ -15,15 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD microlearning block group import main page
+ *
  * @package   block_iomad_microlearning
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/**
- * Script to import completion information.
- */
+use block_iomad_company_admin\event\dashboard_page_viewed;
+use block_iomad_microlearning\forms\user_group_import_form;
+use block_iomad_microlearning\microlearning;
 
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
@@ -31,9 +33,7 @@ use local_iomad\custom_context\context_company;
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->libdir.'/csvlib.class.php');
-require_once(dirname(__FILE__) . '/lib.php');
 
-$returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
 $completions = optional_param('completions', 0, PARAM_BOOL);
 $confirm = optional_param('confirm', null, PARAM_ALPHANUM);
 $submit = optional_param('submitbutton', '', PARAM_ALPHANUM);
@@ -42,39 +42,37 @@ $iid         = optional_param('iid', '', PARAM_INT);
 $previewrows = optional_param('previewrows', 10, PARAM_INT);
 $readcount   = optional_param('readcount', 0, PARAM_INT);
 
+// Log in and set up $PAGE.
 require_login();
 
+// Set the companyid.
 $systemcontext = context_system::instance();
-
-// Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
+// Can we even do anything?
 iomad::require_capability('block/iomad_microlearning:importgroupfromcsv', $companycontext);
 
-$urlparams = array();
-if ($returnurl) {
-    $urlparams['returnurl'] = $returnurl;
-}
-
+// Set the link text.
 $linktext = get_string('importusergroups', 'block_iomad_microlearning');
 
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_microlearning/group_import.php');
 
+// Finish setting up PAGE.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
 $PAGE->set_title($linktext);
+
 // Set the page heading.
 $url = new moodle_url('/blocks/iomad_microlearning/index.php');
 $title = get_string('pluginname', 'block_iomad_microlearning');
-
 $PAGE->set_heading($linktext);
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Deal with the link back to the main microlearning page.
 $buttoncaption = get_string('threads', 'block_iomad_microlearning');
@@ -83,20 +81,19 @@ $buttons = $OUTPUT->single_button($buttonlink, $buttoncaption, 'get');
 $PAGE->set_button($buttons);
 
 // Array of all valid fields for validation.
-$stdfields = array('username', 'email', 'thread', 'group');
+$stdfields = ['username', 'email', 'thread', 'group'];
 
 if (!empty($fileimport)) {
     if (empty($iid)) {
-        $mform = new block_iomad_microlearning\forms\user_group_import_form();
+        $mform = new user_group_import_form();
         if ($mform->is_cancelled()) {
             redirect($linkurl);
         }
         if ($importdata = $mform->get_data()) {
             // Verification moved to two places: after upload and into form2.
             $grouperrors  = 0;
-            $erroredgroups = array();
+            $erroredgroups = [];
             $errorstr = get_string('error');
-
 
             $iid = csv_import_reader::get_new_iid('uploadgroup');
             $cir = new csv_import_reader($iid, 'uploadgroup');
@@ -108,7 +105,7 @@ if (!empty($fileimport)) {
                                                 'validate_uploadgroup_columns');
 
             if (!$columns = $cir->get_columns()) {
-               throw new moodle_exception('cannotreadtmpfile', 'error', $returnurl);
+                throw new moodle_exception('cannotreadtmpfile', 'error', $linkurl);
             }
 
             unset($content);
@@ -131,7 +128,8 @@ if (!empty($fileimport)) {
                 $upt->track('line', $linenum);
                 foreach ($line as $key => $value) {
                     if ($columns[$key] == 'thread') {
-                        if (!$threadrec = $DB->get_record('microlearning_thread', ['name' => $value, 'companyid' => $companyid])) {
+                        if (!$threadrec = $DB->get_record('microlearning_thread', ['name' => $value,
+                                                                                   'companyid' => $companyid])) {
                             $grouperrors++;
                             $errornum++;
                             $erroredgroups[] = $line;
@@ -166,8 +164,11 @@ if (!empty($fileimport)) {
                         }
                     } else if ($columns[$key] == 'group') {
                         $threadkey = array_search('thread', $columns);
-                        if ($threadrec = $DB->get_record('microlearning_thread', ['name' => $line[$threadkey], 'companyid' => $companyid])) {
-                            if (!$groupinfo = $DB->get_record('microlearning_thread_group', ['name' => $value, 'threadid' => $threadrec->id, 'companyid' => $companyid])) {
+                        if ($threadrec = $DB->get_record('microlearning_thread', ['name' => $line[$threadkey],
+                                                                                  'companyid' => $companyid])) {
+                            if (!$groupinfo = $DB->get_record('microlearning_thread_group', ['name' => $value,
+                                                                                             'threadid' => $threadrec->id,
+                                                                                             'companyid' => $companyid])) {
                                 $grouperrors++;
                                 $errornum++;
                                 $erroredgroups[] = $line;
@@ -194,8 +195,12 @@ if (!empty($fileimport)) {
                 $upt->track('email', $grouprec->email);
                 $upt->track('thread', $grouprec->thread);
                 $upt->track('group', $grouprec->groupname);
-                if ($DB->get_records('microlearning_thread_user', ['threadid' => $grouprec->threadid, 'userid' => $grouprec->userid])) {
-                    $DB->set_field('microlearning_thread_user', 'groupid', $grouprec->groupid, ['threadid' => $grouprec->threadid, 'userid' => $grouprec->userid]);
+                if ($DB->get_records('microlearning_thread_user', ['threadid' => $grouprec->threadid,
+                                                                   'userid' => $grouprec->userid])) {
+                    $DB->set_field('microlearning_thread_user',
+                                   'groupid',
+                                   $grouprec->groupid,
+                                   ['threadid' => $grouprec->threadid, 'userid' => $grouprec->userid]);
                     $upt->track('status', get_string('ok'));
                 } else {
                     if (!microlearning::add_user_to_thread($grouprec->threadid, $grouprec->userid, $grouprec->groupid)) {
@@ -224,13 +229,13 @@ if (!empty($fileimport)) {
             }
             echo html_writer::tag('a',
                                   get_string('continue'),
-                                  array('class' => 'btn-primary',
-                                        'href' => $linkurl));
+                                  ['class' => 'btn-primary',
+                                        'href' => $linkurl]);
 
             echo $OUTPUT->footer();
             die;
         } else {
-            $mform->set_data(array('fileimport' => $fileimport));
+            $mform->set_data(['fileimport' => $fileimport]);
             echo $OUTPUT->header();
             $mform->display();
             echo $OUTPUT->footer();
@@ -243,8 +248,8 @@ if (!empty($fileimport)) {
 echo $OUTPUT->header();
 
 echo $OUTPUT->single_button(new moodle_url($CFG->wwwroot . '/blocks/iomad_microlearning/group_import.php',
-                                           array('fileimport' => true,
-                                                 'sesskey' => sesskey())),
+                                           ['fileimport' => true,
+                                                 'sesskey' => sesskey()]),
                                            get_string('importgroupsfromfile', 'block_iomad_microlearning'));
 echo $OUTPUT->footer();
 
@@ -252,19 +257,27 @@ echo $OUTPUT->footer();
 * Utility functions and classes
 */
 
+/**
+ * Utility upload class
+ */
 class upload_progress_tracker {
+    /** @var array row data */
     public $_row;
-    public $columns = array('status',
+
+    /** @var array columns */
+    public $columns = ['status',
                             'line',
                             'id',
                             'username',
                             'email',
                             'thread',
-                            'group');
+                            'group'];
 
-    public function __construct() {
-    }
-
+    /**
+     * Initialisation function
+     *
+     * @return void
+     */
     public function init() {
         $ci = 0;
         echo '<table id="uploadresults" class="generaltable boxaligncenter flexible-wrap" summary="'.
@@ -281,11 +294,16 @@ class upload_progress_tracker {
         $this->_row = null;
     }
 
+    /**
+     * Write the row data output
+     *
+     * @return void
+     */
     public function flush() {
-        if (empty($this->_row) or empty($this->_row['line']['normal'])) {
-            $this->_row = array();
+        if (empty($this->_row) || empty($this->_row['line']['normal'])) {
+            $this->_row = [];
             foreach ($this->columns as $col) {
-                $this->_row[$col] = array('normal' => '', 'info' => '', 'warning' => '', 'error' => '');
+                $this->_row[$col] = ['normal' => '', 'info' => '', 'warning' => '', 'error' => ''];
             }
             return;
         }
@@ -310,10 +328,19 @@ class upload_progress_tracker {
         }
         echo '</tr>';
         foreach ($this->columns as $col) {
-            $this->_row[$col] = array('normal' => '', 'info' => '', 'warning' => '', 'error' => '');
+            $this->_row[$col] = ['normal' => '', 'info' => '', 'warning' => '', 'error' => ''];
         }
     }
 
+    /**
+     * Track progress
+     *
+     * @param string $col
+     * @param string $msg
+     * @param string $level
+     * @param boolean $merge
+     * @return void
+     */
     public function track($col, $msg, $level= 'normal', $merge=true) {
         if (empty($this->_row)) {
             $this->flush(); // Init arrays.
@@ -332,6 +359,11 @@ class upload_progress_tracker {
         }
     }
 
+    /**
+     * Close the output table
+     *
+     * @return void
+     */
     public function close() {
         echo '</table>';
     }
@@ -348,7 +380,7 @@ function validate_uploadgroup_columns(&$columns) {
         return get_string('csvfewcolumns', 'error');
     }
     // Test columns.
-    $processed = array();
+    $processed = [];
     foreach ($columns as $key => $unused) {
         $field = $columns[$key];
         if (!in_array($field, $stdfields)) {

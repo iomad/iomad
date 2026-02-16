@@ -15,116 +15,117 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD microlearning block capabilities
+ *
  * @package   block_iomad_microlearning
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$capabilities = array(
+defined('MOODLE_INTERNAL') || die();
 
-    'block/iomad_microlearning:addinstance' => array(
+$capabilities = [
 
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_BLOCK
-    ),
-
-    'block/iomad_microlearning:myaddinstance' => array(
+    'block/iomad_microlearning:addinstance' => [
 
         'captype' => 'read',
-        'contextlevel' => CONTEXT_BLOCK
-    ),
+        'contextlevel' => CONTEXT_BLOCK,
+    ],
 
-    'block/iomad_microlearning:view' => array(
+    'block/iomad_microlearning:myaddinstance' => [
 
         'captype' => 'read',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+        'contextlevel' => CONTEXT_BLOCK,
+    ],
 
-    'block/iomad_microlearning:thread_clone' => array(
+    'block/iomad_microlearning:view' => [
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_microlearning:edit_threads' => array(
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_microlearning:import_threads' => array(
+    'block/iomad_microlearning:thread_clone' => [
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_microlearning:edit_nuggets' => array(
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_microlearning:thread_delete' => array(
+    'block/iomad_microlearning:edit_threads' => [
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_microlearning:thread_view' => array(
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_microlearning:assign_threads' => array(
+    'block/iomad_microlearning:import_threads' => [
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_microlearning:manage_groups' => array(
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_microlearning:importgroupfromcsv' => array(
+    'block/iomad_microlearning:edit_nuggets' => [
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-);
+    'block/iomad_microlearning:thread_delete' => [
 
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
+    'block/iomad_microlearning:thread_view' => [
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_microlearning:assign_threads' => [
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_microlearning:manage_groups' => [
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_microlearning:importgroupfromcsv' => [
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+];

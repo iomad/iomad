@@ -97,6 +97,7 @@ class potential_thread extends company_base {
                                                        SQL_PARAMS_NAMED,
                                                        'depids');
             $departmentsql = " AND cu.departmentid {$insql}";
+            $params = $params + $inparams;
         }
 
         // Deal with parent company managers.

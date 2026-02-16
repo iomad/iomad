@@ -15,55 +15,64 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD microlearning thread shedule main page
+ *
  * @package   block_iomad_microlearning
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_company_admin\event\dashboard_page_viewed;
+use block_iomad_microlearning\forms\thread_schedule_form;
+use block_iomad_microlearning\microlearning;
+use core\output\notification;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
-require_once('lib.php');
 require_once(dirname(__FILE__) . '/../../course/lib.php');
 
 $threadid = required_param('threadid', PARAM_INT);
 $deleteid = optional_param('deleteid', 0, PARAM_INT);
 $confirm = optional_param('confirm', null, PARAM_ALPHANUM);
 
+// Log in and set up $PAGE.
 require_login();
 
+// Set the companyid.
 $systemcontext = context_system::instance();
-
-// Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
+// Can we even do anything?
 iomad::require_capability('block/iomad_microlearning:edit_threads', $companycontext);
 
+// Set the thread list URL.
 $threadlist = new moodle_url('/blocks/iomad_microlearning/threads.php');
 
+// Set the link text.
 $linktext = get_string('threadschedule', 'block_iomad_microlearning');
 
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_microlearning/thread_schedule.php');
 
+// Finish setting up PAGE.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
 $PAGE->set_title($linktext);
 
-// get output renderer
+// Get output renderer.
 $output = $PAGE->get_renderer('block_iomad_microlearning');
 
 // Set the page heading.
 $PAGE->set_heading($linktext);
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Deal with the link back to the main microlearning page.
 $buttoncaption = get_string('threads', 'block_iomad_microlearning');
@@ -72,41 +81,39 @@ $buttons = $OUTPUT->single_button($buttonlink, $buttoncaption, 'get');
 $PAGE->set_button($buttons);
 
 // Check the thread is valid.
-if (!$threadinfo = $DB->get_record('microlearning_thread', array('id' => $threadid))) {
+if (!$threadinfo = $DB->get_record('microlearning_thread', ['id' => $threadid])) {
     throw new moodle_exception('invalidthread', 'block_iomad_microlearning');
 }
 
 if ($deleteid && confirm_sesskey() && $confirm == md5($deleteid)) {
     // Check the thread is valid.
-    if (!$threadinfo = $DB->get_record('microlearning_thread', array('id' => $threadid))) {
+    if (!$threadinfo = $DB->get_record('microlearning_thread', ['id' => $threadid])) {
         throw new moodle_exception('invalidthread', 'block_iomad_microlearning');
     }
 
     // Get the list of thread ids which are to be removed..
     if (!empty($deleteid)) {
         microlearning::reset_thread_schedule($threadinfo);
-        //$redirectmessage = get_string('threadscheduleresetok', 'block_iomad_microlearning');
-        //redirect($threadlist, $redirectmessage, null, \core\output\notification::NOTIFY_SUCCESS);
-        //die;
     }
 }
 
 // Get the nuggets for this thread.
-$nuggets = $DB->get_records('microlearning_nugget', array('threadid' => $threadid), 'nuggetorder ASC');
+$nuggets = $DB->get_records('microlearning_nugget', ['threadid' => $threadid], 'nuggetorder ASC');
 
 // Set up the form.
-$editform = new block_iomad_microlearning\forms\thread_schedule_form($PAGE->url, $threadid, $nuggets);
+$editform = new thread_schedule_form($PAGE->url, $threadid, $nuggets);
 
 $nuggetschedules = microlearning::get_schedules($threadinfo, $nuggets);
 
 $editform->set_data($nuggetschedules);
 
-// Process the form.
+// Was the form cancelled?
 if ($editform->is_cancelled()) {
     redirect($threadlist);
     die;
 }
 
+// Process the form.
 if ($scheduledata = $editform->get_data()) {
 
     // Are we resetting the schedules to default?
@@ -115,7 +122,7 @@ if ($scheduledata = $editform->get_data()) {
         // No so show the confirmation question.
         echo $output->header();
         echo $output->heading(get_string('resetschedule', 'block_iomad_microlearning'));
-        $optionsyes = array('threadid' => $threadid, 'deleteid' => $threadid, 'confirm' => md5($threadid), 'sesskey' => sesskey());
+        $optionsyes = ['threadid' => $threadid, 'deleteid' => $threadid, 'confirm' => md5($threadid), 'sesskey' => sesskey()];
         echo $output->confirm(get_string('resetschedulecheckfull', 'block_iomad_microlearning', "'$threadinfo->name'"),
                               new moodle_url('thread_schedule.php', $optionsyes), 'threads.php');
         echo $output->footer();
@@ -126,21 +133,23 @@ if ($scheduledata = $editform->get_data()) {
     $scheduledata->threadinfo = $threadinfo;
     microlearning::update_thread_schedule($scheduledata);
     $redirectmessage = get_string('threadscheduleupdatedok', 'block_iomad_microlearning');
-    redirect($threadlist, $redirectmessage, null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect($threadlist, $redirectmessage, null, notification::NOTIFY_SUCCESS);
     die;
 }
 // Trap if we are resetting the schedule.
-if (!empty($threadid) &!empty($deleteid) && $confirm ==  md5($threadid) && confirm_sesskey()) {
+if (!empty($threadid) && !empty($deleteid) && $confirm == md5($threadid) && confirm_sesskey()) {
     $threadinfo = $DB->get_record('microlearning_thread', ['id' => $threadid], '*', MUST_EXIST);
     microlearning::reset_thread_schedule($threadinfo);
     $redirectmessage = get_string('threadscheduleresetok', 'block_iomad_microlearning');
-    redirect($threadlist, $redirectmessage, null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect($threadlist, $redirectmessage, null, notification::NOTIFY_SUCCESS);
     die;
 }
 
-// Display the form.
+// Display the page.
 echo $output->header();
 
+// Display the form.
 $editform->display();
 
+// Display the footer.
 echo $output->footer();

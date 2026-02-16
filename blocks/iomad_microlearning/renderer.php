@@ -17,19 +17,40 @@
 use local_iomad\iomad;
 
 /**
+ * IOMAD microlearning default renderer
+ *
  * @package   block_iomad_microlearning
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+/**
+ * IOMAD microlearning default renderer
+ *
+ * @package   block_iomad_microlearning
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class block_iomad_microlearning_renderer extends plugin_renderer_base {
 
     /**
      * Back to list of roles button
      */
     public function threads_buttons($link) {
-        $out = '<p><a class="btn btn-primary" href="'.$link.'">' . get_string('add') . '</a></p>';
+        $out = html_writer::tag(
+            'p',
+            html_writer::tag(
+                'a',
+                get_string('add'),
+                [
+                    'class' => "btn btn-primary",
+                    'href' => $link,
+
+                ]
+            )
+        );
 
         return $out;
     }
@@ -40,17 +61,54 @@ class block_iomad_microlearning_renderer extends plugin_renderer_base {
     public function threads_list_buttons($link, $link2, $link3, $link4) {
         global $companycontext;
 
-        $out = '<p><a class="btn btn-primary" href="'.$link.'">' . get_string('add') . '</a>';
+        $out = html_writer::start_tag('p') .
+            html_writer::tag(
+                'a',
+                get_string('add'),
+                [
+                    'class' => "btn btn-primary",
+                    'href' => $link,
+
+                ]
+            );
+
         if (iomad::has_capability('block/iomad_microlearning:import_threads', $companycontext)) {
-            $out .= '&nbsp<a class="btn btn-primary" href="'.$link2.'">' . get_string('import') . '</a>';
+            $out .= '&nbsp;' .
+                html_writer::tag(
+                    'a',
+                    get_string('import'),
+                    [
+                        'class' => "btn btn-primary",
+                        'href' => $link2,
+
+                    ]
+                );
         }
         if (iomad::has_capability('block/iomad_microlearning:manage_groups', $companycontext)) {
-            $out .= '&nbsp<a class="btn btn-primary" href="'.$link3.'">' . get_string('learninggroups', 'block_iomad_microlearning') . '</a>';
-            if (iomad::has_capability('block/iomad_microlearning:importgroupfromcsv', $companycontext)) {
-                $out .= '&nbsp<a class="btn btn-primary" href="'.$link4.'">' . get_string('bulkassigngroups', 'block_iomad_microlearning') . '</a>';
-            }
+            $out .= '&nbsp;' .
+                html_writer::tag(
+                    'a',
+                    get_string('learninggroups', 'block_iomad_microlearning'),
+                    [
+                        'class' => "btn btn-primary",
+                        'href' => $link3,
+
+                    ]
+                );
         }
-        $out .= '</p>';
+        if (iomad::has_capability('block/iomad_microlearning:importgroupfromcsv', $companycontext)) {
+            $out .= '&nbsp;' .
+                html_writer::tag(
+                    'a',
+                    get_string('bulkassigngroups', 'block_iomad_microlearning'),
+                    [
+                        'class' => "btn btn-primary",
+                        'href' => $link4,
+
+                    ]
+                );
+        }
+        $out .= html_writer::end_tag('p');
 
         return $out;
     }

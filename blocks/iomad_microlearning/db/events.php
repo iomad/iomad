@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Add event handlers for the quiz
+ * IOMAD microlearning event handlers
  *
  * @package    block_iomad_microlearning
  * @copyright  2019 E-Learn Design (http://www.e-learndesign.co.uk)
@@ -26,76 +26,75 @@
 defined('MOODLE_INTERNAL') || die();
 
 // List of observers.
-$observers = array(
+$observers = [
 
-    array(
+    [
         'eventname'   => '\block_iomad_microlearning\event\thread_created',
         'callback'    => 'block_iomad_microlearning_observer::thread_created',
         'includefile' => '/blocks/iomad_microlearning/classes/observer.php',
         'internal'    => false,
-    ),
+    ],
 
-    array(
+    [
         'eventname'   => '\block_iomad_microlearning\event\thread_deleted',
         'callback'    => 'block_iomad_microlearning_observer::thread_deleted',
         'includefile' => '/blocks/iomad_microlearning/classes/observer.php',
         'internal'    => false,
-    ),
+    ],
 
-    array(
+    [
         'eventname'   => '\block_iomad_microlearning\event\thread_schedule_updated',
         'callback'    => 'block_iomad_microlearning_observer::thread_schedule_updated',
         'includefile' => '/blocks/iomad_microlearning/classes/observer.php',
         'internal'    => false,
-    ),
+    ],
 
-    array(
+    [
         'eventname'   => '\block_iomad_microlearning\event\thread_updated',
         'callback'    => 'block_iomad_microlearning_observer::thread_updated',
         'includefile' => '/blocks/iomad_microlearning/classes/observer.php',
         'internal'    => false,
-    ),
+    ],
 
-    array(
+    [
         'eventname'   => '\block_iomad_microlearning\event\nugget_created',
         'callback'    => 'block_iomad_microlearning_observer::nugget_created',
         'includefile' => '/blocks/iomad_microlearning/classes/observer.php',
         'internal'    => false,
-    ),
+    ],
 
-    array(
+    [
         'eventname'   => '\block_iomad_microlearning\event\nugget_deleted',
         'callback'    => 'block_iomad_microlearning_observer::nugget_deleted',
         'includefile' => '/blocks/iomad_microlearning/classes/observer.php',
         'internal'    => false,
-    ),
+    ],
 
-    array(
+    [
         'eventname'   => '\block_iomad_microlearning\event\nugget_moved',
         'callback'    => 'block_iomad_microlearning_observer::nugget_moved',
         'includefile' => '/blocks/iomad_microlearning/classes/observer.php',
         'internal'    => false,
-    ),
+    ],
 
-    array(
+    [
         'eventname'   => '\block_iomad_microlearning\event\nugget_updated',
         'callback'    => 'block_iomad_microlearning_observer::nugget_updated',
         'includefile' => '/blocks/iomad_microlearning/classes/observer.php',
         'internal'    => false,
-    ),
+    ],
 
-    array(
+    [
         'eventname'   => '\core\event\course_module_completion_updated',
         'callback'    => 'block_iomad_microlearning_observer::course_module_completion_updated',
         'includefile' => '/blocks/iomad_microlearning/classes/observer.php',
         'internal'    => false,
-    ),
+    ],
 
-    array(
+    [
         'eventname'   => '\core\event\user_deleted',
         'callback'    => 'block_iomad_microlearning_observer::user_deleted',
         'includefile' => '/blocks/iomad_microlearning/classes/observer.php',
         'internal'    => false,
-    ),
-
-);
+    ],
+];
