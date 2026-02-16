@@ -25,18 +25,26 @@
 
 namespace block_iomad_approve_access\privacy;
 
-use \core_privacy\local\request\deletion_criteria;
-use \core_privacy\local\request\helper;
-use \core_privacy\local\metadata\collection;
-use \core_privacy\local\request\transform;
-use \core_privacy\local\request\contextlist;
-use \core_privacy\local\request\userlist;
-use \core_privacy\local\request\approved_contextlist;
-use \core_privacy\local\request\approved_userlist;
-use \core_privacy\local\request\writer;
-use \context_system;
-use \context_user;
+use core_privacy\local\request\deletion_criteria;
+use core_privacy\local\request\helper;
+use core_privacy\local\metadata\collection;
+use core_privacy\local\request\transform;
+use core_privacy\local\request\contextlist;
+use core_privacy\local\request\userlist;
+use core_privacy\local\request\approved_contextlist;
+use core_privacy\local\request\approved_userlist;
+use core_privacy\local\request\writer;
+use context_system;
+use context_user;
 
+/**
+ * Privacy Subsystem implementation for block_iomad_approve_access.
+ *
+ * @package    block_iomad_approve_access
+ * @copyright  2021 Derick Turner
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class provider implements
         \core_privacy\local\metadata\provider,
         \core_privacy\local\request\core_userlist_provider,
@@ -48,7 +56,7 @@ class provider implements
      * @param collection $items a reference to the collection to use to store the metadata.
      * @return collection the updated collection of metadata items.
      */
-    public static function get_metadata(collection $collection) : collection {
+    public static function get_metadata(collection $collection): collection {
         $collection->add_database_table(
             'block_iomad_approve_access',
             [
@@ -72,7 +80,7 @@ class provider implements
      * @param int $userid the userid.
      * @return contextlist the list of contexts containing user info for the user.
      */
-    public static function get_contexts_for_userid(int $userid) : contextlist {
+    public static function get_contexts_for_userid(int $userid): contextlist {
         // Fetch all approval requests.
         $sql = "SELECT c.id
                   FROM {context} c
@@ -107,11 +115,11 @@ class provider implements
         // Get the emails information.
         $sql = "SELECT * FROM {block_iomad_approve_access}
                      WHERE userid = :userid";
-        $params = array('userid' => $user->id);
+        $params = ['userid' => $user->id];
         if ($approvals = $DB->get_records_sql($sql, $params)) {
             $approvalsout = (object) [];
             $approvalsout->approvals = $approvals;
-            writer::with_context($context)->export_data(iarray(get_string('pluginname', 'block_iomad_approve_access')), $approvalsout);
+            writer::with_context($context)->export_data([get_string('pluginname', 'block_iomad_approve_access')], $approvalsout);
         }
     }
 
@@ -146,10 +154,10 @@ class provider implements
         // Get the emails information.
         $sql = "SELECT * FROM {block_iomad_approve_access}
                      WHERE userid = :userid";
-        $params = array('userid' => $user->id);
+        $params = ['userid' => $user->id];
         if ($approvals = $DB->get_records_sql($sql, $params)) {
             foreach ($approvals as $approval) {
-                $DB->delete_records('block_iomad_approve_access', array('id' => $approval->id));
+                $DB->delete_records('block_iomad_approve_access', ['id' => $approval->id]);
             }
         }
     }
@@ -192,7 +200,7 @@ class provider implements
         $context = $userlist->get_context();
 
         if ($context instanceof context_user) {
-            $DB->delete_records('block_iomad_approve_access', array('userid' => $context->id));
+            $DB->delete_records('block_iomad_approve_access', ['userid' => $context->id]);
         }
     }
 }

@@ -22,10 +22,15 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+use block_iomad_approve_access\iomad_approve_access;
 
-require_once($CFG->dirroot.'/blocks/iomad_approve_access/lib.php');
-
+/**
+ * Event observer for block iomad_approve_access plugin.
+ *
+ * @package    block_iomad_approve_access
+ * @copyright  2025 Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class block_iomad_approve_access_observer {
 
     /**
