@@ -814,7 +814,7 @@ class company {
      * @param bool $licensed
      * @return bool
      */
-    public function add_course(object $course, int $departmentid=0, bool $own=false, bool $licensed=false): bool {
+    public function add_course(object $course, int|null $departmentid=0, bool $own=false, bool $licensed=false): bool {
         global $DB, $CFG;
 
         $coursecontext = context_course::instance($course->id);
