@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD microlearning block nugget edit form class
+ *
  * @package   block_iomad_microlearning
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,21 +25,37 @@
 
 namespace block_iomad_microlearning\forms;
 
-defined('MOODLE_INTERNAL') || die;
+use moodleform;
 
-use \moodleform;
+/**
+ * IOMAD microlearning block nugget edit form class
+ *
+ * @package   block_iomad_microlearning
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class nugget_edit_form extends moodleform {
 
-class nugget_edit_form extends \moodleform {
+    /** @var array orderselect */
+    protected $orderselect = [];
 
+    /**
+     * Constructor function
+     *
+     * @param moodle_url $actionurl
+     * @param int $threadid
+     * @param int $nuggetid
+     */
     public function __construct($actionurl, $threadid, $nuggetid = 0) {
         global $DB;
 
-        $nuggetcount = $DB->count_records('microlearning_nugget', array('threadid' => $threadid));
+        $nuggetcount = $DB->count_records('microlearning_nugget', ['threadid' => $threadid]);
         if (empty($nuggetid)) {
             // We are adding so count is whatever is there plus this one.
             $nuggetcount++;
         }
-        $this->orderselect = array();
+        $this->orderselect = [];
         $count = 1;
         while ($count <= $nuggetcount) {
             $this->orderselect[$count - 1] = $count;
@@ -47,10 +65,15 @@ class nugget_edit_form extends \moodleform {
         parent::__construct($actionurl);
     }
 
-
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
         global $CFG;
 
+        // Set up the form.
         $mform =& $this->_form;
 
         $mform->addElement('hidden', 'id');
@@ -92,12 +115,20 @@ class nugget_edit_form extends \moodleform {
         $this->add_action_buttons();
     }
 
+    /**
+     * Form validation
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
     public function validation($data, $files) {
         global $CFG, $DB;
 
-        $errors = array();
+        $errors = [];
 
-        if ($nuggetbyname = $DB->get_record('microlearning_nugget', array('threadid' => $data['threadid'], 'name' => trim($data['name'])))) {
+        if ($nuggetbyname = $DB->get_record('microlearning_nugget', ['threadid' => $data['threadid'],
+                                                                     'name' => trim($data['name'])])) {
             if ($nuggetbyname->id != $data['id']) {
                 $errors['name'] = get_string('nameinuse', 'block_iomad_microlearning');
             }
@@ -105,15 +136,19 @@ class nugget_edit_form extends \moodleform {
         if (empty($data['sectionid']) && empty($data['cmid']) && empty($data['url'])) {
             $errors['sectionid'] = get_string('missingsectionorcmid', 'block_iomad_microlearning');
         }
-        if (!empty($data['cmid']) && $DB->get_records_sql("SELECT id FROM {microlearning_nugget}
-                                                          WHERE threadid = :threadid
-                                                          AND cmid = :cmid
-                                                          AND id != :id", $data)) {
+        if (!empty($data['cmid']) &&
+            $DB->get_records_sql(
+                "SELECT id FROM {microlearning_nugget}
+                WHERE threadid = :threadid
+                AND cmid = :cmid
+                AND id <> :id", $data)) {
             $errors['cmid'] = get_string('cmidalreadyinuse', 'block_iomad_microlearning');
-        } else if (!empty($data['sectionid']) && $DB->get_records_sql("SELECT id FROM {microlearning_nugget}
-                                                          WHERE threadid = :threadid
-                                                          AND sectionid = :sectionid
-                                                          AND id != :id", $data)) {
+        } else if (!empty($data['sectionid']) &&
+        $DB->get_records_sql(
+            "SELECT id FROM {microlearning_nugget}
+            WHERE threadid = :threadid
+            AND sectionid = :sectionid
+            AND id <> :id", $data)) {
             $errors['sectionid'] = get_string('sectionidalreadyinuse', 'block_iomad_microlearning');
         }
         if (!empty($data['url']) && strpos($data['url'], $CFG->wwwroot) === false) {

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Base class for the table used by a {@link quiz_attempts_report}.
+ * IOMAD microlearning block list groups table class
  *
  * @package   block_iomad_microlearning
  * @copyright 2021 Derick Turner
@@ -25,13 +25,22 @@
 
 namespace block_iomad_microlearning\tables;
 
-use \table_sql;
-use \moodle_url;
+use html_writer;
+use moodle_url;
+use table_sql;
 
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/tablelib.php');
 
+/**
+ * IOMAD microlearning block list groups table class
+ *
+ * @package   block_iomad_microlearning
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class list_groups_table extends table_sql {
 
     /**
@@ -61,9 +70,39 @@ class list_groups_table extends table_sql {
     public function col_actions($row) {
         global $CFG;
 
-        $deleteurl = new \moodle_url($CFG->wwwroot . '/blocks/iomad_microlearning/groups.php', ['deleteid' => $row->id, 'sesskey' => sesskey()]);
-        $editurl = new \moodle_url($CFG->wwwroot . '/blocks/iomad_microlearning/group_edit_form.php', ['id' => $row->id]);
-        return "<a href='" . $editurl . "' class='btn'>" . get_string('edit') . "</a>&nbsp<a href='" . $deleteurl . "' class='btn btn-danger'>" . get_string('delete') . "</a>";
+        $deleteurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_microlearning/groups.php',
+                                    ['deleteid' => $row->id, 'sesskey' => sesskey()]);
+        $editurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_microlearning/group_edit_form.php',
+                                  ['id' => $row->id]);
+        return html_writer::tag(
+            'a',
+            html_writer::tag(
+                'i',
+                '',
+                [
+                    'class' => "icon fa fa-cog fa-fw ",
+                    'title' => get_string('edit'),
+                    'aria-label' => get_string('edit'),
+                ]
+            ),
+            [
+                'href' => $editurl,
+            ]
+        ) . '&nbsp;' .
+            html_writer::tag(
+                'a',
+                html_writer::tag(
+                    'i',
+                    '',
+                    [
+                        'class' => "icon fa fa-trash fa-fw ",
+                        'title' => get_string('delete'),
+                        'aria-label' => get_string('delete'),
+                    ]
+                ),
+                [
+                    'href' => $deleteurl,
+                ]
+            );
     }
-
 }

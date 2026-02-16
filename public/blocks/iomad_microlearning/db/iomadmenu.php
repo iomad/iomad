@@ -15,18 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD microlearning dashboard menu items
+ *
  * @package   block_iomad_microlearning
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Define the Iomad menu items that are defined by this plugin
-
+/**
+ * Define the Iomad menu items that are defined by this plugin
+ *
+ * @return array
+ */
 function block_iomad_microlearning_menu() {
 
-    return array(
-        'MicroLearningSchedules' => array(
+    return [
+        'MicroLearningSchedules' => [
             'category' => 'MicroLearningAdmin',
             'tab' => 7,
             'name' => get_string('threads', 'block_iomad_microlearning'),
@@ -35,9 +40,9 @@ function block_iomad_microlearning_menu() {
             'icondefault' => 'learningpath',
             'style' => 'micro',
             'icon' => 'fa-file-text',
-            'iconsmall' => 'fa-microchip'
-        ),
-        'MicroLearningUsers' => array(
+            'iconsmall' => 'fa-microchip',
+        ],
+        'MicroLearningUsers' => [
             'category' => 'MicroLearningAdmin',
             'tab' => 7,
             'name' => get_string('learningusers', 'block_iomad_microlearning'),
@@ -46,7 +51,7 @@ function block_iomad_microlearning_menu() {
             'icondefault' => 'users',
             'style' => 'micro',
             'icon' => 'fa-group',
-            'iconsmall' => 'fa-microchip'
-        ),
-    );
+            'iconsmall' => 'fa-microchip',
+        ],
+    ];
 }

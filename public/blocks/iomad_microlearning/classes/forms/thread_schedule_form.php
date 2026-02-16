@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD microlearning block thread schedule form class
+ *
  * @package   block_iomad_microlearning
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,80 +25,165 @@
 
 namespace block_iomad_microlearning\forms;
 
-defined('MOODLE_INTERNAL') || die;
+use html_writer;
+use moodleform;
 
-use \moodleform;
+/**
+ * IOMAD microlearning block thread schedule form class
+ *
+ * @package   block_iomad_microlearning
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class thread_schedule_form extends moodleform {
 
-class thread_schedule_form extends \moodleform {
+    /** @var int thread ID */
     protected $threadid;
-    protected $nuggets;
+
+    /** @var object thread */
     protected $threadinfo;
 
+    /** @var array list of nuggets */
+    protected $nuggets;
+
+    /**
+     * Constructor function
+     *
+     * @param moodle_url $actionurl
+     * @param int $threadid
+     * @param int $nuggets
+     */
     public function __construct($actionurl, $threadid, $nuggets) {
         global $DB;
 
         $this->threadid = $threadid;
         $this->nuggets = $nuggets;
-        $this->threadinfo = $DB->get_record('microlearning_thread', array('id' => $threadid));
+        $this->threadinfo = $DB->get_record('microlearning_thread', ['id' => $threadid]);
         parent::__construct($actionurl);
-
     }
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
         global $CFG;
 
+        // Set up the form.
         $mform =& $this->_form;
 
         $mform->addElement('hidden', 'threadid');
         $mform->setType('threadid', PARAM_INT);
 
-        $headhtml = '<table class="generaltable" width="95%"><thead><tr>
-                     <th class="header c0" style="text-align:left;" scope="col">' . get_string('nugget', 'block_iomad_microlearning') . '</th>
-                     <th class="header c1" style="text-align:right;" scope="col">' . get_string('nuggetorder', 'block_iomad_microlearning') . '</th>
-                     <th class="header c2" style="text-align:right;" scope="col">' . get_string('scheduledate', 'block_iomad_microlearning') . '</th>
-                     <th class="header c3" style="text-align:right;" scope="col">' . get_string('duedate', 'block_iomad_microlearning') . '</th>';
+        $headhtml = html_writer::start_tag('table', ['class' => 'generaltable', 'width' => "95%"]) .
+                    html_writer::start_tag('thead') .
+                    html_writer::start_tag('tr') .
+                    html_writer::tag(
+                        'th',
+                        get_string('nugget', 'block_iomad_microlearning'),
+                        ['class' => "header c0", 'style' => "text-align:left;", 'scope' => "col"]) .
+                    html_writer::tag(
+                        'th',
+                        get_string('nuggetorder', 'block_iomad_microlearning'),
+                        ['class' => "header c1", 'style' => "text-align:left;", 'scope' => "col"]) .
+                    html_writer::tag(
+                        'th',
+                        get_string('scheduledate', 'block_iomad_microlearning'),
+                        ['class' => "header c2", 'style' => "text-align:left;", 'scope' => "col"]) .
+                    html_writer::tag(
+                        'th',
+                        get_string('duedate', 'block_iomad_microlearning'),
+                        ['class' => "header c3", 'style' => "text-align:left;", 'scope' => "col"]);
+
         if (!empty($this->threadinfo->send_reminder)) {
-            $headhtml .= '<th class="header c4" style="text-align:right;" scope="col">' . get_string('reminder1', 'block_iomad_microlearning') . '</th>
-                     <th class="header c5 lastcol" style="text-align:right;" scope="col">' . get_string('reminder2', 'block_iomad_microlearning') . '</th>';
+            $headhtml .= html_writer::tag(
+                'th',
+                get_string('reminder1', 'block_iomad_microlearning'),
+                ['class' => "header c4", 'style' => "text-align:left;", 'scope' => "col"]) .
+                        html_writer::tag(
+                'th',
+                get_string('reminder2', 'block_iomad_microlearning'),
+                ['class' => "header c5", 'style' => "text-align:left;", 'scope' => "col"]);
         }
-        $headhtml .= '</tr></thead><tbody>';
+
+        $headhtml .= html_writer::end_tag('tr') .
+                     html_writer::end_tag('thead') .
+                     html_writer::start_tag('tbody');
 
         $mform->addElement('html', $headhtml);
 
         foreach ($this->nuggets as $nugget) {
-            $mform->addElement('html', '<tr class=""><td class="cell c0" style="">' . format_text($nugget->name) .
-                                       '</td><td class="cell c1" style="text-align:left;">');
-            $mform->addElement('html', $nugget->nuggetorder + 1 . '</td><td class="cell c2" style="text-align:left;">');
+            $mform->addElement(
+                'html',
+                html_writer::start_tag('tr') .
+                html_writer::tag(
+                    'td',
+                    format_text($nugget->name),
+                    ['class' => "cell c0"]) .
+                html_writer::tag(
+                    'td',
+                    $nugget->nuggetorder + 1,
+                    ['class' => "cell c1", 'style' => "text-align:left;"]) .
+                html_writer::start_tag('td', ['class' => "cell c2", 'style' => "text-align:left;"]));
+
             $mform->addElement('date_time_selector', "schedulearray[$nugget->id]", '');
-            $mform->addElement('html', '</td><td class="cell c2" style="text-align:left;">');
-            $mform->addElement('date_time_selector', "duedatearray[$nugget->id]", '', array('optional' => true));
+
+            $mform->addElement(
+                'html',
+                html_writer::end_tag('td') .
+                html_writer::start_tag('td', ['class' => "cell c2", 'style' => "text-align:left;"]));
+
+            $mform->addElement('date_time_selector', "duedatearray[$nugget->id]", '', ['optional' => true]);
+
             if (!empty($this->threadinfo->send_reminder)) {
-                $mform->addElement('html', '</td><td class="cell c3" style="text-align:left;">');
-                $mform->addElement('date_time_selector', "reminder1array[$nugget->id]", '', array('optional' => true));
-                $mform->addElement('html', '</td><td class="cell c4" style="text-align:left;">');
-                $mform->addElement('date_time_selector', "reminder2array[$nugget->id]", '', array('optional' => true));
+                $mform->addElement(
+                    'html',
+                    html_writer::end_tag('td') .
+                    html_writer::start_tag('td', ['class' => "cell c3", 'style' => "text-align:left;"]));
+
+                $mform->addElement('date_time_selector', "reminder1array[$nugget->id]", '', ['optional' => true]);
+
+                $mform->addElement(
+                    'html',
+                    html_writer::end_tag('td') .
+                    html_writer::start_tag('td', ['class' => "cell c4", 'style' => "text-align:left;"]));
+
+                $mform->addElement('date_time_selector', "reminder2array[$nugget->id]", '', ['optional' => true]);
             }
-            $mform->addElement('html', '</td></tr>');
+            $mform->addElement('html', html_writer::end_tag('td') . html_writer::end_tag('tr'));
         }
-        $mform->addElement('html', '</tbody></table>');
+        $mform->addElement('html', html_writer::end_tag('tbody') . html_writer::end_tag('table'));
 
         // Add buttons.
-        $buttonarray = array();
+        $buttonarray = [];
         $buttonarray[] = &$mform->createElement('submit', 'submitbutton', get_string('save'));
-        $buttonarray[] = &$mform->createElement('submit', 'resetallbutton', get_string('resetschedule', 'block_iomad_microlearning'));
+        $buttonarray[] = &$mform->createElement(
+            'submit',
+            'resetallbutton',
+            get_string('resetschedule', 'block_iomad_microlearning'));
         $buttonarray[] = &$mform->createElement('cancel');
 
-        $mform->addGroup($buttonarray, 'buttonarray', '', array(' '), false);
+        $mform->addGroup($buttonarray, 'buttonarray', '', [' '], false);
 
     }
 
+    /**
+     * Validation function
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
     public function validation($data, $files) {
         global $DB;
 
-        $errors = array();
+        $errors = [];
 
         foreach ($this->nuggets as $nugget) {
-            if (!empty($data['duedatearray'][$nugget->id]) && $data['duedatearray'][$nugget->id] < $data['schedulearray'][$nugget->id]) {
+            if (!empty($data['duedatearray'][$nugget->id]) &&
+                $data['duedatearray'][$nugget->id] < $data['schedulearray'][$nugget->id]) {
                 $errors['duedatearray'][$nugget->id] = get_string('duedatebeforescheduledate', 'block_iomad_microlearning');
             }
 

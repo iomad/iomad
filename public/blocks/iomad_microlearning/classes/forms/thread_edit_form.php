@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD microlearning block thread edit form class
+ *
  * @package   block_iomad_microlearning
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,15 +25,26 @@
 
 namespace block_iomad_microlearning\forms;
 
-defined('MOODLE_INTERNAL') || die;
+use moodleform;
 
-use \moodleform;
-
+/**
+ * IOMAD microlearning block thread edit form class
+ *
+ * @package   block_iomad_microlearning
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class thread_edit_form extends \moodleform {
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
-        global $CFG;
 
+        // Set up the form.
         $mform =& $this->_form;
 
         $mform->addElement('hidden', 'id');
@@ -57,40 +70,40 @@ class thread_edit_form extends \moodleform {
         $mform->addHelpButton('startdate', 'startdate', 'block_iomad_microlearning');
 
         $mform->addElement('duration', 'message_preset',
-                            get_string('message_preset', 'block_iomad_microlearning'), array('defaultunit' => 86400));
+                            get_string('message_preset', 'block_iomad_microlearning'), ['defaultunit' => 86400]);
         $mform->addHelpButton('message_preset', 'message_preset', 'block_iomad_microlearning');
 
-        $hourarray = array();
-        $unit = array(0,1,2,3,4,5,6,7,8,9);
-        $ten = array(0,1,2,3,4,5);
+        $hourarray = [];
+        $unit = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        $ten = [0, 1, 2, 3, 4, 5];
         foreach ($ten as $t) {
             foreach ($unit as $u) {
-                if ($t == 2 and $u == 4) {
+                if ($t == 2 && $u == 4) {
                     break 2;
                 }
                 $hourarray[$t.$u] = $t.$u;
             }
         }
 
-        $minutearray = array();
+        $minutearray = [];
         foreach ($ten as $t) {
             foreach ($unit as $u) {
                 $minutearray[$t.$u] = $t.$u;
             }
         }
 
-        $timegroup = array();
+        $timegroup = [];
         $timegroup[] = $mform->createElement('select', 'hour', '', $hourarray);
         $timegroup[] = $mform->createElement('select', 'minute', '', $minutearray);
         $mform->addGroup($timegroup, 'message_time', get_string('message_time', 'block_iomad_microlearning'), ' ', false);
         $mform->addHelpButton('message_time', 'message_time', 'block_iomad_microlearning');
 
         $mform->addElement('duration', 'releaseinterval',
-                            get_string('interval', 'block_iomad_microlearning'), array('defaultunit' => 86400));
+                            get_string('interval', 'block_iomad_microlearning'), ['defaultunit' => 86400]);
         $mform->addHelpButton('releaseinterval', 'interval', 'block_iomad_microlearning');
 
         $mform->addElement('duration', 'defaultdue',
-                            get_string('defaultdue', 'block_iomad_microlearning'), array('defaultunit' => 86400));
+                            get_string('defaultdue', 'block_iomad_microlearning'), ['defaultunit' => 86400]);
         $mform->addHelpButton('defaultdue', 'defaultdue', 'block_iomad_microlearning');
 
         $mform->addElement('selectyesno', 'halt_until_fulfilled',
@@ -102,27 +115,34 @@ class thread_edit_form extends \moodleform {
         $mform->addHelpButton('send_reminder', 'send_reminder', 'block_iomad_microlearning');
 
         $mform->addElement('duration', 'reminder1',
-                            get_string('reminder1', 'block_iomad_microlearning'), array('defaultunit' => 86400));
+                            get_string('reminder1', 'block_iomad_microlearning'), ['defaultunit' => 86400]);
         $mform->addHelpButton('reminder1', 'reminder1', 'block_iomad_microlearning');
 
         $mform->addElement('duration', 'reminder2',
-                            get_string('reminder2', 'block_iomad_microlearning'), array('defaultunit' => 86400));
+                            get_string('reminder2', 'block_iomad_microlearning'), ['defaultunit' => 86400]);
         $mform->addHelpButton('reminder2', 'reminder2', 'block_iomad_microlearning');
 
         $mform->addElement('selectyesno', 'active',
                             get_string('active', 'block_iomad_microlearning'));
         $mform->addHelpButton('active', 'active', 'block_iomad_microlearning');
 
-
         $this->add_action_buttons();
     }
 
+    /**
+     * Form validation
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
     public function validation($data, $files) {
         global $DB;
 
-        $errors = array();
+        $errors = [];
 
-        if ($threadbyname = $DB->get_record('microlearning_thread', array('companyid' => $data['companyid'], 'name' => trim($data['name'])))) {
+        if ($threadbyname = $DB->get_record('microlearning_thread', ['companyid' => $data['companyid'],
+                                                                     'name' => trim($data['name'])])) {
             if ($threadbyname->id != $data['id']) {
                 $errors['name'] = get_string('nameinuse', 'block_iomad_microlearning');
             }

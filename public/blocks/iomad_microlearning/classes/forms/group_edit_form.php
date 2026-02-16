@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD micro learning block group edit form class
+ *
  * @package   block_iomad_microlearning
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,31 +25,54 @@
 
 namespace block_iomad_microlearning\forms;
 
-use \moodleform;
+use moodleform;
 use local_iomad\company;
 
+/**
+ * IOMAD micro learning block group edit form class
+ *
+ * @package   block_iomad_microlearning
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class group_edit_form extends moodleform {
+
+    /** @var int company ID */
     protected $companyid = 0;
-    protected $company = null;
-    protected $deptid = 0;
-    protected $output = null;
+
+    /** @var int group ID */
     protected $groupid = 0;
+
+    /** @var array list of available threads */
     protected $availablethreads = [];
 
+    /**
+     * Constructor function.
+     *
+     * @param moodle_url $actionurl
+     * @param int $companyid
+     * @param int $groupid
+     * @param object $output
+     */
     public function __construct($actionurl, $companyid, $groupid, $output) {
-        global $CFG, $DB;
+        global $DB;
 
         $this->companyid = $companyid;
         $this->groupid = $groupid;
-        $this->output = $output;
         $this->availablethreads = $DB->get_records_menu('microlearning_thread', ['companyid' => $companyid],  'name', 'id,name');
 
         parent::__construct($actionurl);
     }
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
-        global $CFG, $output;
 
+        // Set up the form.
         $mform =& $this->_form;
 
         $mform->addElement('hidden', 'id', $this->groupid);
@@ -55,8 +80,7 @@ class group_edit_form extends moodleform {
         $mform->addElement('hidden', 'companyid', $this->companyid);
         $mform->setType('companyid', PARAM_INT);
 
-
-        // Display group select html (create only)
+        // Display group select html (create only).
         $mform->addElement('select', 'threadid', get_string('threadname', 'block_iomad_microlearning'), $this->availablethreads);
 
         $mform->addElement('text', 'name',
@@ -68,16 +92,30 @@ class group_edit_form extends moodleform {
         $this->add_action_buttons();
     }
 
+    /**
+     * Form validation
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
     public function validation($data, $files) {
         global $DB;
 
-        $errors = array();
+        $errors = [];
 
-        if ($groupbyname = $DB->get_record('microlearning_thread_group', ['companyid' => $this->companyid, 'name' => trim($data['name']), 'threadid' => $data['threadid']])) {
+        if ($groupbyname = $DB->get_record(
+            'microlearning_thread_group',
+            [
+                'companyid' => $this->companyid,
+                'name' => trim($data['name']),
+                'threadid' => $data['threadid'],
+                ])) {
             if ($groupbyname->id != $this->groupid) {
                 $errors['name'] = get_string('nameinuse', 'block_iomad_microlearning');
             }
         }
+
         return $errors;
     }
 }

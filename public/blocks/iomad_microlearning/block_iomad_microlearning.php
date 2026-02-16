@@ -15,74 +15,65 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD microlearning block class
+ *
  * @package   block_iomad_microlearning
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
-require_once($CFG->dirroot.'/blocks/iomad_microlearning/lib.php');
+use block_iomad_microlearning\microlearning;
 
 /**
+ * IOMAD microlearning block class
  *
+ * @package   block_iomad_microlearning
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class block_iomad_microlearning extends block_base {
+
+    /**
+     * Initialisation function
+     *
+     * @return void
+     */
     public function init() {
         $this->title = get_string('blocktitle', 'block_iomad_microlearning');
     }
 
+    /**
+     * Do we hide the block header?
+     *
+     * @return void
+     */
     public function hide_header() {
         return false;
     }
 
+    /**
+     * Get the block content
+     *
+     * @return void
+     */
     public function get_content() {
-        global $CFG, $USER, $DB;
-
-        // Get any nuggets assigned and not completed.
-        $mynuggets = $DB->get_records_sql("SELECT mtu.*, mn.name AS nuggetname, mn.cmid, mn.sectionid, mn.url as url, mt.name AS threadname 
-                                           FROM {microlearning_thread_user} mtu
-                                           JOIN {microlearning_nugget} mn ON (mtu.nuggetid = mn.id)
-                                           JOIN {microlearning_thread} mt ON (mtu.threadid = mt.id)
-                                           WHERE mtu.userid = :userid
-                                           AND mtu.timecompleted IS NULL
-                                           ORDER BY mn.name,mtu.schedule_date",
-                                           array('userid' => $USER->id));
-        if (empty($mynuggets)) {
-            $nuggetout = get_string('nolearningthreads', 'block_microlearning');
-        } else {
-            $threadid = 0;
-            $nuggetout = html_writer::start_tag('div', array('class' => 'microlearningthreads'));
-            foreach ($mynuggets as $mynugget) {
-                if ($threadid != $mynugget->threadid) {
-                    // display the thread name.
-                    $nuggetout .= html_writer::start_tag('div', array('class' => 'microlearningthreadhead'));
-                    $nuggetout .= format_text($mynugget->threadname);
-                    $nuggetout .= html_writer::end_tag('a');
-                    $threadid = $mynugget->threadid;
-                }
-                $linkurl = microlearning::get_nugget_url($mynugget);
-                $nuggetout .= html_writer::start_tag('div', array('class' => 'microlearningnugget'));
-                $nuggetout .= html_writer::start_tag('a', array('class' => 'microlearningnugget_link', 'href' => $linkurl));
-                $nuggetout .= format_string($mynugget->nuggetname);
-                $nuggetout .= html_writer::end_tag('a');
-                $nuggetout .= html_writer::end_tag('div');
-            }
-            $nuggetout .= html_writer::end_tag('div');
-        }
-
-        // Need to add in links to manage if we have caps.
 
         $this->content = new stdClass;
         $this->content->footer = '';
 
-        $this->content->text = $nuggetout;
+        $this->content->text = microlearning::get_my_nuggets();
 
         return $this->content;
     }
 
-    function has_config() {
+    /**
+     * Does this block have configuration options?
+     *
+     * @return boolean
+     */
+    public function has_config() {
         return true;
     }
 }

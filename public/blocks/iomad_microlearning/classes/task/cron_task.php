@@ -15,18 +15,28 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * A scheduled task for forum cron.
- *
- * @todo MDL-44734 This job will be split up properly.
+ * IOMAD micrlearning block cron task class
  *
  * @package    block_iomad_microlearning
  * @copyright  2019 E-Learn Design
  * @author    Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 namespace block_iomad_microlearning\task;
 
-class cron_task extends \core\task\scheduled_task {
+use block_iomad_microlearning\microlearning;
+use core\task\scheduled_task;
+
+/**
+ * IOMAD micrlearning block cron task class
+ *
+ * @package    block_iomad_microlearning
+ * @copyright  2019 E-Learn Design
+ * @author    Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class cron_task extends scheduled_task {
 
     /**
      * Get a descriptive name for this task (shown to admins).
@@ -41,9 +51,6 @@ class cron_task extends \core\task\scheduled_task {
      * Run microlearning cron.
      */
     public function execute() {
-        global $CFG;
-        require_once($CFG->dirroot . '/blocks/iomad_microlearning/lib.php');
-        \microlearning::cron();
+        microlearning::cron();
     }
-
 }
