@@ -1471,7 +1471,7 @@ while ($fields = $cir->next()) {
 
     switch($optype) {
         case UU_ADDNEW:
-            if ($usernameexist || $emailexist ) {
+            if ($usernameexist || ($emailexist && !$CFG->allowaccountssameemail) ) {
                 $rowcols['action'] = 'skipped';
             } else {
                 $rowcols['action'] = 'create';
@@ -1494,7 +1494,7 @@ while ($fields = $cir->next()) {
             if (isset($rowcols['oldusername'])) {
                 $oldusernameexist = $DB->record_exists('user', ['username' => $rowcols['oldusername']]);
             }
-            if ($usernameexist || $emailexist || $oldusernameexist ) {
+            if ($usernameexist || ($emailexist && !$CFG->allowaccountssameemail) || $oldusernameexist ) {
                 $rowcols['action'] = 'update';
             } else {
                 $rowcols['action'] = 'create';
