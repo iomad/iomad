@@ -505,6 +505,7 @@ class enrol_license_plugin extends enrol_plugin {
         } else {
             // This user can not license enrol using this instance. Using an empty form to keep
             // the UI consistent with other enrolment plugins that returns a form.
+            $data = (object) [];
             $data->header = $this->get_instance_name($instance);
             $data->info = $enrolstatus;
 
