@@ -75,7 +75,7 @@ M.local_framework_selector.init_framework_selector = function (Y, name, hash, ex
 
             // Replace the Clear submit button with a clone that is not a submit button.
             var clearbtn = Y.one('#' + this.name + '_clearbutton');
-            this.clearbutton = Y.Node.create('<input type="button" value="' + clearbtn.get('value') + '" />');
+            this.clearbutton = Y.Node.create('<input type="button" value="' + clearbtn.get('value') + '" class="btn btn-secondary mx-1"/>');
             clearbtn.replace(Y.Node.getDOMNode(this.clearbutton));
             this.clearbutton.set('id', + this.name + "_clearbutton");
             this.clearbutton.on('click', this.handle_clear, this);
