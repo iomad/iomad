@@ -46,6 +46,7 @@ class helper {
     public static function get_my_inprogress($sort = 'coursefullname', $dir = 'ASC', $mandatoryonly = false) {
         global $CFG, $DB, $USER;
 
+        // Get my company id.
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
 
         // Set up the arrays we will be returning.
@@ -61,30 +62,41 @@ class helper {
         }
 
         // Set up the completion information.
-        $myinprogress = $DB->get_records_sql("SELECT DISTINCT lit.id,
-                                              lit.userid,
-                                              lit.courseid AS courseid,
-                                              lit.coursename AS coursefullname,
-                                              c.summary AS coursesummary,
-                                              c.visible,
-                                              c.id AS realcourseid,
-                                              ic.hasgrade,
-                                              lit.timestarted,
-                                              lit.modifiedtime,
-                                              cca.mandatory
-                                              FROM {local_iomad_track} lit
-                                              LEFT JOIN {course} c ON (c.id = lit.courseid)
-                                              LEFT JOIN {user_enrolments} ue ON (ue.userid = lit.userid)
-                                              LEFT JOIN {enrol} e ON (e.id = ue.enrolid AND e.courseid = c.id AND e.courseid = lit.courseid)
-                                              LEFT JOIN {iomad_courses} ic ON (c.id = ic.courseid AND lit.courseid = ic.courseid)
-                                              LEFT JOIN {company_course_options} cca ON (c.id = cca.courseid AND lit.companyid = cca.companyid)
-                                              WHERE lit.userid = :userid
-                                              AND lit.companyid = :companyid
-                                              AND lit.timecompleted IS NULL
-                                              AND lit.timestarted > 0
-                                              $mandatorysql",
-                                             ['userid' => $USER->id,
-                                              'companyid' => $companyid]);
+        $myinprogress = $DB->get_records_sql(
+            "SELECT DISTINCT lit.id,
+                             lit.userid,
+                             lit.courseid AS courseid,
+                             lit.coursename AS coursefullname,
+                             c.summary AS coursesummary,
+                             c.visible,
+                             c.id AS realcourseid,
+                             ic.hasgrade,
+                             lit.timestarted,
+                             lit.modifiedtime,
+                             cca.mandatory
+             FROM {local_iomad_track} lit
+             LEFT JOIN {course} c ON (c.id = lit.courseid)
+             LEFT JOIN {user_enrolments} ue ON (ue.userid = lit.userid)
+             LEFT JOIN {enrol} e ON (
+                 e.id = ue.enrolid
+                 AND e.courseid = c.id
+                 AND e.courseid = lit.courseid
+             )
+             LEFT JOIN {iomad_courses} ic ON (
+                 c.id = ic.courseid
+                 AND lit.courseid = ic.courseid
+             )
+             LEFT JOIN {company_course_options} cca ON (
+                 c.id = cca.courseid
+                 AND lit.companyid = cca.companyid
+             )
+             WHERE lit.userid = :userid
+             AND lit.companyid = :companyid
+             AND lit.timecompleted IS NULL
+             AND lit.timestarted > 0
+             $mandatorysql",
+            ['userid' => $USER->id,
+             'companyid' => $companyid]);
 
         // We need to de-duplicate this list.
         foreach ($myinprogress as $rec) {
@@ -103,6 +115,8 @@ class helper {
                                                             true,
                                                             ['context' => context_course::instance($inprogress->courseid)]);
             }
+
+            // Deal with empty grades.
             if (empty($inprogress->hasgrade)) {
                 $inprogress->finalgrade = "";
             }
@@ -116,10 +130,11 @@ class helper {
             }
         }
 
-        // Sort the courses
+        // Sort the courses.
         $myinprogress = self::courses_sort($myinprogress, $sort, $dir);
         $mymandatory = self::courses_sort($mymandatory, $sort, $dir);
 
+        // Return the list of courses.
         return $mymandatory + $myinprogress;
     }
 
@@ -129,6 +144,7 @@ class helper {
     public static function get_my_available($sort = 'coursefullname', $dir = 'ASC', $mandatoryonly = false) {
         global $CFG, $DB, $USER;
 
+        // Get my company id.
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
 
         // Are we only showing mandatory courses?
@@ -142,6 +158,7 @@ class helper {
         $mymandatorycourses = [];
 
         // We don't want any courses we are in progress of.
+        $sqlparams = [];
         $myusedcourses = $DB->get_records_sql("SELECT DISTINCT courseid
                                                FROM {local_iomad_track}
                                                WHERE userid = :userid
@@ -151,32 +168,40 @@ class helper {
                                               ['userid' => $USER->id,
                                                'companyid' => $companyid]);
         if (!empty($myusedcourses)) {
-            $inprogresssql = "AND c.id NOT IN (" . join(',', array_keys($myusedcourses)) . ")";
+            [$notinsql, $sqlparams] = $DB->get_in_or_equal(array_keys($myusedcourses),
+                                                           SQL_PARAMS_NAMED,
+                                                           'ccids',
+                                                           false);
+            $inprogresssql = "AND c.id {$notinsql}";
         } else {
             $inprogresssql = "";
         }
 
-        $mynotstartedlicense = $DB->get_records_sql("SELECT clu.id,
-                                                     clu.userid,
-                                                     clu.licensecourseid AS courseid,
-                                                     c.fullname AS coursefullname,
-                                                     c.summary AS coursesummary,
-                                                     c.visible,
-                                                     cca.mandatory
-                                                     FROM {companylicense_users} clu
-                                                     JOIN {course} c ON (c.id = clu.licensecourseid)
-                                                     JOIN {companylicense} cl ON (clu.licenseid = cl.id)
-                                                     LEFT JOIN {company_course_options} cca ON (
-                                                        cl.companyid = cca.companyid
-                                                        AND clu.licensecourseid = cca.courseid
-                                                     )
-                                                     WHERE clu.userid = :userid
-                                                     AND clu.isusing = 0
-                                                     $inprogresssql
-                                                     $mandatorysql",
-                                                    ['userid' => $USER->id,
-                                                     'companyid' => $companyid]);
+        // Get the list of courses.
+        $sqlparams['userid'] = $USER->id;
+        $sqlparams['companyid'] = $companyid;
+        $mynotstartedlicense = $DB->get_records_sql(
+            "SELECT clu.id,
+                    clu.userid,
+                    clu.licensecourseid AS courseid,
+                    c.fullname AS coursefullname,
+                    c.summary AS coursesummary,
+                    c.visible,
+                    cca.mandatory
+             FROM {companylicense_users} clu
+             JOIN {course} c ON (c.id = clu.licensecourseid)
+             JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+             LEFT JOIN {company_course_options} cca ON (
+                 cl.companyid = cca.companyid
+                 AND clu.licensecourseid = cca.courseid
+             )
+             WHERE clu.userid = :userid
+             AND clu.isusing = 0
+             $inprogresssql
+             $mandatorysql",
+            $sqlparams);
 
+        // Process the list of courses.
         foreach ($mynotstartedlicense as $licensedcourse) {
             $licensedcourse->coursefullname = format_string($licensedcourse->coursefullname,
                                                             true,
@@ -190,32 +215,38 @@ class helper {
         }
 
         // Get courses which are available as self sign up and assigned to the company.
-        $companyselfenrolcourses = $DB->get_records_sql("SELECT e.id,
-                                                         e.courseid,
-                                                         c.fullname AS coursefullname,
-                                                         c.summary AS coursesummary,
-                                                         c.visible,
-                                                         cca.mandatory
-                                                         FROM {enrol} e
-                                                         JOIN {course} c ON (e.courseid = c.id)
-                                                         JOIN {company_course} cc ON (c.id = cc.courseid)
-                                                         LEFT JOIN {company_course_options} cca ON (
-                                                            c.id = cca.courseid
-                                                            AND cc.courseid = cca.courseid
-                                                            AND cc.companyid = cca.companyid)
-                                                         WHERE e.enrol = :enrol
-                                                         AND e.status = 0
-                                                         AND cc.companyid = :companyid
-                                                         $inprogresssql
-                                                         $mandatorysql",
-                                                        ['companyid' => $companyid,
-                                                         'enrol' => 'self']);
+        $companyselfenrolcourses = $DB->get_records_sql(
+            "SELECT e.id,
+                    e.courseid,
+                    c.fullname AS coursefullname,
+                    c.summary AS coursesummary,
+                    c.visible,
+                    cca.mandatory
+             FROM {enrol} e
+             JOIN {course} c ON (e.courseid = c.id)
+             JOIN {company_course} cc ON (c.id = cc.courseid)
+             LEFT JOIN {company_course_options} cca ON (
+                 c.id = cca.courseid
+                 AND cc.courseid = cca.courseid
+                 AND cc.companyid = cca.companyid
+             )
+             WHERE e.enrol = :enrol
+             AND e.status = 0
+             AND cc.companyid = :companyid
+             $inprogresssql
+             $mandatorysql",
+            ['companyid' => $companyid,
+             'enrol' => 'self']);
 
         // Process all of the company self enrol courses.
         foreach ($companyselfenrolcourses as $companyselfenrolcourse) {
-            $companyselfenrolcourse->coursefullname = format_string($companyselfenrolcourse->coursefullname,
-                                                                    true,
-                                                                    ['context' => context_course::instance($companyselfenrolcourse->courseid)]);
+            $companyselfenrolcourse->coursefullname = format_string(
+                $companyselfenrolcourse->coursefullname,
+                true,
+                ['context' => context_course::instance($companyselfenrolcourse->courseid)]
+            );
+
+            // Deal with any mandatory course options.
             if (get_config('local_iomad', 'use_mandatory_courses') &&
                 !empty($companyselfenrolcourse->mandatory)) {
                 $mymandatorycourses[$companyselfenrolcourse->coursefullname] = $companyselfenrolcourse;
@@ -224,32 +255,40 @@ class helper {
             }
         }
 
-        $sharedselfenrolcourses = $DB->get_records_sql("SELECT e.id,
-                                                        e.courseid,
-                                                        c.fullname AS coursefullname,
-                                                        c.summary AS coursesummary,
-                                                        c.visible,
-                                                        cca.mandatory
-                                                        FROM {enrol} e
-                                                        JOIN {course} c ON (e.courseid = c.id)
-                                                        LEFT JOIN {company_course_options} cca ON (
-                                                            c.id = cca.courseid
-                                                            AND cca.companyid = :companyid)
-                                                        WHERE e.enrol = :enrol
-                                                        AND e.status = 0
-                                                        AND c.id IN (
-                                                            SELECT courseid FROM {iomad_courses}
-                                                            WHERE shared = 1)
-                                                        $inprogresssql
-                                                        $mandatorysql",
-                                                       ['enrol' => 'self',
-                                                        'companyid' => $companyid]);
+        // Set the set of self enrol courses.
+        $sharedselfenrolcourses = $DB->get_records_sql(
+            "SELECT e.id,
+                    e.courseid,
+                    c.fullname AS coursefullname,
+                    c.summary AS coursesummary,
+                    c.visible,
+                    cca.mandatory
+                    FROM {enrol} e
+                    JOIN {course} c ON (e.courseid = c.id)
+                    LEFT JOIN {company_course_options} cca ON (
+                         c.id = cca.courseid
+                         AND cca.companyid = :companyid
+                     )
+                     WHERE e.enrol = :enrol
+                     AND e.status = 0
+                     AND c.id IN (
+                         SELECT courseid FROM {iomad_courses}
+                         WHERE shared = 1
+                     )
+                     $inprogresssql
+                     $mandatorysql",
+                    ['enrol' => 'self',
+                     'companyid' => $companyid]);
 
         // Process all of the shared self enrol courses.
         foreach ($sharedselfenrolcourses as $sharedselfenrolcourse) {
-            $sharedselfenrolcourse->coursefullname = format_string($sharedselfenrolcourse->coursefullname,
-                                                                   true,
-                                                                   ['context' => context_course::instance($sharedselfenrolcourse->courseid)]);
+            $sharedselfenrolcourse->coursefullname = format_string(
+                $sharedselfenrolcourse->coursefullname,
+                true,
+                ['context' => context_course::instance($sharedselfenrolcourse->courseid)]
+            );
+
+            // Deal with any mandatory courses.
             if (get_config('local_iomad', 'use_mandatory_courses') &&
                 !empty($sharedselfenrolcourse->mandatory)) {
                 $mymandatorycourses[$sharedselfenrolcourse->coursefullname] = $sharedselfenrolcourse;
@@ -259,42 +298,45 @@ class helper {
         }
 
         // Check if there are any courses from 'blanket' licenses.
-        if ($blanketlicenses = $DB->get_records_sql("SELECT * FROM {companylicense}
-                                                     WHERE companyid = :companyid
-                                                     AND type = :type
-                                                     AND startdate < :startdate
-                                                     AND expirydate > :expirydate",
-                                                    ['companyid' => $companyid,
-                                                     'type' => 4,
-                                                     'startdate' => time(),
-                                                     'expirydate' => time()])) {
+        if ($blanketlicenses = $DB->get_records_select(
+            'companylicense',
+            "companyid = :companyid
+             AND type = :type
+             AND startdate < :startdate
+             AND expirydate > :expirydate",
+            ['companyid' => $companyid,
+            'type' => 4,
+            'startdate' => time(),
+            'expirydate' => time()])) {
 
             // Process any found licenses.
             foreach ($blanketlicenses as $blanketlicense) {
                 // Get the courses for this license.
-                $licensecourses = $DB->get_records_sql("SELECT c.id,
-                                                        c.id AS courseid,
-                                                        c.fullname AS coursefullname,
-                                                        c.summary AS coursesummary,
-                                                        cca.mandatory
-                                                        FROM {course} c
-                                                        JOIN {companylicense_courses} clc on (c.id = clc.courseid)
-                                                        LEFT JOIN {company_course_options} cca ON (
-                                                            c.id = cca.courseid
-                                                            AND clc.courseid = cca.courseid)
-                                                        WHERE clc.licenseid = :licenseid
-                                                        $inprogresssql
-                                                        $mandatorysql
-                                                        AND cca.companyid = :companyid",
-                                                       ['licenseid' => $blanketlicense->id,
-                                                        'companyid' => $companyid]);
+                $licensecourses = $DB->get_records_sql(
+                    "SELECT c.id,
+                            c.id AS courseid,
+                            c.fullname AS coursefullname,
+                            c.summary AS coursesummary,
+                            cca.mandatory
+                     FROM {course} c
+                     JOIN {companylicense_courses} clc ON (c.id = clc.courseid)
+                     LEFT JOIN {company_course_options} cca ON (
+                         c.id = cca.courseid
+                         AND clc.courseid = cca.courseid
+                     )
+                     WHERE clc.licenseid = :licenseid
+                     $inprogresssql
+                     $mandatorysql
+                     AND cca.companyid = :companyid",
+                    ['licenseid' => $blanketlicense->id,
+                     'companyid' => $companyid]);
 
                 // Add them to the holding array.
                 foreach ($licensecourses as $licensecourse) {
                     $licensecourse->fullname = format_string($licensecourse->coursefullname,
                                                              true,
                                                              ['context' => context_course::instance($licensecourse->courseid)]);
-
+                    // Deal with any mandatory courses.
                     if (get_config('local_iomad', 'use_mandatory_courses') &&
                         !empty($licensecourse->mandatory)) {
                         $mymandatorycourses[$licensecourse->coursefullname] = $licensecourse;
@@ -309,6 +351,7 @@ class helper {
         $mymandatorycourses = self::courses_sort($mymandatorycourses, 'coursefullname', $dir);
         $myavailablecourses = self::courses_sort($myavailablecourses, 'coursefullname', $dir);
 
+        // Return the list of courses.
         return $mymandatorycourses + $myavailablecourses;
     }
 
@@ -325,7 +368,7 @@ class helper {
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
 
         // Check if there is a iomadcertificate module.
-        if ($DB->get_record('modules', array('name' => 'iomadcertificate'))) {
+        if ($DB->get_record('modules', ['name' => 'iomadcertificate'])) {
             $hasiomadcertificate = true;
             require_once($CFG->dirroot . '/mod/iomadcertificate/lib.php');
         } else {
@@ -370,12 +413,12 @@ class helper {
                                                                 true,
                                                                 ['context' => context_course::instance($archive->courseid)]);
             }
+
             // Deal with the iomadcertificate info.
             $myarchive[$id]->certificates = [];
-
             if ($hasiomadcertificate) {
                 // Get the certificate from the download files thing.
-                if ($traccerts = $DB->get_records('local_iomad_track_certs', array('trackid' => $id))) {
+                if ($traccerts = $DB->get_records('local_iomad_track_certs', ['trackid' => $id])) {
                     foreach ($traccerts as $traccertrec) {
                         $certobj = (object) [];
                         $certobj->certificateurl = moodle_url::make_file_url('/pluginfile.php', '/' .
@@ -394,6 +437,7 @@ class helper {
         // Sort the courses by name.
         $myarchive = self::courses_sort($myarchive, $sort, $dir);
 
+        // Return the list of courses.
         return $myarchive;
     }
 
@@ -401,16 +445,24 @@ class helper {
      * Sort a list of courses provided by an array
      */
     private static function courses_sort($courselist, $sorton = 'timestarted', $direction = "ASC") {
+
+        // Default array.
         $namedcourses = [];
+
+        // Process the passed list of courses.
         foreach ($courselist as $id => $course) {
+            // We add the field we are sorting on to the array key.
             $namedcourses[$course->$sorton . $id] = $courselist[$id];
         }
+
+        // Do the sort.
         if ($direction == "ASC") {
             ksort($namedcourses, SORT_NATURAL | SORT_FLAG_CASE);
         } else {
             krsort($namedcourses, SORT_NATURAL | SORT_FLAG_CASE);
         }
 
+        // Return the result.
         return $namedcourses;
     }
 }

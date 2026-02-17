@@ -48,11 +48,7 @@ class inprogress_view implements renderable, templatable {
     /** Quantity of courses per page. */
     const COURSES_PER_PAGE = 6;
 
-    /**
-     * List of available courses.
-     *
-     * @param array $myavailable
-     */
+    /** @var array $myavailable */
     protected $myinprogress;
 
     /**
@@ -81,7 +77,7 @@ class inprogress_view implements renderable, templatable {
 
         // Deal with all the passed courses.
         foreach ($this->myinprogress as $inprogress) {
-            if (!$course = $DB->get_record("course", ["id"=>$inprogress->courseid])) {
+            if (!$course = $DB->get_record('course', ['id' => $inprogress->courseid])) {
                 $context = context_system::instance();
                 $linkurl = new moodle_url('/my');
                 $exportedcourse = (object) ['id' => 0,
@@ -111,7 +107,7 @@ class inprogress_view implements renderable, templatable {
                     $coursesummary = content_to_text($exportedcourse->summary, $exportedcourse->summaryformat);
                 }
 
-                // Display course overview files
+                // Display course overview files.
                 $imageurl = course_summary_exporter::get_course_image($courseobj);
                 if (empty($imageurl)) {
                     $imageurl = $OUTPUT->get_generated_image_for_id($course->id);
@@ -127,7 +123,8 @@ class inprogress_view implements renderable, templatable {
 
             // Get the course percentage.
             if ($totalrec = $DB->get_records('course_completion_criteria', ['course' => $inprogress->courseid])) {
-                $usercount = $DB->count_records('course_completion_crit_compl', ['course' => $inprogress->courseid, 'userid' => $USER->id]);
+                $usercount = $DB->count_records('course_completion_crit_compl', ['course' => $inprogress->courseid,
+                                                                                 'userid' => $USER->id]);
                 $exportedcourse->progress = round($usercount * 100 / count($totalrec), 0);
                 $exportedcourse->hasprogress = true;
                 $tooltip = "";
@@ -161,20 +158,27 @@ class inprogress_view implements renderable, templatable {
 
                         // Do we show the grade and is there one?
                         if ($showgrade &&
-                            $gradeinfo = $DB->get_record_sql("SELECT gg.* FROM {grade_grades} gg
-                                                              JOIN {grade_items} gi ON (gg.itemid = gi.id)
-                                                              JOIN {course_modules} cm ON (gi.courseid = cm.course
-                                                                                           AND gi.iteminstance = cm.instance)
-                                                              JOIN {modules} m ON (m.id = cm.module AND m.name = gi.itemmodule)
-                                                              WHERE gg.userid = :userid
-                                                              AND gi.courseid = :courseid
-                                                              AND cm.id = :moduleid",
-                                                              ['userid' => $USER->id,
-                                                               'courseid' => $course->id,
-                                                               'moduleid' => $criteria->moduleinstance])) {
+                            $gradeinfo = $DB->get_record_sql(
+                                "SELECT gg.*
+                                 FROM {grade_grades} gg
+                                 JOIN {grade_items} gi ON (gg.itemid = gi.id)
+                                 JOIN {course_modules} cm ON (
+                                     gi.courseid = cm.course
+                                     AND gi.iteminstance = cm.instance
+                                 )
+                                 JOIN {modules} m ON (
+                                     m.id = cm.module
+                                     AND m.name = gi.itemmodule
+                                 )
+                                 WHERE gg.userid = :userid
+                                 AND gi.courseid = :courseid
+                                 AND cm.id = :moduleid",
+                                ['userid' => $USER->id,
+                                 'courseid' => $course->id,
+                                 'moduleid' => $criteria->moduleinstance])) {
                             if (!empty($gradeinfo->finalgrade) && $gradeinfo->finalgrade != 0) {
                                 $gradestring = " - " .
-                                               format_string(round($gradeinfo->finalgrade/$gradeinfo->rawgrademax * 100,
+                                               format_string(round($gradeinfo->finalgrade / $gradeinfo->rawgrademax * 100,
                                                                    get_config('local_iomad', 'report_grade_places')) .
                                                "%");
                             }

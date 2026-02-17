@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD my courses main render class
  * @package   block_mycourses
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -31,8 +32,6 @@ use renderer_base;
 use templatable;
 use local_iomad\iomad;
 
-require_once($CFG->libdir . '/completionlib.php');
-
 /**
  * Class containing data for my overview block.
  *
@@ -41,9 +40,7 @@ require_once($CFG->libdir . '/completionlib.php');
  */
 class main implements renderable, templatable {
 
-    /**
-     * @var string The tab to display.
-     */
+    /** @var string The tab to display. */
     public $tab;
 
     /**
@@ -129,7 +126,7 @@ class main implements renderable, templatable {
         // Set the default for no courses.
         $nocoursesurl = $output->image_url('courses', 'block_mycourses')->out();
 
-        // Set up the sort URL links
+        // Set up the sort URL links.
         $sortnameurl = new moodle_url($PAGE->url->out(false), ['sort' => 'coursefullname',
                                                                'dir' => $dir,
                                                                'tab' => $this->tab,
