@@ -195,6 +195,7 @@ class course_summary_exporter extends \core\external\exporter {
         // IOMAD
         // Check that the image has the correct tenant URL.
         if ($image &&
+            str_starts_with($image, 'http') &&
             !str_starts_with($image, $CFG->wwwroot)) {
             // We don't match - fix it.
             $image = iomad::fix_url($image);
