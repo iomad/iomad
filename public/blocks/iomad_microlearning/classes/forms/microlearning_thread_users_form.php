@@ -220,7 +220,7 @@ class microlearning_thread_users_form extends company_moodleform {
                 'table',
                 [
                     'summary' => "",
-                    'class' => 'companythreaduserstable addremovetable generaltable generalbox  boxaligncenter',
+                    'class' => 'generaltable generalbox groupmanagementtable boxaligncenter',
                     'cellspacing' => '0',
                 ]) .
             html_writer::start_tag('tr') .
@@ -230,24 +230,16 @@ class microlearning_thread_users_form extends company_moodleform {
             'html',
             html_writer::end_tag('td') .
             html_writer::start_tag('td', ['id' => "buttonscell"]) .
+            html_writer::start_tag('p', ['class' => 'arrow_button']) .
             html_writer::empty_tag(
                 'input',
                 [
                     'name' => "add",
                     'id' => "add",
                     'type' => "submit",
-                    'value' => $output->larrow() . get_string('enrol', 'block_iomad_company_admin'),
-                    'title' => get_string('enrol', 'block_iomad_company_admin'),
-                    ]) .
-            html_writer::empty_tag('br') .
-            html_writer::empty_tag(
-                'input',
-                [
-                    'name' => "addall",
-                    'id' => "addall",
-                    'type' => "submit",
-                    'value' => $output->larrow() . get_string('enrolall', 'block_iomad_company_admin'),
-                    'title' => get_string('enrolall', 'block_iomad_company_admin'),
+                    'value' => $output->larrow() . ' ' . get_string('add'),
+                    'title' => get_string('add'),
+                    'class' => 'btn btn-secondary',
                     ]) .
             html_writer::empty_tag('br') .
             html_writer::empty_tag(
@@ -256,8 +248,21 @@ class microlearning_thread_users_form extends company_moodleform {
                     'name' => "remove",
                     'id' => "remove",
                     'type' => "submit",
-                    'value' => get_string('unenrol', 'block_iomad_company_admin') . $output->rarrow(),
-                    'title' => get_string('unenrol', 'block_iomad_company_admin'),
+                    'value' => get_string('remove') . ' ' . $output->rarrow(),
+                    'title' => get_string('remove'),
+                    'class' => 'btn btn-secondary',
+                    ]) .
+            html_writer::empty_tag('br') .
+            html_writer::empty_tag(
+                'input',
+                [
+                    'name' => "addall",
+                    'id' => "addall",
+                    'type' => "submit",
+                    'value' => $output->larrow() . $output->larrow() . ' ' .
+                               get_string('addall', 'bulkusers'),
+                    'title' => get_string('addall', 'bulkusers'),
+                    'class' => 'btn btn-secondary',
                     ]) .
             html_writer::empty_tag('br') .
             html_writer::empty_tag(
@@ -266,9 +271,12 @@ class microlearning_thread_users_form extends company_moodleform {
                     'name' => "removeall",
                     'id' => "removeall",
                     'type' => "submit",
-                    'value' => get_string('unenrolall', 'block_iomad_company_admin') . $output->rarrow(),
-                    'title' => get_string('unenrolall', 'block_iomad_company_admin'),
+                    'value' => get_string('removeall', 'bulkusers') . ' ' .
+                               $output->rarrow(). $output->rarrow(),
+                    'title' => get_string('removeall', 'bulkusers'),
+                    'class' => 'btn btn-secondary',
                     ]) .
+            html_writer::end_tag('p') .
             html_writer::end_tag('td'));
 
         $mform->addElement('html', html_writer::tag('td', $this->potentialusers->display(true), ['id' => 'potentialcell']));
