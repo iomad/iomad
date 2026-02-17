@@ -215,6 +215,7 @@ class helper {
         }
 
         // Get courses which are available as self sign up and assigned to the company.
+        $sqlparams['enrol'] = 'self';
         $companyselfenrolcourses = $DB->get_records_sql(
             "SELECT e.id,
                     e.courseid,
@@ -235,8 +236,7 @@ class helper {
              AND cc.companyid = :companyid
              $inprogresssql
              $mandatorysql",
-            ['companyid' => $companyid,
-             'enrol' => 'self']);
+            $sqlparams);
 
         // Process all of the company self enrol courses.
         foreach ($companyselfenrolcourses as $companyselfenrolcourse) {
@@ -263,22 +263,21 @@ class helper {
                     c.summary AS coursesummary,
                     c.visible,
                     cca.mandatory
-                    FROM {enrol} e
-                    JOIN {course} c ON (e.courseid = c.id)
-                    LEFT JOIN {company_course_options} cca ON (
-                         c.id = cca.courseid
-                         AND cca.companyid = :companyid
-                     )
-                     WHERE e.enrol = :enrol
-                     AND e.status = 0
-                     AND c.id IN (
-                         SELECT courseid FROM {iomad_courses}
-                         WHERE shared = 1
-                     )
-                     $inprogresssql
-                     $mandatorysql",
-                    ['enrol' => 'self',
-                     'companyid' => $companyid]);
+             FROM {enrol} e
+             JOIN {course} c ON (e.courseid = c.id)
+             LEFT JOIN {company_course_options} cca ON (
+                 c.id = cca.courseid
+                 AND cca.companyid = :companyid
+             )
+             WHERE e.enrol = :enrol
+             AND e.status = 0
+             AND c.id IN (
+                 SELECT courseid FROM {iomad_courses}
+                 WHERE shared = 1
+             )
+             $inprogresssql
+             $mandatorysql",
+           $sqlparams);
 
         // Process all of the shared self enrol courses.
         foreach ($sharedselfenrolcourses as $sharedselfenrolcourse) {
@@ -312,6 +311,7 @@ class helper {
             // Process any found licenses.
             foreach ($blanketlicenses as $blanketlicense) {
                 // Get the courses for this license.
+                $sqlparams['licenseid'] = $blanketlicense->id;
                 $licensecourses = $DB->get_records_sql(
                     "SELECT c.id,
                             c.id AS courseid,
@@ -328,8 +328,7 @@ class helper {
                      $inprogresssql
                      $mandatorysql
                      AND cca.companyid = :companyid",
-                    ['licenseid' => $blanketlicense->id,
-                     'companyid' => $companyid]);
+                    $sqlparams);
 
                 // Add them to the holding array.
                 foreach ($licensecourses as $licensecourse) {
