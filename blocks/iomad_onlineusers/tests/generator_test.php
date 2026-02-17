@@ -20,12 +20,12 @@ namespace block_iomad_onlineusers;
  * PHPUnit data generator testcase
  *
  * @package    block_iomad_onlineusers
- * @category   phpunit
+ * @category   test
  * @copyright  2012 Petr Skoda {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class generator_test extends \advanced_testcase {
-    public function test_generator() {
+final class generator_test extends \advanced_testcase {
+    public function test_generator(): void {
         global $DB;
 
         $this->resetAfterTest(true);
@@ -41,7 +41,7 @@ class generator_test extends \advanced_testcase {
         $generator->create_instance();
         $generator->create_instance();
         $bi = $generator->create_instance();
-        $this->assertEquals($beforeblocks+3, $DB->count_records('block_instances'));
+        $this->assertEquals($beforeblocks + 3, $DB->count_records('block_instances'));
 
     }
 }

@@ -28,8 +28,6 @@ use iomad;
 use company;
 use context_system;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Class used to list and count online users
  *
@@ -88,7 +86,7 @@ class fetcher {
                                     OR up.value IS NULL
                                     OR u.id = :userid)";
         }
-        $params = array();
+        $params = [];
 
         $userfieldsapi = \core_user\fields::for_userpic()->including('username', 'deleted');
         $userfields = $userfieldsapi->get_sql('u', false, '', '', false)->selects;
@@ -115,7 +113,7 @@ class fetcher {
         $companysql = " AND 1=2 ";
         $systemcontext = context_system::instance();
 
-        // Set the companyid
+        // Set the companyid.
         $companyid = iomad::get_my_companyid($systemcontext, false);
         if (!empty($companyid)) {
             $companysql = " AND u.id IN (SELECT userid FROM {company_users} WHERE companyid = :companyid) ";
@@ -151,7 +149,6 @@ class fetcher {
                             $groupselect";
         } else {
             // Course level - show only enrolled users for now.
-            // TODO: add a new capability for viewing of all users (guests+enrolled+viewing).
             list($esqljoin, $eparams) = get_enrolled_sql($context);
             $params = array_merge($params, $eparams);
 

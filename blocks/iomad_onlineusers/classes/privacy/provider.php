@@ -28,8 +28,6 @@ use core_privacy\local\metadata\collection;
 use core_privacy\local\request\writer;
 use core_privacy\local\request\transform;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Privacy Subsystem for block_iomad_onlineusers.
  *
@@ -46,7 +44,7 @@ class provider implements
      * @param collection $collection Collection of items to add metadata to.
      * @return collection Collection with our added items.
      */
-    public static function get_metadata(collection $collection) : collection {
+    public static function get_metadata(collection $collection): collection {
 
         $collection->add_user_preference('block_iomad_onlineusers_uservisibility',
                 'privacy:metadata:preference:uservisibility');

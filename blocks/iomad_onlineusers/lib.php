@@ -22,7 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Callback to define user preferences.
@@ -30,17 +29,17 @@ defined('MOODLE_INTERNAL') || die();
  * @return array
  */
 function block_iomad_onlineusers_user_preferences() {
-    $preferences = array();
-    $preferences['block_iomad_onlineusers_uservisibility'] = array(
+    $preferences = [];
+    $preferences['block_iomad_onlineusers_uservisibility'] = [
         'type' => PARAM_INT,
         'null' => NULL_NOT_ALLOWED,
         'default' => 1,
-        'choices' => array(0, 1),
+        'choices' => [0, 1],
         'permissioncallback' => function($user, $preferencename) {
             global $USER;
             return $user->id == $USER->id;
-        }
-    );
+        },
+    ];
 
     return $preferences;
 }

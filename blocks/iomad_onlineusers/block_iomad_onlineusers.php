@@ -30,18 +30,34 @@ use block_iomad_onlineusers\fetcher;
  * teacher roles.
  */
 class block_iomad_onlineusers extends block_base {
-    function init() {
-        $this->title = get_string('pluginname','block_iomad_onlineusers');
+
+    /**
+     * Initialisation function
+     *
+     * @return void
+     */
+    public function init() {
+        $this->title = get_string('pluginname', 'block_iomad_onlineusers');
     }
 
-    function has_config() {
+    /**
+     * Does the block have per instance settings
+     *
+     * @return boolean
+     */
+    public function has_config() {
         return true;
     }
 
-    function get_content() {
+    /**
+     * Get the block content
+     *
+     * @return void
+     */
+    public function get_content() {
         global $USER, $CFG, $DB, $OUTPUT;
 
-        if ($this->content !== NULL) {
+        if ($this->content !== null) {
             return $this->content;
         }
 
@@ -53,27 +69,27 @@ class block_iomad_onlineusers extends block_base {
             return $this->content;
         }
 
-        $timetoshowusers = 300; //Seconds default
+        $timetoshowusers = 300; // Seconds default.
         if (isset($CFG->block_iomad_onlineusers_timetosee)) {
             $timetoshowusers = $CFG->block_iomad_onlineusers_timetosee * 60;
         }
         $now = time();
 
-        //Calculate if we are in separate groups
+        // Calculate if we are in separate groups.
         $isseparategroups = ($this->page->course->groupmode == SEPARATEGROUPS
                              && $this->page->course->groupmodeforce
                              && !has_capability('moodle/site:accessallgroups', $this->page->context));
 
-        //Get the user current group
-        $currentgroup = $isseparategroups ? groups_get_course_group($this->page->course) : NULL;
+        // Get the user current group.
+        $currentgroup = $isseparategroups ? groups_get_course_group($this->page->course) : null;
 
         $sitelevel = $this->page->course->id == SITEID || $this->page->context->contextlevel < CONTEXT_COURSE;
 
         $onlineusers = new fetcher($currentgroup, $now, $timetoshowusers, $this->page->context,
                 $sitelevel, $this->page->course->id);
 
-        //Calculate minutes
-        $minutes  = floor($timetoshowusers/60);
+        // Calculate minutes.
+        $minutes = floor($timetoshowusers / 60);
         $periodminutes = get_string('periodnminutes', 'block_iomad_onlineusers', $minutes);
 
         // Count users.
@@ -108,15 +124,16 @@ class block_iomad_onlineusers extends block_base {
                 $users[$user->id]->fullname = fullname($user);
             }
         } else {
-            $users = array();
+            $users = [];
         }
 
-        //Now, we have in users, the list of users to show
-        //Because they are online
+        // Now, we have in users, the list of users to show
+        // because they are online.
         if (!empty($users)) {
             $this->page->requires->js_call_amd('block_iomad_onlineusers/change_user_visibility', 'init');
-            //Accessibility: Don't want 'Alt' text for the user picture; DO want it for the envelope/message link (existing lang string).
-            //Accessibility: Converted <div> to <ul>, inherit existing classes & styles.
+            // Accessibility: Don't want 'Alt' text for the user picture;
+            // DO want it for the envelope/message link (existing lang string).
+            // Accessibility: Converted <div> to <ul>, inherit existing classes & styles.
             $this->content->text .= "<ul class='list'>\n";
             if (isloggedin() && has_capability('moodle/site:sendmessage', $this->page->context)
                            && !empty($CFG->messaging) && !isguestuser()) {
@@ -126,15 +143,29 @@ class block_iomad_onlineusers extends block_base {
             }
             foreach ($users as $user) {
                 $this->content->text .= '<li class="listentry">';
-                $timeago = format_time($now - $user->lastaccess); //bruno to calculate correctly on frontpage
+                $timeago = format_time($now - $user->lastaccess); // Bruno to calculate correctly on frontpage.
 
                 if (isguestuser($user)) {
-                    $this->content->text .= '<div class="user">'.$OUTPUT->user_picture($user, array('size'=>16, 'alttext'=>false));
+                    $this->content->text .= '<div class="user">'.$OUTPUT->user_picture($user, ['size' => 16, 'alttext' => false]);
                     $this->content->text .= get_string('guestuser').'</div>';
 
                 } else { // Not a guest user.
                     $this->content->text .= '<div class="user">';
-                    $this->content->text .= '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$user->id.'&amp;course='.$this->page->course->id.'" title="'.$timeago.'">';
+                    $this->content->text .= html_writer::start_tag(
+                        'a',
+                        [
+                            'href' => new moodle_url(
+                                $CFG->wwwroot.'/user/view.php',
+                                [
+                                    'id' => $user->id,
+                                    'course' => $this->page->course->id,
+                                ]
+
+                            ),
+                            'title' => $timeago,
+
+                        ]
+                    );
                     $avataroptions = [
                         'size' => 30,
                         'class' => 'userpicture align-middle',
@@ -149,17 +180,17 @@ class block_iomad_onlineusers extends block_base {
                             $anchortagcontents = $OUTPUT->pix_icon('t/' . $action,
                                 get_string('online_status:' . $action, 'block_iomad_onlineusers'));
                             $anchortag = html_writer::link("", $anchortagcontents,
-                                array('title' => get_string('online_status:' . $action, 'block_iomad_onlineusers'),
-                                    'data-action' => $action, 'data-userid' => $user->id, 'id' => 'change-user-visibility'));
+                                ['title' => get_string('online_status:' . $action, 'block_iomad_onlineusers'),
+                                    'data-action' => $action, 'data-userid' => $user->id, 'id' => 'change-user-visibility']);
 
                             $this->content->text .= '<div class="uservisibility">' . $anchortag . '</div>';
                         }
                     } else {
                         if ($canshowicon) {  // Only when logged in and messaging active etc.
                             $anchortagcontents = $OUTPUT->pix_icon('t/message', get_string('messageselectadd'));
-                            $anchorurl = new moodle_url('/message/index.php', array('id' => $user->id));
+                            $anchorurl = new moodle_url('/message/index.php', ['id' => $user->id]);
                             $anchortag = html_writer::link($anchorurl, $anchortagcontents,
-                                array('title' => get_string('messageselectadd')));
+                                ['title' => get_string('messageselectadd')]);
 
                             $this->content->text .= '<div class="message">'.$anchortag.'</div>';
                         }
@@ -193,7 +224,7 @@ class block_iomad_onlineusers extends block_base {
         // Return all settings for all users since it is safe (no private keys, etc..).
         $configs = (object) [
             'timetosee' => $CFG->block_iomad_onlineusers_timetosee,
-            'onlinestatushiding' => $CFG->block_iomad_onlineusers_onlinestatushiding
+            'onlinestatushiding' => $CFG->block_iomad_onlineusers_onlinestatushiding,
         ];
 
         return (object) [
@@ -202,5 +233,3 @@ class block_iomad_onlineusers extends block_base {
         ];
     }
 }
-
-
