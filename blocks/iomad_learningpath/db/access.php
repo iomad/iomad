@@ -56,7 +56,7 @@ $capabilities = [
         ],
     ],
 
-    'local/iomad_learningpath:view_admin' => [
+    'block/iomad_learningpath:view_admin' => [
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
@@ -78,7 +78,7 @@ $capabilities = [
         ],
     ],
 
-    'local/iomad_learningpath:assign' => [
+    'block/iomad_learningpath:assign' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
         'archetypes' => [
