@@ -15,18 +15,32 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD training event attendance report select form
+ *
  * @package   local_report_attendance
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once($CFG->libdir . '/formslib.php');
+namespace local_report_attendance\forms;
 
-class atendance_select_form extends moodleform {
+/**
+ * IOMAD training event attendance report select form
+ *
+ * @package   local_report_attendance
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class select_form extends moodleform {
 
+    /**
+     * Form definitioion
+     *
+     * @return void
+     */
     public function definition() {
-        global $CFG;
 
         // Get custom data.
         $customdata = $this->_customdata;
@@ -38,22 +52,11 @@ class atendance_select_form extends moodleform {
         $mform->addElement('header', 'iomadreportselect', get_string('reportselect',
                            'local_report_completion'));
         $mform->addElement('select', 'repcourse', get_string('course', 'local_report_completion'),
-                            $courses, array());
+                            $courses, []);
         $mform->setDefault('repcourse', $customdata->selected_course);
         $mform->addElement('select', 'participant',
                             get_string('participant', 'local_report_completion'),
-                            $participants, array());
+                            $participants, []);
         $mform->setDefault('participant', $customdata->selected_participant);
     }
-
-    // Perform some extra moodle validation.
-    public function validation($data, $files) {
-        global $DB, $CFG;
-
-        $errors = parent::validation($data, $files);
-
-        return $errors;
-    }
-
 }
-
