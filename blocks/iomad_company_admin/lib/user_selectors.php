@@ -30,7 +30,9 @@ abstract class company_user_selector_base extends user_selector_base {
 
     protected $companyid;
     protected $courseid;
+    protected $parentdepartmentid;
     protected $departmentid;
+    protected $subdepartments;
     protected $courses;
     protected $company;
     protected $selectedcourses;
@@ -38,6 +40,7 @@ abstract class company_user_selector_base extends user_selector_base {
     protected $profilefieldid = 0;
     protected $allusers = false;
     protected $groupid;
+    protected $threadid;
 
     /** @var array JavaScript YUI3 Module definition */
     protected static $jsmodule = array(
