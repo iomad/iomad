@@ -959,7 +959,7 @@ class microlearning {
 
         // Deal with any language formatting.
         foreach ($threads as $id => $name) {
-            $menuthreads[$id] = format_text($name);
+            $menuthreads[$id] = format_string($name);
         }
 
         return $menuthreads;

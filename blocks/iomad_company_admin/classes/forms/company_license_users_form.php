@@ -364,17 +364,6 @@ class company_license_users_form extends \moodleform {
             html_writer::empty_tag(
                 'input',
                 [
-                    'name' => 'addall',
-                    'id' => 'addall',
-                    'type' => 'submit',
-                    'value' => $output->larrow() . ' ' . get_string('licenseallocateall', 'block_iomad_company_admin'),
-                    'title' => get_string('licenseallocateall', 'block_iomad_company_admin'),
-                    'class' => 'btn btn-secondary',
-                ]) .
-            html_writer::empty_tag('br') .
-            html_writer::empty_tag(
-                'input',
-                [
                     'name' => 'remove',
                     'id' => 'remove',
                     'type' => 'submit',
@@ -386,10 +375,23 @@ class company_license_users_form extends \moodleform {
             html_writer::empty_tag(
                 'input',
                 [
+                    'name' => 'addall',
+                    'id' => 'addall',
+                    'type' => 'submit',
+                    'value' => $output->larrow() . ' ' . $output->larrow() . ' ' .
+                               get_string('licenseallocateall', 'block_iomad_company_admin'),
+                    'title' => get_string('licenseallocateall', 'block_iomad_company_admin'),
+                    'class' => 'btn btn-secondary',
+                ]) .
+            html_writer::empty_tag('br') .
+            html_writer::empty_tag(
+                'input',
+                [
                     'name' => 'removeall',
                     'id' => 'removeall',
                     'type' => 'submit',
-                    'value' => get_string('licenseremoveall', 'block_iomad_company_admin') . ' ' . $output->rarrow(),
+                    'value' => get_string('licenseremoveall', 'block_iomad_company_admin') .
+                               ' ' . $output->rarrow() . ' ' . $output->rarrow(),
                     'title' => get_string('licenseremoveall', 'block_iomad_company_admin'),
                     'class' => 'btn btn-secondary',
                 ]) .
