@@ -43,11 +43,7 @@ use moodle_url;
  */
 class available_view implements renderable, templatable {
 
-    /**
-     * List of available courses.
-     *
-     * @param array $myavailable
-     */
+    /** @var array $myavailable */
     protected $myavailable;
 
     /**
@@ -67,7 +63,6 @@ class available_view implements renderable, templatable {
      */
     public function export_for_template(renderer_base $output) {
         global $CFG, $DB, $OUTPUT;
-        require_once($CFG->dirroot.'/course/lib.php');
 
         // Build courses view data structure.
         $availableview = [];

@@ -47,11 +47,7 @@ class completed_view implements renderable, templatable {
     /** Quantity of courses per page. */
     const COURSES_PER_PAGE = 6;
 
-    /**
-     * List of available courses.
-     *
-     * @param array $mycompleted
-     */
+    /** @var array $mycompleted */
     protected $mycompleted;
 
     /**
@@ -71,7 +67,6 @@ class completed_view implements renderable, templatable {
      */
     public function export_for_template(renderer_base $output) {
         global $CFG, $DB, $OUTPUT;
-        require_once($CFG->dirroot.'/course/lib.php');
 
         // Build courses view data structure.
         $completedview = [];

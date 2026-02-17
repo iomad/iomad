@@ -21,10 +21,18 @@
  * @copyright 2019-onward Mike Churchward (mike.churchward@poetopensource.org)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 namespace block_mycourses\output;
 
 use block_mycourses\helper;
 
+/**
+ * Mobile output class for block_mycourses.
+ *
+ * @package  block_mycourses
+ * @copyright 2019-onward Mike Churchward (mike.churchward@poetopensource.org)
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class mobile {
 
     /**
@@ -87,11 +95,11 @@ class mobile {
             'templates' => [
                 [
                     'id' => 'main',
-                    'html' => $OUTPUT->render_from_template('block_mycourses/mobile_view_block', $data)
+                    'html' => $OUTPUT->render_from_template('block_mycourses/mobile_view_block', $data),
                 ],
             ],
             'otherdata' => [$page],
-            'files' => null
+            'files' => null,
         ];
         return $return;
     }

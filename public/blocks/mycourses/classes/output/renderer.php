@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD my courses block renderer
  * @package   block_mycourses
  * @copyright 2021 Derick Turner
  * @author    Derick Turner

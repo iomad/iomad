@@ -15,22 +15,45 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD My Courses block
+ *
  * @package   block_mycourses
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+use block_mycourses\output\main;
 
+/**
+ * IOMAD My Courses block
+ *
+ * @package   block_mycourses
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class block_mycourses extends block_base {
 
-    function init() {
+    /**
+     * Initialisation function
+     *
+     * @return void
+     */
+    public function init() {
         $this->title = get_string('title', 'block_mycourses');
     }
 
-    function get_content() {
-        global $CFG, $OUTPUT;
+    /**
+     * Get the block content
+     *
+     * @return void
+     */
+    public function get_content() {
+        global $CFG;
+
+        require_once($CFG->dirroot.'/course/lib.php');
+        require_once($CFG->libdir . '/completionlib.php');
 
         if ($this->content !== null) {
             return $this->content;
@@ -46,11 +69,11 @@ class block_mycourses extends block_base {
             $tab = 'inprogress';
         }
 
-        $renderable = new \block_mycourses\output\main($tab);
+        $renderable = new main($tab);
         $renderer = $this->page->get_renderer('block_mycourses');
         $this->content = new stdClass();
-        $this->content->items = array();
-        $this->content->icons = array();
+        $this->content->items = [];
+        $this->content->icons = [];
         $this->content->footer = '';
 
         $this->content = new stdClass();
@@ -60,7 +83,11 @@ class block_mycourses extends block_base {
         return $this->content;
     }
 
-    // my moodle can only have SITEID and it's redundant here, so take it away
+    /**
+     * Where can we see this block?
+     *
+     * @return void
+     */
     public function applicable_formats() {
         return ['all' => false,
                 'my' => true,
@@ -68,15 +95,21 @@ class block_mycourses extends block_base {
                ];
     }
 
+    /**
+     * Can we have multiple instances?
+     *
+     * @return void
+     */
     public function instance_allow_multiple() {
         return true;
     }
 
-    function has_config() {return true;}
-
-    public function cron() {
-        mtrace( "Hey, my cron script is running" );
-        // do something
+    /**
+     * Does the block have settings?
+     *
+     * @return boolean
+     */
+    public function has_config() {
         return true;
     }
 }
