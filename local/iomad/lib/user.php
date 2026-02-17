@@ -1010,7 +1010,7 @@ class company_user {
     public static function get_department_name(int $userid, int $companyid): string {
         global $DB;
 
-        $userdepartments = $DB->get_field_sql(
+        $userdepartments = $DB->get_records_sql(
             "SELECT d.name
              FROM {department} d
              JOIN {company_users} cu ON cu.departmentid = d.id
@@ -1020,7 +1020,7 @@ class company_user {
             ['userid' => $userid,
              'companyid' => $companyid]);
 
-        return implode(',', array_values($userdepartments));
+        return implode(',', array_keys($userdepartments));
     }
 
     /**
