@@ -27,6 +27,7 @@ namespace block_iomad_onlineusers;
  */
 class iomad_onlineusers_test extends \advanced_testcase {
 
+    /** @var array test data */
     protected $data;
 
     /**
@@ -36,6 +37,7 @@ class iomad_onlineusers_test extends \advanced_testcase {
      * simulate various recent accesses.
      */
     protected function setUp(): void {
+        parent::setUp();
 
         // Generate (simulated) recently logged-in users.
         $generator = $this->getDataGenerator()->get_plugin_generator('block_iomad_onlineusers');
