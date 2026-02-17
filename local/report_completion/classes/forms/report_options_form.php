@@ -29,6 +29,7 @@ use core_form\dynamic_form;
 use moodle_url;
 use context_system;
 use context;
+use html_writer;
 
 /**
  * Local report completion form options dynamic form
@@ -49,31 +50,48 @@ class report_options_form extends dynamic_form {
 
         $mform =& $this->_form;
 
-        $mform->addElement('html', '<div class="iomad_report_options_form">');
+        $mform->addElement('html', html_writer::start_tag('div', ['class' => 'iomad_report_options_form']));
 
-        $mform->addElement('html', '<div class="iomad_report_options_form_element">');
+        $mform->addElement('html', html_writer::start_tag('div', ['class' => 'iomad_report_options_form_element']));
 
-        $mform->addElement('advcheckbox', 'allusers', get_string('user_options', 'local_report_completion'), get_string('allusers', 'local_report_completion'));
-        $mform->addElement('advcheckbox', 'showsuspended', '', get_string('showsuspendedusers', 'local_report_completion'));
-        $mform->addElement('html', '</div>');
+        $mform->addElement(
+            'advcheckbox',
+            'allusers',
+            get_string('user_options', 'local_report_completion'),
+            get_string('allusers', 'local_report_completion'));
+        $mform->addElement(
+            'advcheckbox',
+            'showsuspended',
+            '',
+            get_string('showsuspendedusers', 'local_report_completion'));
 
-        $mform->addElement('html', '<div class="iomad_report_options_form_element">');
+        $mform->addElement('html', html_writer::end_tag('div'));
+
+        $mform->addElement('html', html_writer::start_tag('div', ['class' => 'iomad_report_options_form_element']));
         $showpercentageoptions = [get_string("hidepercentageusers", 'block_iomad_company_admin'),
                                   get_string("showpercentageusers", 'block_iomad_company_admin'),
                                   get_string("showpercentagecourseusers", 'block_iomad_company_admin')];
         $mform->addElement('select', 'showpercentage', "User calculation", $showpercentageoptions);
-        $mform->addElement('html', '</div>');
+        $mform->addElement('html', html_writer::end_tag('div'));
 
-        $mform->addElement('html', '<div class="iomad_report_options_form_element">');
-        $mform->addElement('advcheckbox', 'validonly', get_string('course_options', 'local_report_completion'), get_string('hidevalidcourses', 'block_iomad_company_admin'));
+        $mform->addElement('html', html_writer::start_tag('div', ['class' => 'iomad_report_options_form_element']));
+        $mform->addElement(
+            'advcheckbox',
+            'validonly',
+            get_string('course_options', 'local_report_completion'),
+            get_string('hidevalidcourses', 'block_iomad_company_admin'));
         $mform->addElement('advcheckbox', 'mandatoryonly', '', get_string('mandatoryonly', 'local_report_completion'));
-        $mform->addElement('html', '</div>');
+        $mform->addElement('html', html_writer::end_tag('div'));
 
-        $mform->addElement('html', '<div class="iomad_report_options_form_element">');
-        $mform->addElement('advcheckbox', 'showcharts', get_string('report_options', 'local_report_completion'), get_string('showcharts', 'block_iomad_company_admin'));
+        $mform->addElement('html', html_writer::start_tag('div', ['class' => 'iomad_report_options_form_element']));
+        $mform->addElement(
+            'advcheckbox',
+            'showcharts',
+            get_string('report_options', 'local_report_completion'),
+            get_string('showcharts', 'block_iomad_company_admin'));
         $mform->addElement('advcheckbox', 'showsummary', '', get_string('showcompanydetail', 'block_iomad_company_admin'));
-        $mform->addElement('html', '</div>');
-        $mform->addElement('html', '</div>');
+        $mform->addElement('html', html_writer::end_tag('div'));
+        $mform->addElement('html', html_writer::end_tag('div'));
 
         $mform->addelement('hidden', 'courseid');
         $mform->addelement('hidden', 'firstname');
@@ -103,7 +121,6 @@ class report_options_form extends dynamic_form {
         // Contextually hide unwanted components.
         $mform->hideIF('showsummary', 'usingchildren', 'eq', 0);
         $mform->hideIF('mandatoryonly', 'usingmandatory', 'eq', 0);
-
     }
 
     /**
@@ -116,7 +133,6 @@ class report_options_form extends dynamic_form {
         // Get the form data.
         $data = $this->get_data();
         $reloadurl = new moodle_url('/local/report_completion/index.php', (array) $data);
-        error_log("URL = " . $reloadurl->out(false));
 
         // Return stuff for the JS.
         return [
@@ -245,6 +261,6 @@ class report_options_form extends dynamic_form {
             'showsummary' => $showsummary,
         ];
 
-       return new moodle_url('/local/report_completion/index.php', $data);
+        return new moodle_url('/local/report_completion/index.php', $data);
     }
 }

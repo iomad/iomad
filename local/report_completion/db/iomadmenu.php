@@ -15,18 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD course completion report dashboard menu items
+ *
  * @package   local_report_completion
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Define the Iomad menu items that are defined by this plugin
-
+/**
+ * Define the items used in the IOMAD dashboard
+ *
+ * @return array
+ */
 function local_report_completion_menu() {
 
-        return array(
-            'completion' => array(
+        return [
+            'completion' => [
                 'category' => 'Reports',
                 'tab' => 8,
                 'name' => get_string('pluginname', 'local_report_completion'),
@@ -36,6 +41,6 @@ function local_report_completion_menu() {
                 'style' => 'report',
                 'icon' => 'fa-check-square-o',
                 'iconsmall' => 'fa-bar-chart-o',
-            ),
-        );
+            ],
+        ];
 }
