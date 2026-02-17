@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD my courses block admin settings
+ *
  * @package   block_mycourses
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -33,7 +35,7 @@ $settings->add(new admin_setting_configcheckbox('mycourses_showsummary',
                                                 0));
 
 $options = ['card' => get_string('card', 'block_myoverview'),
-            'list' => get_string('list', 'block_myoverview')
+            'list' => get_string('list', 'block_myoverview'),
            ];
 
 $settings->add(new admin_setting_configselect('mycourses_defaultview',

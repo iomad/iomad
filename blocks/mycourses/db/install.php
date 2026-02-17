@@ -15,16 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD mycourses block install function
+ *
  * @package   block_mycourses
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// This script is run after the dashboard has been installed.
-
+/**
+ * This script is run after the dashboard has been installed.
+ *
+ * @return bool
+ */
 function xmldb_block_mycourses_install() {
-    global $SITE;
 
     // Add some default blocks to the dashboard
     // yes, I know this isn't really what this is for!!
@@ -33,9 +37,9 @@ function xmldb_block_mycourses_install() {
     $page->set_context( $systemcontext );
     $page->set_pagetype( 'my-index' );
     $page->blocks->add_region('content');
-    $defaultblocks = array(
-        'content' => array('mycourses'),
-        );
+    $defaultblocks = [
+        'content' => ['mycourses'],
+        ];
     $page->blocks->add_blocks($defaultblocks);
 
     return true;
