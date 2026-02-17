@@ -36,16 +36,16 @@ $addons = [
                 'method' => 'mobile_view_block',
                 'styles' => [
                     'url' => $CFG->wwwroot . '/blocks/mycourses/styles_app.css',
-                    'version' => '1.7'
-                ]
-            ]
+                    'version' => '1.7',
+                ],
+            ],
         ],
         'lang' => [
             ['pluginname', 'block_mycourses'],
             ['availableheader', 'block_mycourses'],
             ['inprogressheader', 'block_mycourses'],
             ['completedheader', 'block_mycourses'],
-            ['startcourse', 'block_mycourses']
+            ['startcourse', 'block_mycourses'],
         ],
-    ]
+    ],
 ];
