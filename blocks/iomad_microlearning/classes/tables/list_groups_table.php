@@ -74,7 +74,35 @@ class list_groups_table extends table_sql {
                                     ['deleteid' => $row->id, 'sesskey' => sesskey()]);
         $editurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_microlearning/group_edit_form.php',
                                   ['id' => $row->id]);
-        return html_writer::tag('a', get_string('edit'), ['href' => $editurl, 'class' => 'btn']). '&nbsp' .
-               html_writer::tag('a', get_string('delete'), ['href' => $deleteurl, 'class' => 'btn btn-danger']);
+        return html_writer::tag(
+            'a',
+            html_writer::tag(
+                'i',
+                '',
+                [
+                    'class' => "icon fa fa-cog fa-fw ",
+                    'title' => get_string('edit'),
+                    'aria-label' => get_string('edit'),
+                ]
+            ),
+            [
+                'href' => $editurl,
+            ]
+        ) . '&nbsp;' .
+            html_writer::tag(
+                'a',
+                html_writer::tag(
+                    'i',
+                    '',
+                    [
+                        'class' => "icon fa fa-trash fa-fw ",
+                        'title' => get_string('delete'),
+                        'aria-label' => get_string('delete'),
+                    ]
+                ),
+                [
+                    'href' => $deleteurl,
+                ]
+            );
     }
 }
