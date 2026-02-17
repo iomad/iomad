@@ -15,18 +15,26 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Training event attendance report dashboard menu items
+ *
  * @package   local_report_attendance
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Define the Iomad menu items that are defined by this plugin
-
+/**
+ * IOMAD Training event attendance report dashboard menu items
+ *
+ * @package   local_report_attendance
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 function local_report_attendance_menu() {
 
-        return array(
-            'attendance' => array(
+        return [
+            'attendance' => [
                 'category' => 'Reports',
                 'tab' => 8,
                 'name' => get_string('pluginname', 'local_report_attendance'),
@@ -36,6 +44,6 @@ function local_report_attendance_menu() {
                 'style' => 'report',
                 'icon' => 'fa-clock-o',
                 'iconsmall' => 'fa-bar-chart-o',
-            ),
-        );
+            ],
+        ];
 }
