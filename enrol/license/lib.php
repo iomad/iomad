@@ -110,7 +110,6 @@ class enrol_license_plugin extends enrol_plugin {
         return true;
     }
 
-
     /**
      * Function to check if the enrolment instance can be managed.
      *
