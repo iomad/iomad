@@ -454,7 +454,7 @@ class iomad {
      * @param array $categories
      * @return array
      */
-    public static function iomad_filter_categories($categories): array {
+    public static function iomad_filter_categories($categories) {
         global $DB, $USER;
 
         $contextsystem = context_system::instance();
