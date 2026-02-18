@@ -56,8 +56,8 @@ class frontend extends \core_availability\frontend {
      * @param \section_info|null $section
      * @return void
      */
-    protected function get_javascript_init_params($course, \cm_info $cm = null,
-            \section_info $section = null) {
+    protected function get_javascript_init_params($course, ?\cm_info $cm = null,
+            ?\section_info $section = null) {
         // Get all trainingevents for course.
         $trainingevents = $this->get_all_trainingevents($course->id);
 
@@ -98,8 +98,8 @@ class frontend extends \core_availability\frontend {
      * @param \section_info|null $section
      * @return void
      */
-    protected function allow_add($course, \cm_info $cm = null,
-            \section_info $section = null) {
+    protected function allow_add($course, ?\cm_info $cm = null,
+            ?\section_info $section = null) {
 
         // Only show this option if there are some trainingevents.
         return count($this->get_all_trainingevents($course->id)) > 0;
