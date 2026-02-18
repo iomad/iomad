@@ -158,28 +158,6 @@ class course_edit_form extends moodleform {
     }
 
     /**
-     * Get the form data
-     *
-     * @return void
-     */
-    public function get_data() {
-        $data = parent::get_data();
-        if ($data) {
-            $data->title = '';
-            $data->description = '';
-
-            if ($this->title) {
-                $data->title = $this->title;
-            }
-
-            if ($this->description) {
-                $data->description = $this->description;
-            }
-        }
-        return $data;
-    }
-
-    /**
      * Form validation
      *
      * @param array $data

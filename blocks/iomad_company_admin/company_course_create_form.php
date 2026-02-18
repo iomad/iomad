@@ -86,9 +86,9 @@ if ($mform->is_cancelled()) {
     $data->userid = $USER->id;
 
     // Merge data with course defaults.
-    $company = $DB->get_record('company', ['id' => $companyid]);
+    $companyrec = $DB->get_record('company', ['id' => $companyid]);
     if (!empty($company->category)) {
-        $data->category = $company->category;
+        $data->category = $companyrec->category;
     } else {
         $data->category = $CFG->defaultrequestcategory;
     }
