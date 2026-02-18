@@ -15,17 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_report_license_allocations
+ *
+ * @package   local_report_completion_overview
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_company_admin\event\dashboard_page_viewed;
+use core\session\manager;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
+use local_iomad\forms\{course_search_form, user_search_form};
 
-require_once(dirname(__FILE__) . '/../../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
+require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 
@@ -42,25 +47,31 @@ $perpage      = optional_param('perpage', get_config('local_iomad', 'max_list_us
 $search      = optional_param('search', '', PARAM_CLEAN);// Search string.
 $coursesearch = optional_param('coursesearch', '', PARAM_CLEAN);// Search string.
 $departmentid = optional_param('deptid', 0, PARAM_INTEGER);
-$courses = optional_param_array('courses', NULL, PARAM_INTEGER);
+$courses = optional_param_array('courses', null, PARAM_INTEGER);
 $licenseid    = optional_param('licenseid', 0, PARAM_INTEGER);
 $download  = optional_param('download', false, PARAM_BOOL);
 $showtext = optional_param('showtext', false, PARAM_BOOL);
 $ifirst = optional_param('firstinitial', '', PARAM_ALPHA);
 $ilast = optional_param('lastinitial', '', PARAM_ALPHA);
-$showexpiryonly = optional_param('showexpiryonly', get_config('local_report_completion_overview', 'showexpiryonly'), PARAM_BOOL);
+$showexpiryonly = optional_param(
+    'showexpiryonly',
+    get_config('local_report_completion_overview', 'showexpiryonly'),
+    PARAM_BOOL);
 $bycourse = optional_param('bycourse', false, PARAM_BOOL);
 $viewchildren = optional_param('viewchildren', true, PARAM_BOOL);
 $mandatoryonly = optional_param('mandatoryonly', false, PARAM_BOOL);
-$showenrolledonly = optional_param('showenrolledonly', get_config('local_report_completion_overview', 'showenrolledonly'), PARAM_BOOL);
+$showenrolledonly = optional_param(
+    'showenrolledonly',
+    get_config('local_report_completion_overview', 'showenrolledonly'),
+    PARAM_BOOL);
 
 // Deal with pagination.
 if ($perpage == 0) {
     $page = 0;
 }
 
-$params = array();
-
+// Set up page params.
+$params = [];
 $params['firstname'] = $firstname;
 $params['lastname'] = $lastname;
 $params['email'] = $email;
@@ -98,57 +109,17 @@ if ($sort == "name") {
     $sort = 'u.' . $sort;
 }
 
+// Log in and set up $PAGE.
 require_login();
 
-// Get course customfields.
-$usedfields = [];
-$customfields = $DB->get_records_sql("SELECT cff.* FROM
-                                      {customfield_field} cff
-                                      JOIN {customfield_category} cfc ON (cff.categoryid = cfc.id)
-                                      WHERE cfc.area = 'course'
-                                      AND cfc.component = 'core_course'
-                                      ORDER BY cfc.sortorder, cff.sortorder");
-foreach ($customfields as $customfield) {
-    ${'customfield_' . $customfield->shortname} = optional_param('customfield_' . $customfield->shortname, null, PARAM_ALPHANUMEXT);
-    if (!empty(${'customfield_' . $customfield->shortname})) {
-        $params['customfield_' . $customfield->shortname] = ${'customfield_' . $customfield->shortname};
-        $usedfields[$customfield->id] = ${'customfield_' . $customfield->shortname};
-    }
-}
-
+// Set the companyid.
 $systemcontext = context_system::instance();
-
-// Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
+// Can we even do anything?
 iomad::require_capability('local/report_completion_overview:view', $companycontext);
-
-// Are we showing any child companies?
-$canseechildren = false;
-if (iomad::has_capability('block/iomad_company_admin:canviewchildren', $companycontext)) {
-    $canseechildren = true;
-}
-
-// Get the associated department id.
-$parentlevel = company::get_company_parentnode($company->id);
-$companydepartment = $parentlevel->id;
-
-// Get the company additional optional user parameter names.
-$foundobj = iomad::add_user_filter_params($params, $companyid);
-$idlist = $foundobj->idlist;
-$foundfields = $foundobj->foundfields;
-
-// all companies?
-if ($parentslist = $company->get_parent_companies_recursive()) {
-    $companysql = " AND u.id NOT IN (
-                    SELECT userid FROM {company_users}
-                    WHERE managertype = 1
-                    AND companyid IN (" . implode(',', array_keys($parentslist)) ."))";
-} else {
-    $companysql = "";
-}
 
 // Correct the navbar.
 // Set the name for the page.
@@ -173,14 +144,15 @@ if (iomad::has_capability('local/report_completion:view', $companycontext)) {
 }
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Get the renderer.
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Javascript for fancy select.
-// Parameter is name of proper select form element followed by 1=submit its form
-$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', 1, optional_param('deptid', 0, PARAM_INT)));
+$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select',
+                             'init',
+                             ['deptid', 1, optional_param('deptid', 0, PARAM_INT)]);
 
 // Check the department is valid.
 if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
@@ -190,31 +162,86 @@ if (!empty($departmentid) && !company::check_valid_department($companyid, $depar
 $baseurl = new moodle_url(basename(__FILE__), $params);
 $returnurl = $baseurl;
 
+// Get course customfields.
+$usedfields = [];
+$customfields = $DB->get_records_sql("SELECT cff.* FROM
+                                      {customfield_field} cff
+                                      JOIN {customfield_category} cfc ON (cff.categoryid = cfc.id)
+                                      WHERE cfc.area = 'course'
+                                      AND cfc.component = 'core_course'
+                                      ORDER BY cfc.sortorder, cff.sortorder");
+foreach ($customfields as $customfield) {
+    ${'customfield_' . $customfield->shortname} = optional_param(
+        'customfield_' . $customfield->shortname,
+        null,
+        PARAM_ALPHANUMEXT);
+    if (!empty(${'customfield_' . $customfield->shortname})) {
+        $params['customfield_' . $customfield->shortname] = ${'customfield_' . $customfield->shortname};
+        $usedfields[$customfield->id] = ${'customfield_' . $customfield->shortname};
+    }
+}
+
+// Are we showing any child companies?
+$canseechildren = false;
+if (iomad::has_capability('block/iomad_company_admin:canviewchildren', $companycontext)) {
+    $canseechildren = true;
+}
+
+// Get the associated department id.
+$parentlevel = company::get_company_parentnode($company->id);
+$companydepartment = $parentlevel->id;
+
+// Get the company additional optional user parameter names.
+$foundobj = iomad::add_user_filter_params($params, $companyid);
+$idlist = $foundobj->idlist;
+$foundfields = $foundobj->foundfields;
+
 // Work out where the user sits in the company department tree.
 if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
-    $userlevels = array($parentlevel->id => $parentlevel->id);
+    $userlevels = [$parentlevel->id => $parentlevel->id];
 } else {
     $userlevels = $company->get_userlevel($USER);
 }
-
 $userhierarchylevel = key($userlevels);
 if ($departmentid == 0 ) {
     $departmentid = $userhierarchylevel;
+}
+
+// All companies?
+$companysql = "";
+$sqlparams = [];
+if ($parentslist = $company->get_parent_companies_recursive()) {
+    [$insql, $sqlparams] = $DB->get_in_or_equal(array_keys($parentslist),
+                                               SQL_PARAMS_NAMED,
+                                               'pcids');
+    $companysql = " AND u.id NOT IN (
+                    SELECT userid FROM {company_users}
+                    WHERE managertype = 1
+                    AND companyid IN {$insql})";
 }
 
 // Deal with where we are on the department tree.
 $currentdepartment = company::get_departmentbyid($departmentid);
 $showdepartments = company::get_subdepartments_list($currentdepartment);
 $showdepartments[$departmentid] = $departmentid;
-$departmentsql = " AND d.id IN (" . implode(',', array_keys($showdepartments)) . ")";
+[$insql, $coursesearchparams] = $DB->get_in_or_equal(array_keys($showdepartments),
+                                                     SQL_PARAMS_NAMED,
+                                                     'dids');
+$departmentsql = " AND d.id {$insql}";
+$sqlparams = $sqlparams + $coursesearchparams;
 
-$coursesform = new \local_iomad\forms\course_search_form($linkurl, $params);
+// Set up the course search form.
+$coursesform = new course_search_form($linkurl, $params);
+
 // Deal with company courses and search.
 $allcompanycourses = $company->get_menu_courses(true, false, false, false, false);
 $courselistsql = "";
-$coursesearchparams = [];
 if (!empty($allcompanycourses)) {
-    $courselistsql = " AND ic.courseid IN (" . implode(',', array_keys($allcompanycourses)) . ")";
+    [$insql, $inparams] = $DB->get_in_or_equal(array_keys($allcompanycourses),
+                                               SQL_PARAMS_NAMED,
+                                               'iccids');
+    $courselistsql = " AND ic.courseid {$insql}";
+    $coursesearchparams = $coursesearchparams + $inparams;
 }
 if ($showexpiryonly) {
     $courselistsql = " AND ic.validlength > 0";
@@ -257,17 +284,32 @@ if (!empty($usedfields)) {
     if (empty($fieldcourseids)) {
         $fieldcourseids[0] = "We didn't find any courses";
     }
-    $courselistsql .= " AND c.id IN (" . join(',', array_keys($fieldcourseids)) . ")";
+    [$insql, $inparams] = $DB->get_in_or_equal(array_keys($fieldcourseids),
+                                               SQL_PARAMS_NAMED,
+                                               'cfcids');
+    $courselistsql .= " AND c.id {$insql}";
+    $coursesearchparams = $coursesearchparams + $inparams;
 }
 
 // Are we only showing courses where the users are enrolled?
 $enrolledonlysql = "";
 if (!empty($showenrolledonly)) {
-    $enrolledonlysql = "AND c.id IN (
-                            SELECT lit.courseid FROM {local_iomad_track} lit
-                            JOIN {company_users} cu ON (lit.userid = cu.userid AND lit.companyid = cu.companyid)
-                            JOIN {department} d ON (cu.companyid = d.company AND lit.companyid = d.company AND cu.departmentid = d.id)
-                            WHERE 1 = 1 $departmentsql)";
+    $enrolledonlysql =
+    "AND c.id IN (
+         SELECT lit.courseid
+         FROM {local_iomad_track} lit
+         JOIN {company_users} cu ON (
+             lit.userid = cu.userid
+             AND lit.companyid = cu.companyid
+         )
+         JOIN {department} d ON (
+             cu.companyid = d.company
+             AND lit.companyid = d.company
+             AND cu.departmentid = d.id
+         )
+         WHERE 1 = 1
+         $departmentsql
+     )";
 }
 
 // Are we only showing mandatory courses?
@@ -279,6 +321,7 @@ if (!empty($mandatoryonly)) {
                          AND cca.mandatory = 1)";
 }
 
+// Get all courses if we haven't been passed any.
 if (empty($courses)) {
     $courses = $DB->get_records_sql("SELECT ic.courseid, c.fullname FROM {iomad_courses} ic
                                      JOIN {course} c ON (ic.courseid = c.id)
@@ -288,6 +331,7 @@ if (empty($courses)) {
                                      ORDER BY c.fullname", $coursesearchparams);
 }
 
+// Start defining expire courses.
 $expirecourses = $courses;
 
 // Get courses where we don't show the grade.
@@ -296,6 +340,7 @@ $gradelesscourses = $DB->get_records_sql("SELECT courseid FROM {iomad_courses} W
 // Setup the user search form.
 $searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
 
+// Conditionally start to display the page.
 if (!$download) {
     echo $output->header();
 
@@ -307,13 +352,6 @@ if (!$download) {
     foreach ($params as $param => $paramvalue) {
         $dataparams["data-" . $param] = $paramvalue;
     }
-
-    /*// Is this a parent company and can the user see any children?
-        if ($haschildren && $canseechildren) {
-            $dataparams['data-usingchildren'] = true;
-        } else {
-            $dataparams['data-usingchildren'] = false;
-        }*/
 
     // Do we use mandatory courses?
     if (get_config('local_iomad', 'use_mandatory_courses')) {
@@ -339,32 +377,34 @@ if (!$download) {
         // Display the tree selector thing.
         echo $output->display_tree_selector($company, $parentlevel, $baseurl, $params, $departmentid, false);
 
-        echo html_writer::start_tag('div', ['id' => 'completion_overview_forms',
-                                            'class' => 'report_completion_overview_forms',
-                                            'style' => 'display: inline-flex;']);
+        echo html_writer::start_tag('div', [
+            'id' => 'completion_overview_forms',
+            'class' => 'report_completion_overview_forms',
+            'style' => 'display: inline-flex;',
+        ]);
         // Set up the filter form.
         $options = $params;
         $options['companyid'] = $companyid;
-        $mform = new \local_iomad\forms\user_search_form(null, $options);
-        $mform->set_data(array('departmentid' => $departmentid));
+        $mform = new user_search_form(null, $options);
+        $mform->set_data(['departmentid' => $departmentid]);
 
         $mform->set_data($options);
         $mform->get_data();
 
         // Display the user filter form.
-        echo html_writer::start_tag('div', array('class' => 'iomadusersearchform'));
+        echo html_writer::start_tag('div', ['class' => 'iomadusersearchform']);
         $mform->display();
         echo html_writer::end_tag('div');
 
         // Display the course filter form.
-        echo html_writer::start_tag('div', array('class' => 'iomadcoursesearchform'));
+        echo html_writer::start_tag('div', ['class' => 'iomadcoursesearchform']);
         $coursesform->display();
         echo html_writer::end_tag('div');
         echo html_writer::end_tag('div');
     }
 }
 
-// Sort out downloadind
+// Sort out downloading.
 if ($download) {
     $page = 0;
     $perpage = 0;
@@ -374,17 +414,20 @@ $stredit   = get_string('edit');
 $returnurl = $CFG->wwwroot."/local/report_completion_overview/index.php";
 
 // Do we have any additional reporting fields?
-$extrafields = array();
+$extrafields = [];
 if (!empty(get_config('local_iomad', 'report_fields'))) {
-    $companyrec = $DB->get_record('company', array('id' => $companyid));
+    $companyrec = $DB->get_record('company', ['id' => $companyid]);
     foreach (explode(',', get_config('local_iomad', 'report_fields')) as $extrafield) {
         $extrafields[$extrafield] = new stdclass();
         $extrafields[$extrafield]->name = $extrafield;
         if (strpos($extrafield, 'profile_field') !== false) {
             // Its an optional profile field.
-            $profilefield = $DB->get_record('user_info_field', array('shortname' => str_replace('profile_field_', '', $extrafield)));
+            $profilefield = $DB->get_record(
+                'user_info_field',
+                ['shortname' => str_replace('profile_field_', '', $extrafield)]
+            );
             if ($profilefield->categoryid == $companyrec->profileid ||
-                !$DB->get_record('company', array('profileid' => $profilefield->categoryid))) {
+                !$DB->get_record('company', ['profileid' => $profilefield->categoryid])) {
                 $extrafields[$extrafield]->title = $profilefield->name;
                 $extrafields[$extrafield]->fieldid = $profilefield->id;
             } else {
@@ -396,18 +439,22 @@ if (!empty(get_config('local_iomad', 'report_fields'))) {
     }
 }
 
-//Set up the SQL to get the users.
-$coursesql = " AND lit.courseid IN (" . implode (',', array_keys($courses)) . ")";
+// Set up the SQL to get the users.
 $selectsql = "DISTINCT u.*";
-$fromsql = " {user} u JOIN {company_users} cu ON (u.id = cu.userid) JOIN {department} d ON (cu.departmentid = d.id and cu.companyid = d.company)";
+$fromsql = " {user} u
+             JOIN {company_users} cu ON (u.id = cu.userid)
+             JOIN {department} d ON (
+                 cu.departmentid = d.id
+                 AND cu.companyid = d.company
+             )";
 
 // Set up the headers for the form.
-// Remove page from the params and the url
+// Remove page from the params and the url.
 $sortparams = $params;
 unset($sortparams['page']);
 $sorturl = $baseurl;
 $sorturl->remove_params(['page']);
-// Set the sort for the headers
+// Set the sort for the headers.
 if (!$bycourse) {
     $sortparams['sort'] = 'firstname';
 } else {
@@ -452,12 +499,34 @@ if ($sort == 'd.name') {
     $sortparams['dir'] = $dir;
 }
 $departmentsort = new moodle_url($sorturl, $sortparams);
-// Set the headers for the form
+
+// Set the headers for the form.
 if (!$download) {
     if (!$bycourse) {
-        $headers = [html_writer::tag('a', get_string('firstname'), ['href' => $firstnamesort]) . '&nbsp/&nbsp' . html_writer::tag('a', get_string('lastname'), ['href' => $lastnamesort]),
-                    get_string('department', 'block_iomad_company_admin'),
-                    html_writer::tag('a', get_string('email'), ['href' => $emailsort])];
+        $headers = [
+            html_writer::tag(
+                'a',
+                get_string('firstname'),
+                [
+                    'href' => $firstnamesort,
+                ]
+            ) . '&nbsp/&nbsp' .
+                html_writer::tag(
+                    'a',
+                    get_string('lastname'),
+                    [
+                        'href' => $lastnamesort,
+                    ]
+                ),
+            get_string('department', 'block_iomad_company_admin'),
+            html_writer::tag(
+                'a',
+                get_string('email'),
+                [
+                    'href' => $emailsort,
+                ]
+            ),
+        ];
     } else {
         $headers = [html_writer::tag('a', get_string('course'), ['href' => $coursenamesort])];
     }
@@ -485,7 +554,18 @@ if (!$bycourse) {
             continue;
         }
         if (!$download) {
-            $headers[] = html_writer::tag('a', $allcompanycourses[$courseid], ['href' => new moodle_url($CFG->wwwroot . '/local/report_completion/index.php', ['courseid' => $courseid])]);
+            $headers[] = html_writer::tag(
+                'a',
+                $allcompanycourses[$courseid],
+                [
+                    'href' => new moodle_url(
+                        $CFG->wwwroot . '/local/report_completion/index.php',
+                        [
+                            'courseid' => $courseid,
+                        ]
+                    ),
+                ]
+            );
             $columns[] = "c" . $courseid . "coursename";
         } else {
             $headers[] = get_string('coursestatus', 'local_report_completion_overview', $allcompanycourses[$courseid]);
@@ -498,17 +578,16 @@ if (!$bycourse) {
     }
 }
 
-$sqlparams = array('companyid' => $companyid) + $searchinfo->searchparams;
+// Finish setting up the SQL parameters.
+$sqlparams['companyid'] = $companyid;
+$sqlparams = $sqlparams + $searchinfo->searchparams;
 
 // Deal with optional report fields.
 if (!empty($extrafields)) {
     foreach ($extrafields as $extrafield) {
         $headers[] = $extrafield->title;
         $columns[] = $extrafield->name;
-        if (!empty($extrafield->fieldid)) {
-            // Its a profile field.
-            // Skip it this time as these may not have data.
-        } else {
+        if (empty($extrafield->fieldid)) {
             $selectsql .= ", u." . $extrafield->name;
         }
     }
@@ -516,7 +595,9 @@ if (!empty($extrafields)) {
         if (!empty($extrafield->fieldid)) {
             // Its a profile field.
             $selectsql .= ", P" . $extrafield->fieldid . ".data AS " . $extrafield->name;
-            $fromsql .= " LEFT JOIN {user_info_data} P" . $extrafield->fieldid . " ON (u.id = P" . $extrafield->fieldid . ".userid AND P".$extrafield->fieldid . ".fieldid = :p" . $extrafield->fieldid . "fieldid )";
+            $fromsql .= " LEFT JOIN {user_info_data} P" . $extrafield->fieldid .
+                        " ON (u.id = P" . $extrafield->fieldid . ".userid
+                          AND P".$extrafield->fieldid . ".fieldid = :p" . $extrafield->fieldid . "fieldid )";
             $sqlparams["p".$extrafield->fieldid."fieldid"] = $extrafield->fieldid;
         }
     }
@@ -536,15 +617,32 @@ $usersort = $sort;
 if ($bycourse) {
     $usersort = "u.lastname";
 }
-$wheresql = $searchinfo->sqlsearch . " AND cu.companyid = :companyid $departmentsql $companysql $ifirstsort $ilastsort ORDER BY $usersort $dir";
-$countwheresql = $searchinfo->sqlsearch . " AND cu.companyid = :companyid $departmentsql $companysql $ifirstsort $ilastsort";
+
+// Set up the final SQL.
+$wheresql = $searchinfo->sqlsearch .
+            " AND cu.companyid = :companyid
+              $departmentsql
+              $companysql
+              $ifirstsort
+              $ilastsort
+              ORDER BY $usersort $dir";
+$countwheresql = $searchinfo->sqlsearch .
+                 " AND cu.companyid = :companyid
+                   $departmentsql
+                   $companysql
+                   $ifirstsort $ilastsort";
 $countsql = "SELECT COUNT(u.id) FROM $fromsql WHERE $countwheresql";
 
 // Get the users.
-$userlist = $DB->get_records_sql("SELECT $selectsql FROM $fromsql WHERE $wheresql", $sqlparams, $page*$perpage, $perpage);
+$userlist = $DB->get_records_sql("SELECT $selectsql
+                                  FROM $fromsql
+                                  WHERE $wheresql",
+                                 $sqlparams,
+                                 $page * $perpage,
+                                 $perpage);
 $usercount = $DB->count_records_sql($countsql, $sqlparams);
 
-// Populate all of the course data
+// Populate all of the course data.
 $coursedetailsql = "SELECT lit.*
                     FROM {local_iomad_track} lit
                     WHERE lit.userid = :userid
@@ -554,6 +652,8 @@ $coursedetailsql = "SELECT lit.*
                       FROM {local_iomad_track}
                       WHERE userid = lit.userid
                       AND courseid = lit.courseid)";
+
+// Showing by user.
 if (!$bycourse) {
     foreach ($userlist as $userid => $user) {
         $usercourses = [];
@@ -579,7 +679,7 @@ if (!$bycourse) {
                     $comprecord->indate = $indaterec->timeexpires;
                     $comprecord->lastcompleted = $indaterec->timecompleted;
                     $comprecord->timeexpires = $indaterec->timeexpires;
-                // Do we have an out-date record?
+                    // Do we have an out-date record?
                 } else if ($outdate = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
                                                             WHERE userid = :userid
                                                             AND courseid = :courseid
@@ -611,6 +711,10 @@ if (!$bycourse) {
     }
 } else {
     foreach ($courses as $courseid => $junk) {
+        // Does the company have the course any more?
+        if (empty($allcompanycourses[$courseid])) {
+            continue;
+        }
         $courseusers = [];
         foreach ($userlist as $userid => $user) {
             if ($comprecord = $DB->get_record_sql($coursedetailsql, ['userid' => $userid, 'courseid' => $courseid])) {
@@ -631,7 +735,7 @@ if (!$bycourse) {
                     $indaterec = reset($indate);
                     $comprecord->lastcompleted = $indaterec->timecompleted;
                     $comprecord->timeexpires = $indaterec->timeexpires;
-                // Do we have an out-date record?
+                    // Do we have an out-date record?
                 } else if ($outdate = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
                                                             WHERE userid = :userid
                                                             AND courseid = :courseid
@@ -662,9 +766,10 @@ if (!$bycourse) {
     }
 }
 
+// Conditionally set up the paging bar.
 if (!$download) {
     $pagingurl = new moodle_url($baseurl, $params);
-    // Create a new variable for the initials bar url and remove the page parameter
+    // Create a new variable for the initials bar url and remove the page parameter.
     $initialsbarurl = $pagingurl;
     $initialsbarurl->remove_params(['page']);
     echo $OUTPUT->initials_bar($ifirst, 'firstinitial', get_string('firstname'), 'firstinitial', $initialsbarurl);
@@ -691,10 +796,24 @@ if (!$bycourse) {
 }
 $table->head = $headers;
 
+// Is the display by user or by course?
 if (!$bycourse) {
     foreach ($userlist as $user) {
         if (!$download) {
-            $row = [html_writer::tag("a", fullname($user), ['href' => new moodle_url($CFG->wwwroot . '/local/report_users/userdisplay.php', ['userid' => $user->id])])];
+            $row = [
+                html_writer::tag(
+                    "a",
+                    fullname($user),
+                    [
+                        'href' => new moodle_url(
+                            $CFG->wwwroot . '/local/report_users/userdisplay.php',
+                            [
+                                'userid' => $user->id,
+                            ]
+                        ),
+                    ]
+                ),
+            ];
         } else {
             $row = [fullname($user)];
         }
@@ -709,23 +828,21 @@ if (!$bycourse) {
         $count = count($userdepartments);
         $current = 1;
         if ($count > 5 && !$download) {
-            $departmentinfo .= "<details><summary>" . get_string('show') . "</summary>";
+            $departmentinfo .= html_writer::start_tag('details') .
+                               html_writer::tag('summary', get_string('show'));
         }
-        $first = true;
+        $departmentnames = [];
         foreach ($userdepartments as $userdepartment) {
-            $departmentinfo .= format_string($userdepartment->name);
-            if ($current < $count) {
-                if (!$download) {
-                    $departmentinfo .= ",<br>";
-                } else {
-                    $departmentinfo .= ",\n";
-                }
-            }
-            $current++;
+            $departmentnames[] = format_string($userdepartment->name);
+        }
+        if (!$download) {
+            $departmentinfo .= implode(",<br>", $departmentnames);
+        } else {
+            $departmentinfo .= implode(",\n", $departmentnames);
         }
 
         if ($count > 5) {
-            $departmentinfo .= "</details>";
+            $departmentinfo .= html_writer::end_tag("details");
         }
         $row[] = $departmentinfo;
         $row[] = $user->email;
@@ -768,31 +885,62 @@ if (!$bycourse) {
             // Make the extra info.
             if (!$showfulldetails) {
                 if (empty($coursesummary['timeexpired'])) {
-                    $rowtext = get_string('coursesummary_partial', 'local_report_completion_overview', (object) $coursesummary);
+                    $rowtext = get_string(
+                        'coursesummary_partial',
+                        'local_report_completion_overview',
+                        (object) $coursesummary);
                 } else {
                     if ($usercourse->timeexpired > $runtime) {
-                        $rowtext = get_string('coursesummary_partial_extra_indate', 'local_report_completion_overview', (object) $coursesummary);
+                        $rowtext = get_string(
+                            'coursesummary_partial_extra_indate',
+                            'local_report_completion_overview',
+                            (object) $coursesummary);
                     } else {
-                        $rowtext = get_string('coursesummary_partial_extra_outdate', 'local_report_completion_overview', (object) $coursesummary);
+                        $rowtext = get_string(
+                            'coursesummary_partial_extra_outdate',
+                            'local_report_completion_overview',
+                            (object) $coursesummary);
                     }
                 }
             } else {
-                if (!empty($expirecourses[$usercourse->courseid]) && empty($gradelesscourses[$usercourse->courseid])) {
+                if (!empty($expirecourses[$usercourse->courseid]) &&
+                    empty($gradelesscourses[$usercourse->courseid])) {
                     if (empty($coursesummary['timeexpired'])) {
-                        $rowtext = get_string('coursesummary', 'local_report_completion_overview', (object) $coursesummary);
+                        $rowtext = get_string(
+                            'coursesummary',
+                            'local_report_completion_overview',
+                            (object) $coursesummary);
                     } else {
-                    if ($usercourse->timeexpired > $runtime) {
-                            $rowtext = get_string('coursesummary_extra_indate', 'local_report_completion_overview', (object) $coursesummary);
+                        if ($usercourse->timeexpired > $runtime) {
+                            $rowtext = get_string(
+                                'coursesummary_extra_indate',
+                                'local_report_completion_overview',
+                                (object) $coursesummary);
                         } else {
-                            $rowtext = get_string('coursesummary_extra_outdate', 'local_report_completion_overview', (object) $coursesummary);
+                            $rowtext = get_string(
+                                'coursesummary_extra_outdate',
+                                'local_report_completion_overview',
+                                (object) $coursesummary);
                         }
                     }
-                } else if (empty($expirecourses[$usercourse->courseid]) && empty($gradelesscourses[$usercourse->courseid])) {
-                    $rowtext = get_string('coursesummary_noexpiry', 'local_report_completion_overview', (object) $coursesummary);
-                } else if (!empty($expirecourses[$usercourse->courseid]) && !empty($gradelesscourses[$usercourse->courseid])) {
-                    $rowtext = get_string('coursesummary_nograde', 'local_report_completion_overview', (object) $coursesummary);
-                } else if (empty($expirecourses[$usercourse->courseid]) && !empty($gradelesscourses[$usercourse->courseid])) {
-                    $rowtext = get_string('coursesummary_nograde_noexpiry', 'local_report_completion_overview', (object) $coursesummary);
+                } else if (empty($expirecourses[$usercourse->courseid]) &&
+                           empty($gradelesscourses[$usercourse->courseid])) {
+                    $rowtext = get_string(
+                        'coursesummary_noexpiry',
+                        'local_report_completion_overview',
+                        (object) $coursesummary);
+                } else if (!empty($expirecourses[$usercourse->courseid]) &&
+                           !empty($gradelesscourses[$usercourse->courseid])) {
+                    $rowtext = get_string(
+                        'coursesummary_nograde',
+                        'local_report_completion_overview',
+                        (object) $coursesummary);
+                } else if (empty($expirecourses[$usercourse->courseid]) &&
+                !empty($gradelesscourses[$usercourse->courseid])) {
+                    $rowtext = get_string(
+                        'coursesummary_nograde_noexpiry',
+                        'local_report_completion_overview',
+                        (object) $coursesummary);
                 }
             }
 
@@ -832,13 +980,19 @@ if (!$bycourse) {
                         $rowclass .= "-outdate";
                     }
                 }
-                if (!empty($usercourse->timeenrolled) && !empty($usercourse->timecompleted) && $usercourse->timeexpires > $runtime) {
+                if (!empty($usercourse->timeenrolled) &&
+                    !empty($usercourse->timecompleted) &&
+                    $usercourse->timeexpires > $runtime) {
                     $rowclass = "indate";
                 }
-                if (!empty($usercourse->timeenrolled) && !empty($usercourse->timecompleted) && $usercourse->timeexpires < $runtime + $warningduration) {
+                if (!empty($usercourse->timeenrolled) &&
+                    !empty($usercourse->timecompleted) &&
+                    $usercourse->timeexpires < $runtime + $warningduration) {
                     $rowclass = "expiring";
                 }
-                if (!empty($usercourse->timeenrolled) && !empty($usercourse->timecompleted) && $usercourse->timeexpires < $runtime) {
+                if (!empty($usercourse->timeenrolled) &&
+                    !empty($usercourse->timecompleted) &&
+                    $usercourse->timeexpires < $runtime) {
                     if (empty($usercourse->timeexpires)) {
                         $rowclass = "indate";
                     } else {
@@ -853,9 +1007,22 @@ if (!$bycourse) {
                 $row[] = $coursesummary['timecompleted'];
                 $row[] = $coursesummary['timeexpires'];
             } else if (!$showtext) {
-                $row[] = "<div class='completion_overview_icon' title='$rowtext'><span class='dot $rowclass'></span></div>";
+                $row[] = html_writer::tag(
+                    'div',
+                    html_writer::tag(
+                        'span',
+                        '',
+                        [
+                            'class' => 'dot ' . $rowclass,
+                        ]
+                    ),
+                    [
+                        'class' => 'completion_overview_icon',
+                        'title' => $rowtext,
+                    ]
+                );
             } else {
-                $row[] = "<span>" . nl2br($rowtext) . "</span>";
+                $row[] = html_writer::tag('span', nl2br($rowtext));
             }
         }
         $table->data[] = $row;
@@ -864,7 +1031,18 @@ if (!$bycourse) {
     // Doing this by course instead.
     foreach ($userlist as $user) {
         if (!$download) {
-            $headers[] = html_writer::tag("a", fullname($user), ['href' => new moodle_url($CFG->wwwroot . '/local/report_users/userdisplay.php', ['userid' => $user->id])]);
+            $headers[] = html_writer::tag(
+                "a",
+                fullname($user),
+                [
+                    'href' => new moodle_url(
+                        $CFG->wwwroot . '/local/report_users/userdisplay.php',
+                        [
+                            'userid' => $user->id,
+                        ]
+                    ),
+                ]
+            );
             $columns[] = "u" . $user->id;
         } else {
             $headers[] = fullname($user);
@@ -875,9 +1053,26 @@ if (!$bycourse) {
     $table->head = $headers;
 
     foreach ($courses as $course) {
+        // Does the tenant still have the course?
+        if (empty($allcompanycourses[$course->courseid])) {
+            continue;
+        }
         $runtime = time();
         if (!$download) {
-            $row = [html_writer::tag("a", format_string($course->fullname), ['href' => new moodle_url($CFG->wwwroot . '/local/report_completion/index.php', ['courseid' => $course->courseid])])];
+            $row = [
+                html_writer::tag(
+                    "a",
+                    format_string($course->fullname),
+                    [
+                        'href' => new moodle_url(
+                            $CFG->wwwroot . '/local/report_completion/index.php',
+                            [
+                                'courseid' => $course->courseid,
+                            ]
+                        ),
+                    ]
+                ),
+            ];
         } else {
             $row = [format_string($course->fullname)];
         }
@@ -918,31 +1113,62 @@ if (!$bycourse) {
             // Make the extra info.
             if (!$showfulldetails) {
                 if (empty($coursesummary['timeexpired'])) {
-                    $rowtext = get_string('coursesummary_partial', 'local_report_completion_overview', (object) $coursesummary);
+                    $rowtext = get_string(
+                        'coursesummary_partial',
+                        'local_report_completion_overview',
+                        (object) $coursesummary);
                 } else {
                     if ($usercourse->timeexpired > $runtime) {
-                        $rowtext = get_string('coursesummary_partial_extra_indate', 'local_report_completion_overview', (object) $coursesummary);
+                        $rowtext = get_string(
+                            'coursesummary_partial_extra_indate',
+                            'local_report_completion_overview',
+                            (object) $coursesummary);
                     } else {
-                        $rowtext = get_string('coursesummary_partial_extra_outdate', 'local_report_completion_overview', (object) $coursesummary);
+                        $rowtext = get_string(
+                            'coursesummary_partial_extra_outdate',
+                            'local_report_completion_overview',
+                            (object) $coursesummary);
                     }
                 }
             } else {
-                if (!empty($expirecourses[$usercourse->courseid]) && empty($gradelesscourses[$usercourse->courseid])) {
+                if (!empty($expirecourses[$usercourse->courseid]) &&
+                    empty($gradelesscourses[$usercourse->courseid])) {
                     if (empty($coursesummary['timeexpired'])) {
-                        $rowtext = get_string('coursesummary', 'local_report_completion_overview', (object) $coursesummary);
+                        $rowtext = get_string(
+                            'coursesummary',
+                            'local_report_completion_overview',
+                            (object) $coursesummary);
                     } else {
-                    if ($usercourse->timeexpired > $runtime) {
-                            $rowtext = get_string('coursesummary_extra_indate', 'local_report_completion_overview', (object) $coursesummary);
+                        if ($usercourse->timeexpired > $runtime) {
+                            $rowtext = get_string(
+                                'coursesummary_extra_indate',
+                                'local_report_completion_overview',
+                                (object) $coursesummary);
                         } else {
-                            $rowtext = get_string('coursesummary_extra_outdate', 'local_report_completion_overview', (object) $coursesummary);
+                            $rowtext = get_string(
+                                'coursesummary_extra_outdate',
+                                'local_report_completion_overview',
+                                (object) $coursesummary);
                         }
                     }
-                } else if (empty($expirecourses[$usercourse->courseid]) && empty($gradelesscourses[$usercourse->courseid])) {
-                    $rowtext = get_string('coursesummary_noexpiry', 'local_report_completion_overview', (object) $coursesummary);
-                } else if (!empty($expirecourses[$usercourse->courseid]) && !empty($gradelesscourses[$usercourse->courseid])) {
-                    $rowtext = get_string('coursesummary_nograde', 'local_report_completion_overview', (object) $coursesummary);
-                } else if (empty($expirecourses[$usercourse->courseid]) && !empty($gradelesscourses[$usercourse->courseid])) {
-                    $rowtext = get_string('coursesummary_nograde_noexpiry', 'local_report_completion_overview', (object) $coursesummary);
+                } else if (empty($expirecourses[$usercourse->courseid]) &&
+                           empty($gradelesscourses[$usercourse->courseid])) {
+                    $rowtext = get_string(
+                        'coursesummary_noexpiry',
+                        'local_report_completion_overview',
+                        (object) $coursesummary);
+                } else if (!empty($expirecourses[$usercourse->courseid]) &&
+                           !empty($gradelesscourses[$usercourse->courseid])) {
+                    $rowtext = get_string(
+                        'coursesummary_nograde',
+                        'local_report_completion_overview',
+                        (object) $coursesummary);
+                } else if (empty($expirecourses[$usercourse->courseid]) &&
+                           !empty($gradelesscourses[$usercourse->courseid])) {
+                    $rowtext = get_string(
+                        'coursesummary_nograde_noexpiry',
+                        'local_report_completion_overview',
+                        (object) $coursesummary);
                 }
             }
 
@@ -977,13 +1203,16 @@ if (!$bycourse) {
                         $rowclass .= "-outdate";
                     }
                 }
-                if (!empty($usercourse->timeenrolled) && !empty($usercourse->timecompleted) && $usercourse->timeexpires > $runtime) {
+                if (!empty($usercourse->timeenrolled) && !empty($usercourse->timecompleted)
+                    && $usercourse->timeexpires > $runtime) {
                     $rowclass = "indate";
                 }
-                if (!empty($usercourse->timeenrolled) && !empty($usercourse->timecompleted) && $usercourse->timeexpires < $runtime + get_config('local_report_completion_overview', 'warningduration')) {
+                if (!empty($usercourse->timeenrolled) && !empty($usercourse->timecompleted) &&
+                $usercourse->timeexpires < $runtime + get_config('local_report_completion_overview', 'warningduration')) {
                     $rowclass = "expiring";
                 }
-                if (!empty($usercourse->timeenrolled) && !empty($usercourse->timecompleted) && $usercourse->timeexpires < $runtime) {
+                if (!empty($usercourse->timeenrolled) && !empty($usercourse->timecompleted) &&
+                    $usercourse->timeexpires < $runtime) {
                     if (empty($usercourse->timeexpires)) {
                         $rowclass = "indate";
                     } else {
@@ -998,14 +1227,29 @@ if (!$bycourse) {
                 $row[] = $coursesummary['timecompleted'];
                 $row[] = $coursesummary['timeexpires'];
             } else if (!$showtext) {
-                $row[] = "<div class='completion_overview_icon' title='$rowtext'><span class='dot $rowclass'></span></div>";
+                $row[] = html_writer::tag(
+                    'div',
+                    html_writer::tag(
+                        'span',
+                        '',
+                        [
+                            'class' => 'dot ' . $rowclass,
+                        ]
+                    ),
+                    [
+                        'class' => 'completion_overview_icon',
+                        'title' => $rowtext,
+                    ]
+                );
             } else {
-                $row[] = "<span>" . nl2br($rowtext) . "</span>";
+                $row[] = html_writer::tag('span', nl2br($rowtext));
             }
         }
         $table->data[] = $row;
     }
 }
+
+// Conditionally display the table and footer.
 if (!$download) {
     echo html_writer::table($table);
     echo $output->footer();
@@ -1025,17 +1269,16 @@ if (!$download) {
     set_time_limit(0);
 
     // Close the session so that the users other tabs in the same session are not blocked.
-    \core\session\manager::write_close();
+    manager::write_close();
 
-    //$dataformat->set_filename($filename);
-    $dataformat->set_filename("test");
+    $dataformat->set_filename("report_completion_overview");
     $dataformat->send_http_headers();
-    $dataformat->set_sheettitle("Testsheet");
+    $dataformat->set_sheettitle("report");
     $dataformat->start_output();
     $dataformat->start_sheet($headers);
 
     $rownum = 1;
-    // Output the rows
+    // Output the rows.
     foreach ($table->data as $row) {
         $dataformat->write_record($row, $rownum++);
     }

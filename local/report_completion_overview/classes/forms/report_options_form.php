@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Local report completion form options dynamic form
+ * Local report completion overview form options dynamic form
  *
- * @package   local_report_completion
+ * @package   local_report_completion_overview
  * @copyright 2026 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,15 +25,16 @@
 
 namespace local_report_completion_overview\forms;
 
+use context;
+use context_system;
 use core_form\dynamic_form;
 use moodle_url;
-use context_system;
-use context;
+use html_writer;
 
 /**
- * Local report completion form options dynamic form
+ * Local report completion overview form options dynamic form
  *
- * @package   local_report_completion
+ * @package   local_report_completion_overview
  * @copyright 2026 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -50,9 +51,9 @@ class report_options_form extends dynamic_form {
 
         $mform =& $this->_form;
 
-        $mform->addElement('html', '<div class="iomad_report_options_form">');
+        $mform->addElement('html', html_writer::start_tag('div', ['class' => 'iomad_report_options_form']));
 
-        $mform->addElement('html', '<div class="iomad_report_options_form_element">');
+        $mform->addElement('html', html_writer::start_tag('div', ['class' => 'iomad_report_options_form_element']));
         $mform->addElement('advcheckbox',
                            'bycourse',
                            get_string('report_options', 'local_report_completion'),
@@ -64,16 +65,16 @@ class report_options_form extends dynamic_form {
                         50 => 50,
                         0 => get_string('all')];
         $mform->addElement('select', 'perpage', get_string('perpage'), $numberarray);
-        $mform->addElement('html', '</div>');
+        $mform->addElement('html', html_writer::end_tag('div'));
 
-        $mform->addElement('html', '<div class="iomad_report_options_form_element">');
+        $mform->addElement('html', html_writer::start_tag('div', ['class' => 'iomad_report_options_form_element']));
         $mform->addElement('advcheckbox',
                            'showsuspended',
                            get_string('user_options', 'local_report_completion'),
                            get_string('showsuspendedusers', 'local_report_completion'));
-        $mform->addElement('html', '</div>');
+        $mform->addElement('html', html_writer::end_tag('div'));
 
-        $mform->addElement('html', '<div class="iomad_report_options_form_element">');
+        $mform->addElement('html', html_writer::start_tag('div', ['class' => 'iomad_report_options_form_element']));
         $mform->addElement('advcheckbox',
                            'showexpiryonly',
                            get_string('course_options', 'local_report_completion'),
@@ -86,9 +87,8 @@ class report_options_form extends dynamic_form {
                            'mandatoryonly',
                            '',
                            get_string('mandatoryonly', 'local_report_completion'));
-        $mform->addElement('html', '</div>');
-
-        $mform->addElement('html', '</div>');
+        $mform->addElement('html', html_writer::end_tag('div'));
+        $mform->addElement('html', html_writer::end_tag('div'));
 
         // Add the hidden elements.
         $mform->addelement('hidden', 'firstname');
@@ -157,7 +157,7 @@ class report_options_form extends dynamic_form {
         $search = $this->optional_param('search', '', PARAM_CLEAN); // Search string.
         $coursesearch = $this->optional_param('coursesearch', '', PARAM_CLEAN); // Search string.
         $departmentid = $this->optional_param('deptid', 0, PARAM_INT);
-        $courses = $this->optional_param('courses', NULL, PARAM_RAW);
+        $courses = $this->optional_param('courses', null, PARAM_RAW);
         $licenseid = $this->optional_param('licenseid', 0, PARAM_INT);
         $showtext = $this->optional_param('showtext', false, PARAM_BOOL);
         $ifirst = $this->optional_param('firstinitial', '', PARAM_ALPHA);
@@ -169,7 +169,6 @@ class report_options_form extends dynamic_form {
         $showenrolledonly = $this->optional_param('showenrolledonly', 0, PARAM_BOOL);
         $usingchildren = $this->optional_param('usingchildren', false, PARAM_BOOL);
         $usingmandatory = $this->optional_param('usingmandatory', false, PARAM_BOOL);
-
 
         // Send it.
         $data = [
@@ -233,7 +232,7 @@ class report_options_form extends dynamic_form {
         $search = $this->optional_param('search', '', PARAM_CLEAN); // Search string.
         $coursesearch = $this->optional_param('coursesearch', '', PARAM_CLEAN); // Search string.
         $departmentid = $this->optional_param('deptid', 0, PARAM_INT);
-        $courses = $this->optional_param('courses', NULL, PARAM_RAW);
+        $courses = $this->optional_param('courses', null, PARAM_RAW);
         $licenseid = $this->optional_param('licenseid', 0, PARAM_INT);
         $showtext = $this->optional_param('showtext', false, PARAM_BOOL);
         $ifirst = $this->optional_param('firstinitial', '', PARAM_ALPHA);
@@ -245,7 +244,6 @@ class report_options_form extends dynamic_form {
         $showenrolledonly = $this->optional_param('showenrolledonly', 0, PARAM_BOOL);
         $usingchildren = $this->optional_param('usingchildren', false, PARAM_BOOL);
         $usingmandatory = $this->optional_param('usingmandatory', false, PARAM_BOOL);
-
 
         // Send it.
         $data = [
@@ -271,6 +269,6 @@ class report_options_form extends dynamic_form {
             'usingmandatory' => $usingmandatory,
         ];
 
-       return new moodle_url('/local/report_completion_overview/index.php', $data);
+        return new moodle_url('/local/report_completion_overview/index.php', $data);
     }
 }
