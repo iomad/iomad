@@ -55,9 +55,9 @@ $perpage = optional_param('perpage', get_config('local_iomad', 'max_list_users')
 $acl = optional_param('acl', '0', PARAM_INT);           // Id of user to tweak mnet ACL (requires $access).
 $search = optional_param('search', '', PARAM_CLEAN);// Search string.
 $departmentid = optional_param('deptid', 0, PARAM_INTEGER);
-$firstname = optional_param('firstname', 0, PARAM_CLEAN);
+$firstname = optional_param('firstname', '', PARAM_CLEAN);
 $lastname = optional_param('lastname', '', PARAM_CLEAN);   // Md5 confirmation hash.
-$email = optional_param('email', 0, PARAM_CLEAN);
+$email = optional_param('email', '', PARAM_CLEAN);
 $showall = optional_param('showall', false, PARAM_BOOL);
 $usertype = optional_param('usertype', 'a', PARAM_ALPHANUM);
 $edit = optional_param('edit', -1, PARAM_BOOL);
@@ -91,7 +91,7 @@ $company = new company($companyid);
 iomad::require_capability('block/iomad_company_admin:view_editusers', $companycontext);
 
 // Are we able to view all users regardless of tenant?
-if (!iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
+if (!iomad::has_capability('block/iomad_company_admin:company_add', $systemcontext)) {
     $showall = false;
 }
 $params['showall'] = $showall;
@@ -494,41 +494,28 @@ if (!empty(get_config('local_iomad', 'report_fields'))) {
 $searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
 
 // Set some defaults.
-$sqlsearch = " AND 1 = 2 ";
+if ($showall) {
+    $departmentsearch = "";
+} else {
+    $departmentsearch = " AND 1 = 2 ";
+}
+$sqlsearch = " AND u.id NOT IN (" . $CFG->siteadmins . ")";
 $sqlparams = [];
 $managertypesql = "";
 $companysql = "";
 
-// Get all or company users depending on capability.
-if (iomad::has_capability('block/iomad_company_admin:editallusers', $companycontext)) {
-    // Make sure we dont display site admins.
-    // Set default search to something which cant happen.
-    $sqlsearch = " AND u.id NOT IN (" . $CFG->siteadmins . ")";
-
-    // Get department users.
-    $departmentusers = company::get_recursive_department_users($departmentid);
-    if (count($departmentusers) > 0 || $showall) {
-        if (!$showall) {
-            [$insql, $inparams] = $DB->get_in_or_equal(array_keys($departmentusers),
-                                                       SQL_PARAMS_NAMED,
-                                                       'duids');
-            $sqlsearch .= " AND u.id {$insql} ";
-            $sqlparams = $sqlparams + $inparams;
-        }
-    }
-} else {
-    // Get users company association.
-    $departmentusers = company::get_recursive_department_users($departmentid);
-    if (count($departmentusers) > 0) {
-        if (empty($showsuspended)) {
-            [$insql, $inparams] = $DB->get_in_or_equal(array_keys($departmentusers),
-                                                       SQL_PARAMS_NAMED,
-                                                       'duids');
-            $sqlsearch = " AND u.id {$insql} ";
-            $sqlparams = $sqlparams + $inparams;
-        }
+// Get department users.
+$departmentusers = company::get_recursive_department_users($departmentid);
+if (count($departmentusers) > 0) {
+    if (!$showall) {
+        [$insql, $inparams] = $DB->get_in_or_equal(array_keys($departmentusers),
+                                                   SQL_PARAMS_NAMED,
+                                                   'duids');
+        $departmentsearch = " AND u.id {$insql} ";
+        $sqlparams = $sqlparams + $inparams;
     }
 }
+$sqlsearch .= $departmentsearch;
 
 // Return the right type of user.
 if ($usertype != 'a' ) {
