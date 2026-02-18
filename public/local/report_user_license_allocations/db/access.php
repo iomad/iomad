@@ -15,24 +15,28 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_report_license_usage
+ * IOMAD user license allocations report capabilities
+ *
+ * @package   local_report_user_license_allocations
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$capabilities = array(
+defined('MOODLE_INTERNAL') || die;
 
-    'local/report_user_license_allocations:view' => array(
+$capabilities = [
+
+    'local/report_user_license_allocations:view' => [
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
             'clientadministrator' => CAP_ALLOW,
             'clientreporter' => CAP_ALLOW,
-            'companyreporter' => CAP_ALLOW
-        ),
-    )
-);
+            'companyreporter' => CAP_ALLOW,
+        ],
+    ],
+];

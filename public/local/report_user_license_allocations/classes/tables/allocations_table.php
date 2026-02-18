@@ -15,7 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_report_license_usage
+ * IOMAD user license allocations report allocation table class
+ *
+ * @package   local_report_user_license_allocations
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,16 +25,20 @@
 
 namespace local_report_user_license_allocations\tables;
 
-use \table_sql;
-use \context_system;
-use \moodle_url;
+use context_system;
+use html_writer;
 use local_iomad\iomad;
+use moodle_url;
+use table_sql;
 
-
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir.'/tablelib.php');
-
+/**
+ * IOMAD user license allocations report allocation table class
+ *
+ * @package   local_report_user_license_allocations
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class allocations_table extends table_sql {
 
     /**
@@ -47,10 +53,19 @@ class allocations_table extends table_sql {
         $userurl = '/local/report_users/userdisplay.php';
 
         if (!$this->is_downloading() && iomad::has_capability('local/report_users:view', $companycontext)) {
-            return "<a href='".
-                    new moodle_url($userurl, array('userid' => $row->id,
-                                                   'courseid' => $row->courseid)).
-                    "'>$name</a>";
+            return html_writer::tag(
+                'a',
+                $name,
+                [
+                    'href' => new moodle_url(
+                        $userurl,
+                        [
+                            'userid' => $row->id,
+                            'courseid' => $row->courseid,
+                        ],
+                    ),
+                ]
+            );
         } else {
             return $name;
         }
@@ -63,16 +78,24 @@ class allocations_table extends table_sql {
      */
     public function col_licenseallocated($row) {
         global $DB;
-        $allocated = $DB->count_records('local_report_user_lic_allocs',
-                                        array('userid' => $row->id,
-                                              'licenseid' => $row->licenseid,
-                                              'courseid' => $row->courseid,
-                                              'action' => 1));
-        $unallocated = $DB->count_records('local_report_user_lic_allocs',
-                                        array('userid' => $row->id,
-                                              'licenseid' => $row->licenseid,
-                                              'courseid' => $row->courseid,
-                                              'action' => 0));
+        $allocated = $DB->count_records(
+            'local_report_user_lic_allocs',
+            [
+                'userid' => $row->id,
+                'licenseid' => $row->licenseid,
+                'courseid' => $row->courseid,
+                'action' => 1,
+            ]
+        );
+        $unallocated = $DB->count_records(
+            'local_report_user_lic_allocs',
+            [
+                'userid' => $row->id,
+                'licenseid' => $row->licenseid,
+                'courseid' => $row->courseid,
+                'action' => 0,
+            ]
+        );
         if ($allocated > $unallocated) {
             return get_string('yes');
         } else {
@@ -88,25 +111,31 @@ class allocations_table extends table_sql {
     public function col_dateallocated($row) {
         global $CFG, $DB;
 
-        $allocations = $DB->get_records('local_report_user_lic_allocs',
-                                        array('userid' => $row->id,
-                                              'licenseid' => $row->licenseid,
-                                              'courseid' => $row->courseid,
-                                              'action' => 1));
+        $allocations = $DB->get_records(
+            'local_report_user_lic_allocs',
+            [
+                'userid' => $row->id,
+                'licenseid' => $row->licenseid,
+                'courseid' => $row->courseid,
+                'action' => 1,
+            ]
+        );
         $count = count($allocations);
         $current = 1;
         $returnstr = "";
         if ($count > 5) {
-            $returnstr = "<details><summary>" . get_string('show') . "</summary>";
+            $returnstr = html_writer::start_tag('details') .
+                         html_writer::tag('summary', get_string('show'));
         }
 
         // Process them.
         foreach ($allocations as $allocation) {
-            $returnstr .= userdate($allocation->issuedate, get_config('local_iomad', 'date_format')) . "<br>";
+            $returnstr .= userdate($allocation->issuedate, get_config('local_iomad', 'date_format')) .
+                          html_writer::empty_tag('br');
         }
 
         if ($count > 5) {
-            $returnstr .= "</details>";
+            $returnstr .= html_writer::end_tag('details');
         }
 
         return $returnstr;
@@ -120,25 +149,31 @@ class allocations_table extends table_sql {
     public function col_dateunallocated($row) {
         global $CFG, $DB;
 
-        $unallocations = $DB->get_records('local_report_user_lic_allocs',
-                                          array('userid' => $row->id,
-                                                'licenseid' => $row->licenseid,
-                                                'courseid' => $row->courseid,
-                                                'action' => 0));
+        $unallocations = $DB->get_records(
+            'local_report_user_lic_allocs',
+            [
+                'userid' => $row->id,
+                'licenseid' => $row->licenseid,
+                'courseid' => $row->courseid,
+                'action' => 0,
+            ]
+        );
         $count = count($unallocations);
         $current = 1;
         $returnstr = "";
         if ($count > 5) {
-            $returnstr = "<details><summary>" . get_string('show') . "</summary>";
+            $returnstr = html_writer::start_tag('details') .
+                         html_writer::tag('summary', get_string('show'));
         }
 
         // Process them.
         foreach ($unallocations as $unallocation) {
-            $returnstr .= userdate($unallocation->issuedate, get_config('local_iomad', 'date_format')) . "<br>";
+            $returnstr .= userdate($unallocation->issuedate, get_config('local_iomad', 'date_format')) .
+                          html_writer::empty_tag('br');
         }
 
         if ($count > 5) {
-            $returnstr .= "</details>";
+            $returnstr .= html_writer::end_tag('details');
         }
 
         return $returnstr;
@@ -156,20 +191,37 @@ class allocations_table extends table_sql {
             $row->licenseid = 0;
         }
         $licenseurl = $CFG->wwwroot . "/local/report_license_usage/index.php";
-	// Is the name valid?
-	if (empty($row->licensename)) {
+        // Is the name valid?
+        if (empty($row->licensename)) {
             // Try and get it from local_iomad_track table.
-            if (!empty($row->licenseid) && $litinfos = $DB->get_records('local_iomad_track', array('licenseid' => $row->licenseid), '', '*', 0, 1)) {
+            if (!empty($row->licenseid) &&
+                $litinfos = $DB->get_records(
+                    'local_iomad_track',
+                    ['licenseid' => $row->licenseid],
+                    '',
+                    '*',
+                    0,
+                    1)) {
                 $litinfo = array_pop($litinfos);
                 $row->licensename = $litinfo->licensename;
             } else {
-                $row->licensename = "-"; 
+                $row->licensename = "-";
             }
         }
-        if (!$this->is_downloading() && iomad::has_capability('local/report_license_usage:view', $companycontext)) {
-            return  "<a href='".
-                    new moodle_url($licenseurl, array('licenseid' => $row->licenseid)).
-                    "'>" . format_string($row->licensename) . "</a>";
+        if (!$this->is_downloading() &&
+            iomad::has_capability('local/report_license_usage:view', $companycontext)) {
+            return html_writer::tag(
+                'a',
+                format_string($row->licensename),
+                [
+                    'href' => new moodle_url(
+                        $licenseurl,
+                        [
+                            'licenseid' => $row->licenseid,
+                        ],
+                    ),
+                ]
+            );
         } else {
             return format_string($row->licensename);
         }
@@ -185,9 +237,18 @@ class allocations_table extends table_sql {
 
         $courseurl  = '/local/report_completion/index.php';
         if (!$this->is_downloading() && iomad::has_capability('local/report_completion:view', $companycontext)) {
-            return "<a href='".
-                    new moodle_url($courseurl, array('courseid' => $row->courseid)).
-                    "'>" . format_string($row->coursename, true, 1) . "</a>";
+            return html_writer::tag(
+                'a',
+                format_string($row->coursename, true, 1),
+                [
+                    'href' => new moodle_url(
+                        $courseurl,
+                        [
+                            'courseid' => $row->courseid,
+                        ],
+                    ),
+                ]
+            );
         } else {
             return format_string($row->coursename, true, 1);
         }
@@ -201,11 +262,15 @@ class allocations_table extends table_sql {
     public function col_numallocations($row) {
         global $DB;
 
-        return $DB->count_records('local_report_user_lic_allocs',
-                                  array('userid' => $row->id,
-                                        'licenseid' => $row->licenseid,
-                                        'courseid' => $row->courseid,
-                                        'action' => 1));
+        return $DB->count_records(
+            'local_report_user_lic_allocs',
+            [
+                'userid' => $row->id,
+                'licenseid' => $row->licenseid,
+                'courseid' => $row->courseid,
+                'action' => 1,
+            ]
+        );
     }
 
     /**
@@ -216,66 +281,15 @@ class allocations_table extends table_sql {
     public function col_numunallocations($row) {
         global $DB;
 
-        return $DB->count_records('local_report_user_lic_allocs',
-                                  array('userid' => $row->id,
-                                        'licenseid' => $row->licenseid,
-                                        'courseid' => $row->courseid,
-                                        'action' => 0));
-    }
-
-    /**
-     * Query the db. Store results in the table object for use by build_table.
-     *
-     * @param int $pagesize size of page for paginated displayed table.
-     * @param bool $useinitialsbar do you want to use the initials bar. Bar
-     * will only be used if there is a fullname column defined for the table.
-     */
-    function dt_query_db($pagesize, $useinitialsbar=true) {
-        global $DB;
-        if (!$this->is_downloading()) {
-            if ($this->countsql === NULL) {
-                $this->countsql = "SELECT DISTINCT " . $DB->sql_concat("u.id", $DB->sql_concat("'-'", $DB->sql_concat("urla.licenseid", $DB->sql_concat("'-'", "urla.courseid")))) . " AS caindex FROM " . $this->sql->from.' WHERE '.$this->sql->where;
-                $this->countparams = $this->sql->params;
-            }
-            $subgrandtotal = $DB->get_records_sql($this->countsql, $this->countparams);
-            $grandtotal = count($subgrandtotal);
-            if ($useinitialsbar && !$this->is_downloading()) {
-                $this->initialbars($grandtotal > $pagesize);
-            }
-
-            list($wsql, $wparams) = $this->get_sql_where();
-            if ($wsql) {
-                $this->countsql .= ' AND '.$wsql;
-                $this->countparams = array_merge($this->countparams, $wparams);
-
-                $this->sql->where .= ' AND '.$wsql;
-                $this->sql->params = array_merge($this->sql->params, $wparams);
-
-                $subtotal  = $DB->get_records_sql($this->countsql, $this->countparams);
-                $total = count($subtotal);
-            } else {
-                $total = $grandtotal;
-            }
-
-            $this->pagesize($pagesize, $total);
-        }
-
-        // Fetch the attempts
-        $sort = $this->get_sql_sort();
-        if ($sort) {
-            $sort = "ORDER BY $sort";
-        }
-        $sql = "SELECT
-                {$this->sql->fields}
-                FROM {$this->sql->from}
-                WHERE {$this->sql->where}
-                {$sort}";
-
-        if (!$this->is_downloading()) {
-            $this->rawdata = $DB->get_records_sql($sql, $this->sql->params, $this->get_page_start(), $this->get_page_size());
-        } else {
-            $this->rawdata = $DB->get_records_sql($sql, $this->sql->params);
-        }
+        return $DB->count_records(
+            'local_report_user_lic_allocs',
+            [
+                'userid' => $row->id,
+                'licenseid' => $row->licenseid,
+                'courseid' => $row->courseid,
+                'action' => 0,
+            ]
+        );
     }
 
     /**
@@ -292,28 +306,26 @@ class allocations_table extends table_sql {
                                              WHERE cu.userid = :userid
                                              AND cu.companyid = :companyid
                                              ORDER BY d.name",
-                                             array('userid' => $row->id,
-                                                   'companyid' => $row->companyid));
+                                             ['userid' => $row->id,
+                                              'companyid' => $row->companyid]);
         $returnstr = "";
         $count = count($departments);
         $current = 1;
         if ($count > 5) {
-            $returnstr = "<details><summary>" . get_string('show') . "</summary>";
+            $returnstr = html_writer::start_tag('details') .
+                         html_writer::tag('summary', get_string('show'));
         }
 
-        foreach($departments as $department) {
-            $returnstr .= format_string($department->name);
-            if ($current < $count) {
-                $returnstr .= ",<br>";
-            }
-            $current++;
+        $departmentlist = [];
+        foreach ($departments as $department) {
+            $departmentlist[] = format_string($department->name);
         }
+        $returnstr .= implode(",<br>", $departmentlist);
 
         if ($count > 5) {
-            $returnstr .= "</details>";
+            $returnstr .= html_writer::end_tag('details');
         }
 
         return $returnstr;
-
     }
 }

@@ -15,7 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_report_license_usage
+ * IOMAD user license allocations report language strings
+ *
+ * @package   local_report_user_license_allocations
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -33,9 +35,9 @@ $string['dateallocated'] = 'Date allocated';
 $string['datecompleted'] = 'Date completed';
 $string['datestarted'] = 'Course allocated/started';
 $string['dateunallocated'] = 'Date unallocated';
-$string['detail'] = 'Detail';
 $string['deleteconfirm'] = 'User will be removed from the course, all their data will be deleted, and any licenses re-allocated. This cannot be undone. Are you sure?';
 $string['department'] = 'Department';
+$string['detail'] = 'Detail';
 $string['downloadcert'] = 'View certificate as PDF';
 $string['inprogress'] = 'In progress';
 $string['licenseallocated'] = 'License allocated';
@@ -43,18 +45,18 @@ $string['nocerttodownload'] = 'Certificate not achieved';
 $string['nofurtherdetail'] = 'No further details to show';
 $string['notstarted'] = 'Not started';
 $string['pluginname'] = 'User license allocations report';
-$string['privacy:metadata:local_report_user_lic_allocs:id'] = 'Local report user license allocation record ID';
-$string['privacy:metadata:local_report_user_lic_allocs:courseid'] = 'Course ID';
-$string['privacy:metadata:local_report_user_lic_allocs:action'] = 'Allocation action';
-$string['privacy:metadata:local_report_user_lic_allocs:userid'] = 'User ID';
-$string['privacy:metadata:local_report_user_lic_allocs:licenseid'] = 'License ID';
-$string['privacy:metadata:local_report_user_lic_allocs:issuedate'] = 'License issue Unix timestamp';
 $string['privacy:metadata:local_report_user_lic_allocs'] = 'Local report user license allocation user information';
-$string['report_user_license_allocations_title'] = 'User license allocations report';
+$string['privacy:metadata:local_report_user_lic_allocs:action'] = 'Allocation action';
+$string['privacy:metadata:local_report_user_lic_allocs:courseid'] = 'Course ID';
+$string['privacy:metadata:local_report_user_lic_allocs:id'] = 'Local report user license allocation record ID';
+$string['privacy:metadata:local_report_user_lic_allocs:issuedate'] = 'License issue Unix timestamp';
+$string['privacy:metadata:local_report_user_lic_allocs:licenseid'] = 'License ID';
+$string['privacy:metadata:local_report_user_lic_allocs:userid'] = 'User ID';
 $string['report_user_license_allocations:view'] = 'View the user license allocations report';
+$string['report_user_license_allocations_title'] = 'User license allocations report';
 $string['repuserlicallocation'] = 'User license allocations report';
 $string['scormattempts'] = 'Number of attempts';
-$string['scormnotstarted'] =  'User enroled on course - Module not started';
+$string['scormnotstarted'] = 'User enroled on course - Module not started';
 $string['scormquestion'] = 'Question ID';
 $string['scormresult'] = 'Result';
 $string['scormresults'] = 'Result';

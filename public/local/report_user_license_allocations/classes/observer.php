@@ -15,7 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_report_license_usage
+ * IOMAD report user license allocation event observers
+ *
+ * @package   local_report_user_license_allocations
+ *
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,6 +26,15 @@
 
 namespace local_report_user_license_allocations;
 
+/**
+ * IOMAD report user license allocation event observers
+ *
+ * @package   local_report_user_license_allocations
+ *
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class observer {
 
     /**
@@ -33,16 +45,20 @@ class observer {
         global $DB;
 
         // Add the event.
-        if (!$DB->get_record('local_report_user_lic_allocs', ['userid' => $event->userid,
-                                                              'licenseid' => $event->other['licenseid'],
-                                                              'issuedate' => $event->other['issuedate'],
-                                                              'courseid' => $event->courseid])) {
-            $DB->insert_record('local_report_user_lic_allocs', ['userid' => $event->userid,
-                                                                'licenseid' => $event->other['licenseid'],
-                                                                'issuedate' => $event->other['issuedate'],
-                                                                'courseid' => $event->courseid,
-                                                                'action' => 1,
-                                                                'modifiedtime' => time()]);
+        if (!$DB->get_record('local_report_user_lic_allocs', [
+            'userid' => $event->userid,
+            'licenseid' => $event->other['licenseid'],
+            'issuedate' => $event->other['issuedate'],
+            'courseid' => $event->courseid,
+        ])) {
+            $DB->insert_record('local_report_user_lic_allocs', [
+                'userid' => $event->userid,
+                'licenseid' => $event->other['licenseid'],
+                'issuedate' => $event->other['issuedate'],
+                'courseid' => $event->courseid,
+                'action' => 1,
+                'modifiedtime' => time(),
+            ]);
         }
 
         return true;
@@ -56,13 +72,14 @@ class observer {
         global $DB;
 
         // Add the event.
-        $user = $DB->get_record('user', array('id' => $event->userid));
-        $DB->insert_record('local_report_user_lic_allocs', array('userid' => $event->userid,
-                                                                 'licenseid' => $event->other['licenseid'],
-                                                                 'issuedate' => $event->timecreated,
-                                                                 'courseid' => $event->courseid,
-                                                                 'action' => 0,
-                                                                 'modifiedtime' => time()));
+        $DB->insert_record('local_report_user_lic_allocs', [
+            'userid' => $event->userid,
+            'licenseid' => $event->other['licenseid'],
+            'issuedate' => $event->timecreated,
+            'courseid' => $event->courseid,
+            'action' => 0,
+            'modifiedtime' => time(),
+        ]);
 
         return true;
     }
