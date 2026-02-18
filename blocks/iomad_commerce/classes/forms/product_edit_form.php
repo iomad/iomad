@@ -56,8 +56,6 @@ class product_edit_form extends moodleform {
 
     /** @var priceblocks list of price blocks array */
     protected $priceblocks = null;
-    protected $editoroptions;
-    protected $currencies;
 
     /** @var editoroptions array */
     protected $editoroptions = [];
