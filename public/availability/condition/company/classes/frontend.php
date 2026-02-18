@@ -58,8 +58,8 @@ class frontend extends \core_availability\frontend {
      * @param \section_info|null $section
      * @return void
      */
-    protected function get_javascript_init_params($course, \cm_info $cm = null,
-            \section_info $section = null) {
+    protected function get_javascript_init_params($course, ?\cm_info $cm = null,
+            ?\section_info $section = null) {
         // Get all companys for course.
         $companys = $this->get_all_companys($course->id);
 
@@ -96,8 +96,8 @@ class frontend extends \core_availability\frontend {
      * @param \section_info|null $section
      * @return void
      */
-    protected function allow_add($course, \cm_info $cm = null,
-            \section_info $section = null) {
+    protected function allow_add($course, ?\cm_info $cm = null,
+            ?\section_info $section = null) {
         global $CFG;
 
         // Only show this option if there are some companys.
