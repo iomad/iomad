@@ -634,7 +634,6 @@ class enrol_license_plugin extends enrol_plugin {
                                                ['userid' => $userid,
                                                 'courseid' => $instance->courseid])) {
 
-
                 // Get the grade item details.
                 if ($gradeitems = $DB->get_records_sql("SELECT gg.id, gg.finalgrade, gg.feedback, gi.itemtype
                                                         FROM {grade_grades} gg, {grade_items} gi
