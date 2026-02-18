@@ -15,38 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_report_license_usage
+ * IOMAD Course completion overview report
+ *
+ * @package   local_report_completion_overview
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'Completion Overview Report';
-$string['privacy:metadata:local_report_user_lic_allocs:id'] = 'Local report user license allocation record ID';
-$string['privacy:metadata:local_report_user_lic_allocs:courseid'] = 'Course ID';
-$string['privacy:metadata:local_report_user_lic_allocs:action'] = 'Allocation action';
-$string['privacy:metadata:local_report_user_lic_allocs:userid'] = 'User ID';
-$string['privacy:metadata:local_report_user_lic_allocs:licenseid'] = 'License ID';
-$string['privacy:metadata:local_report_user_lic_allocs:issuedate'] = 'License issue Unix timestamp';
-$string['privacy:metadata:local_report_user_lic_allocs'] = 'Local report user license allocation user information';
-$string['hideenrolledonly'] = 'Highlight available';
-$string['hideexpiry'] = 'Highlight expire';
-$string['report_completion_overview:view'] = 'View course completion overview report';
-$string['showenrolled'] = 'Highlight only with enrolments';
-$string['showenrolledonly'] = 'Only show courses with recorded enrolments';
-$string['showenrolledonly_help'] = 'If this option is checked, then only courses which have or have had recorded enrolments will be shown.';
-$string['showexpiry'] = 'Highlight all';
-$string['showexpiryonly'] = 'Only show courses which expire';
-$string['showexpiryonly_help'] = 'If this option is checked, then courses which do not have a valid length will not be displayed in colour in the graphical overview by default.';
-$string['showfulldetail'] = 'Show full completion detail';
-$string['showfulldetail_help'] = 'If this option is checked, then all of the completion information is displayed, otherwise it\'s just the completion and expiry dates.';
-$string['warningduration'] = 'Expired warning limit';
-$string['warningdurationcompany'] = 'Company specific expired warning limit';
-$string['warningduration_help'] = 'This is the value of time before a course expires where the report will show the expiry warning colours instead of the OK colours.';
+$string['bycourses'] = 'View by course';
+$string['byusers'] = 'View by user';
+$string['coursecompletion'] = '{$a} completion';
+$string['courseexpiry'] = '{$a} expiry';
+$string['coursestatus'] = '{$a} status';
 $string['coursesummary'] = 'Enroled: {$a->enrolled}
 Started: {$a->timestarted}
 Completed: {$a->timecompleted}
 Expires: {$a->timeexpires}
+Grade: {$a->finalscore}';
+$string['coursesummary_expired'] = 'Enrolled: {$a->enrolled}
+Started: {$a->timestarted}
+Expired: {$a->timeexpires}
 Grade: {$a->finalscore}';
 $string['coursesummary_extra_indate'] = 'Enrolled: {$a->enrolled}
 Started: {$a->timestarted}
@@ -62,10 +51,6 @@ Expires: {$a->timeexpires}
 Grade: {$a->finalscore}
 Last completed: {$a->lastcompleted}
 Expired: {$a->timeexpired}';
-$string['coursesummary_expired'] = 'Enrolled: {$a->enrolled}
-Started: {$a->timestarted}
-Expired: {$a->timeexpires}
-Grade: {$a->finalscore}';
 $string['coursesummary_noexpiry'] = 'Enrolled: {$a->enrolled}
 Started: {$a->timestarted}
 Completed: {$a->timecompleted}
@@ -89,7 +74,11 @@ $string['coursesummary_partial_extra_outdate'] = 'Completed: {$a->timecompleted}
 Expires: {$a->timeexpires}
 Last completed: {$a->lastcompleted}
 Expired: {$a->timeexpired}';
-$string['report_completion_overview_title'] = 'Completion overview report';
+$string['expired'] = 'Expired';
+$string['expiring'] = 'Due';
+$string['hideenrolledonly'] = 'Highlight available';
+$string['hideexpiry'] = 'Highlight expire';
+$string['indate'] = 'OK';
 $string['notcompleted'] = 'In progress';
 $string['notcompleted-expiring'] = 'In progress (Due)';
 $string['notcompleted-indate'] = 'In progress (OK)';
@@ -98,12 +87,25 @@ $string['notenrolled']  = 'Not enrolled';
 $string['notenrolled-expiring']  = 'Not enrolled (Due)';
 $string['notenrolled-indate']  = 'Not enrolled (OK)';
 $string['notenrolled-outdate']  = 'Not enrolled (Expired)';
-$string['indate'] = 'OK';
-$string['expiring'] = 'Due';
-$string['expired'] = 'Expired';
-$string['coursestatus'] = '{$a} status';
-$string['coursecompletion'] = '{$a} completion';
-$string['courseexpiry'] = '{$a} expiry';
-$string['bycourses'] = 'View by course';
-$string['byusers'] = 'View by user';
+$string['pluginname'] = 'Completion Overview Report';
+$string['privacy:metadata:local_report_user_lic_allocs'] = 'Local report user license allocation user information';
+$string['privacy:metadata:local_report_user_lic_allocs:action'] = 'Allocation action';
+$string['privacy:metadata:local_report_user_lic_allocs:courseid'] = 'Course ID';
+$string['privacy:metadata:local_report_user_lic_allocs:id'] = 'Local report user license allocation record ID';
+$string['privacy:metadata:local_report_user_lic_allocs:issuedate'] = 'License issue Unix timestamp';
+$string['privacy:metadata:local_report_user_lic_allocs:licenseid'] = 'License ID';
+$string['privacy:metadata:local_report_user_lic_allocs:userid'] = 'User ID';
+$string['report_completion_overview:view'] = 'View course completion overview report';
+$string['report_completion_overview_title'] = 'Completion overview report';
 $string['reportbytext'] = 'Display report as text';
+$string['showenrolled'] = 'Highlight only with enrolments';
+$string['showenrolledonly'] = 'Only show courses with recorded enrolments';
+$string['showenrolledonly_help'] = 'If this option is checked, then only courses which have or have had recorded enrolments will be shown.';
+$string['showexpiry'] = 'Highlight all';
+$string['showexpiryonly'] = 'Only show courses which expire';
+$string['showexpiryonly_help'] = 'If this option is checked, then courses which do not have a valid length will not be displayed in colour in the graphical overview by default.';
+$string['showfulldetail'] = 'Show full completion detail';
+$string['showfulldetail_help'] = 'If this option is checked, then all of the completion information is displayed, otherwise it\'s just the completion and expiry dates.';
+$string['warningduration'] = 'Expired warning limit';
+$string['warningduration_help'] = 'This is the value of time before a course expires where the report will show the expiry warning colours instead of the OK colours.';
+$string['warningdurationcompany'] = 'Company specific expired warning limit';

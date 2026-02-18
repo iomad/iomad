@@ -15,7 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_report_license_usage
+ * IOMAD Course completion overview report
+ *
+ * @package   local_report_completion_overview
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,7 +27,7 @@ defined('MOODLE_INTERNAL') || die;
 
 use local_iomad\iomad;
 
-// IOMAD
+// IOMAD.
 $companyid = iomad::get_my_companyid(context_system::instance(), false);
 $postfix = "";
 if (!empty($companyid)) {
@@ -34,14 +36,15 @@ if (!empty($companyid)) {
 
 if ($hassiteconfig && !empty($USER->id)) {
 
-    $settings = new admin_settingpage('local_report_completion_overview', get_string('pluginname', 'local_report_completion_overview'));
+    $settings = new admin_settingpage('local_report_completion_overview',
+                                      get_string('pluginname', 'local_report_completion_overview'));
     $ADMIN->add('localplugins', $settings);
 
     $settings->add(new admin_setting_configduration(
         'local_report_completion_overview/warningduration',
         get_string('warningduration', 'local_report_completion_overview'),
         get_string('warningduration_help', 'local_report_completion_overview'),
-        30*24*60*60)
+        30 * 24 * 60 * 60)
     );
 
     if ($companyid > 0) {
@@ -49,7 +52,7 @@ if ($hassiteconfig && !empty($USER->id)) {
             'local_report_completion_overview/warningduration' . $postfix,
             get_string('warningdurationcompany', 'local_report_completion_overview'),
             get_string('warningduration_help', 'local_report_completion_overview'),
-            30*24*60*60)
+            30 * 24 * 60 * 60)
         );
     }
 
@@ -74,4 +77,3 @@ if ($hassiteconfig && !empty($USER->id)) {
         false)
     );
 }
-
