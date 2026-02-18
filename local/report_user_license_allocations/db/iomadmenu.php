@@ -15,18 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_report_license_usage
+ * IOMAD user license allocations report dashboard menu items
+ *
+ * @package   local_report_user_license_allocations
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Define the Iomad menu items that are defined by this plugin
-
+/**
+ * Define the Iomad menu items that are provided by this plugin
+ *
+ * @return array
+ */
 function local_report_user_license_allocations_menu() {
 
-        return array(
-            'userlicenseallocations' => array(
+        return [
+            'userlicenseallocations' => [
                 'category' => 'Reports',
                 'tab' => 8,
                 'name' => get_string('pluginname', 'local_report_user_license_allocations'),
@@ -36,6 +41,6 @@ function local_report_user_license_allocations_menu() {
                 'style' => 'report',
                 'icon' => 'fa-user-secret',
                 'iconsmall' => 'fa-bar-chart-o',
-            ),
-        );
+            ],
+        ];
 }

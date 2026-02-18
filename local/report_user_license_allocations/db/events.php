@@ -15,23 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_report_license_usage
+ * IOMAD user license allocations report event consumers
+ *
+ * @package   local_report_user_license_allocations
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$observers = array(
+defined('MOODLE_INTERNAL') || die;
 
-    array(
+$observers = [
+
+    [
         'eventname' => '\block_iomad_company_admin\event\user_license_assigned',
         'callback' => '\local_report_user_license_allocations\observer::user_license_assigned',
         'internal' => false,
-    ),
+    ],
 
-    array(
+    [
         'eventname' => '\block_iomad_company_admin\event\user_license_unassigned',
         'callback' => '\local_report_user_license_allocations\observer::user_license_unassigned',
         'internal' => false,
-    ),
-);
+    ],
+];

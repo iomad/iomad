@@ -25,20 +25,26 @@
 
 namespace local_report_user_license_allocations\privacy;
 
-use \core_privacy\local\request\deletion_criteria;
-use \core_privacy\local\request\helper;
-use \core_privacy\local\metadata\collection;
-use \core_privacy\local\request\transform;
-use \core_privacy\local\request\contextlist;
-use \core_privacy\local\request\userlist;
-use \core_privacy\local\request\approved_contextlist;
-use \core_privacy\local\request\approved_userlist;
-use \core_privacy\local\request\writer;
-use \context_system;
-use \context_user;
+use core_privacy\local\request\deletion_criteria;
+use core_privacy\local\request\helper;
+use core_privacy\local\metadata\collection;
+use core_privacy\local\request\transform;
+use core_privacy\local\request\contextlist;
+use core_privacy\local\request\userlist;
+use core_privacy\local\request\approved_contextlist;
+use core_privacy\local\request\approved_userlist;
+use core_privacy\local\request\writer;
+use context_system;
+use context_user;
 
-defined('MOODLE_INTERNAL') || die();
-
+/**
+ * Privacy Subsystem implementation for local_report_user_license_allocations.
+ *
+ * @package    local_report_user_license_allocations
+ * @copyright  2021 Derick Turner
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class provider implements
         \core_privacy\local\metadata\provider,
         \core_privacy\local\request\core_userlist_provider,
@@ -50,7 +56,7 @@ class provider implements
      * @param collection $items a reference to the collection to use to store the metadata.
      * @return collection the updated collection of metadata items.
      */
-    public static function get_metadata(collection $collection) : collection {
+    public static function get_metadata(collection $collection): collection {
         $collection->add_database_table(
             'local_report_user_lic_allocs',
             [
@@ -73,7 +79,7 @@ class provider implements
      * @param int $userid the userid.
      * @return contextlist the list of contexts containing user info for the user.
      */
-    public static function get_contexts_for_userid(int $userid) : contextlist {
+    public static function get_contexts_for_userid(int $userid): contextlist {
         $sql = "SELECT c.id
                   FROM {context} c
                 WHERE contextlevel = :contextlevel";
@@ -104,7 +110,7 @@ class provider implements
 
         $context = context_system::instance();
 
-        if ($tracks = $DB->get_records('local_report_user_lic_allocs', array('userid' => $user->id))) {
+        if ($tracks = $DB->get_records('local_report_user_lic_allocs', ['userid' => $user->id])) {
             $trackout = (object) [];
             foreach ($tracks as $id => $track) {
                 if (!empty($track->issuedate)) {
@@ -115,7 +121,11 @@ class provider implements
                 }
             }
             $trackout->license_allocations = $tracks;
-            writer::with_context($context)->export_data(array(get_string('pluginname', 'local_report_user_license_allocations')), $trackout);
+            writer::with_context($context)->export_data(
+                [
+                    get_string('pluginname', 'local_report_user_license_allocations'),
+                ],
+                $trackout);
         }
     }
 
@@ -147,7 +157,7 @@ class provider implements
         }
 
         $userid = $contextlist->get_user()->id;
-        $DB->delete_records('local_report_user_lic_allocs', array('userid' => $userid));
+        $DB->delete_records('local_report_user_lic_allocs', ['userid' => $userid]);
     }
 
     /**
@@ -188,7 +198,7 @@ class provider implements
         $context = $userlist->get_context();
 
         if ($context instanceof context_user) {
-            $DB->delete_records('local_report_user_lic_allocs', array('userid' => $context->id));
+            $DB->delete_records('local_report_user_lic_allocs', ['userid' => $context->id]);
         }
     }
 }
