@@ -109,13 +109,15 @@ if ($mform->is_cancelled()) {
     // If licensed course, turn off all enrolments apart from license enrolment as
     // default  Moving this to a separate page.
     if ($data->selfenrol == 0 ) {
+        // Self or manual.
         if ($instances = $DB->get_records('enrol', ['courseid' => $course->id])) {
             foreach ($instances as $instance) {
                 $updateinstance = (array) $instance;
-                if ($instance->enrol == 'license') {
-                    $updateinstance['status'] = 1;
-                } else {
+                if ($instance->enrol == 'self' ||
+                    $instance->enrol == 'manual') {
                     $updateinstance['status'] = 0;
+                } else {
+                    $updateinstance['status'] = 1;
                 }
                 $DB->update_record('enrol', $updateinstance);
             }
@@ -126,23 +128,22 @@ if ($mform->is_cancelled()) {
             foreach ($instances as $instance) {
                 $updateinstance = (array) $instance;
                 if ($instance->enrol == 'manual') {
-                    $updateinstance['status'] = 1;
-                } else {
                     $updateinstance['status'] = 0;
+                } else {
+                    $updateinstance['status'] = 1;
                 }
                 $DB->update_record('enrol', $updateinstance);
             }
         }
     } else if ($data->selfenrol == 2 ) {
-        // Self or manual.
+        // License only.
         if ($instances = $DB->get_records('enrol', ['courseid' => $course->id])) {
             foreach ($instances as $instance) {
                 $updateinstance = (array) $instance;
-                if ($instance->enrol == 'self' ||
-                    $instance->enrol == 'manual') {
-                    $updateinstance['status'] = 1;
-                } else {
+                if ($instance->enrol == 'license') {
                     $updateinstance['status'] = 0;
+                } else {
+                    $updateinstance['status'] = 1;
                 }
                 $DB->update_record('enrol', $updateinstance);
             }
