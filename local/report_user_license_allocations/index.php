@@ -15,17 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_report_license_allocations
+ * IOMAD user license allocations report
+ *
+ * @package   local_report_user_license_allocations
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_company_admin\event\dashboard_page_viewed;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
+use local_iomad\forms\user_search_form;
+use local_report_user_license_allocations\tables\allocations_table;
 
-require_once(dirname(__FILE__) . '/../../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
+require_once($CFG->libdir.'/tablelib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 
@@ -51,51 +57,32 @@ $licenseunallocatedfromraw = optional_param_array('licenseunallocatedfromraw', n
 $licenseunallocatedtoraw = optional_param_array('licenseunallocatedtoraw', null, PARAM_INT);
 $licenseusage = optional_param('licenseusage', 0, PARAM_INTEGER);
 
-$params = array();
+$params = [];
 
-if ($firstname) {
-    $params['firstname'] = $firstname;
-}
-if ($lastname) {
-    $params['lastname'] = $lastname;
-}
-if ($email) {
-    $params['email'] = $email;
-}
-if ($sort) {
-    $params['sort'] = $sort;
-}
-if ($dir) {
-    $params['dir'] = $dir;
-}
-if ($page) {
-    $params['page'] = $page;
-}
-if ($perpage) {
-    $params['perpage'] = $perpage;
-}
-if ($search) {
-    $params['search'] = $search;
-}
-if ($departmentid) {
-    $params['deptid'] = $departmentid;
-}
-if ($courseid) {
-    $params['courseid'] = $courseid;
-}
-if ($showsuspended) {
-    $params['showsuspended'] = $showsuspended;
-}
-if ($licenseid) {
-    $params['licenseid'] = $licenseid;
-}
-if ($licenseusage) {
-    $params['licenseusage'] = $licenseusage;
-}
+$params['firstname'] = $firstname;
+$params['lastname'] = $lastname;
+$params['email'] = $email;
+$params['sort'] = $sort;
+$params['dir'] = $dir;
+$params['page'] = $page;
+$params['perpage'] = $perpage;
+$params['search'] = $search;
+$params['deptid'] = $departmentid;
+$params['courseid'] = $courseid;
+$params['showsuspended'] = $showsuspended;
+$params['licenseid'] = $licenseid;
+$params['licenseusage'] = $licenseusage;
 
 if ($licenseallocatedfromraw) {
     if (is_array($licenseallocatedfromraw)) {
-        $licenseallocatedfrom = mktime(0, 0, 0, $licenseallocatedfromraw['month'], $licenseallocatedfromraw['day'], $licenseallocatedfromraw['year']);
+        $licenseallocatedfrom = mktime(
+            0,
+            0,
+            0,
+            $licenseallocatedfromraw['month'],
+            $licenseallocatedfromraw['day'],
+            $licenseallocatedfromraw['year']
+        );
     } else {
         $licenseallocatedfrom = $licenseallocatedfromraw;
     }
@@ -110,7 +97,14 @@ if ($licenseallocatedfromraw) {
 
 if ($licenseallocatedtoraw) {
     if (is_array($licenseallocatedtoraw)) {
-        $licenseallocatedto = mktime(0, 0, 0, $licenseallocatedtoraw['month'], $licenseallocatedtoraw['day'], $licenseallocatedtoraw['year']);
+        $licenseallocatedto = mktime(
+            0,
+            0,
+            0,
+            $licenseallocatedtoraw['month'],
+            $licenseallocatedtoraw['day'],
+            $licenseallocatedtoraw['year']
+        );
     } else {
         $licenseallocatedto = $licenseallocatedtoraw;
     }
@@ -125,7 +119,14 @@ if ($licenseallocatedtoraw) {
 
 if ($licenseunallocatedfromraw) {
     if (is_array($licenseunallocatedfromraw)) {
-        $licenseunallocatedfrom = mktime(0, 0, 0, $licenseunallocatedfromraw['month'], $licenseunallocatedfromraw['day'], $licenseunallocatedfromraw['year']);
+        $licenseunallocatedfrom = mktime(
+            0,
+            0,
+            0,
+            $licenseunallocatedfromraw['month'],
+            $licenseunallocatedfromraw['day'],
+            $licenseunallocatedfromraw['year']
+        );
     } else {
         $licenseunallocatedfrom = $licenseunallocatedfromraw;
     }
@@ -140,7 +141,14 @@ if ($licenseunallocatedfromraw) {
 
 if ($licenseunallocatedtoraw) {
     if (is_array($licenseunallocatedtoraw)) {
-        $licenseunallocatedto = mktime(0, 0, 0, $licenseunallocatedtoraw['month'], $licenseunallocatedtoraw['day'], $licenseunallocatedtoraw['year']);
+        $licenseunallocatedto = mktime(
+            0,
+            0,
+            0,
+            $licenseunallocatedtoraw['month'],
+            $licenseunallocatedtoraw['day'],
+            $licenseunallocatedtoraw['year']
+        );
     } else {
         $licenseunallocatedto = $licenseunallocatedtoraw;
     }
@@ -153,15 +161,16 @@ if ($licenseunallocatedtoraw) {
     $licenseunallocatedto = null;
 }
 
+// Log in and create $PAGE.
 require_login();
 
+// Set the companyid.
 $systemcontext = context_system::instance();
-
-// Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
+// Can we even do anything?
 iomad::require_capability('local/report_user_license_allocations:view', $companycontext);
 
 // Get the associated department id.
@@ -173,24 +182,26 @@ $foundobj = iomad::add_user_filter_params($params, $companyid);
 $idlist = $foundobj->idlist;
 $foundfields = $foundobj->foundfields;
 
-// all companies?
+// All companies?
+$companysql = "";
+$sqlparams = [];
 if ($parentslist = $company->get_parent_companies_recursive()) {
+    [$insql, $sqlparams] = $DB->get_in_or_equal(array_keys($parentslist),
+                                                SQL_PARAMS_NAMED,
+                                                'pcids');
     $companysql = " AND u.id NOT IN (
                     SELECT userid FROM {company_users}
                     WHERE managertype = 1
-                    AND companyid IN (" . implode(',', array_keys($parentslist)) ."))";
-} else {
-    $companysql = "";
+                    AND companyid {$insql})";
 }
 
-// Correct the navbar.
 // Set the name for the page.
 $linktext = get_string('report_user_license_allocations_title', 'local_report_user_license_allocations');
 
 // Set the url.
 $linkurl = new moodle_url('/local/report_user_license_allocations/index.php', $params);
 
-// Print the page header.
+// Finish setting up PAGE.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('report');
@@ -210,40 +221,58 @@ $PAGE->navbar->add($linktext, $linkurl);
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Javascript for fancy select.
-// Parameter is name of proper select form element followed by 1=submit its form
-$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', 1, optional_param('deptid', 0, PARAM_INT)));
+$PAGE->requires->js_call_amd(
+    'block_iomad_company_admin/department_select',
+    'init',
+    ['deptid', 1, optional_param('deptid', 0, PARAM_INT)]);
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Check the department is valid.
 if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
     throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
 }
 
+// Set some URLs.
 $baseurl = new moodle_url(basename(__FILE__), $params);
 $returnurl = $baseurl;
 
 // Work out where the user sits in the company department tree.
 if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
-    $userlevels = array($parentlevel->id => $parentlevel->id);
+    $userlevels = [$parentlevel->id => $parentlevel->id];
 } else {
     $userlevels = $company->get_userlevel($USER);
 }
-
 $userhierarchylevel = key($userlevels);
 if ($departmentid == 0 ) {
     $departmentid = $userhierarchylevel;
 }
 
 // Get the appropriate list of licenses.
-$licenselist = array(0 => get_string('all'));
-$licenses = $DB->get_records('companylicense', array('companyid' => $companyid), 'expirydate DESC', 'id,name,startdate,expirydate');
+$licenselist = [0 => get_string('all')];
+$licenses = $DB->get_records(
+    'companylicense',
+    ['companyid' => $companyid],
+    'expirydate DESC',
+    'id, name, startdate, expirydate');
 foreach ($licenses as $license) {
     if ($license->expirydate < time()) {
-        $licenselist[$license->id] = $license->name . " (" . get_string('licenseexpired', 'block_iomad_company_admin', userdate($license->expirydate, $CFG->iomad_date_format)) . ")";
+        $licenselist[$license->id] = $license->name . " (" .
+                                     get_string(
+                                        'licenseexpired',
+                                        'block_iomad_company_admin',
+                                        userdate(
+                                            $license->expirydate,
+                                            $get_config('local_iomad', 'date_format'))) . ")";
     } else if ($license->startdate > time()) {
-        $licenselist[$license->id] = $license->name . " (" . get_string('licensevalidfrom', 'block_iomad_company_admin', userdate($license->startdate, $CFG->iomad_date_format)) . ")";
+        $licenselist[$license->id] = $license->name . " (" .
+                                     get_string(
+                                        'licensevalidfrom',
+                                        'block_iomad_company_admin',
+                                        userdate(
+                                            $license->startdate,
+                                            $get_config('local_iomad', 'date_format'))) . ")";
     } else {
         $licenselist[$license->id] = $license->name;
     }
@@ -254,25 +283,25 @@ $selecturl = new moodle_url('/local/report_user_license_allocations/index.php', 
 $select = new single_select($selecturl, 'licenseid', $licenselist, $licenseid);
 $select->label = get_string('licenseselect', 'block_iomad_company_admin');
 $select->formid = 'chooselicense';
-$licenseselectoutput = html_writer::tag('div', $output->render($select), array('id' => 'iomad_license_selector'));
+$licenseselectoutput = html_writer::tag('div', $output->render($select), ['id' => 'iomad_license_selector']);
 
 // Deal with the course selector.
-$courselist = array( 0 => get_string('all'));
+$courselist = [ 0 => get_string('all')];
 if (empty($licensid)) {
     $courserecs = $DB->get_records_sql_menu("SELECT DISTINCT courseid,coursename
                                         FROM {local_iomad_track}
                                         WHERE companyid = :companyid
                                         AND licenseid IS NOT NULL
                                         ORDER BY coursename",
-                                        array('companyid' => $company->id));
+                                        ['companyid' => $company->id]);
 } else {
     $courserecs = $DB->get_records_sql_menu("SELECT DISTINCT courseid,coursename
                                         FROM {local_iomad_track}
                                         WHERE companyid = :companyid
                                         AND licenseid = :licenseid
                                         ORDER BY coursename",
-                                        array('companyid' => $company->id,
-                                              'licenseid' => $licenseid));
+                                        ['companyid' => $company->id,
+                                              'licenseid' => $licenseid]);
 }
 
 $courselist = $courselist + $courserecs;
@@ -280,12 +309,17 @@ $courselist = $courselist + $courserecs;
 $courseselect = new single_select($selecturl, 'courseid', $courselist, $courseid);
 $courseselect->label = get_string('course');
 $courseselect->formid = 'choosecourse';
-$courseselectoutput = html_writer::tag('div', $output->render($courseselect), array('id' => 'iomad_course_selector'));
+$courseselectoutput = html_writer::tag('div', $output->render($courseselect), ['id' => 'iomad_course_selector']);
 $searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
 
 // Set up the table.
-$table = new \local_report_user_license_allocations\tables\allocations_table('user_report_license_allocations');
-$table->is_downloading($download, format_string($company->get('name')) . ' ' . get_string('pluginname', 'local_report_user_license_allocations'), 'user_report_license_allocations123');
+$table = new allocations_table('user_report_license_allocations');
+$table->is_downloading(
+    $download,
+    format_string(
+        $company->get('name')) . ' ' .
+        get_string('pluginname', 'local_report_user_license_allocations'),
+        'user_report_license_allocations123');
 
 if (!$table->is_downloading()) {
     echo $output->header();
@@ -302,7 +336,7 @@ if (!$table->is_downloading()) {
         if (empty($table->is_downloading())) {
             // Display the tree selector thing.
             echo $output->display_tree_selector($company, $parentlevel, $baseurl, $params, $departmentid);
-            echo html_writer::start_tag('div', array('class' => 'iomadclear controlitems'));
+            echo html_writer::start_tag('div', ['class' => 'iomadclear controlitems']);
             echo $licenseselectoutput;
             echo $courseselectoutput;
             echo html_writer::end_tag('div');
@@ -320,8 +354,8 @@ if (!$table->is_downloading()) {
             $options['licenseallocatedtoraw'] = $licenseallocatedto;
             $options['licenseunallocatedfromraw'] = $licenseunallocatedfrom;
             $options['licenseunallocatedtoraw'] = $licenseunallocatedto;
-            $mform = new \local_iomad\forms\user_search_form(null, $options);
-            $mform->set_data(array('departmentid' => $departmentid));
+            $mform = new user_search_form(null, $options);
+            $mform->set_data(['departmentid' => $departmentid]);
 
             $mform->set_data($options);
             $mform->get_data();
@@ -330,7 +364,7 @@ if (!$table->is_downloading()) {
             echo html_writer::start_tag('div', ['class' => 'iomadusersearchform']);
             $mform->display();
             echo html_writer::end_tag('div');
-            echo html_writer::start_tag('div', array('class' => 'iomadclear'));
+            echo html_writer::start_tag('div', ['class' => 'iomadclear']);
         }
     }
 }
@@ -339,17 +373,17 @@ $stredit   = get_string('edit');
 $returnurl = $CFG->wwwroot."/local/report_user_license_allocations/index.php";
 
 // Do we have any additional reporting fields?
-$extrafields = array();
+$extrafields = [];
 if (!empty(get_config('local_iomad', 'report_fields'))) {
-    $companyrec = $DB->get_record('company', array('id' => $companyid));
+    $companyrec = $DB->get_record('company', ['id' => $companyid]);
     foreach (explode(',', get_config('local_iomad', 'report_fields')) as $extrafield) {
         $extrafields[$extrafield] = new stdclass();
         $extrafields[$extrafield]->name = $extrafield;
         if (strpos($extrafield, 'profile_field') !== false) {
             // Its an optional profile field.
-            $profilefield = $DB->get_record('user_info_field', array('shortname' => str_replace('profile_field_', '', $extrafield)));
+            $profilefield = $DB->get_record('user_info_field', ['shortname' => str_replace('profile_field_', '', $extrafield)]);
             if ($profilefield->categoryid == $companyrec->profileid ||
-                !$DB->get_record('company', array('profileid' => $profilefield->categoryid))) {
+                !$DB->get_record('company', ['profileid' => $profilefield->categoryid])) {
                 $extrafields[$extrafield]->title = $profilefield->name;
                 $extrafields[$extrafield]->fieldid = $profilefield->id;
             } else {
@@ -362,7 +396,7 @@ if (!empty(get_config('local_iomad', 'report_fields'))) {
 }
 
 // Get the license information.
-$license = $DB->get_record('companylicense', array('id' => $licenseid));
+$license = $DB->get_record('companylicense', ['id' => $licenseid]);
 
 // Deal with where we are on the department tree.
 $currentdepartment = company::get_departmentbyid($departmentid);
@@ -384,30 +418,71 @@ if (!empty($licenseid) && $licenseid != 1) {
 }
 
 // Set up the initial SQL for the form.
-$selectsql = "DISTINCT " . $DB->sql_concat("u.id", $DB->sql_concat("'-'", $DB->sql_concat("urla.licenseid", $DB->sql_concat("'-'", "urla.courseid")))) . " AS cindex,u.*,cu.companyid,u.email, c.id AS courseid, c.fullname AS coursename, urla.licenseid, cl.name as licensename";
-$fromsql = " {local_report_user_lic_allocs} urla JOIN {user} u ON (urla.userid = u.id) JOIN {company_users} cu ON (u.id = cu.userid) JOIN {department} d ON (cu.departmentid = d.id and cu.companyid = d.company) JOIN {course} c ON (urla.courseid = c.id) LEFT JOIN {companylicense} cl ON (urla.licenseid = cl.id)";
+$selectsql = "DISTINCT " .
+    $DB->sql_concat(
+        "u.id",
+        $DB->sql_concat(
+            "'-'",
+            $DB->sql_concat(
+                "urla.licenseid",
+                $DB->sql_concat(
+                    "'-'",
+                    "urla.courseid"
+                    )
+                    )
+                    )
+                    ) .
+            " AS cindex,
+              u.*,
+              cu.companyid,
+              u.email,
+              c.id AS courseid,
+              c.fullname AS coursename,
+              urla.licenseid,
+              cl.name as licensename";
+$fromsql = " {local_report_user_lic_allocs} urla
+            JOIN {user} u ON (urla.userid = u.id)
+            JOIN {company_users} cu ON (u.id = cu.userid)
+            JOIN {department} d ON (
+                cu.departmentid = d.id
+                AND cu.companyid = d.company
+            )
+            JOIN {course} c ON (urla.courseid = c.id)
+            LEFT JOIN {companylicense} cl ON (urla.licenseid = cl.id)";
 $wheresql = $searchinfo->sqlsearch . " AND cu.companyid = :companyid $departmentsql $companysql $licensesql $coursesql";
-$countsql = "SELECT COUNT(DISTINCT " . $DB->sql_concat("u.id", $DB->sql_concat("'-'", $DB->sql_concat("urla.licenseid", $DB->sql_concat("'-'", "urla.courseid")))) . ") FROM $fromsql WHERE $wheresql";
-$sqlparams = array('companyid' => $companyid) + $searchinfo->searchparams;
+$countsql = "SELECT COUNT(DISTINCT " .
+    $DB->sql_concat(
+        "u.id",
+        $DB->sql_concat(
+            "'-'",
+            $DB->sql_concat(
+                "urla.licenseid",
+                $DB->sql_concat(
+                    "'-'",
+                    "urla.courseid"
+                )
+            )
+        )
+    ) . ") FROM $fromsql WHERE $wheresql";
+$sqlparams = ['companyid' => $companyid] + $searchinfo->searchparams;
 
 // Set up the headers for the form.
-$headers = array(get_string('fullname'),
-                 get_string('department', 'block_iomad_company_admin'),
-                 get_string('email'));
+$headers = [
+    get_string('fullname'),
+    get_string('department', 'block_iomad_company_admin'),
+    get_string('email'),
+];
 
-$columns = array('fullname',
+$columns = ['fullname',
                  'department',
-                 'email');
+                 'email'];
 
 // Deal with optional report fields.
 if (!empty($extrafields)) {
     foreach ($extrafields as $extrafield) {
         $headers[] = $extrafield->title;
         $columns[] = $extrafield->name;
-        if (!empty($extrafield->fieldid)) {
-            // Its a profile field.
-            // Skip it this time as these may not have data.
-        } else {
+        if (empty($extrafield->fieldid)) {
             $selectsql .= ", u." . $extrafield->name;
         }
     }
@@ -415,7 +490,9 @@ if (!empty($extrafields)) {
         if (!empty($extrafield->fieldid)) {
             // Its a profile field.
             $selectsql .= ", P" . $extrafield->fieldid . ".data AS " . $extrafield->name;
-            $fromsql .= " LEFT JOIN {user_info_data} P" . $extrafield->fieldid . " ON (u.id = P" . $extrafield->fieldid . ".userid AND P".$extrafield->fieldid . ".fieldid = :p" . $extrafield->fieldid . "fieldid )";
+            $fromsql .= " LEFT JOIN {user_info_data} P" . $extrafield->fieldid .
+                        " ON (u.id = P" . $extrafield->fieldid . ".userid AND
+                          P".$extrafield->fieldid . ".fieldid = :p" . $extrafield->fieldid . "fieldid )";
             $sqlparams["p".$extrafield->fieldid."fieldid"] = $extrafield->fieldid;
         }
     }

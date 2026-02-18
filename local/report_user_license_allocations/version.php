@@ -15,13 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_report_license_usage
+ * IOMAD user license allocations report
+ *
+ * @package   local_report_user_license_allocations
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$plugin->release  = '4.5.8 (Build: 20251208)'; // Human-friendly version name
+defined('MOODLE_INTERNAL') || die;
+
+$plugin->release  = '4.5.8 (Build: 20251208)'; // Human-friendly version name.
 $plugin->version  = 2024100745;   // The (date) version of this plugin.
 $plugin->requires = 2024100700;   // Requires this Moodle version.
 $plugin->component  = 'local_report_user_license_allocations';
