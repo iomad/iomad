@@ -144,7 +144,7 @@ if (empty($SESSION->currenteditingcompany) &&
     }
 }
 
-// _Now_ we set the context.
+// Now(!) we set the context.
 if (!empty($company)) {
     $companycontext = \core\context\company::instance($company);
 }
