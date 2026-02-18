@@ -25,10 +25,11 @@
 
 namespace local_report_user_license_allocations\tables;
 
-use table_sql;
 use context_system;
-use moodle_url;
+use html_writer;
 use iomad;
+use moodle_url;
+use table_sql;
 
 /**
  * IOMAD user license allocations report allocation table class
