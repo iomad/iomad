@@ -118,7 +118,7 @@ if (!empty($fileimport)) {
             $linenum = 1; // Column header is first line.
 
             // Init upload progress tracker.
-            $upt = new upload_progress_tracker();
+            $upt = new group_upload_progress_tracker();
             $upt->init(); // Start table.
             while ($line = $cir->next()) {
                 $upt->flush();
@@ -260,7 +260,7 @@ echo $OUTPUT->footer();
 /**
  * Utility upload class
  */
-class upload_progress_tracker {
+class group_upload_progress_tracker {
     /** @var array row data */
     public $_row;
 
