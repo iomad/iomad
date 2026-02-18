@@ -132,15 +132,11 @@ if ($format) {
         $departmentusers = company::get_recursive_department_users($userlevelid);
     }
     if (count($departmentusers) > 0) {
-        $departmentids = "";
-        foreach ($departmentusers as $departmentuser) {
-            if (!empty($departmentids)) {
-                $departmentids .= ",".$departmentuser->userid;
-            } else {
-                $departmentids .= $departmentuser->userid;
-            }
-        }
-        $sqlsearch = " AND userid in ($departmentids) ";
+        [$insql, $inparams] = $DB->get_in_or_equal(array_keys($departmentusers),
+                                                   SQL_PARAMS_NAMED,
+                                                   'duids');
+        $sqlsearch = " AND u.id {$insql} ";
+        $params = $params + $inparams;
     } else {
         $sqlsearch = "AND 1 = 0";
     }

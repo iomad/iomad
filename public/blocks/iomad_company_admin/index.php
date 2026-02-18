@@ -46,9 +46,6 @@ require_login();
 // Deal with initial company stuff.
 $systemcontext = context_system::instance();
 $companycontext = $systemcontext;
-if (!empty($company)) {
-    $companycontext = context_company::instance($company);
-}
 
 // Did we change company?
 if ($companychange &&
@@ -147,6 +144,11 @@ if (empty($SESSION->currenteditingcompany) &&
     } else {
         $company = 0;
     }
+}
+
+// _Now_ we set the context.
+if (!empty($company)) {
+    $companycontext = context_company::instance($company);
 }
 
 // Page setup stuff.
