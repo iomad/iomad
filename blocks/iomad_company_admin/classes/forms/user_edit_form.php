@@ -450,17 +450,6 @@ class user_edit_form extends moodleform {
         $data = parent::get_data();
 
         if ($data) {
-            $data->title = '';
-            $data->description = '';
-
-            if ($this->title) {
-                $data->title = $this->title;
-            }
-
-            if ($this->description) {
-                $data->description = $this->description;
-            }
-
             if ($this->courseselector) {
                 $data->selectedcourses = $this->courseselector->get_selected_courses();
             }
