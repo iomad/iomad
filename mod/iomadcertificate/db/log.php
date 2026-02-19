@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of the Certificate module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,18 +15,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD certificate activity
+ *
  * @package   mod_iomadcertificate
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   mod_certificate by Mark Nelson <markn@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+// This plugin is based on code originally created as mod_certificate by Mark Nelson <markn@moodle.com>.
+
 defined('MOODLE_INTERNAL') || die();
 
-$logs = array(
-    array('module'=>'iomadcertificate', 'action'=>'view', 'mtable'=>'iomadcertificate', 'field'=>'name'),
-    array('module'=>'iomadcertificate', 'action'=>'add', 'mtable'=>'iomadcertificate', 'field'=>'name'),
-     array('module'=>'iomadcertificate', 'action'=>'update', 'mtable'=>'iomadcertificate', 'field'=>'name'),
-    array('module'=>'iomadcertificate', 'action'=>'received', 'mtable'=>'iomadcertificate', 'field'=>'name'),
-);
+$logs = [
+    ['module' => 'iomadcertificate', 'action' => 'view', 'mtable' => 'iomadcertificate', 'field' => 'name'],
+    ['module' => 'iomadcertificate', 'action' => 'add', 'mtable' => 'iomadcertificate', 'field' => 'name'],
+     ['module' => 'iomadcertificate', 'action' => 'update', 'mtable' => 'iomadcertificate', 'field' => 'name'],
+    ['module' => 'iomadcertificate', 'action' => 'received', 'mtable' => 'iomadcertificate', 'field' => 'name'],
+];
