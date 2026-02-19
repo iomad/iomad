@@ -121,7 +121,7 @@ function local_iomad_track_download_certs($companyid = 0, $courses = [], $users 
 
     // Deal with the courses.
     if (empty($courses)) {
-        $allcourses = array_keys($company->get_menu_courses(true, false, false, false)); 
+        $allcourses = array_keys($company->get_menu_courses(true, false, false, false));
     } else {
         $allcourses = $courses;
     }
@@ -132,16 +132,25 @@ function local_iomad_track_download_certs($companyid = 0, $courses = [], $users 
         $sqlselect .= " AND userid IN (" . implode(',', $users) . ")";
     }
 
+    // Ensure the temp directory exists
+    $tempdir = $CFG->dataroot . '/temp/filestorage';
+    if (!file_exists($tempdir)) {
+        mkdir($tempdir, 0777, true);
+    }
+
     // create the zip file
     $zipfile = new ZipArchive();
-    $tempfilename = $CFG->dataroot . '/temp/filestorage/' . time();
+    $tempfilename = $tempdir . '/' . time() . '_' . random_string(10);
     $realfilename = "certificates.zip";
-    if ($zipfile->open($tempfilename, ZipArchive::CREATE) === TRUE) {
+    $zipresult = $zipfile->open($tempfilename, ZipArchive::CREATE);
+
+    if ($zipresult === TRUE) {
+        $filesadded = 0;
         foreach ($allcourses as $course) {
             $comprecords = $DB->get_records_select('local_iomad_track',
                                                     $sqlselect,
                                                    ['courseid' => $course,
-                                                    'companyid' => $company->id]); 
+                                                    'companyid' => $company->id]);
             if (count($comprecords) > 0) {
                 // For all of the track saved files
                 foreach ($comprecords as $comprecord) {
@@ -155,11 +164,24 @@ function local_iomad_track_download_certs($companyid = 0, $courses = [], $users 
                                                            'filearea' => 'issue',
                                                            'itemid' => $comprecord->id])) {
                         if ($userrec = $DB->get_record('user', ['id' => $comprecord->userid])) {
-                            $savefilename = $comprecord->coursename . "/" . $userrec->firstname . "_" . $userrec->lastname . "_" . $userrec->id . "/" . $comprecord->id . "_" . $filerec->filename;
+                            $cleancoursename = clean_filename(format_string($comprecord->coursename));
+                            $cleanfirstname = clean_filename($userrec->firstname);
+                            $cleanlastname = clean_filename($userrec->lastname);
+                            $savefilename = $cleancoursename . "/" .
+                                          $cleanfirstname . "_" .
+                                          $cleanlastname . "_" .
+                                          $userrec->id . "/" .
+                                          $comprecord->id . "_" .
+                                          $filerec->filename;
                             $first = substr($filerec->contenthash, 0, 2);
                             $second = substr($filerec->contenthash, 2, 2);
                             $filepath = $CFG->dataroot . "/filedir/$first/$second/" . $filerec->contenthash;
-                            $zipfile->addFile($filepath, $savefilename);
+
+                            if (file_exists($filepath)) {
+                                if ($zipfile->addFile($filepath, $savefilename)) {
+                                    $filesadded++;
+                                }
+                            }
                         }
                     }
                 }
@@ -167,20 +189,30 @@ function local_iomad_track_download_certs($companyid = 0, $courses = [], $users 
         }
         $zipfile->close();
 
-        // Send the headers to force download the zip file
-        header("Content-type: application/zip");
-        header("Content-Disposition: attachment; filename=$realfilename");
-        header("Content-length: " . filesize($tempfilename));
-        header("Pragma: no-cache");
-        header("Expires: 0");
-        ob_clean();
-        flush();
-        $handle = fopen($tempfilename, "rb");
-        while (!feof($handle)){
-            echo fread($handle, 8192);
+        if ($filesadded > 0 && file_exists($tempfilename) && filesize($tempfilename) > 0) {
+            // Send the headers to force download the zip file
+            header("Content-type: application/zip");
+            header("Content-Disposition: attachment; filename=$realfilename");
+            header("Content-length: " . filesize($tempfilename));
+            header("Pragma: no-cache");
+            header("Expires: 0");
+            ob_clean();
+            flush();
+            $handle = fopen($tempfilename, "rb");
+            while (!feof($handle)){
+                echo fread($handle, 8192);
+            }
+            fclose($handle);
+            unlink($tempfilename);
+            exit;
+        } else {
+            if (file_exists($tempfilename)) {
+                unlink($tempfilename);
+            }
+            throw new moodle_exception('nocertificatesfound', 'local_iomad_track');
         }
-        fclose($handle);
-        unlink($tempfilename);
-        exit;
+    } else {
+        throw new moodle_exception('erroropeningzip', 'local_iomad_track', '',
+            'ZipArchive error code: ' . $zipresult);
     }
 }

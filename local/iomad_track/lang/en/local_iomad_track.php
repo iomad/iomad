@@ -59,3 +59,5 @@ $string['importcompletionsfromfile'] = 'Import completion information from file'
 $string['courseswithoutcompletionenabledcouunt'] = 'Number of courses which do not have completion enabled = {$a}';
 $string['courseswithoutcompletioncriteriacouunt'] ='Number of courses which have no completion criteria = {$a}';
 $string['checkcoursestatusmoodle'] = 'Check course settings for import';
+$string['nocertificatesfound'] = 'No certificates found to download';
+$string['erroropeningzip'] = 'Error creating ZIP file: {$a}';

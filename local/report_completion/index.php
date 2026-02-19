@@ -232,10 +232,8 @@ if (!empty($courseid)) {
     $buttons .= $OUTPUT->single_button($buttonlink, $buttoncaption, 'get');
     if (iomad::has_capability('block/iomad_company_admin:downloadcertificates', $companycontext)) {
         $buttoncaption = get_string('downloadcertificates', 'block_iomad_company_admin');
-        $buttonlink = new moodle_url($CFG->wwwroot . "/local/report_completion/index.php", ['certcourses' => $courseid,
-                                                                                            'certusers' => 0,
-                                                                                            'action' => 'downloadcerts',
-                                                                                            'sesskey' => sesskey()]);
+        $certcourseid = ($courseid == 1) ? 0 : $courseid;
+        $buttonlink = new moodle_url($CFG->wwwroot . "/local/report_completion/index.php", ['certcourses' => $certcourseid, 'certusers' => 0, 'action' => 'downloadcerts', 'sesskey' => sesskey()]);
         $buttons .= $OUTPUT->single_button($buttonlink, $buttoncaption, 'get');
     }
 
@@ -1195,7 +1193,7 @@ if (empty($courseid)) {
     $percentageuserslink = new moodle_url($baseurl, $params);
     $percentageselect = new single_select($percentageuserslink, 'showpercentage', $showpercentageoptions, $showpercentage);
 
-    $buttons = $output->render($percentageselect) . "&nbsp" .$buttons;;
+    $buttons = $output->render($percentageselect) . "&nbsp" .$buttons;
 
     $total = $DB->count_records_sql(
         "SELECT count(DISTINCT lit.id)
