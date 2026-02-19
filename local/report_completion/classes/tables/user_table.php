@@ -603,7 +603,8 @@ class user_table extends table_sql {
         }
 
         // Add in the modified time.
-        $tooltip .= format_string(get_string('lastmodified') . " - " .userdate($row->modifiedtime, get_config('local_iomad', 'date_format')));
+        $tooltip .= format_string(get_string('lastmodified') . " - " .
+                    userdate($row->modifiedtime, get_config('local_iomad', 'date_format')));
 
         if (!empty($row->timecompleted)) {
             $progress = 100;
@@ -768,7 +769,12 @@ class user_table extends table_sql {
                          'courseid' => $row->courseid,
                          'moduleid' => $modinfo->id])) {
                         if (!empty($gradeinfo->finalgrade) && $gradeinfo->finalgrade != 0) {
-                            $gradestring = format_string(round($gradeinfo->finalgrade, get_config('local_iomad', 'report_grade_places'))."%");
+                            $gradestring = format_string(
+                                round(
+                                    $gradeinfo->finalgrade,
+                                    get_config('local_iomad', 'report_grade_places')
+                                ) . "%"
+                            );
                         }
                     }
                     return $gradestring;

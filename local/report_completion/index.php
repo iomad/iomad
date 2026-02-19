@@ -290,7 +290,7 @@ if (!empty($data)) {
         if (!empty($confirm) && confirm_sesskey()) {
             iomad::require_capability('local/report_users:deleteentriesfull', $companycontext);
             echo $OUTPUT->header();
-            foreach($data->purge_entries as $rowid) {
+            foreach ($data->purge_entries as $rowid) {
                 track::delete_entry($rowid, true);
                 echo html_writer::tag('p', get_string('deletedtrackentry', 'block_iomad_company_admin', $rowid));
             }
@@ -359,7 +359,7 @@ if (!empty($data)) {
                     $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $key]);
 
                     // Re-generate the certificate.
-                    if ($trackrec = $DB->get_record('local_iomad_track',['id' => $key])) {
+                    if ($trackrec = $DB->get_record('local_iomad_track', ['id' => $key])) {
                         track::delete_entry($key);
                         track::record_certificates(
                             $trackrec->courseid,
