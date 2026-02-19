@@ -135,11 +135,15 @@ class oidc_sync {
         $profilecategories = iomad::iomad_filter_profile_categories($DB->get_records('user_info_category'), 0, $companyid);
         $customfields = [];
         if (!empty($profilecategories)) {
-            $customfields = $DB->get_records_select_menu("user_info_field",
-	                                          "categoryid IN (" . implode(',', array_keys($profilecategories)) . ")",
-						  null,
-						  '',
-                                                  "id, concat('profile_field_',shortname)");
+            [$insql, $inparams] - $DB->get_in_or_equal(array_keys($profilecategories),
+                                                       SQL_PARAMS_NAMED,
+                                                       'uicids');
+            $customfields = $DB->get_records_select_menu(
+                'user_info_field',
+                "categoryid {$insql}",
+                $inparams,
+                '',
+                "id, concat('profile_field_',shortname)");
             $customfields = array_values($customfields);
         }
         if (!empty($customfields)) {
@@ -182,7 +186,7 @@ class oidc_sync {
         // Process the users.
         foreach ($users as $aduser) {
             if ($CFG->debug > DEBUG_NONE) {
-                mtrace("Dealing with passed data " . print_r($aduser, true));
+                mtrace("Dealing with passed data " . var_dump($aduser));
             }
 
             // Are we restricting by email domain?
