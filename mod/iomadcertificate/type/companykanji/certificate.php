@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of the Certificate module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,31 +15,33 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD certificate activity
+ *
  * @package   mod_iomadcertificate
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-if (!defined('MOODLE_INTERNAL')) {
-    die('Direct access to this script is forbidden.'); // It must be included from view.php
-}
+// This plugin is based on code originally created as mod_certificate by Mark Nelson <markn@moodle.com>.
+
+defined('MOODLE_INTERNAL') || die();
 
 use local_iomad\iomad;
 
 $pdf = new PDF($iomadcertificate->orientation, 'mm', 'A4', true, 'UTF-8', false);
 
 $pdf->SetTitle(format_string($iomadcertificate->name, true));
-$pdf->SetProtection(array('modify'));
+$pdf->SetProtection(['modify']);
 $pdf->setPrintHeader(false);
 $pdf->setPrintFooter(false);
 $pdf->SetAutoPageBreak(false, 0);
 $pdf->AddPage();
 
-// Define variables
+// Define variables.
 global $DB;
 
-// Landscape
+// Landscape.
 if ($iomadcertificate->orientation == 'L') {
     $x = 40;
     $y = 56;
@@ -60,7 +61,7 @@ if ($iomadcertificate->orientation == 'L') {
     $brdrh = 210;
     $codey = 175;
     $alignment = 'L';
-} else { // Portrait
+} else { // Portrait.
     $x = 10;
     $y = 76;
     $sealx = 90;
@@ -91,140 +92,228 @@ $usesignature = true;
 $useborder = true;
 $usewatermark = true;
 
-// Get the site defaults
+// Get the site defaults.
 $sitecontext = context_system::instance();
 $fs = get_file_storage();
-if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad', 'iomadcertificate_logo', 0, 'sortorder DESC, id ASC', false)) {
+if ($files = $fs->get_area_files(
+    $sitecontext->id,
+    'local_iomad',
+    'iomadcertificate_logo',
+    0,
+    'sortorder DESC, id ASC',
+    false
+)) {
     if (!count($files) < 1) {
         $file = reset($files);
         unset($files);
         $certificateseal = $file->get_filename();
-        $seal_filename = $file->copy_content_to_temp($iomadcertificate->name, 'iomadcertificate_logo_');
+        $sealfilename = $file->copy_content_to_temp($iomadcertificate->name, 'iomadcertificate_logo_');
     }
 }
-if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad', 'iomadcertificate_signature', 0, 'sortorder DESC, id ASC', false)) {
+if ($files = $fs->get_area_files(
+    $sitecontext->id,
+    'local_iomad',
+    'iomadcertificate_signature',
+    0,
+    'sortorder DESC, id ASC',
+    false
+)) {
     if (!count($files) < 1) {
         $file = reset($files);
         unset($files);
         $certificatesignature = $file->get_filename();
-        $signature_filename = $file->copy_content_to_temp($iomadcertificate->name, 'iomadcertificate_signature_');
+        $signaturefilename = $file->copy_content_to_temp($iomadcertificate->name, 'iomadcertificate_signature_');
     }
 }
-if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad', 'iomadcertificate_border', 0, 'sortorder DESC, id ASC', false)) {
+if ($files = $fs->get_area_files(
+    $sitecontext->id,
+    'local_iomad',
+    'iomadcertificate_border',
+    0,
+    'sortorder DESC, id ASC',
+    false
+)) {
     if (!count($files) < 1) {
         $file = reset($files);
         unset($files);
         $certificateborder = $file->get_filename();
-        $border_filename = $file->copy_content_to_temp($iomadcertificate->name, 'iomadcertificate_border_');
+        $borderfilename = $file->copy_content_to_temp($iomadcertificate->name, 'iomadcertificate_border_');
     }
 }
-if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad', 'iomadcertificate_watermark', 0, 'sortorder DESC, id ASC', false)) {
+if ($files = $fs->get_area_files(
+    $sitecontext->id,
+    'local_iomad',
+    'iomadcertificate_watermark',
+    0,
+    'sortorder DESC, id ASC',
+    false
+)) {
     if (!count($files) < 1) {
         $file = reset($files);
         unset($files);
         $certificatewatermark = $file->get_filename();
-        $watermark_filename = $file->copy_content_to_temp($iomadcertificate->name, 'iomadcertificate_watermark_');
+        $watermarkfilename = $file->copy_content_to_temp($iomadcertificate->name, 'iomadcertificate_watermark_');
     }
 }
 
 $companyid = 0;
 if ($companyid = iomad::is_company_user($certuser)) {
-    if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad', 'companycertificateseal', $companyid, 'sortorder DESC, id ASC', false)) {
+    if ($files = $fs->get_area_files(
+        $sitecontext->id,
+        'local_iomad',
+        'companycertificateseal',
+        $companyid,
+        'sortorder DESC, id ASC',
+        false
+    )) {
         if (!count($files) < 1) {
             if (!empty($certificateseal)) {
-                @unlink($seal_filename);
+                @unlink($sealfilename);
             }
             $file = reset($files);
             unset($files);
             $certificateseal = $file->get_filename();
-            $seal_filename = $file->copy_content_to_temp($iomadcertificate->name, 'iomadcertificate_logo_');
+            $sealfilename = $file->copy_content_to_temp($iomadcertificate->name, 'iomadcertificate_logo_');
         }
     }
 
-    if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad', 'companycertificatesignature', $companyid, 'sortorder DESC, id ASC', false)) {
+    if ($files = $fs->get_area_files(
+        $sitecontext->id,
+        'local_iomad',
+        'companycertificatesignature',
+        $companyid,
+        'sortorder DESC, id ASC',
+        false
+    )) {
         if (!count($files) < 1) {
             if (!empty($certificatesignature)) {
-                @unlink($signature_filename);
+                @unlink($signaturefilename);
             }
             $file = reset($files);
             unset($files);
             $certificatesignature = $file->get_filename();
-            $signature_filename = $file->copy_content_to_temp($iomadcertificate->name, 'iomadcertificate_signature_');
+            $signaturefilename = $file->copy_content_to_temp($iomadcertificate->name, 'iomadcertificate_signature_');
         }
     }
 
-    if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad', 'companycertificateborder', $companyid, 'sortorder DESC, id ASC', false)) {
+    if ($files = $fs->get_area_files(
+        $sitecontext->id,
+        'local_iomad',
+        'companycertificateborder',
+        $companyid,
+        'sortorder DESC, id ASC',
+        false
+    )) {
         if (!count($files) < 1) {
             if (!empty($certificateborder)) {
-                @unlink($border_filename);
+                @unlink($borderfilename);
             }
             $file = reset($files);
             unset($files);
             $certificateborder = $file->get_filename();
-            $border_filename = $file->copy_content_to_temp($iomadcertificate->name, 'iomadcertificate_border_');
+            $borderfilename = $file->copy_content_to_temp($iomadcertificate->name, 'iomadcertificate_border_');
         }
     }
 
-    if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad', 'companycertificatewatermark', $companyid, 'sortorder DESC, id ASC', false)) {
+    if ($files = $fs->get_area_files(
+        $sitecontext->id,
+        'local_iomad',
+        'companycertificatewatermark',
+        $companyid,
+        'sortorder DESC, id ASC',
+        false
+    )) {
         if (!count($files) < 1) {
             if (!empty($certificatewatermark)) {
-                @unlink($watermark_filename);
+                @unlink($watermarkfilename);
             }
             $file = reset($files);
             unset($files);
             $certificatewatermark = $file->get_filename();
-            $watermark_filename = $file->copy_content_to_temp($iomadcertificate->name, 'iomadcertificate_watermark_');
+            $watermarkfilename = $file->copy_content_to_temp($iomadcertificate->name, 'iomadcertificate_watermark_');
         }
     }
 }
 
 // Get the company certificat design info, if appropriate.
 if (!empty($companyid)) {
-    if ($companycertificateinfo = $DB->get_record('companycertificate', array('companyid' => $companyid))) {
+    if ($companycertificateinfo = $DB->get_record('companycertificate', ['companyid' => $companyid])) {
         $uselogo = $companycertificateinfo->uselogo;
         $usesignature = $companycertificateinfo->usesignature;
         $useborder = $companycertificateinfo->useborder;
         $usewatermark = $companycertificateinfo->usewatermark;
-	if ($showgrade) {
+        if ($showgrade) {
             $showgrade = $companycertificateinfo->showgrade;
         }
     }
 }
-// Add images and lines
+// Add images and lines.
 if ($useborder) {
     if (empty($certificateborder)) {
-        iomadcertificate_print_image($pdf, $iomadcertificate, CERT_IMAGE_BORDER, $brdrx, $brdry, $brdrw, $brdrh);
+        iomadcertificate_print_image(
+            $pdf,
+            $iomadcertificate,
+            CERT_IMAGE_BORDER,
+            $brdrx,
+            $brdry,
+            $brdrw,
+            $brdrh
+        );
     } else {
-        $pdf->Image($border_filename, $brdrx, $brdry, $brdrw, $brdrh);
-        @unlink($border_filename);
+        $pdf->Image($borderfilename, $brdrx, $brdry, $brdrw, $brdrh);
+        @unlink($borderfilename);
     }
 }
 iomadcertificate_draw_frame($pdf, $iomadcertificate);
-// Set alpha to semi-transparency
+// Set alpha to semi-transparency.
 $pdf->SetAlpha(0.2);
 if ($usewatermark) {
     if (empty($certificatewatermark)) {
-        iomadcertificate_print_image($pdf, $iomadcertificate, CERT_IMAGE_WATERMARK, $wmarkx, $wmarky, $wmarkw, $wmarkh);
+        iomadcertificate_print_image(
+            $pdf,
+            $iomadcertificate,
+            CERT_IMAGE_WATERMARK,
+            $wmarkx,
+            $wmarky,
+            $wmarkw,
+            $wmarkh
+        );
     } else {
-        $pdf->Image($watermark_filename, $wmarkx, $wmarky, $wmarkw, $wmarkh);
-        @unlink($watermark_filename);
+        $pdf->Image($watermarkfilename, $wmarkx, $wmarky, $wmarkw, $wmarkh);
+        @unlink($watermarkfilename);
     }
 }
 $pdf->SetAlpha(1);
 if ($uselogo) {
     if (empty($certificateseal)) {
-        iomadcertificate_print_image($pdf, $iomadcertificate, CERT_IMAGE_SEAL, $sealx, $sealy, '', '');
+        iomadcertificate_print_image(
+            $pdf,
+            $iomadcertificate,
+            CERT_IMAGE_SEAL,
+            $sealx,
+            $sealy,
+            '',
+            ''
+        );
     } else {
-        $pdf->Image($seal_filename, $sealx, $sealy, '', '');
-        @unlink($seal_filename);
+        $pdf->Image($sealfilename, $sealx, $sealy, '', '');
+        @unlink($sealfilename);
     }
 }
 if ($usesignature) {
     if (empty($certificatesignature)) {
-        iomadcertificate_print_image($pdf, $iomadcertificate, CERT_IMAGE_SIGNATURE, $sigx, $sigy, '', '');
+        iomadcertificate_print_image(
+            $pdf,
+            $iomadcertificate,
+            CERT_IMAGE_SIGNATURE,
+            $sigx,
+            $sigy,
+            '',
+            ''
+        );
     } else {
-        $pdf->Image($signature_filename, $sigx, $sigy, '', '');
-        @unlink($signature_filename);
+        $pdf->Image($signaturefilename, $sigx, $sigy, '', '');
+        @unlink($signaturefilename);
     }
 }
 
@@ -237,18 +326,89 @@ if (!empty($gradeinfo[1])) {
 
 if ($showgrade) {
     $dategradestring = get_string('companyscore', 'iomadcertificate', $gradestr) . ' ' .
-    get_string('companydate', 'iomadcertificate', iomadcertificate_get_date($iomadcertificate, $certrecord, $course, $certuser->id));
+        get_string(
+            'companydate',
+            'iomadcertificate',
+            iomadcertificate_get_date($iomadcertificate, $certrecord, $course, $certuser->id)
+        );
 } else {
-    $dategradestring = get_string('companydatecap', 'iomadcertificate', iomadcertificate_get_date($iomadcertificate, $certrecord, $course, $certuser->id));
+    $dategradestring = get_string(
+        'companydatecap',
+        'iomadcertificate',
+        iomadcertificate_get_date($iomadcertificate, $certrecord, $course, $certuser->id)
+    );
 }
 
-// Add text
+// Add text.
 $pdf->SetTextColor(0, 0, 120);
 $pdf->SetTextColor(0, 0, 0);
-iomadcertificate_print_text($pdf, $x, $y + 20, $alignment, 'droidsansfallback', '', 20, get_string('companycertify', 'iomadcertificate'));
-iomadcertificate_print_text($pdf, $x, $y + 34, $alignment, 'droidsansfallback', '', 30, fullname($certuser));
-iomadcertificate_print_text($pdf, $x, $y + 53, $alignment, 'droidsansfallback', '', 20, get_string('companydetails', 'iomadcertificate'));
-iomadcertificate_print_text($pdf, $x, $y + 68, $alignment, 'droidsansfallback', '', 20, format_string($course->fullname, true));
-iomadcertificate_print_text($pdf, $x, $y + 86, $alignment, 'droidsansfallback', '', 14, $dategradestring);
-iomadcertificate_print_text($pdf, $x, $codey, 'C', 'droidsansfallback', '', 10, iomadcertificate_get_code($iomadcertificate, $certrecord));
-iomadcertificate_print_text($pdf, $custx, $custy, $alignment, 'droidsansfallback', null, null, $iomadcertificate->customtext);
+iomadcertificate_print_text(
+    $pdf,
+    $x,
+    $y + 20,
+    $alignment,
+    'droidsansfallback',
+    '',
+    20,
+    get_string('companycertify', 'iomadcertificate')
+);
+iomadcertificate_print_text(
+    $pdf,
+    $x,
+    $y + 34,
+    $alignment,
+    'droidsansfallback',
+    '',
+    30,
+    fullname($certuser)
+);
+iomadcertificate_print_text(
+    $pdf,
+    $x,
+    $y + 53,
+    $alignment,
+    'droidsansfallback',
+    '',
+    20,
+    get_string('companydetails', 'iomadcertificate')
+);
+iomadcertificate_print_text(
+    $pdf,
+    $x,
+    $y + 68,
+    $alignment,
+    'droidsansfallback',
+    '',
+    20,
+    format_string($course->fullname, true)
+);
+iomadcertificate_print_text(
+    $pdf,
+    $x,
+    $y + 86,
+    $alignment,
+    'droidsansfallback',
+    '',
+    14,
+    $dategradestring
+);
+iomadcertificate_print_text(
+    $pdf,
+    $x,
+    $codey,
+    'C',
+    'droidsansfallback',
+    '',
+    10,
+    iomadcertificate_get_code($iomadcertificate, $certrecord)
+);
+iomadcertificate_print_text(
+    $pdf,
+    $custx,
+    $custy,
+    $alignment,
+    'droidsansfallback',
+    null,
+    null,
+    $iomadcertificate->customtext
+);
