@@ -176,6 +176,13 @@ class company_user {
             $id = user_create_user($user);
             $user->id = $id;
 
+            // For external authentication plugins, properly initialize the password field
+            // to AUTH_PASSWORD_NOT_CACHED to prevent password policy checks from failing.
+            if (!$authplugin->is_internal()) {
+                $fulluser = get_complete_user_data('id', $user->id);
+                update_internal_user_password($fulluser, '');
+            }
+
             // Passwords will be created and sent out on cron.
             if ($createpassword) {
                 set_user_preference('create_password', 1, $user->id);
