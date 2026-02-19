@@ -26,8 +26,6 @@
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Default block class.
  */
