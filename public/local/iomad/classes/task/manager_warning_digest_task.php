@@ -25,7 +25,7 @@
 
 namespace local_iomad\task;
 
-use core\core\task\scheduled_task;
+use core\task\scheduled_task;
 use html_writer;
 use local_iomad\{company, emailtemplate};
 
