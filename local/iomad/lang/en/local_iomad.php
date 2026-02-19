@@ -459,7 +459,7 @@ $string['approval_body'] = '<p>You have been asked to approve access to course {
 $string['approved_subject'] = 'You have been approved access to {Course_FullName}.';
 $string['approved_body'] = '<p>You have been granted access to course {Course_FullName}. To access this, please click on <a href="{CourseURL}">{CourseURL}</a>.</p>';
 $string['course_classroom_approval_subject'] = 'New face-to-face training event approval.';
-$string['course_classroom_approval_body'] ='<p>You have been asked to approve access to the face-to-face training course {Event_Name} for {Approveuser_FirstName} {Approveuser_LastName} at the following event -</p><br>
+$string['course_classroom_approval_body'] = '<p>You have been asked to approve access to the face-to-face training course {Event_Name} for {Approveuser_FirstName} {Approveuser_LastName} at the following event -</p><br>
 Time: {Classroom_Time}</br>
 Location: {Classroom_Name}</br>
 Address: {Classroom_Address}</br>{Classroom_City} {Classroom_Postcode}</br></br>
@@ -613,12 +613,12 @@ $string['password_update_body'] = '<p>Your password has been updated by the admi
 $string['course_not_started_warning_subject'] = 'Notice: Course {Course_FullName} has not been started';
 $string['course_not_started_warning_body'] = '<p>Dear {User_FirstName},</p><p>You have still not yet started your training on {Course_FullName}. Please visit <a href="{CourseURL}">{CourseURL}</a> to rectify this.</p>';
 $string['trainingevent_not_selected_subject'] = 'Notice: Training event not selected in course {Course_FullName}';
-$string['trainingevent_not_selected_body'] ='<p>Dear {User_FirstName}.</p><p>You have not signed up for any training events available in {Course_FullName}. Please visit <a href="{CourseURL}">{CourseURL}</a> to rectify this.</p>';
+$string['trainingevent_not_selected_body'] = '<p>Dear {User_FirstName}.</p><p>You have not signed up for any training events available in {Course_FullName}. Please visit <a href="{CourseURL}">{CourseURL}</a> to rectify this.</p>';
 $string['completion_warn_user_subject'] = 'Notice: Course {Course_FullName} has not been completed';
-$string['completion_warn_user_body'] ='<p>Dear {User_FirstName},</p>
+$string['completion_warn_user_body'] = '<p>Dear {User_FirstName},</p>
 <p>You have still not completed your training on {Course_FullName}. Please visit <a href="{CourseURL}">{CourseURL}</a> to rectify this.</p>';
 $string['completion_warn_manager_subject'] = 'User completion failure report';
-$string['completion_warn_manager_body'] ='<p>Dear {User_FirstName},</p>
+$string['completion_warn_manager_body'] = '<p>Dear {User_FirstName},</p>
 <p>The following users have not completed their training within the normal timeframe:</p>
 <p>{Course_ReportText}</p>';
 $string['completion_digest_manager_subject'] = 'User course completions weekly report';
@@ -678,7 +678,7 @@ $string['completion_course_user_body'] = '<p>Dear {User_FirstName},</p>
 
 <p>The certificate is also available from your dashboard should you need a copy in the future.</p>';
 $string['user_programcompleted_subject'] = 'Program of courses is complete';
-$string['user_programcompleted_body'] ='<p>Dear {User_FirstName} {User_LastName},</p>
+$string['user_programcompleted_body'] = '<p>Dear {User_FirstName} {User_LastName},</p>
 <p>Congratulations! You have completed all of the courses within your training program.</p>';
 $string['completion_warn_supervisor_subject'] = 'Notice: Course {Course_FullName} has not been completed';
 $string['completion_warn_supervisor_body'] = '<p>{User_FirstName} {User_LastName} has not completed their training in course {Course_FullName} within the normal timeframe.</p>';
@@ -722,7 +722,7 @@ $string['company_suspended_body'] = '<p>Hello {User_FirstName} {User_LastName},<
 <p>Your email: {User_Email}</p>
 <p>If you feel that this is in error, please contact support.</p>';
 $string['company_unsuspended_subject'] = 'Company account has been unsuspended';
-$string['company_unsuspended_body'] ='<p>Hello {User_FirstName} {User_LastName},</p>
+$string['company_unsuspended_body'] = '<p>Hello {User_FirstName} {User_LastName},</p>
 <p>Your company account has been unsuspended on {SiteURL}. You now have access to manage your company.</p>
 <p>Your email: {User_Email}</p>
 <p>If you have any further questions, please contact support.</p>';

@@ -1002,7 +1002,7 @@ class track {
             $sqlselect .= " AND userid {$insql}";
         }
 
-        // Ensure the temp directory exists
+        // Ensure the temp directory exists.
         $tempdir = $CFG->dataroot . '/temp/filestorage';
         if (!file_exists($tempdir)) {
             mkdir($tempdir, 0777, true);
@@ -1029,7 +1029,7 @@ class track {
                                                        $sqlparams);
                 // Did we get anything?
                 if (count($comprecords) > 0) {
-                    // For all of the track saved files.
+                    // For all of the track saved files..
                     foreach ($comprecords as $comprecord) {
                         if ($filerec = $DB->get_record_select('files',
                                                               "component =:component
@@ -1079,7 +1079,7 @@ class track {
             // Did we manage to create anything?
             if ($filesadded > 0 && file_exists($tempfilename) && filesize($tempfilename) > 0) {
 
-                // Send the headers to force download the zip file
+                // Send the headers to force download the zip file.
                 header("Content-type: application/zip");
                 header("Content-Disposition: attachment; filename=$realfilename");
                 header("Content-length: " . filesize($tempfilename));
@@ -1088,7 +1088,7 @@ class track {
                 ob_clean();
                 flush();
                 $handle = fopen($tempfilename, "rb");
-                while (!feof($handle)){
+                while (!feof($handle)) {
                     echo fread($handle, 8192);
                 }
                 fclose($handle);
