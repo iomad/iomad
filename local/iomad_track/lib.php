@@ -126,11 +126,20 @@ function local_iomad_track_download_certs($companyid = 0, $courses = [], $users 
 
     }
 
+    // Ensure the temp directory exists
+    $tempdir = $CFG->dataroot . '/temp/filestorage';
+    if (!file_exists($tempdir)) {
+        mkdir($tempdir, 0777, true);
+    }
+
     // Create the zip file.
     $zipfile = new ZipArchive();
-    $tempfilename = $CFG->dataroot . '/temp/filestorage/' . time();
+    $tempfilename = $tempdir . '/' . time() . '_' . random_string(10);
     $realfilename = "certificates.zip";
-    if ($zipfile->open($tempfilename, ZipArchive::CREATE) === TRUE) {
+    $zipresult = $zipfile->open($tempfilename, ZipArchive::CREATE);
+    if ($zipresult === true) {
+        $filesadded = 0;
+
         // Process all of the courses.
         foreach ($allcourses as $course) {
             $sqlparams['courseid'] = $course;
@@ -151,35 +160,66 @@ function local_iomad_track_download_certs($companyid = 0, $courses = [], $users 
                                                            'filearea' => 'issue',
                                                            'itemid' => $comprecord->id])) {
                         if ($userrec = $DB->get_record('user', ['id' => $comprecord->userid])) {
-                            $savefilename = format_string($comprecord->coursename) . "/" .
-                                            $userrec->firstname . "_" .
-                                            $userrec->lastname . "_" . $userrec->id . "/" .
-                                            $comprecord->id . "_" . $filerec->filename;
+                            // Clean up the filename for the zip archive.
+                            $cleancoursename = clean_filename(format_string($comprecord->coursename));
+                            $cleanfirstname = clean_filename($userrec->firstname);
+                            $cleanlastname = clean_filename($userrec->lastname);
+                            $savefilename = $cleancoursename . "/" .
+                                          $cleanfirstname . "_" .
+                                          $cleanlastname . "_" .
+                                          $userrec->id . "/" .
+                                          $comprecord->id . "_" .
+                                          $filerec->filename;
                             $first = substr($filerec->contenthash, 0, 2);
                             $second = substr($filerec->contenthash, 2, 2);
                             $filepath = $CFG->dataroot . "/filedir/$first/$second/" . $filerec->contenthash;
-                            $zipfile->addFile($filepath, $savefilename);
+
+                            // Add the file to the zip file.
+                            if (file_exists($filepath)) {
+                                if ($zipfile->addFile($filepath, $savefilename)) {
+                                    $filesadded++;
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+
+        // Close the file.
         $zipfile->close();
 
-        // Send the headers to force download the zip file.
-        header("Content-type: application/zip");
-        header("Content-Disposition: attachment; filename=$realfilename");
-        header("Content-length: " . filesize($tempfilename));
-        header("Pragma: no-cache");
-        header("Expires: 0");
-        ob_clean();
-        flush();
-        $handle = fopen($tempfilename, "rb");
-        while (!feof($handle)){
-            echo fread($handle, 8192);
+        // Did we manage to create anything?
+        if ($filesadded > 0 && file_exists($tempfilename) && filesize($tempfilename) > 0) {
+
+            // Send the headers to force download the zip file
+            header("Content-type: application/zip");
+            header("Content-Disposition: attachment; filename=$realfilename");
+            header("Content-length: " . filesize($tempfilename));
+            header("Pragma: no-cache");
+            header("Expires: 0");
+            ob_clean();
+            flush();
+            $handle = fopen($tempfilename, "rb");
+            while (!feof($handle)){
+                echo fread($handle, 8192);
+            }
+            fclose($handle);
+            unlink($tempfilename);
+            exit;
+        } else {
+            // Didn't get any files - so throw an error.
+            if (file_exists($tempfilename)) {
+                unlink($tempfilename);
+            }
+            throw new moodle_exception('nocertificatesfound', 'local_iomad_track');
         }
-        fclose($handle);
-        unlink($tempfilename);
-        exit;
+    } else {
+        throw new moodle_exception(
+            'erroropeningzip',
+            'local_iomad_track',
+            '',
+            'ZipArchive error code: ' . $zipresult
+        );
     }
 }
