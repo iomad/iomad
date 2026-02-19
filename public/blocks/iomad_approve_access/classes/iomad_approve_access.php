@@ -96,14 +96,17 @@ class iomad_approve_access {
 
         // Then get the list of users I am responsible for.
         $myusers = company::get_my_users($companyid);
-        [$insql, $sqlparams] = $DB->get_in_or_equal(
-            array_keys($myusers),
-            SQL_PARAMS_NAMED,
-            'muids'
-        );
+        if (empty($myusers)) {
+            return false;
+        }
+
+        // Check my list of users.
+        [$insql, $sqlparams] = $DB->get_in_or_equal(array_keys($myusers),
+                                                    SQL_PARAMS_NAMED,
+                                                    'muids');
         $sqlparams['companyid'] = $companyid;
         $sqlparams['myuserid'] = $USER->id;
-        if (!empty($myuserids) &&
+        if (!empty($myusers) &&
             $DB->get_records_sql(
                 "SELECT beae.*
                  FROM {block_iomad_approve_access} beae
