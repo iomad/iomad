@@ -264,7 +264,7 @@ foreach ($licenses as $license) {
                                         'block_iomad_company_admin',
                                         userdate(
                                             $license->expirydate,
-                                            $get_config('local_iomad', 'date_format'))) . ")";
+                                            get_config('local_iomad', 'date_format'))) . ")";
     } else if ($license->startdate > time()) {
         $licenselist[$license->id] = $license->name . " (" .
                                      get_string(
@@ -272,7 +272,7 @@ foreach ($licenses as $license) {
                                         'block_iomad_company_admin',
                                         userdate(
                                             $license->startdate,
-                                            $get_config('local_iomad', 'date_format'))) . ")";
+                                            get_config('local_iomad', 'date_format'))) . ")";
     } else {
         $licenselist[$license->id] = $license->name;
     }
