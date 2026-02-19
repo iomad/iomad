@@ -811,6 +811,10 @@ class auth extends \auth_plugin_base {
                 profile_save_data($user);
                 // Make sure all user data is fetched.
                 $user = \core_user::get_user($user->id);
+
+                // For external authentication plugins, properly initialize the password field
+                // to AUTH_PASSWORD_NOT_CACHED to prevent password policy checks from failing.
+                update_internal_user_password($user, '');
             } else {
                 // Moodle user does not exist and settings prevent creating new accounts.
                 $event = \core\event\user_login_failed::create(['other' => ['username' => $uid,
