@@ -993,8 +993,13 @@ class track {
                       AND timecompleted > 0";
 
         // Do we have any users?
+        $sqlparams = [];
+        $sqlselect = "courseid = :courseid AND companyid = :companyid AND timecompleted > 0";
         if (!empty($users)) {
-            $sqlselect .= " AND userid IN (" . implode(',', $users) . ")";
+            [$insql, $sqlparams] = $DB->get_in_or_equal($users,
+                                                        SQL_PARAMS_NAMED,
+                                                        'uids');
+            $sqlselect .= " AND userid {$insql}";
         }
 
         // Create the zip file.
@@ -1004,14 +1009,13 @@ class track {
 
         // Make sure we can create that file.
         if ($zipfile->open($tempfilename, ZipArchive::CREATE) === true) {
+            // Process all of the courses.
             foreach ($allcourses as $course) {
-                // Get the completed records for that course.
+                $sqlparams['courseid'] = $course;
+                $sqlparams['companyid'] = $company->id;
                 $comprecords = $DB->get_records_select('local_iomad_track',
                                                        $sqlselect,
-                                                       [
-                                                        'courseid' => $course,
-                                                        'companyid' => $company->id,
-                                                       ]);
+                                                       $sqlparams);
                 // Did we get anything?
                 if (count($comprecords) > 0) {
                     // For all of the track saved files.
@@ -1030,7 +1034,7 @@ class track {
 
                             // Check the user is valid.
                             if ($userrec = $DB->get_record('user', ['id' => $comprecord->userid])) {
-                                $savefilename = $comprecord->coursename .
+                                $savefilename = format_string($comprecord->coursename) .
                                                 "/" .
                                                 $userrec->firstname .
                                                 "_" .
