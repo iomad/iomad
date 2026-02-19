@@ -266,9 +266,9 @@ class oidc_sync {
                             $userrec->$profilefield = $aduser[$first][$second];
                         }
                     } else if (!empty($aduser[$mapping])) {
-                            if ($CFG->debug > DEBUG_NONE) {
-                                mtrace("Setting profile field $profilefield to " . $aduser[$mapping]);
-                            }
+                        if ($CFG->debug > DEBUG_NONE) {
+                            mtrace("Setting profile field $profilefield to " . $aduser[$mapping]);
+                        }
                         $userrec->$profilefield = $aduser[$mapping];
                     }
                 }
