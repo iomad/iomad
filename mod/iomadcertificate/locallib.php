@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of the Certificate module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,12 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD certificate activity
+ *
  * @package   mod_iomadcertificate
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   mod_certificate by Mark Nelson <markn@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+// This plugin is based on code originally created as mod_certificate by Mark Nelson <markn@moodle.com>.
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -62,15 +64,15 @@ function iomadcertificate_get_teachers($iomadcertificate, $user, $course, $cm) {
     $potteachers = get_users_by_capability($context, 'mod/iomadcertificate:manage',
         '', '', '', '', '', '', false, false);
     if (empty($potteachers)) {
-        return array();
+        return [];
     }
-    $teachers = array();
-    if (groups_get_activity_groupmode($cm, $course) == SEPARATEGROUPS) {   // Separate groups are being used
-        if ($groups = groups_get_all_groups($course->id, $user->id)) {  // Try to find all groups
+    $teachers = [];
+    if (groups_get_activity_groupmode($cm, $course) == SEPARATEGROUPS) {   // Separate groups are being used.
+        if ($groups = groups_get_all_groups($course->id, $user->id)) {  // Try to find all groups.
             foreach ($groups as $group) {
                 foreach ($potteachers as $t) {
                     if ($t->id == $user->id) {
-                        continue; // do not send self
+                        continue; // Do not send self.
                     }
                     if (groups_is_member($group->id, $t->id)) {
                         $teachers[$t->id] = $t;
@@ -78,12 +80,12 @@ function iomadcertificate_get_teachers($iomadcertificate, $user, $course, $cm) {
                 }
             }
         } else {
-            // user not in group, try to find teachers without group
+            // User not in group, try to find teachers without group.
             foreach ($potteachers as $t) {
                 if ($t->id == $USER->id) {
-                    continue; // do not send self
+                    continue; // Do not send self.
                 }
-                if (!groups_get_all_groups($course->id, $t->id)) { //ugly hack
+                if (!groups_get_all_groups($course->id, $t->id)) {
                     $teachers[$t->id] = $t;
                 }
             }
@@ -91,7 +93,7 @@ function iomadcertificate_get_teachers($iomadcertificate, $user, $course, $cm) {
     } else {
         foreach ($potteachers as $t) {
             if ($t->id == $USER->id) {
-                continue; // do not send self
+                continue; // Do not send self.
             }
             $teachers[$t->id] = $t;
         }
@@ -112,26 +114,27 @@ function iomadcertificate_get_teachers($iomadcertificate, $user, $course, $cm) {
 function iomadcertificate_email_teachers($course, $iomadcertificate, $certrecord, $cm) {
     global $USER, $CFG, $DB;
 
-    if ($iomadcertificate->emailteachers == 0) {          // No need to do anything
+    // Do we need to do anything?
+    if ($iomadcertificate->emailteachers == 0) {
         return;
     }
 
-    $user = $DB->get_record('user', array('id' => $certrecord->userid));
+    $user = $DB->get_record('user', ['id' => $certrecord->userid]);
 
     if ($teachers = iomadcertificate_get_teachers($iomadcertificate, $user, $course, $cm)) {
         $strawarded = get_string('awarded', 'iomadcertificate');
         foreach ($teachers as $teacher) {
             $info = new stdClass;
             $info->student = fullname($USER);
-            $info->course = format_string($course->fullname,true);
-            $info->iomadcertificate = format_string($iomadcertificate->name,true);
+            $info->course = format_string($course->fullname, true);
+            $info->iomadcertificate = format_string($iomadcertificate->name, true);
             $info->url = $CFG->wwwroot.'/mod/iomadcertificate/report.php?id='.$cm->id;
             $from = $USER;
             $postsubject = $strawarded . ': ' . $info->student . ' -> ' . $iomadcertificate->name;
             $posttext = iomadcertificate_email_teachers_text($info);
             $posthtml = ($teacher->mailformat == 1) ? iomadcertificate_email_teachers_html($info) : '';
 
-            @email_to_user($teacher, $from, $postsubject, $posttext, $posthtml);  // If it fails, oh well, too bad.
+            @email_to_user($teacher, $from, $postsubject, $posttext, $posthtml);
         }
     }
 }
@@ -170,7 +173,7 @@ function iomadcertificate_email_others($course, $iomadcertificate, $certrecord, 
                     $posttext = iomadcertificate_email_teachers_text($info);
                     $posthtml = iomadcertificate_email_teachers_html($info);
 
-                    @email_to_user($destination, $from, $postsubject, $posttext, $posthtml);  // If it fails, oh well, too bad.
+                    @email_to_user($destination, $from, $postsubject, $posttext, $posthtml);
                 }
             }
         }
@@ -196,9 +199,9 @@ function iomadcertificate_email_teachers_text($info) {
  * @return string
  */
 function iomadcertificate_email_teachers_html($info) {
-    $posthtml  = '<font face="sans-serif">';
-    $posthtml .= '<p>' . get_string('emailteachermailhtml', 'iomadcertificate', $info) . '</p>';
-    $posthtml .= '</font>';
+    $posthtml  = '<font face="sans-serif"> ';
+    $posthtml .= '<p> ' . get_string('emailteachermailhtml', 'iomadcertificate', $info) . '</p> ';
+    $posthtml .= '</font> ';
 
     return $posthtml;
 }
@@ -218,7 +221,7 @@ function iomadcertificate_email_teachers_html($info) {
 function iomadcertificate_email_student($course, $iomadcertificate, $certrecord, $context, $filecontents, $filename) {
     global $USER;
 
-    // Get teachers
+    // Get teachers.
     if ($users = get_users_by_capability($context, 'moodle/course:update', 'u.*', 'u.id ASC',
         '', '', '', '', false, true)) {
         $users = sort_by_roleassignment_authority($users, $context);
@@ -232,7 +235,7 @@ function iomadcertificate_email_student($course, $iomadcertificate, $certrecord,
         $teacher = array_shift($users);
     }
 
-    // Ok, no teachers, use administrator name
+    // Ok, no teachers, use administrator name.
     if (empty($teacher)) {
         $teacher = get_admin();
     }
@@ -245,7 +248,7 @@ function iomadcertificate_email_student($course, $iomadcertificate, $certrecord,
     $subject = $info->course . ': ' . $info->iomadcertificate;
     $message = get_string('emailstudenttext', 'iomadcertificate', $info) . "\n";
 
-    // Make the HTML version more XHTML happy  (&amp;)
+    // Make the HTML version more XHTML happy  (&amp;).
     $messagehtml = text_to_html(get_string('emailstudenttext', 'iomadcertificate', $info));
 
     $tempdir = make_temp_directory('iomadcertificate/attachment');
@@ -288,19 +291,20 @@ function iomadcertificate_save_pdf($pdf, $certrecordid, $filename, $contextid) {
 
     $fs = get_file_storage();
 
-    // Prepare file record object
+    // Prepare file record object.
     $component = 'mod_iomadcertificate';
     $filearea = 'issue';
     $filepath = '/';
-    $fileinfo = array(
-        'contextid' => $contextid,   // ID of context
-        'component' => $component,   // usually = table name
-        'filearea'  => $filearea,     // usually = table name
-        'itemid'    => $certrecordid,  // usually = ID of row in table
-        'filepath'  => $filepath,     // any path beginning and ending in /
-        'filename'  => $filename,    // any filename
-        'mimetype'  => 'application/pdf',    // any filename
-        'userid'    => $certuser->id);
+    $fileinfo = [
+        'contextid' => $contextid,   // ID of context.
+        'component' => $component,   // Usually = table name.
+        'filearea'  => $filearea,     // Usually = table name.
+        'itemid'    => $certrecordid,  // Usually = ID of row in table.
+        'filepath'  => $filepath,     // Any path beginning and ending in /.
+        'filename'  => $filename,    // Any filename.
+        'mimetype'  => 'application/pdf',    // Any filename.
+        'userid'    => $certuser->id,
+        ];
 
     // We do not know the previous file name, better delete everything here,
     // luckily there is supposed to be always only one iomadcertificate here.
@@ -324,7 +328,8 @@ function iomadcertificate_print_user_files($iomadcertificate, $userid, $contexti
 
     $output = '';
 
-    $certrecord = $DB->get_record('iomadcertificate_issues', array('userid' => $userid, 'iomadcertificateid' => $iomadcertificate->id));
+    $certrecord = $DB->get_record('iomadcertificate_issues', ['userid' => $userid,
+                                                              'iomadcertificateid' => $iomadcertificate->id]);
     $fs = get_file_storage();
 
     $component = 'mod_iomadcertificate';
@@ -332,14 +337,21 @@ function iomadcertificate_print_user_files($iomadcertificate, $userid, $contexti
     $files = $fs->get_area_files($contextid, $component, $filearea, $certrecord->id);
     foreach ($files as $file) {
         $filename = $file->get_filename();
-        $link = file_encode_url($CFG->wwwroot.'/pluginfile.php', '/'.$contextid.'/mod_iomadcertificate/issue/'.$certrecord->id.'/'.$filename);
+        $link = file_encode_url(
+            $CFG->wwwroot . '/pluginfile.php',
+            '/' . $contextid . '/mod_iomadcertificate/issue/' . $certrecord->id . '/' . $filename
+        );
 
-        $output = '<img src="'.$OUTPUT->image_url(file_mimetype_icon($file->get_mimetype())).'" height="16" width="16" alt="'.$file->get_mimetype().'" />&nbsp;'.
-            '<a href="'.$link.'" >'.s($filename).'</a>';
+        $output = '<img src="'.
+                  $OUTPUT->image_url(file_mimetype_icon($file->get_mimetype())) .
+                  '" height="16" width="16" alt="' .
+                  $file->get_mimetype().'" />&nbsp;'.
+            '<a href="'.$link.'" > ' .
+            s($filename).'</a> ';
 
     }
-    $output .= '<br />';
-    $output = '<div class="files">'.$output.'</div>';
+    $output .= '<br /> ';
+    $output = '<div class="files"> '.$output.'</div> ';
 
     return $output;
 }
@@ -357,24 +369,25 @@ function iomadcertificate_print_user_files($iomadcertificate, $userid, $contexti
 function iomadcertificate_get_issue($course, $user, $iomadcertificate, $cm) {
     global $DB;
 
-    // Check if there is an issue already, should only ever be one
-    if ($certissue = $DB->get_record('iomadcertificate_issues', array('userid' => $user->id, 'iomadcertificateid' => $iomadcertificate->id))) {
-        // is this from before the user was enrolled?
+    // Check if there is an issue already, should only ever be one.
+    if ($certissue = $DB->get_record('iomadcertificate_issues', ['userid' => $user->id,
+                                                                 'iomadcertificateid' => $iomadcertificate->id])) {
+        // Is this from before the user was enrolled?
         $enrolinfo = $DB->get_record_sql("SELECT ue.* FROM {user_enrolments} ue
                                           JOIN {enrol} e ON (ue.enrolid = e.id)
                                           WHERE e.courseid = :courseid
                                           AND e.status = 0
                                           AND ue.userid = :userid",
-                                          array('courseid' => $course->id, 'userid' => $user->id));
+                                          ['courseid' => $course->id, 'userid' => $user->id]);
         if (empty($enrolinfo->timestart) || $certissue->timecreated > $enrolinfo->timestart) {
             return $certissue;
         } else {
             // No. Remove this record.
-            $DB->delete_records('iomadcertificate_issues', array('id' => $certissue->id));
+            $DB->delete_records('iomadcertificate_issues', ['id' => $certissue->id]);
         }
     }
 
-    // Create new iomadcertificate issue record
+    // Create new iomadcertificate issue record.
     $certissue = new stdClass();
     $certissue->iomadcertificateid = $iomadcertificate->id;
     $certissue->userid = $user->id;
@@ -382,7 +395,7 @@ function iomadcertificate_get_issue($course, $user, $iomadcertificate, $cm) {
     $certissue->timecreated = time();
     $certissue->id = $DB->insert_record('iomadcertificate_issues', $certissue);
 
-    // Email to the teachers and anyone else
+    // Email to the teachers and anyone else.
     iomadcertificate_email_teachers($course, $iomadcertificate, $certissue, $cm);
     iomadcertificate_email_others($course, $iomadcertificate, $certissue, $cm);
 
@@ -400,12 +413,18 @@ function iomadcertificate_get_issue($course, $user, $iomadcertificate, $cm) {
  * @param int $perpage total per page
  * @return stdClass the users
  */
-function iomadcertificate_get_issues($iomadcertificateid, $sort="ci.timecreated ASC", $groupmode = false, $cm = null, $page = 0, $perpage = 0) {
+function iomadcertificate_get_issues(
+    $iomadcertificateid,
+    $sort="ci.timecreated ASC",
+    $groupmode = false,
+    $cm = null,
+    $page = 0,
+    $perpage = 0) {
     global $DB, $USER;
 
     $context = context_module::instance($cm->id);
     $conditionssql = '';
-    $conditionsparams = array();
+    $conditionsparams = [];
 
     // Get all users that can manage this iomadcertificate to exclude them from the report.
     $certmanagers = array_keys(get_users_by_capability($context, 'mod/iomadcertificate:manage', 'u.id'));
@@ -420,30 +439,30 @@ function iomadcertificate_get_issues($iomadcertificateid, $sort="ci.timecreated 
 
         // If we are viewing all participants and the user does not have access to all groups then return nothing.
         if (!$currentgroup && !$canaccessallgroups) {
-            return array();
+            return [];
         }
 
         if ($currentgroup) {
             if (!$canaccessallgroups) {
                 // Guest users do not belong to any groups.
                 if (isguestuser()) {
-                    return array();
+                    return [];
                 }
 
                 // Check that the user belongs to the group we are viewing.
                 $usersgroups = groups_get_all_groups($cm->course, $USER->id, $cm->groupingid);
                 if ($usersgroups) {
                     if (!isset($usersgroups[$currentgroup])) {
-                        return array();
+                        return [];
                     }
                 } else { // They belong to no group, so return an empty array.
-                    return array();
+                    return [];
                 }
             }
 
             $groupusers = array_keys(groups_get_members($currentgroup, 'u.*'));
             if (empty($groupusers)) {
-                return array();
+                return [];
             }
 
             list($sql, $params) = $DB->get_in_or_equal($groupusers, SQL_PARAMS_NAMED, 'grp');
@@ -455,18 +474,27 @@ function iomadcertificate_get_issues($iomadcertificateid, $sort="ci.timecreated 
     $page = (int) $page;
     $perpage = (int) $perpage;
 
-    // Get all the users that have iomadcertificates issued, should only be one issue per user for a iomadcertificate
-    $allparams = $conditionsparams + array('iomadcertificateid' => $iomadcertificateid);
+    // Get all the users that have iomadcertificates issued, should only be one issue per user for a iomadcertificate.
+    $allparams = $conditionsparams + ['iomadcertificateid' => $iomadcertificateid];
 
     // The picture fields also include the name fields for the user.
      $picturefields = \core_user\fields::for_userpic()->get_sql('u');
-     $users = $DB->get_records_sql("SELECT ". $DB->sql_concat("'u.id'", $DB->sql_concat("'-'", 'ci.code')) . " AS indexcode {$picturefields->selects}, u.idnumber, ci.code, ci.timecreated
-                                     FROM {user} u
-                               INNER JOIN {iomadcertificate_issues} ci
-                                       ON u.id = ci.userid
-                                    WHERE u.deleted = 0
-                                      AND ci.iomadcertificateid = :iomadcertificateid $conditionssql
-                                 ORDER BY {$sort}", $allparams, $page * $perpage, $perpage);
+     $users = $DB->get_records_sql(
+        "SELECT ". $DB->sql_concat("'u.id'",
+            $DB->sql_concat("'-'", 'ci.code')) .
+        " AS indexcode
+         {$picturefields->selects},
+         u.idnumber,
+         ci.code,
+         ci.timecreated
+         FROM {user} u
+         JOIN {iomadcertificate_issues} ci
+         ON u.id = ci.userid
+         WHERE u.deleted = 0
+         AND ci.iomadcertificateid = :iomadcertificateid
+         $conditionssql
+         ORDER BY {$sort}",
+        $allparams, $page * $perpage, $perpage);
 
     return $users;
 }
@@ -484,7 +512,7 @@ function iomadcertificate_get_attempts($iomadcertificateid) {
               FROM {iomadcertificate_issues} i
              WHERE iomadcertificateid = :iomadcertificateid
                AND userid = :userid";
-    if ($issues = $DB->get_records_sql($sql, array('iomadcertificateid' => $iomadcertificateid, 'userid' => $USER->id))) {
+    if ($issues = $DB->get_records_sql($sql, ['iomadcertificateid' => $iomadcertificateid, 'userid' => $USER->id])) {
         return $issues;
     }
 
@@ -504,23 +532,23 @@ function iomadcertificate_print_attempts($course, $iomadcertificate, $attempts) 
 
     echo $OUTPUT->heading(get_string('summaryofattempts', 'iomadcertificate'));
 
-    // Prepare table header
+    // Prepare table header.
     $table = new html_table();
     $table->class = 'generaltable';
-    $table->head = array(get_string('issued', 'iomadcertificate'));
-    $table->align = array('left');
-    $table->attributes = array("style" => "width:20%; margin:auto");
+    $table->head = [get_string('issued', 'iomadcertificate')];
+    $table->align = ['left'];
+    $table->attributes = ["style" => "width:20%; margin:auto"];
     $gradecolumn = $iomadcertificate->printgrade;
     if ($gradecolumn) {
         $table->head[] = get_string('grade', 'iomadcertificate');
         $table->align[] = 'center';
         $table->size[] = '';
     }
-    // One row for each attempt
+    // One row for each attempt.
     foreach ($attempts as $attempt) {
-        $row = array();
+        $row = [];
 
-        // prepare strings for time taken and date completed
+        // Prepare strings for time taken and date completed.
         $datecompleted = userdate($attempt->timecreated);
         $row[] = $datecompleted;
 
@@ -575,13 +603,13 @@ function iomadcertificate_get_course_time($courseid) {
              WHERE userid = :userid
                AND $coursefield = :courseid
           ORDER BY $timefield ASC";
-    $params = array('userid' => $USER->id, 'courseid' => $courseid);
+    $params = ['userid' => $USER->id, 'courseid' => $courseid];
 
     $totaltime = 0;
     if ($logs = $DB->get_recordset_sql($sql, $params)) {
         foreach ($logs as $log) {
             if (!isset($login)) {
-                // For the first time $login is not set so the first log is also the first login
+                // For the first time $login is not set so the first log is also the first login.
                 $login = $log->$timefield;
                 $lasthit = $log->$timefield;
                 $totaltime = 0;
@@ -594,7 +622,7 @@ function iomadcertificate_get_course_time($courseid) {
             } else {
                 $totaltime += $delay;
             }
-            // Now the actual log became the previous log for the next cycle
+            // Now the actual log became the previous log for the next cycle.
             $lasthit = $log->$timefield;
         }
 
@@ -616,14 +644,14 @@ function iomadcertificate_get_mods() {
     $strweek = get_string("week");
     $strsection = get_string("section");
 
-    // Collect modules data
+    // Collect modules data.
     $modinfo = get_fast_modinfo($COURSE);
     $mods = $modinfo->get_cms();
 
-    $modules = array();
+    $modules = [];
     $sections = $modinfo->get_section_info_all();
     for ($i = 0; $i <= count($sections) - 1; $i++) {
-        // should always be true
+        // Should always be true.
         if (isset($sections[$i])) {
             $section = $sections[$i];
             if ($section->sequence) {
@@ -644,11 +672,11 @@ function iomadcertificate_get_mods() {
                         continue;
                     }
                     $mod = $mods[$sectionmod];
-                    $instance = $DB->get_record($mod->modname, array('id' => $mod->instance));
-                    if ($grade_items = grade_get_grade_items_for_activity($mod)) {
-                        $mod_item = grade_get_grades($COURSE->id, 'mod', $mod->modname, $mod->instance);
-                        $item = reset($mod_item->items);
-                        if (isset($item->grademax)){
+                    $instance = $DB->get_record($mod->modname, ['id' => $mod->instance]);
+                    if ($gradeitems = grade_get_grade_items_for_activity($mod)) {
+                        $moditem = grade_get_grades($COURSE->id, 'mod', $mod->modname, $mod->instance);
+                        $item = reset($moditem->items);
+                        if (isset($item->grademax)) {
                             $modules[$mod->id] = $sectionlabel . ' ' . $section->section . ' : ' . $instance->name;
                         }
                     }
@@ -692,17 +720,17 @@ function iomadcertificate_get_date_options() {
  * @return array
  */
 function iomadcertificate_get_grade_categories($courseid) {
-    $grade_category_options = array();
+    $gradecategoryoptions = [];
 
-    if ($grade_categories = grade_category::fetch_all(array('courseid' => $courseid))) {
-        foreach ($grade_categories as $grade_category) {
-            if (!$grade_category->is_course_category()) {
-                $grade_category_options[-$grade_category->id] = get_string('category') . ' : ' . $grade_category->get_name();
+    if ($gradecategories = grade_category::fetch_all(['courseid' => $courseid])) {
+        foreach ($gradecategories as $gradecategory) {
+            if (!$gradecategory->is_course_category()) {
+                $gradecategoryoptions[-$gradecategory->id] = get_string('category') . ' : ' . $gradecategory->get_name();
             }
         }
     }
 
-    return $grade_category_options;
+    return $gradecategoryoptions;
 }
 
 /**
@@ -713,15 +741,15 @@ function iomadcertificate_get_grade_categories($courseid) {
 function iomadcertificate_get_outcomes() {
     global $COURSE;
 
-    // get all outcomes in course
-    $grade_seq = new grade_tree($COURSE->id, false, true, '', false);
-    if ($grade_items = $grade_seq->items) {
-        // list of item for menu
-        $printoutcome = array();
-        foreach ($grade_items as $grade_item) {
-            if (isset($grade_item->outcomeid)){
-                $itemmodule = $grade_item->itemmodule;
-                $printoutcome[$grade_item->id] = $itemmodule . ': ' . $grade_item->get_name();
+    // Get all outcomes in course.
+    $gradeseq = new grade_tree($COURSE->id, false, true, '', false);
+    if ($gradeitems = $gradeseq->items) {
+        // List of item for menu.
+        $printoutcome = [];
+        foreach ($gradeitems as $gradeitem) {
+            if (isset($gradeitem->outcomeid)) {
+                $itemmodule = $gradeitem->itemmodule;
+                $printoutcome[$gradeitem->id] = $itemmodule . ': ' . $gradeitem->get_name();
             }
         }
     }
@@ -744,7 +772,7 @@ function iomadcertificate_get_outcomes() {
  * @return array containing the iomadcertificate type
  */
 function iomadcertificate_types() {
-    $types = array();
+    $types = [];
     $names = get_list_of_plugins('mod/iomadcertificate/type');
     $sm = get_string_manager();
     foreach ($names as $name) {
@@ -785,21 +813,21 @@ function iomadcertificate_get_images($type) {
             $uploadpath = "$CFG->dataroot/mod/iomadcertificate/pix/watermarks";
             break;
     }
-    // If valid path
+    // If valid path.
     if (!empty($path)) {
-        $options = array();
+        $options = [];
         $options += iomadcertificate_scan_image_dir($path);
         $options += iomadcertificate_scan_image_dir($uploadpath);
 
-        // Sort images
+        // Sort images.
         ksort($options);
 
-        // Add the 'no' option to the top of the array
-        $options = array_merge(array('0' => get_string('no')), $options);
+        // Add the 'no' option to the top of the array.
+        $options = array_merge(['0' => get_string('no')], $options);
 
         return $options;
     } else {
-        return array();
+        return [];
     }
 }
 
@@ -814,19 +842,19 @@ function iomadcertificate_get_images($type) {
 function iomadcertificate_get_mod_grade($course, $moduleid, $userid) {
     global $DB;
 
-    $cm = $DB->get_record('course_modules', array('id' => $moduleid));
-    $module = $DB->get_record('modules', array('id' => $cm->module));
+    $cm = $DB->get_record('course_modules', ['id' => $moduleid]);
+    $module = $DB->get_record('modules', ['id' => $cm->module]);
 
-    $grade_item = grade_get_grades($course->id, 'mod', $module->name, $cm->instance, $userid);
-    if (!empty($grade_item)) {
+    $gradeitem = grade_get_grades($course->id, 'mod', $module->name, $cm->instance, $userid);
+    if (!empty($gradeitem)) {
         $item = new grade_item();
-        $itemproperties = reset($grade_item->items);
+        $itemproperties = reset($gradeitem->items);
         foreach ($itemproperties as $key => $value) {
             $item->$key = $value;
         }
         $modinfo = new stdClass;
-        $modname = $DB->get_field($module->name, 'name', array('id' => $cm->instance));
-        $modinfo->name = format_string($modname, true, array('context' => context_module::instance($cm->id)));
+        $modname = $DB->get_field($module->name, 'name', ['id' => $cm->instance]);
+        $modinfo->name = format_string($modname, true, ['context' => context_module::instance($cm->id)]);
         $grade = $item->grades[$userid]->grade;
         $item->gradetype = GRADE_TYPE_VALUE;
         $item->courseid = $course->id;
@@ -862,17 +890,17 @@ function iomadcertificate_get_date($iomadcertificate, $certrecord, $course, $use
         $userid = $USER->id;
     }
 
-    // Set iomadcertificate date to current time, can be overwritten later
+    // Set iomadcertificate date to current time, can be overwritten later.
     if (!empty($certrecord->timecreated)) {
         $date = $certrecord->timecreated;
     }
     if ($iomadcertificate->printdate == '2') {
-        // Get the enrolment end date
+        // Get the enrolment end date.
         $sql = "SELECT MAX(c.timecompleted) as timecompleted
                   FROM {course_completions} c
                  WHERE c.userid = :userid
                    AND c.course = :courseid";
-            if ($timecompleted = $DB->get_record_sql($sql, array('userid' => $userid, 'courseid' => $course->id))) {
+        if ($timecompleted = $DB->get_record_sql($sql, ['userid' => $userid, 'courseid' => $course->id])) {
             if (!empty($timecompleted->timecompleted) && $date > $timecompleted->timecompleted) {
                 $date = $timecompleted->timecompleted;
             }
@@ -911,12 +939,18 @@ function iomadcertificate_get_date($iomadcertificate, $certrecord, $course, $use
  * @return string the suffix.
  */
 function iomadcertificate_get_ordinal_number_suffix($day) {
-    if (!in_array(($day % 100), array(11, 12, 13))) {
+    if (!in_array(($day % 100), [11, 12, 13])) {
         switch ($day % 10) {
-            // Handle 1st, 2nd, 3rd
-            case 1: return 'st';
-            case 2: return 'nd';
-            case 3: return 'rd';
+            // Handle 1st, 2nd, 3rd.
+            case 1:
+                return 'st';
+                break;
+            case 2:
+                return 'nd';
+                break;
+            case 3:
+                return 'rd';
+                break;
         }
     }
     return 'th';
@@ -946,12 +980,30 @@ function iomadcertificate_get_grade($iomadcertificate, $course, $userid = null, 
         }
 
         if (!empty($iomadcertificate->finalscore)) {
-            if ($course_item = grade_item::fetch_course_item($course->id)) {
-                $course_item->gradetype = GRADE_TYPE_VALUE;
+            if ($courseitem = grade_item::fetch_course_item($course->id)) {
+                $courseitem->gradetype = GRADE_TYPE_VALUE;
                 $coursegrade = new stdClass;
-                $coursegrade->points = grade_format_gradevalue($iomadcertificate->finalscore, $course_item, true, GRADE_DISPLAY_TYPE_REAL, $decimals = 2);
-                $coursegrade->percentage = grade_format_gradevalue($iomadcertificate->finalscore, $course_item, true, GRADE_DISPLAY_TYPE_PERCENTAGE, $decimals = 2);
-                $coursegrade->letter = grade_format_gradevalue($iomadcertificate->finalscore, $course_item, true, GRADE_DISPLAY_TYPE_LETTER, $decimals = 0);
+                $coursegrade->points = grade_format_gradevalue(
+                    $iomadcertificate->finalscore,
+                    $courseitem,
+                    true,
+                    GRADE_DISPLAY_TYPE_REAL,
+                    $decimals = 2
+                );
+                $coursegrade->percentage = grade_format_gradevalue(
+                    $iomadcertificate->finalscore,
+                    $courseitem,
+                    true,
+                    GRADE_DISPLAY_TYPE_PERCENTAGE,
+                    $decimals = 2
+                );
+                $coursegrade->letter = grade_format_gradevalue(
+                    $iomadcertificate->finalscore,
+                    $courseitem,
+                    true,
+                    GRADE_DISPLAY_TYPE_LETTER,
+                    $decimals = 0
+                );
 
                 if ($iomadcertificate->gradefmt == 1) {
                     $grade = $strprefix . $coursegrade->percentage;
@@ -964,13 +1016,31 @@ function iomadcertificate_get_grade($iomadcertificate, $course, $userid = null, 
                 return $grade;
             }
         } else if ($iomadcertificate->printgrade == 1) {
-            if ($course_item = grade_item::fetch_course_item($course->id)) {
-                $grade = new grade_grade(array('itemid' => $course_item->id, 'userid' => $userid));
-                $course_item->gradetype = GRADE_TYPE_VALUE;
+            if ($courseitem = grade_item::fetch_course_item($course->id)) {
+                $grade = new grade_grade(['itemid' => $courseitem->id, 'userid' => $userid]);
+                $courseitem->gradetype = GRADE_TYPE_VALUE;
                 $coursegrade = new stdClass;
-                $coursegrade->points = grade_format_gradevalue($grade->finalgrade, $course_item, true, GRADE_DISPLAY_TYPE_REAL, $decimals = 2);
-                $coursegrade->percentage = grade_format_gradevalue($grade->finalgrade, $course_item, true, GRADE_DISPLAY_TYPE_PERCENTAGE, $decimals = 2);
-                $coursegrade->letter = grade_format_gradevalue($grade->finalgrade, $course_item, true, GRADE_DISPLAY_TYPE_LETTER, $decimals = 0);
+                $coursegrade->points = grade_format_gradevalue(
+                    $grade->finalgrade,
+                    $courseitem,
+                    true,
+                    GRADE_DISPLAY_TYPE_REAL,
+                    $decimals = 2
+                );
+                $coursegrade->percentage = grade_format_gradevalue(
+                    $grade->finalgrade,
+                    $courseitem,
+                    true,
+                    GRADE_DISPLAY_TYPE_PERCENTAGE,
+                    $decimals = 2
+                );
+                $coursegrade->letter = grade_format_gradevalue(
+                    $grade->finalgrade,
+                    $courseitem,
+                    true,
+                    GRADE_DISPLAY_TYPE_LETTER,
+                    $decimals = 0
+                );
 
                 if ($iomadcertificate->gradefmt == 1) {
                     $grade = $strprefix . $coursegrade->percentage;
@@ -982,7 +1052,7 @@ function iomadcertificate_get_grade($iomadcertificate, $course, $userid = null, 
 
                 return $grade;
             }
-        } else { // Print the mod grade
+        } else { // Print the mod grade.
             if ($modinfo = iomadcertificate_get_mod_grade($course, $iomadcertificate->printgrade, $userid)) {
                 // Check we want to add a prefix to the grade.
                 $strprefix = '';
@@ -1001,22 +1071,40 @@ function iomadcertificate_get_grade($iomadcertificate, $course, $userid = null, 
             }
         }
     } else if ($iomadcertificate->printgrade < 0) { // Must be a category id.
-        if ($category_item = grade_item::fetch(array('itemtype' => 'category', 'iteminstance' => -$iomadcertificate->printgrade))) {
-            $category_item->gradetype = GRADE_TYPE_VALUE;
+        if ($categoryitem = grade_item::fetch(['itemtype' => 'category', 'iteminstance' => -$iomadcertificate->printgrade])) {
+            $categoryitem->gradetype = GRADE_TYPE_VALUE;
 
-            $grade = new grade_grade(array('itemid' => $category_item->id, 'userid' => $userid));
+            $grade = new grade_grade(['itemid' => $categoryitem->id, 'userid' => $userid]);
 
-            $category_grade = new stdClass;
-            $category_grade->points = grade_format_gradevalue($grade->finalgrade, $category_item, true, GRADE_DISPLAY_TYPE_REAL, $decimals = 2);
-            $category_grade->percentage = grade_format_gradevalue($grade->finalgrade, $category_item, true, GRADE_DISPLAY_TYPE_PERCENTAGE, $decimals = 2);
-            $category_grade->letter = grade_format_gradevalue($grade->finalgrade, $category_item, true, GRADE_DISPLAY_TYPE_LETTER, $decimals = 0);
+            $categorygrade = new stdClass;
+            $categorygrade->points = grade_format_gradevalue(
+                $grade->finalgrade,
+                $categoryitem,
+                true,
+                GRADE_DISPLAY_TYPE_REAL,
+                $decimals = 2
+            );
+            $categorygrade->percentage = grade_format_gradevalue(
+                $grade->finalgrade,
+                $categoryitem,
+                true,
+                GRADE_DISPLAY_TYPE_PERCENTAGE,
+                $decimals = 2
+            );
+            $categorygrade->letter = grade_format_gradevalue(
+                $grade->finalgrade,
+                $categoryitem,
+                true,
+                GRADE_DISPLAY_TYPE_LETTER,
+                $decimals = 0
+            );
 
             if ($iomadcertificate->gradefmt == 1) {
-                $formattedgrade = $category_grade->percentage;
+                $formattedgrade = $categorygrade->percentage;
             } else if ($iomadcertificate->gradefmt == 2) {
-                $formattedgrade = $category_grade->points;
+                $formattedgrade = $categorygrade->points;
             } else if ($iomadcertificate->gradefmt == 3) {
-                $formattedgrade = $category_grade->letter;
+                $formattedgrade = $categorygrade->letter;
             }
 
             return $formattedgrade;
@@ -1037,11 +1125,11 @@ function iomadcertificate_get_outcome($iomadcertificate, $course) {
     global $certuser;
 
     if ($iomadcertificate->printoutcome > 0) {
-        if ($grade_item = new grade_item(array('id' => $iomadcertificate->printoutcome))) {
+        if ($gradeitem = new grade_item(['id' => $iomadcertificate->printoutcome])) {
             $outcomeinfo = new stdClass;
-            $outcomeinfo->name = $grade_item->get_name();
-            $outcome = new grade_grade(array('itemid' => $grade_item->id, 'userid' => $certuser->id));
-            $outcomeinfo->grade = grade_format_gradevalue($outcome->finalgrade, $grade_item, true, GRADE_DISPLAY_TYPE_REAL);
+            $outcomeinfo->name = $gradeitem->get_name();
+            $outcome = new grade_grade(['itemid' => $gradeitem->id, 'userid' => $certuser->id]);
+            $outcomeinfo->grade = grade_format_gradevalue($outcome->finalgrade, $gradeitem, true, GRADE_DISPLAY_TYPE_REAL);
 
             return $outcomeinfo->name . ': ' . $outcomeinfo->grade;
         }
@@ -1073,12 +1161,21 @@ function iomadcertificate_get_code($iomadcertificate, $certrecord) {
  * @param int $y vertical position
  * @param char $align L=left, C=center, R=right
  * @param string $font any available font in font directory
- * @param char $style ''=normal, B=bold, I=italic, U=underline
+ * @param char $style '' =normal, B=bold, I=italic, U=underline
  * @param int $size font size in points
  * @param string $text the text to print
  * @param int $width horizontal dimension of text block
  */
-function iomadcertificate_print_text($pdf, $x, $y, $align, $font='freeserif', $style = 'normal', $size = 10, $text = '', $width = 0) {
+function iomadcertificate_print_text(
+    $pdf,
+    $x,
+    $y,
+    $align,
+    $font = 'freeserif',
+    $style = 'normal',
+    $size = 10,
+    $text = '',
+    $width = 0) {
     $pdf->setFont($font, $style, $size);
     $pdf->SetXY($x, $y);
     $pdf->writeHTMLCell($width, 0, '', '', $text, 0, 0, 0, true, $align);
@@ -1093,38 +1190,38 @@ function iomadcertificate_print_text($pdf, $x, $y, $align, $font='freeserif', $s
 function iomadcertificate_draw_frame($pdf, $iomadcertificate) {
     if ($iomadcertificate->bordercolor > 0) {
         if ($iomadcertificate->bordercolor == 1) {
-            $color = array(0, 0, 0); // black
+            $color = [0, 0, 0]; // Black.
         }
         if ($iomadcertificate->bordercolor == 2) {
-            $color = array(153, 102, 51); // brown
+            $color = [153, 102, 51]; // Brown.
         }
         if ($iomadcertificate->bordercolor == 3) {
-            $color = array(0, 51, 204); // blue
+            $color = [0, 51, 204]; // Blue.
         }
         if ($iomadcertificate->bordercolor == 4) {
-            $color = array(0, 180, 0); // green
+            $color = [0, 180, 0]; // Green.
         }
         switch ($iomadcertificate->orientation) {
             case 'L':
-                // create outer line border in selected color
-                $pdf->SetLineStyle(array('width' => 1.5, 'color' => $color));
+                // Create outer line border in selected color.
+                $pdf->SetLineStyle(['width' => 1.5, 'color' => $color]);
                 $pdf->Rect(10, 10, 277, 190);
-                // create middle line border in selected color
-                $pdf->SetLineStyle(array('width' => 0.2, 'color' => $color));
+                // Create middle line border in selected color.
+                $pdf->SetLineStyle(['width' => 0.2, 'color' => $color]);
                 $pdf->Rect(13, 13, 271, 184);
-                // create inner line border in selected color
-                $pdf->SetLineStyle(array('width' => 1.0, 'color' => $color));
+                // Create inner line border in selected color.
+                $pdf->SetLineStyle(['width' => 1.0, 'color' => $color]);
                 $pdf->Rect(16, 16, 265, 178);
                 break;
             case 'P':
-                // create outer line border in selected color
-                $pdf->SetLineStyle(array('width' => 1.5, 'color' => $color));
+                // Create outer line border in selected color.
+                $pdf->SetLineStyle(['width' => 1.5, 'color' => $color]);
                 $pdf->Rect(10, 10, 190, 277);
-                // create middle line border in selected color
-                $pdf->SetLineStyle(array('width' => 0.2, 'color' => $color));
+                // Create middle line border in selected color.
+                $pdf->SetLineStyle(['width' => 0.2, 'color' => $color]);
                 $pdf->Rect(13, 13, 184, 271);
-                // create inner line border in selected color
-                $pdf->SetLineStyle(array('width' => 1.0, 'color' => $color));
+                // Create inner line border in selected color.
+                $pdf->SetLineStyle(['width' => 1.0, 'color' => $color]);
                 $pdf->Rect(16, 16, 178, 265);
                 break;
         }
@@ -1139,39 +1236,39 @@ function iomadcertificate_draw_frame($pdf, $iomadcertificate) {
  */
 function iomadcertificate_draw_frame_letter($pdf, $iomadcertificate) {
     if ($iomadcertificate->bordercolor > 0) {
-        if ($iomadcertificate->bordercolor == 1)    {
-            $color = array(0, 0, 0); //black
+        if ($iomadcertificate->bordercolor == 1) {
+            $color = [0, 0, 0]; // Black.
         }
-        if ($iomadcertificate->bordercolor == 2)    {
-            $color = array(153, 102, 51); //brown
+        if ($iomadcertificate->bordercolor == 2) {
+            $color = [153, 102, 51]; // Brown.
         }
-        if ($iomadcertificate->bordercolor == 3)    {
-            $color = array(0, 51, 204); //blue
+        if ($iomadcertificate->bordercolor == 3) {
+            $color = [0, 51, 204]; // Blue.
         }
-        if ($iomadcertificate->bordercolor == 4)    {
-            $color = array(0, 180, 0); //green
+        if ($iomadcertificate->bordercolor == 4) {
+            $color = [0, 180, 0]; // Green.
         }
         switch ($iomadcertificate->orientation) {
             case 'L':
-                // create outer line border in selected color
-                $pdf->SetLineStyle(array('width' => 4.25, 'color' => $color));
+                // Create outer line border in selected color.
+                $pdf->SetLineStyle(['width' => 4.25, 'color' => $color]);
                 $pdf->Rect(28, 28, 736, 556);
-                // create middle line border in selected color
-                $pdf->SetLineStyle(array('width' => 0.2, 'color' => $color));
+                // Create middle line border in selected color.
+                $pdf->SetLineStyle(['width' => 0.2, 'color' => $color]);
                 $pdf->Rect(37, 37, 718, 538);
-                // create inner line border in selected color
-                $pdf->SetLineStyle(array('width' => 2.8, 'color' => $color));
+                // Create inner line border in selected color.
+                $pdf->SetLineStyle(['width' => 2.8, 'color' => $color]);
                 $pdf->Rect(46, 46, 700, 520);
                 break;
             case 'P':
-                // create outer line border in selected color
-                $pdf->SetLineStyle(array('width' => 1.5, 'color' => $color));
+                // Create outer line border in selected color.
+                $pdf->SetLineStyle(['width' => 1.5, 'color' => $color]);
                 $pdf->Rect(25, 20, 561, 751);
-                // create middle line border in selected color
-                $pdf->SetLineStyle(array('width' => 0.2, 'color' => $color));
+                // Create middle line border in selected color.
+                $pdf->SetLineStyle(['width' => 0.2, 'color' => $color]);
                 $pdf->Rect(40, 35, 531, 721);
-                // create inner line border in selected color
-                $pdf->SetLineStyle(array('width' => 1.0, 'color' => $color));
+                // Create inner line border in selected color.
+                $pdf->SetLineStyle(['width' => 1.0, 'color' => $color]);
                 $pdf->Rect(51, 46, 509, 699);
                 break;
         }
@@ -1214,7 +1311,7 @@ function iomadcertificate_print_image($pdf, $iomadcertificate, $type, $x, $y, $w
             $uploadpath = "$CFG->dataroot/mod/iomadcertificate/pix/$type/$iomadcertificate->printwmark";
             break;
     }
-    // Has to be valid
+    // Has to be valid.
     if (!empty($path)) {
         switch ($iomadcertificate->$attr) {
             case '0' :
@@ -1243,7 +1340,7 @@ function iomadcertificate_generate_code() {
     $uniquecodefound = false;
     $code = random_string(10);
     while (!$uniquecodefound) {
-        if (!$DB->record_exists('iomadcertificate_issues', array('code' => $code))) {
+        if (!$DB->record_exists('iomadcertificate_issues', ['code' => $code])) {
             $uniquecodefound = true;
         } else {
             $code = random_string(10);
@@ -1260,16 +1357,16 @@ function iomadcertificate_generate_code() {
  * @return array
  */
 function iomadcertificate_scan_image_dir($path) {
-    // Array to store the images
-    $options = array();
+    // Array to store the images.
+    $options = [];
 
-    // Start to scan directory
+    // Start to scan directory.
     if (is_dir($path)) {
         $iterator = new DirectoryIterator($path);
         foreach ($iterator as $fileinfo) {
             $filename = $fileinfo->getFilename();
             $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-            if ($fileinfo->isFile() && in_array($extension, array('png', 'jpg', 'jpeg'))) {
+            if ($fileinfo->isFile() && in_array($extension, ['png', 'jpg', 'jpeg'])) {
                 $options[$filename] = pathinfo($filename, PATHINFO_FILENAME);
             }
         }
@@ -1287,10 +1384,10 @@ function iomadcertificate_scan_image_dir($path) {
  */
 function iomadcertificate_get_iomadcertificate_filename($iomadcertificate, $cm, $course) {
     $coursecontext = context_course::instance($course->id);
-    $coursename = format_string($course->shortname, true, array('context' => $coursecontext));
+    $coursename = format_string($course->shortname, true, ['context' => $coursecontext]);
 
     $context = context_module::instance($cm->id);
-    $name = format_string($iomadcertificate->name, true, array('context' => $context));
+    $name = format_string($iomadcertificate->name, true, ['context' => $context]);
 
     $filename = $coursename . '_' . $name;
     $filename = core_text::entities_to_utf8($filename);

@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of the Certificate module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,12 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD certificate activity
+ *
  * @package   mod_iomadcertificate
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   mod_certificate by Mark Nelson <markn@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+// This plugin is based on code originally created as mod_certificate by Mark Nelson <markn@moodle.com>.
 
 /**
  * Define all the restore steps that will be used by the restore_iomadcertificate_activity_task
@@ -32,9 +34,14 @@
  */
 class restore_iomadcertificate_activity_structure_step extends restore_activity_structure_step {
 
+    /**
+     * Define the steps structure.
+     *
+     * @return void
+     */
     protected function define_structure() {
 
-        $paths = array();
+        $paths = [];
         $userinfo = $this->get_setting_value('userinfo');
 
         $paths[] = new restore_path_element('iomadcertificate', '/activity/iomadcertificate');
@@ -43,25 +50,38 @@ class restore_iomadcertificate_activity_structure_step extends restore_activity_
             $paths[] = new restore_path_element('iomadcertificate_issue', '/activity/iomadcertificate/issues/issue');
         }
 
-        // Return the paths wrapped into standard activity structure
+        // Return the paths wrapped into standard activity structure.
         return $this->prepare_activity_structure($paths);
     }
 
+    /**
+     * Process the certificate activity
+     *
+     * @param [type] $data
+     * @return void
+     */
     protected function process_iomadcertificate($data) {
         global $DB;
 
-        $data = (object)$data;
+        $data = (object) $data;
         $oldid = $data->id;
         $data->course = $this->get_courseid();
         $data->timecreated = $this->apply_date_offset($data->timecreated);
         $data->timemodified = $this->apply_date_offset($data->timemodified);
 
-        // insert the iomadcertificate record
+        // Insert the iomadcertificate record.
         $newitemid = $DB->insert_record('iomadcertificate', $data);
-        // immediately after inserting "activity" record, call this
+
+        // Immediately after inserting "activity" record, call this.
         $this->apply_activity_instance($newitemid);
     }
 
+    /**
+     * Process the certificate files
+     *
+     * @param [type] $data
+     * @return void
+     */
     protected function process_iomadcertificate_issue($data) {
         global $DB;
 
@@ -78,8 +98,13 @@ class restore_iomadcertificate_activity_structure_step extends restore_activity_
         $this->set_mapping('iomadcertificate_issue', $oldid, $newitemid);
     }
 
+    /**
+     * Function to add any related files to the activity
+     *
+     * @return void
+     */
     protected function after_execute() {
-        // Add iomadcertificate related files, no need to match by itemname (just internally handled context)
+        // Add iomadcertificate related files, no need to match by itemname (just internally handled context).
         $this->add_related_files('mod_iomadcertificate', 'issue', 'iomadcertificate_issue');
     }
 }

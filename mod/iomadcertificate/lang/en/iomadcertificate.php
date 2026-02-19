@@ -1,6 +1,5 @@
 <?php
-
-// This file is part of the IOMAD Certificate module for Moodle - http://moodle.org/
+// This file is part of the Certificate module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD certificate activity
+ *
  * @package   mod_iomadcertificate
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   mod_certificate by Mark Nelson <markn@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+// This plugin is based on code originally created as mod_certificate by Mark Nelson <markn@moodle.com>.
 
 $string['addlinklabel'] = 'Add another linked activity option';
 $string['addlinktitle'] = 'Click to add another linked activity option';
@@ -39,28 +41,13 @@ $string['bordergreen'] = 'Green';
 $string['borderlines'] = 'Lines';
 $string['borderstyle'] = 'Border Image';
 $string['borderstyle_help'] = 'The \'Border Image\' option allows you to choose a border image from the certificate/pix/borders folder. Select the border image that you want around the certificate edges or select \'no border\'.';
-$string['iomadcertificate'] = 'Verification for certificate code:';
-$string['iomadcertificate:addinstance'] = 'Add a certificate instance';
-$string['iomadcertificate:manage'] = 'Manage a certificate instance';
-$string['iomadcertificate:printteacher'] = 'Be listed as a teacher on the certificate if the print teacher setting is on';
-$string['iomadcertificate:student'] = 'Retrieve a certificate';
-$string['iomadcertificate:view'] = 'View a certificate';
-$string['iomadcertificate:viewother'] = 'View another users certificate';
-$string['iomadcertificatename'] = 'Certificate Name';
-$string['iomadcertificatereport'] = 'Certificates Report';
-$string['iomadcertificatesfor'] = 'Certificates for';
-$string['iomadcertificatetype'] = 'Certificate Type';
-$string['iomadcertificatetype_help'] = 'This is where you determine the layout of the certificate. The certificate type folder includes four default certificates:
-A4 Embedded prints on A4 size paper with embedded font.
-A4 Non-Embedded prints on A4 size paper without embedded fonts.
-Letter Embedded prints on letter size paper with embedded font.
-Letter Non-Embedded prints on letter size paper without embedded fonts.
-
-The non-embedded types use the Helvetica and Times fonts. If you feel your users will not have these fonts on their computer, or if your language uses characters or symbols that are not accommodated by the Helvetica and Times fonts, then choose an embedded type. The embedded types use the Dejavusans and Dejavuserif fonts. This will make the PDF files rather large; it is not recommended to use an embedded type unless that\'s your only option.
-
-New type folders can be added to the certificate/type folder. The name of the folder and any new language strings for the new type must be added to the certificate language file.';
 $string['certify'] = 'This is to certify that';
 $string['code'] = 'Code';
+$string['companycertify'] = 'This Certificate of Completion recognises that';
+$string['companydate'] = 'on {$a}';
+$string['companydatecap'] = 'On {$a}';
+$string['companydetails'] = 'has successfully completed the web-based training program entitled';
+$string['companyscore'] = 'with an overall score of {$a}';
 $string['completiondate'] = 'Course Completion';
 $string['course'] = 'For';
 $string['coursegrade'] = 'Course Grade';
@@ -86,8 +73,6 @@ $string['emailiomadcertificate'] = 'Email';
 $string['emailothers'] = 'Email Others';
 $string['emailothers_help'] = 'Enter the email addresses here, separated by a comma, of those who should be alerted with an email whenever students receive a certificate.';
 $string['emailstudenttext'] = 'Attached is your certificate for {$a->course}.';
-$string['emailteachers'] = 'Email Teachers';
-$string['emailteachers_help'] = 'If enabled, then teachers are alerted with an email whenever students receive a certificate.';
 $string['emailteachermail'] = '
 {$a->student} has received their certificate: \'{$a->certificate}\'
 for {$a->course}.
@@ -101,7 +86,9 @@ for {$a->course}.
 
 You can review the certificate here:
 
-    <a href="{$a->url}">Certificate Report</a>';
+    <a href="{$a->url}">Certificate Report</a> ';
+$string['emailteachers'] = 'Email Teachers';
+$string['emailteachers_help'] = 'If enabled, then teachers are alerted with an email whenever students receive a certificate.';
 $string['entercode'] = 'Enter certificate code to verify:';
 $string['fontsans'] = 'Sans-serif font family';
 $string['fontsans_desc'] = 'Sans-serif font family for certificates with embedded fonts';
@@ -122,9 +109,29 @@ $string['gradepoints'] = 'Points Grade';
 $string['imagetype'] = 'Image Type';
 $string['incompletemessage'] = 'In order to download your certificate, you must first complete all required activities. Please return to the course to complete your coursework.';
 $string['intro'] = 'Introduction';
-$string['issueoptions'] = 'Issue Options';
+$string['iomadcertificate'] = 'Verification for certificate code:';
+$string['iomadcertificate:addinstance'] = 'Add a certificate instance';
+$string['iomadcertificate:manage'] = 'Manage a certificate instance';
+$string['iomadcertificate:printteacher'] = 'Be listed as a teacher on the certificate if the print teacher setting is on';
+$string['iomadcertificate:student'] = 'Retrieve a certificate';
+$string['iomadcertificate:view'] = 'View a certificate';
+$string['iomadcertificate:viewother'] = 'View another users certificate';
+$string['iomadcertificatename'] = 'Certificate Name';
+$string['iomadcertificatereport'] = 'Certificates Report';
+$string['iomadcertificatesfor'] = 'Certificates for';
+$string['iomadcertificatetype'] = 'Certificate Type';
+$string['iomadcertificatetype_help'] = 'This is where you determine the layout of the certificate. The certificate type folder includes four default certificates:
+A4 Embedded prints on A4 size paper with embedded font.
+A4 Non-Embedded prints on A4 size paper without embedded fonts.
+Letter Embedded prints on letter size paper with embedded font.
+Letter Non-Embedded prints on letter size paper without embedded fonts.
+
+The non-embedded types use the Helvetica and Times fonts. If you feel your users will not have these fonts on their computer, or if your language uses characters or symbols that are not accommodated by the Helvetica and Times fonts, then choose an embedded type. The embedded types use the Dejavusans and Dejavuserif fonts. This will make the PDF files rather large; it is not recommended to use an embedded type unless that\'s your only option.
+
+New type folders can be added to the certificate/type folder. The name of the folder and any new language strings for the new type must be added to the certificate language file.';
 $string['issued'] = 'Issued';
 $string['issueddate'] = 'Date Issued';
+$string['issueoptions'] = 'Issue Options';
 $string['landscape'] = 'Landscape';
 $string['lastviewed'] = 'You last received this certificate on:';
 $string['letter'] = 'Letter';
@@ -134,11 +141,11 @@ $string['modulename_help'] = 'This module allows for the dynamic generation of c
 $string['modulename_link'] = 'Certificate_module';
 $string['modulenameplural'] = 'IOMAD Certificates';
 $string['myiomadcertificates'] = 'My Certificates';
+$string['nofileselected'] = 'Must choose a file to upload!';
+$string['nogrades'] = 'No grades available';
 $string['noiomadcertificates'] = 'There are no certificates';
 $string['noiomadcertificatesissued'] = 'There are no certificates that have been issued';
 $string['noiomadcertificatesreceived'] = 'has not received any course certificates.';
-$string['nofileselected'] = 'Must choose a file to upload!';
-$string['nogrades'] = 'No grades available';
 $string['notapplicable'] = 'N/A';
 $string['notfound'] = 'The certificate number could not be validated.';
 $string['notissued'] = 'Not issued';
@@ -157,10 +164,10 @@ $string['portrait'] = 'Portrait';
 $string['printdate'] = 'Print Date';
 $string['printdate_help'] = 'This is the date that will be printed on the certificate if a print date is selected. If the course completion date is selected but the student has not completed the course, the date that the certificate was received will be printed. You can also choose to print the date based on when an activity was graded. If a certificate is issued before that activity is graded, the date received will be printed.';
 $string['printerfriendly'] = 'Printer-friendly page';
-$string['printhours'] = 'Print Credit Hours';
-$string['printhours_help'] = 'Enter here the number of credit hours to be printed on the certificate.';
 $string['printgrade'] = 'Print Grade';
 $string['printgrade_help'] = 'You can choose any available course grade items from the gradebook to print the user\'s grade received for that item on the certificate. The grade items are listed in the order in which they appear in the gradebook. Choose the format of the grade below.';
+$string['printhours'] = 'Print Credit Hours';
+$string['printhours_help'] = 'Enter here the number of credit hours to be printed on the certificate.';
 $string['printnumber'] = 'Print Code';
 $string['printnumber_help'] = 'A unique 10-digit code of random letters and numbers can be printed on the certificate. This number can then be verified by comparing it to the code number displayed in the certificates report.';
 $string['printoutcome'] = 'Print Outcome';
@@ -172,7 +179,7 @@ $string['printsignature_help'] = 'This option allows you to print a signature im
 $string['printteacher'] = 'Print Teacher Name(s)';
 $string['printteacher_help'] = 'For printing the teacher name on the certificate, set the role of teacher at the module level. Do this if, for example, you have more than one teacher for the course or more than one certificate in the course and you want to print different teacher names on each certificate. Click to edit the certificate, then click on the \'Locally assigned roles\' tab. Then assign the role of teacher (editing teacher) to the certificate (they do not HAVE to be a teacher in the course - you can assign that role to anyone). Those names will be printed on the certificate for teacher.';
 $string['printwmark'] = 'Watermark Image';
-$string['printwmark_help'] =  'A watermark image can be placed in the background of the certificate. This could be a logo, seal, crest, wording, or whatever you want to use as a graphic background.';
+$string['printwmark_help'] = 'A watermark image can be placed in the background of the certificate. This could be a logo, seal, crest, wording, or whatever you want to use as a graphic background.';
 $string['receivedcerts'] = 'Received certificates';
 $string['receiveddate'] = 'Date Received';
 $string['removecert'] = 'Issued certificates removed';
@@ -202,13 +209,8 @@ $string['uploadimagedesc'] = 'This button will take you to a new screen where yo
 $string['userdateformat'] = 'User\'s Language Date Format';
 $string['validate'] = 'Verify';
 $string['verifyiomadcertificate'] = 'Verify Certificate';
-$string['viewiomadcertificateviews'] = 'View {$a} issued certificates';
 $string['viewed'] = 'You received this certificate on:';
+$string['viewiomadcertificateviews'] = 'View {$a} issued certificates';
 $string['viewtranscript'] = 'View Certificates';
 $string['watermark'] = 'Watermark';
-$string['companycertify'] = 'This Certificate of Completion recognises that';
-$string['companydetails'] = 'has successfully completed the web-based training program entitled';
-$string['companyscore'] = 'with an overall score of {$a}';
-$string['companydate'] = 'on {$a}';
-$string['companydatecap'] = 'On {$a}';
 

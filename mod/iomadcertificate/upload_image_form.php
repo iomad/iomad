@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of the Certificate module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,33 +15,48 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD certificate activity
+ *
  * @package   mod_iomadcertificate
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   mod_certificate by Mark Nelson <markn@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-if (!defined('MOODLE_INTERNAL')) {
-    die('Direct access to this script is forbidden.');    ///  It must be included from a Moodle page
-}
+// This plugin is based on code originally created as mod_certificate by Mark Nelson <markn@moodle.com>.
+
+defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->dirroot.'/mod/iomadcertificate/locallib.php');
 
+/**
+ * IOMAD certificate activity
+ *
+ * @package   mod_iomadcertificate
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class mod_iomadcertificate_upload_image_form extends moodleform {
 
-    function definition() {
+    /**
+     * Form definition
+     *
+     * @return void
+     */
+    public function definition() {
         global $CFG;
 
+        // Set up the form.
         $mform =& $this->_form;
 
-        $imagetypes = array(
+        $imagetypes = [
             CERT_IMAGE_BORDER => get_string('border', 'iomadcertificate'),
             CERT_IMAGE_WATERMARK => get_string('watermark', 'iomadcertificate'),
             CERT_IMAGE_SIGNATURE => get_string('signature', 'iomadcertificate'),
-            CERT_IMAGE_SEAL => get_string('seal', 'iomadcertificate')
-        );
+            CERT_IMAGE_SEAL => get_string('seal', 'iomadcertificate'),
+        ];
 
         $mform->addElement('select', 'imagetype', get_string('imagetype', 'iomadcertificate'), $imagetypes);
 
@@ -55,17 +69,19 @@ class mod_iomadcertificate_upload_image_form extends moodleform {
     /**
      * Some validation - Michael Avelar <michaela@moodlerooms.com>
      */
-    function validation($data, $files) {
+    public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
-        $supportedtypes = array('jpe' => 'image/jpeg',
-                                'jpeIE' => 'image/pjpeg',
-                                'jpeg' => 'image/jpeg',
-                                'jpegIE' => 'image/pjpeg',
-                                'jpg' => 'image/jpeg',
-                                'jpgIE' => 'image/pjpeg',
-                                'png' => 'image/png',
-                                'pngIE' => 'image/x-png');
+        $supportedtypes = [
+            'jpe' => 'image/jpeg',
+            'jpeIE' => 'image/pjpeg',
+            'jpeg' => 'image/jpeg',
+            'jpegIE' => 'image/pjpeg',
+            'jpg' => 'image/jpeg',
+            'jpgIE' => 'image/pjpeg',
+            'png' => 'image/png',
+            'pngIE' => 'image/x-png',
+        ];
 
         $files = $this->get_draft_files('iomadcertificateimage');
         if ($files) {

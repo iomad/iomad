@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of the Certificate module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,17 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD certificate activity
+ *
  * @package   mod_iomadcertificate
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   mod_certificate by Mark Nelson <markn@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+// This plugin is based on code originally created as mod_certificate by Mark Nelson <markn@moodle.com>.
 
 require_once('../../config.php');
 require_once('locallib.php');
 
-$id   = required_param('id', PARAM_INT); // Course module ID
+$id   = required_param('id', PARAM_INT);
 $sort = optional_param('sort', '', PARAM_RAW);
 $download = optional_param('download', '', PARAM_ALPHA);
 $action = optional_param('action', '', PARAM_ALPHA);
@@ -44,7 +46,7 @@ if (CERT_PER_PAGE !== 0) {
     $perpage = '9999999';
 }
 
-$url = new moodle_url('/mod/iomadcertificate/report.php', array('id'=>$id, 'page' => $page, 'perpage' => $perpage));
+$url = new moodle_url('/mod/iomadcertificate/report.php', ['id' => $id, 'page' => $page, 'perpage' => $perpage]);
 if ($download) {
     $url->param('download', $download);
 }
@@ -57,45 +59,45 @@ if (!$cm = get_coursemodule_from_id('iomadcertificate', $id)) {
     throw new moodle_exception('Course Module ID was incorrect');
 }
 
-if (!$course = $DB->get_record('course', array('id'=> $cm->course))) {
+if (!$course = $DB->get_record('course', ['id' => $cm->course])) {
     throw new moodle_exception('Course is misconfigured');
 }
 
-if (!$iomadcertificate = $DB->get_record('iomadcertificate', array('id'=> $cm->instance))) {
+if (!$iomadcertificate = $DB->get_record('iomadcertificate', ['id' => $cm->instance])) {
     throw new moodle_exception('Certificate ID was incorrect');
 }
 
-// Requires a course login
+// Requires a course login.
 require_login($course, false, $cm);
 
-// Check capabilities
+// Check capabilities.
 $context = context_module::instance($cm->id);
 require_capability('mod/iomadcertificate:manage', $context);
 
-// Declare some variables
+// Declare some variables.
 $striomadcertificates = get_string('modulenameplural', 'iomadcertificate');
-$striomadcertificate  = get_string('modulename', 'iomadcertificate');
+$striomadcertificate = get_string('modulename', 'iomadcertificate');
 $strto = get_string('awardedto', 'iomadcertificate');
 $strdate = get_string('receiveddate', 'iomadcertificate');
-$strgrade = get_string('grade','iomadcertificate');
+$strgrade = get_string('grade', 'iomadcertificate');
 $strcode = get_string('code', 'iomadcertificate');
-$strreport= get_string('report', 'iomadcertificate');
+$strreport = get_string('report', 'iomadcertificate');
 
 if (!$download) {
     $PAGE->navbar->add($strreport);
     $PAGE->set_title(format_string($iomadcertificate->name).": $strreport");
     $PAGE->set_heading($course->fullname);
-    // Check to see if groups are being used in this choice
+    // Check to see if groups are being used in this choice.
     if ($groupmode = groups_get_activity_groupmode($cm)) {
         groups_get_activity_group($cm, true);
     }
 } else {
     $groupmode = groups_get_activity_groupmode($cm);
-    // Get all results when $page and $perpage are 0
+    // Get all results when $page and $perpage are 0.
     $page = $perpage = 0;
 }
 
-// Ensure there are issues to display, if not display notice
+// Ensure there are issues to display, if not display notice.
 if (!$users = iomadcertificate_get_issues($iomadcertificate->id, $DB->sql_fullname(), $groupmode, $cm, $page, $perpage)) {
     echo $OUTPUT->header();
     groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/iomadcertificate/report.php?id='.$id);
@@ -110,16 +112,16 @@ $extrafields = \core_user\fields::for_identity($context);
 if ($download == "ods") {
     require_once("$CFG->libdir/odslib.class.php");
 
-    // Calculate file name
+    // Calculate file name.
     $filename = iomadcertificate_get_iomadcertificate_filename($iomadcertificate, $cm, $course) . '.ods';
-    // Creating a workbook
+    // Creating a workbook.
     $workbook = new MoodleODSWorkbook("-");
-    // Send HTTP headers
+    // Send HTTP headers.
     $workbook->send($filename);
-    // Creating the first worksheet
+    // Creating the first worksheet.
     $myxls = $workbook->add_worksheet($strreport);
 
-    // Print names of all the fields
+    // Print names of all the fields.
     $myxls->write_string(0, 0, get_string("lastname"));
     $myxls->write_string(0, 1, get_string("firstname"));
     $nextposition = 2;
@@ -132,7 +134,7 @@ if ($download == "ods") {
     $myxls->write_string(0, $nextposition + 2, $strgrade);
     $myxls->write_string(0, $nextposition + 3, $strcode);
 
-    // Generate the data for the body of the spreadsheet
+    // Generate the data for the body of the spreadsheet.
     $i = 0;
     $row = 1;
     if ($users) {
@@ -158,7 +160,7 @@ if ($download == "ods") {
         }
         $pos = 6;
     }
-    // Close the workbook
+    // Close the workbook.
     $workbook->close();
     exit;
 }
@@ -166,16 +168,16 @@ if ($download == "ods") {
 if ($download == "xls") {
     require_once("$CFG->libdir/excellib.class.php");
 
-    // Calculate file name
+    // Calculate file name.
     $filename = iomadcertificate_get_iomadcertificate_filename($iomadcertificate, $cm, $course) . '.xls';
-    // Creating a workbook
+    // Creating a workbook.
     $workbook = new MoodleExcelWorkbook("-");
-    // Send HTTP headers
+    // Send HTTP headers.
     $workbook->send($filename);
-    // Creating the first worksheet
+    // Creating the first worksheet.
     $myxls = $workbook->add_worksheet($strreport);
 
-    // Print names of all the fields
+    // Print names of all the fields.
     $myxls->write_string(0, 0, get_string("lastname"));
     $myxls->write_string(0, 1, get_string("firstname"));
     $nextposition = 2;
@@ -188,7 +190,7 @@ if ($download == "xls") {
     $myxls->write_string(0, $nextposition + 2, $strgrade);
     $myxls->write_string(0, $nextposition + 3, $strcode);
 
-    // Generate the data for the body of the spreadsheet
+    // Generate the data for the body of the spreadsheet.
     $i = 0;
     $row = 1;
     if ($users) {
@@ -214,7 +216,7 @@ if ($download == "xls") {
         }
         $pos = 6;
     }
-    // Close the workbook
+    // Close the workbook.
     $workbook->close();
     exit;
 }
@@ -228,7 +230,7 @@ if ($download == "txt") {
     header("Cache-Control: must-revalidate,post-check=0,pre-check=0");
     header("Pragma: public");
 
-    // Print names of all the fields
+    // Print names of all the fields.
     echo get_string("lastname"). "\t" .get_string("firstname") . "\t";
     foreach ($extrafields as $field) {
         echo get_user_field_name($field) . "\t";
@@ -238,70 +240,80 @@ if ($download == "txt") {
     echo $strgrade. "\t";
     echo $strcode. "\n";
 
-    // Generate the data for the body of the spreadsheet
-    $i=0;
-    $row=1;
-    if ($users) foreach ($users as $user) {
-        echo $user->lastname;
-        echo "\t" . $user->firstname . "\t";
-        foreach ($extrafields as $field) {
-            echo $user->$field . "\t";
-        }
-        $ug2 = '';
-        if ($usergrps = groups_get_all_groups($course->id, $user->id)) {
-            foreach ($usergrps as $ug) {
-                $ug2 = $ug2. $ug->name;
+    // Generate the data for the body of the spreadsheet.
+    $i = 0;
+    $row = 1;
+    if ($users) {
+        foreach ($users as $user) {
+            echo $user->lastname;
+            echo "\t" . $user->firstname . "\t";
+            foreach ($extrafields as $field) {
+                echo $user->$field . "\t";
             }
+            $ug2 = '';
+            if ($usergrps = groups_get_all_groups($course->id, $user->id)) {
+                foreach ($usergrps as $ug) {
+                    $ug2 = $ug2 . $ug->name;
+                }
+            }
+            echo $ug2 . "\t";
+            echo userdate($user->timecreated) . "\t";
+            echo iomadcertificate_get_grade($iomadcertificate, $course, $user->id) . "\t";
+            echo $user->code . "\n";
+            $row++;
         }
-        echo $ug2 . "\t";
-        echo userdate($user->timecreated) . "\t";
-        echo iomadcertificate_get_grade($iomadcertificate, $course, $user->id) . "\t";
-        echo $user->code . "\n";
-        $row++;
     }
     exit;
 }
 
 $usercount = count(iomadcertificate_get_issues($iomadcertificate->id, $DB->sql_fullname(), $groupmode, $cm));
 
-// Create the table for the users
+// Create the table for the users.
 $table = new html_table();
 $table->width = "95%";
 $table->tablealign = "center";
-$table->head = array($strto);
-$table->align = array('left');
+$table->head = [$strto];
+$table->align = ['left'];
 foreach ($extrafields as $field) {
     $table->head[] = get_user_field_name($field);
     $table->align[] = 'left';
 }
-$table->head = array_merge($table->head, array($strdate, $strgrade, $strcode));
-$table->align = array_merge($table->align, array('left', 'center', 'center'));
+$table->head = array_merge($table->head, [$strdate, $strgrade, $strcode]);
+$table->align = array_merge($table->align, ['left', 'center', 'center']);
 foreach ($users as $user) {
     $name = $OUTPUT->user_picture($user) . fullname($user);
     $date = userdate($user->timecreated) . iomadcertificate_print_user_files($iomadcertificate, $user->id, $context->id);
     $code = $user->code;
-    $data = array();
+    $data = [];
     $data[] = $name;
     foreach ($extrafields as $field) {
         $data[] = $user->$field;
     }
-    $data = array_merge($data, array($date, iomadcertificate_get_grade($iomadcertificate, $course, $user->id), $code));
+    $data = array_merge($data, [$date, iomadcertificate_get_grade($iomadcertificate, $course, $user->id), $code]);
     $table->data[] = $data;
 }
 
-// Create table to store buttons
+// Create table to store buttons.
 $tablebutton = new html_table();
 $tablebutton->attributes['class'] = 'downloadreport';
-$btndownloadods = $OUTPUT->single_button(new moodle_url("report.php", array('id'=>$cm->id, 'download'=>'ods')), get_string("downloadods"));
-$btndownloadxls = $OUTPUT->single_button(new moodle_url("report.php", array('id'=>$cm->id, 'download'=>'xls')), get_string("downloadexcel"));
-$btndownloadtxt = $OUTPUT->single_button(new moodle_url("report.php", array('id'=>$cm->id, 'download'=>'txt')), get_string("downloadtext"));
-$tablebutton->data[] = array($btndownloadods, $btndownloadxls, $btndownloadtxt);
+$btndownloadods = $OUTPUT->single_button(
+    new moodle_url("report.php", ['id' => $cm->id, 'download' => 'ods']),
+    get_string("downloadods")
+);
+$btndownloadxls = $OUTPUT->single_button(
+    new moodle_url("report.php", ['id' => $cm->id, 'download' => 'xls']),
+    get_string("downloadexcel")
+);
+$btndownloadtxt = $OUTPUT->single_button(
+    new moodle_url("report.php", ['id' => $cm->id, 'download' => 'txt']),
+    get_string("downloadtext")
+);
+$tablebutton->data[] = [$btndownloadods, $btndownloadxls, $btndownloadtxt];
 
 echo $OUTPUT->header();
 groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/iomadcertificate/report.php?id='.$id);
 echo $OUTPUT->heading(get_string('modulenameplural', 'iomadcertificate'));
 echo $OUTPUT->paging_bar($usercount, $page, $perpage, $url);
-echo '<br />';
 echo html_writer::table($table);
-echo html_writer::tag('div', html_writer::table($tablebutton), array('style' => 'margin:auto; width:50%'));
+echo html_writer::tag('div', html_writer::table($tablebutton), ['style' => 'margin:auto; width:50%']);
 echo $OUTPUT->footer($course);

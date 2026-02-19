@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of the Certificate module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,69 +15,74 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD certificate activity
+ *
  * @package   mod_iomadcertificate
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   mod_certificate by Mark Nelson <markn@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$capabilities = array(
+// This plugin is based on code originally created as mod_certificate by Mark Nelson <markn@moodle.com>.
 
-    'mod/iomadcertificate:addinstance' => array(
+defined('MOODLE_INTERNAL') || die();
+
+$capabilities = [
+
+    'mod/iomadcertificate:addinstance' => [
         'riskbitmask' => RISK_XSS,
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => array(
+        'archetypes' => [
             'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        ),
-        'clonepermissionsfrom' => 'moodle/course:manageactivities'
-    ),
+            'manager' => CAP_ALLOW,
+        ],
+        'clonepermissionsfrom' => 'moodle/course:manageactivities',
+    ],
 
-    'mod/iomadcertificate:view' => array(
+    'mod/iomadcertificate:view' => [
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
+        'archetypes' => [
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    ),
+            'manager' => CAP_ALLOW,
+        ],
+    ],
 
 
-    'mod/iomadcertificate:viewother' => array(
+    'mod/iomadcertificate:viewother' => [
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        )
-    ),
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'mod/iomadcertificate:manage' => array(
+    'mod/iomadcertificate:manage' => [
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
+        'archetypes' => [
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    ),
+            'manager' => CAP_ALLOW,
+        ],
+    ],
 
-    'mod/iomadcertificate:printteacher' => array(
+    'mod/iomadcertificate:printteacher' => [
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
+        'archetypes' => [
             'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW
-        )
-    ),
+            'editingteacher' => CAP_ALLOW,
+        ],
+    ],
 
-);
+];
