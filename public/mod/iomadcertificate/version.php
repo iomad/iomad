@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of the Certificate module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,16 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD certificate activity
+ *
  * @package   mod_iomadcertificate
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   mod_certificate by Mark Nelson <markn@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+// This plugin is based on code originally created as mod_certificate by Mark Nelson <markn@moodle.com>.
+
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '5.0.2 (Build: 20250811)';    // Human-friendly version name
+$plugin->release  = '5.0.2 (Build: 20250811)';    // Human-friendly version name.
 $plugin->version  = 2025041450;   // The (date) version of this plugin.
 $plugin->requires = 2025041400;   // Requires this Moodle version.
 $plugin->component = 'mod_iomadcertificate';

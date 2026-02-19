@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of the Certificate module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,25 +15,31 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD certificate activity
+ *
  * @package   mod_iomadcertificate
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   mod_certificate by Mark Nelson <markn@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+// This plugin is based on code originally created as mod_certificate by Mark Nelson <markn@moodle.com>.
 
 require('../../config.php');
 require_once($CFG->dirroot.'/mod/iomadcertificate/locallib.php');
 require_once($CFG->dirroot.'/mod/iomadcertificate/upload_image_form.php');
 
+// Log in and set up $PAGE.
 require_login();
 
+// Can we even do anything?
 $context = context_system::instance();
 require_capability('moodle/site:config', $context);
 
 $struploadimage = get_string('uploadimage', 'iomadcertificate');
 
-$PAGE->set_url('/admin/settings.php', array('section' => 'modsettingiomadcertificate'));
+// Finish setting up PAGE.
+$PAGE->set_url('/admin/settings.php', ['section' => 'modsettingiomadcertificate']);
 $PAGE->set_pagetype('admin-setting-modsettingiomadcertificate');
 $PAGE->set_pagelayout('admin');
 $PAGE->set_context($context);
@@ -42,23 +47,29 @@ $PAGE->set_title($struploadimage);
 $PAGE->set_heading($SITE->fullname);
 $PAGE->navbar->add($struploadimage);
 
-$upload_form = new mod_iomadcertificate_upload_image_form();
+// Set up the upload form.
+$uploadform = new mod_iomadcertificate_upload_image_form();
 
-if ($upload_form->is_cancelled()) {
+if ($uploadform->is_cancelled()) {
     redirect(new moodle_url('/admin/settings.php?section=modsettingiomadcertificate'));
-} else if ($data = $upload_form->get_data()) {
-    // Ensure the directory for storing is created
+} else if ($data = $uploadform->get_data()) {
+    // Ensure the directory for storing is created.
     $uploaddir = "mod/iomadcertificate/pix/$data->imagetype";
-    $filename = $upload_form->get_new_filename('iomadcertificateimage');
+    $filename = $uploadform->get_new_filename('iomadcertificateimage');
     make_upload_directory($uploaddir);
     $destination = $CFG->dataroot . '/' . $uploaddir . '/' . $filename;
-    if (!$upload_form->save_file('iomadcertificateimage', $destination, true)) {
+    if (!$uploadform->save_file('iomadcertificateimage', $destination, true)) {
         throw new coding_exception('File upload failed');
     }
 
     redirect(new moodle_url('/admin/settings.php?section=modsettingiomadcertificate'), get_string('changessaved'));
 }
 
+// Display the page.
 echo $OUTPUT->header();
-echo $upload_form->display();
+
+// Display the form.
+echo $uploadform->display();
+
+// Display the footer.
 echo $OUTPUT->footer();

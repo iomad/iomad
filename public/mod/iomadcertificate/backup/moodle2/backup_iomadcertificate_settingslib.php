@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of the Certificate module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,13 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD certificate activity
+ *
  * @package   mod_iomadcertificate
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   mod_certificate by Mark Nelson <markn@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+// This plugin is based on code originally created as mod_certificate by Mark Nelson <markn@moodle.com>.
+
  // This activity has no particular settings but the inherited from the generic
  // backup_activity_task so here there isn't any class definition, like the ones
- // existing in /backup/moodle2/backup_settingslib.php (activities section)
+ // existing in /backup/moodle2/backup_settingslib.php (activities section).

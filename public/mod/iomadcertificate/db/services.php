@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of the Certificate module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,49 +15,67 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD certificate activity
+ *
  * @package   mod_iomadcertificate
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   mod_certificate by Mark Nelson <markn@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$functions = array(
+// This plugin is based on code originally created as mod_certificate by Mark Nelson <markn@moodle.com>.
 
-    'mod_iomadcertificate_get_iomadcertificates_by_courses' => array(
+defined('MOODLE_INTERNAL') || die();
+
+$functions = [
+
+    'mod_iomadcertificate_get_iomadcertificates_by_courses' => [
         'classname'     => 'mod_iomadcertificate_external',
         'methodname'    => 'get_iomadcertificates_by_courses',
         'description'   => 'Returns a list of iomadcertificate instances in a provided set of courses, if
-                            no courses are provided then all the iomadcertificate instances the user has access to will be returned.',
+                            no courses are provided then all the iomadcertificate instances the user has
+                            access to will be returned.',
         'type'          => 'read',
         'capabilities'  => 'mod/iomadcertificate:view',
-        'services'      => array(MOODLE_OFFICIAL_MOBILE_SERVICE, 'local_mobile'),
-    ),
+        'services'      => [
+            MOODLE_OFFICIAL_MOBILE_SERVICE,
+            'local_mobile',
+        ],
+    ],
 
-    'mod_iomadcertificate_view_iomadcertificate' => array(
+    'mod_iomadcertificate_view_iomadcertificate' => [
         'classname'     => 'mod_iomadcertificate_external',
         'methodname'    => 'view_iomadcertificate',
         'description'   => 'Trigger the course module viewed event and update the module completion status.',
         'type'          => 'write',
         'capabilities'  => 'mod/iomadcertificate:view',
-        'services'      => array(MOODLE_OFFICIAL_MOBILE_SERVICE, 'local_mobile'),
-    ),
+        'services'      => [
+            MOODLE_OFFICIAL_MOBILE_SERVICE,
+            'local_mobile',
+        ],
+    ],
 
-    'mod_iomadcertificate_issue_iomadcertificate' => array(
+    'mod_iomadcertificate_issue_iomadcertificate' => [
         'classname'     => 'mod_iomadcertificate_external',
         'methodname'    => 'issue_iomadcertificate',
         'description'   => 'Create new iomadcertificate record, or return existing record for the current user.',
         'type'          => 'write',
         'capabilities'  => 'mod/iomadcertificate:view',
-        'services'      => array(MOODLE_OFFICIAL_MOBILE_SERVICE, 'local_mobile'),
-    ),
+        'services'      => [
+            MOODLE_OFFICIAL_MOBILE_SERVICE,
+            'local_mobile',
+        ],
+    ],
 
-    'mod_iomadcertificate_get_issued_iomadcertificates' => array(
+    'mod_iomadcertificate_get_issued_iomadcertificates' => [
         'classname'     => 'mod_iomadcertificate_external',
         'methodname'    => 'get_issued_iomadcertificates',
         'description'   => 'Get the list of issued iomadcertificates for the current user.',
         'type'          => 'read',
         'capabilities'  => 'mod/iomadcertificate:view',
-        'services'      => array(MOODLE_OFFICIAL_MOBILE_SERVICE, 'local_mobile'),
-    ),
-);
+        'services'      => [
+            MOODLE_OFFICIAL_MOBILE_SERVICE,
+            'local_mobile',
+        ],
+    ],
+];

@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of the Certificate module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,14 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD certificate activity
+ *
  * @package   mod_iomadcertificate
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   mod_certificate by Mark Nelson <markn@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+// This plugin is based on code originally created as mod_certificate by Mark Nelson <markn@moodle.com>.
 
 /**
  * Add iomadcertificate instance.
@@ -68,23 +68,23 @@ function iomadcertificate_update_instance($iomadcertificate) {
 function iomadcertificate_delete_instance($id) {
     global $DB;
 
-    // Ensure the iomadcertificate exists
-    if (!$iomadcertificate = $DB->get_record('iomadcertificate', array('id' => $id))) {
+    // Ensure the iomadcertificate exists.
+    if (!$iomadcertificate = $DB->get_record('iomadcertificate', ['id' => $id])) {
         return false;
     }
 
-    // Prepare file record object
+    // Prepare file record object.
     if (!$cm = get_coursemodule_from_instance('iomadcertificate', $id)) {
         return false;
     }
 
     $result = true;
-    $DB->delete_records('iomadcertificate_issues', array('iomadcertificateid' => $id));
-    if (!$DB->delete_records('iomadcertificate', array('id' => $id))) {
+    $DB->delete_records('iomadcertificate_issues', ['iomadcertificateid' => $id]);
+    if (!$DB->delete_records('iomadcertificate', ['id' => $id])) {
         $result = false;
     }
 
-    // Delete any files associated with the iomadcertificate
+    // Delete any files associated with the iomadcertificate.
     $context = context_module::instance($cm->id);
     $fs = get_file_storage();
     $fs->delete_area_files($context->id);
@@ -106,13 +106,13 @@ function iomadcertificate_reset_userdata($data) {
     global $DB;
 
     $componentstr = get_string('modulenameplural', 'iomadcertificate');
-    $status = array();
+    $status = [];
 
     if (!empty($data->reset_iomadcertificate)) {
         $sql = "SELECT cert.id
                   FROM {iomadcertificate} cert
                  WHERE cert.course = :courseid";
-        $params = array('courseid' => $data->courseid);
+        $params = ['courseid' => $data->courseid];
         $iomadcertificates = $DB->get_records_sql($sql, $params);
         $fs = get_file_storage();
         if ($iomadcertificates) {
@@ -126,12 +126,20 @@ function iomadcertificate_reset_userdata($data) {
         }
 
         $DB->delete_records_select('iomadcertificate_issues', "iomadcertificateid IN ($sql)", $params);
-        $status[] = array('component' => $componentstr, 'item' => get_string('removecert', 'iomadcertificate'), 'error' => false);
+        $status[] = [
+            'component' => $componentstr,
+            'item' => get_string('removecert', 'iomadcertificate'),
+            'error' => false,
+        ];
     }
-    // Updating dates - shift may be negative too
+    // Updating dates - shift may be negative too.
     if ($data->timeshift) {
-        shift_course_mod_dates('iomadcertificate', array('timeopen', 'timeclose'), $data->timeshift, $data->courseid);
-        $status[] = array('component' => $componentstr, 'item' => get_string('datechanged'), 'error' => false);
+        shift_course_mod_dates('iomadcertificate', ['timeopen', 'timeclose'], $data->timeshift, $data->courseid);
+        $status[] = [
+            'component' => $componentstr,
+            'item' => get_string('datechanged'),
+            'error' => false,
+        ];
     }
 
     return $status;
@@ -159,7 +167,7 @@ function iomadcertificate_reset_course_form_definition(&$mform) {
  * @return array
  */
 function iomadcertificate_reset_course_form_defaults($course) {
-    return array('reset_iomadcertificate' => 1);
+    return ['reset_iomadcertificate' => 1];
 }
 
 /**
@@ -176,7 +184,8 @@ function iomadcertificate_user_outline($course, $user, $mod, $iomadcertificate) 
     global $DB;
 
     $result = new stdClass;
-    if ($issue = $DB->get_record('iomadcertificate_issues', array('iomadcertificateid' => $iomadcertificate->id, 'userid' => $user->id))) {
+    if ($issue = $DB->get_record('iomadcertificate_issues', ['iomadcertificateid' => $iomadcertificate->id,
+                                                             'userid' => $user->id])) {
         $result->info = get_string('issued', 'iomadcertificate');
         $result->time = $issue->timecreated;
     } else {
@@ -200,13 +209,14 @@ function iomadcertificate_user_complete($course, $user, $mod, $iomadcertificate)
     global $DB, $OUTPUT, $CFG;
     require_once($CFG->dirroot.'/mod/iomadcertificate/locallib.php');
 
-    if ($issue = $DB->get_record('iomadcertificate_issues', array('iomadcertificateid' => $iomadcertificate->id, 'userid' => $user->id))) {
+    if ($issue = $DB->get_record('iomadcertificate_issues', ['iomadcertificateid' => $iomadcertificate->id,
+                                                             'userid' => $user->id])) {
         echo $OUTPUT->box_start();
         echo get_string('issued', 'iomadcertificate') . ": ";
         echo userdate($issue->timecreated);
         $cm = get_coursemodule_from_instance('iomadcertificate', $iomadcertificate->id, $course->id);
         iomadcertificate_print_user_files($iomadcertificate, $user->id, context_module::instance($cm->id)->id);
-        echo '<br />';
+        echo '<br /> ';
         echo $OUTPUT->box_end();
     } else {
         print_string('notissuedyet', 'iomadcertificate');
@@ -227,10 +237,11 @@ function iomadcertificate_get_participants($iomadcertificateid) {
               FROM {user} u, {iomadcertificate_issues} a
              WHERE a.iomadcertificateid = :iomadcertificateid
                AND u.id = a.userid";
-    return  $DB->get_records_sql($sql, array('iomadcertificateid' => $iomadcertificateid));
+    return  $DB->get_records_sql($sql, ['iomadcertificateid' => $iomadcertificateid]);
 }
 
 /**
+ *
  * @uses FEATURE_GROUPS
  * @uses FEATURE_GROUPINGS
  * @uses FEATURE_GROUPMEMBERSONLY
@@ -242,18 +253,23 @@ function iomadcertificate_get_participants($iomadcertificateid) {
  * @return mixed True if module supports feature, null if doesn't know
  */
 function iomadcertificate_supports($feature) {
-    switch ($feature) {
-        case FEATURE_GROUPS:                  return true;
-        case FEATURE_GROUPINGS:               return true;
-        case FEATURE_GROUPMEMBERSONLY:        return true;
-        case FEATURE_MOD_INTRO:               return true;
-        case FEATURE_COMPLETION_TRACKS_VIEWS: return true;
-        case FEATURE_BACKUP_MOODLE2:          return true;
-        case FEATURE_SHOW_DESCRIPTION:        return true;
-        case FEATURE_MOD_PURPOSE:             return MOD_PURPOSE_COMMUNICATION;
-
-        default: return null;
+    if (!$feature) {
+        return null;
     }
+    $features = [
+        FEATURE_GROUPS => true,
+        FEATURE_GROUPINGS => true,
+        FEATURE_GROUPMEMBERSONLY => true,
+        FEATURE_MOD_INTRO => true,
+        FEATURE_BACKUP_MOODLE2 => true,
+        FEATURE_COMPLETION_TRACKS_VIEWS => true,
+        FEATURE_SHOW_DESCRIPTION => true,
+        FEATURE_MOD_PURPOSE => MOD_PURPOSE_COMMUNICATION,
+    ];
+    if (isset($features[(string) $feature])) {
+        return $features[$feature];
+    }
+    return null;
 }
 
 /**
@@ -274,7 +290,7 @@ function iomadcertificate_pluginfile($course, $cm, $context, $filearea, $args, $
         return false;
     }
 
-    if (!$iomadcertificate = $DB->get_record('iomadcertificate', array('id' => $cm->instance))) {
+    if (!$iomadcertificate = $DB->get_record('iomadcertificate', ['id' => $cm->instance])) {
         return false;
     }
 
@@ -284,12 +300,12 @@ function iomadcertificate_pluginfile($course, $cm, $context, $filearea, $args, $
 
     $certrecord = (int)array_shift($args);
 
-    if (!$certrecord = $DB->get_record('iomadcertificate_issues', array('id' => $certrecord))) {
+    if (!$certrecord = $DB->get_record('iomadcertificate_issues', ['id' => $certrecord])) {
         return false;
     }
 
     $canmanageiomadcertificate = has_capability('mod/iomadcertificate:manage', $context);
-    if ($certuser->id != $certrecord->userid and !$canmanageiomadcertificate) {
+    if ($certuser->id != $certrecord->userid && !$canmanageiomadcertificate) {
         return false;
     }
 
@@ -298,15 +314,15 @@ function iomadcertificate_pluginfile($course, $cm, $context, $filearea, $args, $
         $fullpath = "/{$context->id}/mod_iomadcertificate/issue/$certrecord->id/$relativepath";
 
         $fs = get_file_storage();
-        if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
+        if (!$file = $fs->get_file_by_hash(sha1($fullpath)) || $file->is_directory()) {
             return false;
         }
-        send_stored_file($file, 0, 0, true); // download MUST be forced - security!
+        send_stored_file($file, 0, 0, true); // Download MUST be forced - security!
     } else if ($filearea === 'onthefly') {
         require_once($CFG->dirroot.'/mod/iomadcertificate/locallib.php');
         require_once("$CFG->libdir/pdflib.php");
 
-        if (!$iomadcertificate = $DB->get_record('iomadcertificate', array('id' => $certrecord->iomadcertificateid))) {
+        if (!$iomadcertificate = $DB->get_record('iomadcertificate', ['id' => $certrecord->iomadcertificateid])) {
             return false;
         }
 
@@ -330,7 +346,7 @@ function iomadcertificate_pluginfile($course, $cm, $context, $filearea, $args, $
  * @return array
  */
 function iomadcertificate_get_view_actions() {
-    return array('view', 'view all', 'view report');
+    return ['view', 'view all', 'view report'];
 }
 
 /**
@@ -339,5 +355,5 @@ function iomadcertificate_get_view_actions() {
  * @return array
  */
 function iomadcertificate_get_post_actions() {
-    return array('received');
+    return ['received'];
 }

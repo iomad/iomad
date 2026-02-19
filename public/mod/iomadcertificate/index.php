@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of the Certificate module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,52 +15,57 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD certificate activity
+ *
  * @package   mod_iomadcertificate
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   mod_certificate by Mark Nelson <markn@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once('../../config.php');
-require_once('locallib.php');
+// This plugin is based on code originally created as mod_certificate by Mark Nelson <markn@moodle.com>.
 
-$id = required_param('id', PARAM_INT);           // Course Module ID
+require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/locallib.php');
 
-// Ensure that the course specified is valid
-if (!$course = $DB->get_record('course', array('id'=> $id))) {
+$id = required_param('id', PARAM_INT);
+
+// Ensure that the course specified is valid.
+if (!$course = $DB->get_record('course', ['id' => $id])) {
     throw new moodle_exception('Course ID is incorrect');
 }
 
-// Requires a login
+// Requires a login.
 require_login($course);
 
-// Declare variables
+// Declare variables.
 $currentsection = "";
 $printsection = "";
 $timenow = time();
 
-// Strings used multiple times
+// Strings used multiple times.
 $striomadcertificates = get_string('modulenameplural', 'iomadcertificate');
 $strissued  = get_string('issued', 'iomadcertificate');
 $strname  = get_string("name");
 $strsectionname = get_string('sectionname', 'format_'.$course->format);
 
-// Print the header
+// Print the header.
 $PAGE->set_pagelayout('incourse');
-$PAGE->set_url('/mod/iomadcertificate/index.php', array('id'=>$course->id));
+$PAGE->set_url('/mod/iomadcertificate/index.php', ['id' => $course->id]);
 $PAGE->navbar->add($striomadcertificates);
 $PAGE->set_title($striomadcertificates);
 $PAGE->set_heading($course->fullname);
 
-// Add the page view to the Moodle log
-$event = \mod_iomadcertificate\event\course_module_instance_list_viewed::create(array(
-    'context' => context_course::instance($course->id)
-));
+// Add the page view to the Moodle log.
+$event = \mod_iomadcertificate\event\course_module_instance_list_viewed::create(
+    [
+        'context' => context_course::instance($course->id),
+    ]
+);
 $event->add_record_snapshot('course', $course);
 $event->trigger();
 
-// Get the iomadcertificates, if there are none display a notice
+// Get the iomadcertificates, if there are none display a notice.
 if (!$iomadcertificates = get_all_instances_in_course('iomadcertificate', $course)) {
     echo $OUTPUT->header();
     notice(get_string('noiomadcertificates', 'iomadcertificate'), "$CFG->wwwroot/course/view.php?id=$course->id");
@@ -74,20 +78,20 @@ $usesections = course_format_uses_sections($course->format);
 $table = new html_table();
 
 if ($usesections) {
-    $table->head  = array ($strsectionname, $strname, $strissued);
+    $table->head  = [$strsectionname, $strname, $strissued];
 } else {
-    $table->head  = array ($strname, $strissued);
+    $table->head  = [$strname, $strissued];
 }
 
 foreach ($iomadcertificates as $iomadcertificate) {
     if (!$iomadcertificate->visible) {
-        // Show dimmed if the mod is hidden
-        $link = html_writer::tag('a', $iomadcertificate->name, array('class' => 'dimmed',
-            'href' => $CFG->wwwroot . '/mod/iomadcertificate/view.php?id=' . $iomadcertificate->coursemodule));
+        // Show dimmed if the mod is hidden.
+        $link = html_writer::tag('a', $iomadcertificate->name, ['class' => 'dimmed',
+            'href' => $CFG->wwwroot . '/mod/iomadcertificate/view.php?id=' . $iomadcertificate->coursemodule]);
     } else {
-        // Show normal if the mod is visible
-        $link = html_writer::tag('a', $iomadcertificate->name, array('class' => 'dimmed',
-            'href' => $CFG->wwwroot . '/mod/iomadcertificate/view.php?id=' . $iomadcertificate->coursemodule));
+        // Show normal if the mod is visible.
+        $link = html_writer::tag('a', $iomadcertificate->name, ['class' => 'dimmed',
+            'href' => $CFG->wwwroot . '/mod/iomadcertificate/view.php?id=' . $iomadcertificate->coursemodule]);
     }
 
     $strsection = '';
@@ -101,21 +105,26 @@ foreach ($iomadcertificates as $iomadcertificate) {
         $currentsection = $iomadcertificate->section;
     }
 
-    // Get the latest iomadcertificate issue
-    if ($certrecord = $DB->get_record('iomadcertificate_issues', array('userid' => $USER->id, 'iomadcertificateid' => $iomadcertificate->id))) {
+    // Get the latest iomadcertificate issue.
+    if ($certrecord = $DB->get_record('iomadcertificate_issues', ['userid' => $USER->id,
+                                                                  'iomadcertificateid' => $iomadcertificate->id])) {
         $issued = userdate($certrecord->timecreated);
     } else {
         $issued = get_string('notreceived', 'iomadcertificate');
     }
 
     if ($usesections) {
-        $table->data[] = array ($strsection, $link, $issued);
+        $table->data[] = [$strsection, $link, $issued];
     } else {
-        $table->data[] = array ($link, $issued);
+        $table->data[] = [$link, $issued];
     }
 }
 
+// Display the page.
 echo $OUTPUT->header();
-echo '<br />';
+
+// Display the table.
 echo html_writer::table($table);
+
+// Display the footer.
 echo $OUTPUT->footer();

@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of the Certificate module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,12 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD certificate activity
+ *
  * @package   mod_iomadcertificate
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   mod_certificate by Mark Nelson <markn@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+// This plugin is based on code originally created as mod_certificate by Mark Nelson <markn@moodle.com>.
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -44,11 +47,11 @@ class mod_iomadcertificate_external extends external_api {
      */
     public static function get_iomadcertificates_by_courses_parameters() {
         return new external_function_parameters (
-            array(
+            [
                 'courseids' => new external_multiple_structure(
-                    new external_value(PARAM_INT, 'course id'), 'Array of course ids', VALUE_DEFAULT, array()
+                    new external_value(PARAM_INT, 'course id'), 'Array of course ids', VALUE_DEFAULT, []
                 ),
-            )
+            ]
         );
     }
 
@@ -59,13 +62,13 @@ class mod_iomadcertificate_external extends external_api {
      * @param array $courseids the course ids
      * @return array the iomadcertificate details
      */
-    public static function get_iomadcertificates_by_courses($courseids = array()) {
+    public static function get_iomadcertificates_by_courses($courseids = []) {
         global $CFG;
 
-        $returnediomadcertificates = array();
-        $warnings = array();
+        $returnediomadcertificates = [];
+        $warnings = [];
 
-        $params = self::validate_parameters(self::get_iomadcertificates_by_courses_parameters(), array('courseids' => $courseids));
+        $params = self::validate_parameters(self::get_iomadcertificates_by_courses_parameters(), ['courseids' => $courseids]);
 
         if (empty($params['courseids'])) {
             $params['courseids'] = array_keys(enrol_get_my_courses());
@@ -85,7 +88,7 @@ class mod_iomadcertificate_external extends external_api {
                 $context = context_module::instance($iomadcertificate->coursemodule);
 
                 // Entry to return.
-                $module = array();
+                $module = [];
 
                 // First, we return information that any user can see in (or can deduce from) the web interface.
                 $module['id'] = $iomadcertificate->id;
@@ -112,11 +115,35 @@ class mod_iomadcertificate_external extends external_api {
                 // Check additional permissions for returning optional private settings.
                 if (has_capability('moodle/course:manageactivities', $context)) {
 
-                    $additionalfields = array('emailteachers', 'emailothers', 'savecert',
-                        'reportcert', 'delivery', 'iomadcertificatetype', 'orientation', 'borderstyle', 'bordercolor',
-                        'printwmark', 'printdate', 'datefmt', 'printnumber', 'printgrade', 'gradefmt', 'printoutcome',
-                        'printhours', 'printteacher', 'customtext', 'printsignature', 'printseal', 'timecreated', 'timemodified',
-                        'section', 'visible', 'groupmode', 'groupingid');
+                    $additionalfields = [
+                        'emailteachers',
+                        'emailothers',
+                        'savecert',
+                        'reportcert',
+                        'delivery',
+                        'iomadcertificatetype',
+                        'orientation',
+                        'borderstyle',
+                        'bordercolor',
+                        'printwmark',
+                        'printdate',
+                        'datefmt',
+                        'printnumber',
+                        'printgrade',
+                        'gradefmt',
+                        'printoutcome',
+                        'printhours',
+                        'printteacher',
+                        'customtext',
+                        'printsignature',
+                        'printseal',
+                        'timecreated',
+                        'timemodified',
+                        'section',
+                        'visible',
+                        'groupmode',
+                        'groupingid',
+                    ];
                     $viewablefields = array_merge($viewablefields, $additionalfields);
 
                 }
@@ -129,7 +156,7 @@ class mod_iomadcertificate_external extends external_api {
             }
         }
 
-        $result = array();
+        $result = [];
         $result['iomadcertificates'] = $returnediomadcertificates;
         $result['warnings'] = $warnings;
         return $result;
@@ -143,10 +170,10 @@ class mod_iomadcertificate_external extends external_api {
     public static function get_iomadcertificates_by_courses_returns() {
 
         return new external_single_structure(
-            array(
+            [
                 'iomadcertificates' => new external_multiple_structure(
                     new external_single_structure(
-                        array(
+                        [
                             'id' => new external_value(PARAM_INT, 'Certificate id'),
                             'coursemodule' => new external_value(PARAM_INT, 'Course module id'),
                             'course' => new external_value(PARAM_INT, 'Course id'),
@@ -182,11 +209,11 @@ class mod_iomadcertificate_external extends external_api {
                             'visible' => new external_value(PARAM_INT, 'visible', VALUE_OPTIONAL),
                             'groupmode' => new external_value(PARAM_INT, 'group mode', VALUE_OPTIONAL),
                             'groupingid' => new external_value(PARAM_INT, 'group id', VALUE_OPTIONAL),
-                        ), 'Tool'
+                        ], 'Tool'
                     )
                 ),
                 'warnings' => new external_warnings(),
-            )
+            ]
         );
     }
 
@@ -197,9 +224,9 @@ class mod_iomadcertificate_external extends external_api {
      */
     public static function view_iomadcertificate_parameters() {
         return new external_function_parameters(
-            array(
-                'iomadcertificateid' => new external_value(PARAM_INT, 'iomadcertificate instance id')
-            )
+            [
+                'iomadcertificateid' => new external_value(PARAM_INT, 'iomadcertificate instance id'),
+            ]
         );
     }
 
@@ -214,24 +241,24 @@ class mod_iomadcertificate_external extends external_api {
         global $DB;
 
         $params = self::validate_parameters(self::view_iomadcertificate_parameters(),
-                                            array(
-                                                'iomadcertificateid' => $iomadcertificateid
-                                            )
+                                            [
+                                                'iomadcertificateid' => $iomadcertificateid,
+                                            ]
         );
-        $warnings = array();
+        $warnings = [];
 
         // Request and permission validation.
-        $iomadcertificate = $DB->get_record('iomadcertificate', array('id' => $params['iomadcertificateid']), '*', MUST_EXIST);
+        $iomadcertificate = $DB->get_record('iomadcertificate', ['id' => $params['iomadcertificateid']], '*', MUST_EXIST);
         list($course, $cm) = get_course_and_cm_from_instance($iomadcertificate, 'iomadcertificate');
 
         $context = context_module::instance($cm->id);
         self::validate_context($context);
         require_capability('mod/iomadcertificate:view', $context);
 
-        $event = \mod_iomadcertificate\event\course_module_viewed::create(array(
+        $event = \mod_iomadcertificate\event\course_module_viewed::create([
             'objectid' => $iomadcertificate->id,
             'context' => $context,
-        ));
+        ]);
         $event->add_record_snapshot('course', $course);
         $event->add_record_snapshot('iomadcertificate', $iomadcertificate);
         $event->trigger();
@@ -239,7 +266,7 @@ class mod_iomadcertificate_external extends external_api {
         $completion = new completion_info($course);
         $completion->set_module_viewed($cm);
 
-        $result = array();
+        $result = [];
         $result['status'] = true;
         $result['warnings'] = $warnings;
         return $result;
@@ -252,10 +279,10 @@ class mod_iomadcertificate_external extends external_api {
      */
     public static function view_iomadcertificate_returns() {
         return new external_single_structure(
-            array(
+            [
                 'status' => new external_value(PARAM_BOOL, 'status: true if success'),
-                'warnings' => new external_warnings()
-            )
+                'warnings' => new external_warnings(),
+            ]
         );
     }
 
@@ -268,7 +295,7 @@ class mod_iomadcertificate_external extends external_api {
     private static function check_can_issue($iomadcertificateid) {
         global $DB;
 
-        $iomadcertificate = $DB->get_record('iomadcertificate', array('id' => $iomadcertificateid), '*', MUST_EXIST);
+        $iomadcertificate = $DB->get_record('iomadcertificate', ['id' => $iomadcertificateid], '*', MUST_EXIST);
         list($course, $cm) = get_course_and_cm_from_instance($iomadcertificate, 'iomadcertificate');
 
         $context = context_module::instance($cm->id);
@@ -283,7 +310,7 @@ class mod_iomadcertificate_external extends external_api {
                 throw new moodle_exception('requiredtimenotmet', 'iomadcertificate', '', $a);
             }
         }
-        return array($iomadcertificate, $course, $cm, $context);
+        return [$iomadcertificate, $course, $cm, $context];
     }
 
     /**
@@ -293,7 +320,7 @@ class mod_iomadcertificate_external extends external_api {
      */
     private static function issued_structure() {
         return new external_single_structure(
-            array(
+            [
             'id' => new external_value(PARAM_INT, 'Issue id'),
             'userid' => new external_value(PARAM_INT, 'User id'),
             'iomadcertificateid' => new external_value(PARAM_INT, 'Certificate id'),
@@ -303,7 +330,7 @@ class mod_iomadcertificate_external extends external_api {
             'fileurl' => new external_value(PARAM_URL, 'Time created'),
             'mimetype' => new external_value(PARAM_RAW, 'mime type'),
             'grade' => new external_value(PARAM_NOTAGS, 'Certificate grade', VALUE_OPTIONAL),
-            )
+            ]
         );
     }
 
@@ -339,9 +366,9 @@ class mod_iomadcertificate_external extends external_api {
      */
     public static function issue_iomadcertificate_parameters() {
         return new external_function_parameters(
-            array(
-                'iomadcertificateid' => new external_value(PARAM_INT, 'iomadcertificate instance id')
-            )
+            [
+                'iomadcertificateid' => new external_value(PARAM_INT, 'iomadcertificate instance id'),
+            ]
         );
     }
 
@@ -356,11 +383,11 @@ class mod_iomadcertificate_external extends external_api {
         global $USER;
 
         $params = self::validate_parameters(self::issue_iomadcertificate_parameters(),
-                                            array(
-                                                'iomadcertificateid' => $iomadcertificateid
-                                            )
+                                            [
+                                                'iomadcertificateid' => $iomadcertificateid,
+                                            ]
         );
-        $warnings = array();
+        $warnings = [];
 
         // Request and permission validation.
         list($iomadcertificate, $course, $cm, $context) = self::check_can_issue($params['iomadcertificateid']);
@@ -368,7 +395,7 @@ class mod_iomadcertificate_external extends external_api {
         $issue = iomadcertificate_get_issue($course, $USER, $iomadcertificate, $cm);
         self::add_extra_issue_data($issue, $iomadcertificate, $course, $cm, $context);
 
-        $result = array();
+        $result = [];
         $result['issue'] = $issue;
         $result['warnings'] = $warnings;
         return $result;
@@ -381,10 +408,10 @@ class mod_iomadcertificate_external extends external_api {
      */
     public static function issue_iomadcertificate_returns() {
         return new external_single_structure(
-            array(
+            [
                 'issue' => self::issued_structure(),
-                'warnings' => new external_warnings()
-            )
+                'warnings' => new external_warnings(),
+            ]
         );
     }
 
@@ -395,9 +422,9 @@ class mod_iomadcertificate_external extends external_api {
      */
     public static function get_issued_iomadcertificates_parameters() {
         return new external_function_parameters(
-            array(
-                'iomadcertificateid' => new external_value(PARAM_INT, 'iomadcertificate instance id')
-            )
+            [
+                'iomadcertificateid' => new external_value(PARAM_INT, 'iomadcertificate instance id'),
+            ]
         );
     }
 
@@ -411,11 +438,11 @@ class mod_iomadcertificate_external extends external_api {
     public static function get_issued_iomadcertificates($iomadcertificateid) {
 
         $params = self::validate_parameters(self::get_issued_iomadcertificates_parameters(),
-                                            array(
-                                                'iomadcertificateid' => $iomadcertificateid
-                                            )
+                                            [
+                                                'iomadcertificateid' => $iomadcertificateid,
+                                            ]
         );
-        $warnings = array();
+        $warnings = [];
 
         // Request and permission validation.
         list($iomadcertificate, $course, $cm, $context) = self::check_can_issue($params['iomadcertificateid']);
@@ -428,10 +455,10 @@ class mod_iomadcertificate_external extends external_api {
 
             }
         } else {
-            $issues = array();
+            $issues = [];
         }
 
-        $result = array();
+        $result = [];
         $result['issues'] = $issues;
         $result['warnings'] = $warnings;
         return $result;
@@ -444,10 +471,10 @@ class mod_iomadcertificate_external extends external_api {
      */
     public static function get_issued_iomadcertificates_returns() {
         return new external_single_structure(
-            array(
+            [
                 'issues' => new external_multiple_structure(self::issued_structure()),
-                'warnings' => new external_warnings()
-            )
+                'warnings' => new external_warnings(),
+            ]
         );
     }
 
