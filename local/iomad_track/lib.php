@@ -15,7 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_iomad_signup
+ * IOMAD local tracking plugin
+ *
+ * @package   local_iomad_track
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,23 +29,10 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir.'/filelib.php');
 
 /**
- * Form for editing HTML block instances.
+ * Send the stored file to the user
  *
- * @copyright 2010 Petr Skoda (http://skodak.org)
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @package   block_html
- * @category  files
- * @param stdClass $course course object
- * @param stdClass $birecord_or_cm block instance record
- * @param stdClass $context context object
- * @param string $filearea file area
- * @param array $args extra arguments
- * @param bool $forcedownload whether or not force download
- * @param array $options additional options affecting the file serving
- * @return bool
- * @todo MDL-36050 improve capability check on stick blocks, so we can check user capability before sending images.
  */
-function local_iomad_track_pluginfile($course, $birecord_or_cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
+function local_iomad_track_pluginfile($course, $birecord_or_cm, $context, $filearea, $args, $forcedownload, array $options=[]) {
     global $DB, $CFG, $USER;
 
     if ($context->contextlevel != CONTEXT_USER) {
@@ -79,9 +68,9 @@ function local_iomad_track_delete_entry($trackid, $full=false) {
     global $DB,$CFG;
 
     // Do we have a recorded certificate?
-    if ($certs = $DB->get_records('local_iomad_track_certs', array('trackid' => $trackid))) {
+    if ($certs = $DB->get_records('local_iomad_track_certs', ['trackid' => $trackid])) {
         foreach ($certs as $cert) {
-            $DB->delete_records('local_iomad_track_certs', array('id' => $cert->id));
+            $DB->delete_records('local_iomad_track_certs', ['id' => $cert->id]);
         }
     }
 
@@ -89,18 +78,18 @@ function local_iomad_track_delete_entry($trackid, $full=false) {
     if ($file = $DB->get_record_sql("SELECT * FROM {files}
                                      WHERE component= :component
                                      AND itemid = :itemid
-                                     AND filename != '.'",
-                                     array('component' => 'local_iomad_track', 'itemid' => $trackid))) {
+                                     AND filename <> '.'",
+                                     ['component' => 'local_iomad_track', 'itemid' => $trackid])) {
         $filedir1 = substr($file->contenthash,0,2);
         $filedir2 = substr($file->contenthash,2,2);
         $filepath = $CFG->dataroot . '/filedir/' . $filedir1 . '/' . $filedir2 . '/' . $file->contenthash;
         unlink($filepath);
     }
-    $DB->delete_records('files', array('itemid' => $trackid, 'component' => 'local_iomad_track'));
+    $DB->delete_records('files', ['itemid' => $trackid, 'component' => 'local_iomad_track']);
 
     // Are we getting rid of the full record?
     if ($full) {
-        $DB->delete_records('local_iomad_track', array('id' => $trackid));
+        $DB->delete_records('local_iomad_track', ['id' => $trackid]);
     }
 }
 
@@ -121,29 +110,36 @@ function local_iomad_track_download_certs($companyid = 0, $courses = [], $users 
 
     // Deal with the courses.
     if (empty($courses)) {
-        $allcourses = array_keys($company->get_menu_courses(true, false, false, false)); 
+        $allcourses = array_keys($company->get_menu_courses(true, false, false, false));
     } else {
         $allcourses = $courses;
     }
 
     // Deal with the users.
-    $sqlselect = "courseid =:courseid AND companyid = :companyid AND timecompleted > 0";
+    $sqlparams = [];
+    $sqlselect = "courseid = :courseid AND companyid = :companyid AND timecompleted > 0";
     if (!empty($users)) {
-        $sqlselect .= " AND userid IN (" . implode(',', $users) . ")";
+        [$insql, $sqlparams] = $DB->get_in_or_equal($users,
+                                                    SQL_PARAMS_NAMED,
+                                                    'uids');
+        $sqlselect .= " AND userid {$insql}";
+
     }
 
-    // create the zip file
+    // Create the zip file.
     $zipfile = new ZipArchive();
     $tempfilename = $CFG->dataroot . '/temp/filestorage/' . time();
     $realfilename = "certificates.zip";
     if ($zipfile->open($tempfilename, ZipArchive::CREATE) === TRUE) {
+        // Process all of the courses.
         foreach ($allcourses as $course) {
+            $sqlparams['courseid'] = $course;
+            $sqlparams['companyid'] = $company->id;
             $comprecords = $DB->get_records_select('local_iomad_track',
-                                                    $sqlselect,
-                                                   ['courseid' => $course,
-                                                    'companyid' => $company->id]); 
+                                                   $sqlselect,
+                                                   $sqlparams);
             if (count($comprecords) > 0) {
-                // For all of the track saved files
+                // For all of the track saved files.
                 foreach ($comprecords as $comprecord) {
                     if ($filerec = $DB->get_record_select('files',
                                                           "component =:component
@@ -155,7 +151,10 @@ function local_iomad_track_download_certs($companyid = 0, $courses = [], $users 
                                                            'filearea' => 'issue',
                                                            'itemid' => $comprecord->id])) {
                         if ($userrec = $DB->get_record('user', ['id' => $comprecord->userid])) {
-                            $savefilename = $comprecord->coursename . "/" . $userrec->firstname . "_" . $userrec->lastname . "_" . $userrec->id . "/" . $comprecord->id . "_" . $filerec->filename;
+                            $savefilename = format_string($comprecord->coursename) . "/" .
+                                            $userrec->firstname . "_" .
+                                            $userrec->lastname . "_" . $userrec->id . "/" .
+                                            $comprecord->id . "_" . $filerec->filename;
                             $first = substr($filerec->contenthash, 0, 2);
                             $second = substr($filerec->contenthash, 2, 2);
                             $filepath = $CFG->dataroot . "/filedir/$first/$second/" . $filerec->contenthash;
@@ -167,7 +166,7 @@ function local_iomad_track_download_certs($companyid = 0, $courses = [], $users 
         }
         $zipfile->close();
 
-        // Send the headers to force download the zip file
+        // Send the headers to force download the zip file.
         header("Content-type: application/zip");
         header("Content-Disposition: attachment; filename=$realfilename");
         header("Content-length: " . filesize($tempfilename));
