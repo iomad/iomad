@@ -79,7 +79,12 @@ class completion_table extends table_sql {
 
         if ($this->is_downloading() || empty($USER->editing)) {
             if (!empty($row->licenseallocated)) {
-                return format_string(userdate($row->licenseallocated, get_config('local_iomad', 'date_format')) . " (" . $row->licensename . ")");
+                return format_string(
+                    userdate(
+                        $row->licenseallocated,
+                        get_config('local_iomad', 'date_format')
+                    ) . " (" . $row->licensename . ")"
+                );
             } else {
                 return;
             }
