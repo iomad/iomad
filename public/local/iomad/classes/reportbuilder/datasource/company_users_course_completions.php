@@ -67,7 +67,7 @@ class company_users_course_completions extends datasource {
         // Join the company entity to the coursecompltions entity.
         $this->add_entity($companyentity
             ->add_join("JOIN {company} {$companyalias}
-                ON {$coursecompletionsalias}.courseid = {$companyalias}.id")
+                ON {$coursecompletionsalias}.companyid = {$companyalias}.id")
         );
 
         // Join the companyusers entity to the coursecompltions entity.
@@ -152,6 +152,7 @@ class company_users_course_completions extends datasource {
      */
     public function get_default_conditions(): array {
         return [
+            'company:id',
             'company:name',
             'user:fullname',
             'department:name',

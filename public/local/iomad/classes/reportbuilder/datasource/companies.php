@@ -97,6 +97,7 @@ class companies extends datasource {
      */
     public function get_default_conditions(): array {
         return [
+            'company:id',
             'company:name',
         ];
     }
