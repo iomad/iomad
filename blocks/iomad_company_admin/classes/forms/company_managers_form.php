@@ -228,7 +228,7 @@ class company_managers_form extends moodleform {
         } else {
             $mform->addElement(
                 'html',
-                html_witer::tag(
+                html_writer::tag(
                     'a',
                     get_string('createuser', 'block_iomad_company_admin'),
                     [
