@@ -103,12 +103,17 @@ class company_user {
             $existinguser = $DB->get_record('user', ['email' => $user->email])
         ) {
             $clashed = true;
-        } else if ($existinguser = $DB->get_record('user', [
-            'firstname' => $user->firstname,
-            'lastname' => $user->lastname,
-            'email' => $user->email,
-        ])) {
-            // It only clashes if the existing user is in a different tenant.
+        } else if (!get_config('local_iomad', 'enforce_username_match') &&
+            $existinguser = $DB->get_record(
+                'user',
+                [
+                    'firstname' => $user->firstname,
+                    'lastname' => $user->lastname,
+                    'email' => $user->email,
+                ]
+            )) {
+            // It only clashes if the existing user is in a different tenant and
+            // the option to enforce clash on username isn't on.
             if (!$DB->get_records('company_users', ['companyid' => $company->id,
                                                     'userid' => $existinguser->id])) {
                 $clashed = true;
