@@ -217,7 +217,7 @@ class coursecompletions extends base {
         // Licenseallocated.
         $columns[] = (new column(
             'licenseallocated',
-            new lang_string('licenseallocated', 'block_iomad_company_admin'),
+            new lang_string('licensedateallocated', 'block_iomad_company_admin'),
             $this->get_entity_name()
         ))
             ->add_joins($this->get_joins())
@@ -247,6 +247,17 @@ class coursecompletions extends base {
      */
     protected function get_all_filters(): array {
         $coursecompletionsalias = $this->get_table_alias('coursecompletions');
+
+        // Companyid.
+        $columns[] = (new column(
+            'companyid',
+            new lang_string('companyid', 'block_iomad_company_admin'),
+            $this->get_entity_name()
+        ))
+            ->add_joins($this->get_joins())
+            ->set_type(column::TYPE_INTEGER)
+            ->add_field("{$coursecompletionsalias}.companyid")
+            ->set_is_sortable(false);
 
         // Coursename.
         $filters[] = (new filter(
@@ -300,7 +311,7 @@ class coursecompletions extends base {
         $filters[] = (new filter(
             select::class,
             'timeexpires',
-            new lang_string('timeexpires', 'block_iomad_company_admin'),
+            new lang_string('timeexpires', 'local_report_completion'),
             $this->get_entity_name(),
             "{$coursecompletionsalias}.timeexpires"
         ))
@@ -336,7 +347,7 @@ class coursecompletions extends base {
         $filters[] = (new filter(
             select::class,
             'licenseallocated',
-            new lang_string('licenseallocated', 'block_iomad_company_admin'),
+            new lang_string('licensedateallocated', 'block_iomad_company_admin'),
             $this->get_entity_name(),
             "{$coursecompletionsalias}.licenseallocated"
         ))
