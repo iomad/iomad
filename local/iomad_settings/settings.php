@@ -38,6 +38,11 @@ if ($hassiteconfig) {
                                                 get_string('iomad_allow_username_help', 'local_iomad_settings'),
                                                 0));
 
+    $settings->add(new admin_setting_configcheckbox('local_iomad/enforce_username_match',
+                                                get_string('enforce_username_match', 'local_iomad'),
+                                                get_string('enforce_username_match_help', 'local_iomad'),
+                                                0));
+
     $settings->add(new admin_setting_configcheckbox('iomad_show_company_structure',
                                                 get_string('iomad_show_company_structure', 'local_iomad_settings'),
                                                 get_string('iomad_show_company_structure_help', 'local_iomad_settings'),
