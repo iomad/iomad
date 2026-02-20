@@ -26,10 +26,11 @@
 
 namespace block_iomad_microlearning\tables;
 
-use table_sql;
-use moodle_url;
 use context_system;
+use html_writer;
 use local_iomad\iomad;
+use moodle_url;
+use table_sql;
 
 /**
  * IOMAD microlearning block thread import table class
