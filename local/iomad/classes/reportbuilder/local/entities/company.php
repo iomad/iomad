@@ -105,6 +105,17 @@ class company extends base {
         $companyalias = $this->get_table_alias('company');
         $contextalias = $this->get_table_alias('context');
 
+        // ID.
+        $columns[] = (new column(
+            'id',
+            new lang_string('companyid', 'block_iomad_company_admin'),
+            $this->get_entity_name()
+        ))
+            ->add_joins($this->get_joins())
+            ->set_type(column::TYPE_TEXT)
+            ->add_field("{$companyalias}.id")
+            ->set_is_sortable(false);
+
         // Name.
         $columns[] = (new column(
             'name',
@@ -240,7 +251,7 @@ class company extends base {
         // Maxusers.
         $columns[] = (new column(
             'maxusers',
-            new lang_string('maxusers', 'block_iomad_company_admin'),
+            new lang_string('companymaxusers', 'block_iomad_company_admin'),
             $this->get_entity_name()
         ))
             ->add_joins($this->get_joins())
@@ -291,6 +302,16 @@ class company extends base {
      */
     protected function get_all_filters(): array {
         $companyalias = $this->get_table_alias('company');
+
+        // ID.
+        $filters[] = (new filter(
+            text::class,
+            'id',
+            new lang_string('companyid', 'block_iomad_company_admin'),
+            $this->get_entity_name(),
+            "{$companyalias}.id"
+        ))
+            ->add_joins($this->get_joins());
 
         // Name.
         $filters[] = (new filter(
