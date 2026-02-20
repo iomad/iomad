@@ -144,12 +144,12 @@ class iomadcourses extends base {
             ->set_type(column::TYPE_INTEGER)
             ->add_field("{$iomadcoursesalias}.shared")
             ->set_is_sortable(true)
-            ->add_callback(static function($shared) {
-            $sharedselectoptions = [
-                '0' => get_string('no'),
-                '1' => get_string('open', 'block_iomad_company_admin'),
-                '2' => get_string('closed', 'block_iomad_company_admin'),
-            ];
+            ->add_callback(static function ($shared) {
+                $sharedselectoptions = [
+                    '0' => get_string('no'),
+                    '1' => get_string('open', 'block_iomad_company_admin'),
+                    '2' => get_string('closed', 'block_iomad_company_admin'),
+                ];
                 return $sharedselectoptions[$shared];
             });
 
