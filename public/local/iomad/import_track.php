@@ -171,7 +171,7 @@ if (!empty($fileimport)) {
             $linenum = 1; // Column header is first line.
 
             // Init upload progress tracker.
-            $upt = new upload_progress_tracker();
+            $upt = new local_iomad_import_track_upload_progress_tracker();
             $upt->init(); // Start table.
             while ($line = $cir->next()) {
                 $upt->flush();
@@ -468,7 +468,7 @@ echo $OUTPUT->footer();
 /**
  * Upload progress tracker helper class
  */
-class upload_progress_tracker {
+class local_iomad_import_track_upload_progress_tracker {
 
     /** @var object current row */
     public $_row;
