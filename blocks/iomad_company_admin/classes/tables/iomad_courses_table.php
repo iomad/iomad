@@ -713,7 +713,7 @@ class iomad_courses_table extends table_sql {
                             'i',
                             '',
                             [
-                                'class' => 'icon fa a-copy fa-fw ',
+                                'class' => 'icon fa fa-copy fa-fw ',
                                 'title' => get_string('copycoursetitle', 'backup', $row->coursename),
                                 'role' => 'img',
                                 'aria-label' => get_string('copycoursetitle', 'backup', $row->coursename),
