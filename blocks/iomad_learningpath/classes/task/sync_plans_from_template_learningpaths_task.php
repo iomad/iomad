@@ -32,7 +32,7 @@ use core_competency\template_learningpath;
  * Synchronise plans from template learningpaths.
  *
  *
- * @package    block_iomad_learningpaths
+ * @package    block_iomad_learningpath
  * @copyright  2024 Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

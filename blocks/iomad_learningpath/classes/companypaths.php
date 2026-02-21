@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * "Business" class for Iomad Learning Paths
+ * IOMAD learningpaths main class
  *
- * @package    local_iomadlearninpath
+ * @package    block_iomad_learningpath
  * @copyright  2021 Derick Turner
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,22 +25,42 @@
 
 namespace block_iomad_learningpath;
 
-defined('MOODLE_INTERNAL') || die();
-
 use local_iomad\company;
-
+/**
+ * IOMAD learningpaths main class
+ *
+ * @package    block_iomad_learningpath
+ * @copyright  2021 Derick Turner
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class companypaths {
 
+    /** @var object context */
     protected $context;
 
+
+    /** @var int company ID */
     protected $companyid;
 
+
+    /** @var object company */
     protected $company;
 
+
+    /** @var array list of categories */
     protected $categories;
 
+
+    /** @var array list of program licenses */
     protected $programlicenses;
 
+    /**
+     * Consructor function
+     *
+     * @param int $companyid
+     * @param object $context
+     */
     public function __construct($companyid, $context) {
         $this->context = $context;
         $this->companyid = $companyid;
@@ -51,7 +71,7 @@ class companypaths {
      * Convenience function to return the company
      * @return object
      */
-    public function get_company():object {
+    public function get_company(): object {
         return $this->company;
     }
 
@@ -59,10 +79,10 @@ class companypaths {
      * Get learning paths for company.
      * @return array
      */
-    public function get_paths():array {
+    public function get_paths(): array {
         global $DB;
 
-        $paths = $DB->get_records('iomad_learningpath', array('company' => $this->companyid));
+        $paths = $DB->get_records('iomad_learningpath', ['company' => $this->companyid]);
 
         return $paths;
     }
@@ -76,7 +96,7 @@ class companypaths {
     public function get_path(int $id, bool $create = true): object {
         global $DB;
 
-        if ($path = $DB->get_record('iomad_learningpath', array('id' => $id))) {
+        if ($path = $DB->get_record('iomad_learningpath', ['id' => $id])) {
             if ($path->company != $this->companyid) {
                 throw new moodle_exception('companymismatch', 'block_iomad_learningpath');
             }
@@ -150,10 +170,10 @@ class companypaths {
     public function delete_group(int $pathid, int $groupid) {
         global $DB;
 
-        // Remove group courses from LP
+        // Remove group courses from LP.
         $DB->delete_records('iomad_learningpathcourse', ['path' => $pathid, 'groupid' => $groupid]);
 
-        // Remove group
+        // Remove group.
         $DB->delete_records('iomad_learningpathgroup', ['learningpath' => $pathid, 'id' => $groupid]);
     }
 
@@ -175,7 +195,7 @@ class companypaths {
      * @param string $ext
      */
     private function validate_ext(string $ext): string {
-        // Check the file extension is a valid extension for a image
+        // Check the file extension is a valid extension for a image.
         return (in_array($ext, $this->ext_array(), true)) ? '.'.$ext : '.png';
     }
 
@@ -188,9 +208,9 @@ class companypaths {
      * @param string $ext
      */
     private function fileinfo_array(int $contextid, int $id, string $filearea, string $filename, string $ext): array {
-        // Vailidate file extension
+        // Vailidate file extension.
         $extension = $this->validate_ext($ext);
-        // Return array of fileinfo
+        // Return array of fileinfo.
         return [
             'contextid' => $contextid,
             'component' => 'block_iomad_learningpath',
@@ -210,22 +230,42 @@ class companypaths {
      * @param bool $delpath
      */
     public function delete_file(int $contextid, string $component, string $filearea, int $id, bool $delpath): void {
-        // Get file storage
+        // Get file storage.
         $fs = get_file_storage();
-        // Get the files which are stored in a specific area
+        // Get the files which are stored in a specific area.
         $oldfile = $fs->get_area_files($contextid, $component, $filearea, $id);
-        // Loop through the files found
+        // Loop through the files found.
         foreach ($oldfile as $old) {
-            // If $delpath is set to true delete the directory for the file
+            // If $delpath is set to true delete the directory for the file.
             if ($delpath) {
                 $old->delete();
             } else {
                 if ($old->is_directory()) {
                     continue;
                 }
-                // Check the file has a valid file extension for a image file
-                if(in_array(pathinfo($old->get_filename(), PATHINFO_EXTENSION), ['ai','bmp','gdraw','gif','ico','jpe','jpeg','jpg','pct','pic','pict','png','svg','svgz','tif','tiff'], true)){
-                    // Delete the file
+                // Check the file has a valid file extension for a image file.
+                if (in_array(
+                    pathinfo($old->get_filename(), PATHINFO_EXTENSION),
+                    [
+                        'ai',
+                        'bmp',
+                        'gdraw',
+                        'gif',
+                        'ico',
+                        'jpe',
+                        'jpeg',
+                        'jpg',
+                        'pct',
+                        'pic',
+                        'pict',
+                        'png',
+                        'svg',
+                        'svgz',
+                        'tif',
+                        'tiff',
+                    ],
+                    true)) {
+                    // Delete the file.
                     $old->delete();
                     break;
                 }
@@ -242,28 +282,28 @@ class companypaths {
     public function process_image(object $context, int $id) {
         global $CFG;
 
-        // Get file storage
+        // Get file storage.
         $fs = get_file_storage();
-        // find the files
+        // Find the files.
         $files = $fs->get_area_files($context->id, 'block_iomad_learningpath', 'picture', $id);
         foreach ($files as $file) {
             if ($file->is_directory()) {
                 continue;
             }
 
-            // Process main picture
+            // Process main picture.
             $picture = $file->resize_image(null, 150);
             $ext = pathinfo($file->get_filename(), PATHINFO_EXTENSION);
 
-            // store mainpicture
+            // Store mainpicture.
             $this->delete_file($context->id, 'block_iomad_learningpath', 'mainpicture', $id, false);
             $fileinfo = $this->fileinfo_array($context->id, $id, 'mainpicture', 'picture', $ext);
             $fs->create_file_from_string($fileinfo, $picture);
 
-            // Process thumbnail
+            // Process thumbnail.
             $thumb = $file->resize_image(null, 50);
 
-            // store thumbnail
+            // Store thumbnail.
             $this->delete_file($context->id, 'block_iomad_learningpath', 'thumbnail', $id, false);
             $fileinfo = $this->fileinfo_array($context->id, $id, 'thumbnail', 'thumbnail', $ext);
             $fs->create_file_from_string($fileinfo, $thumb);
@@ -281,7 +321,9 @@ class companypaths {
 
         $PAGE->navbar->ignore_active();
         $PAGE->navbar->add(get_string('administrationsite'));
-        $PAGE->navbar->add(get_string('managetitle', 'block_iomad_learningpath'), new \moodle_url('/blocks/iomad_learningpath/manage.php'));
+        $PAGE->navbar->add(
+            get_string('managetitle', 'block_iomad_learningpath'),
+            new \moodle_url('/blocks/iomad_learningpath/manage.php'));
         if ($linktext) {
             $PAGE->navbar->add($linktext, $linkurl);
         }
@@ -337,7 +379,7 @@ class companypaths {
             return array_keys($courses);
         }
 
-        // Add images and groupid
+        // Add images and groupid.
         foreach ($courses as $course) {
             $course->image = $this->get_course_image_url($course->courseid);
             $course->groupid = $groupid;
@@ -376,30 +418,30 @@ class companypaths {
     public function get_prospective_courses(int $pathid, string $filter = '', int $category = 0, int $programlicenseid = 0) {
         global $DB;
 
-        // Get currently selected courses
+        // Get currently selected courses.
         $selectedcourses = $this->get_courselist($pathid, 0, true);
 
         $topdepartment = company::get_company_parentnode($this->companyid);
         $depcourses = company::get_recursive_department_courses($topdepartment->id);
 
-        $courses = array();
-        $categories = array();
+        $courses = [];
+        $categories = [];
         foreach ($depcourses as $depcourse) {
 
-            // Get full course object
+            // Get full course object.
             if (!$course = $DB->get_record('course', ['id' => $depcourse->courseid])) {
                 throw new \coding_exception('No course record found for courseid = ' . $depcourse->courseid);
             }
 
-            // Collect categories regardless of selection
+            // Collect categories regardless of selection.
             $categories[$course->category] = $course->category;
 
-            // Do not include courses already selected
+            // Do not include courses already selected.
             if (in_array($depcourse->courseid, $selectedcourses, true)) {
                 continue;
             }
 
-            // Do not include courses NOT in the selected category
+            // Do not include courses NOT in the selected category.
             if ($category) {
                 if ($course->category != $category) {
                     continue;
@@ -408,7 +450,7 @@ class companypaths {
 
             // Do not include courses NOT in selected license.
             if ($programlicenseid) {
-                if (!$DB->get_record('companylicense_courses', array('id' => $programlicenseid, 'courseid' => $course->id))) {
+                if (!$DB->get_record('companylicense_courses', ['id' => $programlicenseid, 'courseid' => $course->id])) {
                     continue;
                 }
             }
@@ -434,12 +476,12 @@ class companypaths {
     public function get_categories(int $pathid): array {
         global $DB;
 
-        // Check if categories have been collected
+        // Check if categories have been collected.
         if (!$this->categories) {
             $this->get_prospective_courses($pathid);
         }
 
-        // loop over categories and get full(er) information.
+        // Loop over categories and get full(er) information.
         $cat0 = (object)['id' => 0, 'name' => get_string('all')];
         $cats = [0 => $cat0];
         foreach ($this->categories as $categoryid) {
@@ -461,10 +503,10 @@ class companypaths {
     public function get_programlicenses(int $pathid): array {
         global $DB;
 
-        $programlicenses = $DB->get_records('companylicense', array('companyid' => $this->companyid, 'program' => 1));
-        $path = $DB->get_record('iomad_learningpath', array('id' => $pathid));
+        $programlicenses = $DB->get_records('companylicense', ['companyid' => $this->companyid, 'program' => 1]);
+        $path = $DB->get_record('iomad_learningpath', ['id' => $pathid]);
 
-        // loop over licenses and get full(er) information.
+        // Loop over licenses and get full(er) information.
         $program0 = (object)['id' => 0, 'name' => get_string('none')];
         if (empty($path->licenseid)) {
             $program0->selected = "selected";
@@ -499,10 +541,10 @@ class companypaths {
         // Make sure we only add courses in the prospective list.
         $allcourses = $this->get_prospective_courses($pathid);
 
-        // Get existing list
+        // Get existing list.
         $count = $DB->count_records('iomad_learningpathcourse', ['path' => $pathid]);
 
-        // Check/get groupid
+        // Check/get groupid.
         if ($groupid) {
             $group = $DB->get_record('iomad_learningpathgroup', ['learningpath' => $pathid, 'id' => $groupid], '*', MUST_EXIST);
         } else {
@@ -520,12 +562,12 @@ class companypaths {
                 continue;
             }
 
-            // If course already in the list then just skip it
+            // If course already in the list then just skip it.
             if ($course = $DB->get_record('iomad_learningpathcourse', ['path' => $pathid, 'course' => $courseid])) {
                 continue;
             }
 
-            // Add at the end
+            // Add at the end.
             $count++;
             $course = new \stdClass;
             $course->path = $pathid;
@@ -549,7 +591,7 @@ class companypaths {
             $DB->delete_records('iomad_learningpathcourse', ['course' => $courseid, 'path' => $pathid]);
         }
 
-        // Fix the sequence
+        // Fix the sequence.
         $this->fix_sequence($pathid);
     }
 
@@ -583,17 +625,17 @@ class companypaths {
             $this->delete_users($pathid, $users);
         }
 
-        // Delete courses from path
+        // Delete courses from path.
         $DB->delete_records('iomad_learningpathcourse', ['path' => $pathid]);
 
-        // Delete groups from path
+        // Delete groups from path.
         $DB->delete_records('iomad_learningpathgroup', ['learningpath' => $pathid]);
 
-        // Delete image from path (if any)
+        // Delete image from path (if any).
         foreach (['picture', 'mainpicture', 'thumbnail'] as $component) {
             $this->delete_file($this->context->id, 'block_iomad_learningpath', $component, $pathid, true);
         }
-        // Delete path itself
+        // Delete path itself.
         $DB->delete_records('iomad_learningpath', ['id' => $pathid]);
     }
 
@@ -605,21 +647,26 @@ class companypaths {
      * @param string $filename
      * @param int $newpathid
      */
-    private function copy_image(int $contextid, string $component, string $filearea, int $pathid, string $filename, int $newpathid): void {
-        // Get file storage
+    private function copy_image(int $contextid,
+                                string $component,
+                                string $filearea,
+                                int $pathid,
+                                string $filename,
+                                int $newpathid): void {
+        // Get file storage.
         $fs = get_file_storage();
-        // Get the files which are stored in a specific area
+        // Get the files which are stored in a specific area.
         $pictures = $fs->get_area_files($contextid, $component, $filearea, $pathid);
-        // Loop through the files found
+        // Loop through the files found.
         foreach ($pictures as $picture) {
             if ($picture->is_directory()) {
                 continue;
             }
             $extension = pathinfo($picture->get_filename(), PATHINFO_EXTENSION);
             if (in_array($extension, $this->ext_array(), true)) {
-                // Get file info array
+                // Get file info array.
                 $fileinfo = $this->fileinfo_array($this->context->id, $newpathid, $filearea, $filename, $extension);
-                // Copy file
+                // Copy file.
                 $fs->create_file_from_storedfile($fileinfo, $picture);
                 break;
             }
@@ -633,10 +680,10 @@ class companypaths {
     public function copypath(int $pathid) {
         global $DB;
 
-        // Get original path
+        // Get original path.
         $path = $DB->get_record('iomad_learningpath', ['id' => $pathid], '*', MUST_EXIST);
 
-        // work out what new name will be
+        // Work out what new name will be.
         $count = 1;
         while ($DB->get_record('iomad_learningpath', ['name' => $path->name . " Copy $count"])) {
             $count++;
@@ -646,7 +693,7 @@ class companypaths {
         }
         $newname = $path->name . " Copy $count";
 
-        // Create new path
+        // Create new path.
         $newpath = new \stdClass;
         $newpath->company = $path->company;
         $newpath->name = $newname;
@@ -656,7 +703,7 @@ class companypaths {
         $newpath->timeupdated = time();
         $newpathid = $DB->insert_record('iomad_learningpath', $newpath);
 
-        // Copy images
+        // Copy images.
         $this->copy_image($this->context->id, 'block_iomad_learningpath', 'mainpicture', $pathid, 'picture', $newpathid);
         $this->copy_image($this->context->id, 'block_iomad_learningpath', 'thumbnail', $pathid, 'thumbnail', $newpathid);
 
@@ -667,7 +714,7 @@ class companypaths {
             $group->newid = $DB->insert_record('iomad_learningpathgroup', $group);
         }
 
-        // Copy courses
+        // Copy courses.
         $courses = $DB->get_records('iomad_learningpathcourse', ['path' => $pathid]);
         foreach ($courses as $course) {
             $course->path = $newpathid;
@@ -675,7 +722,7 @@ class companypaths {
             $DB->insert_record('iomad_learningpathcourse', $course);
         }
 
-        // Copy students over
+        // Copy students over.
         $pathusers = $DB->get_records('iomad_learningpathuser', ['pathid' => $pathid]);
         foreach ($pathusers as $pathuser) {
             $pathuser->pathid = $newpathid;
@@ -703,7 +750,7 @@ class companypaths {
             return array_keys($users);
         }
 
-        // Adjust for fullname
+        // Adjust for fullname.
         foreach ($users as $user) {
             $user->fullname = fullname($user);
         }
@@ -722,7 +769,7 @@ class companypaths {
 
         // Set up some defaults for the SQL.
         $companyprofjoin = "";
-        $sqlparams = array('companyid' => $this->companyid);
+        $sqlparams = ['companyid' => $this->companyid];
 
         // Did we get passed anything to filter?
         if (!empty($filter)) {
@@ -737,10 +784,9 @@ class companypaths {
                               OR " . $DB->sql_like("u.lastname", ':lastname', false, false) . "
                               OR " . $DB->sql_like("u.email", ':email', false, false) . "
                               )";
-            $sqlparams['firstname'] = "%" . $filter . "%";
-            $sqlparams['lastname'] = "%" . $filter . "%";
-            $sqlparams['email'] = "%" . $filter . "%";
-
+                $sqlparams['firstname'] = "%" . $filter . "%";
+                $sqlparams['lastname'] = "%" . $filter . "%";
+                $sqlparams['email'] = "%" . $filter . "%";
             }
         } else {
             $filtersql = "";
@@ -748,8 +794,6 @@ class companypaths {
 
         // Get any users who are already assigned to the learning path.
         $excludeids = $this->get_users($pathid, true);
-error_log("exclude users = " . print_r($excludeids, true));
-error_log("companyid = $this->companyid");
         if (!empty($excludeids)) {
             // Add SQL to remove them from the list.
             $excludesql = " AND u.id NOT IN (" . implode(',', array_values($excludeids)) . ")";
@@ -769,7 +813,6 @@ error_log("companyid = $this->companyid");
             $filtersql
             ORDER BY u.lastname, u.firstname ASC";
 
-error_log ("SQL = $sql");
         // Get the users.
         $allusers = $DB->get_records_sql($sql, $sqlparams);
 
@@ -793,17 +836,17 @@ error_log ("SQL = $sql");
 
         foreach ($userids as $userid) {
 
-            // Check userid is really in this company
+            // Check userid is really in this company.
             if (!$companyuser = $DB->get_record('company_users', ['companyid' => $this->companyid, 'userid' => $userid])) {
                 throw new \coding_exception('invaliduserid', 'User is not a member of current company - id = ' . $userid);
             }
 
-            // Is the userid already in the path
+            // Is the userid already in the path.
             if ($user = $DB->get_record('iomad_learningpathuser', ['pathid' => $pathid, 'userid' => $userid])) {
                 continue;
             }
 
-            // Add a new record
+            // Add a new record.
             $user = new \stdClass;
             $user->pathid = $pathid;
             $user->userid = $userid;
@@ -823,7 +866,7 @@ error_log ("SQL = $sql");
 
         foreach ($userids as $userid) {
 
-            // Check userid is really in this company
+            // Check userid is really in this company.
             if (!$companyuser = $DB->get_record('company_users', ['companyid' => $this->companyid, 'userid' => $userid])) {
                 throw new \coding_exception('invaliduserid', 'User is not a member of current company - id = ' . $userid);
             }
@@ -843,12 +886,12 @@ error_log ("SQL = $sql");
     public function assign_license_to_plan(int $pathid, int $licenseid) {
         global $DB;
 
-        $path = $DB->get_record('iomad_learningpath', array('id' => $pathid));
+        $path = $DB->get_record('iomad_learningpath', ['id' => $pathid]);
 
-        // If we are removing a license
+        // If we are removing a license.
         if (($licenseid == 0 && !empty($path->licenseid)) || $path->licenseid != $licenseid) {
             // Remove the courses from the learning path.
-            if ($courses = $DB->get_records('iomad_learningpathcourse', array('path' => $pathid), 'course', 'course')) {
+            if ($courses = $DB->get_records('iomad_learningpathcourse', ['path' => $pathid], 'course', 'course')) {
                 self::remove_courses($pathid, array_keys($courses));
             }
         }
@@ -856,13 +899,13 @@ error_log ("SQL = $sql");
         // Are we adding a license?
         if (!empty($licenseid) && $path->licenseid != $licenseid) {
             // Get the license courses.
-            if ($newcourses = $DB->get_records('companylicense_courses', array('licenseid' => $licenseid), 'courseid', 'courseid')) {
+            if ($newcourses = $DB->get_records('companylicense_courses', ['licenseid' => $licenseid], 'courseid', 'courseid')) {
                 self::add_courses($pathid, array_keys($newcourses));
             }
         }
 
         // Update the path.
-        $DB->set_field('iomad_learningpath', 'licenseid', $licenseid, array('id' => $pathid));
+        $DB->set_field('iomad_learningpath', 'licenseid', $licenseid, ['id' => $pathid]);
     }
 
     /** Events **/
@@ -878,18 +921,18 @@ error_log ("SQL = $sql");
 
         $licenseid = $event->other['licenseid'];
 
-        if (!$licenserec = $DB->get_record('companylicense', array('id' => $licenseid))) {
+        if (!$licenserec = $DB->get_record('companylicense', ['id' => $licenseid])) {
             // Do nothing.
             return;
         }
 
-        if (!$company = $DB->get_record('company', array('id' => $licenserec->companyid))) {
+        if (!$company = $DB->get_record('company', ['id' => $licenserec->companyid])) {
             // Do nothing.
             return;
         }
 
         // Check if this license is tied to a path.
-        if (!$path = $DB->get_record('iomad_learningpath', array('licenseid' => $licenseid))) {
+        if (!$path = $DB->get_record('iomad_learningpath', ['licenseid' => $licenseid])) {
             return;
         }
 
@@ -910,18 +953,18 @@ error_log ("SQL = $sql");
 
         $licenseid = $event->other['licenseid'];
 
-        if (!$licenserec = $DB->get_record('companylicense', array('id' => $licenseid))) {
+        if (!$licenserec = $DB->get_record('companylicense', ['id' => $licenseid])) {
             // Do nothing.
             return;
         }
 
-        if (!$company = $DB->get_record('company', array('id' => $licenserec->companyid))) {
+        if (!$company = $DB->get_record('company', ['id' => $licenserec->companyid])) {
             // Do nothing.
             return;
         }
 
         // Check if this license is tied to a path.
-        if (!$path = $DB->get_record('iomad_learningpath', array('licenseid' => $licenseid))) {
+        if (!$path = $DB->get_record('iomad_learningpath', ['licenseid' => $licenseid])) {
             return;
         }
 
@@ -930,14 +973,14 @@ error_log ("SQL = $sql");
         if (!empty($licenserecord->program)) {
             // This is a program of courses.
             // If it's been updated we need to deal with any course changes.
-            $currentcourses = $DB->get_records('companylicense_courses', array('licenseid' => $licenseid), null, 'courseid');
+            $currentcourses = $DB->get_records('companylicense_courses', ['licenseid' => $licenseid], null, 'courseid');
             $oldcourses = (array) json_decode($event->other['oldcourses'], true);
 
             // Check for courses which have been removed.
             foreach ($oldcourses as $oldcourse) {
                 $oldcourseid = $oldcourse['courseid'];
                 if (empty($currentcourses[$oldcourseid])) {
-                    $companypath->remove_courses($pathid, array($oldcourseid));
+                    $companypath->remove_courses($pathid, [$oldcourseid]);
                 }
             }
 
@@ -945,7 +988,7 @@ error_log ("SQL = $sql");
             foreach ($currentcourses as $currentcourse) {
                 $currcourseid = $currentcourse->courseid;
                 if (empty($oldcourses[$currcourseid])) {
-                    $companypath->add_courses($pathid, array($currentcourseid));
+                    $companypath->add_courses($pathid, [$currentcourseid]);
                 }
             }
         }
@@ -966,25 +1009,25 @@ error_log ("SQL = $sql");
         $userlicid = $event->objectid;
         $licenseid = $event->other['licenseid'];
 
-        if (!$licenserec = $DB->get_record('companylicense', array('id' => $licenseid))) {
+        if (!$licenserec = $DB->get_record('companylicense', ['id' => $licenseid])) {
             // Do nothing.
             return;
         }
 
-        if (!$company = $DB->get_record('company', array('id' => $licenserec->companyid))) {
+        if (!$company = $DB->get_record('company', ['id' => $licenserec->companyid])) {
             // Do nothing.
             return;
         }
 
         // Check if this license is tied to a path.
-        if (!$path = $DB->get_record('iomad_learningpath', array('licenseid' => $licenseid))) {
+        if (!$path = $DB->get_record('iomad_learningpath', ['licenseid' => $licenseid])) {
             return;
         }
 
         $companypath = new companypaths($company->id, \context_system::instance());
 
         // If so, add this user to the path.
-        $companypath->add_users($path->id, array($userid));
+        $companypath->add_users($path->id, [$userid]);
 
         return true;
     }
@@ -1002,27 +1045,26 @@ error_log ("SQL = $sql");
         $userlicid = $event->objectid;
         $licenseid = $event->other['licenseid'];
 
-        if (!$licenserec = $DB->get_record('companylicense', array('id' => $licenseid))) {
+        if (!$licenserec = $DB->get_record('companylicense', ['id' => $licenseid])) {
             // Do nothing.
             return;
         }
 
-        if (!$company = $DB->get_record('company', array('id' => $licenserec->companyid))) {
+        if (!$company = $DB->get_record('company', ['id' => $licenserec->companyid])) {
             // Do nothing.
             return;
         }
 
         // Check if this license is tied to a path.
-        if (!$path = $DB->get_record('iomad_learningpath', array('licenseid' => $licenseid))) {
+        if (!$path = $DB->get_record('iomad_learningpath', ['licenseid' => $licenseid])) {
             return;
         }
 
         $companypath = new companypaths($company->id, \context_system::instance());
 
         // If so, remove this user from the path.
-        $companypath->delete_users($path->id, array($userid));
+        $companypath->delete_users($path->id, [$userid]);
 
         return true;
     }
-
 }

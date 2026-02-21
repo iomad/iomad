@@ -17,7 +17,7 @@
 /**
  * Declare web services
  *
- * @package    local_iomadlearninpath
+ * @package    block_iomad_learningpath
  * @copyright  2026 E-Learn Design - https://www.e-learndesign.co.uk
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later

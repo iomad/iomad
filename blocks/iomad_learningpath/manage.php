@@ -17,27 +17,30 @@
 /**
  * Management page for Iomad Learning Paths
  *
- * @package    local_iomadlearninpath
+ * @package    block_iomad_learningpath
  * @copyright  2018 Howard Miller (howardsmiller@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_company_admin\event\dashboard_page_viewed;
+use block_iomad_learningpath\companypaths;
+use block_iomad_learningpath\output\manage_page;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once(dirname(__FILE__) . '/lib.php');
 
-// Security
+// Security.
 require_login();
 
+// Set the companyid.
 $systemcontext = context_system::instance();
-
-// Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
+// Can we even do anything?
 iomad::require_capability('block/iomad_learningpath:manage', $companycontext);
 
 // Page boilerplate stuff.
@@ -51,17 +54,17 @@ $PAGE->requires->js_call_amd('block_iomad_learningpath/manage', 'init');
 $output = $PAGE->get_renderer('block_iomad_learningpath');
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
-// IOMAD stuff
-$companypaths = new block_iomad_learningpath\companypaths($companyid, $systemcontext);
+// IOMAD stuff.
+$companypaths = new companypaths($companyid, $systemcontext);
 $paths = $companypaths->get_paths();
 
 // Get renderer for page (and pass data).
-$manage_page = new block_iomad_learningpath\output\manage_page($systemcontext, $paths);
+$managepage = new manage_page($systemcontext, $paths);
 
 echo $OUTPUT->header();
 
-echo $output->render($manage_page);
+echo $output->render($managepage);
 
 echo $OUTPUT->footer();

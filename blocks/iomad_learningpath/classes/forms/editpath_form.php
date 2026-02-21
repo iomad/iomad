@@ -17,75 +17,100 @@
 /**
  * Edit/create path form definition for Iomad Learning Paths
  *
- * @package    local_iomadlearninpath
+ * @package    block_iomad_learningpath
  * @copyright  2018 Howard Miller (howardsmiller@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace block_iomad_learningpath\forms;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 use moodleform;
 
+/**
+ * Edit/create path form definition for Iomad Learning Paths
+ *
+ * @package    block_iomad_learningpath
+ * @copyright  2018 Howard Miller (howardsmiller@gmail.com)
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class editpath_form extends moodleform {
 
     /**
      * Usual form definition stuff
      */
     public function definition() {
-        global $CFG;
 
+        // Seet up the form.
         $mform = $this->_form;
 
-        // Learning Path Id
+        // Learning Path Id.
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
 
-        // Learning path name
+        // Learning path name.
         $mform->addElement('text', 'name', get_string('name', 'block_iomad_learningpath'), ['size' => 50]);
         $mform->setType('name', PARAM_TEXT);
         $mform->addHelpButton('name', 'name', 'block_iomad_learningpath');
         $mform->addRule('name', get_string('required'), 'required');
 
-        // Description
+        // Description.
         $mform->addElement('editor', 'description', get_string('description'));
         $mform->setType('description', PARAM_RAW);
         $mform->addHelpButton('description', 'description', 'block_iomad_learningpath');
         $mform->addRule('description', get_string('required'), 'required');
 
-        // Active
+        // Active.
         $mform->addElement('selectyesno', 'active', get_string('active', 'block_iomad_learningpath'));
         $mform->setType('active', PARAM_INT);
         $mform->addHelpButton('active', 'active', 'block_iomad_learningpath');
 
-        // Picture
+        // Picture.
         $mform->addElement('filemanager', 'picture', get_string('picture', 'block_iomad_learningpath'), null, [
             'subdirs' => 0,
             'maxfiles' => 1,
-            'accepted_types' => ['gif','jpe','jpeg','jpg','png'],
+            'accepted_types' => [
+                'gif',
+                'jpe',
+                'jpeg',
+                'jpg',
+                'png',
+            ],
         ]);
         $mform->addHelpButton('picture', 'picture', 'block_iomad_learningpath');
 
-        // Buttons
+        // Buttons.
         $this->add_action_buttons();
     }
 
+    /**
+     * Form validation
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
     public function validation($data, $files) {
         global $DB;
-        $errors = array();
-        if ($this->_customdata['id'] != 0 && $DB->record_exists('iomad_learningpath', ['id' => $this->_customdata['id']])) {
-            if (!empty($DB->get_record_sql("SELECT id, name, company FROM {iomad_learningpath} WHERE id != ? AND name = ? AND company = ?",[$this->_customdata['id'], $data['name'], $this->_customdata['companyid']]))){
+        $errors = [];
+        if ($this->_customdata['id'] != 0
+        && $DB->record_exists('iomad_learningpath', ['id' => $this->_customdata['id']])) {
+            if (!empty($DB->get_record_sql(
+                "SELECT id, name, company
+                FROM {iomad_learningpath}
+                WHERE id != ? AND name = ? AND company = ?",
+                [$this->_customdata['id'], $data['name'], $this->_customdata['companyid']]))) {
                 $errors['name'] = get_string('learningpathnameused', 'block_iomad_learningpath');
             } else {
                 return $errors;
             }
-        } elseif (!empty($DB->get_record_sql("SELECT company, name FROM {iomad_learningpath} where company = ? AND name = ?",[$this->_customdata['companyid'], $data['name']]))) {
+        } else if (!empty($DB->get_record_sql(
+            "SELECT company, name
+            FROM {iomad_learningpath}
+            WHERE company = ?
+            AND name = ?",
+            [$this->_customdata['companyid'], $data['name']]))) {
             $errors['name'] = get_string('learningpathnameused', 'block_iomad_learningpath');
         }
         return $errors;
     }
-
 }

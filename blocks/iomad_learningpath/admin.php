@@ -17,7 +17,7 @@
 /**
  * Management page for Iomad Learning Paths
  *
- * @package    local_iomadlearninpath
+ * @package    block_iomad_learningpath
  * @copyright  2018 e-Learn Design Ltd. https://www.e-learndesign.co.uk
  * @author     Howard Miller (howardsmiller@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -29,12 +29,12 @@ use local_iomad\custom_context\context_company;
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once(dirname(__FILE__) . '/lib.php');
 
-// Security
+// Security.
 require_login();
 
 $systemcontext = context_system::instance();
 
-// Set the companyid
+// Set the companyid.
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);

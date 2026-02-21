@@ -17,46 +17,48 @@
 /**
  * Edit/create group
  *
- * @package    local_iomadlearninpath
+ * @package    block_iomad_learningpath
  * @copyright  2018 Howard Miller (howardsmiller@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace block_iomad_learningpath\forms;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 use moodleform;
 
+/**
+ * Edit/create group
+ *
+ * @package    block_iomad_learningpath
+ * @copyright  2018 Howard Miller (howardsmiller@gmail.com)
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class editgroup_form extends moodleform {
 
     /**
      * Usual form definition stuff
      */
     public function definition() {
-        global $CFG;
 
+        // Set up the form.
         $mform = $this->_form;
 
-        // Learning Path Id
+        // Learning Path Id.
         $mform->addElement('hidden', 'learningpath');
         $mform->setType('learningpath', PARAM_INT);
 
-        // Group id
+        // Group id.
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
 
-        // Group name
+        // Group name.
         $mform->addElement('text', 'name', get_string('groupname', 'block_iomad_learningpath'), ['size' => 50]);
         $mform->setType('name', PARAM_TEXT);
         $mform->addHelpButton('name', 'groupname', 'block_iomad_learningpath');
         $mform->addRule('name', get_string('required'), 'required');
         $mform->addElement('selectyesno', 'sequence', get_string('sequential', 'block_iomad_learningpath'));
 
-        // Buttons
+        // Buttons.
         $this->add_action_buttons();
     }
-
 }

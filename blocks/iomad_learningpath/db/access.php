@@ -52,7 +52,7 @@ $capabilities = [
         'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
+            'clientadministrator' => CAP_ALLOW,
         ],
     ],
 
@@ -63,7 +63,7 @@ $capabilities = [
         'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
+            'clientadministrator' => CAP_ALLOW,
         ],
     ],
 
@@ -74,7 +74,7 @@ $capabilities = [
         'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
+            'clientadministrator' => CAP_ALLOW,
         ],
     ],
 

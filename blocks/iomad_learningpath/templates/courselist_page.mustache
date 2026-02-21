@@ -19,29 +19,28 @@
     <div class="col-sm-6">
         <form class="form-inline">
             <div class="form-group">
-                <label for="category">{{# str }}licenseprogram, block_iomad_company_admin {{/ str }}</label>
-                <select id="program" class="form-control">
-                    {{# programlicenses }}
-                        <option value="{{ id }}" {{ selected }}>{{ name }}</option>
-                    {{/ programlicenses }}
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="coursefilter">{{# str }}filter, block_iomad_learningpath{{/ str }}</label>
+                <input id='id' class='hidden' value={{path.id}}>
+                <label for="coursefilter">{{# str }}search{{/ str }}&nbsp</label>
                 <input id="coursefilter" class="form-control" type="text" name="coursefilter">
-            </div>
-            <div class="form-group">
-                <label for="category">{{# str }}category {{/ str }}</label>
+                &nbsp<label for="category">{{# str }}category {{/ str }}&nbsp</label>
                 <select id="category" class="form-control">
                     {{# categories }}
                         <option value="{{ id }}">{{ name }}</option>
                     {{/ categories }}
                 </select>
+            </div>
+            <div class="form-group">
+            <label for="category">{{# str }}licenseprogram, block_iomad_company_admin {{/ str }}&nbsp</label>
+                <select id="program" class="form-control">
+                    {{# programlicenses }}
+                        <option value="{{ id }}" {{ selected }}>{{ name }}</option>
+                    {{/ programlicenses }}
+                </select>
            </div>
         </form>
     </div>
 </div>
-
+<br>
 <div class="row m-t-1 m-b-1">
     <div class="col-sm-6">
         <div class="card bg-light">
