@@ -361,7 +361,7 @@ class enrol_license_plugin extends enrol_plugin {
             }
         }
 
-        // Set the companyid
+        // Set the companyid.
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
 
         // Get the license information.
