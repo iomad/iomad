@@ -17,12 +17,10 @@
 /**
  * External library for Iomad Learning Path
  *
- * @package    local_iomadlearninpath
+ * @package    block_iomad_learningpath
  * @copyright  2018 Howard Miller (howardsmiller@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
 
 define('LOCAL_IOMAD_LEARNINGPATH_COURSEFULLNAME', 'fullname');
 define('LOCAL_IOMAD_LEARNINGPATH_COURSESHORTNAME', 'shortname');
@@ -53,7 +51,7 @@ function block_iomad_learningpath_pluginfile($course,
     $fullpath = "/{$context->id}/block_iomad_learningpath/$filearea/$itemid/$relativepath";
 
     $fs = get_file_storage();
-    if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
+    if (!$file = $fs->get_file_by_hash(sha1($fullpath)) || $file->is_directory()) {
         return false;
     }
     // Download MUST be forced - security!
@@ -69,7 +67,7 @@ function block_iomad_learningpath_pre_course_delete($course) {
     global $DB, $OUTPUT;
 
     // Clear references from the iomad_learningpathcourse table.
-    $DB->delete_records('iomad_learningpathcourse', array('course' => $course->id));
+    $DB->delete_records('iomad_learningpathcourse', ['course' => $course->id]);
 
     return true;
 }

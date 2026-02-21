@@ -17,34 +17,38 @@
 /**
  * Manage list of courses in learning path
  *
- * @package    local_iomadlearninpath
+ * @package    block_iomad_learningpath
  * @copyright  2018 Howard Miller (howardsmiller@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_company_admin\event\dashboard_page_viewed;
+use block_iomad_learningpath\companypaths;
+use block_iomad_learningpath\output\students_page;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once(dirname(__FILE__) . '/lib.php');
 
-// Security
+// Security.
 require_login();
 
+// Set the companyid.
 $systemcontext = context_system::instance();
-
-// Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
+// Can we even do anything?
 iomad::require_capability('block/iomad_learningpath:assign', $companycontext);
 
-// Parameters
+// Parameters.
 $id = required_param('id', PARAM_INT);
 
 // Page boilerplate stuff.
 $url = new moodle_url('/blocks/iomad_learningpath/students.php', ['id' => $id]);
+$manageurl = new moodle_url('/blocks/iomad_learningpath/manage.php');
 $PAGE->set_context($companycontext);
 $PAGE->set_url($url);
 $PAGE->set_pagelayout('base');
@@ -53,20 +57,27 @@ $PAGE->set_heading(get_string('managestudents', 'block_iomad_learningpath'));
 $output = $PAGE->get_renderer('block_iomad_learningpath');
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
-// IOMAD stuff
-$companypaths = new block_iomad_learningpath\companypaths($companyid, $systemcontext);
+// IOMAD stuff.
+$companypaths = new companypaths($companyid, $systemcontext);
 $path = $companypaths->get_path($id);
 
-// Javascript initialise
+// Javascript initialise.
 $PAGE->requires->js_call_amd('block_iomad_learningpath/students', 'init', [$companyid, $id]);
 
-// Get renderer for page (and pass data).
-$students_page = new block_iomad_learningpath\output\students_page($companycontext, $path);
+// Add the management button
+$buttons = $OUTPUT->single_button($manageurl, get_string('managetitle', 'block_iomad_learningpath'), 'get');
+$PAGE->set_button($buttons);
 
+// Get renderer for page (and pass data).
+$studentspage = new students_page($companycontext, $path);
+
+// Display the page.
 echo $OUTPUT->header();
 
-echo $output->render($students_page);
+// Display the template.
+echo $output->render($studentspage);
 
+// Display the footer.
 echo $OUTPUT->footer();

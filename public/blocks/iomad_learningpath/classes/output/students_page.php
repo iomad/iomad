@@ -17,7 +17,7 @@
 /**
  * Students assignment management for IOMAD Learning Paths
  *
- * @package    block_iomad_learningpaths
+ * @package    block_iomad_learningpath
  * @copyright  2018 e-Learn Design Ltd. https://www.e-learndesign.co.uk
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -33,7 +33,7 @@ use moodle_url;
 /**
  * Students assignment management for IOMAD Learning Paths
  *
- * @package    block_iomad_learningpaths
+ * @package    block_iomad_learningpath
  * @copyright  2018 e-Learn Design Ltd. https://www.e-learndesign.co.uk
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later

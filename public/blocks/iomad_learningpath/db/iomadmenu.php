@@ -14,21 +14,33 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-// Define the Iomad menu items that are defined by this plugin
+/**
+ * Event observer for local iomad plugin.
+ *
+ * @package    block_iomad_learningpath
+ * @copyright  2016 E-Learn Design Ltd. (http://www.e-learndesign.co.uk)
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
+/**
+ * Define the Iomad menu items that are defined by this plugin
+ *
+ * @return void
+ */
 function block_iomad_learningpath_menu() {
 
-        return array(
-            'learningpath' => array(
+        return [
+            'learningpath' => [
                 'category' => 'CourseAdmin',
                 'tab' => 3,
                 'name' => get_string('learningpaths', 'block_iomad_learningpath'),
-                'url' => '/local/iomad_learningpath/manage.php',
+                'url' => '/blocks/iomad_learningpath/manage.php',
                 'cap' => 'block/iomad_learningpath:view_admin',
                 'icondefault' => 'learningpath',
                 'style' => 'company',
                 'icon' => 'fa-map-signs',
                 'iconsmall' => 'fa-gear',
-            ),
-        );
+            ],
+        ];
 }

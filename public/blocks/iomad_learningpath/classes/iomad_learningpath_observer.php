@@ -17,7 +17,7 @@
 /**
  * Event observer for local iomad plugin.
  *
- * @package    local_iomad
+ * @package    block_iomad_learningpath
  * @copyright  2016 E-Learn Design Ltd. (http://www.e-learndesign.co.uk)
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,11 +25,16 @@
 
 namespace block_iomad_learningpath;
 
-defined('MOODLE_INTERNAL') || die();
+use block_iomad_learningpath\companypaths;
 
-use local_iomad\company;
-use companypaths;
-
+/**
+ * Event observer for local iomad plugin.
+ *
+ * @package    block_iomad_learningpath
+ * @copyright  2016 E-Learn Design Ltd. (http://www.e-learndesign.co.uk)
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class block_iomad_learningpath_observer {
 
     /**
@@ -39,7 +44,7 @@ class block_iomad_learningpath_observer {
      * @return bool true on success.
      */
     public static function company_license_deleted($event) {
-        \block_iomad_learningpath\companypaths::company_license_deleted($event);
+        companypaths::company_license_deleted($event);
         return true;
     }
 
@@ -50,7 +55,7 @@ class block_iomad_learningpath_observer {
      * @return bool true on success.
      */
     public static function company_license_updated($event) {
-        \block_iomad_learningpath\companypaths::company_license_updated($event);
+        companypaths::company_license_updated($event);
         return true;
     }
 
@@ -61,7 +66,7 @@ class block_iomad_learningpath_observer {
      * @return bool true on success.
      */
     public static function user_license_assigned($event) {
-        \block_iomad_learningpath\companypaths::user_license_assigned($event);
+        companypaths::user_license_assigned($event);
         return true;
     }
 
@@ -72,7 +77,7 @@ class block_iomad_learningpath_observer {
      * @return bool true on success.
      */
     public static function user_license_unassigned($event) {
-        \block_iomad_learningpath\companypaths::user_license_unassigned($event);
+        companypaths::user_license_unassigned($event);
         return true;
     }
 }
