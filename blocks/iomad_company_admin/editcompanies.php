@@ -115,6 +115,9 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 // Set the page heading.
 $PAGE->set_heading($linktext);
 
+// Add the modal forms.
+$PAGE->requires->js_call_amd('block_iomad_company_admin/delete_company', 'init');
+
 // Log this page view.
 dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
@@ -129,16 +132,79 @@ if (empty($data->showchild)) {
 }
 
 // Set some defaults.
-$strdelete = get_string('deletecompany', 'block_iomad_company_admin');
-$strsuspend = get_string('suspendcompany', 'block_iomad_company_admin');
+$strdelete = html_writer::tag(
+    'i',
+    '',
+    [
+        'class' => 'icon fa fa-trash fa-fw ',
+        'title' => get_string('deletecompany', 'block_iomad_company_admin'),
+        'role' => 'img',
+        'aria-label' => get_string('deletecompany', 'block_iomad_company_admin'),
+    ]
+);
+$strsuspend = html_writer::tag(
+    'i',
+    '',
+    [
+        'class' => 'icon fa fa-eye fa-fw ',
+        'title' => get_string('suspendcompany', 'block_iomad_company_admin'),
+        'role' => 'img',
+        'aria-label' => get_string('suspendcompany', 'block_iomad_company_admin'),
+    ]
+);
 $strsuspendcheck = get_string('suspendcompanycheck', 'block_iomad_company_admin');
-$strunsuspend = get_string('unsuspendcompany', 'block_iomad_company_admin');
+$strunsuspend = html_writer::tag(
+    'i',
+    '',
+    [
+        'class' => 'icon fa fa-eye-slash fa-fw ',
+        'title' => get_string('unsuspendcompany', 'block_iomad_company_admin'),
+        'role' => 'img',
+        'aria-label' => get_string('unsuspendcompany', 'block_iomad_company_admin'),
+    ]
+);
 $strunsuspendcheck = get_string('unsuspendcompanycheck', 'block_iomad_company_admin');
-$strenableecommerce = get_string('ecommerceenabled', 'block_iomad_company_admin');
-$strdisableecommerce = get_string('disableecommerce', 'block_iomad_company_admin');
+$strenableecommerce = html_writer::tag(
+    'i',
+    '',
+    [
+        'class' => 'icon fa fa-store-slash fa-fw ',
+        'title' => get_string('ecommerceenabled', 'block_iomad_company_admin'),
+        'role' => 'img',
+        'aria-label' => get_string('ecommerceenabled', 'block_iomad_company_admin'),
+    ]
+);
+$strdisableecommerce = html_writer::tag(
+    'i',
+    '',
+    [
+        'class' => 'icon fa fa-store fa-fw ',
+        'title' => get_string('disableecommerce', 'block_iomad_company_admin'),
+        'role' => 'img',
+        'aria-label' => get_string('disableecommerce', 'block_iomad_company_admin'),
+    ]
+);
 $strshowallusers = get_string('showallcompanies', 'block_iomad_company_admin');
-$stroverview = get_string('overview', 'local_report_companies');
-$strcreatechild = get_string('createchildcompany', 'block_iomad_company_admin');
+$stroverview = html_writer::tag(
+    'i',
+    '',
+    [
+        'class' => 'icon fa fa-circle-info fa-fw ',
+        'title' => get_string('overview', 'local_report_companies'),
+        'role' => 'img',
+        'aria-label' => get_string('overview', 'local_report_companies'),
+    ]
+);
+$strcreatechild = html_writer::tag(
+    'i',
+    '',
+    [
+        'class' => 'icon fa fa-building-circle-arrow-right fa-fw ',
+        'title' => get_string('createchildcompany', 'block_iomad_company_admin'),
+        'role' => 'img',
+        'aria-label' => get_string('createchildcompany', 'block_iomad_company_admin'),
+    ]
+);
 
 // Reset form?
 if ($resetbutton) {
@@ -490,7 +556,7 @@ if ($companies) {
                         'a',
                         $strunsuspend,
                         [
-                            'class' => 'btn btn-sm btn-warning',
+                            'role' => 'button',
                             'href' => $suspendurl,
                         ]);
                 }
@@ -505,7 +571,7 @@ if ($companies) {
                         'a',
                         $strsuspend,
                         [
-                            'class' => 'btn btn-sm btn-warning',
+                            'role' => 'button',
                             'href' => $suspendurl,
                         ]);
                 }
@@ -516,14 +582,32 @@ if ($companies) {
                 $linkparams['delete'] = $company->id;
                 unset($linkparams['suspend']);
                 $deleteurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_company_admin/editcompanies.php", $linkparams);
-                $deletebutton = html_writer::tag('a', $strdelete, ['class' => 'btn btn-sm btn-danger', 'href' => $deleteurl]);
+                $deletebutton = html_writer::tag(
+                    'a',
+                    $strdelete,
+                    [
+                        'role' => 'button',
+                        'href' => '#',
+                        'data-action' => 'show-deletecompanyform',
+                        'data-companyid' => $company->id,
+                        'data-companyname' => format_string($company->name),
+                    ]);
             }
         }
         // Can we see the management report?
-        if (!iomad::has_capability('block/iomad_company_admin:companymanagement_view', $companycontext)) {
-            $strmanage = get_string('selectitem', 'moodle', get_string('company', 'block_iomad_company_admin'));
+        if (iomad::has_capability('block/iomad_company_admin:companymanagement_view', $companycontext)) {
+            $strmanage = html_writer::tag(
+                'i',
+                '',
+                [
+                    'class' => 'icon fa fa-cog fa-fw ',
+                    'title' => get_string('selectitem', 'moodle', format_string($company->name)),
+                    'role' => 'img',
+                    'aria-label' => get_string('selectitem', 'moodle', format_string($company->name)),
+                ]
+            );
             $manageurl = new moodle_url($CFG->wwwroot .'/blocks/iomad_company_admin/index.php', ['company' => $company->id]);
-            $managebutton = html_writer::tag('a', $strmanage, ['class' => 'btn btn-sm btn-primary', 'href' => $manageurl]);
+            $managebutton = html_writer::tag('a', $strmanage, ['role' => 'button', 'href' => $manageurl]);
         }
 
         // Can we add child companies?
@@ -538,7 +622,7 @@ if ($companies) {
                 'a',
                 $strcreatechild,
                 [
-                    'class' => 'btn btn-sm btn-primary',
+                    'role' => 'button',
                     'href' => $childurl,
                 ]
             );
@@ -561,7 +645,7 @@ if ($companies) {
                     'a',
                     $strdisableecommerce,
                     [
-                        'class' => 'btn btn-sm btn-primary',
+                        'role' => 'button',
                         'href' => $ecommerceurl,
                     ]);
             } else {
@@ -572,7 +656,7 @@ if ($companies) {
                     'a',
                     $strenableecommerce,
                     [
-                        'class' => 'btn btn-sm btn-primary',
+                        'role' => 'button',
                         'href' => $ecommerceurl,
                     ]);
             }
@@ -581,7 +665,7 @@ if ($companies) {
         if (iomad::has_capability('local/report_companies:view', $companycontext)) {
             $overviewurl = new moodle_url($CFG->wwwroot . "/local/report_companies/index.php",
                                         ['companyid' => $company->id]);
-            $overviewurl = html_writer::tag('a', $stroverview, ['class' => 'btn btn-sm btn-primary', 'href' => $overviewurl]);
+            $overviewurl = html_writer::tag('a', $stroverview, ['role' => 'button', 'href' => $overviewurl]);
         }
 
         // Is the company suspended?

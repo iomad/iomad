@@ -25,7 +25,13 @@
 
 namespace block_iomad_company_admin\forms;
 
+use block_iomad_company_admin\event\company_deleted;
+use context;
+use core_form\dynamic_form;
 use html_writer;
+use local_iomad\custom_context\context_company;
+use local_iomad\iomad;
+use moodle_url;
 
 /**
  * IOMAD Dashboard delete company form class
@@ -35,35 +41,7 @@ use html_writer;
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class company_delete_form extends company_moodleform {
-
-    /** @var bool does this company have child companies */
-    protected $haschildren;
-
-    /** @var int company ID */
-    protected $companyid;
-
-    /** @var array company record */
-    protected $companyrecord;
-
-    /**
-     * Constructor function
-     *
-     * @param moodle_url $actionurl
-     * @param int $companyid
-     */
-    public function __construct($actionurl, $companyid) {
-        global $DB;
-
-        $this->companyid = $companyid;
-        $this->companyrecord = $DB->get_record('company', ['id' => $companyid]);
-        $this->haschildren = false;
-        if ($DB->get_records('company', ['parentid' => $companyid])) {
-            $this->haschildren = true;
-        }
-
-        parent::__construct($actionurl);
-    }
+class company_delete_form extends dynamic_form {
 
     /**
      * Form definition
@@ -71,21 +49,30 @@ class company_delete_form extends company_moodleform {
      * @return void
      */
     public function definition() {
+        global $DB;
+
+        // Set up the controls.
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $companyname = $this->optional_param('companyname', 0, PARAM_TEXT);
+        $haschildren = false;
+        if ($DB->get_records('company', ['parentid' => $companyid])) {
+            $haschildren = true;
+        }
 
         // Set up the form.
         $mform = & $this->_form;
 
         $strrequired = get_string('required');
 
-        $mform->addElement('hidden', 'delete', $this->companyid);
-        $mform->setType('delete', PARAM_INT);
+        $mform->addElement('hidden', 'companyid');
+        $mform->setType('companyid', PARAM_INT);
 
         $mform->addElement('html', html_writer::empty_tag('hr'));
         $mform->addElement('html', html_writer::tag(
             'p',
             html_writer::tag(
                 'b',
-                get_string('companydeletecheckfull', 'block_iomad_company_admin', $this->companyrecord->name)
+                get_string('companydeletecheckfull', 'block_iomad_company_admin', $companyname)
         )));
         $mform->addElement(
             'html',
@@ -96,7 +83,7 @@ class company_delete_form extends company_moodleform {
 
         $mform->addElement('html', html_writer::empty_tag('hr'));
 
-        if ($this->haschildren) {
+        if ($haschildren) {
             $mform->addElement(
                 'checkbox',
                 'confirmdeleteparent',
@@ -139,7 +126,104 @@ class company_delete_form extends company_moodleform {
             get_string('companycertificatesdeletewarning', 'block_iomad_company_admin'),
             get_string('deletecertificates', 'block_iomad_company_admin'));
         $mform->addRule('confirmdeletecertificates', $strrequired, 'required', null, 'client');
+    }
 
-        $this->add_action_buttons(true, get_string('confirm'));
+    /**
+     * Process the form submission, used if form was submitted via AJAX.
+     *
+     * @return array
+     */
+    public function process_dynamic_submission(): array {
+        global $DB, $USER;
+
+        // Get the info from the form.
+        $data = $this->get_data();
+
+        // Check the companyid is OK.
+        if (!$DB->get_record('company', ['id' => $data->companyid])) {
+            throw new moodle_exception('invalidcompany', 'block_iomad_company_admin');
+        }
+
+        // Check permissions.
+        $companycontext = context_company::instance($data->companyid);
+        iomad::require_capability('block/iomad_company_admin:company_delete', $companycontext);
+
+        // Generate an event to actually do the work.
+        $eventother = ['companyid' => $data->companyid];
+            $event = company_deleted::create([
+                'context' => $companycontext,
+                'objectid' => $data->companyid,
+                'userid' => $USER->id,
+                'other' => $eventother,
+            ]);
+            $event->trigger();
+
+        // Return stuff to the JS.
+        return [
+            'result' => true,
+            'returnmessage' => get_string('companydeletescheduled', 'block_iomad_company_admin'),
+        ];
+    }
+
+    /**
+     * Load in existing data as form defaults (not applicable).
+     *
+     * @return void
+     */
+    public function set_data_for_dynamic_submission(): void {
+
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+
+        // Send it.
+        $data = [
+            'companyid' => $companyid,
+        ];
+        $this->set_data($data);
+    }
+
+    /**
+     * Check if current user has access to this form, otherwise throw exception.
+     *
+     * @return void
+     * @throws moodle_exception
+     */
+    protected function check_access_for_dynamic_submission(): void {
+        global $CFG;
+
+        $context = $this->get_context_for_dynamic_submission();
+        if (!iomad::has_capability('block/iomad_company_admin:company_delete', $context)) {
+            $returnurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/editcompanies.php');
+            throw new moodle_exception(
+                'nopermissions',
+                '',
+                $returnurl->out(),
+                get_string(
+                    'block/iomad_company_admin:company_delete',
+                    'block_iomad_company_admin'
+                )
+            );
+        }
+    }
+
+    /**
+     * Return form context
+     *
+     * @return context
+     */
+    protected function get_context_for_dynamic_submission(): context {
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $companycontext = context_company::instance($companyid);
+
+        return $companycontext;
+    }
+
+    /**
+     * Returns url to set in $PAGE->set_url() when form is being rendered or submitted via AJAX.
+     *
+     * @return moodle_url
+     */
+    protected function get_page_url_for_dynamic_submission(): moodle_url {
+
+        return new moodle_url('/blocks/iomad_company_admin/editcompanies.php');
     }
 }

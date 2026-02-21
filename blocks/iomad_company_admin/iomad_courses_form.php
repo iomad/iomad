@@ -57,7 +57,6 @@ $showid = optional_param('showid', 0, PARAM_INT);
 $confirm = optional_param('confirm', null, PARAM_ALPHANUM);
 $edit = optional_param('edit', -1, PARAM_BOOL);
 $delegateid = optional_param('delegateid', 0, PARAM_INT);
-$cloneid = optional_param('cloneid', 0, PARAM_INT);
 $action = optional_param('action', '', PARAM_ALPHA);
 
 $params = [
@@ -143,99 +142,12 @@ if ($canedit && $PAGE->user_allowed_editing()) {
     $PAGE->set_button($buttons);
 }
 
+// Add the modal forms.
+$PAGE->requires->js_call_amd('block_iomad_company_admin/copy_course', 'init');
+$PAGE->requires->js_call_amd('block_iomad_company_admin/delete_course', 'init');
+
 // Log this page view.
 dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
-
-// Process any delete requests.
-if (!empty($deleteid)) {
-    if (!$course = $DB->get_record('course', ['id' => $deleteid])) {
-        throw new moodle_exception('invalidcourse');
-    }
-    // Did the confirm?
-    if (confirm_sesskey() && $confirm == md5($deleteid)) {
-        $destroy = optional_param('destroy', 0, PARAM_INT);
-        // Delete the course and all of the data.
-        if (company::delete_course($companyid, $deleteid, $destroy)) {
-            redirect($linkurl,
-                get_string("deletecourse_successful", 'block_iomad_company_admin'),
-                null,
-                notification::NOTIFY_SUCCESS);
-
-        }
-        die;
-    } else {
-        // Display the confirmation page.
-        echo $OUTPUT->header();
-        $confirmurl = new moodle_url(
-            'iomad_courses_form.php',
-            [
-                'confirm' => md5($deleteid),
-                'deleteid' => $deleteid,
-                'sesskey' => sesskey(),
-            ]
-        );
-        $continue = new single_button($confirmurl, get_string('continue'), 'post');
-        $destroyurl = new moodle_url(
-            'iomad_courses_form.php',
-            [
-                'confirm' => md5($deleteid),
-                'deleteid' => $deleteid,
-                'destroy' => true,
-                'sesskey' => sesskey(),
-            ]
-        );
-        $destroy = new single_button($destroyurl, get_string('destroy', 'block_iomad_company_admin'), 'post');
-        $cancel = new single_button($linkurl, get_string('cancel'), 'post');
-
-        $attributes = [
-            'role' => 'alertdialog',
-            'aria-labelledby' => 'modal-header',
-            'aria-describedby' => 'modal-body',
-            'aria-modal' => 'true',
-        ];
-
-        // Which message are we showing?
-        if (iomad::has_capability('block/iomad_company_admin:destroycourses', $companycontext)) {
-            $message = get_string('deleteanddestroycoursesfull', 'block_iomad_company_admin', $course->fullname);
-        } else {
-            $message = get_string('deletecoursesfull', 'block_iomad_company_admin', $course->fullname);
-        }
-        $confirmhtml = $OUTPUT->box_start('generalbox modal modal-dialog modal-in-page show', 'notice', $attributes);
-        $confirmhtml .= $OUTPUT->box_start('modal-content', 'modal-content');
-        $confirmhtml .= $OUTPUT->box_start('modal-header p-x-1', 'modal-header');
-        $confirmhtml .= html_writer::tag('h4', get_string('confirm'));
-        $confirmhtml .= $OUTPUT->box_end();
-        $attributes = [
-            'role' => 'alert',
-            'data-aria-autofocus' => 'true',
-        ];
-        $confirmhtml .= $OUTPUT->box_start('modal-body', 'modal-body', $attributes);
-        $confirmhtml .= html_writer::tag('p', $message);
-        $confirmhtml .= $OUTPUT->box_end();
-        $confirmhtml .= $OUTPUT->box_start('modal-footer', 'modal-footer');
-        if (iomad::has_capability('block/iomad_company_admin:destroycourses', $companycontext)) {
-            $confirmhtml .= html_writer::tag(
-                'div',
-                $OUTPUT->render($continue) .
-                $OUTPUT->render($destroy) .
-                $OUTPUT->render($cancel),
-                ['class' => 'buttons']);
-        } else {
-            $confirmhtml .= html_writer::tag(
-                'div',
-                $OUTPUT->render($continue) .
-                $OUTPUT->render($cancel),
-                ['class' => 'buttons']);
-        }
-        $confirmhtml .= $OUTPUT->box_end();
-        $confirmhtml .= $OUTPUT->box_end();
-        $confirmhtml .= $OUTPUT->box_end();
-
-        echo $confirmhtml;
-        echo $OUTPUT->footer();
-        die;
-    }
-}
 
 // Hide/show courses.
 if (!empty($hideid) &&
@@ -282,43 +194,6 @@ if (!empty($showid) &&
         $record = get_course($showid);
         $course = new core_course_list_element($record);
         course_change_visibility($course->id, true);
-    }
-}
-
-// Clone courses.
-if (!empty($cloneid) &&
-   iomad::has_capability('block/iomad_company_admin:createcourse', $companycontext)) {
-    if ((!$clonecourse = $DB->get_record('course', ['id' => $cloneid])) ||
-         ! $DB->get_record('company_created_courses', ['companyid' => $companyid, 'courseid' => $cloneid])) {
-        throw new moodle_exception('invalidcourse');
-    }
-    if (!$clonecourse = $DB->get_record('course', ['id' => $cloneid])) {
-        throw new moodle_exception('invalidcourse');
-    }
-
-    // Create the course clone form.
-    $cloneparams = $params;
-    $cloneparams['cloneid'] = $cloneid;
-    $cloneurl = new moodle_url('/blocks/iomad_company_admin/iomad_courses_form.php', $cloneparams);
-    $cloneform = new course_copy_form($cloneurl, ['course' => $clonecourse]);
-
-    // Do we do the actual work?
-    if ($clonedata = $cloneform->get_data()) {
-        // Process the form and create the copy task.
-        $copydata = \copy_helper::process_formdata($clonedata);
-        \copy_helper::create_copy($copydata);
-        redirect($linkurl, get_string('successfulcopy', 'backup'), null, notification::NOTIFY_SUCCESS);
-    } else if ($cloneform->is_cancelled()) {
-        redirect($linkurl);
-    } else {
-        $title = get_string('copycoursetitle', 'backup', $clonecourse->shortname);
-
-        // Display the form.
-        echo $OUTPUT->header();
-        echo $OUTPUT->heading($title);
-        $cloneform->display();
-        echo $OUTPUT->footer();
-        die;
     }
 }
 

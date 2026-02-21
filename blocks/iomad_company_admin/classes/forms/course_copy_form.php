@@ -25,13 +25,15 @@
 
 namespace block_iomad_company_admin\forms;
 
+use context;
+use context_system;
 use copy_helper;
+use core_form\dynamic_form;
 use DateTime;
 use html_writer;
 use local_iomad\custom_context\context_company;
 use local_iomad\iomad;
 use moodle_url;
-use moodleform;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -48,28 +50,24 @@ require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class course_copy_form extends moodleform {
+class course_copy_form extends dynamic_form {
 
     /**
-     * Build form for the course copy settings.
+     * Form definition.
      *
-     * {@inheritDoc}
-     * @see \moodleform::definition()
+     * @return void
      */
     public function definition() {
         global $CFG, $OUTPUT, $USER, $company;
 
         $mform = $this->_form;
-        $course = $this->_customdata['course'];
-        $companycontext = context_company::instance($company->id);
         $courseconfig = get_config('moodlecourse');
-
-        if (empty($course->category)) {
-            $course->category = $course->categoryid;
-        }
+        $courseid = $this->optional_param('courseid', 0, PARAM_INT);
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $companycontext = context_company::instance($companyid);
 
         // Course ID.
-        $mform->addElement('hidden', 'courseid', $course->id);
+        $mform->addElement('hidden', 'courseid');
         $mform->setType('courseid', PARAM_INT);
 
         // Dont want to keep source course user data.
@@ -80,17 +78,19 @@ class course_copy_form extends moodleform {
         // Set the course category the same.
         $mform->addElement('hidden', 'category');
         $mform->setType('category', PARAM_INT);
-        $mform->setConstant('category', $course->category);
 
         // Set the companyid.
         $mform->addElement('hidden', 'companyid');
         $mform->setType('companyid', PARAM_INT);
-        $mform->setConstant('companyid', $company->id);
+
+        // Set the companycreatedcourse.
+        $mform->addElement('hidden', 'companycreatedcourse');
+        $mform->setType('companycreatedcourse', PARAM_BOOL);
 
         // Notifications of current copies.
-        $copies = copy_helper::get_copies($USER->id, $course->id);
+        $copies = copy_helper::get_copies($USER->id, $courseid);
         if (!empty($copies)) {
-            $progresslink = new moodle_url('/backup/copyprogress.php?', ['id' => $course->id]);
+            $progresslink = new moodle_url('/backup/copyprogress.php?', ['id' => $courseid]);
             $notificationmsg = get_string('copiesinprogress', 'backup', $progresslink->out());
             $notification = $OUTPUT->notification($notificationmsg, 'notifymessage');
             $mform->addElement('html', $notification);
@@ -114,11 +114,10 @@ class course_copy_form extends moodleform {
         $choices['1'] = get_string('show');
         $mform->addElement('select', 'visible', get_string('coursevisibility'), $choices);
         $mform->addHelpButton('visible', 'coursevisibility');
-        $mform->setDefault('visible', $courseconfig->visible);
+
         if (!iomad::has_capability('block/iomad_company_admin:hideshowcourses', $companycontext) &&
             !iomad::has_capability('block/iomad_company_admin:hideshowallcourses', $companycontext)) {
             $mform->hardFreeze('visible');
-            $mform->setConstant('visible', $course->visible);
         }
 
         // Course start date.
@@ -136,7 +135,7 @@ class course_copy_form extends moodleform {
             $attributes = [
                 'aria-describedby' => 'relativedatesmode_warning',
             ];
-            if (!empty($course->id)) {
+            if (!empty($courseid)) {
                 $attributes['disabled'] = true;
             }
             $relativeoptions = [
@@ -154,7 +153,6 @@ class course_copy_form extends moodleform {
 
         // Course ID number (default to the current course ID number; blank for users who can't change ID numbers).
         $mform->addElement('text', 'idnumber', get_string('idnumbercourse'), 'maxlength="100"  size="10"');
-        $mform->setDefault('idnumber', $course->idnumber);
         $mform->addHelpButton('idnumber', 'idnumbercourse');
         $mform->setType('idnumber', PARAM_RAW);
         if (!iomad::has_capability('block/iomad_company_admin:hideshowcourses', $companycontext) &&
@@ -162,11 +160,6 @@ class course_copy_form extends moodleform {
             $mform->hardFreeze('idnumber');
             $mform->setConstant('idnumber', '');
         }
-
-        $buttonarray = [];
-        $buttonarray[] = $mform->createElement('submit', 'submitreturn', get_string('copyreturn', 'backup'));
-        $buttonarray[] = $mform->createElement('cancel');
-        $mform->addGroup($buttonarray, 'buttonar', '', ' ', false);
     }
 
     /**
@@ -200,5 +193,131 @@ class course_copy_form extends moodleform {
         }
 
         return $errors;
+    }
+
+    /**
+     * Process the form submission, used if form was submitted via AJAX.
+     *
+     * @return array
+     */
+    public function process_dynamic_submission(): array {
+        global $DB;
+
+        // Get the info from the form.
+        $data = $this->get_data();
+        $returnmessage = "";
+
+        if (!$DB->get_record('course', ['id' => $data->courseid])) {
+            throw new moodle_exception('invalidcourse');
+        }
+
+        // Check permissions.
+        $companycontext = context_company::instance($data->companyid);
+        if (!iomad::has_capability('block/iomad_company_admin:createcourse', context_system::instance()) &&
+            !($data->companycreatedcourse &&
+              iomad::has_capability('block/iomad_company_admin:createcourse', $companycontext))) {
+            $returnurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/iomad_courses_form.php');
+            throw new moodle_exception(
+                'nopermissions',
+                '',
+                $returnurl->out(),
+                get_string(
+                    'block/iomad_company_admin:createcourse',
+                    'block_iomad_company_admin'
+                )
+            );
+        }
+
+        // Process the form and create the copy task.
+        $copydata = copy_helper::process_formdata($data);
+        $copyids = copy_helper::create_copy($copydata);
+
+        if (empty($copyids)) {
+            $returnmessage = get_string('copyformfail', 'backup');
+            $result = false;
+        } else {
+            $returnmessage = get_string('successfulcopy', 'backup');
+            $result = true;
+        }
+
+        // Return stuff to the JS.
+        return [
+            'result' => $result,
+            'returnmessage' => $returnmessage,
+        ];
+    }
+
+    /**
+     * Load in existing data as form defaults (not applicable).
+     *
+     * @return void
+     */
+    public function set_data_for_dynamic_submission(): void {
+        global $DB;
+
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $courseid = $this->optional_param('courseid', 0, PARAM_INT);
+        $companycreatedcourse = $this->optional_param('companycreatedcourse', 0, PARAM_BOOL);
+        $course = $DB->get_record('course', ['id' => $courseid]);
+
+        // Send it.
+        $data = [
+            'companyid' => $companyid,
+            'courseid' => $courseid,
+            'category' => $course->category,
+            'visible' => $course->visible,
+            'idnumber' => $course->idnumber,
+            'companycreatedcourse' => $companycreatedcourse,
+        ];
+        $this->set_data($data);
+    }
+
+    /**
+     * Check if current user has access to this form, otherwise throw exception.
+     *
+     * @return void
+     * @throws moodle_exception
+     */
+    protected function check_access_for_dynamic_submission(): void {
+        global $CFG;
+
+        $context = $this->get_context_for_dynamic_submission();
+        $this->optional_param('companycreatedcourse', 0, PARAM_INT);
+        if (!iomad::has_capability('block/iomad_company_admin:createcourse', context_system::instance()) &&
+            !($companycreatedcourse &&
+              iomad::has_capability('block/iomad_company_admin:createcourse', $context))) {
+            $returnurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/iomad_courses_form.php');
+            throw new moodle_exception(
+                'nopermissions',
+                '',
+                $returnurl->out(),
+                get_string(
+                    'block/iomad_company_admin:createcourse',
+                    'block_iomad_company_admin'
+                )
+            );
+        }
+    }
+
+    /**
+     * Return form context
+     *
+     * @return context
+     */
+    protected function get_context_for_dynamic_submission(): context {
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $companycontext = context_company::instance($companyid);
+
+        return $companycontext;
+    }
+
+    /**
+     * Returns url to set in $PAGE->set_url() when form is being rendered or submitted via AJAX.
+     *
+     * @return moodle_url
+     */
+    protected function get_page_url_for_dynamic_submission(): moodle_url {
+
+        return new moodle_url('/blocks/iomad_company_admin/iomad_courses_form.php');
     }
 }
