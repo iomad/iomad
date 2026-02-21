@@ -713,29 +713,28 @@ class iomad_courses_table extends table_sql {
                             '',
                             [
                                 'class' => 'icon fa fa-copy fa-fw ',
-                                'title' => get_string('copycoursetitle', 'backup', $row->coursename),
+                                'title' => get_string('copycoursetitle', 'backup', format_string($row->coursename)),
                                 'role' => 'img',
-                                'aria-label' => get_string('copycoursetitle', 'backup', $row->coursename),
+                                'aria-label' => get_string('copycoursetitle', 'backup', format_string($row->coursename)),
                             ]
                         ),
                         [
-                            'href' => $cloneurl,
+                            'data-action' => 'show-copycourseform',
+                            'data-companycreatedcourse' => $companycreatedcourse,
+                            'data-courseid' => $row->courseid,
+                            'data-coursename' => format_string($row->coursename),
+                            'data-companyid' => $company->id,
+                            'role' => 'button',
+                            'href' => '#',
                         ]
                     );
                 }
 
                 // Handle course delete action.
-                if ($row->shared == 0 &&
-                    (iomad::has_capability('block/iomad_company_admin:deletecourses', $companycontext) ||
-                     iomad::has_capability('block/iomad_company_admin:deletecourses', $companycontext))) {
-                    $linkurl = "/blocks/iomad_company_admin/iomad_courses_form.php";
-                    $linkparams = $params;
-                    if (!empty($params['coursesearchtext'])) {
-                        $linkparams['coursesearch'] = $params['coursesearchtext'];
-                    }
-                    $linkparams['deleteid'] = $row->courseid;
-                    $linkparams['sesskey'] = sesskey();
-                    $deleteurl = new moodle_url($linkurl, $linkparams);
+                if (iomad::has_capability('block/iomad_company_admin:deleteallcourses', $companycontext) ||
+                    ($row->shared == 0 &&
+                     (iomad::has_capability('block/iomad_company_admin:deletecourses', $companycontext) ||
+                      iomad::has_capability('block/iomad_company_admin:destroycourses', $companycontext)))) {
                     $actionsoutput .= html_writer::tag(
                         'a',
                         html_writer::tag(
@@ -749,32 +748,12 @@ class iomad_courses_table extends table_sql {
                             ]
                         ),
                         [
-                            'href' => $deleteurl,
-                        ]
-                    );
-                } else if (iomad::has_capability('block/iomad_company_admin:deleteallcourses', $companycontext)) {
-                    $linkurl = "/blocks/iomad_company_admin/iomad_courses_form.php";
-                    $linkparams = $params;
-                    if (!empty($params['coursesearchtext'])) {
-                        $linkparams['coursesearch'] = $params['coursesearchtext'];
-                    }
-                    $linkparams['deleteid'] = $row->courseid;
-                    $linkparams['sesskey'] = sesskey();
-                    $deleteurl = new moodle_url($linkurl, $linkparams);
-                    $actionsoutput .= html_writer::tag(
-                        'a',
-                        html_writer::tag(
-                            'i',
-                            '',
-                            [
-                                'class' => 'icon fa fa-trash fa-fw ',
-                                'title' => get_string('delete'),
-                                'role' => 'img',
-                                'aria-label' => get_string('delete'),
-                            ]
-                        ),
-                        [
-                            'href' => $deleteurl,
+                            'data-action' => 'show-deletecourseform',
+                            'data-courseid' => $row->courseid,
+                            'data-coursename' => format_string($row->coursename),
+                            'data-companyid' => $company->id,
+                            'role' => 'button',
+                            'href' => '#',
                         ]
                     );
                 }

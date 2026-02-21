@@ -1026,7 +1026,7 @@ class company {
      * @return bool
      */
     public static function remove_course(object $course, int $companyid, int $departmentid=0): bool {
-        global $DB, $PAGE;
+        global $CFG, $DB, $PAGE;
 
         $errors = false;
         $transaction = $DB->start_delegated_transaction();
@@ -1122,6 +1122,7 @@ class company {
         }
 
         // Un-enrol anyone from the course which hasn't already been cleared.
+        require_once($CFG->dirroot . '/enrol/locallib.php');
         $courseenrolment = new course_enrolment_manager($PAGE, $course);
         $userlist = $courseenrolment->get_users('u.id', 'ASC', 0, 0);
 
@@ -1183,7 +1184,10 @@ class company {
      * @param bool $destroy
      * @return bool
      */
-    public static function delete_course(int $companyid, int $courseid, bool $destroy = false): bool {
+    public static function delete_course(int $companyid,
+                                         int $courseid,
+                                         bool $destroy = false,
+                                         $showfeedback = true): bool {
         global $DB, $USER, $CFG;
 
         $errors = false;
@@ -1218,7 +1222,7 @@ class company {
         // Is the course a shared course?
         if ($iomadcourse->shared == 0) {
             // Call the moodle course delete function.
-            if (!delete_course($courseid)) {
+            if (!delete_course($courseid, $showfeedback)) {
                 $errors = true;
             }
             if (!$DB->delete_records('iomad_courses', ['id' => $iomadcourse->id])) {
