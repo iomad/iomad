@@ -41,6 +41,7 @@ use block_iomad_company_admin\output\{
     courses_warnexpire_editable,
     courses_warnnotstarted_editable,
     enrolment_expireafter_editable};
+use context_system;
 use html_writer;
 use local_iomad\iomad;
 use moodle_url;
@@ -134,7 +135,6 @@ class iomad_courses_table extends table_sql {
         }
 
         return $coursereturn;
-
     }
 
     /**
@@ -162,7 +162,7 @@ class iomad_courses_table extends table_sql {
 
         // Apply styling if the course is hidden.
         if ($row->visible == 0) {
-            $licenseselectoutput = "<span class=\"dimmed_text\">";
+            $licenseselectoutput = html_writer::start_tag('span', ['class' => 'dimmed_text']);
         } else if ($row->visible == 1) {
             $licenseselectoutput = "";
         }
@@ -173,10 +173,10 @@ class iomad_courses_table extends table_sql {
             $hidelicensed = !iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext);
 
             $editable = new courses_license_editable($company,
-                                                          $companycontext,
-                                                          $row,
-                                                          $row->licensed,
-                                                          $hidelicensed);
+                                                     $companycontext,
+                                                     $row,
+                                                     $row->licensed,
+                                                     $hidelicensed);
 
             return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
 
@@ -191,7 +191,7 @@ class iomad_courses_table extends table_sql {
         }
 
         if ($row->visible == 0) {
-            $licenseselectoutput .= "</span>";
+            $licenseselectoutput .= html_writer::end_tag('span');
         }
 
         return $licenseselectoutput;
@@ -217,9 +217,9 @@ class iomad_courses_table extends table_sql {
         iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext)) {
 
             $editable = new courses_autoenrol_editable($company,
-                                                          $companycontext,
-                                                          $row,
-                                                          $value);
+                                                       $companycontext,
+                                                       $row,
+                                                       $value);
 
             return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
 
@@ -291,7 +291,6 @@ class iomad_courses_table extends table_sql {
         } else if ($row->visible == 1) {
             return $sharedselectoptions[$row->shared];
         }
-
     }
 
     /**
@@ -320,9 +319,9 @@ class iomad_courses_table extends table_sql {
         (( $canbemanaged || $companycreatedcourse) ||
             iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext))) {
             $editable = new courses_validlength_editable($company,
-                                                          $companycontext,
-                                                          $row,
-                                                          $row->validlength);
+                                                         $companycontext,
+                                                         $row,
+                                                         $row->validlength);
 
             return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
 
@@ -359,9 +358,9 @@ class iomad_courses_table extends table_sql {
         (( $canbemanaged || $companycreatedcourse) ||
             iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext))) {
             $editable = new enrolment_expireafter_editable($company,
-                                                          $companycontext,
-                                                          $row,
-                                                          $row->expireafter);
+                                                           $companycontext,
+                                                           $row,
+                                                           $row->expireafter);
 
             return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
 
@@ -409,7 +408,6 @@ class iomad_courses_table extends table_sql {
         } else if ($row->visible == 1) {
             return $row->warnexpire;
         }
-
     }
 
     /**
@@ -697,8 +695,9 @@ class iomad_courses_table extends table_sql {
                 }
 
                 // Handle course clone action.
-                if ($companycreatedcourse &&
-                    iomad::has_capability('block/iomad_company_admin:createcourse', $companycontext)) {
+                if (iomad::has_capability('block/iomad_company_admin:createcourse', context_system::instance()) ||
+                    ($companycreatedcourse &&
+                     iomad::has_capability('block/iomad_company_admin:createcourse', $companycontext))) {
                     $linkurl = "/blocks/iomad_company_admin/iomad_courses_form.php";
                     $linkparams = $params;
                     if (!empty($params['coursesearchtext'])) {
@@ -713,7 +712,7 @@ class iomad_courses_table extends table_sql {
                             'i',
                             '',
                             [
-                                'class' => 'icon fa a-copy fa-fw ',
+                                'class' => 'icon fa fa-copy fa-fw ',
                                 'title' => get_string('copycoursetitle', 'backup', $row->coursename),
                                 'role' => 'img',
                                 'aria-label' => get_string('copycoursetitle', 'backup', $row->coursename),

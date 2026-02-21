@@ -27,11 +27,10 @@ namespace block_iomad_company_admin\output;
 
 use block_iomad_company_admin\event\company_course_updated;
 use coding_exception;
-use core\output\inplace_editable;
+use core\output\{inplace_editable, renderer_base};
 use core_external;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
-use renderer_base;
 
 /**
  * IOMAD Dashboard course is licensed in-place editable class

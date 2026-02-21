@@ -25,6 +25,8 @@
 
 namespace block_iomad_company_admin\forms;
 
+use moodleform;
+
 /**
  * IOMAD dashboard company search form class
  *
@@ -33,7 +35,7 @@ namespace block_iomad_company_admin\forms;
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class iomad_company_filter_form extends \moodleform {
+class iomad_company_filter_form extends moodleform {
 
     /**
      * Form definition

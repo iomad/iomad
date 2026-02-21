@@ -36,7 +36,7 @@ use moodle_url;
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class company_license_form extends \company_moodleform {
+class company_license_form extends company_moodleform {
 
     /** @var object context */
     protected $context = null;
