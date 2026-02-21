@@ -42,6 +42,11 @@ if ($hassiteconfig) {
                                                   get_string('iomad_allow_username_help', 'local_iomad'),
                                                   0);
 
+    $generalconfigs[] = new admin_setting_configcheckbox('local_iomad/enforce_username_match',
+                                                get_string('enforce_username_match', 'local_iomad'),
+                                                get_string('enforce_username_match_help', 'local_iomad'),
+                                                0);
+
     $generalconfigs[] = new admin_setting_configcheckbox('local_iomad/use_mandatory_courses',
                                                 get_string('iomad_use_mandatory_courses', 'local_iomad'),
                                                 get_string('iomad_use_mandatory_courses_help', 'local_iomad'),
