@@ -29,6 +29,7 @@ use local_iomad\iomad;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
+require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/auth/iomadoidc/lib.php');
 $companyonly = optional_param('companyonly', false, PARAM_BOOL);
 

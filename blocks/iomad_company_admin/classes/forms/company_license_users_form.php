@@ -41,7 +41,7 @@ use context_course;
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class company_license_users_form extends \moodleform {
+class company_license_users_form extends moodleform {
 
     /** @var object context */
     protected $context = null;

@@ -40,7 +40,7 @@ use moodle_url;
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class company_edit_form extends \company_moodleform {
+class company_edit_form extends company_moodleform {
 
     /** @var bool is this the first company ever */
     protected $firstcompany;

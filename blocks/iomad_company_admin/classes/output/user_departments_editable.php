@@ -28,7 +28,7 @@ namespace block_iomad_company_admin\output;
 use coding_exception;
 use core_user;
 use core_external;
-use core\output\inplace_editable;
+use core\output\{inplace_editable, renderer_base};
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 

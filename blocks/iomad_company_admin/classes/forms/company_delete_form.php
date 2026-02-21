@@ -35,7 +35,7 @@ use html_writer;
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class company_delete_form extends \company_moodleform {
+class company_delete_form extends company_moodleform {
 
     /** @var bool does this company have child companies */
     protected $haschildren;
