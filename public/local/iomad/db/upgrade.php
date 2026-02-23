@@ -655,7 +655,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
         }
 
         // Launch rename table to local_iomad_departments.
-        $dbman->rename_table($table, 'local_iomad_departments');
+        $dbman->rename_table($table, 'local_iomad_company_departments');
 
         // Company table structure changes.
         mtrace("Restructuring company table");
