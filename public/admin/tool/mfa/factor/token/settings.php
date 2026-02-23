@@ -34,7 +34,7 @@ global $CFG;
 
 $companyid = iomad::get_my_companyid(context_system::instance(), false);
 $postfix = "";
-if (!empty($companyid)) {
+if ($companyid > 0) {
     $postfix = "_$companyid";
 }
 

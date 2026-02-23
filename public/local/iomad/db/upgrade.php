@@ -83,7 +83,8 @@ function xmldb_local_iomad_upgrade($oldversion) {
         $table->add_field('autoenrol', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
 
         // Adding keys to table company_course_autoenrol.
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key(
+            'primary', XMLDB_KEY_PRIMARY, ['id']);
 
         // Conditionally launch create table for company_course_autoenrol.
         if (!$dbman->table_exists($table)) {
@@ -232,7 +233,8 @@ function xmldb_local_iomad_upgrade($oldversion) {
 
         // Define index complic_comp_ix (not unique) to be added to companylicense.
         $table = new xmldb_table('companylicense');
-        $index = new xmldb_index('complic_comp_ix', XMLDB_INDEX_NOTUNIQUE, ['companyid']);
+        $index = new xmldb_index(
+            'complic_comp_ix', XMLDB_INDEX_NOTUNIQUE, ['companyid']);
 
         // Conditionally launch add index complic_comp_ix.
         if (!$dbman->index_exists($table, $index)) {
@@ -241,7 +243,8 @@ function xmldb_local_iomad_upgrade($oldversion) {
 
         // Define index complicu_userlicid_ix (not unique) to be added to companylicense_users.
         $table = new xmldb_table('companylicense_users');
-        $index = new xmldb_index('complicu_userlicid_ix', XMLDB_INDEX_NOTUNIQUE, ['userid', 'licenseid', 'licensecourseid']);
+        $index = new xmldb_index(
+            'complicu_userlicid_ix', XMLDB_INDEX_NOTUNIQUE, ['userid', 'licenseid', 'licensecourseid']);
 
         // Conditionally launch add index complicu_userlicid_ix.
         if (!$dbman->index_exists($table, $index)) {
@@ -264,7 +267,8 @@ function xmldb_local_iomad_upgrade($oldversion) {
         $table->add_field('pageid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
 
         // Adding keys to table company_pages.
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key(
+            'primary', XMLDB_KEY_PRIMARY, ['id']);
 
         // Conditionally launch create table for company_pages.
         if (!$dbman->table_exists($table)) {
@@ -527,25 +531,6 @@ function xmldb_local_iomad_upgrade($oldversion) {
             $DB->set_field('task_adhoc', 'classname', $new, ['classname' => $old]);
         }
 
-        mtrace("");
-        mtrace("Uninstalling the old plugins.");
-        $oldplugins = [
-            'local_iomad_track',
-        ];
-        $pluginman = core_plugin_manager::instance();
-
-        foreach ($oldplugins as $plugin) {
-            if ($pluginman->can_uninstall_plugin($plugin)) {
-                mtrace('Uninstalling: ' . $plugin);
-                $progress = new progress_trace_buffer(new text_progress_trace(), true);
-                $pluginman->uninstall_plugin($plugin, $progress);
-                $progress->finished();
-                mtrace($progress->get_buffer());
-            } else {
-                mtrace('Can not be uninstalled: ' . $plugin);
-            }
-        }
-
         // Iomad savepoint reached.
         upgrade_plugin_savepoint(true, 2026010500, 'local', 'iomad');
     }
@@ -598,10 +583,2439 @@ function xmldb_local_iomad_upgrade($oldversion) {
             $DB->set_field('task_adhoc', 'classname', $new, ['classname' => $old]);
         }
 
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2026010600, 'local', 'iomad');
+    }
+
+    if ($oldversion < 2026022345) {
+
+        // Department table structure changes.
+        mtrace("Restructuring department table");
+        $table = new xmldb_table('department');
+
+        // Define index depa_idcom (not unique) to be dropped form department.
+        $index = new xmldb_index(
+            'depa_idcom',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['id', 'company']
+        );
+
+        // Conditionally launch drop index depa_idcom.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define index depa_idcompar (not unique) to be dropped form department.
+        $index = new xmldb_index(
+            'depa_idcompar',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['id', 'company', 'parent']
+        );
+
+        // Conditionally launch drop index depa_idcompar.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Rename field company on table department to companyid.
+        $field = new xmldb_field('company', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, '0', 'shortname');
+
+        // Launch rename field company.
+        $dbman->rename_field($table, $field, 'companyid');
+
+        // Rename field parent on table department to parentid.
+        $field = new xmldb_field('parent', XMLDB_TYPE_INTEGER, '20', null, null, null, null, 'companyid');
+
+        // Launch rename field parent.
+        $dbman->rename_field($table, $field, 'parentid');
+
+        // Define index id-companyid (not unique) to be added to department.
+        $index = new xmldb_index(
+            'id-companyid',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['id', 'companyid']
+        );
+
+        // Conditionally launch add index id-companyid.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define index id-companyid-parentid (not unique) to be added to department.
+        $index = new xmldb_index(
+            'id-companyid-parentid',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['id', 'companyid', 'parentid']
+        );
+
+        // Conditionally launch add index id-companyid-parentid.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Launch rename table to local_iomad_departments.
+        $dbman->rename_table($table, 'local_iomad_departments');
+
+        // Company table structure changes.
+        mtrace("Restructuring company table");
+        $table = new xmldb_table('company');
+
+        // Define key category (foreign) to be dropped form company.
+        $key = new xmldb_key(
+            'category',
+            XMLDB_KEY_FOREIGN,
+            ['category'],
+            'course_categories',
+            ['id']
+        );
+
+        // Launch drop key category.
+        $dbman->drop_key($table, $key);
+
+        // Define key profileid (foreign) to be dropped form company.
+        $key = new xmldb_key(
+            'profileid',
+            XMLDB_KEY_FOREIGN,
+            ['profileid'],
+            'user_info_field',
+            ['id']
+        );
+
+        // Launch drop key profileid.
+        $dbman->drop_key($table, $key);
+
+        // Define key supervisorprofileid (foreign) to be dropped form company.
+        $key = new xmldb_key(
+            'supervisorprofileid',
+            XMLDB_KEY_FOREIGN,
+            ['supervisorprofileid'],
+            'user_info_field',
+            ['id']
+        );
+
+        // Launch drop key supervisorprofileid.
+        $dbman->drop_key($table, $key);
+
+        // Define key emailprofileid (foreign) to be dropped form company.
+        $key = new xmldb_key(
+            'emailprofileid',
+            XMLDB_KEY_FOREIGN,
+            ['emailprofileid'],
+            'user_info_field',
+            ['id']
+        );
+
+        // Launch drop key emailprofileid.
+        $dbman->drop_key($table, $key);
+
+        // Define key previousroletemplateid (foreign) to be dropped form company.
+        $key = new xmldb_key(
+            'previousroletemplateid',
+            XMLDB_KEY_FOREIGN,
+            ['previousroletemplateid'],
+            'company_role_templates',
+            ['id']
+        );
+
+        // Launch drop key previousroletemplateid.
+        $dbman->drop_key($table, $key);
+
+        // Define key previousemailtemplateid (foreign) to be dropped form company.
+        $key = new xmldb_key(
+            'previousemailtemplateid',
+            XMLDB_KEY_FOREIGN,
+            ['previousemailtemplateid'],
+            'email_templateset',
+            ['id']
+        );
+
+        // Launch drop key previousemailtemplateid.
+        $dbman->drop_key($table, $key);
+
+        // Define key previousemailtemplateid (foreign) to be dropped form company.
+        $key = new xmldb_key(
+            'previousemailtemplateid',
+            XMLDB_KEY_FOREIGN,
+            ['previousemailtemplateid'],
+            'email_templateset',
+            ['id']
+        );
+
+        // Launch drop key previousemailtemplateid.
+        $dbman->drop_key($table, $key);
+
+        // Define index comp_shortname (not unique) to be dropped form company.
+        $index = new xmldb_index(
+            'comp_shortname',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['shortname']
+        );
+
+        // Conditionally launch drop index comp_shortname.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define index comp_name (not unique) to be dropped form company.
+        $index = new xmldb_index(
+            'comp_name',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['name']
+        );
+
+        // Conditionally launch drop index comp_name.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define index comp_par (not unique) to be dropped form company.
+        $index = new xmldb_index(
+            'comp_par',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['parentid']
+        );
+
+        // Conditionally launch drop index comp_par.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Rename field category on table company to coursecategoryid.
+        $field = new xmldb_field('category', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, '0', 'theme');
+
+        // Launch rename field category.
+        $dbman->rename_field($table, $field, 'coursecategoryid');
+
+        // Rename field paymentaccountid on table company to paymentaccount.
+        $field = new xmldb_field('paymentaccount', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'custom3');
+
+        // Launch rename field paymentaccountid.
+        $dbman->rename_field($table, $field, 'paymentaccountid');
+
+        // Rename field profilecategoryid on table company to profilecategoryid.
+        $field = new xmldb_field('profileid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'coursecategoryid');
+
+        // Launch rename field profilecategoryid.
+        $dbman->rename_field($table, $field, 'profilecategoryid');
+
+        // Rename field companyterminated on table company to terminated.
+        $field = new xmldb_field('companyterminated', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'suspendafter');
+
+        // Launch rename field companyterminated.
+        $dbman->rename_field($table, $field, 'terminated');
+
+        // Define index shortname (unique) to be added to company.
+        $index = new xmldb_index(
+            'shortname',
+            XMLDB_INDEX_UNIQUE,
+            ['shortname']
+        );
+
+        // Conditionally launch add index shortname.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define index id-name (not unique) to be added to company.
+        $index = new xmldb_index(
+            'id-name',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['id', 'name']
+        );
+
+        // Conditionally launch add index id-name.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define index id-parentid (not unique) to be added to company.
+        $index = new xmldb_index(
+            'id-parentid',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['id', 'parentid']
+        );
+
+        // Conditionally launch add index id-parentid.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define key fk_coursecategoryid (foreign) to be added to company.
+        $key = new xmldb_key(
+            'fk_coursecategoryid',
+            XMLDB_KEY_FOREIGN,
+            ['coursecategoryid'],
+            'course_categories',
+            ['id']
+        );
+
+        // Launch add key fk_coursecategoryid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_departmentprofileid (foreign) to be added to company.
+        $key = new xmldb_key(
+            'fk_departmentprofileid',
+            XMLDB_KEY_FOREIGN,
+            ['departmentprofileid'],
+            'user_info_field',
+            ['id']
+        );
+
+        // Launch add key fk_departmentprofileid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_emailprofileid (foreign) to be added to company.
+        $key = new xmldb_key(
+            'fk_emailprofileid',
+            XMLDB_KEY_FOREIGN,
+            ['emailprofileid'],
+            'user_info_field',
+            ['id']
+        );
+
+        // Launch add key fk_emailprofileid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_parentid (foreign) to be added to company.
+        $key = new xmldb_key(
+            'fk_parentid',
+            XMLDB_KEY_FOREIGN,
+            ['parentid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_parentid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_paymentaccountid (foreign) to be added to company.
+        $key = new xmldb_key(
+            'fk_paymentaccountid',
+            XMLDB_KEY_FOREIGN,
+            ['paymentaccountid'],
+            'payment_accounts',
+            ['id']
+        );
+
+        // Launch add key fk_paymentaccountid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_previousemailtemplateid (foreign) to be added to company.
+        $key = new xmldb_key(
+            'fk_previousemailtemplateid',
+            XMLDB_KEY_FOREIGN,
+            ['previousemailtemplateid'],
+            'email_templateset',
+            ['id']
+        );
+
+        // Launch add key fk_previousemailtemplateid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_profileid (foreign) to be added to company.
+        $key = new xmldb_key(
+            'fk_profilecategoryid',
+            XMLDB_KEY_FOREIGN,
+            ['profilecategoryid'],
+            'user_info_category',
+            ['id']
+        );
+
+        // Launch add key fk_profileid.
+        $dbman->add_key($table, $key);
+
+        // Drop all of the foreign key references to the company table.
+        // Define key companyid (foreign) to be dropped form company_course_groups.
+        $table = new xmldb_table('company_course_groups');
+        $key = new xmldb_key(
+            'companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'company',
+            ['id']
+        );
+
+        // Launch drop key companyid.
+        $dbman->drop_key($table, $key);
+
+        // Define key companyid (foreign) to be dropped form classroom.
+        $table = new xmldb_table('classroom');
+        $key = new xmldb_key(
+            'companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'company',
+            ['id']
+        );
+
+        // Launch drop key companyid.
+        $dbman->drop_key($table, $key);
+
+        // Define key companyid (foreign) to be dropped form company_shared_courses.
+        $table = new xmldb_table('company_shared_courses');
+        $key = new xmldb_key(
+            'companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'company',
+            ['id']
+        );
+
+        // Launch drop key companyid.
+        $dbman->drop_key($table, $key);
+
+        // Define key companyid (foreign) to be dropped form company_created_courses.
+        $table = new xmldb_table('company_created_courses');
+        $key = new xmldb_key(
+            'companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'company',
+            ['id']
+        );
+
+        // Launch drop key companyid.
+        $dbman->drop_key($table, $key);
+
+        // Define key companyid (foreign) to be dropped form company_domains.
+        $table = new xmldb_table('company_domains');
+        $key = new xmldb_key(
+            'companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'company',
+            ['id']
+        );
+
+        // Launch drop key companyid.
+        $dbman->drop_key($table, $key);
+
+        // Define key companyid (foreign) to be dropped form company_comp_frameworks.
+        $table = new xmldb_table('company_comp_frameworks');
+        $key = new xmldb_key(
+            'companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'company',
+            ['id']
+        );
+
+        // Launch drop key companyid.
+        $dbman->drop_key($table, $key);
+
+        // Define key companyid (foreign) to be dropped form company_comp_templates.
+        $table = new xmldb_table('company_comp_templates');
+        $key = new xmldb_key(
+            'companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'company',
+            ['id']
+        );
+
+        // Launch drop key companyid.
+        $dbman->drop_key($table, $key);
+
+        // Define key companyid (foreign) to be dropped form company_shared_templates.
+        $table = new xmldb_table('company_shared_templates');
+        $key = new xmldb_key(
+            'companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'company',
+            ['id']
+        );
+
+        // Launch drop key companyid.
+        $dbman->drop_key($table, $key);
+
+        // Define key companyid (foreign) to be dropped form company_shared_frameworks.
+        $table = new xmldb_table('company_shared_frameworks');
+        $key = new xmldb_key(
+            'companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'company',
+            ['id']
+        );
+
+        // Launch drop key companyid.
+        $dbman->drop_key($table, $key);
+
+        // Define key companyid (foreign) to be dropped form company_role_templates_ass.
+        $table = new xmldb_table('company_role_templates_ass');
+        $key = new xmldb_key(
+            'companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'company',
+            ['id']
+        );
+
+        // Launch drop key companyid.
+        $dbman->drop_key($table, $key);
+
+        // Define key companyid (foreign) to be dropped form companycertificate.
+        $table = new xmldb_table('companycertificate');
+        $key = new xmldb_key(
+            'companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'company',
+            ['id']
+        );
+
+        // Launch drop key companyid.
+        $dbman->drop_key($table, $key);
+
+        // Define key companyid (foreign) to be dropped form company_course_options.
+        $table = new xmldb_table('company_course_options');
+        $key = new xmldb_key(
+            'companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'company',
+            ['id']
+        );
+
+        // Launch drop key companyid.
+        $dbman->drop_key($table, $key);
+
+        // Define key companyid_fk (foreign) to be dropped form email_template.
+        $table = new xmldb_table('email_template');
+        $key = new xmldb_key(
+            'companyid_fk',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'company',
+            ['id']
+        );
+
+        // Launch drop key companyid_fk.
+        $dbman->drop_key($table, $key);
+
+        // Define key companyid (foreign) to be dropped form email.
+        $table = new xmldb_table('email');
+        $key = new xmldb_key(
+            'companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'company',
+            ['id']
+        );
+
+        // Launch drop key companyid.
+        $dbman->drop_key($table, $key);
+
+        // Define key companyid (foreign) to be dropped form invoice.
+        $table = new xmldb_table('invoice');
+        $key = new xmldb_key(
+            'companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'company',
+            ['id']
+        );
+
+        // Launch drop key companyid.
+        $dbman->drop_key($table, $key);
+
+        // Define key companyid (foreign) to be dropped form course_shopsettings.
+        $table = new xmldb_table('course_shopsettings');
+        $key = new xmldb_key(
+            'companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'company',
+            ['id']
+        );
+
+        // Launch drop key companyid.
+        $dbman->drop_key($table, $key);
+
+        // Define key companyid (foreign) to be dropped form microlearning_thread.
+        $table = new xmldb_table('microlearning_thread');
+        $key = new xmldb_key(
+            'companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'company',
+            ['id']
+        );
+
+        // Launch drop key companyid.
+        $dbman->drop_key($table, $key);
+
+        // Define key companyid (foreign) to be dropped form block_iomad_approve_access.
+        $table = new xmldb_table('block_iomad_approve_access');
+        $key = new xmldb_key(
+            'companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'company',
+            ['id']
+        );
+
+        // Launch drop key companyid.
+        $dbman->drop_key($table, $key);
+
+        // Define key companyid (foreign) to be dropped form microlearning_thread_group.
+        $table = new xmldb_table('microlearning_thread_group');
+        $key = new xmldb_key(
+            'companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'company',
+            ['id']
+        );
+
+        // Launch drop key companyid.
+        $dbman->drop_key($table, $key);
+
+        // Define table company to be renamed to local_iomad_companies.
+        $table = new xmldb_table('company');
+
+        // Launch rename table for local_iomad_companies.
+        $dbman->rename_table($table, 'local_iomad_companies');
+
+        // Company_course table restructure.
+        $table = new xmldb_table('company_course');
+
+        // Define index companycourse (not unique) to be dropped form company_course.
+        $index = new xmldb_index(
+            'companycourse',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['companyid', 'courseid']
+        );
+
+        // Conditionally launch drop index companycourse.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define index departmentcourse (not unique) to be dropped form company_course.
+        $index = new xmldb_index(
+            'departmentcourse',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['departmentid', 'courseid']
+        );
+
+        // Conditionally launch drop index departmentcourse.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define index companyid-courseid (not unique) to be added to company_course.
+        $index = new xmldb_index(
+            'companyid-courseid',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['companyid', 'courseid']
+        );
+
+        // Conditionally launch add index companyid-courseid.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define index departmentid-courseid (not unique) to be added to company_course.
+        $index = new xmldb_index(
+            'departmentid-courseid',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['departmentid', 'courseid']
+        );
+
+        // Conditionally launch add index departmentid-courseid.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Launch rename table for company_course.
+        $dbman->rename_table($table, 'local_iomad_company_courses');
+
+        // Companylicense table restructure.
+        mtrace("Restructuring companylicense table");
+        $table = new xmldb_table('companylicense');
+
+        // Define key parentid (foreign) to be dropped form companylicense.
+        $key = new xmldb_key(
+            'parentid',
+            XMLDB_KEY_FOREIGN,
+            ['parentid'],
+            'companylicense',
+            ['id']
+        );
+
+        // Launch drop key parentid.
+        $dbman->drop_key($table, $key);
+
+        // Define index complic_comp_ix (not unique) to be dropped form companylicense.
+        $index = new xmldb_index(
+            'complic_comp_ix',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['companyid']
+        );
+
+        // Conditionally launch drop index complic_comp_ix.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define index id-companyid (not unique) to be added to companylicense.
+        $index = new xmldb_index(
+            'id-companyid',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['id', 'companyid']
+        );
+
+        // Conditionally launch add index id-companyid.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define key licenseid (foreign) to be dropped form companylicense_users.
+        $table = new xmldb_table('companylicense_users');
+        $key = new xmldb_key(
+            'licenseid',
+            XMLDB_KEY_FOREIGN,
+            ['licenseid'],
+            'companylicense',
+            ['id']
+        );
+
+        // Launch drop key licenseid.
+        $dbman->drop_key($table, $key);
+
+        // Define key licenseid (foreign) to be dropped form companylicense_courses.
+        $table = new xmldb_table('companylicense_courses');
+        $key = new xmldb_key(
+            'licenseid',
+            XMLDB_KEY_FOREIGN,
+            ['licenseid'],
+            'companylicense',
+            ['id']
+        );
+
+        // Launch drop key licenseid.
+        $dbman->drop_key($table, $key);
+
+        // Define key licenseid (foreign) to be dropped form iomad_learningpath.
+        $table = new xmldb_table('iomad_learningpath');
+        $key = new xmldb_key(
+            'licenseid',
+            XMLDB_KEY_FOREIGN,
+            ['licenseid'],
+            'companylicense',
+            ['id']
+        );
+
+        // Launch drop key licenseid.
+        $dbman->drop_key($table, $key);
+
+        // Define table companylicense to be renamed to local_iomad_company_licenses.
+        $table = new xmldb_table('companylicense');
+
+        // Launch rename table for companylicense.
+        $dbman->rename_table($table, 'local_iomad_company_licenses');
+
+        // Companylicense_users table restructure.
+        mtrace("Restructuring companylicense_users table");
+        $table = new xmldb_table('companylicense_users');
+
+        // Define key licensecourseid (foreign) to be dropped form companylicense_users.
+        $key = new xmldb_key(
+            'licensecourseid',
+            XMLDB_KEY_FOREIGN,
+            ['licensecourseid'],
+            'course',
+            ['id']
+        );
+
+        // Launch drop key licensecourseid.
+        $dbman->drop_key($table, $key);
+
+        // Define key userid (foreign) to be dropped form companylicense_users.
+        $key = new xmldb_key(
+            'userid',
+            XMLDB_KEY_FOREIGN,
+            ['userid'],
+            'user',
+            ['id']
+        );
+
+        // Launch drop key userid.
+        $dbman->drop_key($table, $key);
+
+        // Define key groupid (foreign) to be dropped form companylicense_users.
+        $key = new xmldb_key(
+            'groupid',
+            XMLDB_KEY_FOREIGN,
+            ['groupid'],
+            'groups',
+            ['id']
+        );
+
+        // Launch drop key groupid.
+        $dbman->drop_key($table, $key);
+
+        // Define index complicu_userlicid_ix (not unique) to be dropped form companylicense_users.
+        $index = new xmldb_index(
+            'complicu_userlicid_ix',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['userid', 'licenseid', 'licensecourseid']
+        );
+
+        // Conditionally launch drop index complicu_userlicid_ix.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define key fk_licensecourseid (foreign) to be added to companylicense_users.
+        $key = new xmldb_key(
+            'fk_licensecourseid',
+            XMLDB_KEY_FOREIGN,
+            ['licensecourseid'],
+            'course',
+            ['id']
+        );
+
+        // Launch add key fk_licensecourseid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_userid (foreign) to be added to companylicense_users.
+        $key = new xmldb_key(
+            'fk_userid',
+            XMLDB_KEY_FOREIGN,
+            ['userid'],
+            'user',
+            ['id']
+        );
+
+        // Launch add key fk_userid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_groupid (foreign) to be added to companylicense_users.
+        $key = new xmldb_key(
+            'fk_groupid',
+            XMLDB_KEY_FOREIGN,
+            ['groupid'],
+            'groups',
+            ['id']
+        );
+
+        // Launch add key fk_groupid.
+        $dbman->add_key($table, $key);
+
+        // Define index userid-licenseid-licensecourseid (not unique) to be added to companylicense_users.
+        $index = new xmldb_index(
+            'userid-licenseid-licensecourseid',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['userid', 'licenseid', 'licensecourseid']
+        );
+
+        // Conditionally launch add index userid-licenseid-licensecourseid.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Launch rename table for to local_iomad_company_license_users.
+        $dbman->rename_table($table, 'local_iomad_company_license_users');
+
+        // Companylicense_courses table restructure.
+        mtrace("Restructuring companylicense_courses table");
+        $table = new xmldb_table('companylicense_courses');
+
+        // Define key courseid (foreign) to be dropped form companylicense_courses.
+        $key = new xmldb_key(
+            'courseid',
+            XMLDB_KEY_FOREIGN,
+            ['courseid'],
+            'course',
+            ['id']
+        );
+
+        // Launch drop key courseid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_courseid (foreign) to be added to companylicense_courses.
+        $key = new xmldb_key(
+            'fk_courseid',
+            XMLDB_KEY_FOREIGN,
+            ['courseid'],
+            'course',
+            ['id']
+        );
+
+        // Launch add key fk_courseid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to local_iomad_company_license_courses.
+        $dbman->rename_table($table, 'local_iomad_company_license_courses');
+
+        // Company_course_groups table restructure.
+        mtrace("Restructuring company_course_groups table");
+        $table = new xmldb_table('company_course_groups');
+
+        // Define key courseid (foreign) to be dropped form company_course_groups.
+        $key = new xmldb_key(
+            'courseid',
+            XMLDB_KEY_FOREIGN,
+            ['courseid'],
+            'course',
+            ['id']
+        );
+
+        // Launch drop key courseid.
+        $dbman->drop_key($table, $key);
+
+        // Define key groupid (foreign) to be dropped form company_course_groups.
+        $key = new xmldb_key(
+            'groupid',
+            XMLDB_KEY_FOREIGN,
+            ['groupid'],
+            'groups',
+            ['id']
+        );
+
+        // Launch drop key groupid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_courseid (foreign) to be added to company_course_groups.
+        $key = new xmldb_key(
+            'fk_courseid',
+            XMLDB_KEY_FOREIGN,
+            ['courseid'],
+            'course',
+            ['id']
+        );
+
+        // Launch add key fk_courseid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_groupid (foreign) to be added to company_course_groups.
+        $key = new xmldb_key(
+            'fk_groupid',
+            XMLDB_KEY_FOREIGN,
+            ['groupid'],
+            'groups',
+            ['id']
+        );
+
+        // Launch add key fk_groupid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to local_iomad_company_course_groups.
+        $dbman->rename_table($table, 'local_iomad_company_course_groups');
+
+        // Iomad_courses table restructure.
+        mtrace("Restructuring iomad_courses table");
+        $table = new xmldb_table('iomad_courses');
+
+        // Define key courseid (foreign) to be dropped form iomad_courses.
+        $key = new xmldb_key(
+            'courseid',
+            XMLDB_KEY_FOREIGN,
+            ['courseid'],
+            'course',
+            ['id']
+        );
+
+        // Launch drop key courseid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_courseid (foreign) to be added to iomad_courses.
+        $table = new xmldb_table('iomad_courses');
+        $key = new xmldb_key(
+            'fk_courseid',
+            XMLDB_KEY_FOREIGN,
+            ['courseid'],
+            'course',
+            ['id']
+        );
+
+        // Launch add key fk_courseid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to local_iomad_courses.
+        $dbman->rename_table($table, 'local_iomad_courses');
+
+        // Classroom table restructure.
+        mtrace("Restructuring classroom table");
+
+        // Define key classroomid (foreign) to be dropped form email.
+        $table = new xmldb_table('email');
+        $key = new xmldb_key(
+            'classroomid',
+            XMLDB_KEY_FOREIGN,
+            ['classroomid'],
+            'classroom',
+            ['id']
+        );
+
+        // Launch drop key classroomid.
+        $dbman->drop_key($table, $key);
+
+        // Define key classroomid (foreign) to be dropped form trainingevent.
+        $table = new xmldb_table('trainingevent');
+        $key = new xmldb_key(
+            'classroomid',
+            XMLDB_KEY_FOREIGN,
+            ['classroomid'],
+            'classroom',
+            ['id']
+        );
+
+        // Launch drop key classroomid.
+        $dbman->drop_key($table, $key);
+
+        // Define table classroom to be renamed to local_iomad_training_locations.
+        $table = new xmldb_table('classroom');
+
+        // Launch rename table to local_iomad_training_locations.
+        $dbman->rename_table($table, 'local_iomad_training_locations');
+
+        // Company_shared_courses table restructure.
+        mtrace("Restructuring company_shared_courses table");
+        $table = new xmldb_table('company_shared_courses');
+
+        // Define key courseid (foreign) to be dropped form company_shared_courses.
+        $key = new xmldb_key(
+            'courseid',
+            XMLDB_KEY_FOREIGN,
+            ['courseid'],
+            'course',
+            ['id']
+        );
+
+        // Launch drop key courseid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_courseid (foreign) to be added to company_shared_courses.
+        $key = new xmldb_key(
+            'fk_courseid',
+            XMLDB_KEY_FOREIGN,
+            ['courseid'],
+            'course',
+            ['id']
+        );
+
+        // Launch add key fk_courseid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to local_iomad_company_shared_courses.
+        $dbman->rename_table($table, 'local_iomad_company_shared_courses');
+
+        // Company_created_courses table restructure.
+        mtrace("Restructuring company_created_courses table");
+        $table = new xmldb_table('company_created_courses');
+
+        // Define key courseid (foreign) to be dropped form company_created_courses.
+        $key = new xmldb_key(
+            'courseid',
+            XMLDB_KEY_FOREIGN,
+            ['courseid'],
+            'course',
+            ['id']
+        );
+
+        // Launch drop key courseid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_courseid (foreign) to be added to company_created_courses.
+        $key = new xmldb_key(
+            'fk_courseid',
+            XMLDB_KEY_FOREIGN,
+            ['courseid'],
+            'course',
+            ['id']
+        );
+
+        // Launch add key fk_courseid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to local_iomad_company_created_courses.
+        $dbman->rename_table($table, 'local_iomad_company_created_courses');
+
+        // Company_users table restructure.
+        mtrace("Restructuring company_users table");
+        $table = new xmldb_table('company_users');
+
+        // Define index departmentusers (unique) to be dropped form company_users.
+        $index = new xmldb_index(
+            'departmentusers',
+            XMLDB_INDEX_UNIQUE,
+            ['companyid', 'userid', 'departmentid']
+        );
+
+        // Conditionally launch drop index departmentusers.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define index companymanagers (not unique) to be dropped form company_users.
+        $index = new xmldb_index(
+            'companymanagers',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['companyid', 'managertype']
+        );
+
+        // Conditionally launch drop index companymanagers.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define index departmentmanagers (not unique) to be dropped form company_users.
+        $index = new xmldb_index(
+            'departmentmanagers',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['departmentid', 'managertype']
+        );
+
+        // Conditionally launch drop index departmentmanagers.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define index companyid-userid-departmentid (unique) to be added to company_users.
+        $index = new xmldb_index(
+            'companyid-userid-departmentid',
+            XMLDB_INDEX_UNIQUE,
+            ['companyid', 'userid', 'departmentid']
+        );
+
+        // Conditionally launch add index companyid-userid-departmentid.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define index companyid-managertype (not unique) to be added to company_users.
+        $index = new xmldb_index(
+            'companyid-managertype',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['companyid', 'managertype']
+        );
+
+        // Conditionally launch add index companyid-managertype.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define index departmentid-managertype (not unique) to be added to company_users.
+        $index = new xmldb_index(
+            'departmentid-managertype',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['departmentid', 'managertype']
+        );
+
+        // Conditionally launch add index departmentid-managertype.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Launch rename table to local_iomad_company_users.
+        $dbman->rename_table($table, 'local_iomad_company_users');
+
+        // Company_role_restriction table restructure.
+        mtrace("Restructuring company_role_restriction table");
+        $table = new xmldb_table('company_role_restriction');
+
+        // Define index company_roleid_companyid (unique) to be dropped form company_role_restriction.
+        $index = new xmldb_index(
+            'company_roleid_companyid',
+            XMLDB_INDEX_UNIQUE,
+            ['roleid', 'companyid', 'capability']
+        );
+
+        // Conditionally launch drop index company_roleid_companyid.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define index roleid-companyid-capability (unique) to be added to company_role_restriction.
+        $index = new xmldb_index(
+            'roleid-companyid-capability',
+            XMLDB_INDEX_UNIQUE,
+            ['roleid', 'companyid', 'capability']
+        );
+
+        // Conditionally launch add index roleid-companyid-capability.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Launch rename table tp local_iomad_company_role_restrictions.
+        $dbman->rename_table($table, 'local_iomad_company_role_restrictions');
+
+        // Company_comains table restructure.
+        mtrace("Restructuring company_domains table");
+        $table = new xmldb_table('company_domains');
+
+        // Launch rename table for local_iomad_company_domains.
+        $dbman->rename_table($table, 'local_iomad_company_domains');
+
+        // Company_comp_frameworks table restructure.
+        mtrace("Restructuring company_comp_frameworks table");
+        $table = new xmldb_table('company_comp_frameworks');
+
+        // Define key frameworkid (foreign) to be dropped form company_comp_frameworks.
+        $key = new xmldb_key(
+            'frameworkid',
+            XMLDB_KEY_FOREIGN,
+            ['frameworkid'],
+            'competency_framework',
+            ['id']
+        );
+
+        // Launch drop key frameworkid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_frameworkid (foreign) to be added to company_comp_frameworks.
+        $key = new xmldb_key(
+            'fk_frameworkid',
+            XMLDB_KEY_FOREIGN,
+            ['frameworkid'],
+            'competency_framework',
+            ['id']
+        );
+
+        // Launch add key fk_frameworkid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to local_iomad_company_comp_frameworks.
+        $dbman->rename_table($table, 'local_iomad_company_comp_frameworks');
+
+        // Company_comp_templates table restructure.
+        mtrace("Restructuring company_comp_templates table");
+        $table = new xmldb_table('company_comp_templates');
+
+        // Define key templateid (foreign) to be dropped form company_comp_templates.
+        $key = new xmldb_key(
+            'templateid',
+            XMLDB_KEY_FOREIGN,
+            ['templateid'],
+            'competency_template',
+            ['id']
+        );
+
+        // Launch drop key templateid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_templateid (foreign) to be added to company_comp_templates.
+        $key = new xmldb_key(
+            'fk_templateid',
+            XMLDB_KEY_FOREIGN,
+            ['templateid'],
+            'competency_template',
+            ['id']
+        );
+
+        // Launch add key fk_templateid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to local_iomad_company_comp_templates.
+        $dbman->rename_table($table, 'local_iomad_company_comp_templates');
+
+        // Iomad_templates table restructure.
+        mtrace("Restructuring iomad_templates table");
+        $table = new xmldb_table('iomad_templates');
+
+        // Define key templateid (foreign) to be dropped form iomad_templates.
+        $key = new xmldb_key(
+            'templateid',
+            XMLDB_KEY_FOREIGN,
+            ['templateid'],
+            'competency_template',
+            ['id']
+        );
+
+        // Launch drop key templateid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_templateid (foreign) to be added to iomad_templates.
+        $key = new xmldb_key(
+            'fk_templateid',
+            XMLDB_KEY_FOREIGN,
+            ['templateid'],
+            'competency_template',
+            ['id']
+        );
+
+        // Launch add key fk_templateid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to local_iomad_templates.
+        $dbman->rename_table($table, 'local_iomad_templates');
+
+        // Iomad_frameworks table restructure.
+        mtrace("Restructuring iomad_frameworks table");
+        $table = new xmldb_table('iomad_frameworks');
+
+        // Define key frameworkid (foreign) to be dropped form iomad_frameworks.
+        $key = new xmldb_key(
+            'frameworkid',
+            XMLDB_KEY_FOREIGN,
+            ['frameworkid'],
+            'competency_framework',
+            ['id']
+        );
+
+        // Launch drop key frameworkid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_frameworkid (foreign) to be added to iomad_frameworks.
+        $key = new xmldb_key(
+            'fk_frameworkid',
+            XMLDB_KEY_FOREIGN,
+            ['frameworkid'],
+            'competency_framework',
+            ['id']
+        );
+
+        // Launch add key fk_frameworkid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to local_iomad_frameworks.
+        $dbman->rename_table($table, 'local_iomad_frameworks');
+
+        // Company_shared_templates table restructure.
+        mtrace("Restructuring company_shared_templates table");
+        $table = new xmldb_table('company_shared_templates');
+
+        // Define key templateid (foreign) to be dropped form company_shared_templates.
+        $key = new xmldb_key(
+            'templateid',
+            XMLDB_KEY_FOREIGN,
+            ['templateid'],
+            'competency_template',
+            ['id']
+        );
+
+        // Launch drop key templateid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_templateid (foreign) to be added to company_shared_templates.
+        $key = new xmldb_key(
+            'fk_templateid',
+            XMLDB_KEY_FOREIGN,
+            ['templateid'],
+            'competency_template',
+            ['id']
+        );
+
+        // Launch add key fk_templateid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to local_iomad_company_shared_templates.
+        $dbman->rename_table($table, 'local_iomad_company_shared_templates');
+
+        // Company_shared_frameworks table restructure.
+        mtrace("Restructuring company_shared_frameworks table");
+        $table = new xmldb_table('company_shared_frameworks');
+
+        // Define key frameworkid (foreign) to be dropped form company_shared_frameworks.
+        $key = new xmldb_key(
+            'frameworkid',
+            XMLDB_KEY_FOREIGN,
+            ['frameworkid'],
+            'competency_framework',
+            ['id']
+        );
+
+        // Launch drop key frameworkid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_frameworkid (foreign) to be added to company_shared_frameworks.
+        $key = new xmldb_key(
+            'fk_frameworkid',
+            XMLDB_KEY_FOREIGN,
+            ['frameworkid'],
+            'competency_framework',
+            ['id']
+        );
+
+        // Launch add key fk_frameworkid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to local_iomad_company_shared_frameworks.
+        $dbman->rename_table($table, 'local_iomad_company_shared_frameworks');
+
+        // Company_role_templates table restructure.
+        mtrace("Restructuring company_role_templates table");
+
+        // Define key templateid (foreign) to be dropped form company_role_templates_caps.
+        $table = new xmldb_table('company_role_templates_caps');
+        $key = new xmldb_key(
+            'templateid',
+            XMLDB_KEY_FOREIGN,
+            ['templateid'],
+            'company_role_templates',
+            ['id']
+        );
+
+        // Launch drop key templateid.
+        $dbman->drop_key($table, $key);
+
+        // Define key templateid (foreign) to be dropped form company_role_templates_ass.
+        $table = new xmldb_table('company_role_templates_ass');
+        $key = new xmldb_key(
+            'templateid',
+            XMLDB_KEY_FOREIGN,
+            ['templateid'],
+            'company_role_templates',
+            ['id']
+        );
+
+        // Launch drop key templateid.
+        $dbman->drop_key($table, $key);
+
+        // Define table company_role_templates to be renamed to local_iomad_company_role_templates.
+        $table = new xmldb_table('company_role_templates');
+
+        // Launch rename table to local_iomad_company_role_templates.
+        $dbman->rename_table($table, 'local_iomad_company_role_templates');
+
+        // Company_role_templates_caps table restructure.
+        mtrace("Restructuring company_role_templates_caps table");
+        $table = new xmldb_table('company_role_templates_caps');
+
+        // Define key roleid (foreign) to be dropped form company_role_templates_caps.
+        $key = new xmldb_key(
+            'roleid',
+            XMLDB_KEY_FOREIGN,
+            ['roleid'],
+            'role',
+            ['id']
+        );
+
+        // Launch drop key roleid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_roleid (foreign) to be added to company_role_templates_caps.
+        $key = new xmldb_key(
+            'fk_roleid',
+            XMLDB_KEY_FOREIGN,
+            ['roleid'],
+            'role',
+            ['id']
+        );
+
+        // Launch add key fk_roleid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to local_iomad_company_role_templates_caps.
+        $dbman->rename_table($table, 'local_iomad_company_role_templates_caps');
+
+        // Company_role_templates_ass table restructure.
+        mtrace("Restructuring company_role_templates_ass table");
+        $table = new xmldb_table('company_role_templates_ass');
+
+        // Launch rename table to local_iomad_company_role_templates_ass.
+        $dbman->rename_table($table, 'local_iomad_company_role_templates_ass');
+
+        // Companycertificate table restructure.
+        mtrace("Restructuring companycertificate table");
+        $table = new xmldb_table('companycertificate');
+
+        // Launch rename table to local_iomad_company_certificates.
+        $dbman->rename_table($table, 'local_iomad_company_certificates');
+
+        // Company_transient_tokens table restructure.
+        mtrace("Restructuring company_transient_tokens table");
+        $table = new xmldb_table('company_transient_tokens');
+
+        // Define key userid (foreign) to be dropped form company_transient_tokens.
+        $key = new xmldb_key(
+            'userid',
+            XMLDB_KEY_FOREIGN,
+            ['userid'],
+            'user',
+            ['id']
+        );
+
+        // Launch drop key userid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_userid (foreign) to be added to company_transient_tokens.
+        $key = new xmldb_key(
+            'fk_userid',
+            XMLDB_KEY_FOREIGN,
+            ['userid'],
+            'user',
+            ['id']
+        );
+
+        // Launch add key fk_userid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to local_iomad_company_transient_tokens.
+        $dbman->rename_table($table, 'local_iomad_company_transient_tokens');
+
+        // Company_course_options table restructure.
+        mtrace("Restructuring company_course_options table");
+        $table = new xmldb_table('company_course_options');
+
+        // Define key courseid (foreign) to be dropped form company_course_options.
+        $key = new xmldb_key(
+            'courseid',
+            XMLDB_KEY_FOREIGN,
+            ['courseid'],
+            'course',
+            ['id']
+        );
+
+        // Launch drop key courseid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_courseid (foreign) to be added to company_course_options.
+        $key = new xmldb_key(
+            'fk_courseid',
+            XMLDB_KEY_FOREIGN,
+            ['courseid'],
+            'course',
+            ['id']
+        );
+
+        // Launch add key fk_courseid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to local_iomad_company_course_options.
+        $dbman->rename_table($table, 'local_iomad_company_course_options');
+
+        // Company_pages table restructure.
+        mtrace("Restructuring company_pages table");
+        $table = new xmldb_table('company_pages');
+
+        // Define key fk_pageid (foreign) to be added to local_iomad_company_pages.
+        $key = new xmldb_key(
+            'fk_pageid',
+            XMLDB_KEY_FOREIGN,
+            ['pageid'],
+            'local_iomadcustompages',
+            ['id']
+        );
+
+        // Launch add key fk_pageid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table for local_iomad_company_pages.
+        $dbman->rename_table($table, 'local_iomad_company_pages');
+
+        // Local_iomad_track table restructure.
+        mtrace("Restructuring local_iomad_track table");
+        $table = new xmldb_table('local_iomad_track');
+
+        // Define index userid (not unique) to be dropped form local_iomad_track.
+        $index = new xmldb_index(
+            'userid',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['userid']
+        );
+        // Conditionally launch drop index userid.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define index companycourse (not unique) to be dropped form local_iomad_track.
+        $index = new xmldb_index(
+            'companycourse',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['companyid', 'courseid']
+        );
+
+        // Conditionally launch drop index companycourse.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define index usercourseenrol (not unique) to be dropped form local_iomad_track.
+        $index = new xmldb_index(
+            'usercourseenrol',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['userid', 'courseid', 'timeenrolled']
+        );
+
+        // Conditionally launch drop index usercourseenrol.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define index usercourselicense (not unique) to be dropped form local_iomad_track.
+        $index = new xmldb_index(
+            'usercourselicense',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['userid', 'courseid', 'licenseid', 'licenseallocated']
+        );
+
+        // Conditionally launch drop index usercourselicense.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define index usercourseexpire (not unique) to be dropped form local_iomad_track.
+        $index = new xmldb_index(
+            'usercourseexpire',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['userid', 'courseid', 'timeexpires']
+        );
+
+        // Conditionally launch drop index usercourseexpire.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define index usercoursecomplete (not unique) to be dropped form local_iomad_track.
+        $index = new xmldb_index(
+            'usercoursecomplete',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['userid', 'courseid', 'timecompleted']
+        );
+
+        // Conditionally launch drop index usercoursecomplete.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define index userid-companyid (not unique) to be added to local_iomad_track.
+        $index = new xmldb_index(
+            'userid-companyid',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['userid', 'companyid']
+        );
+
+        // Conditionally launch add index userid-companyid.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define index companyid-courseid (not unique) to be added to local_iomad_track.
+        $index = new xmldb_index(
+            'companyid-courseid',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['companyid', 'courseid']
+        );
+
+        // Conditionally launch add index companyid-courseid.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define index userid-courseid-timeenrolled (not unique) to be added to local_iomad_track.
+        $index = new xmldb_index(
+            'userid-courseid-timeenrolled',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['userid', 'courseid', 'timeenrolled']
+        );
+
+        // Conditionally launch add index userid-courseid-timeenrolled.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define index userid-courseid-licenseid-licenseallocated (not unique) to be added to local_iomad_track.
+        $index = new xmldb_index(
+            'userid-courseid-licenseid-licenseallocated',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['userid', 'courseid', 'licenseid', 'licenseallocated']
+        );
+
+        // Conditionally launch add index userid-courseid-licenseid-licenseallocated.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define index userid-courseid-timeexpires (not unique) to be added to local_iomad_track.
+        $index = new xmldb_index(
+            'userid-courseid-timeexpires',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['userid', 'courseid', 'timeexpires']
+        );
+
+        // Conditionally launch add index userid-courseid-timeexpires.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define index userid-courseid-timecompleted (not unique) to be added to local_iomad_track.
+        $index = new xmldb_index(
+            'userid-courseid-timecompleted',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['userid', 'courseid', 'timecompleted']
+        );
+
+        // Conditionally launch add index userid-courseid-timecompleted.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define key fk_courseid (foreign) to be added to local_iomad_track.
+        $key = new xmldb_key(
+            'fk_courseid',
+            XMLDB_KEY_FOREIGN,
+            ['courseid'],
+            'course',
+            ['id']
+        );
+
+        // Launch add key fk_courseid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to local_iomad_tracks.
+        $dbman->rename_table($table, 'local_iomad_tracks');
+
+        // Local_iomad_track_certs table restructure.
+        mtrace("Restructuring local_iomad_track_certs table");
+        $table = new xmldb_table('local_iomad_track_certs');
+
+        // Define index trackid (not unique) to be dropped form local_iomad_track_certs.
+        $index = new xmldb_index(
+            'trackid',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['trackid']
+        );
+
+        // Conditionally launch drop index trackid.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Email_template table restructure.
+        mtrace("Restructuring email table");
+
+        // Define key email_templ_strings_tempid (foreign) to be dropped form email_template_strings.
+        $table = new xmldb_table('email_template_strings');
+        $key = new xmldb_key(
+            'email_templ_strings_tempid',
+            XMLDB_KEY_FOREIGN,
+            ['templateid'],
+            'email_template',
+            ['id']
+        );
+
+        // Launch drop key email_templ_strings_tempid.
+        $dbman->drop_key($table, $key);
+
+        // Define index companyid-name-disabled (not unique) to be added to email_template.
+        $table = new xmldb_table('email_template');
+        $index = new xmldb_index(
+            'companyid-name-disabled',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['companyid', 'name', 'disabled']
+        );
+
+        // Conditionally launch add index companyid-name-disabled.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define index companyid-name-disabledmanager (not unique) to be added to email_template.
+        $index = new xmldb_index(
+            'companyid-name-disabledmanager',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['companyid', 'name', 'disabledmanager']
+        );
+
+        // Conditionally launch add index companyid-name-disabledmanager.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define index companyid-name-disabledsupervisor (not unique) to be added to email_template.
+        $index = new xmldb_index(
+            'companyid-name-disabledsupervisor',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['companyid', 'name', 'disabledsupervisor']
+        );
+
+        // Conditionally launch add index companyid-name-disabledsupervisor.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Launch rename table to local_iomad_email_templates.
+        $dbman->rename_table($table, 'local_iomad_email_templates');
+
+        // Email table restructure.
+        $table = new xmldb_table('email');
+
+        // Define key courseid (foreign) to be dropped form email.
+        $key = new xmldb_key(
+            'courseid',
+            XMLDB_KEY_FOREIGN,
+            ['courseid'],
+            'course',
+            ['id']
+        );
+
+        // Launch drop key courseid.
+        $dbman->drop_key($table, $key);
+
+        // Define key userid (foreign) to be dropped form email.
+        $key = new xmldb_key(
+            'userid',
+            XMLDB_KEY_FOREIGN,
+            ['userid'],
+            'user',
+            ['id']
+        );
+
+        // Launch drop key userid.
+        $dbman->drop_key($table, $key);
+
+        // Define key invoiceid (foreign) to be dropped form email.
+        $key = new xmldb_key(
+            'invoiceid',
+            XMLDB_KEY_FOREIGN,
+            ['invoiceid'],
+            'invoice',
+            ['id']
+        );
+
+        // Launch drop key invoiceid.
+        $dbman->drop_key($table, $key);
+
+        // Define key senderid (foreign) to be dropped form email.
+        $key = new xmldb_key(
+            'senderid',
+            XMLDB_KEY_FOREIGN,
+            ['senderid'],
+            'user',
+            ['id']
+        );
+
+        // Launch drop key senderid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_courseid (foreign) to be added to email.
+        $key = new xmldb_key(
+            'fk_courseid',
+            XMLDB_KEY_FOREIGN,
+            ['courseid'],
+            'course',
+            ['id']
+        );
+
+        // Launch add key fk_courseid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_userid (foreign) to be added to email.
+        $key = new xmldb_key(
+            'fk_userid',
+            XMLDB_KEY_FOREIGN,
+            ['userid'],
+            'user',
+            ['id']
+        );
+
+        // Launch add key fk_userid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_invoiceid (foreign) to be added to email.
+        $key = new xmldb_key(
+            'fk_invoiceid',
+            XMLDB_KEY_FOREIGN,
+            ['invoiceid'],
+            'invoice',
+            ['id']
+        );
+
+        // Launch add key fk_invoiceid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_senderid (foreign) to be added to email.
+        $key = new xmldb_key(
+            'fk_senderid',
+            XMLDB_KEY_FOREIGN,
+            ['senderid'],
+            'user',
+            ['id']
+        );
+
+        // Launch add key fk_senderid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to local_iomad_emails.
+        $dbman->rename_table($table, 'local_iomad_emails');
+
+        // Email_templateset_template_strings table restructure.
+        mtrace("Restructuring email_templateset_template_strings table");
+        $table = new xmldb_table('email_templateset_template_strings');
+
+        // Define key email_templset_templ_str_tempid_fk (foreign) to be dropped form email_templateset_template_strings.
+        $key = new xmldb_key(
+            'email_templset_templ_str_tempid_fk',
+            XMLDB_KEY_FOREIGN,
+            ['templatesetid'],
+            'email_templateset_templates',
+            ['id']
+        );
+
+        // Launch drop key email_templset_templ_str_tempid_fk.
+        $dbman->drop_key($table, $key);
+
+        // Define index email_templset_templ_str_tempidlang (not unique) to be dropped form email_templateset_template_strings.
+        $index = new xmldb_index(
+            'email_templset_templ_str_tempidlang',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['templatesetid', 'lang']
+        );
+
+        // Conditionally launch drop index email_templset_templ_str_tempidlang.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define index templatesetid-lang (not unique) to be added to email_templateset_template_strings.
+        $index = new xmldb_index(
+            'templatesetid-lang',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['templatesetid', 'lang']
+        );
+
+        // Conditionally launch add index templatesetid-lang.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Launch rename table to local_iomad_email_templateset_template_strings.
+        $dbman->rename_table($table, 'local_iomad_email_templateset_template_strings');
+
+        // Email_templateset_templates table restructure.
+        mtrace("Restructuring email_templateset_templates table");
+        $table = new xmldb_table('email_templateset_templates');
+
+        // Define key templateset (foreign) to be dropped form email_templateset_templates.
+        $key = new xmldb_key(
+            'templateset',
+            XMLDB_KEY_FOREIGN,
+            ['templateset'],
+            'email_templateset',
+            ['id']
+        );
+
+        // Launch drop key templateset.
+        $dbman->drop_key($table, $key);
+
+        // Email_templateset table restructure.
+        mtrace("Restructuring email_templateset table");
+        $table = new xmldb_table('email_templateset');
+
+        // Launch rename table to local_iomad_email_templatesets.
+        $dbman->rename_table($table, 'local_iomad_email_templatesets');
+
+        // Email_templateset_templates table restructure.
+        mtrace("Restructuring email_templateset_templates table");
+        $table = new xmldb_table('email_templateset_templates');
+
+        // Launch rename table to local_iomad_email_templateset_templates.
+        $dbman->rename_table($table, 'local_iomad_email_templateset_templates');
+
+        // Email_template_strings table restructure.
+        mtrace("Restructuring email_template_strings table");
+        $table = new xmldb_table('email_template_strings');
+
+        // Define index email_templ_strings_tempidlang (not unique) to be dropped form email_template_strings.
+        $index = new xmldb_index(
+            'email_templ_strings_tempidlang',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['templateid', 'lang']
+        );
+
+        // Conditionally launch drop index email_templ_strings_tempidlang.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define index templateid-lang (not unique) to be added to email_template_strings.
+        $index = new xmldb_index(
+            'templateid-lang',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['templateid', 'lang']
+        );
+
+        // Conditionally launch add index templateid-lang.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Launch rename table to local_iomad_email_template_strings.
+        $dbman->rename_table($table, 'local_iomad_email_template_strings');
+
+        // Add back in the foreign keys for the tables we've just renamed.
+        mtrace("Adding back all foreign keys to new table names");
+
+        // Define key local_iomad_companies (foreign) to be added to local_iomad_departments.
+        $table = new xmldb_table('local_iomad_departments');
+        $key = new xmldb_key(
+            'local_iomad_companies',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key local_iomad_companies.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to company_course_groups.
+        $table = new xmldb_table('local_iomad_company_course_groups');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to classroom.
+        $table = new xmldb_table('local_iomad_training_locations');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to company_shared_courses.
+        $table = new xmldb_table('local_iomad_company_shared_courses');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to company_created_courses.
+        $table = new xmldb_table('local_iomad_company_created_courses');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to company_domains.
+        $table = new xmldb_table('local_iomad_company_domains');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to company_comp_frameworks.
+        $table = new xmldb_table('local_iomad_company_comp_frameworks');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to company_comp_templates.
+        $table = new xmldb_table('local_iomad_company_comp_templates');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to company_shared_templates.
+        $table = new xmldb_table('local_iomad_company_shared_templates');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to company_role_templates_ass.
+        $table = new xmldb_table('local_iomad_company_role_templates_ass');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to companycertificate.
+        $table = new xmldb_table('local_iomad_company_certificates');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to company_course_options.
+        $table = new xmldb_table('local_iomad_company_course_options');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to email_template.
+        $table = new xmldb_table('local_iomad_email_templates');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to email.
+        $table = new xmldb_table('local_iomad_emails');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to invoice.
+        $table = new xmldb_table('invoice');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to course_shopsettings.
+        $table = new xmldb_table('course_shopsettings');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to microlearning_thread.
+        $table = new xmldb_table('microlearning_thread');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to block_iomad_approve_access.
+        $table = new xmldb_table('block_iomad_approve_access');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to microlearning_thread_group.
+        $table = new xmldb_table('microlearning_thread_group');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_parentid (foreign) to be added to companylicense.
+        $table = new xmldb_table('local_iomad_company_licenses');
+        $key = new xmldb_key(
+            'fk_parentid',
+            XMLDB_KEY_FOREIGN,
+            ['parentid'],
+            'local_iomad_company_licenses',
+            ['id']
+        );
+
+        // Launch add key fk_parentid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_licenseid (foreign) to be added to companylicense_users.
+        $table = new xmldb_table('local_iomad_company_license_users');
+        $key = new xmldb_key(
+            'fk_licenseid',
+            XMLDB_KEY_FOREIGN,
+            ['licenseid'],
+            'local_iomad_company_licenses',
+            ['id']
+        );
+
+        // Launch add key fk_licenseid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_licenseid (foreign) to be added to companylicense_courses.
+        $table = new xmldb_table('local_iomad_company_license_courses');
+        $key = new xmldb_key(
+            'fk_licenseid',
+            XMLDB_KEY_FOREIGN,
+            ['licenseid'],
+            'local_iomad_company_licenses',
+            ['id']
+        );
+
+        // Launch add key fk_licenseid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_licenseid (foreign) to be added to iomad_learningpath.
+        $table = new xmldb_table('iomad_learningpath');
+        $key = new xmldb_key(
+            'fk_licenseid',
+            XMLDB_KEY_FOREIGN,
+            ['licenseid'],
+            'local_iomad_company_licenses',
+            ['id']
+        );
+
+        // Launch add key fk_licenseid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_classroomid (foreign) to be added to email.
+        $table = new xmldb_table('local_iomad_emails');
+        $key = new xmldb_key(
+            'fk_classroomid',
+            XMLDB_KEY_FOREIGN,
+            ['classroomid'],
+            'local_iomad_training_locations',
+            ['id']
+        );
+
+        // Launch add key fk_classroomid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_classroomid (foreign) to be added to trainingevent.
+        $table = new xmldb_table('trainingevent');
+        $key = new xmldb_key(
+            'fk_classroomid',
+            XMLDB_KEY_FOREIGN,
+            ['classroomid'],
+            'local_iomad_training_locations',
+            ['id']
+        );
+
+        // Launch add key fk_classroomid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_previousroletemplateid (foreign) to be added to local_iomad_companies.
+        $table = new xmldb_table('local_iomad_companies');
+        $key = new xmldb_key(
+            'fk_previousroletemplateid',
+            XMLDB_KEY_FOREIGN,
+            ['previousroletemplateid'],
+            'local_iomad_company_role_templates',
+            ['id']
+        );
+
+        // Launch add key fk_previousroletemplateid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_templateid (foreign) to be added to company_role_templates_caps.
+        $table = new xmldb_table('local_iomad_company_role_templates_caps');
+        $key = new xmldb_key(
+            'fk_templateid',
+            XMLDB_KEY_FOREIGN,
+            ['templateid'],
+            'local_iomad_company_role_templates',
+            ['id']
+        );
+
+        // Launch add key fk_templateid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_templateid (foreign) to be added to company_role_templates_ass.
+        $table = new xmldb_table('local_iomad_company_role_templates_ass');
+        $key = new xmldb_key(
+            'fk_templateid',
+            XMLDB_KEY_FOREIGN,
+            ['templateid'],
+            'local_iomad_company_role_templates',
+            ['id']
+        );
+
+        // Launch add key fk_templateid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to local_iomad_company_pages.
+        $table = new xmldb_table('local_iomad_company_pages');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to local_iomad_tracks.
+        $table = new xmldb_table('local_iomad_tracks');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_licenseid (foreign) to be added to local_iomad_tracks.
+        $table = new xmldb_table('local_iomad_tracks');
+        $key = new xmldb_key(
+            'fk_licenseid',
+            XMLDB_KEY_FOREIGN,
+            ['licenseid'],
+            'local_iomad_company_licenses',
+            ['id']
+        );
+
+        // Launch add key fk_licenseid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_userid (foreign) to be added to local_iomad_tracks.
+        $table = new xmldb_table('local_iomad_tracks');
+        $key = new xmldb_key(
+            'fk_userid',
+            XMLDB_KEY_FOREIGN,
+            ['userid'],
+            'user',
+            ['id']
+        );
+
+        // Launch add key fk_userid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_templateid (foreign) to be added to email_template_strings.
+        $table = new xmldb_table('local_iomad_email_template_strings');
+        $key = new xmldb_key(
+            'fk_templateid',
+            XMLDB_KEY_FOREIGN,
+            ['templateid'],
+            'local_email_templates',
+            ['id']
+        );
+
+        // Launch add key fk_templateid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_templateset (foreign) to be added to email_templateset_templates.
+        $table = new xmldb_table('local_iomad_email_templateset_templates');
+        $key = new xmldb_key(
+            'fk_templateset',
+            XMLDB_KEY_FOREIGN,
+            ['templateset'],
+            'local_iomad_email_templatesets',
+            ['id']
+        );
+
+        // Launch add key fk_templateset.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_templatesetid (foreign) to be added to local_iomad_email_templateset_template_strings.
+        $table = new xmldb_table('local_iomad_email_templateset_template_strings');
+        $key = new xmldb_key(
+            'fk_templatesetid',
+            XMLDB_KEY_FOREIGN,
+            ['templatesetid'],
+            'local_iomad_email_templateset_templates',
+            ['id']
+        );
+
+        // Launch add key fk_templatesetid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_trackid (foreign) to be added to local_iomad_track_certs.
+        $table = new xmldb_table('local_iomad_track_certs');
+        $key = new xmldb_key(
+            'fk_trackid',
+            XMLDB_KEY_FOREIGN,
+            ['trackid'],
+            'local_iomad_tracks',
+            ['id']
+        );
+
+        // Launch add key fk_trackid.
+        $dbman->add_key($table, $key);
+
         mtrace("");
         mtrace("Uninstalling the old plugins.");
         $oldplugins = [
             'local_email',
+            'local_iomad_track',
         ];
         $pluginman = core_plugin_manager::instance();
 
@@ -618,7 +3032,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
         }
 
         // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2026010600, 'local', 'iomad');
+        upgrade_plugin_savepoint(true, 2026022345, 'local', 'iomad');
     }
 
     return $result;

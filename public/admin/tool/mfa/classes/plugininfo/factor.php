@@ -76,7 +76,7 @@ class factor extends \core\plugininfo\base {
 
         // IOMAD
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid) &&
+        if ($companyid > 0 &&
             get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
             $postfix = "_$companyid";
         } else {
@@ -382,7 +382,7 @@ class factor extends \core\plugininfo\base {
 
         // IOMAD
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid) &&
+        if ($companyid > 0 &&
             get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
             $postfix = "_$companyid";
         } else {

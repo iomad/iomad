@@ -48,7 +48,7 @@ class utils {
         global $CFG;
 
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid)) {
+        if ($companyid > 0) {
             $this->postfix = "_$companyid";
         } else {
             $this->postfix = "";
@@ -141,7 +141,7 @@ class utils {
         global $CFG;
 
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid)) {
+        if ($companyid > 0) {
             $postfix = "_$companyid";
         } else {
             $postfix = "";
@@ -192,7 +192,7 @@ class utils {
         global $CFG;
 
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid)) {
+        if ($companyid > 0) {
             $postfix = "_$companyid";
         } else {
             $postfix = "";
@@ -218,7 +218,7 @@ class utils {
         global $CFG;
 
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid)) {
+        if ($companyid > 0) {
             $postfix = "_$companyid";
         } else {
             $postfix = "";

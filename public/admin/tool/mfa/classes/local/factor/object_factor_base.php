@@ -60,7 +60,7 @@ abstract class object_factor_base implements object_factor {
 
         // IOMAD
         $this->companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($this->companyid) &&
+        if ($this->companyid > 0 &&
             get_config('tool_mfa', 'enabled'. "_" . $this->companyid) !== false) {
             $this->postfix = "_" . $this->companyid;
         } else {
@@ -116,7 +116,7 @@ abstract class object_factor_base implements object_factor {
      */
     public function is_enabled(): bool {
         // Have to be explicit here - so not using $this value without checking.
-        if (!empty($this->companyid)) {
+        if ($this->companyid > 0) {
             $postfix = "_" . $this->companyid;
         } else {
             $postfix = $this->postfix = "";

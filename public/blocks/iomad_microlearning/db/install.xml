@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="blocks/iomad_microlearning/db" VERSION="20250115" COMMENT="XMLDB file for Moodle blocks/iomad_microlearning"
+<XMLDB PATH="blocks/iomad_microlearning/db" VERSION="20260222" COMMENT="XMLDB file for Moodle blocks/iomad_microlearning"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -32,7 +32,7 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="company" REFFIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
     <TABLE NAME="microlearning_nugget" COMMENT="Default comment for the table, please edit me">
@@ -106,7 +106,7 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="threadid" TYPE="foreign" FIELDS="threadid" REFTABLE="microlearning_thread" REFFIELDS="id"/>
-        <KEY NAME="companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="company" REFFIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
   </TABLES>

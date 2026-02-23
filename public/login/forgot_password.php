@@ -45,7 +45,7 @@ $token = optional_param('token', false, PARAM_ALPHANUM);
 
 // IOMAD
 $companyid = iomad::get_my_companyid(context_system::instance(), false);
-if (!empty($companyid)) {
+if ($companyid > 0) {
     $postfix = "_$companyid";
 } else {
     $postfix = "";

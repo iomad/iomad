@@ -40,7 +40,7 @@ class factor_email_renderer extends plugin_renderer_base {
 
         // IOMAD
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid) &&
+        if ($companyid > 0 &&
             get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
             $postfix = "_$companyid";
         } else {
