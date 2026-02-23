@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/iomad/db" VERSION="20260115" COMMENT="XMLDB file for Moodle local/iomad"
+<XMLDB PATH="local/iomad/db" VERSION="20260223" COMMENT="XMLDB file for Moodle local/iomad"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="company" COMMENT="company table retrofitted from MySQL">
+    <TABLE NAME="local_iomad_companies" COMMENT="IOMAD companies">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="name" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
@@ -27,8 +27,8 @@
         <FIELD NAME="bgcolor_header" TYPE="char" LENGTH="7" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="bgcolor_content" TYPE="char" LENGTH="7" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="theme" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
-        <FIELD NAME="category" TYPE="int" LENGTH="20" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="holds the default company course category"/>
-        <FIELD NAME="profileid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Holds the default company profile category"/>
+        <FIELD NAME="coursecategoryid" TYPE="int" LENGTH="20" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="holds the default company course category"/>
+        <FIELD NAME="profilecategoryid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Holds the default company profile category"/>
         <FIELD NAME="suspended" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="To keep track is a company is suspended."/>
         <FIELD NAME="customcss" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="To hold company specific CSS for the Iomad and Bootstrap themes"/>
         <FIELD NAME="maincolor" TYPE="char" LENGTH="20" NOTNULL="false" DEFAULT="null" SEQUENCE="false"/>
@@ -47,30 +47,31 @@
         <FIELD NAME="maxusers" TYPE="int" LENGTH="20" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="validto" TYPE="int" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="suspendafter" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
-        <FIELD NAME="companyterminated" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="terminated" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="custom1" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="custom2" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="custom3" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
-        <FIELD NAME="paymentaccount" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="paymentaccountid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="departmentprofileid" TYPE="int" LENGTH="20" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="profileid" TYPE="foreign" FIELDS="profileid" REFTABLE="user_info_field" REFFIELDS="id"/>
-        <KEY NAME="supervisorprofileid" TYPE="foreign" FIELDS="supervisorprofileid" REFTABLE="user_info_field" REFFIELDS="id"/>
-        <KEY NAME="category" TYPE="foreign" FIELDS="category" REFTABLE="course_categories" REFFIELDS="id"/>
-        <KEY NAME="emailprofileid" TYPE="foreign" FIELDS="emailprofileid" REFTABLE="user_info_field" REFFIELDS="id"/>
-        <KEY NAME="previousroletemplateid" TYPE="foreign" FIELDS="previousroletemplateid" REFTABLE="company_role_templates" REFFIELDS="id"/>
-        <KEY NAME="previousemailtemplateid" TYPE="foreign" FIELDS="previousemailtemplateid" REFTABLE="email_templateset" REFFIELDS="id"/>
-        <KEY NAME="departmentprofileid" TYPE="foreign" FIELDS="departmentprofileid" REFTABLE="user_info_field" REFFIELDS="id"/>
+        <KEY NAME="fk_coursecategoryid" TYPE="foreign" FIELDS="coursecategoryid" REFTABLE="course_categories" REFFIELDS="id"/>
+        <KEY NAME="fk_emailprofileid" TYPE="foreign" FIELDS="emailprofileid" REFTABLE="user_info_field" REFFIELDS="id"/>
+        <KEY NAME="fk_departmentprofileid" TYPE="foreign" FIELDS="departmentprofileid" REFTABLE="user_info_field" REFFIELDS="id"/>
+        <KEY NAME="fk_parentid" TYPE="foreign" FIELDS="parentid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
+        <KEY NAME="fk_paymentaccountid" TYPE="foreign" FIELDS="paymentaccountid" REFTABLE="payment_accounts" REFFIELDS="id"/>
+        <KEY NAME="fk_previousemailtemplateid" TYPE="foreign" FIELDS="previousemailtemplateid" REFTABLE="local_iomad_email_templatesets" REFFIELDS="id"/>
+        <KEY NAME="fk_profilecategoryid" TYPE="foreign" FIELDS="profilecategoryid" REFTABLE="user_info_category" REFFIELDS="id"/>
+        <KEY NAME="fk_templateid" TYPE="foreign" FIELDS="previousroletemplateid" REFTABLE="local_iomad_company_role_templates" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="comp_shortname" UNIQUE="false" FIELDS="shortname"/>
-        <INDEX NAME="comp_name" UNIQUE="false" FIELDS="name"/>
-        <INDEX NAME="comp_par" UNIQUE="false" FIELDS="parentid" COMMENT="Parentid [Foreign Key, parentid, company, id]"/>
+        <INDEX NAME="shortname" UNIQUE="true" FIELDS="shortname"/>
+        <INDEX NAME="id-name" UNIQUE="false" FIELDS="id, name"/>
+        <INDEX NAME="id-parentid" UNIQUE="false" FIELDS="id, parentid"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="company_course" COMMENT="Links Companies to Courses for Perficio">
+    <TABLE NAME="local_iomad_company_courses" COMMENT="IOMAD company course assignments">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="companyid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false"/>
@@ -81,27 +82,28 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="companycourse" UNIQUE="false" FIELDS="companyid, courseid" COMMENT="[Foreign Key, companyid, company, id] [Foreign Key, courseid, course, id]"/>
-        <INDEX NAME="departmentcourse" UNIQUE="false" FIELDS="departmentid, courseid" COMMENT="[Foreign Key, departmentid, department, id]"/>
+        <INDEX NAME="companyid-courseid" UNIQUE="false" FIELDS="companyid, courseid" COMMENT="[Foreign Key, companyid, company, id] [Foreign Key, courseid, course, id]"/>
+        <INDEX NAME="departmentid-courseid" UNIQUE="false" FIELDS="departmentid, courseid" COMMENT="[Foreign Key, departmentid, department, id]"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="department" COMMENT="Perficio department deginitions">
+    <TABLE NAME="local_iomad_departments" COMMENT="IOMAD company department definitions">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Department Name"/>
         <FIELD NAME="shortname" TYPE="char" LENGTH="32" NOTNULL="true" SEQUENCE="false" COMMENT="Shortname of department"/>
-        <FIELD NAME="company" TYPE="int" LENGTH="20" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Company ID"/>
-        <FIELD NAME="parent" TYPE="int" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="ID of parent department"/>
+        <FIELD NAME="companyid" TYPE="int" LENGTH="20" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Company ID"/>
+        <FIELD NAME="parentid" TYPE="int" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="ID of parent department"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="local_iomad_companies" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="depa_idcom" UNIQUE="false" FIELDS="id, company" COMMENT="[Foreign Key, company, company, id]"/>
-        <INDEX NAME="depa_idcompar" UNIQUE="false" FIELDS="id, company, parent"/>
+        <INDEX NAME="id-companyid" UNIQUE="false" FIELDS="id, companyid"/>
+        <INDEX NAME="id-companyid-parentid" UNIQUE="false" FIELDS="id, companyid, parentid"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="companylicense" COMMENT="To hold the Iomad license allocations">
+    <TABLE NAME="local_iomad_company_licenses" COMMENT="IOMAD company license definitions.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="license name"/>
@@ -122,13 +124,13 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="parentid" TYPE="foreign" FIELDS="parentid" REFTABLE="companylicense" REFFIELDS="id"/>
+        <KEY NAME="fk_parentid" TYPE="foreign" FIELDS="parentid" REFTABLE="local_iomad_company_licenses" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="complic_comp_ix" UNIQUE="false" FIELDS="companyid" COMMENT="[Foreign Key, companyid, company, id]"/>
+        <INDEX NAME="id-companyid" UNIQUE="false" FIELDS="id, companyid" COMMENT="[Foreign Key, companyid, company, id]"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="companylicense_users" COMMENT="To tie users to licenses">
+    <TABLE NAME="local_iomad_company_license_users" COMMENT="IOMAD user license allocations">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="licenseid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="License foreign key"/>
@@ -143,16 +145,16 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="licenseid" TYPE="foreign" FIELDS="licenseid" REFTABLE="companylicense" REFFIELDS="id"/>
-        <KEY NAME="licensecourseid" TYPE="foreign" FIELDS="licensecourseid" REFTABLE="course" REFFIELDS="id"/>
-        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
-        <KEY NAME="groupid" TYPE="foreign" FIELDS="groupid" REFTABLE="groups" REFFIELDS="id"/>
+        <KEY NAME="fk_licenseid" TYPE="foreign" FIELDS="licenseid" REFTABLE="local_iomad_company_licenses" REFFIELDS="id"/>
+        <KEY NAME="fk_licensecourseid" TYPE="foreign" FIELDS="licensecourseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="fk_groupid" TYPE="foreign" FIELDS="groupid" REFTABLE="groups" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="complicu_userlicid_ix" UNIQUE="false" FIELDS="userid, licenseid, licensecourseid"/>
+        <INDEX NAME="userid-licenseid-licensecourseid" UNIQUE="false" FIELDS="userid, licenseid, licensecourseid"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="companylicense_courses" COMMENT="for keeping track of license course allocations">
+    <TABLE NAME="local_iomad_company_license_courses" COMMENT="IOMAD license courses allocations">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="licenseid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="License foreign key"/>
@@ -160,11 +162,11 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
-        <KEY NAME="licenseid" TYPE="foreign" FIELDS="licenseid" REFTABLE="companylicense" REFFIELDS="id"/>
+        <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="fk_licenseid" TYPE="foreign" FIELDS="licenseid" REFTABLE="local_iomad_company_licenses" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="company_course_groups" COMMENT="Pivot table to map the groups table to the company table;">
+    <TABLE NAME="local_iomad_company_course_groups" COMMENT="IOMAD list of company owned course groups">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="companyid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="Foreign key for company table"/>
@@ -173,12 +175,12 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
-        <KEY NAME="companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="company" REFFIELDS="id"/>
-        <KEY NAME="groupid" TYPE="foreign" FIELDS="groupid" REFTABLE="groups" REFFIELDS="id"/>
+        <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
+        <KEY NAME="fk_groupid" TYPE="foreign" FIELDS="groupid" REFTABLE="groups" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="iomad_courses" COMMENT="Table for holding course information for use within the iomad system.">
+    <TABLE NAME="local_iomad_courses" COMMENT="IOMAD course settings">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="courseid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="foreign key to course table"/>
@@ -194,10 +196,10 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="classroom" COMMENT="Default comment for the table, please edit me">
+    <TABLE NAME="local_iomad_training_locations" COMMENT="IOMAD training location definitions to be used by mod_trainingevent">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="companyid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -214,10 +216,10 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="company" REFFIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="company_shared_courses" COMMENT="Pivot table to keep track of courses shared to other companies">
+    <TABLE NAME="local_iomad_company_shared_courses" COMMENT="IOMAD list of company courses which are shared to other companies.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="companyid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="company ID"/>
@@ -225,11 +227,11 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="company" REFFIELDS="id"/>
-        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
+        <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="company_created_courses" COMMENT="Table to hold all the courses which the company managers have created themselves">
+    <TABLE NAME="local_iomad_company_created_courses" COMMENT="IOMAD list of courses which can be managed by the company">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="companyid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
@@ -237,11 +239,11 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="company" REFFIELDS="id"/>
-        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
+        <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="company_users" COMMENT="table to hold the users assigned to a company">
+    <TABLE NAME="local_iomad_company_users" COMMENT="IOMAD company user allocations and roles">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="companyid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -256,12 +258,12 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="departmentusers" UNIQUE="true" FIELDS="companyid, userid, departmentid" COMMENT="[Foreign Key, companyid, company, id] [Foreign Key, userid, user, id] [Foreign Key, departmentid, department, id]"/>
-        <INDEX NAME="companymanagers" UNIQUE="false" FIELDS="companyid, managertype"/>
-        <INDEX NAME="departmentmanagers" UNIQUE="false" FIELDS="departmentid, managertype"/>
+        <INDEX NAME="companyid-userid-departmentid" UNIQUE="true" FIELDS="companyid, userid, departmentid" COMMENT="[Foreign Key, companyid, company, id] [Foreign Key, userid, user, id] [Foreign Key, departmentid, department, id]"/>
+        <INDEX NAME="companyid-managertype" UNIQUE="false" FIELDS="companyid, managertype"/>
+        <INDEX NAME="departmentid-managertype" UNIQUE="false" FIELDS="departmentid, managertype"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="company_role_restriction" COMMENT="Records show which capabilities are blocked for company/role">
+    <TABLE NAME="local_iomad_company_role_restrictions" COMMENT="IOMAD list of disallowed role capabilities within a company">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="companyid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false"/>
@@ -272,10 +274,10 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="company_roleid_companyid" UNIQUE="true" FIELDS="roleid, companyid, capability" COMMENT="[Foreign Key, roleid, role, id] [Foreign Key, companyid, company, id]"/>
+        <INDEX NAME="roleid-companyid-capability" UNIQUE="true" FIELDS="roleid, companyid, capability" COMMENT="[Foreign Key, roleid, role, id] [Foreign Key, companyid, company, id]"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="company_domains" COMMENT="swing table to hold domains and company ids">
+    <TABLE NAME="local_iomad_company_domains" COMMENT="IOMAD list of domains associated with a company">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="companyid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="company id foreign key"/>
@@ -283,10 +285,10 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="company" REFFIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="company_comp_frameworks" COMMENT="Swing table for associating companies to frameworks">
+    <TABLE NAME="local_iomad_company_comp_frameworks" COMMENT="Swing table for associating companies to frameworks">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="companyid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
@@ -294,11 +296,11 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="company" REFFIELDS="id"/>
-        <KEY NAME="frameworkid" TYPE="foreign" FIELDS="frameworkid" REFTABLE="competency_framework" REFFIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
+        <KEY NAME="fk_frameworkid" TYPE="foreign" FIELDS="frameworkid" REFTABLE="competency_framework" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="company_comp_templates" COMMENT="Swing table to associate learning plan templates to companies">
+    <TABLE NAME="local_iomad_company_comp_templates" COMMENT="IOMAD company learning plan template assignments">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="companyid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
@@ -306,11 +308,11 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="company" REFFIELDS="id"/>
-        <KEY NAME="templateid" TYPE="foreign" FIELDS="templateid" REFTABLE="competency_template" REFFIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
+        <KEY NAME="fk_templateid" TYPE="foreign" FIELDS="templateid" REFTABLE="competency_template" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="iomad_templates" COMMENT="for holding metadata on company templates">
+    <TABLE NAME="local_iomad_templates" COMMENT="IOMAD competency template settings">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="templateid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
@@ -318,10 +320,10 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="templateid" TYPE="foreign" FIELDS="templateid" REFTABLE="competency_template" REFFIELDS="id"/>
+        <KEY NAME="fk_templateid" TYPE="foreign" FIELDS="templateid" REFTABLE="competency_template" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="iomad_frameworks" COMMENT="for holding meta data for company frameworks">
+    <TABLE NAME="local_iomad_frameworks" COMMENT="IOMAD competency framework settings">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="frameworkid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
@@ -329,10 +331,10 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="frameworkid" TYPE="foreign" FIELDS="frameworkid" REFTABLE="competency_framework" REFFIELDS="id"/>
+        <KEY NAME="fk_frameworkid" TYPE="foreign" FIELDS="frameworkid" REFTABLE="competency_framework" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="company_shared_templates" COMMENT="for holding info on templates which have been shared between companies">
+    <TABLE NAME="local_iomad_company_shared_templates" COMMENT="IOMAD competency templates which have been shared between companies">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="companyid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
@@ -340,11 +342,11 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="company" REFFIELDS="id"/>
-        <KEY NAME="templateid" TYPE="foreign" FIELDS="templateid" REFTABLE="competency_template" REFFIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
+        <KEY NAME="fk_templateid" TYPE="foreign" FIELDS="templateid" REFTABLE="competency_template" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="company_shared_frameworks" COMMENT="for holding info on templates which have been shared between companies">
+    <TABLE NAME="local_iomad_company_shared_frameworks" COMMENT="IOMAD templates which have been shared between companies">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="companyid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
@@ -352,11 +354,11 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="company" REFFIELDS="id"/>
-        <KEY NAME="frameworkid" TYPE="foreign" FIELDS="frameworkid" REFTABLE="competency_framework" REFFIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
+        <KEY NAME="fk_frameworkid" TYPE="foreign" FIELDS="frameworkid" REFTABLE="competency_framework" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="company_role_templates" COMMENT="Table for holding information on company role templates.">
+    <TABLE NAME="local_iomad_company_role_templates" COMMENT="IOMAD company role templates">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="name" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" COMMENT="Template name"/>
@@ -365,7 +367,7 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="company_role_templates_caps" COMMENT="Table for holding the template capabilities.">
+    <TABLE NAME="local_iomad_company_role_templates_caps" COMMENT="IOMAD company role template capabilities">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="templateid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
@@ -374,11 +376,11 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="templateid" TYPE="foreign" FIELDS="templateid" REFTABLE="company_role_templates" REFFIELDS="id"/>
-        <KEY NAME="roleid" TYPE="foreign" FIELDS="roleid" REFTABLE="role" REFFIELDS="id"/>
+        <KEY NAME="fk_roleid" TYPE="foreign" FIELDS="roleid" REFTABLE="role" REFFIELDS="id"/>
+        <KEY NAME="fk_templateid" TYPE="foreign" FIELDS="templateid" REFTABLE="local_iomad_company_role_templates" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="company_role_templates_ass" COMMENT="table to store which company templates are available to which companies">
+    <TABLE NAME="local_iomad_company_role_templates_ass" COMMENT="IOMAD company role template assignments">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="companyid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
@@ -386,11 +388,11 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="company" REFFIELDS="id"/>
-        <KEY NAME="templateid" TYPE="foreign" FIELDS="templateid" REFTABLE="company_role_templates" REFFIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
+        <KEY NAME="fk_templateid" TYPE="foreign" FIELDS="templateid" REFTABLE="local_iomad_company_role_templates" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="companycertificate" COMMENT="for storing the options for the company certificate">
+    <TABLE NAME="local_iomad_company_certificates" COMMENT="IOMAD company certificate options">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="companyid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
@@ -402,10 +404,10 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="company" REFFIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="company_transient_tokens" COMMENT="storing user tokens for SSO">
+    <TABLE NAME="local_iomad_company_transient_tokens" COMMENT="IOMAD storing user tokens for SSO">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
@@ -414,10 +416,10 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="company_course_options" COMMENT="Company specific course options">
+    <TABLE NAME="local_iomad_company_course_options" COMMENT="IOMAD company specific course options">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="companyid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
@@ -427,11 +429,11 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="company" REFFIELDS="id"/>
-        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
+        <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="company_pages" COMMENT="Table to store company local custom pages.">
+    <TABLE NAME="local_iomad_company_pages" COMMENT="IOMAD company local custom pages.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="companyid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -440,9 +442,11 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
+        <KEY NAME="fk_pageid" TYPE="foreign" FIELDS="pageid" REFTABLE="local_iomadcustompages" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="local_iomad_track" COMMENT="Main IOMAD report table for storing user course completion information.">
+    <TABLE NAME="local_iomad_tracks" COMMENT="IOMAD user course completion tracking information.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="courseid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false" COMMENT="id of completed course"/>
@@ -466,14 +470,18 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
+        <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="fk_licenseid" TYPE="foreign" FIELDS="licenseid" REFTABLE="local_iomad_company_licenses" REFFIELDS="id"/>
+        <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="userid" UNIQUE="false" FIELDS="userid" COMMENT="[Foreign Key, userid, user, id]"/>
-        <INDEX NAME="companycourse" UNIQUE="false" FIELDS="companyid, courseid" COMMENT="[Foreign Key, companyid, company, id] [Foreign Key, courseid, course, id]"/>
-        <INDEX NAME="usercourseenrol" UNIQUE="false" FIELDS="userid, courseid, timeenrolled"/>
-        <INDEX NAME="usercourselicense" UNIQUE="false" FIELDS="userid, courseid, licenseid, licenseallocated" COMMENT="[Foreign Key, licenseid, companylicense, id]"/>
-        <INDEX NAME="usercourseexpire" UNIQUE="false" FIELDS="userid, courseid, timeexpires"/>
-        <INDEX NAME="usercoursecomplete" UNIQUE="false" FIELDS="userid, courseid, timecompleted"/>
+        <INDEX NAME="userid-companyid" UNIQUE="false" FIELDS="userid, companyid" COMMENT="[Foreign Key, userid, user, id]"/>
+        <INDEX NAME="companyid-courseid" UNIQUE="false" FIELDS="companyid, courseid" COMMENT="[Foreign Key, companyid, company, id] [Foreign Key, courseid, course, id]"/>
+        <INDEX NAME="userid-courseid-timeenrolled" UNIQUE="false" FIELDS="userid, courseid, timeenrolled"/>
+        <INDEX NAME="userid-courseid-licenseid-licenseallocated" UNIQUE="false" FIELDS="userid, courseid, licenseid, licenseallocated" COMMENT="[Foreign Key, licenseid, companylicense, id]"/>
+        <INDEX NAME="userid-courseid-timeexpires" UNIQUE="false" FIELDS="userid, courseid, timeexpires"/>
+        <INDEX NAME="userid-courseid-timecompleted" UNIQUE="false" FIELDS="userid, courseid, timecompleted"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="local_iomad_track_certs" COMMENT="Record certificates issued">
@@ -484,12 +492,10 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_trackid" TYPE="foreign" FIELDS="trackid" REFTABLE="local_iomad_tracks" REFFIELDS="id"/>
       </KEYS>
-      <INDEXES>
-        <INDEX NAME="trackid" UNIQUE="false" FIELDS="trackid" COMMENT="[Foreign Key, trackid, local_iomad_track, id]"/>
-      </INDEXES>
     </TABLE>
-    <TABLE NAME="email_template" COMMENT="Table for company email templates">
+    <TABLE NAME="local_iomad_email_templates" COMMENT="IOMAD company email templates">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="companyid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -512,10 +518,15 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="companyid_fk" TYPE="foreign" FIELDS="companyid" REFTABLE="company" REFFIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
       </KEYS>
+      <INDEXES>
+        <INDEX NAME="companyid-name-disabled" UNIQUE="false" FIELDS="companyid, name, disabled"/>
+        <INDEX NAME="companyid-name-disabledmanager" UNIQUE="false" FIELDS="companyid, name, disabledmanager"/>
+        <INDEX NAME="companyid-name-disabledsupervisor" UNIQUE="false" FIELDS="companyid, name, disabledsupervisor"/>
+      </INDEXES>
     </TABLE>
-    <TABLE NAME="email" COMMENT="emails to be processed, send or that have been sent">
+    <TABLE NAME="local_iomad_emails" COMMENT="IOMAD outgoing email queue">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="templatename" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
@@ -535,15 +546,15 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="company" REFFIELDS="id"/>
-        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
-        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
-        <KEY NAME="invoiceid" TYPE="foreign" FIELDS="invoiceid" REFTABLE="invoice" REFFIELDS="id"/>
-        <KEY NAME="classroomid" TYPE="foreign" FIELDS="classroomid" REFTABLE="classroom" REFFIELDS="id"/>
-        <KEY NAME="senderid" TYPE="foreign" FIELDS="senderid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
+        <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="fk_invoiceid" TYPE="foreign" FIELDS="invoiceid" REFTABLE="invoice" REFFIELDS="id"/>
+        <KEY NAME="fk_classroomid" TYPE="foreign" FIELDS="classroomid" REFTABLE="local_iomad_training_locations" REFFIELDS="id"/>
+        <KEY NAME="fk_senderid" TYPE="foreign" FIELDS="senderid" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="email_templateset" COMMENT="list of email template sets">
+    <TABLE NAME="local_iomad_email_templatesets" COMMENT="IOMAD list of email template sets">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="templatesetname" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Name for the template set"/>
@@ -553,7 +564,7 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="email_templateset_templates" COMMENT="email templates tied to a template set">
+    <TABLE NAME="local_iomad_email_templateset_templates" COMMENT="IOMAD email templateset templates">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="templateset" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="template set foreign key"/>
@@ -576,10 +587,10 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="templateset" TYPE="foreign" FIELDS="templateset" REFTABLE="email_templateset" REFFIELDS="id"/>
+        <KEY NAME="fk_templateset" TYPE="foreign" FIELDS="templateset" REFTABLE="local_iomad_email_templatesets" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="email_template_strings" COMMENT="table to hold the language strings for the email templates.">
+    <TABLE NAME="local_iomad_email_template_strings" COMMENT="IOMAD email template language string definitions">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="templateid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -590,13 +601,13 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="email_templ_strings_tempid" TYPE="foreign" FIELDS="templateid" REFTABLE="email_template" REFFIELDS="id"/>
+        <KEY NAME="fk_templateid" TYPE="foreign" FIELDS="templateid" REFTABLE="local_email_templates" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="email_templ_strings_tempidlang" UNIQUE="false" FIELDS="templateid, lang"/>
+        <INDEX NAME="templateid-lang" UNIQUE="false" FIELDS="templateid, lang"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="email_templateset_template_strings" COMMENT="table to hold the lang strings for the email_templateset_template tables">
+    <TABLE NAME="local_iomad_email_templateset_template_strings" COMMENT="IOMAD templateset templates lang strings">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="templatesetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -607,10 +618,10 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="email_templset_templ_str_tempid_fk" TYPE="foreign" FIELDS="templatesetid" REFTABLE="email_templateset_templates" REFFIELDS="id"/>
+        <KEY NAME="fk_templatesetid" TYPE="foreign" FIELDS="templatesetid" REFTABLE="local_iomad_email_templateset_templates" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="email_templset_templ_str_tempidlang" UNIQUE="false" FIELDS="templatesetid, lang"/>
+        <INDEX NAME="templatesetid-lang" UNIQUE="false" FIELDS="templatesetid, lang"/>
       </INDEXES>
     </TABLE>
   </TABLES>

@@ -51,7 +51,7 @@ $PAGE->requires->js_init_call('M.auth_iomadoidc.init', $jsparams, true, $jsmodul
 
 
 $companyid = iomad::get_my_companyid(context_system::instance(), false);
-if (!empty($companyid)) {
+if ($companyid > 0) {
     $postfix = "_$companyid";
 } else {
     $postfix = "";

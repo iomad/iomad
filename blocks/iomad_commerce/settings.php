@@ -27,7 +27,11 @@ use local_iomad\iomad;
 
 defined('MOODLE_INTERNAL') || die;
 
+$postfix = '';
 $companyid = iomad::get_my_companyid(context_system::instance(), false);
+if ($companyid > 0) {
+    $postfix = "_" . $companyid;
+}
 
 if ($ADMIN->fulltree) {
 
@@ -42,13 +46,11 @@ if ($ADMIN->fulltree) {
                                             '',
                                             PARAM_TEXT));
 
-    if (!empty($companyid)) {
-        $settings->add(new admin_setting_configtext('commerce_externalshop_url' . "_$companyid",
-                                                get_string('commerce_externalshop_url_company', 'block_iomad_commerce'),
-                                                get_string('commerce_externalshop_url_company', 'block_iomad_commerce'),
-                                                '',
-                                                PARAM_TEXT));
-    }
+    $settings->add(new admin_setting_configtext('commerce_externalshop_url' . $postfix,
+                                            get_string('commerce_externalshop_url_company', 'block_iomad_commerce'),
+                                            get_string('commerce_externalshop_url_company', 'block_iomad_commerce'),
+                                            '',
+                                            PARAM_TEXT));
 
     $settings->add(new admin_setting_configtext('commerce_externalshop_link_timeout',
                                             get_string('commerce_externalshop_link_timeout', 'block_iomad_commerce'),

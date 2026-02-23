@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="blocks/iomad_learningpath/db" VERSION="20241211" COMMENT="XMLDB file for Moodle blocks/iomad_learningpath"
+<XMLDB PATH="blocks/iomad_learningpath/db" VERSION="20260222" COMMENT="XMLDB file for Moodle blocks/iomad_learningpath"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -17,7 +17,7 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="licenseid" TYPE="foreign" FIELDS="licenseid" REFTABLE="companylicense" REFFIELDS="id"/>
+        <KEY NAME="fk_licenseid" TYPE="foreign" FIELDS="licenseid" REFTABLE="local_iomad_company_licenses" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="ix_com" UNIQUE="false" FIELDS="company" COMMENT="Index on company id [Foreign Key, company, company, id]"/>
