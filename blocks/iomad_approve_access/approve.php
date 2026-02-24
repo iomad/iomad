@@ -33,7 +33,6 @@ use local_iomad\custom_context\context_company;
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/tablelib.php');
 require_once($CFG->libdir.'/formslib.php');
-require_once($CFG->dirroot."/local/email/lib.php");
 
 // Login and set up $PAGE.
 require_login();

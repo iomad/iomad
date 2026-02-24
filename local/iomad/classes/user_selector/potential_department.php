@@ -93,6 +93,7 @@ class potential_department extends company_base {
             // We don't want any educators in the list.
             $users = $DB->get_records('local_iomad_company_users', [
                 'companyid' => $this->companyid,
+                'departmentid' => $this->departmentid,
                 'educator' => 1,
                 'suspended' => 0,
             ], null, 'userid');

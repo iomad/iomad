@@ -126,7 +126,7 @@ $table->sort_default_column = 'date DESC';
 $table->is_downloading($download,
                        format_string($company->get('name')) .
                                      ' invoices ' .
-                                     format_string(userdate(time(), $CFG->iomad_date_format)),
+                                     format_string(userdate(time(), get_config('local_iomad', 'date_format'))),
                        'companyinvoices');
 
 if (!$table->is_downloading()) {

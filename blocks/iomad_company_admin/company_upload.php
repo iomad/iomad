@@ -25,6 +25,8 @@
 
 use block_iomad_company_admin\event\{company_created, dashboard_page_viewed};
 use block_iomad_company_admin\forms\company_import_form;
+use local_iomad\{company, company_user, iomad};
+use local_iomad\custom_context\context_company;
 
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');

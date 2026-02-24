@@ -2314,7 +2314,7 @@ class company {
             $newdepartment->name = $importtree->name;
             $newdepartment->shortname = $importtree->shortname;
             $newdepartment->companyid = $companyid;
-            $newdepartment->parent = $currentdepartment->id;
+            $newdepartment->parentid = $currentdepartment->id;
             $newdepartment->id = $DB->insert_record('local_iomad_company_departments', $newdepartment);
         } else {
             // Already created so pass it.
@@ -2439,9 +2439,9 @@ class company {
         $returnarray = $department;
         // Check to see if its the top node.
         if (isset($department->id)) {
-            if ($department->parent != 0) {
+            if ($department->parentid != 0) {
                 $parent = self::get_department_parentnode($department->id);
-                if ($parent->parent != 0 ) {
+                if ($parent->parentid != 0 ) {
 
                     $returnarray->parents[] = self::get_parentdepartments($parent);
                 } else {
@@ -2572,7 +2572,7 @@ class company {
     public static function get_department_parentnode(int $departmentid): object|bool {
         global $DB;
         if ($department = $DB->get_record('local_iomad_company_departments', ['id' => $departmentid])) {
-            $parent = $DB->get_record('local_iomad_company_departments', ['id' => $department->parent]);
+            $parent = $DB->get_record('local_iomad_company_departments', ['id' => $department->parentid]);
             return $parent;
         } else {
             return false;
@@ -2605,7 +2605,7 @@ class company {
     public static function get_top_department(int $departmentid): int {
         global $DB;
         $department = $DB->get_record('local_iomad_company_departments', ['id' => $departmentid]);
-        $parentnode = self::get_company_parentnode($department->company);
+        $parentnode = self::get_company_parentnode($department->companyid);
         return $parentnode->id;
     }
 
@@ -2660,7 +2660,7 @@ class company {
         $departmenttree = self::get_subdepartments($departmentnode, $ignorecurrentbranch);
 
         if ($addchildcompanies) {
-            $currentcompany = new company($departmentnode->company);
+            $currentcompany = new company($departmentnode->companyid);
             if ($childcompanies = $currentcompany->get_child_companies_recursive()) {
                 foreach ($childcompanies as $childcompany) {
                     $childnode = self::get_company_parentnode($childcompany->id);
@@ -2746,7 +2746,7 @@ class company {
         $parentlist[$parentnodeid] = format_string($parentnode->name, true, $options);
         $departmenttree = self::get_subdepartments($parentnode);
         if ($addchildcompanies) {
-            $currentcompany = new company($parentnode->company);
+            $currentcompany = new company($parentnode->companyid);
             if ($childcompanies = $currentcompany->get_child_companies_recursive()) {
                 foreach ($childcompanies as $childcompany) {
                     $childnode = self::get_company_parentnode($childcompany->id);
@@ -2972,7 +2972,7 @@ class company {
         // Moving a user.
         if ($currentuser = $DB->get_record(
             'local_iomad_company_users',
-            ['userid' => $userid, 'companyid' => $departmentrec->company])) {
+            ['userid' => $userid, 'companyid' => $departmentrec->companyid])) {
             $currentuser->departmentid = $departmentid;
             if ($ws && !empty($managertype)) {
                 $currentuser->managertype = $managertype;
@@ -3084,7 +3084,7 @@ class company {
         $departmentrec = $DB->get_record('local_iomad_company_departments', ['id' => $departmentid], '*', MUST_EXIST);
 
         // And the context.
-        $companycontext = context_company::instance($departmentrec->company);
+        $companycontext = context_company::instance($departmentrec->companyid);
 
         // Can we manage it?
         if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
@@ -3092,7 +3092,7 @@ class company {
         } else if (!iomad::has_capability('block/iomad_company_admin:edit_departments', $companycontext)) {
             return false;
         } else {
-            $company = new company($departmentrec->company);
+            $company = new company($departmentrec->companyid);
             // Get the list of departments at and below the user assignment.
             $userhierarchylevels = $company->get_userlevel($USER);
             $subhierarchytree = [];

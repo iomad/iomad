@@ -31,7 +31,8 @@ use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 use local_iomad\forms\template_edit_form;
 
-require_once(dirname(__FILE__) . '/../../config.php');
+require_once(__DIR__ . '/../../config.php');
+require_once($CFG->libdir . '/formslib.php');
 
 $confirm      = optional_param('confirm', '', PARAM_ALPHANUM);   // Md5 confirmation hash.
 $returnurl = optional_param('returnurl', '', PARAM_LOCALURL);

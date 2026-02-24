@@ -1359,7 +1359,7 @@ if (empty($courseid)) {
     }
 
     // Display the table.
-    $table->out(get_config('local_iomad', 'report_fields'), true);
+    $table->out(get_config('local_iomad', 'max_list_users'), true);
 
     if (!$table->is_downloading()) {
         if (!empty($USER->editing)) {
