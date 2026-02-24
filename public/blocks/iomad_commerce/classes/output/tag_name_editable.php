@@ -26,6 +26,7 @@
 namespace block_iomad_commerce\output;
 
 use block_iomad_commerce\event\tag_name_updated;
+use context_system;
 use core\output\inplace_editable;
 use core_external;
 use local_iomad\iomad;
@@ -98,7 +99,7 @@ class tag_name_editable extends inplace_editable {
         $newvalue = clean_param($newvalue, PARAM_NOTAGS);
 
         // Get the current company id for the user.
-        $companyid = iomad::get_my_companyid($context, true);
+        $companyid = iomad::get_my_companyid(context_system::instance(), true);
 
         // Define the context.
         $context = context_company::instance($companyid);

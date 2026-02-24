@@ -59,7 +59,7 @@ class report_options_form extends dynamic_form {
                            get_string('report_options', 'local_report_completion'),
                            get_string('bycourses', 'local_report_completion_overview'));
         $mform->addElement('advcheckbox', 'showtext', '', get_string('reportbytext', 'local_report_completion_overview'));
-        $numberarray = [$CFG->iomad_max_list_users => get_string('defaultrows', 'block_iomad_company_admin'),
+        $numberarray = [get_config('local_iomad', 'max_list_users') => get_string('defaultrows', 'block_iomad_company_admin'),
                         10 => 10,
                         25 => 25,
                         50 => 50,
@@ -153,7 +153,7 @@ class report_options_form extends dynamic_form {
         $lastname  = $this->optional_param('lastname', '', PARAM_CLEAN);
         $showsuspended = $this->optional_param('showsuspended', 0, PARAM_INT);
         $email = $this->optional_param('email', 0, PARAM_CLEAN);
-        $perpage = $this->optional_param('perpage', $CFG->iomad_max_list_users, PARAM_INT);
+        $perpage = $this->optional_param('perpage', get_config('local_iomad', 'max_list_users'), PARAM_INT);
         $search = $this->optional_param('search', '', PARAM_CLEAN); // Search string.
         $coursesearch = $this->optional_param('coursesearch', '', PARAM_CLEAN); // Search string.
         $departmentid = $this->optional_param('deptid', 0, PARAM_INT);
@@ -228,7 +228,7 @@ class report_options_form extends dynamic_form {
         $lastname  = $this->optional_param('lastname', '', PARAM_CLEAN);
         $showsuspended = $this->optional_param('showsuspended', 0, PARAM_INT);
         $email = $this->optional_param('email', 0, PARAM_CLEAN);
-        $perpage = $this->optional_param('perpage', $CFG->iomad_max_list_users, PARAM_INT);
+        $perpage = $this->optional_param('perpage', get_config('local_iomad', 'max_list_users'), PARAM_INT);
         $search = $this->optional_param('search', '', PARAM_CLEAN); // Search string.
         $coursesearch = $this->optional_param('coursesearch', '', PARAM_CLEAN); // Search string.
         $departmentid = $this->optional_param('deptid', 0, PARAM_INT);

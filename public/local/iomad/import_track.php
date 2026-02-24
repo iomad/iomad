@@ -65,7 +65,7 @@ if ($returnurl) {
 $linktext = get_string('importcompletionrecords', 'local_iomad');
 
 // Set the url.
-$linkurl = new moodle_url('/local/iomad/track_import.php');
+$linkurl = new moodle_url('/local/iomad/import_track.php');
 
 $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
@@ -125,10 +125,10 @@ if (!empty($completions)) {
         $optionsyes = ['completions' => $completions, 'confirm' => md5($completions), 'sesskey' => sesskey()];
         if (empty($courseswithoutcompletionenabledcount) && empty($courseswithoutcompletioncriteriacount)) {
             echo $OUTPUT->confirm(get_string('importcompletionsfrommoodlefull', 'local_iomad'),
-                                  new moodle_url('/local/iomad/track_import.php', $optionsyes), $linkurl);
+                                  new moodle_url('/local/iomad/import_track.php', $optionsyes), $linkurl);
         } else {
             echo $OUTPUT->confirm(get_string('importcompletionsfrommoodlefullwitherrors', 'local_iomad'),
-                                  new moodle_url('/local/iomad/track_import.php', $optionsyes), $linkurl);
+                                  new moodle_url('/local/iomad/import_track.php', $optionsyes), $linkurl);
         }
         echo $OUTPUT->footer();
         die;
@@ -382,7 +382,7 @@ echo $OUTPUT->header();
 echo html_writer::start_tag('p');
 echo html_writer::tag('a',
                       get_string('checkcoursestatusmoodle', 'local_iomad'),
-                      ['href' => new moodle_url('/local/iomad/track_import.php',
+                      ['href' => new moodle_url('/local/iomad/import_track.php',
                                                      ['checkcourses' => true,
                                                            'sesskey' => sesskey()])]);
 
@@ -393,7 +393,7 @@ if ($checkcourses) {
         'a',
         get_string('view'),
         [
-            'href' => new moodle_url('/local/iomad/track_import.php', ['checkcourses' => 1, 'viewenabled' => 1]),
+            'href' => new moodle_url('/local/iomad/import_track.php', ['checkcourses' => 1, 'viewenabled' => 1]),
         ]);
     if ($viewenabled) {
         echo html_writer::start_tag('table');
@@ -419,7 +419,7 @@ if ($checkcourses) {
         'a',
         get_string('view'),
         [
-            'href' => new moodle_url('/local/iomad/track_import.php', ['checkcourses' => 1, 'viewcriteria' => 1]),
+            'href' => new moodle_url('/local/iomad/import_track.php', ['checkcourses' => 1, 'viewcriteria' => 1]),
         ]);
     if ($viewcriteria) {
         echo html_writer::start_tag('table');
@@ -446,7 +446,7 @@ echo html_writer::end_tag('p');
 echo html_writer::start_tag('p');
 echo html_writer::tag('a',
                       get_string('importcompletionsfrommoodle', 'local_iomad'),
-                      ['href' => new moodle_url('/local/iomad/track_import.php',
+                      ['href' => new moodle_url('/local/iomad/import_track.php',
                                                      ['completions' => true,
                                                            'sesskey' => sesskey()])]);
 
@@ -454,7 +454,7 @@ echo html_writer::end_tag('p');
 echo html_writer::start_tag('p');
 echo html_writer::tag('a',
                       get_string('importcompletionsfromfile', 'local_iomad'),
-                      ['href' => new moodle_url('/local/iomad/track_import.php',
+                      ['href' => new moodle_url('/local/iomad/import_track.php',
                                                      ['fileimport' => true,
                                                            'sesskey' => sesskey()])]);
 echo html_writer::end_tag('p');

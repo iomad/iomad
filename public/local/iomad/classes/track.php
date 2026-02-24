@@ -29,6 +29,8 @@ use context_system;
 use context_user;
 use local_iomad\custom_context\context_company;
 use local_iomad\task\savecertificatetask;
+use core\exception\moodle_exception;
+use ZipArchive;
 
 defined('MOODLE_INTERNAL') || die();
 if (!defined('CERTIFICATE')) {
@@ -1064,7 +1066,7 @@ class track {
                                 // Add this file to the zip file.
                                 if (file_exists($filepath)) {
                                     if ($zipfile->addFile($filepath, $savefilename)) {
-                                        $filesadded++;
+                                        $zipfilesadded++;
                                     }
                                 }
                             }
@@ -1077,7 +1079,7 @@ class track {
             $zipfile->close();
 
             // Did we manage to create anything?
-            if ($filesadded > 0 && file_exists($tempfilename) && filesize($tempfilename) > 0) {
+            if ($zipfilesadded > 0 && file_exists($tempfilename) && filesize($tempfilename) > 0) {
 
                 // Send the headers to force download the zip file.
                 header("Content-type: application/zip");

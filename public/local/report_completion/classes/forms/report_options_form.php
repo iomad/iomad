@@ -155,7 +155,7 @@ class report_options_form extends dynamic_form {
         $allusers = $this->optional_param('allusers', 0, PARAM_INT);
         $departmentid = $this->optional_param('deptid', 0, PARAM_INTEGER);
         $completiontype = $this->optional_param('completiontype', 0, PARAM_INT);
-        $showcharts = $this->optional_param('showcharts', $CFG->iomad_showcharts, PARAM_BOOL);
+        $showcharts = $this->optional_param('showcharts', get_config('local_iomad', 'showcharts'), PARAM_BOOL);
         $coursesearch = $this->optional_param('coursesearch', '', PARAM_CLEAN);
         $email  = $this->optional_param('email', 0, PARAM_CLEAN);
         $courseid = $this->optional_param('courseid', 0, PARAM_INT);
@@ -230,7 +230,7 @@ class report_options_form extends dynamic_form {
         $courseid = $this->optional_param('courseid', 0, PARAM_INT);
         $firstname = $this->optional_param('firstname', 0, PARAM_CLEAN);
         $lastname  = $this->optional_param('lastname', '', PARAM_CLEAN);
-        $showcharts = $this->optional_param('showcharts', $CFG->iomad_showcharts, PARAM_BOOL);
+        $showcharts = $this->optional_param('showcharts', get_config('local_iomad', 'showcharts'), PARAM_BOOL);
         $showpercentage = $this->optional_param('showpercentage', 0, PARAM_INT);
         $validonly = $this->optional_param('validonly', 0, PARAM_BOOL);
         $mandatoryonly = $this->optional_param('vamandatoryonlylidonly', 0, PARAM_BOOL);

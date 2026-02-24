@@ -163,7 +163,7 @@ class user_edit_form extends moodleform {
         $mform->addElement(
             'advcheckbox',
             'use_email_as_username',
-            get_string('iomad_use_email_as_username', 'local_iomad_settings'));
+            get_string('iomad_use_email_as_username', 'local_iomad'));
         if (!empty(get_config('local_iomad', 'use_email_as_username'))) {
             $mform->setDefault('use_email_as_username', 1);
         } else {

@@ -26,7 +26,8 @@
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-require_once(dirname(__FILE__) . '/../../config.php');
+require_once(__DIR__ . '/../../config.php');
+require_once($CFG->libdir . '/formslib.php');
 
 $templatesetid = required_param('templatesetid', PARAM_INTEGER);
 

@@ -25,9 +25,10 @@
 
 namespace block_iomad_company_admin\forms;
 
-use moodleform;
+use html_writer;
 use local_iomad\{company, iomad};
 use local_iomad\course_selector\{current_company, potential_company};
+use moodleform;
 use stdclass;
 
 /**
