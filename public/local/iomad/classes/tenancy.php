@@ -91,7 +91,7 @@ class tenancy {
         // Get the user's companyid - have to assume only one here as it's
         // meant to be via a WS call.
         if ($company = company::by_userid($USER->id)) {
-            $mygroups = $DB->get_records('company_course_groups', ['companyid' => $company->id], '', 'groupid');
+            $mygroups = $DB->get_records('local_iomad_company_course_groups', ['companyid' => $company->id], '', 'groupid');
             if (!empty($mygroups)) {
                 $return = " AND $sqlname IN (" . join (',', array_keys($mygroups)) . ")";
             }

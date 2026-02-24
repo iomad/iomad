@@ -138,7 +138,7 @@ if (!empty($courseid)) {
         $events = $DB->get_records('trainingevent', ['course' => $courseid]);
         foreach ($events as $event) {
             // Get the location information.
-            $location = $DB->get_record('classroom', ['id' => $event->classroomid]);
+            $location = $DB->get_record('local_iomad_training_locations', ['id' => $event->classroomid]);
 
             // Is it virtual?
             $virtual = $location->isvirtual;
@@ -203,8 +203,8 @@ if (!empty($courseid)) {
 
                     // Get the user departments.
                     $userdepartments = $DB->get_records_sql(
-                        "SELECT d.* FROM {department} d
-                         JOIN {company_users} cu ON (d.id = cu.departmentid)
+                        "SELECT d.* FROM {local_iomad_company_departments} d
+                         JOIN {local_iomad_company_users} cu ON (d.id = cu.departmentid)
                          WHERE cu.userid = :userid
                          AND cu.companyid = :companyid",
                         ['userid' => $user->id,
@@ -248,7 +248,7 @@ if (!empty($courseid)) {
         }
 
         // Get the event location details.
-        $location = $DB->get_record('classroom', ['id' => $event->classroomid]);
+        $location = $DB->get_record('local_iomad_training_locations', ['id' => $event->classroomid]);
 
         // Output everything to a file.
         header("Content-Type: application/download\n");

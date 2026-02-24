@@ -73,8 +73,8 @@ class core_renderer extends \theme_boost\output\core_renderer {
 
         // Get company colours
         $companyid = iomad::get_my_companyid(\context_system::instance(), false);
-        if ($companyrec = $DB->get_record('company', array('id' => $companyid))) {
-            $company = $DB->get_record('company', array('id' => $companyid), '*', MUST_EXIST);
+        if ($companyrec = $DB->get_record('local_iomad_companies', array('id' => $companyid))) {
+            $company = $DB->get_record('local_iomad_companies', array('id' => $companyid), '*', MUST_EXIST);
             $linkcolor = $company->linkcolor;
             if ($linkcolor) {
                 $css .= 'a {color: ' . $linkcolor . '} ';
@@ -114,7 +114,7 @@ class core_renderer extends \theme_boost\output\core_renderer {
 
         // Deal with company custom menu items.
         if ($companyid = iomad::get_my_companyid(\context_system::instance(), false)) {
-            if ($companyrec = $DB->get_record('company', array('id' => $companyid))) {
+            if ($companyrec = $DB->get_record('local_iomad_companies', array('id' => $companyid))) {
                 if (!empty($companyrec->custommenuitems)) {
                     $custommenuitems = $companyrec->custommenuitems;
                 }
@@ -156,7 +156,7 @@ class core_renderer extends \theme_boost\output\core_renderer {
         $custommenuitems = false;
         // Deal with company custom menu items.
         if ($companyid = iomad::get_my_companyid(\context_system::instance(), false)) {
-            if ($companyrec = $DB->get_record('company', array('id' => $companyid))) {
+            if ($companyrec = $DB->get_record('local_iomad_companies', array('id' => $companyid))) {
                 if (!empty($companyrec->custommenuitems)) {
                     $custommenuitems = true;
                 }

@@ -44,7 +44,7 @@ return array(
         'user_private_key',
         'user_info_data',
         'my_pages',
-        'company_users',
+        'local_iomad_company_users',
     ),
 
     // List of compound indexes.

@@ -133,7 +133,7 @@ if ($mform->is_cancelled()) {
         }
 
         // Sanity check.
-        $departmentinfo = $DB->get_record('department', ['id' => $departmentid], '*', MUST_EXIST);
+        $departmentinfo = $DB->get_record('local_iomad_company_departments', ['id' => $departmentid], '*', MUST_EXIST);
 
         // Parent id havs to be > 0 as 0 is company top level department.
         if (!empty($departmentinfo->parent)) {
@@ -169,7 +169,7 @@ if ($mform->is_cancelled()) {
         // Editing an existing department.
         if (!empty($departmentid)) {
             // Get the department record.
-            $departmentrecord = $DB->get_record('department', ['id' => $departmentid]);
+            $departmentrecord = $DB->get_record('local_iomad_company_departments', ['id' => $departmentid]);
 
             // Check the department is valid.
             if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {

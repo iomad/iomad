@@ -214,7 +214,7 @@ if ($category = company::get_category($companyid)) {
 }
 if ($categories = $DB->get_records_sql("SELECT id FROM {user_info_category}
                                                 WHERE id NOT IN (
-                                                 SELECT profileid FROM {company})")) {
+                                                 SELECT profilecategoryid FROM {local_iomad_companies})")) {
     foreach ($categories as $category) {
         if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
             foreach ($fields as $field) {
@@ -301,7 +301,7 @@ if (!empty($usedfields)) {
     $courselistsql .= " AND c.id IN (" . join(',', array_keys($fieldcourseids)) . ")";
 }
 
-$courselist = $DB->get_records_sql("SELECT ic.courseid, c.fullname FROM {iomad_courses} ic
+$courselist = $DB->get_records_sql("SELECT ic.courseid, c.fullname FROM {local_iomad_courses} ic
                                     JOIN {course} c ON (ic.courseid = c.id)
                                     WHERE 1=1 $courselistsql
                                     ORDER BY c.fullname", $coursesearchparams);
@@ -354,7 +354,7 @@ $departmentsql = " AND cu.departmentid IN (" . implode(',', array_keys($showdepa
 // All companies?
 if ($parentslist = $company->get_parent_companies_recursive()) {
     $companysql = " AND u.id NOT IN (
-                    SELECT userid FROM {company_users}
+                    SELECT userid FROM {local_iomad_company_users}
                     WHERE managertype = 1
                     AND companyid IN (" . implode(',', array_keys($parentslist)) ."))";
 } else {
@@ -383,8 +383,8 @@ if (!empty($compto)) {
 // Set up the initial SQL for the form.
 $selectsql = "DISTINCT lit.id,lit.timecompleted";
 $fromsql = "{user} u
-            JOIN {local_iomad_track} lit ON (u.id = lit.userid)
-            JOIN {company_users} cu ON (u.id = cu.userid AND lit.userid = cu.userid AND lit.companyid = cu.companyid)";
+            JOIN {local_iomad_tracks} lit ON (u.id = lit.userid)
+            JOIN {local_iomad_company_users} cu ON (u.id = cu.userid AND lit.userid = cu.userid AND lit.companyid = cu.companyid)";
 $wheresql = $searchinfo->sqlsearch . " AND cu.companyid = :companyid
             AND lit.timecompleted IS NOT NULL
             $departmentsql

@@ -85,7 +85,7 @@ class iomad_company_admin {
             }
 
             // Add the iomad restriction info.
-            if ($DB->get_record('company_role_restriction', ['roleid' => $roleid,
+            if ($DB->get_record('local_iomad_company_role_restrictions', ['roleid' => $roleid,
                                                              'companyid' => $companyid,
                                                              'capability' => $capability->capability])) {
                 $capability->iomad_restriction = true;
@@ -122,7 +122,7 @@ class iomad_company_admin {
             }
 
             // Add the iomad restriction info.
-            if ($DB->get_record('company_role_templates_caps', ['roleid' => $roleid,
+            if ($DB->get_record('local_iomad_company_role_templates_caps', ['roleid' => $roleid,
                                                                 'templateid' => $templateid,
                                                                 'capability' => $capability->capability])) {
                 $capability->iomad_restriction = true;

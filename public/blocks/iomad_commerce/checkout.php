@@ -60,7 +60,7 @@ $PAGE->requires->js_call_amd('core_payment/gateways_modal', 'init');
 // Set up the checkout data.
 $data = clone $USER;
 $companyid = iomad::get_my_companyid(context_system::instance());
-$companyrec = $DB->get_record('company', ['id' => $companyid]);
+$companyrec = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
 $data->company = $companyrec->name;
 $data->address = $companyrec->address;
 $data->postcode = $companyrec->postcode;

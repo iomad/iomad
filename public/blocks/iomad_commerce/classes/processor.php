@@ -151,7 +151,7 @@ class processor {
         try {
             // Get name for company license.
             $companyid = iomad::get_my_companyid(context_system::instance());
-            $company = $DB->get_record('company', ['id' => $companyid]);
+            $company = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
             $item = $DB->get_record('course_shopsettings', ['id' => $invoiceitem->invoiceableitemid]);
             $courses = $DB->get_records('course_shopsettings_courses', ['itemid' => $item->id]);
 
@@ -163,7 +163,7 @@ class processor {
                            " [" . $item->name . "] " .
                            userdate(time(), get_config('local_iomad', 'date_format'));
             $count = $DB->count_records_sql("SELECT COUNT(*)
-                                             FROM {companylicense}
+                                             FROM {local_iomad_company_licenses}
                                              WHERE " . $DB->sql_like('name', ":licensename"),
                                             ['licensename' => str_replace("'", "\'", $licensename)]);
             if ($count) {
@@ -210,12 +210,12 @@ class processor {
                 $companylicense->program = 1;
                 $companylicense->validlength = (!empty($item->single_purchase_validlength)) ?
                                                 $item->single_purchase_validlength / 86400 : 1825;
-                $companylicenseid = $DB->insert_record('companylicense', $companylicense);
+                $companylicenseid = $DB->insert_record('local_iomad_company_licenses', $companylicense);
 
                 // Add the courses to the license.
                 foreach ($pathcoursesarray as $pathcourse) {
-                    $DB->insert_record('companylicense_courses', ['licenseid' => $companylicenseid, 'courseid' => $pathcourse]);
-                    $DB->insert_record('companylicense_users', (object)['licenseid' => $companylicenseid,
+                    $DB->insert_record('local_iomad_company_license_courses', ['licenseid' => $companylicenseid, 'courseid' => $pathcourse]);
+                    $DB->insert_record('local_iomad_company_license_users', (object)['licenseid' => $companylicenseid,
                                                                         'userid' => $invoice->userid,
                                                                         'isusing' => 0,
                                                                         'licensecourseid' => $pathcourse,
@@ -236,11 +236,11 @@ class processor {
                 $companylicense->validlength = ($validlength == 0 ) ? 1 : $validlength;
 
                 // Create the license record.
-                $companylicenseid = $DB->insert_record('companylicense', $companylicense);
+                $companylicenseid = $DB->insert_record('local_iomad_company_licenses', $companylicense);
 
                 // Add the courses to it.
                 foreach ($courses as $course) {
-                    $DB->insert_record('companylicense_courses', ['licenseid' => $companylicenseid,
+                    $DB->insert_record('local_iomad_company_license_courses', ['licenseid' => $companylicenseid,
                                                                   'courseid' => $course->courseid]);
                 }
             }
@@ -309,7 +309,7 @@ class processor {
             // Get the number of licenses.
             $licensecoursecount = $DB->count_records_sql(
                 "SELECT COUNT(csc.id) FROM {course_shopsettings_courses} csc
-                 JOIN {iomad_courses} ic ON (csc.courseid = ic.courseid)
+                 JOIN {local_iomad_courses} ic ON (csc.courseid = ic.courseid)
                  WHERE ic.licensed = 1
                  AND csc.itemid = :itemid",
             ['itemid' => $iteminfo->id]);
@@ -321,13 +321,13 @@ class processor {
                 // Get the company id.
                 $companyid = iomad::get_my_companyid(context_system::instance());
                 // Get name for company license.
-                $company = $DB->get_record('company', ['id' => $companyid]);
+                $company = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
                 $licensename = $company->shortname .
                                " [" . $iteminfo->name . "] " .
                                userdate(time(), get_config('local_iomad', 'date_format'));
                 $count = $DB->count_records_sql(
                     "SELECT COUNT(*)
-                     FROM {companylicense}
+                     FROM {local_iomad_company_licenses}
                      WHERE " . $DB->sql_like('name', ":licensename"),
                     ['licensename' => str_replace("'", "\'", $licensename)]);
 
@@ -365,7 +365,7 @@ class processor {
                     // Process them.
                     foreach ($pathcourses as $pathcourse) {
                         // Is this a licensed course or a manual enrol course?
-                        if ($DB->get_record('iomad_courses', ['courseid' => $pathcourse->course,
+                        if ($DB->get_record('local_iomad_courses', ['courseid' => $pathcourse->course,
                                                               'licensed' => 1])) {
                             $pathcoursesarray[] = $pathcourse->course;
                             $totalcourses++;
@@ -385,15 +385,15 @@ class processor {
                                                     $iteminfo->single_purchase_validlength / 86400 :
                                                     1825;
                     // Create the license record.
-                    $companylicenseid = $DB->insert_record('companylicense', $companylicense);
+                    $companylicenseid = $DB->insert_record('local_iomad_company_licenses', $companylicense);
 
                     // Add the courses to the license.
                     foreach ($pathcoursesarray as $pathcourse) {
-                        $DB->insert_record('companylicense_courses', ['licenseid' => $companylicenseid,
+                        $DB->insert_record('local_iomad_company_license_courses', ['licenseid' => $companylicenseid,
                                                                       'courseid' => $pathcourse]);
 
                         // Assign the license and course to the user.
-                        $licenseuserid = $DB->insert_record('companylicense_users', (object)['licenseid' => $companylicenseid,
+                        $licenseuserid = $DB->insert_record('local_iomad_company_license_users', (object)['licenseid' => $companylicenseid,
                                                                                             'userid' => $invoice->userid,
                                                                                             'isusing' => 0,
                                                                                             'licensecourseid' => $pathcourse,
@@ -417,7 +417,7 @@ class processor {
                 if (!empty($pathcourseenrol)) {
                     foreach ($pathcourseenrol as $pathcourse) {
                         // Check it's not a license course.
-                        if (!$DB->get_record('iomad_courses', ['courseid' => $pathcourse, 'licensed' => 1])) {
+                        if (!$DB->get_record('local_iomad_courses', ['courseid' => $pathcourse, 'licensed' => 1])) {
                             // Enrol user into course.
                             company_user::enrol($invoice->userid, [$pathcourse]);
                         }
@@ -441,17 +441,17 @@ class processor {
                 $companylicense->validlength = ($validlength == 0 ) ? 1 : $validlength;
 
                 // Create the license record.
-                $companylicenseid = $DB->insert_record('companylicense', $companylicense);
+                $companylicenseid = $DB->insert_record('local_iomad_company_licenses', $companylicense);
 
                 // Add the courses to it.
                 foreach ($courses as $course) {
                     // Check this is a license enrolment course.
-                    if ($DB->get_record('iomad_courses', ['courseid' => $course->courseid, 'licensed' => 1])) {
+                    if ($DB->get_record('local_iomad_courses', ['courseid' => $course->courseid, 'licensed' => 1])) {
                         // Add it to the license.
-                        $DB->insert_record('companylicense_courses', ['licenseid' => $companylicenseid,
+                        $DB->insert_record('local_iomad_company_license_courses', ['licenseid' => $companylicenseid,
                                                                       'courseid' => $course->courseid]);
                         // Assign the course/license to the user.
-                        $licenseuserid = $DB->insert_record('companylicense_users', (object)['licenseid' => $companylicenseid,
+                        $licenseuserid = $DB->insert_record('local_iomad_company_license_users', (object)['licenseid' => $companylicenseid,
                                                                                             'userid' => $invoice->userid,
                                                                                             'isusing' => 0,
                                                                                             'licensecourseid' => $course->id,
@@ -474,7 +474,7 @@ class processor {
                 // Process manual enrolment courses.
                 foreach ($courses as $course) {
                     // Check it's not a license enrolment course.
-                    if (!$DB->get_record('iomad_courses', ['courseid' => $course->courseid, 'licensed' => 1])) {
+                    if (!$DB->get_record('local_iomad_courses', ['courseid' => $course->courseid, 'licensed' => 1])) {
 
                         // Enrol user into course.
                         company_user::enrol($invoice->userid, [$course->courseid]);

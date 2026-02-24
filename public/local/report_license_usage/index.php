@@ -165,7 +165,7 @@ if ($category = company::get_category($companyid)) {
 }
 if ($categories = $DB->get_records_sql("SELECT id FROM {user_info_category}
                                                 WHERE id NOT IN (
-                                                 SELECT profileid FROM {company})")) {
+                                                 SELECT profilecategoryid FROM {local_iomad_companies})")) {
     foreach ($categories as $category) {
         if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
             foreach ($fields as $field) {
@@ -195,7 +195,12 @@ if ($departmentid == 0 ) {
 
 // Get the appropriate list of licenses.
 $licenselist = [];
-$licenses = $DB->get_records('companylicense', ['companyid' => $companyid], 'expirydate DESC', 'id,name,startdate,expirydate');
+$licenses = $DB->get_records(
+    'local_iomad_company_licenses',
+    ['companyid' => $companyid],
+    'expirydate DESC',
+    'id,name,startdate,expirydate'
+);
 foreach ($licenses as $license) {
     if ($license->expirydate < time()) {
         $licenselist[$license->id] = $license->name . " (" .
@@ -264,7 +269,7 @@ if (empty($CFG->loginhttps)) {
 $returnurl = $CFG->wwwroot."/local/report_license_usage/index.php";
 
 // Get the license information.
-$license = $DB->get_record('companylicense', ['id' => $licenseid]);
+$license = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid]);
 
 // Get the full company tree as we may need it.
 $topcompanyid = $company->get_topcompanyid();
@@ -275,11 +280,11 @@ $parentcompanies = $company->get_parent_companies_recursive();
 // Deal with parent company managers.
 if (!empty($parentcompanies)) {
     $userfilter = " AND id NOT IN (
-                     SELECT userid FROM {company_users}
+                     SELECT userid FROM {local_iomad_company_users}
                      WHERE managertype = 1
                      AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
     $userfilterwithu = " AND u.id NOT IN (
-                         SELECT userid FROM {company_users}
+                         SELECT userid FROM {local_iomad_company_users}
                          WHERE managertype = 1
                          AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
 } else {
@@ -375,7 +380,7 @@ if (!empty($userlist)) {
                                                          'fromtime' => $from]);
             $numstart = $numallocations - $numunallocations;
         } else {
-            $coursecount = $DB->count_records('companylicense_courses', ['licenseid' => $licenseid]);
+            $coursecount = $DB->count_records('local_iomad_company_license_courses', ['licenseid' => $licenseid]);
             $allocations = $DB->get_records_sql("SELECT * FROM {local_report_user_lic_allocs}
                                                  WHERE action = 1
                                                  AND license = :licenseid
@@ -424,7 +429,7 @@ if (!empty($userlist)) {
                                                     AND userid IN (" . $departmentids . ")",
                                                     $sqlparams);
     } else {
-        $coursecount = $DB->count_records('companylicense_courses', ['licenseid' => $licenseid]);
+        $coursecount = $DB->count_records('local_iomad_company_license_courses', ['licenseid' => $licenseid]);
         $allocations = $DB->count_records_sql("SELECT count(id) FROM {local_report_user_lic_allocs}
                                              WHERE action = 1
                                              AND licenseid = :licenseid
@@ -452,9 +457,9 @@ $table->head = [get_string('licensename', 'block_iomad_company_admin'),
                 get_string('licenses', 'block_iomad_company_admin'),
                 get_string('userlicenseused', 'block_iomad_company_admin')];
 $table->align = ["left", "center", "center", "center"];
-$licenseused = $DB->count_records('companylicense_users', ['licenseid' => $license->id, 'isusing' => 1]);
+$licenseused = $DB->count_records('local_iomad_company_license_users', ['licenseid' => $license->id, 'isusing' => 1]);
 if (!empty($license->program)) {
-    $weighting = $DB->count_records('companylicense_courses', ['licenseid' => $licenseid]);
+    $weighting = $DB->count_records('local_iomad_company_license_courses', ['licenseid' => $licenseid]);
 } else {
     $weighting = 1;
 }

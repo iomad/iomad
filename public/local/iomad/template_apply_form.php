@@ -39,7 +39,7 @@ $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
-$templatesetinfo = $DB->get_record('email_templateset', ['id' => $templatesetid]);
+$templatesetinfo = $DB->get_record('local_iomad_email_templatesets', ['id' => $templatesetid]);
 
 // Correct the navbar.
 // Set the name for the page.
@@ -64,7 +64,7 @@ block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->ur
 // Just display name of current company if no choice.
 if (!iomad::has_capability('block/iomad_company_admin:company_view_all', $systemcontext)) {
     $companies = $DB->get_records_sql_menu("SELECT c.id, c.name
-                                            FROM {company} c
+                                            FROM {local_iomad_companies} c
                                             JOIN {company_user} cu
                                             ON (c.id = cu.companyid)
                                             WHERE c.suspended = 0
@@ -72,7 +72,7 @@ if (!iomad::has_capability('block/iomad_company_admin:company_view_all', $system
                                             ORDER BY name",
                                            ['userid' => $USER->id]);
 } else {
-    $companies = $DB->get_records_menu('company', ['suspended' => 0], 'name', 'id,name');
+    $companies = $DB->get_records_menu('local_iomad_companies', ['suspended' => 0], 'name', 'id,name');
 }
 $menucompanies = ['-1' => get_string('all')] + $companies;
 

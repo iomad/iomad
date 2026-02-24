@@ -71,7 +71,7 @@ class companies extends base {
         [$companyusers] = database::generate_aliases(1);
 
         $join = "
-            JOIN {company_users} {$companyusers} ON {$companyusers}.userid = {$usertablealias}.id";
+            JOIN {local_iomad_company_users} {$companyusers} ON {$companyusers}.userid = {$usertablealias}.id";
 
         $where = "{$companyusers}.companyid {$insql}";
 
@@ -97,7 +97,7 @@ class companies extends base {
     public function get_description(): string {
         global $DB;
         $companyids = $this->get_configdata()['companies'];
-        $companies = $DB->get_records_list('company', 'id', $companyids, 'name', 'name');
+        $companies = $DB->get_records_list('local_iomad_companies', 'id', $companyids, 'name', 'name');
         $companies = array_column($companies, 'name');
         return $this->format_description_for_multiselect(array_values($companies));
     }
@@ -135,7 +135,7 @@ class companies extends base {
         $companyids = $this->get_configdata()['companies'];
         if (!iomad::has_capability('block/iomad_company_admin:company_view_all', context_system::instance())) {
             if (!$DB->get_records_sql("SELECT id
-                                       FROM {company_users}
+                                       FROM {local_iomad_company_users}
                                        WHERE userid = :userid
                                        AND companyid IN (" . implode(',', array_keys($companyids)) . ")",
                                       ['userid' => $USER->id])) {

@@ -117,10 +117,10 @@ if (iomad::has_capability('block/iomad_company_admin:unallocate_licenses', $comp
     // Are we an educator?
     if (
         !empty($userid) &&
-        $DB->get_records('company_users', ['userid' => $userid, 'educator' => 1])
+        $DB->get_records('local_iomad_company_users', ['userid' => $userid, 'educator' => 1])
     ) {
         $licenses = $DB->get_records_select(
-            'companylicense',
+            'local_iomad_company_licenses',
             "companyid = :companyid
              AND expirydate > :time",
             ['companyid' => $companyid,
@@ -129,7 +129,7 @@ if (iomad::has_capability('block/iomad_company_admin:unallocate_licenses', $comp
             'id,type,name,startdate,expirydate');
     } else {
         $licenses = $DB->get_records_select(
-            'companylicense',
+            'local_iomad_company_licenses',
             "companyid = :companyid
              AND type IN (0,1,4)
              AND expirydate > :time",
@@ -186,7 +186,7 @@ if (iomad::has_capability('block/iomad_company_admin:unallocate_licenses', $comp
     // Is this an educator user?
     $educator = false;
     if (!empty($userid) &&
-        $DB->get_record('company_users', ['userid' => $userid, 'educator' => 1])) {
+        $DB->get_record('local_iomad_company_users', ['userid' => $userid, 'educator' => 1])) {
         $educator = true;
     }
     // Get the licenses.
@@ -196,7 +196,7 @@ if (iomad::has_capability('block/iomad_company_admin:unallocate_licenses', $comp
     foreach ($licenses as $deptlicenseid) {
         // Get the license record.
         if ($license = $DB->get_records(
-            'companylicense',
+            'local_iomad_company_licenses',
             ['id' => $deptlicenseid->licenseid, 'companyid' => $companyid],
             null,
             'id,name,startdate,expirydate')) {

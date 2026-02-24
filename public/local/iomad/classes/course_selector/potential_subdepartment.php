@@ -90,13 +90,13 @@ class potential_subdepartment extends company_base {
         if (!$this->license) {
             $licensesql = " AND c.id NOT IN (
                                 SELECT courseid
-                                FROM {iomad_courses}
+                                FROM {local_iomad_courses}
                                 WHERE licensed = 1
                             )";
         }
 
         $sqldistinct = " FROM {course} c,
-                        JOIN {company_course} cc ON (c.id = cc.courseid)
+                        JOIN {local_iomad_company_courses} cc ON (c.id = cc.courseid)
                         WHERE $wherecondition
                         AND c.id <> :siteid
                         $licensesql
@@ -106,13 +106,13 @@ class potential_subdepartment extends company_base {
                 WHERE $wherecondition
                 AND c.id <> :siteid
                 AND NOT EXISTS (
-                    SELECT NULL FROM {company_course}
+                    SELECT NULL FROM {local_iomad_company_courses}
                     WHERE courseid = c.id
                 )";
 
         if (!empty($this->showopenshared)) {
             $sqlopenshared = " FROM {course} c,
-                            JOIN {iomad_courses} ic ON (c.id = ic.courseid)
+                            JOIN {local_iomad_courses} ic ON (c.id = ic.courseid)
                             WHERE $wherecondition
                             AND c.id <> :siteid
                             AND ic.shared = 1

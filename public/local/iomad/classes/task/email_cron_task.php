@@ -56,11 +56,11 @@ class email_cron_task extends scheduled_task {
         // Delete emails older than 6 months to prevent the email table from clogging up the database.
         $halfyearagoish = time() - 6 * 30 * 24 * 60 * 60;
         $now = time();
-        $DB->delete_records_select('email', "modifiedtime < $halfyearagoish AND due < $now");
+        $DB->delete_records_select('local_iomad_emails', "modifiedtime < $halfyearagoish AND due < $now");
 
         // Send emails.
         mtrace("Processing IOMAD email cron");
-        if ($emails = $DB->get_records_sql("SELECT e.* FROM {email} e
+        if ($emails = $DB->get_records_sql("SELECT e.* FROM {local_iomad_emails} e
                                             JOIN {user} u ON (e.userid = u.id)
                                             WHERE e.sent IS NULL
                                             AND e.due < :timenow
@@ -85,7 +85,7 @@ class email_cron_task extends scheduled_task {
                 if (!$company->email_template_is_enabled($email->templatename, $managertype)) {
 
                     // It's not - so we delete it.
-                    $DB->delete_records('email', ['id' => $email->id]);
+                    $DB->delete_records('local_iomad_emails', ['id' => $email->id]);
                     continue;
                 } else {
                     // Send the email.
@@ -94,13 +94,13 @@ class email_cron_task extends scheduled_task {
                     // Mark it as sent.
                     $email->modifiedtime = $email->sent = time();
                     $email->id = $email->id;
-                    $DB->update_record('email', $email);
+                    $DB->update_record('local_iomad_emails', $email);
                 }
             }
         }
 
         // Deal with special destination users like shop admin.
-        if ($emails = $DB->get_records_sql("SELECT e.* FROM {email} e
+        if ($emails = $DB->get_records_sql("SELECT e.* FROM {local_iomad_emails} e
                                             WHERE e.sent IS NULL
                                             AND e.due < :timenow
                                             AND e.userid IN (:specialusers)",
@@ -123,7 +123,7 @@ class email_cron_task extends scheduled_task {
                 if (!$company->email_template_is_enabled($email->templatename, $managertype)) {
 
                     // It's not, so remove the email from the queue.
-                    $DB->delete_records('email', ['id' => $email->id]);
+                    $DB->delete_records('local_iomad_emails', ['id' => $email->id]);
                     continue;
                 } else {
                     // Process the email.
@@ -133,13 +133,13 @@ class email_cron_task extends scheduled_task {
                     $email->modifiedtime = $email->sent = time();
                     $email->id = $email->id;
                     $email->userid = $currentid;
-                    $DB->update_record('email', $email);
+                    $DB->update_record('local_iomad_emails', $email);
                 }
             }
         }
 
         // Send company suspended emails. Users are suspended so not picked up above.
-        if ($emails = $DB->get_records_sql("SELECT e.* from {email} e
+        if ($emails = $DB->get_records_sql("SELECT e.* from {local_iomad_emails} e
                                             JOIN {user} u ON (e.userid = u.id)
                                             WHERE e.sent IS NULL
                                             AND e.due < :timenow
@@ -166,7 +166,7 @@ class email_cron_task extends scheduled_task {
                 if (!$company->email_template_is_enabled($email->templatename, $managertype)) {
 
                     // It's not, so remove it from the queue.
-                    $DB->delete_records('email', ['id' => $email->id]);
+                    $DB->delete_records('local_iomad_emails', ['id' => $email->id]);
                     continue;
                 } else {
                     // Process the email.
@@ -175,7 +175,7 @@ class email_cron_task extends scheduled_task {
                     // Mark it as sent.
                     $email->modifiedtime = $email->sent = time();
                     $email->id = $email->id;
-                    $DB->update_record('email', $email);
+                    $DB->update_record('local_iomad_emails', $email);
                 }
             }
         }

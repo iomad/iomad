@@ -450,7 +450,7 @@ class companypaths {
 
             // Do not include courses NOT in selected license.
             if ($programlicenseid) {
-                if (!$DB->get_record('companylicense_courses', ['id' => $programlicenseid, 'courseid' => $course->id])) {
+                if (!$DB->get_record('local_iomad_company_license_courses', ['id' => $programlicenseid, 'courseid' => $course->id])) {
                     continue;
                 }
             }
@@ -503,7 +503,7 @@ class companypaths {
     public function get_programlicenses(int $pathid): array {
         global $DB;
 
-        $programlicenses = $DB->get_records('companylicense', ['companyid' => $this->companyid, 'program' => 1]);
+        $programlicenses = $DB->get_records('local_iomad_company_licenses', ['companyid' => $this->companyid, 'program' => 1]);
         $path = $DB->get_record('iomad_learningpath', ['id' => $pathid]);
 
         // Loop over licenses and get full(er) information.
@@ -804,7 +804,7 @@ class companypaths {
 
         // Build the SQL.
         $sql = "SELECT DISTINCT u.*
-            FROM {user} u JOIN {company_users} cu ON cu.userid = u.id
+            FROM {user} u JOIN {local_iomad_company_users} cu ON cu.userid = u.id
             $companyprofjoin
             WHERE u.deleted = 0
             AND u.suspended = 0
@@ -837,7 +837,7 @@ class companypaths {
         foreach ($userids as $userid) {
 
             // Check userid is really in this company.
-            if (!$companyuser = $DB->get_record('company_users', ['companyid' => $this->companyid, 'userid' => $userid])) {
+            if (!$companyuser = $DB->get_record('local_iomad_company_users', ['companyid' => $this->companyid, 'userid' => $userid])) {
                 throw new \coding_exception('invaliduserid', 'User is not a member of current company - id = ' . $userid);
             }
 
@@ -867,7 +867,7 @@ class companypaths {
         foreach ($userids as $userid) {
 
             // Check userid is really in this company.
-            if (!$companyuser = $DB->get_record('company_users', ['companyid' => $this->companyid, 'userid' => $userid])) {
+            if (!$companyuser = $DB->get_record('local_iomad_company_users', ['companyid' => $this->companyid, 'userid' => $userid])) {
                 throw new \coding_exception('invaliduserid', 'User is not a member of current company - id = ' . $userid);
             }
 
@@ -899,7 +899,7 @@ class companypaths {
         // Are we adding a license?
         if (!empty($licenseid) && $path->licenseid != $licenseid) {
             // Get the license courses.
-            if ($newcourses = $DB->get_records('companylicense_courses', ['licenseid' => $licenseid], 'courseid', 'courseid')) {
+            if ($newcourses = $DB->get_records('local_iomad_company_license_courses', ['licenseid' => $licenseid], 'courseid', 'courseid')) {
                 self::add_courses($pathid, array_keys($newcourses));
             }
         }
@@ -921,12 +921,12 @@ class companypaths {
 
         $licenseid = $event->other['licenseid'];
 
-        if (!$licenserec = $DB->get_record('companylicense', ['id' => $licenseid])) {
+        if (!$licenserec = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid])) {
             // Do nothing.
             return;
         }
 
-        if (!$company = $DB->get_record('company', ['id' => $licenserec->companyid])) {
+        if (!$company = $DB->get_record('local_iomad_companies', ['id' => $licenserec->companyid])) {
             // Do nothing.
             return;
         }
@@ -953,12 +953,12 @@ class companypaths {
 
         $licenseid = $event->other['licenseid'];
 
-        if (!$licenserec = $DB->get_record('companylicense', ['id' => $licenseid])) {
+        if (!$licenserec = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid])) {
             // Do nothing.
             return;
         }
 
-        if (!$company = $DB->get_record('company', ['id' => $licenserec->companyid])) {
+        if (!$company = $DB->get_record('local_iomad_companies', ['id' => $licenserec->companyid])) {
             // Do nothing.
             return;
         }
@@ -973,7 +973,7 @@ class companypaths {
         if (!empty($licenserecord->program)) {
             // This is a program of courses.
             // If it's been updated we need to deal with any course changes.
-            $currentcourses = $DB->get_records('companylicense_courses', ['licenseid' => $licenseid], null, 'courseid');
+            $currentcourses = $DB->get_records('local_iomad_company_license_courses', ['licenseid' => $licenseid], null, 'courseid');
             $oldcourses = (array) json_decode($event->other['oldcourses'], true);
 
             // Check for courses which have been removed.
@@ -1009,12 +1009,12 @@ class companypaths {
         $userlicid = $event->objectid;
         $licenseid = $event->other['licenseid'];
 
-        if (!$licenserec = $DB->get_record('companylicense', ['id' => $licenseid])) {
+        if (!$licenserec = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid])) {
             // Do nothing.
             return;
         }
 
-        if (!$company = $DB->get_record('company', ['id' => $licenserec->companyid])) {
+        if (!$company = $DB->get_record('local_iomad_companies', ['id' => $licenserec->companyid])) {
             // Do nothing.
             return;
         }
@@ -1045,12 +1045,12 @@ class companypaths {
         $userlicid = $event->objectid;
         $licenseid = $event->other['licenseid'];
 
-        if (!$licenserec = $DB->get_record('companylicense', ['id' => $licenseid])) {
+        if (!$licenserec = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid])) {
             // Do nothing.
             return;
         }
 
-        if (!$company = $DB->get_record('company', ['id' => $licenserec->companyid])) {
+        if (!$company = $DB->get_record('local_iomad_companies', ['id' => $licenserec->companyid])) {
             // Do nothing.
             return;
         }

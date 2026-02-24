@@ -72,11 +72,11 @@ class current_user extends company_base {
                                              FROM {course} c
                                              JOIN {enrol} e ON (c.id = e.courseid)
                                              JOIN {user_enrolments} ue ON (e.id = ue.enrolid)
-                                             JOIN {iomad_courses} ic ON (
+                                             JOIN {local_iomad_courses} ic ON (
                                                c.id = ic.courseid
                                                AND e.courseid = ic.courseid
                                              )
-                                             JOIN {local_iomad_track} lit ON (
+                                             JOIN {local_iomad_tracks} lit ON (
                                                e.courseid = lit.courseid
                                                AND c.id = lit.courseid
                                                AND ic.courseid = lit.courseid

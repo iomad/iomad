@@ -99,7 +99,7 @@ $editform = new department_edit_form($PAGE->url, $companyid, $departmentid, $out
 // Set the form data.
 if (!empty($departmentid)) {
     // Existing department.
-    $department = $DB->get_record('department', ['id' => $departmentid]);
+    $department = $DB->get_record('local_iomad_company_departments', ['id' => $departmentid]);
     $department->fullname = $department->name;
     $department->deptid = $department->parent;
     $editform->set_data($department);
@@ -118,7 +118,7 @@ if ($editform->is_cancelled()) {
     $createdata->shortname = trim($createdata->shortname);
 
     // What are we doing here?
-    $current = $DB->get_record('department', ['id' => $createdata->departmentid]);
+    $current = $DB->get_record('local_iomad_company_departments', ['id' => $createdata->departmentid]);
     if (empty($current)) {
         // We are creating a new department.
         company::create_department($createdata->departmentid,
@@ -136,7 +136,7 @@ if ($editform->is_cancelled()) {
                                    $createdata->deptid);
         $redirectmessage = get_string('departmentupdatedok', 'block_iomad_company_admin');
     } else {
-        $parentdept = $DB->get_record('department', ['id' => $createdata->deptid]);
+        $parentdept = $DB->get_record('local_iomad_company_departments', ['id' => $createdata->deptid]);
         echo $output->header();
         echo $output->heading(get_string('movedepartment', 'block_iomad_company_admin'));
         $optionsyes = [

@@ -68,7 +68,7 @@ class company_logins_table extends table_sql {
         global $DB;
 
         $totalusers = $DB->get_record_sql("SELECT count(u.id) AS number FROM {user} u
-                                            JOIN {company_users} cu ON (u.id = cu.userid)
+                                            JOIN {local_iomad_company_users} cu ON (u.id = cu.userid)
                                             WHERE u.deleted = 0
                                             AND u.confirmed = 1
                                             and cu.companyid = :companyid",
@@ -86,7 +86,7 @@ class company_logins_table extends table_sql {
 
         $realusers = $DB->get_record_sql("SELECT count(u.id) AS number
                                           FROM {user} u
-                                          JOIN {company_users} cu ON (u.id = cu.userid)
+                                          JOIN {local_iomad_company_users} cu ON (u.id = cu.userid)
                                           JOIN {local_report_user_logins} lrul ON (
                                               u.id = lrul.userid
                                               AND cu.userid = lrul.userid)
@@ -108,14 +108,14 @@ class company_logins_table extends table_sql {
         global $DB;
 
         $totalusers = $DB->get_record_sql("SELECT count(u.id) AS number FROM {user} u
-                                           JOIN {company_users} cu ON (u.id = cu.userid)
+                                           JOIN {local_iomad_company_users} cu ON (u.id = cu.userid)
                                            WHERE u.deleted = 0
                                            AND u.confirmed = 1
                                            AND cu.companyid = :companyid",
                                           ['companyid' => $row->id]);
 
         $realusers = $DB->get_record_sql("SELECT count(u.id) AS number FROM {user} u
-                                          JOIN {company_users} cu ON (u.id = cu.userid)
+                                          JOIN {local_iomad_company_users} cu ON (u.id = cu.userid)
                                           JOIN {local_report_user_logins} lrul ON (
                                               u.id = lrul.userid
                                               AND cu.userid = lrul.userid)

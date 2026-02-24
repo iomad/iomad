@@ -265,14 +265,14 @@ $autoselect = "";
 $autofrom = "";
 if (!empty($companyid)) {
     if ($companyid == "-1") {
-        $companysql = " c.id NOT IN (SELECT courseid FROM {company_course}) ";
+        $companysql = " c.id NOT IN (SELECT courseid FROM {local_iomad_company_courses}) ";
     } else {
         $companysql = " (c.id IN (
-                          SELECT courseid FROM {company_course}
+                          SELECT courseid FROM {local_iomad_company_courses}
                           WHERE companyid = :companyid)
                          OR ic.shared = 1) ";
         $autoselect = ", cca.autoenrol AS autoenrol, cca.mandatory AS mandatory";
-        $autofrom = " LEFT JOIN {company_course_options} cca ON (
+        $autofrom = " LEFT JOIN {local_iomad_company_course_options} cca ON (
                           ic.courseid = cca.courseid
                           AND cca.companyid = :autocompanyid
                       )";
@@ -315,7 +315,7 @@ $selectsql = "ic.id,
               c.visible,
               '$companyid' AS companyid
               $autoselect";
-$fromsql = "{iomad_courses} ic JOIN {course} c ON (ic.courseid = c.id) $autofrom ";
+$fromsql = "{local_iomad_courses} ic JOIN {course} c ON (ic.courseid = c.id) $autofrom ";
 $wheresql = "$companysql $searchsql";
 $sqlparams = $params;
 

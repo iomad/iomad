@@ -98,7 +98,7 @@ if ($format) {
     if ($category = $DB->get_record_sql(
         "SELECT uic.id, uic.name
          FROM {user_info_category} uic
-         JOIN {company} c ON (uic.id = c.profileid)
+         JOIN {local_iomad_companies} c ON (uic.id = c.profilecategoryid)
          WHERE c.id = :companyid",
         ['companyid' => $companyid])) {
         if ($extrafields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
@@ -112,7 +112,7 @@ if ($format) {
         "SELECT id, name
          FROM {user_info_category}
          WHERE id NOT IN (
-             SELECT profileid FROM {company}
+             SELECT profilecategoryid FROM {local_iomad_companies}
          )")) {
         foreach ($categories as $category) {
             if ($extrafields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
@@ -135,7 +135,7 @@ if ($format) {
         [$insql, $inparams] = $DB->get_in_or_equal(array_keys($departmentusers),
                                                    SQL_PARAMS_NAMED,
                                                    'duids');
-        $sqlsearch = " AND u.id {$insql} ";
+        $sqlsearch = " AND userid {$insql} ";
         $params = $params + $inparams;
     } else {
         $sqlsearch = "AND 1 = 0";
@@ -145,7 +145,7 @@ if ($format) {
 
     $userids = $DB->get_records_sql_menu("SELECT DISTINCT userid, userid as id
         FROM
-            {company_users}
+            {local_iomad_company_users}
         WHERE
             companyid = :companyid
             " . $sqlsearch, $params);

@@ -62,7 +62,7 @@ class cron_task extends scheduled_task {
 
             // Get the users in multiple companies.
             $multiusers = $DB->get_records_sql("SELECT userid
-                                                FROM {company_users}
+                                                FROM {local_iomad_company_users}
                                                 GROUP BY userid
                                                 HAVING COUNT(companyid) > 1");
             $notmultisql = "";
@@ -79,8 +79,8 @@ class cron_task extends scheduled_task {
                 // Get the users where it's wrong.
                 $users = $DB->get_records_sql("SELECT u.*, c.shortname as targetname
                                                FROM {user} u
-                                               JOIN {company_users} cu ON cu.userid = u.id
-                                               JOIN {company} c ON cu.companyid = c.id
+                                               JOIN {local_iomad_company_users} cu ON cu.userid = u.id
+                                               JOIN {local_iomad_companies} c ON cu.companyid = c.id
                                                WHERE u.institution != c.shortname
                                                $notmultisql",
                                               $usernotinparams, 0, 500);
@@ -91,8 +91,8 @@ class cron_task extends scheduled_task {
                 // Get the users where it's wrong.
                 $users = $DB->get_records_sql("SELECT u.id, c.name as targetname
                                                FROM {user} u
-                                               JOIN {company_users} cu ON cu.userid = u.id
-                                               JOIN {company} c ON cu.companyid = c.id
+                                               JOIN {local_iomad_company_users} cu ON cu.userid = u.id
+                                               JOIN {local_iomad_companies} c ON cu.companyid = c.id
                                                WHERE u.institution != c.name
                                                $notmultisql",
                                                $usernotinparams, 0, 500);
@@ -112,7 +112,7 @@ class cron_task extends scheduled_task {
 
             // Get the users where it's wrong.
             $multiusers = $DB->get_records_sql("SELECT userid
-                                                FROM {company_users}
+                                                FROM {local_iomad_company_users}
                                                 GROUP BY userid
                                                 HAVING COUNT(departmentid) > 1");
             $notmultisql = "";
@@ -131,9 +131,9 @@ class cron_task extends scheduled_task {
             }
             $users = $DB->get_records_sql("SELECT DISTINCT u.*, d.name as targetname
                                            FROM {user} u
-                                           JOIN {company_users} cu ON cu.userid = u.id
-                                           JOIN {company} c ON cu.companyid = c.id
-                                           JOIN {department} d ON cu.departmentid = d.id
+                                           JOIN {local_iomad_company_users} cu ON cu.userid = u.id
+                                           JOIN {local_iomad_companies} c ON cu.companyid = c.id
+                                           JOIN {local_iomad_company_departments} d ON cu.departmentid = d.id
                                            WHERE u.department != d.name
                                            $notmultisql",
                                           $usernotinparams, 0, 500);
@@ -160,7 +160,7 @@ class cron_task extends scheduled_task {
 
         // Suspend any companies which need it.
         mtrace("suspending any companies which need it");
-        if ($suspendcompanies = $DB->get_records_sql("SELECT * FROM {company}
+        if ($suspendcompanies = $DB->get_records_sql("SELECT * FROM {local_iomad_companies}
                                                       WHERE suspended = 0
                                                       AND validto IS NOT NULL
                                                       AND validto < :runtime",
@@ -173,8 +173,8 @@ class cron_task extends scheduled_task {
 
         // Terminate any companies which need it.
         mtrace("Terminating any companies which need it");
-        if ($terminatecompanies = $DB->get_records_sql("SELECT * FROM {company}
-                                                        WHERE companyterminated = 0
+        if ($terminatecompanies = $DB->get_records_sql("SELECT * FROM {local_iomad_companies}
+                                                        WHERE terminated = 0
                                                         AND validto IS NOT NULL
                                                         AND suspendafter > 0
                                                         AND validto + suspendafter < :runtime",
@@ -187,8 +187,8 @@ class cron_task extends scheduled_task {
 
         // Clear users from courses where the license has expired and the option is chosen.
         mtrace ("Clear users from courses where the license has expired and the option is chosen");
-        if ($licenses = $DB->get_records_sql("SELECT DISTINCT cl.*  FROM {companylicense} cl
-                                              JOIN {local_iomad_track} lit ON (cl.id = lit.licenseid)
+        if ($licenses = $DB->get_records_sql("SELECT DISTINCT cl.*  FROM {local_iomad_company_licenses} cl
+                                              JOIN {local_iomad_tracks} lit ON (cl.id = lit.licenseid)
                                               WHERE cl.clearonexpire = 1
                                               AND cl.cutoffdate < :time
                                               AND lit.coursecleared = 0",
@@ -196,7 +196,7 @@ class cron_task extends scheduled_task {
             foreach ($licenses as $license) {
                 mtrace("Dealing with license id $license->id for company id $license->companyid");
                 // Get the corresponding entry from the LIT table.
-                if ($litrecs = $DB->get_records_select('local_iomad_track',
+                if ($litrecs = $DB->get_records_select('local_iomad_tracks',
                                                        'licenseid = :licenseid
                                                         AND coursecleared != 1
                                                         AND companyid = :companyid',
@@ -205,14 +205,14 @@ class cron_task extends scheduled_task {
                     foreach ($litrecs as $litrec) {
                         mtrace("Dealing with userid $litrec->userid from courseid $litrec->courseid");
                         if ($litrec->timestarted > 0) {
-                            if ($DB->get_record_select('local_iomad_track',
+                            if ($DB->get_record_select('local_iomad_tracks',
                                                        'courseid = :courseid AND userid = :userid AND id > :myid',
                                                       ['courseid' => $litrec->courseid,
                                                        'userid' => $litrec->userid,
                                                        'myid' => $litrec->id])) {
                                 mtrace("User already has a new course allocation - mark coursecleared so we skip it next time");
                                 // Already been re-enrolled - so mark it as dealt with.
-                                $DB->set_field('local_iomad_track', 'coursecleared', 1, ['id' => $litrec->id]);
+                                $DB->set_field('local_iomad_tracks', 'coursecleared', 1, ['id' => $litrec->id]);
                             } else {
                                 mtrace("Auto clearing userid $litrec->userid " .
                                        "from courseid $litrec->courseid with record id $litrec->id");
@@ -220,7 +220,7 @@ class cron_task extends scheduled_task {
                             }
                         } else {
                             mtrace("Removing unused license for userid $litrec->userid from courseid $litrec->courseid");
-                            $DB->delete_records('companylicense_users', ['licenseid' => $litrec->licensid,
+                            $DB->delete_records('local_iomad_company_license_users', ['licenseid' => $litrec->licensid,
                                                                          'licensecourseid' => $litrec->courseid,
                                                                          'userid' => $litrec->userid,
                                                                          'issuedate' => $litrec->licenseallocated]);
@@ -237,7 +237,7 @@ class cron_task extends scheduled_task {
                     }
                     // If this is a re-usable license we want to dump the allocation record too.
                     if ($license->type == 1 || $license->type == 3) {
-                        $DB->delete_records('companylicense_users', ['licenseid' => $license->id]);
+                        $DB->delete_records('local_iomad_company_license_users', ['licenseid' => $license->id]);
                     }
                 }
             }

@@ -60,7 +60,7 @@ if ($default && iomad::has_capability('block/iomad_commerce:manage_default', $co
     $companyid = 0;
     $companycourses = $DB->get_records_sql_menu("SELECT c.id, c.fullname
                                                  FROM {course} c
-                                                 JOIN {iomad_courses} ic ON (c.id = ic.courseid)
+                                                 JOIN {local_iomad_courses} ic ON (c.id = ic.courseid)
                                                  ORDER BY c.fullname");
 } else {
     $companycourses = $company->get_menu_courses(true, false);

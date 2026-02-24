@@ -84,7 +84,7 @@ class main implements renderable, templatable {
         $downloadcertslink = "";
         if (iomad::has_capability('block/iomad_company_admin:downloadmycertificates', context_system::instance())) {
             // Does the user have any certificates to download?
-            if ($DB->get_records_sql("SELECT lit.id FROM {local_iomad_track} lit
+            if ($DB->get_records_sql("SELECT lit.id FROM {local_iomad_tracks} lit
                                       JOIN {local_iomad_track_certs} litc ON (lit.id = litc.trackid)
                                       WHERE lit.userid = :userid
                                       AND lit.companyid = :companyid",

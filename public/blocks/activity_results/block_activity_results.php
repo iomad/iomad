@@ -208,7 +208,7 @@ class block_activity_results extends block_base {
         // Get the grades for this activity.
         $sql = 'SELECT * FROM {grade_grades}
                  WHERE itemid = ? AND finalgrade is not NULL
-                 AND userid IN (SELECT userid FROM {company_users} WHERE companyid = ?)
+                 AND userid IN (SELECT userid FROM {local_iomad_company_users} WHERE companyid = ?)
                  ORDER BY finalgrade, timemodified DESC';
 
         $grades = $DB->get_records_sql($sql, array( $activitygradeitemid, $companyid));
@@ -275,7 +275,7 @@ class block_activity_results extends block_base {
                         FROM {groups} g
                         LEFT JOIN {groups_members} gm ON g.id = gm.groupid
                         WHERE gm.userid ' . $usertest . ' AND g.courseid = ?
-                        AND gm.userid IN (SELECT userid FROM {company_users} WHERE companyid = ?', $params);
+                        AND gm.userid IN (SELECT userid FROM {local_iomad_company_users} WHERE companyid = ?', $params);
 
                 // Now, iterate the grades again and sum them up for each group.
                 $groupgrades = array();
@@ -478,7 +478,7 @@ class block_activity_results extends block_base {
                 $params[] = $company->id;
                 $mygroupsusers = $DB->get_records_sql_menu(
                         'SELECT DISTINCT userid, 1 FROM {groups_members} WHERE groupid ' . $grouptest
-                        . ' AND userid IN (SELECT userid FROM {company_users} WHERE companyid = ?',
+                        . ' AND userid IN (SELECT userid FROM {local_iomad_company_users} WHERE companyid = ?',
                         $params);
 
                 // Filter out the grades belonging to other users, and proceed as if there were no groups.

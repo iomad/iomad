@@ -92,7 +92,7 @@ class editusers_table extends table_sql {
 
         // Only show departments if they are in the current company.
         if ($company->id == $selectedcompanyid) {
-            $userdepartments = array_keys($DB->get_records('company_users', ['companyid' => $company->id,
+            $userdepartments = array_keys($DB->get_records('local_iomad_company_users', ['companyid' => $company->id,
                                                                              'userid' => $row->id],
                                                                              '',
                                                                              'departmentid'));
@@ -139,9 +139,9 @@ class editusers_table extends table_sql {
         } else {
             $userdepartments = $DB->get_records_sql(
                 "SELECT d.id, d.name
-                 FROM {department} d
-                 JOIN {company_users} cu ON (
-                     d.company = cu.companyid
+                 FROM {local_iomad_company_departments} d
+                 JOIN {local_iomad_company_users} cu ON (
+                     d.companyid = cu.companyid
                      AND d.id = cu.departmentid
                  )
                  WHERE cu.companyid = :companyid
@@ -193,7 +193,7 @@ class editusers_table extends table_sql {
         } else {
             // Can't be a company manager if you are in more than one department
             // or the department you are in is not the top level department.
-            $userdepartments = array_keys($DB->get_records('company_users', ['companyid' => $company->id,
+            $userdepartments = array_keys($DB->get_records('local_iomad_company_users', ['companyid' => $company->id,
                                                                              'userid' => $row->id],
                                                                              '',
                                                                              'departmentid'));
@@ -207,7 +207,7 @@ class editusers_table extends table_sql {
             // Set up the current value for the inplace form and display it.
             if (empty(get_config('local_iomad', 'autoenrol_managers'))) {
                 $currentvalue = ($row->managertype * 10) + $row->educator;
-                $iseducator = $DB->get_records('company_users', ['userid' => $row->id,
+                $iseducator = $DB->get_records('local_iomad_company_users', ['userid' => $row->id,
                                                                  'companyid' => $company->id,
                                                                  'educator' => 1]);
                 $canassigneducators = iomad::has_capability('block/iomad_company_admin:assign_educator', $companycontext);
@@ -314,7 +314,7 @@ class editusers_table extends table_sql {
                  || iomad::has_capability('block/iomad_company_admin:editallusers', $companycontext))
                  || $row->id == $USER->id && !is_mnet_remote_user($row)) {
                 if ($row->id != $USER->id &&
-                    $DB->get_records_select('company_users',
+                    $DB->get_records_select('local_iomad_company_users',
                                             'companyid =:company AND managertype IN (1,2) AND userid = :userid',
                                             ['company' => $row->companyid, 'userid' => $row->id])
                     && !iomad::has_capability('block/iomad_company_admin:editmanagers', $companycontext)) {
@@ -346,7 +346,7 @@ class editusers_table extends table_sql {
                 if ((iomad::has_capability('block/iomad_company_admin:editusers', $companycontext)
                      || iomad::has_capability('block/iomad_company_admin:editallusers', $companycontext))) {
                     if ($DB->get_records_select(
-                        'company_users',
+                        'local_iomad_company_users',
                         "companyid = :company
                          AND managertype <> 0
                          AND userid = :userid",
@@ -484,7 +484,7 @@ class editusers_table extends table_sql {
                             '3' => get_string('educator', 'block_iomad_company_admin'),
                             '4' => get_string('companyreporter', 'block_iomad_company_admin')];
 
-        $this->departments = $DB->get_records('department', ['company' => $companyid], 'name', 'id,name');
+        $this->departments = $DB->get_records('local_iomad_company_departments', ['companyid' => $companyid], 'name', 'id,name');
 
         $parentlevel = company::get_company_parentnode($companyid);
         $this->parentlevel = $parentlevel;
@@ -497,7 +497,7 @@ class editusers_table extends table_sql {
 
         $this->assignabledepartments = company::array_flatten(company::get_department_list($departmenttree[0]));
 
-        $this->departmentsmenu = $DB->get_records_menu('department', ['company' => $companyid], 'name', 'id,name');
+        $this->departmentsmenu = $DB->get_records_menu('local_iomad_company_departments', ['companyid' => $companyid], 'name', 'id,name');
 
         // Deal with role selector.
         $this->usertypeselect = ['0' => get_string('user', 'block_iomad_company_admin')];

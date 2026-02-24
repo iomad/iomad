@@ -67,7 +67,7 @@ $coursecontext = context_course::instance($course->id);
 if (!$trainingevent = $DB->get_record('trainingevent', ['id' => $cm->instance])) {
     throw new moodle_exception('noinstance');
 }
-if (!$location = $DB->get_record('classroom', ['id' => $trainingevent->classroomid])) {
+if (!$location = $DB->get_record('local_iomad_training_locations', ['id' => $trainingevent->classroomid])) {
     throw new moodle_exception('location not defined');
 }
 
@@ -111,9 +111,9 @@ $departmentid = $userhierarchylevel;
 
 // What is the users approval level, if any?
 if (has_capability('block/iomad_company_admin:company_add', $systemcontext) ||
-    $manageruser = $DB->get_records('company_users', ['userid' => $USER->id, 'managertype' => 1])) {
+    $manageruser = $DB->get_records('local_iomad_company_users', ['userid' => $USER->id, 'managertype' => 1])) {
     $myapprovallevel = "company";
-} else if ($manageruser = $DB->get_records('company_users', ['userid' => $USER->id, 'managertype' => 2])) {
+} else if ($manageruser = $DB->get_records('local_iomad_company_users', ['userid' => $USER->id, 'managertype' => 2])) {
     $myapprovallevel = "department";
 } else {
     $myapprovallevel = "none";
@@ -194,7 +194,7 @@ if (!empty($exportcalendar)) {
 
 if ($action == 'add' &&
     !empty($userid)) {
-    $chosenlocation = $DB->get_record('classroom', ['id' => $trainingevent->classroomid]);
+    $chosenlocation = $DB->get_record('local_iomad_training_locations', ['id' => $trainingevent->classroomid]);
     $alreadyattending = $DB->count_records('trainingevent_users', ['trainingeventid' => $trainingevent->id,
                                                                    'waitlisted' => 0,
                                                                    'approved' => 1]);
@@ -616,10 +616,10 @@ if (!empty($view) && has_capability('mod/trainingevent:viewattendees', $context)
                                            ['trainingeventid' => $courseevent->id,
                                            'waitlisted' => 0]);
         if (empty($courseevent->coursecapacity)) {
-            $courseevent->coursecapacity = $DB->get_field('classroom', 'capacity', ['id' => $courseevent->classroomid]);
+            $courseevent->coursecapacity = $DB->get_field('local_iomad_training_locations', 'capacity', ['id' => $courseevent->classroomid]);
         }
         if ($currentcount < $courseevent->coursecapacity) {
-            $courselocation = $DB->get_record('classroom', ['id' => $courseevent->classroomid]);
+            $courselocation = $DB->get_record('local_iomad_training_locations', ['id' => $courseevent->classroomid]);
             $eventselect[$courseevent->id] = $courseevent->name . ' - ' . $courselocation->name.
                                              ' '.date($dateformat, $courseevent->startdatetime);
         }
@@ -628,15 +628,15 @@ if (!empty($view) && has_capability('mod/trainingevent:viewattendees', $context)
     // Do we have any additional reporting fields?
     $extrafields = [];
     if (!empty(get_config('local_iomad', 'report_fields'))) {
-        $companyrec = $DB->get_record('company', ['id' => $location->companyid]);
+        $companyrec = $DB->get_record('local_iomad_companies', ['id' => $location->companyid]);
         foreach (explode(',', get_config('local_iomad', 'report_fields')) as $extrafield) {
             $extrafields[$extrafield] = new stdclass();
             $extrafields[$extrafield]->name = $extrafield;
             if (strpos($extrafield, 'profile_field') !== false) {
                 // Its an optional profile field.
                 $profilefield = $DB->get_record('user_info_field', ['shortname' => str_replace('profile_field_', '', $extrafield)]);
-                if ($profilefield->categoryid == $companyrec->profileid ||
-                    !$DB->get_record('company', ['profileid' => $profilefield->categoryid])) {
+                if ($profilefield->categoryid == $companyrec->profilecategoryid ||
+                    !$DB->get_record('local_iomad_companies', ['profilecategoryid' => $profilefield->categoryid])) {
                     $extrafields[$extrafield]->title = $profilefield->name;
                     $extrafields[$extrafield]->fieldid = $profilefield->id;
                 } else {

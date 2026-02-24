@@ -64,19 +64,22 @@ class migratetemplates extends adhoc_task {
         $templates = array_keys(email::get_templates());
 
         // Deal with the templatesets.
-        $templatesets = $DB->get_records('email_templateset', [], 'id', 'id');
+        $templatesets = $DB->get_records('local_iomad_email_templatesets', [], 'id', 'id');
 
         foreach ($templatesets as $templateset) {
-            if ($DB->count_records('email_templateset_templates', ['templateset' => $templateset->id]) != count($templates)) {
+            if ($DB->count_records(
+                'local_iomad_email_templateset_templates',
+                ['templateset' => $templateset->id]
+            ) != count($templates)) {
                 foreach ($templates as $template) {
                     $templaterec = (object) [];
                     $templaterec->templateset = $templateset->id;
                     $templaterec->name = $template;
                     $DB->execute(
-                        "INSERT INTO {email_templateset_templates} (templateset, name)
+                        "INSERT INTO {local_iomad_email_templateset_templates} (templateset, name)
                                       SELECT :templateset, :templatename
                                       WHERE NOT EXISTS (
-                                        SELECT * FROM {email_templateset_templates}
+                                        SELECT * FROM {local_iomad_email_templateset_templates}
                                         WHERE templateset = :templateset2
                                         AND name = :templatename2)",
                         [
@@ -91,20 +94,20 @@ class migratetemplates extends adhoc_task {
         }
 
         // Deal with the companies.
-        $companies = $DB->get_records('company', [], 'id', 'id');
+        $companies = $DB->get_records('local_iomad_companies', [], 'id', 'id');
 
         foreach ($companies as $company) {
-            if ($DB->count_records('email_template', ['companyid' => $company->id]) != count($templates)) {
+            if ($DB->count_records('local_iomad_email_templates', ['companyid' => $company->id]) != count($templates)) {
                 foreach ($templates as $template) {
                     $templaterec = (object) [];
                     $templaterec->companyid = $company->id;
                     $templaterec->name = $template;
                     $templaterec->lang = $lang;
                     $DB->execute(
-                        "INSERT INTO {email_template} (companyid, name)
+                        "INSERT INTO {local_iomad_email_templates} (companyid, name)
                                       SELECT :companyid, :templatename
                                       WHERE NOT EXISTS (
-                                        SELECT * FROM {email_template}
+                                        SELECT * FROM {local_iomad_email_templates}
                                         WHERE companyid = :companyid2
                                         AND name = :templatename2)",
                         [

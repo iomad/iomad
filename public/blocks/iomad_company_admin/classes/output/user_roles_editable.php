@@ -145,7 +145,7 @@ class user_roles_editable extends inplace_editable {
         // Check permissions.
         iomad::require_capability('block/iomad_company_admin:editusers', $companycontext);
 
-        if (!$DB->get_records('company_users', ['userid' => $userid, 'companyid' => $companyid])) {
+        if (!$DB->get_records('local_iomad_company_users', ['userid' => $userid, 'companyid' => $companyid])) {
             throw new coding_exception('User does not belong to the company');
         }
 
@@ -166,7 +166,7 @@ class user_roles_editable extends inplace_editable {
         }
 
         // Is the user already an educator?
-        $iseducator = $DB->get_records('company_users', ['userid' => $userid, 'companyid' => $companyid, 'educator' => 1]);
+        $iseducator = $DB->get_records('local_iomad_company_users', ['userid' => $userid, 'companyid' => $companyid, 'educator' => 1]);
         $canassigneducators = iomad::has_capability('block/iomad_company_admin:assign_educator', $companycontext);
 
         // Create the rest of the list.
@@ -212,7 +212,7 @@ class user_roles_editable extends inplace_editable {
 
         // Remove company manager roles if the user is not elligible.
         $userdepartments = array_keys($DB->get_records(
-            'company_users',
+            'local_iomad_company_users',
             [
                 'companyid' => $companyid,
                 'userid' => $userid,
@@ -227,7 +227,7 @@ class user_roles_editable extends inplace_editable {
         }
 
         // Process changes.
-        $userlevels = $DB->get_records('company_users', ['companyid' => $companyid, 'userid' => $userid]);
+        $userlevels = $DB->get_records('local_iomad_company_users', ['companyid' => $companyid, 'userid' => $userid]);
         switch ($roleid) {
             case 0:
                 $educator = 0;

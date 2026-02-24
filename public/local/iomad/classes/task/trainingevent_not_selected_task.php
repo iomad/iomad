@@ -63,7 +63,7 @@ class trainingevent_not_selected_task extends scheduled_task {
         // Get all of the upcoming training event courses.
         $courses = $DB->get_records_sql("SELECT DISTINCT c.*,ic.warnnotstarted, ic.notifyperiod FROM {trainingevent} t
                                          JOIN {course} c ON (t.course = c.id)
-                                         JOIN {iomad_courses} ic ON (t.course = ic.courseid AND c.id = ic.courseid)
+                                         JOIN {local_iomad_courses} ic ON (t.course = ic.courseid AND c.id = ic.courseid)
                                          WHERE ic.warnnotstarted > 0
                                          AND c.visible = 1
                                          AND t.startdatetime > :time",
@@ -74,7 +74,7 @@ class trainingevent_not_selected_task extends scheduled_task {
                                            FROM {user} u
                                            JOIN {user_enrolments} ue ON (ue.userid = u.id)
                                            JOIN {enrol} e ON (ue.enrolid = e.id AND e.status = 0)
-                                           JOIN {local_iomad_track} lit
+                                           JOIN {local_iomad_tracks} lit
                                              ON (e.courseid = lit.courseid
                                                  AND ue.userid = lit.userid
                                                  AND ue.timestart = lit.timeenrolled)
@@ -92,7 +92,7 @@ class trainingevent_not_selected_task extends scheduled_task {
 
                     // Get the company template info.
                     // Check against per company template repeat instead.
-                    if ($templateinfo = $DB->get_record('email_template', ['companyid' => $company->id,
+                    if ($templateinfo = $DB->get_record('local_iomad_email_templates', ['companyid' => $company->id,
                                                                            'name' => 'trainingevent_not_selected'])) {
                         // Check if its the correct day, if not continue.
                         if (!empty($templateinfo->repeatday) &&
@@ -122,11 +122,11 @@ class trainingevent_not_selected_task extends scheduled_task {
                     }
 
                     // Check if we have sent any emails and if they are within the period.
-                    if ($DB->count_records('email', ['userid' => $user->id,
+                    if ($DB->count_records('local_iomad_emails', ['userid' => $user->id,
                                                      'courseid' => $course->id,
                                                      'templatename' => 'trainingevent_not_selected']) > 0) {
                         if (!empty($notifyperiod)) {
-                            if (!$DB->get_records_sql("SELECT id FROM {email}
+                            if (!$DB->get_records_sql("SELECT id FROM {local_iomad_emails}
                                                       WHERE userid = :userid
                                                       AND courseid = :courseid
                                                       AND templatename = :templatename

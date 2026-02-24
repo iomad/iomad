@@ -260,7 +260,7 @@ class user_edit_form extends moodleform {
         // Get global fields.
         if ($fields = $DB->get_records_sql("SELECT * FROM {user_info_field}
                                             WHERE categoryid NOT IN (
-                                             SELECT profileid FROM {company})")) {
+                                             SELECT profilecategoryid FROM {local_iomad_companies})")) {
             // Display the header and the fields.
             foreach ($fields as $field) {
                 require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
@@ -271,10 +271,10 @@ class user_edit_form extends moodleform {
             }
         }
         // Get company category.
-        if ($companyinfo = $DB->get_record('company', ['id' => $this->selectedcompany])) {
+        if ($companyinfo = $DB->get_record('local_iomad_companies', ['id' => $this->selectedcompany])) {
 
             // Get fields from company category.
-            if ($fields = $DB->get_records('user_info_field', ['categoryid' => $companyinfo->profileid])) {
+            if ($fields = $DB->get_records('user_info_field', ['categoryid' => $companyinfo->profilecategoryid])) {
                 // Display the header and the fields.
                 foreach ($fields as $field) {
                     require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
@@ -291,7 +291,7 @@ class user_edit_form extends moodleform {
             $mform->addElement('header', 'licenses', get_string('assignlicenses', 'block_iomad_company_admin'));
             $foundlicenses = $DB->get_records_sql_menu(
                 "SELECT id, name
-                 FROM {companylicense}
+                 FROM {local_iomad_company_licenses}
                  WHERE expirydate >= :timestamp
                  AND companyid = :companyid
                  AND used < allocation",
@@ -324,11 +324,11 @@ class user_edit_form extends moodleform {
                 $mylicenseid = $this->licenseid;
 
                 if (!empty($this->licenseid)) {
-                    $mylicensedetails = $DB->get_record('companylicense', ['id' => $this->licenseid]);
+                    $mylicensedetails = $DB->get_record('local_iomad_company_licenses', ['id' => $this->licenseid]);
                     $usedcount = $mylicensedetails->used;
                     // Is this a program license?
                     if (!empty($mylicense->program) && !empty($usedcount)) {
-                        $licensecourses = $DB->count_records('companylicense_courses', ['licenseid' => $this->licenseid]);
+                        $licensecourses = $DB->count_records('local_iomad_company_license_courses', ['licenseid' => $this->licenseid]);
                         if (!empty($licensecourses)) {
                             $usedcount = $usedcount / $licensecourses;
                         } else {
@@ -369,7 +369,7 @@ class user_edit_form extends moodleform {
                 // Get the license courses.
                 if (!$licensecourses = $DB->get_records_sql_menu(
                     "SELECT c.id, c.fullname
-                     FROM {companylicense_courses} clc
+                     FROM {local_iomad_company_license_courses} clc
                      JOIN {course} c ON (clc.courseid = c.id
                      AND clc.licenseid = :licenseid)
                      ORDER BY c.fullname",
@@ -487,7 +487,7 @@ class user_edit_form extends moodleform {
         // Validate email.
         if ($existingusers = $DB->get_records('user', ['email' => $usernew->email, 'mnethostid' => $CFG->mnet_localhost_id])) {
             foreach ($existingusers as $existinguser) {
-                if ($DB->record_exists('company_users', ['userid' => $existinguser->id, 'companyid' => $this->company->id])) {
+                if ($DB->record_exists('local_iomad_company_users', ['userid' => $existinguser->id, 'companyid' => $this->company->id])) {
                     if (empty($CFG->allowaccountssameemail)) {
                         $errors['email'] = get_string('emailexists');
                         break;
@@ -499,7 +499,7 @@ class user_edit_form extends moodleform {
         // Validate email as username in the same company.
         if ($usernew->use_email_as_username) {
             if ($DB->get_records_sql("SELECT u.id FROM {user} u
-                                      JOIN {company_users} cu ON u.id = cu.userid
+                                      JOIN {local_iomad_company_users} cu ON u.id = cu.userid
                                       WHERE cu.companyid = :companyid
                                       AND u.username = :email",
                                       ['companyid' => $this->company->id,
@@ -528,21 +528,21 @@ class user_edit_form extends moodleform {
 
         // Check numbers of licensed courses against license.
         if (!empty($usernew->licenseid)) {
-            $license = $DB->get_record('companylicense', ['id' => $usernew->licenseid]);
+            $license = $DB->get_record('local_iomad_company_licenses', ['id' => $usernew->licenseid]);
 
             // Are we dealing with a program license?
             if (!empty($license->program)) {
                 // If so the courses are not passed automatically.
                 $usernew->licensecourses = $DB->get_records_sql_menu(
                     "SELECT c.id, c.fullname
-                     FROM {companylicense_courses} clc
+                     FROM {local_iomad_company_license_courses} clc
                      JOIN {course} c ON (clc.courseid = c.id
                      AND clc.licenseid = :licenseid)",
                     ['licenseid' => $license->id]);
             }
 
             if (!empty($usernew->licensecourses)) {
-                if ($license = $DB->get_record('companylicense', ['id' => $usernew->licenseid])) {
+                if ($license = $DB->get_record('local_iomad_company_licenses', ['id' => $usernew->licenseid])) {
                     if (count($usernew->licensecourses) + $license->used > $license->allocation) {
                         $errors['licensecourses'] = get_string('triedtoallocatetoomanylicenses', 'block_iomad_company_admin');
                     }

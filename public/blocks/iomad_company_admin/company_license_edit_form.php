@@ -87,7 +87,7 @@ dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // If we are editing a license, check that the parent id is set.
 if (!empty($licenseid)) {
-    $licenseinfo = $DB->get_record('companylicense', ['id' => $licenseid]);
+    $licenseinfo = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid]);
     $parentid = $licenseinfo->parentid;
 }
 
@@ -95,8 +95,8 @@ if (!empty($licenseid)) {
 $mform = new company_license_form($PAGE->url, $companycontext, $companyid, $departmentid, $licenseid, $parentid);
 
 // Get any passed license information.
-if ($licenseinfo = $DB->get_record('companylicense', ['id' => $licenseid])) {
-    if ($currentcourses = $DB->get_records('companylicense_courses', ['licenseid' => $licenseid], null, 'courseid')) {
+if ($licenseinfo = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid])) {
+    if ($currentcourses = $DB->get_records('local_iomad_company_license_courses', ['licenseid' => $licenseid], null, 'courseid')) {
         foreach ($currentcourses as $currentcourse) {
             $licenseinfo->licensecourses[] = $currentcourse->courseid;
         }
@@ -117,7 +117,7 @@ if ($licenseinfo = $DB->get_record('companylicense', ['id' => $licenseid])) {
     // Are we splitting a current license?
     if (!empty($parentid)) {
         // Get the courses from that.
-        if ($currentcourses = $DB->get_records('companylicense_courses', ['licenseid' => $parentid], null, 'courseid')) {
+        if ($currentcourses = $DB->get_records('local_iomad_company_license_courses', ['licenseid' => $parentid], null, 'courseid')) {
             foreach ($currentcourses as $currentcourse) {
                 $licenseinfo->licensecourses[] = $currentcourse->courseid;
             }
@@ -182,28 +182,28 @@ if ( $mform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL) ) {
         }
 
         if (!empty($licenseid) &&
-            $currlicensedata = $DB->get_record('companylicense', ['id' => $licenseid])) {
+            $currlicensedata = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid])) {
             // Already in the table update it.
             $new = false;
             $licensedata['id'] = $currlicensedata->id;
             $licensedata['used'] = $currlicensedata->used;
-            $DB->update_record('companylicense', $licensedata);
+            $DB->update_record('local_iomad_company_licenses', $licensedata);
         } else {
             // New license being created.
             $new = true;
             $licensedata['used'] = 0;
-            $licenseid = $DB->insert_record('companylicense', $licensedata);
+            $licenseid = $DB->insert_record('local_iomad_company_licenses', $licensedata);
         }
 
         // Deal with course allocations if there are any.
         // Capture them for checking.
-        $oldcourses = $DB->get_records('companylicense_courses', ['licenseid' => $licenseid], null, 'courseid');
+        $oldcourses = $DB->get_records('local_iomad_company_license_courses', ['licenseid' => $licenseid], null, 'courseid');
         // Clear down all of them initially.
-        $DB->delete_records('companylicense_courses', ['licenseid' => $licenseid]);
+        $DB->delete_records('local_iomad_company_license_courses', ['licenseid' => $licenseid]);
         if (!empty($data->licensecourses)) {
             // Add the course license allocations.
             foreach ($data->licensecourses as $selectedcourse) {
-                $DB->insert_record('companylicense_courses', ['licenseid' => $licenseid, 'courseid' => $selectedcourse]);
+                $DB->insert_record('local_iomad_company_license_courses', ['licenseid' => $licenseid, 'courseid' => $selectedcourse]);
             }
         }
 

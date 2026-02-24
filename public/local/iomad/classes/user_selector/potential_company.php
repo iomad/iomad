@@ -71,7 +71,7 @@ class potential_company extends company_base {
 
         // By Default we only want users who are not in any company.
         $usersql = "AND u.id NOT IN (
-                        SELECT userid FROM {company_users}
+                        SELECT userid FROM {local_iomad_company_users}
                     )";
 
         // Unless we are searching for any user and have the capability to do so.
@@ -79,7 +79,7 @@ class potential_company extends company_base {
             has_capability('block/iomad_company_admin:company_add', context_system::instance())) {
             $usersql = "AND u.id NOT IN (
                             SELECT userid
-                            FROM {company_users}
+                            FROM {local_iomad_company_users}
                             WHERE companyid = :companyid
                         )";
         }

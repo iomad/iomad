@@ -276,7 +276,7 @@ if (!empty($fileimport)) {
                     $completionrec->companyid = $company->id;
                     $upt->track('company', $company->get_name());
                 } else {
-                    if (!$usercompany = $DB->get_record('company', ['id' => $completionrec->companyid])) {
+                    if (!$usercompany = $DB->get_record('local_iomad_companies', ['id' => $completionrec->companyid])) {
                         $upt->track('status', get_string('missingfield', 'error', 'companyid'), 'error');
                         $upt->track('company', $errorstr, 'error');
                         $line[] = get_string('missingfield', 'error', 'companyid');
@@ -315,7 +315,7 @@ if (!empty($fileimport)) {
                     $completionrec->timestarted = $completionrec->timecompleted;
                     $upt->track('timestarted', userdate($completionrec->timestarted, get_config('local_iomad', 'date_format')));
                 }
-                if ($DB->get_record('iomad_courses', ['courseid' => $courserec->id, 'licensed' => 1])) {
+                if ($DB->get_record('local_iomad_courses', ['courseid' => $courserec->id, 'licensed' => 1])) {
                     if (empty($completionrec->licensename)) {
                         $upt->track('status', get_string('missingfield', 'error', 'licensename'), 'error');
                         $upt->track('licensename', $errorstr, 'error');
@@ -336,7 +336,7 @@ if (!empty($fileimport)) {
                 $completionrec->coursecleared = 1;
 
                 // Write the info to the db.
-                $trackid = $DB->insert_record('local_iomad_track', $completionrec);
+                $trackid = $DB->insert_record('local_iomad_tracks', $completionrec);
                 $upt->track('id', $trackid);
                 $upt->track('status', get_string('ok'));
 

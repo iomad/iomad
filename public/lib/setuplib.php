@@ -573,8 +573,8 @@ function initialise_cfg() {
         $CFG->wwwrootdefault = $CFG->wwwroot;
 
         // Does this match a company hostname?
-        if ($DB->get_manager()->table_exists('company') &&
-            ($companyrec = $DB->get_record('company', array('hostname' => $_SERVER['SERVER_NAME'])))) {
+        if ($DB->get_manager()->table_exists('local_iomad_companies') &&
+            ($companyrec = $DB->get_record('local_iomad_companies', array('hostname' => $_SERVER['SERVER_NAME'])))) {
             $company = new company($companyrec->id);
 
             // Set the wwwroot to the company one using the same protocol.
@@ -671,8 +671,8 @@ function initialise_fullme() {
         $CFG->wwwrootdefault = $CFG->wwwroot;
 
         // Does this match a company hostname?
-        if ($DB->get_manager()->table_exists('company') &&
-            ($companyrec = $DB->get_record('company', array('hostname' => $_SERVER['SERVER_NAME'])))) {
+        if ($DB->get_manager()->table_exists('local_iomad_companies') &&
+            ($companyrec = $DB->get_record('local_iomad_companies', array('hostname' => $_SERVER['SERVER_NAME'])))) {
             $company = new company($companyrec->id);
 
             // Set the wwwroot to the company one using the same protocol.

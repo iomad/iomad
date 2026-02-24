@@ -499,6 +499,12 @@ function xmldb_local_iomad_upgrade($oldversion) {
         }
 
         // We need to deal with any saved files.
+        $DB->set_field(
+            'files',
+            'filearea',
+            'certificate_issue',
+            ['component' => 'local_iomad_track', 'filearea' => 'issue']
+        );
         $DB->set_field('files', 'component', 'local_iomad', ['component' => 'local_iomad_track']);
 
         // Deal with any ad-hoc tasks for the components we've merged.
@@ -583,7 +589,6 @@ function xmldb_local_iomad_upgrade($oldversion) {
             $DB->set_field('task_adhoc', 'classname', $new, ['classname' => $old]);
         }
 
-
         // Iomad savepoint reached.
         upgrade_plugin_savepoint(true, 2026010600, 'local', 'iomad');
     }
@@ -654,7 +659,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
             $dbman->add_index($table, $index);
         }
 
-        // Launch rename table to local_iomad_departments.
+        // Launch rename table to local_iomad_company_departments.
         $dbman->rename_table($table, 'local_iomad_company_departments');
 
         // Company table structure changes.
@@ -2543,8 +2548,8 @@ function xmldb_local_iomad_upgrade($oldversion) {
         // Add back in the foreign keys for the tables we've just renamed.
         mtrace("Adding back all foreign keys to new table names");
 
-        // Define key local_iomad_companies (foreign) to be added to local_iomad_departments.
-        $table = new xmldb_table('local_iomad_departments');
+        // Define key local_iomad_companies (foreign) to be added to local_iomad_company_departments.
+        $table = new xmldb_table('local_iomad_company_departments');
         $key = new xmldb_key(
             'local_iomad_companies',
             XMLDB_KEY_FOREIGN,

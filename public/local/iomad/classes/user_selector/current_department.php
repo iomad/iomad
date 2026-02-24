@@ -79,7 +79,7 @@ class current_department extends company_base {
             return [];
         } else {
             if ($users = $DB->get_records(
-                'company_users',
+                'local_iomad_company_users',
                 [
                     'departmentid' => $this->departmentid,
                     'suspended' => 0,
@@ -121,7 +121,7 @@ class current_department extends company_base {
                                                        SQL_PARAMS_NAMED,
                                                        'pcids');
             $othermanagersql = " AND cu.userid NOT IN (
-                                     SELECT userid FROM {company_users}
+                                     SELECT userid FROM {local_iomad_company_users}
                                      WHERE managertype = 1
                                      AND companyid IN {$insql}
                                  )";
@@ -134,7 +134,7 @@ class current_department extends company_base {
         }
 
         $sql = " FROM {user} u
-                 JOIN {company_users} cu ON cu.userid = u.id
+                 JOIN {local_iomad_company_users} cu ON cu.userid = u.id
                  LEFT JOIN {user_info_data} ui ON (
                      ui.userid = u.id
                      AND ui.userid = cu.userid

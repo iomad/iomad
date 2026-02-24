@@ -107,7 +107,7 @@ if ($importid) {
 $threadtable = new thread_import_table('block_microlearning_thread_import');
 $sqlparams = ['companyid' => $companyid];
 $selectsql = "mt.*, c.name as companyname";
-$fromsql = "{microlearning_thread} mt JOIN {company} c ON (mt.companyid = c.id)";
+$fromsql = "{microlearning_thread} mt JOIN {local_iomad_companies} c ON (mt.companyid = c.id)";
 $wheresql = "mt.companyid <> :companyid";
 if (!empty($search)) {
     $wheresql .= " AND mt.name like :search ";

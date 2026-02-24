@@ -91,7 +91,7 @@ if (empty($company) && !empty($companyid)) {
 
 // Do we need to change something?
 if (!empty($update)) {
-    if (!$templatedetails = $DB->get_record('iomad_templates', ['templateid' => $templateid])) {
+    if (!$templatedetails = $DB->get_record('local_iomad_templates', ['templateid' => $templateid])) {
         throw new moodle_exception(get_string('invaliddetails', 'block_iomad_company_admin'));
     } else {
         // Process shared changes.
@@ -101,17 +101,17 @@ if (!empty($update)) {
             if ($previousshared == 0 && $shared != 0) { // Turning sharing on.
 
                 // Deal with any current templates.
-                if ($companytemplate = $DB->get_record('company_comp_templates', ['templateid' => $templateid])) {
+                if ($companytemplate = $DB->get_record('local_iomad_company_comp_templates', ['templateid' => $templateid])) {
                     if ($shared == 2) {
                         $sharingrecord = new stdclass();
                         $sharingrecord->templateid = $templateid;
                         $sharingrecord->companyid = $companytemplate->companyid;
-                        $DB->insert_record('company_shared_templates', $sharingrecord);
+                        $DB->insert_record('local_iomad_company_shared_templates', $sharingrecord);
                     }
                 }
             } else if ($shared == 0 && $previousshared != 0) { // Turning sharing off.
                 // Deal with company groups.
-                if ($companygroups = $DB->get_records('company_shared_templates', ['templateid' => $templateid])) {
+                if ($companygroups = $DB->get_records('local_iomad_company_shared_templates', ['templateid' => $templateid])) {
                     // Got companies using it.
                     // Skip the first company, it was the one who had it before anyone else so is
                     // assumed to be the owning company.
@@ -121,19 +121,19 @@ if (!empty($update)) {
                             $first = false;
                             continue;
                         }
-                        $DB->delete_records('company_shared_templates', (array) $companygroup);
+                        $DB->delete_records('local_iomad_company_shared_templates', (array) $companygroup);
                     }
                 }
             }
 
             // Set the shared options on.
-            $DB->set_field('iomad_templates', 'shared', $shared, ['id' => $templatedetails->id]);
+            $DB->set_field('local_iomad_templates', 'shared', $shared, ['id' => $templatedetails->id]);
         }
     }
 }
 
 // Get the list of companies and display it as a drop down select..
-$companyids = $DB->get_records_menu('company', [], 'id, name');
+$companyids = $DB->get_records_menu('local_iomad_companies', [], 'id, name');
 $companyids['none'] = get_string('nocompanytemplates', 'block_iomad_company_admin');
 $companyids['all'] = get_string('alltemplates', 'block_iomad_company_admin');
 ksort($companyids);
@@ -155,7 +155,7 @@ if (!empty($company)) {
         }
         $templates = $DB->get_records_select(
             'competency_template',
-            $select . " id NOT IN (SELECT templateid FROM {company_comp_templates})",
+            $select . " id NOT IN (SELECT templateid FROM {local_iomad_company_comp_templates})",
             $selectparams);
     } else if ($company == 'all') {
         // Get every template.
@@ -172,7 +172,7 @@ if (!empty($company)) {
         }
         $sql = "SELECT ct.*
                 FROM {competency_template} ct
-                JOIN {company_comp_templates} cct ON (ct.id = cct.templateid)
+                JOIN {local_iomad_company_comp_templates} cct ON (ct.id = cct.templateid)
                 WHERE
                 cct.companyid = :companyid
                 $select";
@@ -198,9 +198,9 @@ $sharedselectbutton = ['0' => get_string('no'),
 
 
 foreach ($templates as $template) {
-    if (!$iomaddetails = $DB->get_record('iomad_templates', ['templateid' => $template->id])) {
+    if (!$iomaddetails = $DB->get_record('local_iomad_templates', ['templateid' => $template->id])) {
         $iomadrecord = ['templateid' => $template->id, 'licensed' => 0, 'shared' => 0];
-        $iomadrecord['id'] = $DB->insert_record('iomad_templates', $iomadrecord);
+        $iomadrecord['id'] = $DB->insert_record('local_iomad_templates', $iomadrecord);
         $iomaddetails = (object) $iomadrecord;
     }
     $linkparams = $params;
@@ -212,8 +212,8 @@ foreach ($templates as $template) {
     $sharedselect->formid = 'sharedselect'.$template->id;
     $sharedselectoutput = html_writer::tag('div', $OUTPUT->render($sharedselect), ['id' => 'shared_selector'.$template->id]);
     if ($tablecompany = $DB->get_records_sql("SELECT c.shortname
-                                              FROM {company} c
-                                              JOIN {company_comp_templates} cct ON (c.id = cct.companyid)
+                                              FROM {local_iomad_companies} c
+                                              JOIN {local_iomad_company_comp_templates} cct ON (c.id = cct.companyid)
                                               WHERE
                                               cct.templateid = :templateid",
                                              ['templateid' => $template->id])) {

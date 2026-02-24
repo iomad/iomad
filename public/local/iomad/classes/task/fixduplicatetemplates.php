@@ -53,10 +53,10 @@ class fixduplicatetemplates extends adhoc_task {
         global $DB;
 
         // Get all of the companies.
-        $companies = $DB->get_records('company', [], '', 'id');
+        $companies = $DB->get_records('local_iomad_companies', [], '', 'id');
 
         // And all the template names.
-        $templates = $DB->get_records_sql("SELECT DISTINCT name FROM {email_template}");
+        $templates = $DB->get_records_sql("SELECT DISTINCT name FROM {local_iomad_email_templates}");
 
         // Define the bit of SQL as it won't change.
         $deletesql = "companyid = :companyid
@@ -68,7 +68,7 @@ class fixduplicatetemplates extends adhoc_task {
             foreach ($templates as $template) {
                 // Get the first instance of this companyid and template name
                 // as we want to keep just that one.
-                $firstrec = $DB->get_records('email_template',
+                $firstrec = $DB->get_records('local_iomad_email_templates',
                                              ['companyid' => $company->id,
                                               'name' => $template->name],
                                              'id',
@@ -78,7 +78,7 @@ class fixduplicatetemplates extends adhoc_task {
                 $first = array_pop($firstrec);
 
                 // Delete everything else.
-                $DB->delete_records_select('email_template',
+                $DB->delete_records_select('local_iomad_email_templates',
                                            $deletesql,
                                            ['companyid' => $company->id,
                                             'name' => $template->name,

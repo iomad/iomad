@@ -194,7 +194,7 @@ function trainingevent_get_coursemodule_info($coursemodule) {
         // Create template variable.
         $template = (object)[];
         if ($trainingevent->classroomid) {
-            if ($classroom = $DB->get_record('classroom', ['id' => $trainingevent->classroomid], '*')) {
+            if ($classroom = $DB->get_record('local_iomad_training_locations', ['id' => $trainingevent->classroomid], '*')) {
                 $template->name = $classroom->name;
             }
         }
@@ -206,7 +206,7 @@ function trainingevent_get_coursemodule_info($coursemodule) {
         $template->usersbooked = $DB->count_records('trainingevent_users', ['trainingeventid' => $trainingevent->id,
                                                                             'waitlisted' => 0,
                                                                             'approved' => 1]);
-        $classroom = $DB->get_record('classroom', ['id' => $trainingevent->classroomid]);
+        $classroom = $DB->get_record('local_iomad_training_locations', ['id' => $trainingevent->classroomid]);
         if (time() < $trainingevent->startdatetime) {
             $template->slotsleft = ($classroom->isvirtual == 0) ?
             ((!empty($trainingevent->coursecapacity)) ? ($trainingevent->coursecapacity - $template->usersbooked) :
@@ -428,7 +428,7 @@ function trainingevent_get_available_events($currenteventid, $courseid, $userid,
         if (empty($waitlisted)) {
 
             // Check if there is capacity.
-            $location = $DB->get_record('classroom', ['id' => $courseevent->classroomid]);
+            $location = $DB->get_record('local_iomad_training_locations', ['id' => $courseevent->classroomid]);
             if (!$location->isvirtual) {
                 if (!empty($courseevent->coursecapacity)) {
                     $capacity = $courseevent->coursecapacity;
@@ -504,7 +504,7 @@ function trainingevent_user_attending($event) {
     }
 
     // Does the location exist?
-    if (!$location = $DB->get_record('classroom', ['id' => $trainingevent->classroomid])) {
+    if (!$location = $DB->get_record('local_iomad_training_locations', ['id' => $trainingevent->classroomid])) {
         return false;
     }
 
@@ -658,7 +658,7 @@ function trainingevent_user_removed($event) {
     }
 
     // Does the location exist?
-    if (!$location = $DB->get_record('classroom', ['id' => $trainingevent->classroomid])) {
+    if (!$location = $DB->get_record('local_iomad_training_locations', ['id' => $trainingevent->classroomid])) {
         return false;
     }
 
@@ -818,12 +818,12 @@ function trainingevent_attendance_changed($event) {
     }
 
     // Does the location exist?
-    if (!$location = $DB->get_record('classroom', ['id' => $trainingevent->classroomid])) {
+    if (!$location = $DB->get_record('local_iomad_training_locations', ['id' => $trainingevent->classroomid])) {
         return false;
     }
 
     // Does the location exist?
-    if (!$chosenlocation = $DB->get_record('classroom', ['id' => $chosenevent->classroomid])) {
+    if (!$chosenlocation = $DB->get_record('local_iomad_training_locations', ['id' => $chosenevent->classroomid])) {
         return false;
     }
 

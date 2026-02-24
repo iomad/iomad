@@ -166,7 +166,7 @@ if (empty($iid)) {
                             $errornum++;
                             $erroredcompanies[] = $line;
                             continue 2;
-                        } else if ($DB->get_record('company', ['name' => $value])) {
+                        } else if ($DB->get_record('local_iomad_companies', ['name' => $value])) {
                             $upt->track(
                                 'status',
                                 get_string('duplicatecompany', 'block_iomad_company_admin', 'name'),
@@ -193,7 +193,7 @@ if (empty($iid)) {
                             $errornum++;
                             $erroredcompanies[] = $line;
                             continue 2;
-                        } else if ($DB->get_record('company', ['shortname' => $value])) {
+                        } else if ($DB->get_record('local_iomad_companies', ['shortname' => $value])) {
                             $upt->track(
                                 'status',
                                 get_string('duplicatecompany', 'block_iomad_company_admin', 'shortname'),
@@ -229,7 +229,7 @@ if (empty($iid)) {
                             $errornum++;
                             $erroredcompanies[] = $line;
                             continue 2;
-                        } else if ($DB->get_record('company', ['code' => $value])) {
+                        } else if ($DB->get_record('local_iomad_companies', ['code' => $value])) {
                             $upt->track(
                                 'status',
                                 get_string('companycodetaken', 'block_iomad_company_admin', $value),
@@ -256,7 +256,7 @@ if (empty($iid)) {
                             $errornum++;
                             $erroredcompanies[] = $line;
                             continue 2;
-                        } else if ($DB->get_record('company', ['hostname' => $value])) {
+                        } else if ($DB->get_record('local_iomad_companies', ['hostname' => $value])) {
                             $upt->track(
                                 'status',
                                 get_string('companyhostnametaken', 'block_iomad_company_admin', $value),
@@ -307,7 +307,7 @@ if (empty($iid)) {
                             $errornum++;
                             $erroredcompanies[] = $line;
                             continue 2;
-                        } else if (! $parentrec = $DB->get_record('company', ['shortname' => $value])) {
+                        } else if (! $parentrec = $DB->get_record('local_iomad_companies', ['shortname' => $value])) {
                             $upt->track(
                                 'status',
                                 get_string('missingparent', 'block_iomad_company_admin', 'parent'),
@@ -418,7 +418,7 @@ if (empty($iid)) {
             }
 
             // We hit create.
-            $newcompanyid = $DB->insert_record('company', $companyrec);
+            $newcompanyid = $DB->insert_record('local_iomad_companies', $companyrec);
             $newcompany = new company($newcompanyid);
 
             $eventother = ['companyid' => $newcompanyid];
@@ -444,9 +444,9 @@ if (empty($iid)) {
             $categorycontext->mark_dirty();
             $DB->update_record('course_categories', $coursecat);
             fix_course_sortorder();
-            $companydetails = $DB->get_record('company', ['id' => $newcompanyid]);
+            $companydetails = $DB->get_record('local_iomad_companies', ['id' => $newcompanyid]);
             $companydetails->category = $coursecat->id;
-            $DB->update_record('company', $companydetails);
+            $DB->update_record('local_iomad_companies', $companydetails);
 
             // Deal with any parent company assignments.
             if (!empty($companydetails->parentid)) {

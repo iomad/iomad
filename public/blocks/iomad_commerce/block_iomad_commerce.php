@@ -65,7 +65,7 @@ class block_iomad_commerce extends block_base {
         // Always show it if the user is a siteadmin.
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
         $ecommerce = $DB->get_field_sql("SELECT ecommerce
-                                         FROM {company} c
+                                         FROM {local_iomad_companies} c
                                          WHERE c.id = :companyid",
                                          ['companyid' => $companyid]);
 

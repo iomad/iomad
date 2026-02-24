@@ -70,7 +70,7 @@ class companyrep {
         $managedcompanies = [];
         if (!iomad::has_capability('block/iomad_company_admin:company_view_all', context_system::instance()) &&
             $managers = $DB->get_records_sql("SELECT *
-                                              FROM {company_users}
+                                              FROM {local_iomad_company_users}
                                               WHERE userid = :userid
                                               AND managertype != 0",
                                              ['userid' => $user->id])) {
@@ -87,7 +87,7 @@ class companyrep {
         } else {
             $params = [];
         }
-        if (!$companies = $DB->get_records('company', $params)) {
+        if (!$companies = $DB->get_records('local_iomad_companies', $params)) {
             return [];
         }
 
@@ -101,7 +101,7 @@ class companyrep {
 
             // Is this a child company?
             if ($company->parentid) {
-                $parent = $DB->get_record('company', ['id' => $company->parentid], '*', MUST_EXIST);
+                $parent = $DB->get_record('local_iomad_companies', ['id' => $company->parentid], '*', MUST_EXIST);
                 $company->parentlink = new \moodle_url('/local/report_companies', ['companyid' => $company->parentid]);
                 $company->parent = '<a href="' . $company->parentlink . '">' . $parent->name . '</a>';
             } else {
@@ -140,14 +140,14 @@ class companyrep {
 
             // Company managers.
             $company->companymanagers = $DB->get_records_sql(
-                "SELECT u.* from {company_users} cu
+                "SELECT u.* from {local_iomad_company_users} cu
                 JOIN {user} u ON u.id = cu.userid
                 WHERE companyid = :companyid
                 AND managertype = 1", ['companyid' => $company->id]);
 
             // Department managers.
             $company->departmentmanagers = $DB->get_records_sql(
-                "SELECT DISTINCT u.* from {company_users} cu
+                "SELECT DISTINCT u.* from {local_iomad_company_users} cu
                 JOIN {user} u ON u.id = cu.userid
                 WHERE companyid = :companyid
                 AND managertype = 2", ['companyid' => $company->id]);
@@ -171,7 +171,7 @@ class companyrep {
         // Iterate over companies adding their managers.
         foreach ($companies as $company) {
             $users = [];
-            if ($companyusers = $DB->get_records('company_users', ['companyid' => $company->id])) {
+            if ($companyusers = $DB->get_records('local_iomad_company_users', ['companyid' => $company->id])) {
                 foreach ($companyusers as $companyuser) {
                     if ($user = $DB->get_record( 'user', ['id' => $companyuser->userid])) {
                         $users[$user->id] = $user;
@@ -196,7 +196,7 @@ class companyrep {
         // Iterate over companies adding their managers.
         foreach ($companies as $company) {
             $courses = [];
-            if ($companycourses = $DB->get_records( 'company_course', ['companyid' => $company->id])) {
+            if ($companycourses = $DB->get_records( 'local_iomad_company_courses', ['companyid' => $company->id])) {
                 foreach ($companycourses as $companycourse) {
                     if ($course = $DB->get_record( 'course', ['id' => $companycourse->courseid])) {
                         $courses[$course->id] = $course;

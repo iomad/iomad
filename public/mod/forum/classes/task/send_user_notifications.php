@@ -312,8 +312,8 @@ class send_user_notifications extends \core\task\adhoc_task {
 
         // IOMAD - check if the user has a company URL and not the site default.
         if ($companyrec = $DB->get_record_sql("SELECT DISTINCT c.id
-                                               FROM {company} c
-                                               JOIN {company_users} cu ON (c.id = cu.companyid)
+                                               FROM {local_iomad_companies} c
+                                               JOIN {local_iomad_company_users} cu ON (c.id = cu.companyid)
                                                WHERE c.hostname IS NOT NULL
                                                AND cu.userid = :userid",
                                               ['userid' => $this->recipient->id])) {

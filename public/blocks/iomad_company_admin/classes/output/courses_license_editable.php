@@ -130,7 +130,7 @@ class courses_license_editable extends inplace_editable {
         // Check permissions.
         iomad::require_capability('block/iomad_company_admin:managecourses', $companycontext);
 
-        if (!$courserec = $DB->get_record('iomad_courses', ['courseid' => $courseid])) {
+        if (!$courserec = $DB->get_record('local_iomad_courses', ['courseid' => $courseid])) {
             throw new coding_exception('Course is not under IOMAD control');
         }
 
@@ -198,7 +198,7 @@ class courses_license_editable extends inplace_editable {
         }
 
         // Process changes.
-        $DB->set_field('iomad_courses', 'licensed', $licensevalue, ['courseid' => $courseid]);
+        $DB->set_field('local_iomad_courses', 'licensed', $licensevalue, ['courseid' => $courseid]);
 
         // Fire an event for this.
         $eventother = ['iomadcourse' => (array) $courserec];

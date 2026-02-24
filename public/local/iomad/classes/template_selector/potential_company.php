@@ -79,8 +79,8 @@ class potential_company extends company_base {
         // Deal with shared templates.  Cannot be added to a company in this manner.
         $sharedsql = " AND ct.id NOT IN (
                            SELECT cct.templateid
-                           FROM {company_comp_templates} cct
-                           LEFT JOIN {iomad_templates} it ON (cct.templateid = it.templateid)
+                           FROM {local_iomad_company_comp_templates} cct
+                           LEFT JOIN {local_iomad_templates} it ON (cct.templateid = it.templateid)
                            WHERE it.shared <> 1
                        ) ";
 

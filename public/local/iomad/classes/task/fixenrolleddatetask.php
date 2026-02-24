@@ -74,12 +74,12 @@ class fixenrolleddatetask extends adhoc_task {
                     continue;
                 } else {
                     // Get the local_iomad_track record if it's wrong.
-                    if ($trackrec = $DB->get_record('local_iomad_track', ['userid' => $entry->userid,
+                    if ($trackrec = $DB->get_record('local_iomad_tracks', ['userid' => $entry->userid,
                                                                           'courseid' => $entry->course,
                                                                           'timeenrolled' => $userenrolment->timestart])) {
                         // Update both this and course_completions.
                         $trackrec->timeenrolled = $userenrolment->timecreated;
-                        $DB->update_record('local_iomad_track', $trackrec);
+                        $DB->update_record('local_iomad_tracks', $trackrec);
                         $entry->timeenrolled = $userenrolment->timecreated;
                         $DB->update_record('course_completions', $entry);
                     }

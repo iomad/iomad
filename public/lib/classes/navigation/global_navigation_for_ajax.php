@@ -191,7 +191,7 @@ class global_navigation_for_ajax extends global_navigation {
         if (company_user::is_company_user()) {
             $companyid = iomad::get_my_companyid(context_system::instance());
             $sharedsql = " AND ( cc.id IN (
-                               SELECT category FROM {company}
+                               SELECT coursecategoryid FROM {local_iomad_companies}
                                WHERE id = $companyid)) ";
         } else {
             $sharedsql = "";

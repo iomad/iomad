@@ -993,7 +993,7 @@ class microlearning {
         }
 
         // The company?
-        if (!$companyrec = $DB->get_record('company', ['id' => $companyid, 'suspended' => 0])) {
+        if (!$companyrec = $DB->get_record('local_iomad_companies', ['id' => $companyid, 'suspended' => 0])) {
             return false;
         }
 
@@ -1035,7 +1035,7 @@ class microlearning {
         }
 
         // The company?
-        if (!$companyrec = $DB->get_record('company', ['id' => $companyid, 'suspended' => 0])) {
+        if (!$companyrec = $DB->get_record('local_iomad_companies', ['id' => $companyid, 'suspended' => 0])) {
             return false;
         }
 

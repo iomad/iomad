@@ -87,8 +87,8 @@ class user_table extends table_sql {
 
         $userdepartments = $DB->get_records_sql(
             "SELECT d.*
-             FROM {department} d
-             JOIN {company_users} cu ON (d.id = cu.departmentid)
+             FROM {local_iomad_company_departments} d
+             JOIN {local_iomad_company_users} cu ON (d.id = cu.departmentid)
              WHERE cu.userid = :userid
              AND cu.companyid = :companyid",
             ['userid' => $row->userid,
@@ -125,8 +125,8 @@ class user_table extends table_sql {
      */
     public function col_company($row) {
         global $DB;
-        $companies = $DB->get_records_sql("SELECT DISTINCT c.name FROM {company} c
-                                           JOIN {company_users} cu ON (c.id = cu.companyid)
+        $companies = $DB->get_records_sql("SELECT DISTINCT c.name FROM {local_iomad_companies} c
+                                           JOIN {local_iomad_company_users} cu ON (c.id = cu.companyid)
                                            WHERE cu.userid = :userid",
                                            ['userid' => $row->userid]);
         $returnstr = "";
@@ -254,7 +254,7 @@ class user_table extends table_sql {
     public function col_finalscore($row) {
         global $CFG, $DB, $USER;
 
-        if ($DB->get_record('iomad_courses', ['courseid' => $row->courseid, 'hasgrade' => 1])) {
+        if ($DB->get_record('local_iomad_courses', ['courseid' => $row->courseid, 'hasgrade' => 1])) {
             if ($this->is_downloading() || empty($USER->editing)) {
                 if (!empty($row->finalscore) && !empty($row->timeenrolled)) {
                     return round($row->finalscore, get_config('local_iomad', 'report_grade_places'))."%";
@@ -432,7 +432,7 @@ class user_table extends table_sql {
             if (empty($row->coursecleared)) {
                 if (empty($USER->editing)) {
                     if (!empty($row->licenseid) &&
-                        $DB->get_record('companylicense', ['id' => $row->licenseid,
+                        $DB->get_record('local_iomad_company_licenses', ['id' => $row->licenseid,
                                                            'program' => 1])) {
                         if (has_capability('local/report_users:clearentries', $companycontext)) {
                             $delaction .= html_writer::tag(
@@ -445,7 +445,7 @@ class user_table extends table_sql {
                             );
                         }
                     } else {
-                        if ($DB->get_record('companylicense_users', ['userid' => $row->userid,
+                        if ($DB->get_record('local_iomad_company_license_users', ['userid' => $row->userid,
                                                                      'licensecourseid' => $row->courseid,
                                                                      'licenseid' => $row->licenseid,
                                                                      'issuedate' => $row->licenseallocated,
@@ -460,7 +460,7 @@ class user_table extends table_sql {
                                     ]
                                 );
                             }
-                        } else if ($DB->get_record('companylicense_users', ['userid' => $row->userid,
+                        } else if ($DB->get_record('local_iomad_company_license_users', ['userid' => $row->userid,
                                                                             'licensecourseid' => $row->courseid,
                                                                             'licenseid' => $row->licenseid,
                                                                             'issuedate' => $row->licenseallocated,
@@ -540,7 +540,7 @@ class user_table extends table_sql {
         $info = new completion_info($course);
         $completions = $info->get_completions($row->userid);
         $showgrade = true;
-        if ($iomadcourse = $DB->get_record('iomad_courses', ['courseid' => $row->courseid, 'hasgrade' => 0])) {
+        if ($iomadcourse = $DB->get_record('local_iomad_courses', ['courseid' => $row->courseid, 'hasgrade' => 0])) {
             $showgrade = false;
         }
 
@@ -621,7 +621,7 @@ class user_table extends table_sql {
                 return get_string('notstarted', 'local_report_users');
             } else {
                 if (!empty($row->licenseid)) {
-                    if ($DB->get_record('companylicense_users',
+                    if ($DB->get_record('local_iomad_company_license_users',
                                         ['licenseid' => $row->licenseid,
                                               'userid' => $row->userid,
                                               'licensecourseid' => $row->courseid,
@@ -649,7 +649,7 @@ class user_table extends table_sql {
         } else {
             if ($progress < 100 &&
                 !empty($row->licenseid) &&
-                !$DB->get_record('companylicense_users',
+                !$DB->get_record('local_iomad_company_license_users',
                                 ['licenseid' => $row->licenseid,
                                       'userid' => $row->userid,
                                       'licensecourseid' => $row->courseid,
@@ -734,7 +734,7 @@ class user_table extends table_sql {
                         return null;
                     }
                 } else if ($type == 'grade') {
-                    if ($iomadcourse = $DB->get_record('iomad_courses', ['courseid' => $row->courseid, 'hasgrade' => 0])) {
+                    if ($iomadcourse = $DB->get_record('local_iomad_courses', ['courseid' => $row->courseid, 'hasgrade' => 0])) {
                         return null;
                     }
                     // Get the criteria record.

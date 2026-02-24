@@ -71,7 +71,7 @@ if (iomad::has_capability('block/iomad_approve_access:approve', $systemcontext))
     // What type of manager am I?
     if ($companyusers = $DB->get_records_sql(
         "SELECT DISTINCT managertype
-         FROM {company_users}
+         FROM {local_iomad_company_users}
          WHERE userid = :userid
          AND companyid = :companyid
          AND managertype > 0
@@ -122,7 +122,7 @@ if ($data = $callform->get_data()) {
                 $senddenied = false;
 
                 // Get the room info.
-                $roominfo = $DB->get_record('classroom', ['id' => $event->classroomid]);
+                $roominfo = $DB->get_record('local_iomad_training_locations', ['id' => $event->classroomid]);
 
                 // Work out the capacity for the training event.
                 if (!empty($activity->coursecapacity)) {
@@ -187,7 +187,7 @@ if ($data = $callform->get_data()) {
                             $course = $DB->get_record('course', ['id' => $event->course]);
                             $mymanagers = $company->get_my_managers($result->userid, 1);
                             $eventuser = $DB->get_record('user', ['id' => $result->userid]);
-                            $location = $DB->get_record('classroom', ['id' => $event->classroomid]);
+                            $location = $DB->get_record('local_iomad_training_locations', ['id' => $event->classroomid]);
                             $location->time = userdate($event->startdatetime, $dateformat . " %I:%M%p");
 
                             // Send the emails.
@@ -261,11 +261,11 @@ if ($data = $callform->get_data()) {
                             // Add other details too.
                             $course = $DB->get_record('course', ['id' => $event->course]);
                             $mymanagers = $company->get_my_managers($result->userid, 2);
-                            if ($DB->get_record('company_users', ['userid' => $result->userid, 'managertype' => 2])) {
+                            if ($DB->get_record('local_iomad_company_users', ['userid' => $result->userid, 'managertype' => 2])) {
                                 // The requester is a department manager. Does he have a higher department manager?
                                 $nodeptmanagers = true;
                                 foreach ($mymanagers as $mymanager) {
-                                    if ($DB->get_record('company_users', ['userid' => $mymanager->userid,
+                                    if ($DB->get_record('local_iomad_company_users', ['userid' => $mymanager->userid,
                                                                           'managertype' => 2])) {
                                         $nodeptmanagers = false;
                                         break;
@@ -281,7 +281,7 @@ if ($data = $callform->get_data()) {
                             // Email the managers.
                             if (!empty($mymanagers)) {
                                 $eventuser = $DB->get_record('user', ['id' => $result->userid]);
-                                $location = $DB->get_record('classroom', ['id' => $event->classroomid]);
+                                $location = $DB->get_record('local_iomad_training_locations', ['id' => $event->classroomid]);
                                 $location->time = userdate($event->startdatetime, $dateformat . " %I:%M%p");
 
                                 // Send the emails.
@@ -333,7 +333,7 @@ if ($data = $callform->get_data()) {
                 // Are we emailing the original requester?
                 if ($sendemail || $senddenied) {
                     // Get the details for the email.
-                    $location = $DB->get_record('classroom', ['id' => $event->classroomid]);
+                    $location = $DB->get_record('local_iomad_training_locations', ['id' => $event->classroomid]);
                     $location->time = userdate($event->startdatetime, $dateformat . " %I:%M%p");
                     $approveuser = $DB->get_record('user', ['id' => $result->userid]);
                     $approvecourse = $DB->get_record('course', ['id' => $result->courseid]);

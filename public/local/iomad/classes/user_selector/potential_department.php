@@ -84,14 +84,14 @@ class potential_department extends company_base {
         // If the role type is not educator then...
         if ($this->roletype != 3) {
             // We dont want users of this type in the list.
-            $users = $DB->get_records('company_users', [
+            $users = $DB->get_records('local_iomad_company_users', [
                 'departmentid' => $this->departmentid,
                 'managertype' => $this->roletype,
                 'suspended' => 0,
             ], null, 'userid');
         } else {
             // We don't want any educators in the list.
-            $users = $DB->get_records('company_users', [
+            $users = $DB->get_records('local_iomad_company_users', [
                 'companyid' => $this->companyid,
                 'educator' => 1,
                 'suspended' => 0,
@@ -112,8 +112,8 @@ class potential_department extends company_base {
         // Only want to do this if we are showing external managers.
         if ($this->showothermanagers) {
             foreach (array_keys($userlist) as $id) {
-                $sql = "SELECT c.name FROM {company} c
-                        JOIN {company_users} cu ON c.id = cu.companyid
+                $sql = "SELECT c.name FROM {local_iomad_companies} c
+                        JOIN {local_iomad_company_users} cu ON c.id = cu.companyid
                         WHERE
                         cu.userid = $id
                         AND c.id <> :companyid
@@ -146,7 +146,7 @@ class potential_department extends company_base {
         $params['companyid'] = $this->companyid;
         $params['companyid2'] = $this->companyid;
         $params['companyid3'] = $this->companyid;
-        $params['roleid'] = $this->roleid;
+        $params['roletype'] = $this->roletype;
         $params['departmentid'] = $this->departmentid;
 
         $fields = 'SELECT DISTINCT ' . $this->required_fields_sql('u') . ", u.email";
@@ -171,7 +171,7 @@ class potential_department extends company_base {
                                                        SQL_PARAMS_NAMED,
                                                        'pcids');
             $userfilter .= "AND u.id NOT IN (
-                              SELECT userid FROM {company_users}
+                              SELECT userid FROM {local_iomad_company_users}
                               WHERE managertype = 1
                               AND companyid {$insql}
                             )";
@@ -181,11 +181,11 @@ class potential_department extends company_base {
         // Filter out users who are in another department with a elevated role
         // and that elevated role is not selected.
         $userfilter .= " AND u.id NOT IN (
-                            SELECT userid FROM {company_users}
+                            SELECT userid FROM {local_iomad_company_users}
                             WHERE companyid = :companyid
                             AND managertype <> 0
                             AND departmentid <> :departmentid
-                            AND managertype <> :roleid
+                            AND managertype <> :roletype
                          )";
 
         $deptids = $this->subdepartments;
@@ -208,7 +208,7 @@ class potential_department extends company_base {
         $params = $params + $inparams;
 
         $sql = " FROM {user} u
-                 JOIN {company_users} du ON du.userid = u.id
+                 JOIN {local_iomad_company_users} du ON du.userid = u.id
                  LEFT JOIN {user_info_data} ui ON (
                     ui.userid = u.id
                     AND ui.userid = du.userid
@@ -224,13 +224,13 @@ class potential_department extends company_base {
         $othermanagersql = " FROM {user} u where 1 = 2";
         if (!empty($this->showothermanagers)) {
             $othermanagersql = " FROM {user} u
-                                 JOIN {company_users} du on du.userid = u.id
+                                 JOIN {local_iomad_company_users} du on du.userid = u.id
                                  WHERE $wherecondition
                                  AND u.suspended = 0
                                  AND du.managertype = 1
                                  AND du.companyid <> :companyid2
                                  AND du.userid NOT IN (
-                                     SELECT userid FROM {company_users}
+                                     SELECT userid FROM {local_iomad_company_users}
                                      WHERE managertype = 1
                                      AND companyid = :companyid3
                                 )";

@@ -46,13 +46,13 @@ class company_users_course_completions extends datasource {
      */
     protected function initialise(): void {
         $companyentity = new company();
-        $companyalias = $companyentity->get_table_alias('company');
+        $companyalias = $companyentity->get_table_alias('local_iomad_companies');
 
         // Get the tables and aliases.
         $companyusersentity = new companyusers();
-        $companyusersalias = $companyusersentity->get_table_alias('companyusers');
+        $companyusersalias = $companyusersentity->get_table_alias('local_iomad_company_users');
         $departmententity = new department();
-        $departmentalias = $departmententity->get_table_alias('department');
+        $departmentalias = $departmententity->get_table_alias('local_iomad_company_departments');
         $userentity = new user();
         $useralias = $userentity->get_table_alias('user');
         $courseentity = new course();
@@ -60,19 +60,19 @@ class company_users_course_completions extends datasource {
         $coursecompletionsentity = new coursecompletions();
         $coursecompletionsalias = $coursecompletionsentity->get_table_alias('coursecompletions');
 
-        $this->set_main_table('local_iomad_track', $coursecompletionsalias);
+        $this->set_main_table('local_iomad_tracks', $coursecompletionsalias);
 
         $this->add_entity($coursecompletionsentity);
 
         // Join the company entity to the coursecompltions entity.
         $this->add_entity($companyentity
-            ->add_join("JOIN {company} {$companyalias}
+            ->add_join("JOIN {local_iomad_companies} {$companyalias}
                 ON {$coursecompletionsalias}.companyid = {$companyalias}.id")
         );
 
         // Join the companyusers entity to the coursecompltions entity.
         $this->add_entity($companyusersentity
-            ->add_join("JOIN {company_users} {$companyusersalias}
+            ->add_join("JOIN {local_iomad_company_users} {$companyusersalias}
                 ON ({$coursecompletionsalias}.userid = {$companyusersalias}.userid
                 AND {$companyalias}.id = {$companyusersalias}.companyid)")
         );
@@ -80,7 +80,7 @@ class company_users_course_completions extends datasource {
         // Join the department entity to the coursecompltions entity.
 
         $this->add_entity($departmententity
-            ->add_join("JOIN {department} {$departmentalias}
+            ->add_join("JOIN {local_iomad_company_departments} {$departmentalias}
                 ON ({$departmentalias}.company = {$companyalias}.id
                     AND {$departmentalias}.id = {$companyusersalias}.departmentid)")
         );

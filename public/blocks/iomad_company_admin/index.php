@@ -62,13 +62,13 @@ if (!empty($company) &&
     (iomad::has_capability('block/iomad_company_admin:company_add', $companycontext) ||
     $companyuser = $DB->get_record_sql(
         "SELECT DISTINCT managertype
-         FROM {company_users}
+         FROM {local_iomad_company_users}
          WHERE companyid = :companyid
          AND userid = :userid",
         ['companyid' => $company, 'userid' => $USER->id]))) {
 
     // Deal with any potential theme changes.
-    if ($companyrec = $DB->get_record('company', ['id' => $company])) {
+    if ($companyrec = $DB->get_record('local_iomad_companies', ['id' => $company])) {
         if (!empty($SESSION->theme) &&
             $companyrec->theme != $SESSION->theme) {
             try {
@@ -90,7 +90,7 @@ if (!empty($company) &&
     $SESSION->currenteditingcompany = $company;
 
     // Record that this change for later.
-    $DB->set_field('company_users', 'lastused', time(), ['userid' => $USER->id, 'companyid' => $company]);
+    $DB->set_field('local_iomad_company_users', 'lastused', time(), ['userid' => $USER->id, 'companyid' => $company]);
 
     // Do we have rights to see this any more?
     if (!empty($companyuser) && $companyuser->managertype == 0) {
@@ -100,7 +100,7 @@ if (!empty($company) &&
 
 // Change the theme if necessary.
 if (!empty($company) && $company != $SESSION->currenteditingcompany) {
-    if ($companyrec = $DB->get_record('company', ['id' => $company])) {
+    if ($companyrec = $DB->get_record('local_iomad_companies', ['id' => $company])) {
         if ($companyrec->theme != $SESSION->theme) {
             try {
                 $themeconfig = theme_config::load($companyrec->theme);
@@ -119,7 +119,7 @@ if (!empty($company) && $company != $SESSION->currenteditingcompany) {
 }
 
 // Check if there are any companies.
-if (!$companycount = $DB->count_records('company')) {
+if (!$companycount = $DB->count_records('local_iomad_companies')) {
 
     // If not redirect to create form.
     redirect(new moodle_url('/blocks/iomad_company_admin/company_edit_form.php', ['createnew' => 1]));
@@ -133,7 +133,7 @@ if (empty($SESSION->currenteditingcompany) &&
         $SESSION->currenteditingcompany = $company;
     } else {
         // Otherwise, make the first (or only) company the current one.
-        $companies = $DB->get_records('company');
+        $companies = $DB->get_records('local_iomad_companies');
         $firstcompany = reset($companies);
         $SESSION->currenteditingcompany = $firstcompany->id;
         $company = $firstcompany->id;
@@ -364,12 +364,12 @@ $companyselect->onecompany = false;
 if (!iomad::has_capability('block/iomad_company_admin:company_view_all', $systemcontext)) {
     if ($DB->count_records_sql(
         "SELECT COUNT(DISTINCT companyid)
-         FROM {company_users}
+         FROM {local_iomad_company_users}
          WHERE userid = :userid",
         ['userid' => $USER->id]) <= 1 ) {
-        $companyrecords = $DB->get_records('company_users', ['userid' => $USER->id]);
+        $companyrecords = $DB->get_records('local_iomad_company_users', ['userid' => $USER->id]);
         $companyuser = array_pop($companyrecords);
-        $company = $DB->get_record('company', ['id' => $companyuser->companyid], '*', MUST_EXIST);
+        $company = $DB->get_record('local_iomad_companies', ['id' => $companyuser->companyid], '*', MUST_EXIST);
         $companyselect->companyname = $company->name;
         $companyselect->onecompany = true;
     }

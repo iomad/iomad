@@ -61,12 +61,12 @@ class potential_company extends company_base {
         // Deal with shared frameworks.  Cannot be added to a company in this manner.
         $sharedsql = " AND cf.id NOT IN (
                            SELECT frameworkid
-                           FROM {iomad_frameworks}
+                           FROM {local_iomad_frameworks}
                            WHERE shared <> 1
                        )
                        AND cf.id NOT IN (
                            SELECT frameworkid
-                           FROM {company_comp_frameworks}
+                           FROM {local_iomad_company_comp_frameworks}
                            WHERE companyid = :companyid
                        )";
 

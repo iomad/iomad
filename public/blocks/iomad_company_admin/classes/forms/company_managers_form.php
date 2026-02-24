@@ -114,7 +114,7 @@ class company_managers_form extends moodleform {
             'departmentid' => $departmentid,
             'roletype' => $this->roletype,
             'subdepartments' => $this->subhierarchieslist,
-            'parentdepartmentid' => $parentlevel,
+            'parentdepartment' => $parentlevel,
             'showothermanagers' => $this->showothermanagers,
         ];
         $this->potentialusers = new potential_department('potentialmanagers', $options);
@@ -272,7 +272,7 @@ class company_managers_form extends moodleform {
                         if (!iomad::has_capability('block/iomad_company_admin:company_add', $this->context  ) && $roletype == 1 &&
                             $DB->get_record_sql(
                                 "SELECT id
-                                 FROM {company_users}
+                                 FROM {local_iomad_company_users}
                                  WHERE userid = :userid
                                  AND managertype = :roletype
                                  AND companyid <> :companyid",
@@ -287,7 +287,7 @@ class company_managers_form extends moodleform {
                     if (!get_config('local_iomad', 'autoenrol_managers') && $roletype != 3) {
                         // We have to be mindful of educator types here.
                         if ($userrec = $DB->get_record(
-                            'company_users',
+                            'local_iomad_company_users',
                             [
                                 'userid' => $adduser->id,
                                 'companyid' => $this->selectedcompany,
@@ -317,7 +317,7 @@ class company_managers_form extends moodleform {
                     // Check if the user is in any other department.
                     if ($otherdepartments = $DB->get_records_sql(
                         "SELECT departmentid
-                         FROM {company_users}
+                         FROM {local_iomad_company_users}
                          WHERE userid = :userid
                          AND departmentid <> :departmentid
                          AND companyid = :companyid",
@@ -355,7 +355,7 @@ class company_managers_form extends moodleform {
 
                     // Get the current company_users record.
                     $userrec = $DB->get_record(
-                        'company_users',
+                        'local_iomad_company_users',
                         [
                             'userid' => $removeuser->id,
                             'companyid' => $this->selectedcompany,
@@ -364,7 +364,7 @@ class company_managers_form extends moodleform {
                     if (!get_config('local_iomad', 'autoenrol_managers') && $roletype != 3) {
                         // We have to be mindful of educator types here.
                         $userrec = $DB->get_record(
-                            'company_users',
+                            'local_iomad_company_users',
                             [
                                 'userid' => $removeuser->id,
                                 'companyid' => $this->selectedcompany,
@@ -384,11 +384,11 @@ class company_managers_form extends moodleform {
                         $educator);
 
                     // Remove the current record.
-                    $DB->delete_records('company_users', ['id' => $userrec->id]);
+                    $DB->delete_records('local_iomad_company_users', ['id' => $userrec->id]);
 
                     // Does the user exist in the company still?
                     if (!$DB->get_records(
-                        'company_users',
+                        'local_iomad_company_users',
                         [
                             'userid' => $removeuser->id,
                             'companyid' => $this->selectedcompany,

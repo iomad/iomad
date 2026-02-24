@@ -95,10 +95,10 @@ class capabilitiesroles implements renderable, templatable {
 
         // Get company info for heading.
         if (empty($this->templateid)) {
-            $company = $DB->get_record('company', ['id' => $this->companyid], '*', MUST_EXIST);
+            $company = $DB->get_record('local_iomad_companies', ['id' => $this->companyid], '*', MUST_EXIST);
             $title = $company->name;
         } else {
-            $template = $DB->get_record('company_role_templates', ['id' => $this->templateid], '*', MUST_EXIST);
+            $template = $DB->get_record('local_iomad_company_role_templates', ['id' => $this->templateid], '*', MUST_EXIST);
             $title = get_string('roletemplate', 'block_iomad_company_admin') . ' ' . $template->name;
         }
 

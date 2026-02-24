@@ -86,8 +86,8 @@ if (empty($templatesetid)) {
          ets.body,
          ets.signature,
          ets.lang
-         FROM {email_template} et
-         JOIN {email_template_strings} ets ON (et.id = ets.templateid)
+         FROM {local_iomad_email_templates} et
+         JOIN {local_iomad_email_template_strings} ets ON (et.id = ets.templateid)
          WHERE et.id = :id
          AND ets.lang = :lang",
         ['id' => $templateid,
@@ -102,8 +102,8 @@ if (empty($templatesetid)) {
          ets.body,
          ets.signature,
          ets.lang
-         FROM {email_templateset_templates} et
-         JOIN {email_templateset_template_strings} ets ON (et.id = ets.templatesetid)
+         FROM {local_iomad_email_templateset_templates} et
+         JOIN {local_iomad_email_templateset_template_strings} ets ON (et.id = ets.templatesetid)
          WHERE et.id = :id
          AND ets.lang = :lang",
         ['id' => $templateid,
@@ -186,23 +186,23 @@ if ((!empty($reset) ||
         $templaterecord->repeatperiod = 0;
         $templaterecord->repeatvalue = 0;
         if (empty($templatesetid)) {
-            $DB->update_record('email_template', $templaterecord);
+            $DB->update_record('local_iomad_email_templates', $templaterecord);
             $resetarray = ['templateid' => $templaterecord->id];
             if (!empty($reset)) {
                 $resetarray['lang'] = $lang;
             }
-            $DB->set_field('email_template_strings', 'subject', null, $resetarray);
-            $DB->set_field('email_template_strings', 'body', null, $resetarray);
-            $DB->set_field('email_template_strings', 'signature', null, $resetarray);
+            $DB->set_field('local_iomad_email_template_strings', 'subject', null, $resetarray);
+            $DB->set_field('local_iomad_email_template_strings', 'body', null, $resetarray);
+            $DB->set_field('local_iomad_email_template_strings', 'signature', null, $resetarray);
         } else {
-            $DB->update_record('email_templateset_templates', $templaterecord);
+            $DB->update_record('local_iomad_email_templateset_templates', $templaterecord);
             $resetarray = ['templatesetid' => $templaterecord->id];
             if (!empty($reset)) {
                 $resetarray['lang'] = $lang;
             }
-            $DB->set_field('email_templateset_template_strings', 'subject', null, $resetarray);
-            $DB->set_field('email_templateset_template_strings', 'body', null, $resetarray);
-            $DB->set_field('email_templateset_template_strings', 'signature', null, $resetarray);
+            $DB->set_field('local_iomad_email_templateset_template_strings', 'subject', null, $resetarray);
+            $DB->set_field('local_iomad_email_templateset_template_strings', 'body', null, $resetarray);
+            $DB->set_field('local_iomad_email_templateset_template_strings', 'signature', null, $resetarray);
         }
 
         redirect(new moodle_url('/local/iomad/template_list.php', ['templatesetid' => $templatesetid]),
@@ -215,7 +215,7 @@ if ((!empty($reset) ||
 
 // Set the name for the page.
 if (!empty($templatesetid)) {
-    $templatesetrec = $DB->get_record('email_templateset', ['id' => $templatesetid]);
+    $templatesetrec = $DB->get_record('local_iomad_email_templatesets', ['id' => $templatesetid]);
     $linktextextra = (object) ['name' => get_string($templatename .'_name', 'local_iomad'),
                                'companyname' => format_string($templatesetrec->templatesetname)];
 } else {
@@ -277,13 +277,13 @@ if ($mform->is_cancelled()) {
         $data->signature = $data->signature_editor['text'];
         if (!empty($data->templatesetid)) {
             $data->templateset = $data->templatesetid;
-            $templateid = $DB->insert_record('email_templateset_templates', $data);
+            $templateid = $DB->insert_record('local_iomad_email_templateset_templates', $data);
             $data->templatesetid = $templateid;
-            $DB->insert_record('email_templateset_template_strings', $data);
+            $DB->insert_record('local_iomad_email_templateset_template_strings', $data);
         } else {
-            $templateid = $DB->insert_record('email_template', $data);
+            $templateid = $DB->insert_record('local_iomad_email_templates', $data);
             $data->templateid = $templateid;
-            $DB->insert_record('email_template_strings', $data);
+            $DB->insert_record('local_iomad_email_template_strings', $data);
         }
         $data->id = $templateid;
         $redirectmessage = get_string('templatecreatedok', 'local_iomad');
@@ -293,15 +293,15 @@ if ($mform->is_cancelled()) {
         $data->signature = $data->signature_editor['text'];
         if (!empty($data->templatesetid)) {
             $data->templateset = $data->templatesetid;
-            $DB->update_record('email_templateset_templates', $data);
+            $DB->update_record('local_iomad_email_templateset_templates', $data);
             $data->templatesetid = $data->id;
             $data->id = $data->templatestringid;
-            $DB->update_record('email_templateset_template_strings', $data);
+            $DB->update_record('local_iomad_email_templateset_template_strings', $data);
         } else {
-            $DB->update_record('email_template', $data);
+            $DB->update_record('local_iomad_email_templates', $data);
             $data->templateid = $data->id;
             $data->id = $data->templatestringid;
-            $DB->update_record('email_template_strings', $data);
+            $DB->update_record('local_iomad_email_template_strings', $data);
         }
         $redirectmessage = get_string('templateupdatedok', 'local_iomad');
     }

@@ -74,7 +74,7 @@ class importusertask extends adhoc_task {
                                 expiredstop,
                                 coursecleared,
                                 licenseallocated
-                FROM {local_iomad_track}
+                FROM {local_iomad_tracks}
                 WHERE userid = :userid
                 AND companyid != :companyid";
 
@@ -91,7 +91,7 @@ class importusertask extends adhoc_task {
             }
             $comprecord->modifiedtime = $runtime;
             $comprecord->companyid = $customdata->companyid;
-            $DB->insert_record('local_iomad_track', $comprecord);
+            $DB->insert_record('local_iomad_tracks', $comprecord);
         }
 
         \do_redocerts($this->importuser, 0, $customdata->companyid);

@@ -104,7 +104,7 @@ class company_users_licenses_form extends moodleform {
         $this->companydepartment = $this->parentlevel->id;
         $this->licenseid = $licenseid;
         $this->liccourses = $DB->get_records_sql("SELECT c.* FROM {course} c
-                                                  JOIN {companylicense_courses} clc
+                                                  JOIN {local_iomad_company_license_courses} clc
                                                   ON (c.id = clc.courseid)
                                                   WHERE clc.licenseid = :licenseid",
                                                  ['licenseid' => $this->licenseid]);
@@ -124,7 +124,7 @@ class company_users_licenses_form extends moodleform {
         }
         $this->userid = $userid;
         $this->user = $DB->get_record('user', ['id' => $this->userid]);
-        $this->license = $DB->get_record('companylicense', ['id' => $this->licenseid]);
+        $this->license = $DB->get_record('local_iomad_company_licenses', ['id' => $this->licenseid]);
 
         parent::__construct($actionurl);
     }
@@ -153,7 +153,7 @@ class company_users_licenses_form extends moodleform {
                 'user' => $this->user,
                 'departmentid' => $this->departmentid,
                 'subdepartments' => $this->subhierarchieslist,
-                'parentdepartmentid' => $this->parentlevel,
+                'parentdepartment' => $this->parentlevel,
                 'licenseid' => $this->licenseid,
                 'shared' => true,
             ];
@@ -272,7 +272,7 @@ class company_users_licenses_form extends moodleform {
                 $mform->addHelpButton('allocate', 'programallocate', 'block_iomad_company_admin');
 
                 // Do we have any of these courses /license combo yet?
-                if ($DB->get_records('companylicense_users', ['userid' => $this->userid, 'licenseid' => $this->licenseid])) {
+                if ($DB->get_records('local_iomad_company_license_users', ['userid' => $this->userid, 'licenseid' => $this->licenseid])) {
                     $mform->addElement('hidden', 'inuse', true);
                     $mform->setType('inuse', PARAM_INT);
                     $programselect->setSelected(true);
@@ -408,7 +408,7 @@ class company_users_licenses_form extends moodleform {
                 if ($inuse == $allocate && $allocate == 1) {
                     return;
                 }
-                if ($licenserecord = (array) $DB->get_record('companylicense', ['id' => $this->licenseid])) {
+                if ($licenserecord = (array) $DB->get_record('local_iomad_company_licenses', ['id' => $this->licenseid])) {
                     if ($allocate && ($licenserecord['used'] + count($this->liccourses) > $licenserecord['allocation'])) {
                         echo html_writer::tag(
                             'div',
@@ -438,7 +438,7 @@ class company_users_licenses_form extends moodleform {
                         // Is the user using any of the licenses and it's not a subscription?
                         if (!$allocate &&
                             $licenserecord['type'] == 0 &&
-                            $DB->get_records('companylicense_users', [
+                            $DB->get_records('local_iomad_company_license_users', [
                                 'userid' => $this->userid,
                                 'licenseid' => $licenserecord['id'],
                                 'isusing' => 1,
@@ -458,9 +458,9 @@ class company_users_licenses_form extends moodleform {
                                 ];
 
                                 // Check we are not adding multiple times.
-                                if (!$DB->get_record('companylicense_users', $assignrecord)) {
+                                if (!$DB->get_record('local_iomad_company_license_users', $assignrecord)) {
                                     $assignrecord['issuedate'] = time();
-                                    $assignrecord['id'] = $DB->insert_record('companylicense_users', $assignrecord);
+                                    $assignrecord['id'] = $DB->insert_record('local_iomad_company_license_users', $assignrecord);
 
                                     // Create an event.
                                     $eventother = [
@@ -478,13 +478,13 @@ class company_users_licenses_form extends moodleform {
                                     $event->trigger();
                                 }
                             } else {
-                                $userlicenserecord = $DB->get_record('companylicense_users', [
+                                $userlicenserecord = $DB->get_record('local_iomad_company_license_users', [
                                     'userid' => $this->userid,
                                     'licensecourseid' => $course->id,
                                     'licenseid' => $licenserecord['id'],
                                 ]);
                                 if (!empty($userlicenserecord->id)) {
-                                    $DB->delete_records('companylicense_users', ['id' => $userlicenserecord->id]);
+                                    $DB->delete_records('local_iomad_company_license_users', ['id' => $userlicenserecord->id]);
 
                                     // Create an event.
                                     $eventother = [
@@ -512,7 +512,7 @@ class company_users_licenses_form extends moodleform {
                 $coursestoassign = $this->potentialcourses->get_selected_courses();
                 if (!empty($coursestoassign)) {
 
-                    if ($licenserecord = (array) $DB->get_record('companylicense', ['id' => $this->licenseid])) {
+                    if ($licenserecord = (array) $DB->get_record('local_iomad_company_licenses', ['id' => $this->licenseid])) {
                         if ($licenserecord['used'] + count($coursestoassign) > $licenserecord['allocation']) {
                             echo html_writer::tag(
                                 'div',
@@ -547,9 +547,9 @@ class company_users_licenses_form extends moodleform {
                                 ];
 
                                 // Check we are not adding multiple times.
-                                if (!$DB->get_record('companylicense_users', $assignrecord)) {
+                                if (!$DB->get_record('local_iomad_company_license_users', $assignrecord)) {
                                     $assignrecord['issuedate'] = time();
-                                    $userlicid = $DB->insert_record('companylicense_users', $assignrecord);
+                                    $userlicid = $DB->insert_record('local_iomad_company_license_users', $assignrecord);
 
                                     // Create an event.
                                     $eventother = [
@@ -580,11 +580,11 @@ class company_users_licenses_form extends moodleform {
                 $coursestounassign = $this->currentcourses->get_selected_courses();
                 if (!empty($coursestounassign)) {
                     foreach ($coursestounassign as $removecourse) {
-                        if ($userlicenserecord = $DB->get_record('companylicense_users',
+                        if ($userlicenserecord = $DB->get_record('local_iomad_company_license_users',
                                                                  ['id' => $removecourse->id])) {
-                            $licenserecord = (array) $DB->get_record('companylicense', ['id' => $userlicenserecord->licenseid]);
+                            $licenserecord = (array) $DB->get_record('local_iomad_company_licenses', ['id' => $userlicenserecord->licenseid]);
                             if ($userlicenserecord->isusing == 0 || $licenserecord['type'] != 0) {
-                                $DB->delete_records('companylicense_users', ['id' => $userlicenserecord->id]);
+					$DB->delete_records('local_iomad_company_license_users', ['id' => $userlicenserecord->id]);
 
                                 // Create an event.
                                 $eventother = [

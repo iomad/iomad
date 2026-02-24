@@ -66,8 +66,8 @@ class iomad_courses_table extends table_sql {
     public function col_company($row) {
         global $output, $DB;
 
-        $companies = $DB->get_records_sql("SELECT c.id,c.shortname FROM {company} c
-                                           JOIN {company_course} cc ON (c.id = cc.companyid)
+        $companies = $DB->get_records_sql("SELECT c.id,c.shortname FROM {local_iomad_companies} c
+                                           JOIN {local_iomad_company_courses} cc ON (c.id = cc.companyid)
                                            WHERE cc.courseid = :courseid",
                                            ['courseid' => $row->courseid]);
         $linkurl = "/blocks/iomad_company_admin/iomad_courses_form.php";
@@ -156,7 +156,7 @@ class iomad_courses_table extends table_sql {
         // If it's not a license course and it's in the company_created_courses table - then we can do more things with it.
         if (($row->licensed == 0 || $row->licensed == 3) &&
              $row->shared == 0 &&
-             $DB->get_record('company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
+             $DB->get_record('local_iomad_company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
             $canbemanaged = true;
         }
 
@@ -305,7 +305,7 @@ class iomad_courses_table extends table_sql {
         $companycreatedcourse = false;
         // If it's not a license course and it's in the company_created_courses table - then we can do more things with it.
         if (($row->licensed == 0 || $row->licensed = 3) &&
-            $DB->get_record('company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
+            $DB->get_record('local_iomad_company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
             $companycreatedcourse = true;
         }
 
@@ -344,7 +344,7 @@ class iomad_courses_table extends table_sql {
         $companycreatedcourse = false;
         // If it's not a license course and it's in the company_created_courses table - then we can do more things with it.
         if (($row->licensed == 0 || $row->licensed = 3) &&
-            $DB->get_record('company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
+            $DB->get_record('local_iomad_company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
             $companycreatedcourse = true;
         }
 
@@ -383,7 +383,7 @@ class iomad_courses_table extends table_sql {
         $companycreatedcourse = false;
         // If it's not a license course and it's in the company_created_courses table - then we can do more things with it.
         if (($row->licensed == 0 || $row->licensed = 3) &&
-            $DB->get_record('company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
+            $DB->get_record('local_iomad_company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
             $companycreatedcourse = true;
         }
 
@@ -422,7 +422,7 @@ class iomad_courses_table extends table_sql {
         $companycreatedcourse = false;
         // If it's not a license course and it's in the company_created_courses table - then we can do more things with it.
         if (($row->licensed == 0 || $row->licensed = 3) &&
-            $DB->get_record('company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
+            $DB->get_record('local_iomad_company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
             $companycreatedcourse = true;
         }
 
@@ -461,7 +461,7 @@ class iomad_courses_table extends table_sql {
         $companycreatedcourse = false;
         // If it's not a license course and it's in the company_created_courses table - then we can do more things with it.
         if (($row->licensed == 0 || $row->licensed = 3) &&
-            $DB->get_record('company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
+            $DB->get_record('local_iomad_company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
             $companycreatedcourse = true;
         }
 
@@ -503,7 +503,7 @@ class iomad_courses_table extends table_sql {
         $companycreatedcourse = false;
         // If it's not a license course and it's in the company_created_courses table - then we can do more things with it.
         if (($row->licensed == 0 || $row->licensed = 3) &&
-            $DB->get_record('company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
+            $DB->get_record('local_iomad_company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
             $companycreatedcourse = true;
         }
 
@@ -545,7 +545,7 @@ class iomad_courses_table extends table_sql {
         $companycreatedcourse = false;
         // If it's not a license course and it's in the company_created_courses table - then we can do more things with it.
         if (($row->licensed == 0 || $row->licensed = 3) &&
-            $DB->get_record('company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
+            $DB->get_record('local_iomad_company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
             $companycreatedcourse = true;
         }
 
@@ -632,7 +632,7 @@ class iomad_courses_table extends table_sql {
             $companycreatedcourse = false;
             // If it's not a license course and it's in the company_created_courses table - then we can do more things with it.
             if (($row->licensed == 0 || $row->licensed = 3) &&
-                $DB->get_record('company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
+                $DB->get_record('local_iomad_company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
                 $companycreatedcourse = true;
             }
             // Is this a course the company could fully manage?

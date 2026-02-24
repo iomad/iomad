@@ -46,9 +46,9 @@ class companylicenses extends datasource {
      */
     protected function initialise(): void {
         $companyentity = new company();
-        $companyalias = $companyentity->get_table_alias('company');
+        $companyalias = $companyentity->get_table_alias('local_iomad_companies');
 
-        $this->set_main_table('company', $companyalias);
+        $this->set_main_table('local_iomad_companies', $companyalias);
 
         $this->add_entity($companyentity);
 
@@ -57,7 +57,7 @@ class companylicenses extends datasource {
         $companylicensealias = $companylicenseentity->get_table_alias('companylicense');
 
         $this->add_entity($companylicenseentity
-            ->add_join("JOIN {companylicense} {$companylicensealias}
+            ->add_join("JOIN {local_iomad_company_licenses} {$companylicensealias}
                 ON {$companylicensealias}.companyid = {$companyalias}.id")
         );
 

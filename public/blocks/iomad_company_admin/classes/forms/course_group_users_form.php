@@ -143,7 +143,7 @@ class course_group_users_form extends moodleform {
                 'groupid' => $this->groupid,
                 'departmentid' => $this->departmentid,
                 'subdepartments' => $this->subhierarchieslist,
-                'parentdepartmentid' => $this->parentlevel,
+                'parentdepartment' => $this->parentlevel,
             ];
             if (empty($this->potentialusers)) {
                  $this->potentialusers = new potential_group('potentialgroupusers', $options);

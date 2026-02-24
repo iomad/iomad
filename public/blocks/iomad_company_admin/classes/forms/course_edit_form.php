@@ -71,7 +71,7 @@ class course_edit_form extends moodleform {
         $this->selectedcompany = $companyid;
         $this->context = context_coursecat::instance($CFG->defaultrequestcategory);
         $this->editoroptions = $editoroptions;
-        $this->companyrec = $DB->get_record('company', ['id' => $companyid]);
+        $this->companyrec = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
         $this->companycontext = context_company::instance($companyid);
 
         parent::__construct($actionurl);
@@ -142,7 +142,7 @@ class course_edit_form extends moodleform {
 
         // Add custom fields to the form.
         $handler = core_course\customfield\course_handler::create();
-        $handler->set_parent_context(context_coursecat::instance($this->companyrec->category));
+        $handler->set_parent_context(context_coursecat::instance($this->companyrec->coursecategoryid));
         $handler->instance_form_definition($mform, 0);
 
         // Add action buttons.

@@ -49,7 +49,7 @@ class dashboard_page_viewed extends base {
     protected function init() {
         $this->data['crud'] = 'r';
         $this->data['edulevel'] = self::LEVEL_OTHER;
-        $this->data['objecttable'] = 'company';
+        $this->data['objecttable'] = 'local_iomad_companies';
     }
 
     /**

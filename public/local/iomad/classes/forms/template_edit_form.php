@@ -155,8 +155,8 @@ class template_edit_form extends moodleform {
             $langs = get_string_manager()->get_list_of_translations();
             $languages = $DB->get_records_sql(
                 "SELECT DISTINCT ets.lang
-                 FROM {email_template} et
-                 JOIN {email_template_strings} ets ON (et.id = ets.templateid)
+                 FROM {local_iomad_email_templates} et
+                 JOIN {local_iomad_email_template_strings} ets ON (et.id = ets.templateid)
                  WHERE et.companyid = :companyid
                  AND et.name = :name",
                 ['companyid' => $this->companyid,

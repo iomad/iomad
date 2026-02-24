@@ -92,7 +92,7 @@ if ($delete && confirm_sesskey()) {
 
     // Sanity checking.
     iomad::require_capability('block/iomad_company_admin:classrooms_delete', $companycontext);
-    $classroom = $DB->get_record('classroom', ['id' => $delete], '*', MUST_EXIST);
+    $classroom = $DB->get_record('local_iomad_training_locations', ['id' => $delete], '*', MUST_EXIST);
 
     // Are we showing the confirmation page?
     if ($confirm != md5($delete)) {
@@ -109,7 +109,7 @@ if ($delete && confirm_sesskey()) {
         // Do the deletion.
         $transaction = $DB->start_delegated_transaction();
 
-        if ($DB->delete_records('classroom', ['id' => $delete])) {
+        if ($DB->delete_records('local_iomad_training_locations', ['id' => $delete])) {
             // Worked - commit and redirect with a message.
             $transaction->allow_commit();
             redirect($returnurl, get_string('classroomdeletedok', 'block_iomad_company_admin'), null, notification::NOTIFY_SUCCESS);
@@ -182,7 +182,7 @@ if (!empty($search)) {
 }
 
 // Set up the table.
-$table->set_sql("*", "{classroom}", "companyid = :companyid $searchsql", $sqlparams);
+$table->set_sql("*", "{local_iomad_training_locations}", "companyid = :companyid $searchsql", $sqlparams);
 $table->define_baseurl($baseurl);
 $table->define_columns($tablecolumns);
 $table->define_headers($tableheaders);

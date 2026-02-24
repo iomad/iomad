@@ -58,7 +58,7 @@ class provider implements
      */
     public static function get_metadata(collection $collection): collection {
         $collection->add_database_table(
-            'company_users',
+            'local_iomad_company_users',
             [
                 'companyid' => 'privacy:metadata:company_users:companyid',
                 'userid' => 'privacy:metadata:company_users:userid',
@@ -66,11 +66,11 @@ class provider implements
                 'departmentid' => 'privacy:metadata:company_users:departmentid',
                 'suspended' => 'privacy:metadata:company_users:suspended',
             ],
-            'privacy:metadata:company_users'
+            'privacy:metadata:local_iomad_company_users'
         );
 
         $collection->add_database_table(
-            'companylicense_users',
+            'local_iomad_company_license_users',
             [
                 'licenseid' => 'privacy:metadata:companylicense_users:licenseid',
                 'userid' => 'privacy:metadata:companylicense_users:userid',
@@ -82,7 +82,7 @@ class provider implements
                 'issuedate' => 'privacy:metadata:companylicense_users:issuedate',
                 'groupid' => 'privacy:metadata:companylicense_users:groupid',
             ],
-            'privacy:metadata:companylicense_users'
+            'privacy:metadata:local_iomad_company_license_users'
         );
 
         return $collection;
@@ -127,14 +127,14 @@ class provider implements
         $context = context_system::instance();
 
         // Get the company information.
-        if ($companies = $DB->get_records('company_users', ['userid' => $user->id])) {
+        if ($companies = $DB->get_records('local_iomad_company_users', ['userid' => $user->id])) {
             $companiesout = (object) [];
             $companiesout->companies = $companies;
             writer::with_context($context)->export_data([get_string('companyusers', 'block_iomad_company_admin')], $companiesout);
         }
 
         // Get the license allocation information.
-        if ($licenses = $DB->get_records('companylicense_users', ['userid' => $user->id])) {
+        if ($licenses = $DB->get_records('local_iomad_company_license_users', ['userid' => $user->id])) {
             $licensesout = (object) [];
             foreach ($licenses as $id => $license) {
                 if (!empty($license->issuedate)) {
@@ -160,8 +160,8 @@ class provider implements
         if (empty($context)) {
             return;
         }
-        $DB->delete_records('company_users');
-        $DB->delete_records('companylicense_users');
+        $DB->delete_records('local_iomad_company_users');
+        $DB->delete_records('local_iomad_company_license_users');
     }
 
     /**
@@ -177,8 +177,8 @@ class provider implements
         }
 
         $userid = $contextlist->get_user()->id;
-        $DB->delete_records('company_users', ['userid' => $userid]);
-        $DB->execute("UPDATE {companylicense_users} SET userid = -1 WHERE userid = :userid",
+        $DB->delete_records('local_iomad_company_users', ['userid' => $userid]);
+        $DB->execute("UPDATE {local_iomad_company_license_users} SET userid = -1 WHERE userid = :userid",
                       ['userid' => $userid]);
     }
 
@@ -200,7 +200,7 @@ class provider implements
         ];
 
         $sql = "SELECT cu.userid as userid
-                  FROM {company_users} cu
+                  FROM {local_iomad_company_users} cu
                   JOIN {context} ctx
                        ON ctx.instanceid = cu.userid
                        AND ctx.contextlevel = :contextuser
@@ -220,8 +220,8 @@ class provider implements
         $context = $userlist->get_context();
 
         if ($context instanceof context_user) {
-            $DB->delete_records('company_users', ['userid' => $context->id]);
-            $DB->execute("UPDATE {companylicense_users} SET userid = -1 WHERE userid = :userid",
+            $DB->delete_records('local_iomad_company_users', ['userid' => $context->id]);
+            $DB->execute("UPDATE {local_iomad_company_license_users} SET userid = -1 WHERE userid = :userid",
                           ['userid' => $userid]);
         }
     }

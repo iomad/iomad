@@ -57,7 +57,7 @@ class company_user_unassigned extends base {
     protected function init() {
         $this->data['crud'] = 'd';
         $this->data['edulevel'] = self::LEVEL_OTHER;
-        $this->data['objecttable'] = 'company';
+        $this->data['objecttable'] = 'local_iomad_companies';
     }
 
     /**

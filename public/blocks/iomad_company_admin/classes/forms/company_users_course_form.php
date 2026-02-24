@@ -135,7 +135,7 @@ class company_users_course_form extends moodleform {
                 'user' => $this->user,
                 'departmentid' => $this->departmentid,
                 'subdepartments' => $this->subhierarchieslist,
-                'parentdepartmentid' => $this->parentlevel,
+                'parentdepartment' => $this->parentlevel,
                 'shared' => true,
             ];
             if (! $this->potentialcourses) {

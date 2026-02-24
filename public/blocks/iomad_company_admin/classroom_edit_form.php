@@ -66,7 +66,7 @@ if ($classroomid) {
     $isadding = false;
 
     // Do some sanity checking.
-    $classroomrecord = (object) $DB->get_record('classroom', ['id' => $classroomid], '*', MUST_EXIST);
+    $classroomrecord = (object) $DB->get_record('local_iomad_training_locations', ['id' => $classroomid], '*', MUST_EXIST);
     iomad::require_capability('block/iomad_company_admin:classrooms_edit', $companycontext);
 
     // Set up the form data.
@@ -158,12 +158,12 @@ if ($mform->is_cancelled()) {
     // Update or create the new record.
     if ($isadding) {
         $data->companyid = $companyid;
-        $classroomid = $DB->insert_record('classroom', $data);
+        $classroomid = $DB->insert_record('local_iomad_training_locations', $data);
         $data->id = $classroomid;
         $message = get_string('classroomaddedok', 'block_iomad_company_admin');
     } else {
         $data->id = $classroomid;
-        $DB->update_record('classroom', $data);
+        $DB->update_record('local_iomad_training_locations', $data);
         $message = get_string('classroomupdatedok', 'block_iomad_company_admin');
     }
 
@@ -176,8 +176,8 @@ if ($mform->is_cancelled()) {
         'block_iomad_company_admin',
         'classroom_description',
         0);
-    $DB->set_field('classroom', 'description', $editordata->description, ['id' => $classroomid]);
-    $DB->set_field('classroom', 'descriptionformat', $editordata->descriptionformat, ['id' => $classroomid]);
+    $DB->set_field('local_iomad_training_locations', 'description', $editordata->description, ['id' => $classroomid]);
+    $DB->set_field('local_iomad_training_locations', 'descriptionformat', $editordata->descriptionformat, ['id' => $classroomid]);
 
     // Go back to the list of all locations.
     redirect($teachinglocationlist, $message, null, notification::NOTIFY_SUCCESS);

@@ -57,7 +57,7 @@ class companyenableshop extends adhoc_task {
 
         $data = $this->get_custom_data();
         $company = new company($data->companyid);
-        $companyrecord = $DB->get_record('company', ['id' => $data->companyid]);
+        $companyrecord = $DB->get_record('local_iomad_companies', ['id' => $data->companyid]);
         iomad_commerce::update_company($companyrecord, $companyrecord);
 
         // Get the company user ids.
@@ -67,7 +67,7 @@ class companyenableshop extends adhoc_task {
         foreach (array_keys($userids) as $userid) {
             if ($user = $DB->get_record('user', ['id' => $userid, 'suspended' => 0, 'deleted' => 0])) {
                 $user->company = $companyrecord->name;
-                $compuser = $DB->get_record('company_users', ['userid' => $userid, 'companyid' => $data->companyid]);
+                $compuser = $DB->get_record('local_iomad_company_users', ['userid' => $userid, 'companyid' => $data->companyid]);
                 if ($compuser->managertype == 1 ) {
                     $user->manager = 'yes';
                 } else {

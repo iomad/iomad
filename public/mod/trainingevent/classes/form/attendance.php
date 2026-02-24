@@ -220,9 +220,9 @@ class attendance extends dynamic_form {
 
                 // What is the users approval level, if any?
                 if (has_capability('block/iomad_company_admin:company_add', context_system::instance()) ||
-                    $manageruser = $DB->get_records('company_users', ['userid' => $USER->id, 'managertype' => 1])) {
+                    $manageruser = $DB->get_records('local_iomad_company_users', ['userid' => $USER->id, 'managertype' => 1])) {
                     $myapprovallevel = "company";
-                } else if ($manageruser = $DB->get_records('company_users', ['userid' => $USER->id, 'managertype' => 2])) {
+                } else if ($manageruser = $DB->get_records('local_iomad_company_users', ['userid' => $USER->id, 'managertype' => 2])) {
                     $myapprovallevel = "department";
                 } else {
                     $myapprovallevel = "none";
@@ -237,7 +237,7 @@ class attendance extends dynamic_form {
                 }
 
                 // Get the location details.
-                $chosenlocation = $DB->get_record('classroom', ['id' => $chosenevent->classroomid]);
+                $chosenlocation = $DB->get_record('local_iomad_training_locations', ['id' => $chosenevent->classroomid]);
                 $alreadyattending = $DB->count_records('trainingevent_users',
                                                        ['trainingeventid' => $chosenevent->id,
                                                         'waitlisted' => 0,

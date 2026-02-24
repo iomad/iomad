@@ -71,7 +71,7 @@ function xmldb_local_report_user_license_allocations_upgrade($oldversion) {
             ['eventname' => '\block_iomad_company_admin\event\user_license_assigned'],
             0, 1)) {
             $first = array_pop($firstrec);
-            if ($oldallocations = $DB->get_records_sql("SELECT * FROM {companylicense_users}
+            if ($oldallocations = $DB->get_records_sql("SELECT * FROM {local_iomad_company_license_users}
                                                         WHERE issuedate < :first",
                                                         ['first' => $first->timecreated])) {
                 $totalold = count($oldallocations);

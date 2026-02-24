@@ -55,7 +55,7 @@ class company_course_updated extends base {
     protected function init() {
         $this->data['crud'] = 'c';
         $this->data['edulevel'] = self::LEVEL_OTHER;
-        $this->data['objecttable'] = 'iomad_courses';
+        $this->data['objecttable'] = 'local_iomad_courses';
     }
 
     /**

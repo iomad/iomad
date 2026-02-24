@@ -139,7 +139,7 @@ if (!empty($data)) {
             iomad::require_capability('local/report_users:redocertificates', $companycontext);
             echo $OUTPUT->header();
             foreach ($data->redo_certificates as $redocertificate) {
-                if ($trackrec = $DB->get_record('local_iomad_track', ['id' => $redocertificate])) {
+                if ($trackrec = $DB->get_record('local_iomad_tracks', ['id' => $redocertificate])) {
                     echo html_writer::start_tag('p');
                     track::delete_entry($redocertificate);
                     track::record_certificates(
@@ -245,11 +245,11 @@ if (!empty($data)) {
         if (!empty($data->finalscore)) {
             foreach ($data->finalscore as $key => $value) {
                 if ($data->origfinalscore[$key] != $value && confirm_sesskey()) {
-                    $DB->set_field('local_iomad_track', 'finalscore', $value, ['id' => $key]);
-                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $key]);
+                    $DB->set_field('local_iomad_tracks', 'finalscore', $value, ['id' => $key]);
+                    $DB->set_field('local_iomad_tracks', 'modifiedtime', time(), ['id' => $key]);
 
                     // Re-generate the certificate.
-                    if ($trackrec = $DB->get_record('local_iomad_track', ['id' => $key])) {
+                    if ($trackrec = $DB->get_record('local_iomad_tracks', ['id' => $key])) {
                         track::delete_entry($key);
                         track::record_certificates(
                             $trackrec->courseid,
@@ -268,8 +268,8 @@ if (!empty($data)) {
                 $senttime = strtotime($value['year'] . "-" . $value['month'] . "-" . $value['day']);
 
                 if ($testtime != $senttime && confirm_sesskey()) {
-                    $DB->set_field('local_iomad_track', 'licenseallocated', $senttime, ['id' => $key]);
-                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $key]);
+                    $DB->set_field('local_iomad_tracks', 'licenseallocated', $senttime, ['id' => $key]);
+                    $DB->set_field('local_iomad_tracks', 'modifiedtime', time(), ['id' => $key]);
                 }
             }
         }
@@ -279,24 +279,24 @@ if (!empty($data)) {
                 $senttime = strtotime($value['year'] . "-" . $value['month'] . "-" . $value['day']);
 
                 if ($testtime != $senttime && confirm_sesskey()) {
-                    $DB->set_field('local_iomad_track', 'timeenrolled', $senttime, ['id' => $key]);
-                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $key]);
+                    $DB->set_field('local_iomad_tracks', 'timeenrolled', $senttime, ['id' => $key]);
+                    $DB->set_field('local_iomad_tracks', 'modifiedtime', time(), ['id' => $key]);
                 }
             }
         }
         if (!empty($data->timecompleted)) {
             foreach ($data->timecompleted as $key => $value) {
-                if ($trackrec = $DB->get_record('local_iomad_track', ['id' => $key])) {
+                if ($trackrec = $DB->get_record('local_iomad_tracks', ['id' => $key])) {
                     $testtime = strtotime("0:00", $data->origtimecompleted[$key]);
                     $senttime = strtotime($value['year'] . "-" . $value['month'] . "-" . $value['day']);
 
                     if ($testtime != $senttime && confirm_sesskey()) {
-                        $DB->set_field('local_iomad_track', 'timecompleted', $senttime, ['id' => $key]);
-                        $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $key]);
-                        if ($iomadcourseinfo = $DB->get_record('iomad_courses', ['courseid' => $trackrec->courseid])) {
+                        $DB->set_field('local_iomad_tracks', 'timecompleted', $senttime, ['id' => $key]);
+                        $DB->set_field('local_iomad_tracks', 'modifiedtime', time(), ['id' => $key]);
+                        if ($iomadcourseinfo = $DB->get_record('local_iomad_courses', ['courseid' => $trackrec->courseid])) {
                             if (!empty($iomadcourseinfo->validlength)) {
                                 $DB->set_field(
-                                    'local_iomad_track',
+                                    'local_iomad_tracks',
                                     'timeexpires',
                                     $senttime + ($iomadcourseinfo->validlength * 24 * 60 * 60),
                                     ['id' => $key]);
@@ -330,7 +330,7 @@ if (!company::check_valid_user($companyid, $userid)) {
 if (!empty($action)) {
     if (!empty($confirm) && confirm_sesskey()) {
         if ($action == 'redocert' && !empty($redocertificate)) {
-            if ($trackrec = $DB->get_record('local_iomad_track', ['id' => $redocertificate])) {
+            if ($trackrec = $DB->get_record('local_iomad_tracks', ['id' => $redocertificate])) {
                 track::delete_entry($redocertificate);
                 if (track::record_certificates(
                     $trackrec->courseid,
@@ -492,7 +492,7 @@ if (!$table->is_downloading()) {
 $mandatorysql = "";
 if (get_config('local_iomad', 'use_mandatory_courses') &&
     !empty($mandatoryonly)) {
-    $mandatorysql = " JOIN {company_course_options} cca ON (
+    $mandatorysql = " JOIN {local_iomad_company_course_options} cca ON (
                         cca.courseid = lit.courseid
                         AND cca.companyid = lit.companyid
                         AND cca.mandatory = 1)";
@@ -514,7 +514,7 @@ $selectsql = "lit.id,
               lit.id AS certsource,
               lit.coursecleared,1 AS actions,
               lit.modifiedtime";
-$fromsql = "{local_iomad_track} lit  $mandatorysql";
+$fromsql = "{local_iomad_tracks} lit  $mandatorysql";
 $sqlparams = ['userid' => $userid, 'companyid' => $companyid];
 
 // Just valid courses?
@@ -556,8 +556,8 @@ $columns = ['coursename',
 
 // Do we show the time expires column?
 if (empty($USER->editing) &&
-    $DB->get_records_sql("SELECT lit.id FROM {iomad_courses} ic
-                          JOIN {local_iomad_track} lit
+    $DB->get_records_sql("SELECT lit.id FROM {local_iomad_courses} ic
+                          JOIN {local_iomad_tracks} lit
                           ON ic.courseid = lit.courseid
                           WHERE ic.validlength > 0
                           AND lit.userid = :userid",
@@ -567,8 +567,8 @@ if (empty($USER->editing) &&
 }
 
 // Do we show the grade column?
-if ($DB->get_records_sql("SELECT lit.id FROM {iomad_courses} ic
-                          JOIN {local_iomad_track} lit
+if ($DB->get_records_sql("SELECT lit.id FROM {local_iomad_courses} ic
+                          JOIN {local_iomad_tracks} lit
                           ON ic.courseid = lit.courseid
                           WHERE ic.hasgrade = 1
                           AND lit.userid = :userid",

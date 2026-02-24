@@ -143,7 +143,7 @@ $PAGE->set_button($buttons);
 echo $output->header();
 
 // Get the location information.
-$location = $DB->get_record('classroom', ['id' => $trainingevent->classroomid]);
+$location = $DB->get_record('local_iomad_training_locations', ['id' => $trainingevent->classroomid]);
 
 // Set the capacity for the event if it doesn't already exist.
 if (empty($trainingevent->coursecapacity)) {
@@ -193,9 +193,9 @@ echo html_writer::start_tag('div', ['class' => 'iomadclear']);
 // Deal with the user optional profile search.
 $fieldnames = [];
 $allfields = [];
-if ($category = $DB->get_record_sql("SELECT uic.id, uic.name FROM {user_info_category} uic, {company} c
+if ($category = $DB->get_record_sql("SELECT uic.id, uic.name FROM {user_info_category} uic, {local_iomad_companies} c
                                      WHERE c.id = :companyid
-                                     AND c.profileid=uic.id",
+                                     AND c.profilecategoryid = uic.id",
                                      ['companyid' => $location->companyid])) {
     // Get field names from company category.
     if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
@@ -210,7 +210,7 @@ if ($category = $DB->get_record_sql("SELECT uic.id, uic.name FROM {user_info_cat
 }
 if ($categories = $DB->get_records_sql("SELECT id FROM {user_info_category}
                                         WHERE id NOT IN (
-                                            SELECT profileid FROM {company})")) {
+                                            SELECT profilecategoryid FROM {local_iomad_companies})")) {
     foreach ($categories as $category) {
         if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
             foreach ($fields as $field) {

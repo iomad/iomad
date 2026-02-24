@@ -258,7 +258,7 @@ if (empty($iid)) {
                 }
             }
             if (!$DB->get_records_sql("SELECT * FROM {user} u
-                                       JOIN {company_users} cu
+                                       JOIN {local_iomad_company_users} cu
                                        ON (u.id = cu.userid)
                                        WHERE u.username = :username
                                        AND cu.companyid = :companyid",
@@ -337,11 +337,11 @@ if (!empty($cancelled)) {
         // Deal with license courses.
         $formdata->licensecourses = [];
         if (!empty($formdata->licenseid)) {
-            if ($DB->get_record('companylicense', ['id' => $formdata->licenseid, 'program' => 1])) {
+            if ($DB->get_record('local_iomad_company_licenses', ['id' => $formdata->licenseid, 'program' => 1])) {
                 // This is a program of courses so need to get them from the database.
                 $formdata->licensecourses = $DB->get_records_sql_menu(
                     "SELECT c.id, clc.courseid
-                     FROM {companylicense_courses} clc
+                     FROM {local_iomad_company_license_courses} clc
                      JOIN {course} c ON (clc.courseid = c.id
                      AND clc.licenseid = :licenseid)",
                     ['licenseid' => $formdata->licenseid]);
@@ -538,7 +538,7 @@ if (!empty($cancelled)) {
             if ($existinguser = $DB->get_record_sql(
                 "SELECT DISTINCT u.*
                  FROM {user} u
-                 JOIN {company_users} cu ON (u.id = cu.userid)
+                 JOIN {local_iomad_company_users} cu ON (u.id = cu.userid)
                  WHERE u.username = :username
                  AND u.mnethostid = :mnethostid
                  AND cu.companyid = :companyid",
@@ -784,7 +784,7 @@ if (!empty($cancelled)) {
                                     if ($DB->record_exists_sql(
                                         "SELECT DISTINCT u.id
                                          FROM {user} u
-                                         JOIN {company_users} cu ON (u.id = cu.userid)
+                                         JOIN {local_iomad_company_users} cu ON (u.id = cu.userid)
                                          WHERE u.email = :email
                                          AND cu.companyid = :companyid",
                                         ['email' => $user->email,
@@ -911,7 +911,7 @@ if (!empty($cancelled)) {
 
                     // Is the company department valid?
                     if ($passeddepartment && !empty($existinguser->department)) {
-                        if (!$department = $DB->get_record('department', ['company' => $company->id,
+                        if (!$department = $DB->get_record('local_iomad_company_departments', ['companyid' => $company->id,
                                                                           'shortname' => $existinguser->department])) {
                             $upt->track('department', get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
                             $upt->track('status', $strusernotaddederror, 'error');
@@ -932,10 +932,10 @@ if (!empty($cancelled)) {
                             continue;
                         }
 
-                        if ($userdep = $DB->get_record('company_users', ['userid' => $existinguser->id,
+                        if ($userdep = $DB->get_record('local_iomad_company_users', ['userid' => $existinguser->id,
                                                                          'companyid' => $company->id])) {
                             $userdep->departmentid = $department->id;
-                            $DB->update_record('company_users', $userdep);
+                            $DB->update_record('local_iomad_company_users', $userdep);
                         } else {
                             // Add the user to the company.
                             $company->assign_user_to_company($existinguser->id, $department->id);
@@ -991,7 +991,7 @@ if (!empty($cancelled)) {
 
                 if ($DB->record_exists_sql("SELECT DISTINCT u.id
                                             FROM {user} u
-                                            JOIN {company_users} cu
+                                            JOIN {local_iomad_company_users} cu
                                             ON (u.id = cu.userid)
                                             WHERE u.email = :email
                                             AND cu.companyid = :companyid",
@@ -1022,7 +1022,7 @@ if (!empty($cancelled)) {
 
                 // Is the company department valid?
                 if (!empty($user->department)) {
-                    if (!$department = $DB->get_record('department', ['company' => $company->id,
+                    if (!$department = $DB->get_record('local_iomad_company_departments', ['companyid' => $company->id,
                                                                       'shortname' => $user->department])) {
                         $upt->track('department', get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
                         $upt->track('status', $strusernotaddederror, 'error');
@@ -1044,7 +1044,7 @@ if (!empty($cancelled)) {
                         continue;
                     }
                 } else {
-                    if (!$department = $DB->get_record('department', ['company' => $company->id,
+                    if (!$department = $DB->get_record('local_iomad_company_departments', ['companyid' => $company->id,
                                                                       'id' => $formdata->deptid])) {
                         $upt->track('department', get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
                         $upt->track('status', $strusernotaddederror, 'error');
@@ -1205,7 +1205,7 @@ if (!empty($cancelled)) {
                             continue;
                         }
                         $shortname = $user->{'department'.$i};
-                        if (!$department = $DB->get_record('department', ['company' => $company->id,
+                        if (!$department = $DB->get_record('local_iomad_company_departments', ['companyid' => $company->id,
                                                                           'shortname' => $shortname])) {
                             $upt->track('department'.$i, get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
                             $upt->track('status', $strusernotaddederror, 'error');
@@ -1231,7 +1231,7 @@ if (!empty($cancelled)) {
                             !empty($defaultdepartmentid)) {
 
                             // Remove the user from the default department.
-                            $DB->delete_records('company_users', ['userid' => $user->id,
+                            $DB->delete_records('local_iomad_company_users', ['userid' => $user->id,
                                                                   'companyid' => $company->id,
                                                                   'departmentid' => $defaultdepartmentid]);
 
@@ -1268,7 +1268,7 @@ if (!empty($cancelled)) {
             // Assign any licenses.
             if (!empty($formdata->licenseid)) {
                 $timestamp = time();
-                $licenserecord = (array) $DB->get_record('companylicense', ['id' => $formdata->licenseid]);
+                $licenserecord = (array) $DB->get_record('local_iomad_company_licenses', ['id' => $formdata->licenseid]);
                 $count = $licenserecord['used'];
                 $numberoflicenses = $licenserecord['allocation'];
 
@@ -1276,11 +1276,11 @@ if (!empty($cancelled)) {
                     if ($count >= $numberoflicenses) {
                         // Set the used amount.
                         $licenserecord['used'] = $count;
-                        $DB->update_record('companylicense', $licenserecord);
+                        $DB->update_record('local_iomad_company_licenses', $licenserecord);
                         $numlicenseerrors++;
                         continue;
                     }
-                    if ($DB->get_record_sql("SELECT id FROM {companylicense_users}
+                    if ($DB->get_record_sql("SELECT id FROM {local_iomad_company_license_users}
                                              WHERE licenseid = :licenseid
                                              AND licensecourseid = :licensecourseid
                                              AND userid = :userid
@@ -1297,7 +1297,7 @@ if (!empty($cancelled)) {
 
                     $count++;
                     $issuedate = time();
-                    $userlicid = $DB->insert_record('companylicense_users',
+                    $userlicid = $DB->insert_record('local_iomad_company_license_users',
                                         ['userid' => $user->id,
                                          'licenseid' => $formdata->licenseid,
                                          'licensecourseid' => $licensecourse,
@@ -1421,14 +1421,14 @@ while ($fields = $cir->next()) {
     }
 
     $usernameexist = $DB->record_exists_sql("SELECT DISTINCT u.id FROM {user} u
-                                             JOIN {company_users} cu
+                                             JOIN {local_iomad_company_users} cu
                                              ON (u.id = cu.userid)
                                              WHERE u.username = :username
                                              AND cu.companyid = :companyid",
                                             ['username' => $rowcols['username'],
                                              'companyid' => $companyid]);
     $emailexist = $DB->record_exists_sql("SELECT DISTINCT u.id FROM {user} u
-                                             JOIN {company_users} cu
+                                             JOIN {local_iomad_company_users} cu
                                              ON (u.id = cu.userid)
                                              WHERE u.email = :email
                                              AND cu.companyid = :companyid",

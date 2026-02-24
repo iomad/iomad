@@ -74,7 +74,7 @@ class helper {
                              lit.timestarted,
                              lit.modifiedtime,
                              cca.mandatory
-             FROM {local_iomad_track} lit
+             FROM {local_iomad_tracks} lit
              LEFT JOIN {course} c ON (c.id = lit.courseid)
              LEFT JOIN {user_enrolments} ue ON (ue.userid = lit.userid)
              LEFT JOIN {enrol} e ON (
@@ -82,11 +82,11 @@ class helper {
                  AND e.courseid = c.id
                  AND e.courseid = lit.courseid
              )
-             LEFT JOIN {iomad_courses} ic ON (
+             LEFT JOIN {local_iomad_courses} ic ON (
                  c.id = ic.courseid
                  AND lit.courseid = ic.courseid
              )
-             LEFT JOIN {company_course_options} cca ON (
+             LEFT JOIN {local_iomad_company_course_options} cca ON (
                  c.id = cca.courseid
                  AND lit.companyid = cca.companyid
              )
@@ -160,7 +160,7 @@ class helper {
         // We don't want any courses we are in progress of.
         $sqlparams = [];
         $myusedcourses = $DB->get_records_sql("SELECT DISTINCT courseid
-                                               FROM {local_iomad_track}
+                                               FROM {local_iomad_tracks}
                                                WHERE userid = :userid
                                                AND companyid = :companyid
                                                AND timecompleted IS NULL
@@ -188,10 +188,10 @@ class helper {
                     c.summary AS coursesummary,
                     c.visible,
                     cca.mandatory
-             FROM {companylicense_users} clu
+             FROM {local_iomad_company_license_users} clu
              JOIN {course} c ON (c.id = clu.licensecourseid)
-             JOIN {companylicense} cl ON (clu.licenseid = cl.id)
-             LEFT JOIN {company_course_options} cca ON (
+             JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
+             LEFT JOIN {local_iomad_company_course_options} cca ON (
                  cl.companyid = cca.companyid
                  AND clu.licensecourseid = cca.courseid
              )
@@ -225,8 +225,8 @@ class helper {
                     cca.mandatory
              FROM {enrol} e
              JOIN {course} c ON (e.courseid = c.id)
-             JOIN {company_course} cc ON (c.id = cc.courseid)
-             LEFT JOIN {company_course_options} cca ON (
+             JOIN {local_iomad_company_courses} cc ON (c.id = cc.courseid)
+             LEFT JOIN {local_iomad_company_course_options} cca ON (
                  c.id = cca.courseid
                  AND cc.courseid = cca.courseid
                  AND cc.companyid = cca.companyid
@@ -265,14 +265,14 @@ class helper {
                     cca.mandatory
              FROM {enrol} e
              JOIN {course} c ON (e.courseid = c.id)
-             LEFT JOIN {company_course_options} cca ON (
+             LEFT JOIN {local_iomad_company_course_options} cca ON (
                  c.id = cca.courseid
                  AND cca.companyid = :companyid
              )
              WHERE e.enrol = :enrol
              AND e.status = 0
              AND c.id IN (
-                 SELECT courseid FROM {iomad_courses}
+                 SELECT courseid FROM {local_iomad_courses}
                  WHERE shared = 1
              )
              $inprogresssql
@@ -298,7 +298,7 @@ class helper {
 
         // Check if there are any courses from 'blanket' licenses.
         if ($blanketlicenses = $DB->get_records_select(
-            'companylicense',
+            'local_iomad_company_licenses',
             "companyid = :companyid
              AND type = :type
              AND startdate < :startdate
@@ -319,8 +319,8 @@ class helper {
                             c.summary AS coursesummary,
                             cca.mandatory
                      FROM {course} c
-                     JOIN {companylicense_courses} clc ON (c.id = clc.courseid)
-                     LEFT JOIN {company_course_options} cca ON (
+                     JOIN {local_iomad_company_license_courses} clc ON (c.id = clc.courseid)
+                     LEFT JOIN {local_iomad_company_course_options} cca ON (
                          c.id = cca.courseid
                          AND clc.courseid = cca.courseid
                      )
@@ -392,9 +392,9 @@ class helper {
                                            c.visible,
                                            c.id AS realcourseid,
                                            cca.mandatory
-                                           FROM {local_iomad_track} lit
+                                           FROM {local_iomad_tracks} lit
                                            LEFT JOIN {course} c ON (c.id = lit.courseid)
-                                           LEFT JOIN {company_course_options} cca ON (
+                                           LEFT JOIN {local_iomad_company_course_options} cca ON (
                                                c.id = cca.courseid
                                                AND lit.courseid = cca.courseid
                                                AND lit.companyid = cca.companyid)

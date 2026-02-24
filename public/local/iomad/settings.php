@@ -318,7 +318,7 @@ if ($hassiteconfig) {
     }
 
     // Add the available auth methods. IF, there are companies defined.
-    $sitecompanies = $DB->get_records_menu('company', [], 'name', 'id,name');
+    $sitecompanies = $DB->get_records_menu('local_iomad_companies', [], 'name', 'id,name');
     if ($sitecompanies) {
         $signupconfigs[] = new admin_setting_configmulticheckbox('local_iomad/signup_auth',
                                                               get_string('authenticationtypes', 'local_iomad'),

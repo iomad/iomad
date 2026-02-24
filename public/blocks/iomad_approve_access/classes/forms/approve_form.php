@@ -53,7 +53,7 @@ class approve_form extends moodleform {
 
         // Get my manager type.
         $department = false;
-        if ($DB->get_records('company_users', ['userid' => $USER->id, 'managertype' => 2])) {
+        if ($DB->get_records('local_iomad_company_users', ['userid' => $USER->id, 'managertype' => 2])) {
             $department = true;
         }
 

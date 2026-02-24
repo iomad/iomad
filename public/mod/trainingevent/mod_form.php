@@ -79,7 +79,7 @@ class mod_trainingevent_mod_form extends moodleform_mod {
         }
 
         $choices = [];
-        if ($rooms = $DB->get_recordset('classroom', $params, 'name', '*')) {
+        if ($rooms = $DB->get_recordset('local_iomad_training_locations', $params, 'name', '*')) {
             foreach ($rooms as $room) {
                 $choices[$room->id] = $room->name;
             }
@@ -87,7 +87,7 @@ class mod_trainingevent_mod_form extends moodleform_mod {
         }
 
         $publicchoices = [];
-        if ($rooms = $DB->get_recordset_sql('SELECT * FROM {classroom} WHERE ispublic = 1 AND companyid <> ?',
+        if ($rooms = $DB->get_recordset_sql('SELECT * FROM {local_iomad_training_locations} WHERE ispublic = 1 AND companyid <> ?',
         [
             $params['companyid'],
         ]
@@ -183,7 +183,7 @@ class mod_trainingevent_mod_form extends moodleform_mod {
         global $DB;
 
         $errors = [];
-        if (empty($data['classroomid']) || !$DB->get_record('classroom', ['id' => $data['classroomid']])) {
+        if (empty($data['classroomid']) || !$DB->get_record('local_iomad_training_locations', ['id' => $data['classroomid']])) {
             $errors['classroomid'] = get_string('invalidclassroom', 'trainingevent');
             return $errors;
         }
@@ -196,7 +196,7 @@ class mod_trainingevent_mod_form extends moodleform_mod {
         }
 
         // Check the date against that room usage.
-        $classroom = $DB->get_record('classroom', ['id' => $data['classroomid']]);
+        $classroom = $DB->get_record('local_iomad_training_locations', ['id' => $data['classroomid']]);
         if (empty($classroom->isvirtual)) {
             if ($roomclash = $DB->get_records_sql("SELECT * FROM {trainingevent}
                                                    WHERE classroomid = ".$data['classroomid']."$mysql

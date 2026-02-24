@@ -219,7 +219,7 @@ class company_uploaduser_form2 extends company_moodleform {
         // Get global fields.
         if ($fields = $DB->get_records_sql("SELECT * FROM {user_info_field}
                                             WHERE categoryid NOT IN (
-                                                SELECT profileid FROM {company}
+                                                SELECT profilecategoryid FROM {local_iomad_companies}
                                             )")) {
             // Display the header and the fields.
             foreach ($fields as $field) {
@@ -231,10 +231,10 @@ class company_uploaduser_form2 extends company_moodleform {
             }
         }
         // Get company category.
-        if ($companyinfo = $DB->get_record('company', ['id' => $this->selectedcompany])) {
+        if ($companyinfo = $DB->get_record('local_iomad_companies', ['id' => $this->selectedcompany])) {
 
             // Get fields from company category.
-            if ($fields = $DB->get_records('user_info_field', ['categoryid' => $companyinfo->profileid])) {
+            if ($fields = $DB->get_records('user_info_field', ['categoryid' => $companyinfo->profilecategoryid])) {
                 // Display the header and the fields.
                 foreach ($fields as $field) {
                     require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
@@ -251,7 +251,7 @@ class company_uploaduser_form2 extends company_moodleform {
             $mform->addElement('header', 'licenses', get_string('assignlicenses', 'block_iomad_company_admin'));
             $foundlicenses = $DB->get_records_sql_menu(
                 "SELECT id, name
-                 FROM {companylicense}
+                 FROM {local_iomad_company_licenses}
                  WHERE expirydate >= :timestamp
                  AND companyid = :companyid
                  AND used < allocation",
@@ -284,11 +284,11 @@ class company_uploaduser_form2 extends company_moodleform {
                 $mylicenseid = $this->licenseid;
 
                 if (!empty($this->licenseid)) {
-                    $mylicensedetails = $DB->get_record('companylicense', ['id' => $this->licenseid]);
+                    $mylicensedetails = $DB->get_record('local_iomad_company_licenses', ['id' => $this->licenseid]);
                     $usedcount = $mylicensedetails->used;
                     // Is this a program license?
                     if (!empty($mylicense->program) && !empty($usedcount)) {
-                        $licensecourses = $DB->count_records('companylicense_courses', ['licenseid' => $this->licenseid]);
+                        $licensecourses = $DB->count_records('local_iomad_company_license_courses', ['licenseid' => $this->licenseid]);
                         if (!empty($licensecourses)) {
                             $usedcount = $usedcount / $licensecourses;
                         } else {
@@ -329,7 +329,7 @@ class company_uploaduser_form2 extends company_moodleform {
                 // Get the license courses.
                 if (!$licensecourses = $DB->get_records_sql_menu(
                     "SELECT c.id, c.fullname
-                     FROM {companylicense_courses} clc
+                     FROM {local_iomad_company_license_courses} clc
                      JOIN {course} c ON (clc.courseid = c.id
                      AND clc.licenseid = :licenseid)
                      ORDER BY c.fullname",
@@ -454,14 +454,14 @@ class company_uploaduser_form2 extends company_moodleform {
         }
 
         if (!empty($data['licenseid'])) {
-            $license = $DB->get_record('companylicense', ['id' => $data['licenseid']]);
+            $license = $DB->get_record('local_iomad_company_licenses', ['id' => $data['licenseid']]);
 
             // Are we dealing with a program license?
             if (!empty($license->program)) {
                 // If so the courses are not passed automatically.
                 $data['licensecourses'] = $DB->get_records_sql_menu(
                     "SELECT c.id, c.fullname
-                     FROM {companylicense_courses} clc
+                     FROM {local_iomad_company_license_courses} clc
                      JOIN {course} c ON (clc.courseid = c.id
                      AND clc.licenseid = :licenseid)",
                     ['licenseid' => $license->id]);

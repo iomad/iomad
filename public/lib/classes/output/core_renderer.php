@@ -3489,7 +3489,7 @@ EOD;
         }
 
         $iomadlink = "";
-        if ($DB->get_manager()->table_exists('company') &&
+        if ($DB->get_manager()->table_exists('local_iomad_companies') &&
             (iomad::has_capability('block/iomad_company_admin:companymanagement_view', $companycontext) ||
              iomad::has_capability('block/iomad_company_admin:usermanagement_view', $companycontext) ||
              iomad::has_capability('block/iomad_company_admin:coursemanagement_view', $companycontext) ||
@@ -3507,8 +3507,8 @@ EOD;
 
         // Deal with company custom menu items.
         if ($companyid = iomad::get_my_companyid(\context_system::instance(), false)) {
-            if ($DB->get_manager()->table_exists('company') &&
-                $companyrec = $DB->get_record('company', array('id' => $companyid))) {
+            if ($DB->get_manager()->table_exists('local_iomad_companies') &&
+                $companyrec = $DB->get_record('local_iomad_companies', array('id' => $companyid))) {
                 if (!empty($companyrec->custommenuitems)) {
                     $custommenuitems = $companyrec->custommenuitems;
                 }

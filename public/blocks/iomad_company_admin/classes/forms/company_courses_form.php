@@ -73,7 +73,7 @@ class company_courses_form extends moodleform {
             'context' => $this->context,
             'companyid' => $this->selectedcompany,
             'departmentid' => $departmentid,
-            'parentdepartmentid' => $parentlevel,
+            'parentdepartment' => $parentlevel,
             'shared' => false,
             'licenses' => true,
             'partialshared' => true,
@@ -202,19 +202,19 @@ class company_courses_form extends moodleform {
 
                 foreach ($coursestoassign as $addcourse) {
                     // Check if its a shared course.
-                    if ($DB->get_record_sql("SELECT id FROM {iomad_courses}
+                    if ($DB->get_record_sql("SELECT id FROM {local_iomad_courses}
                                              WHERE courseid=$addcourse->id
                                              AND shared <> 0")) {
-                        if ($companycourserecord = $DB->get_record('company_course', ['companyid' => $this->selectedcompany,
+                        if ($companycourserecord = $DB->get_record('local_iomad_company_courses', ['companyid' => $this->selectedcompany,
                                                                                       'courseid' => $addcourse->id])) {
                             // Already assigned to the company so we are just moving it within it.
                             $companycourserecord->departmentid = $this->departmentid;
-                            $DB->update_record('company_course', $companycourserecord);
+                            $DB->update_record('local_iomad_company_courses', $companycourserecord);
                         } else {
                             $sharingrecord = new stdclass();
                             $sharingrecord->courseid = $addcourse->id;
                             $sharingrecord->companyid = $company->id;
-                            $DB->insert_record('company_shared_courses', $sharingrecord);
+                            $DB->insert_record('local_iomad_company_shared_courses', $sharingrecord);
                             if ($this->departmentid != $this->companydepartment ) {
                                 $company->add_course($addcourse, $this->departmentid);
                             } else {

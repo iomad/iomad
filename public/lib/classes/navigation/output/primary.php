@@ -118,7 +118,7 @@ class primary implements renderable, templatable {
         // Deal with company custom menu items.
         $custommenuitems = $CFG->custommenuitems;
         if ($companyid = iomad::get_my_companyid(\context_system::instance(), false)) {
-            if ($companyrec = $DB->get_record('company', array('id' => $companyid))) {
+            if ($companyrec = $DB->get_record('local_iomad_companies', array('id' => $companyid))) {
                 if (!empty($companyrec->custommenuitems)) {
                     $custommenuitems = $companyrec->custommenuitems;
                 }

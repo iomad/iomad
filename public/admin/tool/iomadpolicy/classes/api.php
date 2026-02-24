@@ -556,7 +556,7 @@ class api {
         // Reset the iomadpolicyagreed flag to force everybody re-accept the policies.
         $companyid = $iomadpolicyversion->get('companyid');
         if (!empty($companyid)) {
-            $companyusers = $DB->get_records('company_users', ['companyid' => $companyid]);
+            $companyusers = $DB->get_records('local_iomad_company_users', ['companyid' => $companyid]);
             foreach ($companyusers as $companyuser) {
                 $DB->set_field('user', 'policyagreed', 0, ['id' => $companyuser->userid]);
             }
@@ -564,7 +564,7 @@ class api {
             // Updating default users only.
             $users = $DB->get_records_sql("SELECT id FROM {user}
                                            WHERE id NOT IN (
-                                              SELECT cu.userid FROM {company_users} cu
+                                              SELECT cu.userid FROM {local_iomad_company_users} cu
                                               JOIN {tool_iomadpolicy} tip ON (cu.companyid = tip.companyid)
                                            )");
             foreach ($users as $user) {

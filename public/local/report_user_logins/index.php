@@ -125,9 +125,9 @@ if ($viewchildren &&
     $canseechildren &&
     !empty($departmentid) &&
     company::can_manage_department($departmentid)) {
-    $departmentrec = $DB->get_record('department', ['id' => $departmentid]);
+    $departmentrec = $DB->get_record('local_iomad_company_departments', ['id' => $departmentid]);
     $realcompanyid = $companyid;
-    $companyid = $departmentrec->company;
+    $companyid = $departmentrec->companyid;
     $realcompany = $company;
     $selectedcompany = new company($companyid);
 } else {
@@ -148,7 +148,7 @@ if (!$showsummary) {
     $allfields = [];
     if ($category = $DB->get_record_sql("SELECT uic.id, uic.name
                                          FROM {user_info_category} uic
-                                         JOIN {company} c ON (c.profileid = uic.id)
+                                         JOIN {local_iomad_companies} c ON (c.profilecategoryid = uic.id)
                                          WHERE c.id = :companyid",
                                         ['companyid' => $companyid])) {
         // Get field names from company category.
@@ -166,7 +166,7 @@ if (!$showsummary) {
     }
     if ($categories = $DB->get_records_sql("SELECT id FROM {user_info_category}
                                             WHERE id NOT IN (
-                                            SELECT profileid FROM {company})")) {
+                                            SELECT profilecategoryid FROM {local_iomad_companies})")) {
         foreach ($categories as $category) {
             if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
                 foreach ($fields as $field) {
@@ -271,7 +271,7 @@ $parentparams = [];
 if (!$viewchildren && !$canseechildren && $parentslist = $company->get_parent_companies_recursive()) {
     [$parentsql, $parentparams] = $DB->get_in_or_equal(array_keys($parentslist), SQL_PARAMS_NAMED, 'pcompid');
     $companysql = " AND u.id NOT IN (
-                    SELECT userid FROM {company_users}
+                    SELECT userid FROM {local_iomad_company_users}
                     WHERE managertype = 1
                     AND companyid {$parentsql} )";
 }
@@ -318,15 +318,15 @@ $baseurl = new moodle_url('/local/report_user_logins/index.php', $params);
 // Do we have any additional reporting fields?
 $extrafields = [];
 if (!$showsummary && !empty(get_config('local_iomad', 'report_fields'))) {
-    $companyrec = $DB->get_record('company', ['id' => $companyid]);
+    $companyrec = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
     foreach (explode(',', get_config('local_iomad', 'report_fields')) as $extrafield) {
         $extrafields[$extrafield] = new stdclass();
         $extrafields[$extrafield]->name = $extrafield;
         if (strpos($extrafield, 'profile_field') !== false) {
             // Its an optional profile field.
             $profilefield = $DB->get_record('user_info_field', ['shortname' => str_replace('profile_field_', '', $extrafield)]);
-            if ($profilefield->categoryid == $companyrec->profileid ||
-                !$DB->get_record('company', ['profileid' => $profilefield->categoryid])) {
+            if ($profilefield->categoryid == $companyrec->profilecategoryid ||
+                !$DB->get_record('local_iomad_companies', ['profilecategoryid' => $profilefield->categoryid])) {
                 $extrafields[$extrafield]->title = $profilefield->name;
                 $extrafields[$extrafield]->fieldid = $profilefield->id;
             } else {
@@ -378,8 +378,8 @@ if (!$showsummary) {
                   url.logincount";
     $fromsql = "{user} u
                 JOIN {local_report_user_logins} url ON (u.id = url.userid)
-                JOIN {company_users} cu ON (u.id = cu.userid)
-                JOIN {department} d ON (cu.departmentid = d.id)";
+                JOIN {local_iomad_company_users} cu ON (u.id = cu.userid)
+                JOIN {local_iomad_company_departments} d ON (cu.departmentid = d.id)";
     $wheresql = $searchinfo->sqlsearch . " AND cu.companyid = :companyid $departmentsql $companysql";
     $countsql = "SELECT COUNT( DISTINCT u.id ) FROM $fromsql WHERE $wheresql";
     $sqlparams = ['companyid' => $companyid] + $searchinfo->searchparams + $parentparams + $departmentparams;
@@ -452,7 +452,7 @@ if (!$showsummary) {
 } else {
     // Set up the initial SQL for the form.
     $selectsql = "c.id,c.name";
-    $fromsql = "{company} c";
+    $fromsql = "{local_iomad_companies} c";
     $sqlparams = [];
 
     // Deal with the company list..
@@ -466,16 +466,16 @@ if (!$showsummary) {
 
     $totalusers = $DB->count_records_sql("SELECT COUNT(DISTINCT u.id)
                                           FROM {user} u
-                                          JOIN {company_users} cu ON (u.id = cu.userid)
-                                          JOIN {company} c ON (cu.companyid = c.id)
+                                          JOIN {local_iomad_company_users} cu ON (u.id = cu.userid)
+                                          JOIN {local_iomad_companies} c ON (cu.companyid = c.id)
                                           WHERE u.deleted = 0 AND u.suspended = 0
                                           $companysql",
                                          $sqlparams);
 
     $loggedinusers = $DB->count_records_sql("SELECT COUNT(DISTINCT u.id)
                                           FROM {user} u
-                                          JOIN {company_users} cu ON (u.id = cu.userid)
-                                          JOIN {company} c ON (cu.companyid = c.id)
+                                          JOIN {local_iomad_company_users} cu ON (u.id = cu.userid)
+                                          JOIN {local_iomad_companies} c ON (cu.companyid = c.id)
                                           WHERE u.deleted = 0 AND u.suspended = 0
                                           AND u.currentlogin > 0
                                           $companysql",

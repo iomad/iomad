@@ -61,7 +61,7 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
 
         // Deal with manager completion digests.
         // Get the companies from the list of users in the temp table.
-        $companies = $DB->get_records_sql("SELECT id FROM {company}
+        $companies = $DB->get_records_sql("SELECT id FROM {local_iomad_companies}
                                            WHERE managerdigestday = :dayofweek
                                            AND managernotify in (2,3)",
                                           ['dayofweek' => $dayofweek]);
@@ -78,12 +78,12 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
                                                             SQL_PARAMS_NAMED,
                                                             'pcids');
                 $companyusql = " AND u.id NOT IN (
-                                     SELECT userid FROM {company_users}
+                                     SELECT userid FROM {local_iomad_company_users}
                                      WHERE managertype = 1
                                      AND companyid {$insql}
                                  )";
                 $companysql = " AND userid NOT IN (
-                                    SELECT userid FROM {company_users}
+                                    SELECT userid FROM {local_iomad_company_users}
                                     WHERE managertype = 1
                                     AND companyid {$insql}
                                 )";
@@ -91,7 +91,7 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
 
             // Get the list of managers.
             $sqlparams['companyid'] = $company->id;
-            $managers = $DB->get_records_sql("SELECT * FROM {company_users}
+            $managers = $DB->get_records_sql("SELECT * FROM {local_iomad_company_users}
                                               WHERE companyid = :companyid
                                               AND managertype != 0
                                               $companysql",
@@ -106,10 +106,10 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
                 // If this is a manager of a parent company - skip them.
                 $sqlparams['userid'] = $manager->userid;
                 if (!empty($parentslist) &&
-                    $DB->get_records_sql("SELECT id FROM {company_users}
+                    $DB->get_records_sql("SELECT id FROM {local_iomad_company_users}
                                           WHERE userid = :userid
                                           AND userid IN (
-                                              SELECT userid FROM {company_users}
+                                              SELECT userid FROM {local_iomad_company_users}
                                               WHERE managertype = 1
                                               AND companyid {$insql}
                                           )",
@@ -143,10 +143,10 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
                                                       c.id AS courseid,
                                                       c.fullname,
                                                       cc.timecompleted
-                                                      FROM {local_iomad_track} cc
+                                                      FROM {local_iomad_tracks} cc
                                                       JOIN {user} u ON (cc.userid = u.id)
                                                       JOIN {course} c ON (cc.courseid = c.id)
-                                                      JOIN {company_users} cu ON (u.id = cu.userid)
+                                                      JOIN {local_iomad_company_users} cu ON (u.id = cu.userid)
                                                       WHERE c.visible = 1
                                                       $departmentsql
                                                       AND cc.userid != :managerid
@@ -172,7 +172,7 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
                     if (!$course = $DB->get_record('course', ['id' => $manageruser->courseid])) {
                         continue;
                     }
-                    if ($departmentmanager && $DB->get_record('company_users', ['companyid' => $company->id,
+                    if ($departmentmanager && $DB->get_record('local_iomad_company_users', ['companyid' => $company->id,
                                                                                 'managertype' => 1,
                                                                                 'userid' => $manageruser->userid])) {
                         continue;
@@ -183,10 +183,10 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
                     // Get the user's departments.
                     $userdepartments = $DB->get_records_sql(
                         "SELECT DISTINCT d.name
-                         FROM {department} d
-                         JOIN {company_users} cu ON (
+                         FROM {local_iomad_company_departments} d
+                         JOIN {local_iomad_company_users} cu ON (
                              d.id = cu.departmentid
-                             AND d.company = cu.companyid
+                             AND d.companyid = cu.companyid
                          )
                          WHERE cu.userid = :userid
                          AND cu.companyid = :companyid",

@@ -96,7 +96,7 @@ class company_license_table extends table_sql {
         global $DB;
 
         // Get all of the license courses.
-        $licensecourses = $DB->get_records('companylicense_courses', ['licenseid' => $row->id]);
+        $licensecourses = $DB->get_records('local_iomad_company_license_courses', ['licenseid' => $row->id]);
 
         // Set up the return string.
         $coursestring = "";
@@ -174,7 +174,7 @@ class company_license_table extends table_sql {
         global $DB;
 
         // Get the license courses.
-        $licensecourses = $DB->get_records('companylicense_courses', ['licenseid' => $row->id]);
+        $licensecourses = $DB->get_records('local_iomad_company_license_courses', ['licenseid' => $row->id]);
 
         // Deal with allocation numbers if a program.
         if (!empty($row->program)) {
@@ -237,10 +237,10 @@ class company_license_table extends table_sql {
             // Is this above the user's company allocation?
             if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext) ||
                 $DB->get_record_sql(
-                    "SELECT id FROM {company_users}
+                    "SELECT id FROM {local_iomad_company_users}
                      WHERE userid = :userid
                      AND companyid = (
-                         SELECT companyid FROM {companylicense}
+                         SELECT companyid FROM {local_iomad_company_licenses}
                          WHERE id = :parentid)",
                     [
                         'userid' => $USER->id,
