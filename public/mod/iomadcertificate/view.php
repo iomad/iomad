@@ -49,6 +49,9 @@ if (!empty($userid)  && has_capability('mod/iomadcertificate:viewother', context
 require_login();
 
 // IOMAD - If has ability to view completion reports should be able to see the certificates.
+if (!$cm = get_coursemodule_from_id('iomadcertificate', $id)) {
+    throw new moodle_exception('Course Module ID was incorrect');
+}
 $context = context_module::instance($cm->id);
 if (!has_capability('mod/iomadcertificate:viewother', context_system::instance())) {
     if ($USER->id != $userid || empty($userid)) {
@@ -57,9 +60,6 @@ if (!has_capability('mod/iomadcertificate:viewother', context_system::instance()
     }
 }
 
-if (!$cm = get_coursemodule_from_id('iomadcertificate', $id)) {
-    throw new moodle_exception('Course Module ID was incorrect');
-}
 if (!$course = $DB->get_record('course', ['id' => $cm->course])) {
     throw new moodle_exception('course is misconfigured');
 }
