@@ -89,7 +89,7 @@ class observer {
         $oldlang = $event->other['langcode'];
 
         // Delete for templatesets
-        $DB->delete_records('email_templateset_templates_strings', ['lang' => $oldlang]);
+        $DB->delete_records('email_templateset_template_strings', ['lang' => $oldlang]);
 
         // Delete for companies
         $DB->delete_records('email_template_strings', ['lang' => $oldlang]);
