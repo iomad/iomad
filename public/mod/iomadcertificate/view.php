@@ -27,7 +27,6 @@
 
 require_once("../../config.php");
 require_once("$CFG->dirroot/mod/iomadcertificate/locallib.php");
-require_once("$CFG->dirroot/mod/iomadcertificate/deprecatedlib.php");
 require_once("$CFG->libdir/pdflib.php");
 
 $id = required_param('id', PARAM_INT);
