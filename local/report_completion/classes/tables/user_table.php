@@ -144,7 +144,7 @@ class user_table extends table_sql {
             $companylist[] = format_string($company->name);
         }
 
-        $resturnsrt .= implode(',<br>', $companylist);
+        $resturnstr .= implode(',<br>', $companylist);
 
         // Close the summary tag.
         if ($count > 5) {
