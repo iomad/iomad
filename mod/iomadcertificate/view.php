@@ -45,26 +45,26 @@ if (!empty($userid)  && has_capability('mod/iomadcertificate:viewother', context
     $certuser = $USER;
 }
 
-// Log in and set up $PAGE.
-require_login();
-
-// IOMAD - If has ability to view completion reports should be able to see the certificates.
 if (!$cm = get_coursemodule_from_id('iomadcertificate', $id)) {
     throw new moodle_exception('Course Module ID was incorrect');
 }
+if (!$course = $DB->get_record('course', ['id' => $cm->course])) {
+    throw new moodle_exception('course is misconfigured');
+}
+if (!$iomadcertificate = $DB->get_record('iomadcertificate', ['id' => $cm->instance])) {
+    throw new moodle_exception('course module is incorrect');
+}
+
+// IOMAD - If has ability to view completion reports should be able to see the certificates.
 $context = context_module::instance($cm->id);
 if (!has_capability('mod/iomadcertificate:viewother', context_system::instance())) {
     if ($USER->id != $userid || empty($userid)) {
         require_login($course->id, true, $cm);
         require_capability('mod/iomadcertificate:view', $context);
     }
-}
-
-if (!$course = $DB->get_record('course', ['id' => $cm->course])) {
-    throw new moodle_exception('course is misconfigured');
-}
-if (!$iomadcertificate = $DB->get_record('iomadcertificate', ['id' => $cm->instance])) {
-    throw new moodle_exception('course module is incorrect');
+} else {
+    // Log in and set up $PAGE.
+    require_login();
 }
 
 $PAGE->set_url('/mod/iomadcertificate/view.php', ['id' => $cm->id]);
