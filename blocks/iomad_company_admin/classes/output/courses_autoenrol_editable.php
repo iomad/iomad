@@ -124,17 +124,17 @@ class courses_autoenrol_editable extends inplace_editable {
         // Check permissions.
         iomad::require_capability('block/iomad_company_admin:managecourses', $companycontext);
 
-        if (!$courserec = $DB->get_record('iomad_courses', ['courseid' => $courseid])) {
+        if (!$courserec = $DB->get_record('local_iomad_courses', ['courseid' => $courseid])) {
             throw new coding_exception('Course is not under IOMAD control');
         }
 
-        if (!$currentrec = $DB->get_record('company_course_options', ['companyid' => $companyid, 'courseid' => $courseid])) {
+        if (!$currentrec = $DB->get_record('local_iomad_company_course_options', ['companyid' => $companyid, 'courseid' => $courseid])) {
             $currentrec = (object) ['companyid' => $companyid, 'courseid' => $courseid, 'autoenrol' => 0];
-            $currentrec->id = $DB->insert_record('company_course_options', $currentrec);
+            $currentrec->id = $DB->insert_record('local_iomad_company_course_options', $currentrec);
         }
 
         // Process changes.
-        $DB->set_field('company_course_options', 'autoenrol', $autoenrol, ['id' => $currentrec->id]);
+        $DB->set_field('local_iomad_company_course_options', 'autoenrol', $autoenrol, ['id' => $currentrec->id]);
 
         // Fire an event for this.
         $eventother = ['iomadcourse' => (array) $courserec];

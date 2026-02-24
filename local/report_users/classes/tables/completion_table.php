@@ -165,7 +165,7 @@ class completion_table extends table_sql {
     public function col_finalscore($row) {
         global $CFG, $DB, $USER;
 
-        if ($DB->get_record_sql("SELECT * FROM {iomad_courses}
+        if ($DB->get_record_sql("SELECT * FROM {local_iomad_courses}
                                  WHERE courseid = :courseid
                                  AND hasgrade = 1",
                                 ['courseid' => $row->courseid])) {
@@ -257,7 +257,7 @@ class completion_table extends table_sql {
             if (empty($row->coursecleared)) {
                 if (empty($USER->editing)) {
                     if (!empty($row->licenseid) &&
-                        $DB->get_record('companylicense',
+                        $DB->get_record('local_iomad_company_licenses',
                                          ['id' => $row->licenseid,
                                           'program' => 1])) {
                         if (has_capability('local/report_users:clearentries', $companycontext)) {
@@ -272,7 +272,7 @@ class completion_table extends table_sql {
                         }
                     } else {
                         if ($DB->get_record(
-                            'companylicense_users',
+                            'local_iomad_company_license_users',
                             [
                                 'userid' => $row->userid,
                                 'licensecourseid' => $row->courseid,
@@ -291,7 +291,7 @@ class completion_table extends table_sql {
                                 );
                             }
                         } else if ($DB->get_record(
-                            'companylicense_users',
+                            'local_iomad_company_license_users',
                             [
                                 'userid' => $row->userid,
                                 'licensecourseid' => $row->courseid,
@@ -442,7 +442,7 @@ class completion_table extends table_sql {
         $info = new completion_info($course);
         $completions = $info->get_completions($row->userid);
         $showgrade = true;
-        if ($DB->get_record('iomad_courses', ['courseid' => $row->courseid, 'hasgrade' => 0])) {
+        if ($DB->get_record('local_iomad_courses', ['courseid' => $row->courseid, 'hasgrade' => 0])) {
             $showgrade = false;
         }
 
@@ -522,7 +522,7 @@ class completion_table extends table_sql {
                 return get_string('notstarted', 'local_report_users');
             } else {
                 if (!empty($row->licenseid)) {
-                    if ($DB->get_record('companylicense_users',
+                    if ($DB->get_record('local_iomad_company_license_users',
                                         ['licenseid' => $row->licenseid,
                                          'userid' => $row->userid,
                                          'licensecourseid' => $row->courseid,
@@ -580,7 +580,7 @@ class completion_table extends table_sql {
         } else {
             if ($progress < 100 &&
                 !empty($row->licenseid) &&
-                !$DB->get_record('companylicense_users',
+                !$DB->get_record('local_iomad_company_license_users',
                                 ['licenseid' => $row->licenseid,
                                  'userid' => $row->userid,
                                  'licensecourseid' => $row->courseid,

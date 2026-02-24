@@ -92,7 +92,7 @@ class potential_course extends company_base {
                         ue.enrolid = e.id
                         AND e.status = 0
                     )
-                    JOIN {local_iomad_track} lit ON (
+                    JOIN {local_iomad_tracks} lit ON (
                         e.courseid = lit.courseid
                         AND ue.userid=lit.userid
                         AND ue.timestart = lit.timeenrolled
@@ -146,7 +146,7 @@ class potential_course extends company_base {
                                                        SQL_PARAMS_NAMED,
                                                        'pcids');
             $userfilter = " AND u.id NOT IN (
-                             SELECT userid FROM {company_users}
+                             SELECT userid FROM {local_iomad_company_users}
                              WHERE managertype = 1
                              AND companyid {$pcids}";
             $params = $params + $inparams;
@@ -168,7 +168,7 @@ class potential_course extends company_base {
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM {user} u
-                 JOIN {company_users} cu ON cu.userid = u.id
+                 JOIN {local_iomad_company_users} cu ON cu.userid = u.id
                  LEFT JOIN {user_info_data} ui ON (
                      ui.userid = u.id
                      AND ui.userid = cu.userid

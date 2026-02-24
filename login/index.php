@@ -67,7 +67,7 @@ if (isloggedin() && !isguestuser() && !empty($SESSION->wantsurl)) {
 }
 
 // Check if the company being passed is valid.
-if (!empty($wantedcompanyid) && !$company = $DB->get_record('company', array('id'=> $wantedcompanyid, 'shortname'=>$wantedcompanyshort))) {
+if (!empty($wantedcompanyid) && !$company = $DB->get_record('local_iomad_companies', array('id'=> $wantedcompanyid, 'shortname'=>$wantedcompanyshort))) {
     throw new moodle_exception(get_string('unknown_company', 'local_iomad_signup'));
 } else if (!empty($wantedcompanyid)) {
     // Set the page theme.
@@ -93,8 +93,8 @@ $errorcode = 0;
 
 // IOMAD - Set the theme if the server hostname matches one of ours.
 $postfix = "";
-if ($DB->get_manager()->table_exists('company') &&
-    $company = $DB->get_record('company', array('hostname' => $_SERVER["SERVER_NAME"]))) {
+if ($DB->get_manager()->table_exists('local_iomad_companies') &&
+    $company = $DB->get_record('local_iomad_companies', array('hostname' => $_SERVER["SERVER_NAME"]))) {
     $hascompanybyurl = true;
     // set the current editing company to be this.
     $SESSION->currenteditingcompany = $company->id;
@@ -270,7 +270,7 @@ if ($frm and isset($frm->username)) {                             // Login WITH 
         }
 
         // Check if the company in the session is still correct.
-        if ($DB->get_manager()->table_exists('company') &&
+        if ($DB->get_manager()->table_exists('local_iomad_companies') &&
             !has_capability('block/iomad_company_admin:company_view_all', context_system::instance())) {
             $currenteditingcompany = 0;
             $currentcompany = [];
@@ -281,9 +281,9 @@ if ($frm and isset($frm->username)) {                             // Login WITH 
             if (empty($currenteditingcompany)  ||
                 !company::check_valid_user($currenteditingcompany, $user->id)) {
                 // Check if the user is in multiple companies.
-                if ($DB->count_records_sql("SELECT COUNT(DISTINCT companyid) FROM {company_users} WHERE userid = :userid", ['userid' => $user->id]) == 1) {
+                if ($DB->count_records_sql("SELECT COUNT(DISTINCT companyid) FROM {local_iomad_company_users} WHERE userid = :userid", ['userid' => $user->id]) == 1) {
                     if ($mycompany = company::by_userid($user->id, true)) {
-                        $mycompanyrec = $DB->get_record('company', ['id' => $mycompany->id]);
+                        $mycompanyrec = $DB->get_record('local_iomad_companies', ['id' => $mycompany->id]);
                         if ($currenteditingcompany != $mycompany->id) {
                             if (!empty($currentcompany)) {
                                 $currentcompanyobj = new company($currentcompany->id);
@@ -312,15 +312,15 @@ if ($frm and isset($frm->username)) {                             // Login WITH 
 
         // IOMAD
         // Update the company for the user if there is one.
-        if ($DB->get_manager()->table_exists('company')) {
+        if ($DB->get_manager()->table_exists('local_iomad_companies')) {
             if (!empty($SESSION->currenteditingcompany)) {
-                $DB->set_field('company_users', 'lastused', time(), ['userid' => $user->id, 'companyid' => $SESSION->currenteditingcompany]);
+                $DB->set_field('local_iomad_company_users', 'lastused', time(), ['userid' => $user->id, 'companyid' => $SESSION->currenteditingcompany]);
             } else {
                 $mycompanyid = iomad::get_my_companyid(context_system::instance(), false);
                 if ($mycompanyid > 0) {
                     $mycompany = new company($mycompanyid);
                     $SESSION->theme = $mycompany->get_theme();
-                    $DB->set_field('company_users', 'lastused', time(), ['userid' => $user->id, 'companyid' => $mycompanyid]);
+                    $DB->set_field('local_iomad_company_users', 'lastused', time(), ['userid' => $user->id, 'companyid' => $mycompanyid]);
                 }
             }
         }

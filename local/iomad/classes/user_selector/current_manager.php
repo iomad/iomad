@@ -61,7 +61,7 @@ class current_manager extends company_base {
         $fields = 'SELECT ' . $this->required_fields_sql('u');
         $countfields = 'SELECT COUNT(1)';
         $sql = " FROM {user} u
-                 JOIN {company_users} cu ON (
+                 JOIN {local_iomad_company_users} cu ON (
                      u.id = cu.userid
                      AND cu.companyid = :companyid
                  )

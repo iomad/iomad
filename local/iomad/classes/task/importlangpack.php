@@ -66,18 +66,23 @@ class importlangpack extends adhoc_task {
         $sitelang = $CFG->lang;
 
         // Deal with templatesets.
-        $templatesets = $DB->get_records('email_templateset_templates');
+        $templatesets = $DB->get_records('local_iomad_email_templateset_templates');
         foreach ($templatesets as $templateset) {
-            if (!$DB->get_record('email_templateset_template_strings', ['templatesetid' => $templateset->id, 'lang' => $newlang])) {
-                $DB->insert_record('email_templateset_template_strings', ['templatesetid' => $templateset->id, 'lang' => $newlang]);
+            if (!$DB->get_record(
+                'local_iomad_email_templateset_template_strings',
+                ['templatesetid' => $templateset->id, 'lang' => $newlang])) {
+                $DB->insert_record(
+                    'local_iomad_email_templateset_template_strings',
+                    ['templatesetid' => $templateset->id, 'lang' => $newlang]
+                );
             }
         }
 
         // Deal with companies.
-        $templates = $DB->get_records('email_template');
+        $templates = $DB->get_records('local_iomad_email_templates');
         foreach ($templates as $template) {
-            if (!$DB->get_record('email_template_strings', ['templateid' => $template->id, 'lang' => $newlang])) {
-                $DB->insert_record('email_template_strings', ['templateid' => $template->id, 'lang' => $newlang]);
+            if (!$DB->get_record('local_iomad_email_template_strings', ['templateid' => $template->id, 'lang' => $newlang])) {
+                $DB->insert_record('local_iomad_email_template_strings', ['templateid' => $template->id, 'lang' => $newlang]);
             }
         }
 

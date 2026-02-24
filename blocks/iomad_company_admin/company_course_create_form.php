@@ -86,9 +86,9 @@ if ($mform->is_cancelled()) {
     $data->userid = $USER->id;
 
     // Merge data with course defaults.
-    $companyrec = $DB->get_record('company', ['id' => $companyid]);
-    if (!empty($company->category)) {
-        $data->category = $companyrec->category;
+    $companyrec = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
+    if (!empty($company->coursecategoryid)) {
+        $data->category = $companyrec->coursecategoryid;
     } else {
         $data->category = $CFG->defaultrequestcategory;
     }
@@ -153,7 +153,7 @@ if ($mform->is_cancelled()) {
     // Assign the course to the company.
     // Check if we are a company manager.
     if ($data->selfenrol != 2 &&
-        $DB->get_record('company_users', ['companyid' => $companyid,
+        $DB->get_record('local_iomad_company_users', ['companyid' => $companyid,
                                           'userid' => $USER->id,
                                           'managertype' => 1])) {
         $company->add_course($course, 0, true);

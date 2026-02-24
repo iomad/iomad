@@ -49,7 +49,7 @@ class checklearningrecordstask extends adhoc_task {
         require_once(__DIR__.'/../../lib.php');
 
         // Get the incomplete completion records.
-        $brokencompletions = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
+        $brokencompletions = $DB->get_records_sql("SELECT * FROM {local_iomad_tracks}
                                                    WHERE
                                                    (timecompleted > 0
                                                     AND timestarted IS NULL)
@@ -63,7 +63,7 @@ class checklearningrecordstask extends adhoc_task {
         do_fixbrokencompletions($brokencompletions);
 
         // Get the incomplete license records.
-        $brokenlicenses = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
+        $brokenlicenses = $DB->get_records_sql("SELECT * FROM {local_iomad_tracks}
                                                 WHERE
                                                 (licenseid > 0
                                                  AND licenseallocated IS NULL)
@@ -79,7 +79,7 @@ class checklearningrecordstask extends adhoc_task {
                                                            cc.timeenrolled AS cctimeenrolled,
                                                            cc.timestarted AS cctimestarted,
                                                            cc.timecompleted AS cctimecompleted
-                                                    FROM {local_iomad_track} lit
+                                                    FROM {local_iomad_tracks} lit
                                                     JOIN {course_completions} cc
                                                     ON (lit.userid = cc.userid AND lit.courseid = cc.course)
                                                     WHERE
@@ -92,11 +92,11 @@ class checklearningrecordstask extends adhoc_task {
         // Sort out all expiry.
         // Calculate the timeexpired for all users.
         // Get the courses where there is a expired value.
-        $expirycourses = $DB->get_records_sql("SELECT courseid,validlength FROM {iomad_courses}
+        $expirycourses = $DB->get_records_sql("SELECT courseid,validlength FROM {local_iomad_courses}
                                                WHERE validlength > 0");
         foreach ($expirycourses as $expirycourse) {
             $offset = $expirycourse->validlength * 24 * 60 * 60;
-            $DB->execute("UPDATE {local_iomad_track}
+            $DB->execute("UPDATE {local_iomad_tracks}
                           SET timeexpires = timecompleted + :offset
                           WHERE courseid = :courseid
                           AND timecompleted > 0",

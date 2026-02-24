@@ -238,7 +238,7 @@ if ($companyid = iomad::is_company_user($certuser)) {
 
 // Get the company certificat design info, if appropriate.
 if (!empty($companyid)) {
-    if ($companycertificateinfo = $DB->get_record('companycertificate', ['companyid' => $companyid])) {
+    if ($companycertificateinfo = $DB->get_record('local_iomad_company_certificates', ['companyid' => $companyid])) {
         $uselogo = $companycertificateinfo->uselogo;
         $usesignature = $companycertificateinfo->usesignature;
         $useborder = $companycertificateinfo->useborder;

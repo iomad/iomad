@@ -1816,22 +1816,22 @@ class global_navigation extends navigation_node {
             if (company_user::is_company_user()) {
                 $companyid = iomad::get_my_companyid(context_system::instance());
                 $sharedsql = " AND ( c.id IN (
-                                   SELECT courseid FROM {company_course}
+                                   SELECT courseid FROM {local_iomad_company_courses}
                                    WHERE companyid = $companyid)
                                OR c.id IN (
-                                   SELECT courseid FROM {iomad_courses}
+                                   SELECT courseid FROM {local_iomad_courses}
                                    WHERE shared=1)
                                OR c.id IN (
-                                   SELECT courseid FROM {company_shared_courses}
+                                   SELECT courseid FROM {local_iomad_company_shared_courses}
                                    WHERE companyid = $companyid))
                                OR c.id IN (
-                                   SELECT clu.licensecourseid FROM {companylicense_users} clu 
-                                   JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+                                   SELECT clu.licensecourseid FROM {local_iomad_company_license_users} clu 
+                                   JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
                                    WHERE cl.companyid = $companyid
                                    AND clu.userid = " . $USER->id ."
                                    AND cl.expirydate > " . time() .")";
             } else if (!is_siteadmin()) {
-                $sharedsql = " AND c.id IN (select courseid FROM {iomad_courses} WHERE shared=1) ";
+                $sharedsql = " AND c.id IN (select courseid FROM {local_iomad_courses} WHERE shared=1) ";
             } else {
                 $sharedsql = "";
             }
@@ -1958,22 +1958,22 @@ class global_navigation extends navigation_node {
             if (company_user::is_company_user()) {
                 $companyid = iomad::get_my_companyid(context_system::instance());
                 $sharedsql = " AND ( c.id IN (
-                                   SELECT courseid FROM {company_course}
+                                   SELECT courseid FROM {local_iomad_company_courses}
                                    WHERE companyid = $companyid)
                                OR c.id IN (
-                                   SELECT courseid FROM {iomad_courses}
+                                   SELECT courseid FROM {local_iomad_courses}
                                    WHERE shared=1)
                                OR c.id IN (
-                                   SELECT courseid FROM {company_shared_courses}
+                                   SELECT courseid FROM {local_iomad_company_shared_courses}
                                    WHERE companyid = $companyid))
                                OR c.id IN (
-                                   SELECT clu.licensecourseid FROM {companylicense_users} clu 
-                                   JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+                                   SELECT clu.licensecourseid FROM {local_iomad_company_license_users} clu 
+                                   JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
                                    WHERE cl.companyid = $companyid
                                    AND clu.userid = " . $USER->id ."
                                    AND cl.expirydate > " . time() .")";
             } else if (!is_siteadmin()) {
-                $sharedsql = " AND c.id IN (select courseid FROM {iomad_courses} WHERE shared=1) ";
+                $sharedsql = " AND c.id IN (select courseid FROM {local_iomad_courses} WHERE shared=1) ";
             } else {
                 $sharedsql = "";
             }
@@ -3765,7 +3765,7 @@ class global_navigation_for_ajax extends global_navigation {
         if (company_user::is_company_user()) {
             $companyid = iomad::get_my_companyid(context_system::instance());
             $sharedsql = " AND ( cc.id IN (
-                               SELECT category FROM {company}
+                               SELECT category FROM {local_iomad_companies}
                                WHERE id = $companyid)) ";
         } else {
             $sharedsql = "";

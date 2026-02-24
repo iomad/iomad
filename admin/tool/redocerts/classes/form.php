@@ -61,7 +61,7 @@ class tool_redocerts_form extends moodleform {
             $courses = $DB->get_records_menu('course', [], 'fullname', 'id,fullname');
 
             // Array of all Company names identified by ID.
-            $companies = $DB->get_records_menu('company', [], 'name', 'id,name');
+            $companies = $DB->get_records_menu('local_iomad_companies', [], 'name', 'id,name');
 
             // All companies, courses, and users.
             $allusers = [0 => get_string('all')] + $users;

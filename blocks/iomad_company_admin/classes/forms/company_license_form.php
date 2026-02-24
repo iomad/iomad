@@ -97,11 +97,11 @@ class company_license_form extends company_moodleform {
         $this->parentid = $parentid;
         $this->selectedcourses = $courses;
         if (!empty($this->parentid)) {
-            $this->parentlicense = $DB->get_record('companylicense', ['id' => $parentid]);
+            $this->parentlicense = $DB->get_record('local_iomad_company_licenses', ['id' => $parentid]);
         } else {
             $this->parentlicense = (object) [];
         }
-        if (!$this->license = $DB->get_record('companylicense', ['id' => $licenseid])) {
+        if (!$this->license = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid])) {
             $this->license = (object) [];
         }
 
@@ -113,7 +113,7 @@ class company_license_form extends company_moodleform {
         } else {
             $this->courses = $DB->get_records_sql_menu("SELECT c.id, c.fullname
                                                         FROM {course} c
-                                                        JOIN {companylicense_courses} lic
+                                                        JOIN {local_iomad_company_license_courses} lic
                                                         on (c.id = lic.courseid)
                                                         WHERE lic.licenseid = :licenseid",
                                                        ['licenseid' => $parentid]);
@@ -173,7 +173,7 @@ class company_license_form extends company_moodleform {
             $mform->addElement('hidden', 'designatedcompany', 0);
             $mform->setType('designatedcompany', PARAM_INT);
         } else {
-            $licenseinfo = $DB->get_record('companylicense', ['id' => $this->parentid]);
+            $licenseinfo = $DB->get_record('local_iomad_company_licenses', ['id' => $this->parentid]);
 
             // If this is a program, sort out the displayed used and allocated.
             if (!empty($licenseinfo->program)) {
@@ -357,10 +357,10 @@ class company_license_form extends company_moodleform {
 
         if (!empty($data['licenseid'])) {
             // Check that the amount of free licenses slots is more than the amount being allocated.
-            $currentlicense = $DB->get_record('companylicense', ['id' => $data['licenseid']]);
+            $currentlicense = $DB->get_record('local_iomad_company_licenses', ['id' => $data['licenseid']]);
             if (!empty($currentlicense->program)) {
                 // Used count comes from the number of currently allocated courses.  Not those being passed.
-                $coursecount = $DB->count_records('companylicense_courses', ['licenseid' => $currentlicense->id]);
+                $coursecount = $DB->count_records('local_iomad_company_license_courses', ['licenseid' => $currentlicense->id]);
                 $used = $currentlicense->used / $coursecount;
             } else {
                 $used = $currentlicense->used;
@@ -376,11 +376,11 @@ class company_license_form extends company_moodleform {
 
         if (!empty($data['parentid'])) {
             // Check that the amount of free licenses slots is more than the amount being allocated.
-            $parentlicense = $DB->get_record('companylicense', ['id' => $data['parentid']]);
+            $parentlicense = $DB->get_record('local_iomad_company_licenses', ['id' => $data['parentid']]);
 
             // Check if this is a new license or we are updating it.
             if (!empty($data['licenseid'])) {
-                $currlicenseinfo = $DB->get_record('companylicense', ['id' => $data['licenseid']]);
+                $currlicenseinfo = $DB->get_record('local_iomad_company_licenses', ['id' => $data['licenseid']]);
                 $weighting = $currlicenseinfo->allocation;
             } else {
                 $weighting = 0;

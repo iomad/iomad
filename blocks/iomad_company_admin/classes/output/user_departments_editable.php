@@ -160,13 +160,13 @@ class user_departments_editable extends inplace_editable {
         // Check permissions.
         iomad::require_capability('block/iomad_company_admin:editusers', $companycontext);
 
-        if (!$DB->get_records('company_users', ['userid' => $userid, 'companyid' => $companyid])) {
+        if (!$DB->get_records('local_iomad_company_users', ['userid' => $userid, 'companyid' => $companyid])) {
             throw new coding_exception('User does not belong to the company');
         }
 
         // Check that all the departments belong to the company.
         $company = new company($companyid);
-        $alldepartments = $DB->get_records('department', ['company' => $companyid]);
+        $alldepartments = $DB->get_records('local_iomad_company_departments', ['companyid' => $companyid]);
         $parentlevel = company::get_company_parentnode($companyid);
         if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
             $userlevels = [$parentlevel->id => $parentlevel->id];
@@ -183,10 +183,10 @@ class user_departments_editable extends inplace_editable {
 
         $userdepartmentsbyid = $DB->get_records_sql(
             "SELECT d.id, d.name
-             FROM {department} d
-             JOIN {company_users} cu ON (
+             FROM {local_iomad_company_departments} d
+             JOIN {local_iomad_company_users} cu ON (
                  d.id = cu.departmentid
-                 AND d.company = cu.companyid
+                 AND d.companyid = cu.companyid
              )
              WHERE cu.companyid = :companyid
              AND cu.userid = :userid
@@ -232,7 +232,7 @@ class user_departments_editable extends inplace_editable {
         foreach ($userdepartments as $departmentid => $departmentname) {
             if (isset($userdepartments[$departmentid]) && !isset($departmentstoprocess[$departmentid])) {
                 // Remove them.
-                $DB->delete_records('company_users', ['userid' => $userid,
+                $DB->delete_records('local_iomad_company_users', ['userid' => $userid,
                                                       'companyid' => $company->id,
                                                       'departmentid' => $departmentid]);
                 unset($userdepartments[$departmentid]);

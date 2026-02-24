@@ -100,7 +100,7 @@ if ($data = $mform->get_data()) {
         $newentry->licenseallocated = null;
     }
     $newentry->modifiedtime = time();
-    if ($iomadcourse = $DB->get_record_sql("SELECT * FROM {iomad_courses}
+    if ($iomadcourse = $DB->get_record_sql("SELECT * FROM {local_iomad_courses}
                                             WHERE courseid = :courseid
                                             AND validlength > 0",
                                             ['courseid' => $data->courseid])) {
@@ -111,7 +111,7 @@ if ($data = $mform->get_data()) {
     $courserec = $DB->get_record('course', ['id' => $data->courseid]);
     $newentry->coursename = $courserec->fullname;
     $newentry->coursecleared = 1;
-    $trackid = $DB->insert_record('local_iomad_track', $newentry);
+    $trackid = $DB->insert_record('local_iomad_tracks', $newentry);
 
     // Create a certificate, if required.
     track::record_certificates($newentry->courseid, $newentry->userid, $trackid, false, false);

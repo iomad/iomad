@@ -215,7 +215,7 @@ if ($parentslist = $company->get_parent_companies_recursive()) {
                                                SQL_PARAMS_NAMED,
                                                'pcids');
     $companysql = " AND u.id NOT IN (
-                    SELECT userid FROM {company_users}
+                    SELECT userid FROM {local_iomad_company_users}
                     WHERE managertype = 1
                     AND companyid IN {$insql})";
 }
@@ -297,14 +297,14 @@ if (!empty($showenrolledonly)) {
     $enrolledonlysql =
     "AND c.id IN (
          SELECT lit.courseid
-         FROM {local_iomad_track} lit
-         JOIN {company_users} cu ON (
+         FROM {local_iomad_tracks} lit
+         JOIN {local_iomad_company_users} cu ON (
              lit.userid = cu.userid
              AND lit.companyid = cu.companyid
          )
-         JOIN {department} d ON (
-             cu.companyid = d.company
-             AND lit.companyid = d.company
+         JOIN {local_iomad_company_departments} d ON (
+             cu.companyid = d.companyid
+             AND lit.companyid = d.companyid
              AND cu.departmentid = d.id
          )
          WHERE 1 = 1
@@ -315,7 +315,7 @@ if (!empty($showenrolledonly)) {
 // Are we only showing mandatory courses?
 $mandatorysql = "";
 if (!empty($mandatoryonly)) {
-    $mandatorysql = "JOIN {company_course_options} cca ON (
+    $mandatorysql = "JOIN {local_iomad_company_course_options} cca ON (
                          cca.courseid = ic.courseid
                          AND cca.courseid = c.id
                          AND cca.mandatory = 1)";
@@ -323,7 +323,7 @@ if (!empty($mandatoryonly)) {
 
 // Get all courses if we haven't been passed any.
 if (empty($courses)) {
-    $courses = $DB->get_records_sql("SELECT ic.courseid, c.fullname FROM {iomad_courses} ic
+    $courses = $DB->get_records_sql("SELECT ic.courseid, c.fullname FROM {local_iomad_courses} ic
                                      JOIN {course} c ON (ic.courseid = c.id)
                                      $mandatorysql
                                      WHERE 1=1 $courselistsql
@@ -335,7 +335,7 @@ if (empty($courses)) {
 $expirecourses = $courses;
 
 // Get courses where we don't show the grade.
-$gradelesscourses = $DB->get_records_sql("SELECT courseid FROM {iomad_courses} WHERE hasgrade = 0");
+$gradelesscourses = $DB->get_records_sql("SELECT courseid FROM {local_iomad_courses} WHERE hasgrade = 0");
 
 // Setup the user search form.
 $searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
@@ -416,7 +416,7 @@ $returnurl = $CFG->wwwroot."/local/report_completion_overview/index.php";
 // Do we have any additional reporting fields?
 $extrafields = [];
 if (!empty(get_config('local_iomad', 'report_fields'))) {
-    $companyrec = $DB->get_record('company', ['id' => $companyid]);
+    $companyrec = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
     foreach (explode(',', get_config('local_iomad', 'report_fields')) as $extrafield) {
         $extrafields[$extrafield] = new stdclass();
         $extrafields[$extrafield]->name = $extrafield;
@@ -426,8 +426,8 @@ if (!empty(get_config('local_iomad', 'report_fields'))) {
                 'user_info_field',
                 ['shortname' => str_replace('profile_field_', '', $extrafield)]
             );
-            if ($profilefield->categoryid == $companyrec->profileid ||
-                !$DB->get_record('company', ['profileid' => $profilefield->categoryid])) {
+            if ($profilefield->categoryid == $companyrec->profilecategoryid ||
+                !$DB->get_record('local_iomad_companies', ['profilecategoryid' => $profilefield->categoryid])) {
                 $extrafields[$extrafield]->title = $profilefield->name;
                 $extrafields[$extrafield]->fieldid = $profilefield->id;
             } else {
@@ -442,10 +442,10 @@ if (!empty(get_config('local_iomad', 'report_fields'))) {
 // Set up the SQL to get the users.
 $selectsql = "DISTINCT u.*";
 $fromsql = " {user} u
-             JOIN {company_users} cu ON (u.id = cu.userid)
-             JOIN {department} d ON (
+             JOIN {local_iomad_company_users} cu ON (u.id = cu.userid)
+             JOIN {local_iomad_company_departments} d ON (
                  cu.departmentid = d.id
-                 AND cu.companyid = d.company
+                 AND cu.companyid = d.companyid
              )";
 
 // Set up the headers for the form.
@@ -644,12 +644,12 @@ $usercount = $DB->count_records_sql($countsql, $sqlparams);
 
 // Populate all of the course data.
 $coursedetailsql = "SELECT lit.*
-                    FROM {local_iomad_track} lit
+                    FROM {local_iomad_tracks} lit
                     WHERE lit.userid = :userid
                     AND lit.courseid = :courseid
                     AND lit.id = (
                       SELECT MAX(id)
-                      FROM {local_iomad_track}
+                      FROM {local_iomad_tracks}
                       WHERE userid = lit.userid
                       AND courseid = lit.courseid)";
 
@@ -667,7 +667,7 @@ if (!$bycourse) {
                 $comprecord->lastcompleted = null;
                 $comprecord->timeexpired = null;
                 // Do we have an in-date record?
-                if ($indate = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
+                if ($indate = $DB->get_records_sql("SELECT * FROM {local_iomad_tracks}
                                                     WHERE userid = :userid
                                                     AND courseid = :courseid
                                                     AND timeexpires > :time
@@ -680,7 +680,7 @@ if (!$bycourse) {
                     $comprecord->lastcompleted = $indaterec->timecompleted;
                     $comprecord->timeexpires = $indaterec->timeexpires;
                     // Do we have an out-date record?
-                } else if ($outdate = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
+                } else if ($outdate = $DB->get_records_sql("SELECT * FROM {local_iomad_tracks}
                                                             WHERE userid = :userid
                                                             AND courseid = :courseid
                                                             AND timecompleted > 0
@@ -723,7 +723,7 @@ if (!$bycourse) {
                 $comprecord->lastcompleted = null;
                 $comprecord->timeexpired = null;
                 // Do we have an in-date record?
-                if ($indate = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
+                if ($indate = $DB->get_records_sql("SELECT * FROM {local_iomad_tracks}
                                                     WHERE userid = :userid
                                                     AND courseid = :courseid
                                                     AND timecompleted > :time
@@ -736,7 +736,7 @@ if (!$bycourse) {
                     $comprecord->lastcompleted = $indaterec->timecompleted;
                     $comprecord->timeexpires = $indaterec->timeexpires;
                     // Do we have an out-date record?
-                } else if ($outdate = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
+                } else if ($outdate = $DB->get_records_sql("SELECT * FROM {local_iomad_tracks}
                                                             WHERE userid = :userid
                                                             AND courseid = :courseid
                                                             AND timecompleted > 0
@@ -818,8 +818,8 @@ if (!$bycourse) {
             $row = [fullname($user)];
         }
         $userdepartments = $DB->get_records_sql("SELECT d.name
-                                                 FROM {department} d
-                                                 JOIN {company_users} cu
+                                                 FROM {local_iomad_company_departments} d
+                                                 JOIN {local_iomad_company_users} cu
                                                  ON d.id = cu.departmentid
                                                  WHERE cu.userid = :userid
                                                  AND cu.companyid = :companyid",

@@ -107,8 +107,8 @@ class check_enrolment extends external_api {
                 // Check if they have an unused valid license for this course.
                 if ($DB->get_records_sql(
                     "SELECT clu.id
-                     FROM {companylicense_users} clu
-                     JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+                     FROM {local_iomad_company_license_users} clu
+                     JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
                      WHERE clu.userid = :userid
                      AND clu.licensecourseid = :licensecourseid
                      AND clu.isusing = 0

@@ -87,8 +87,8 @@ class profile_define_base {
         if (!empty($companyid)) {
             // Being passed a company dont need to have the select.
             // Get to company details.
-            $company = $DB->get_record('company', [ 'id' => $companyid], '*', MUST_EXIST);
-            $category = $DB->get_record('user_info_category', [ 'id' => $company->profileid]);
+            $company = $DB->get_record('local_iomad_companies', [ 'id' => $companyid], '*', MUST_EXIST);
+            $category = $DB->get_record('user_info_category', [ 'id' => $company->profilecategoryid]);
             $form->addElement('hidden', 'categoryid', $category->id);
         } else {
             $choices = profile_list_categories();

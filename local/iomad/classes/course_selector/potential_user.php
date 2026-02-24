@@ -90,7 +90,7 @@ class potential_user extends company_base {
              FROM {course} c
              JOIN {enrol} e ON (c.id = e.courseid)
              JOIN {user_enrolments} ue ON (e.id = ue.enrolid AND e.status = 0)
-             JOIN {local_iomad_track} lit ON (
+             JOIN {local_iomad_tracks} lit ON (
                  e.courseid = lit.courseid
                  AND c.id = lit.courseid
                  AND ue.userid = lit.userid
@@ -112,7 +112,7 @@ class potential_user extends company_base {
         // Deal with licensed courses.
         $licensesql = " AND c.id NOT IN (
                              SELECT courseid
-                             FROM {iomad_courses}
+                             FROM {local_iomad_courses}
                              WHERE licensed = 1
                         )";
 
@@ -120,7 +120,7 @@ class potential_user extends company_base {
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM {course} c
-                 JOIN {company_course} cc ON (c.id = cc.courseid)
+                 JOIN {local_iomad_company_courses} cc ON (c.id = cc.courseid)
                  WHERE cc.companyid = :companyid
                  AND $wherecondition
                  $departmentsql
@@ -130,7 +130,7 @@ class potential_user extends company_base {
         // Deal with shared courses.
         if ($this->shared) {
             $sharedsql = " FROM {course} c
-                           JOIN {iomad_courses} pc ON c.id=pc.courseid
+                           JOIN {local_iomad_courses} pc ON c.id=pc.courseid
                            WHERE $wherecondition
                            AND pc.shared = 1
                            AND pc.licensed = 0
@@ -139,8 +139,8 @@ class potential_user extends company_base {
                                 WHERE $wherecondition
                                 AND c.id IN (
                                     SELECT pc.courseid
-                                    FROM {iomad_courses} pc
-                                    JOIN {company_shared_courses} csc ON pc.courseid=csc.courseid
+                                    FROM {local_iomad_courses} pc
+                                    JOIN {local_iomad_company_shared_courses} csc ON pc.courseid=csc.courseid
                                     WHERE pc.shared = 2
                                     AND pc.licensed = 0
                                     AND csc.companyid = :companyid

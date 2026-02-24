@@ -243,7 +243,7 @@ if (!empty($delete) && confirm_sesskey()) {
 if ($suspend && confirm_sesskey()) {
 
     // Suspend a company, after confirmation.
-    $company = $DB->get_record('company', ['id' => $suspend], '*', MUST_EXIST);
+    $company = $DB->get_record('local_iomad_companies', ['id' => $suspend], '*', MUST_EXIST);
     if ($confirm != md5($suspend)) {
         $fullname = $company->name;
         echo $OUTPUT->header();
@@ -279,8 +279,8 @@ if ($suspend && confirm_sesskey()) {
 } else if ($unsuspend && confirm_sesskey()) {
 
     // Unsuspends a selected company, after confirmation.
-    $company = $DB->get_record('company', ['id' => $unsuspend], '*', MUST_EXIST);
-    if (!empty($company->parentid) && $DB->get_record('company', ['id' => $company->parentid, 'suspended' => 1])) {
+    $company = $DB->get_record('local_iomad_companies', ['id' => $unsuspend], '*', MUST_EXIST);
+    if (!empty($company->parentid) && $DB->get_record('local_iomad_companies', ['id' => $company->parentid, 'suspended' => 1])) {
         throw new moodle_exception('parentcompanysuspended', 'block_iomad_company_admin');
     }
 
@@ -317,14 +317,14 @@ if ($suspend && confirm_sesskey()) {
 } else if ($enableecommerce && confirm_sesskey()) {
 
     // Enables ecommerce for a selected company.
-    $company = $DB->get_record('company', ['id' => $enableecommerce], '*', MUST_EXIST);
+    $company = $DB->get_record('local_iomad_companies', ['id' => $enableecommerce], '*', MUST_EXIST);
     $enableecommercecompany = new company($company->id);
     $enableecommercecompany->ecommerce(1);
 
 } else if ($disableecommerce && confirm_sesskey()) {
 
     // Disables ecommerce for a selected company.
-    $company = $DB->get_record('company', ['id' => $disableecommerce], '*', MUST_EXIST);
+    $company = $DB->get_record('local_iomad_companies', ['id' => $disableecommerce], '*', MUST_EXIST);
     $enableecommercecompany = new company($company->id);
     $enableecommercecompany->ecommerce(0);
 }
@@ -421,20 +421,20 @@ if (!empty($params['custom3'])) {
     $searchparams['custom3'] = '%'.$params['custom3'].'%';
 }
 
-$companyrecords = $DB->get_fieldset_select('company', 'id', $sqlsearch, $searchparams);
+$companyrecords = $DB->get_fieldset_select('local_iomad_companies', 'id', $sqlsearch, $searchparams);
 
 // Add in the parent companies if option is set.
 if (!empty($params['showchild']) && !empty($params['name'])) {
     foreach ($companyrecords as $companyrecord) {
         $sqlsearch1 = " parentid = :companyrecord";
-        $companyrecords1 = $DB->get_fieldset_select('company', 'id', $sqlsearch1, ['companyrecord' => $companyrecord]);
+        $companyrecords1 = $DB->get_fieldset_select('local_iomad_companies', 'id', $sqlsearch1, ['companyrecord' => $companyrecord]);
         foreach ($companyrecords1 as $companyrecord1) {
             array_push($companyrecords, $companyrecord1);
         }
     }
     foreach ($companyrecords as $companyrecord) {
         $sqlsearch1 = " id = :companyrecord AND parentid  <> 0";
-        $companyrecords1 = $DB->get_fieldset_select('company', 'parentid', $sqlsearch1, ['companyrecord' => $companyrecord]);
+        $companyrecords1 = $DB->get_fieldset_select('local_iomad_companies', 'parentid', $sqlsearch1, ['companyrecord' => $companyrecord]);
         foreach ($companyrecords1 as $companyrecord1) {
             array_push($companyrecords, $companyrecord1);
         }
@@ -478,7 +478,7 @@ if (!empty($companylist)) {
         foreach ($companies as $companycheck) {
             if ($companycheck->parentid != 0) {
                 $parentcompany = $DB->get_records_sql("SELECT *, 0 AS depth
-                                                       FROM {company}
+                                                       FROM {local_iomad_companies}
                                                        WHERE id = :parentid",
                                                       ['parentid' => $companycheck->parentid]);
                 $companies = $parentcompany + $companies;
@@ -531,8 +531,8 @@ if ($companies) {
         if (iomad::has_capability('block/iomad_company_admin:company_add', $context)) {
             $primary = false;
         } else if ($DB->get_records_sql(
-            "SELECT * FROM {company} c
-             JOIN {company_users} cu
+            "SELECT * FROM {local_iomad_companies} c
+             JOIN {local_iomad_company_users} cu
              ON (c.id = cu.companyid)
              WHERE c.id = :companyid
              AND cu.userid = :userid
@@ -548,7 +548,7 @@ if ($companies) {
                 iomad::has_capability('block/iomad_company_admin:suspendcompanies', $companycontext)) {
                 // Is the parent suspended?
                 if (empty($company->parentid) ||
-                    $DB->get_record('company', ['id' => $company->parentid, 'suspended' => 0])) {
+                    $DB->get_record('local_iomad_companies', ['id' => $company->parentid, 'suspended' => 0])) {
                     $linkparams['unsuspend'] = $company->id;
                     $suspendurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_company_admin/editcompanies.php",
                                                 $linkparams);
@@ -563,7 +563,7 @@ if ($companies) {
             } else if (iomad::has_capability('block/iomad_company_admin:suspendcompanies', $companycontext)) {
                 // Is the parent suspended?
                 if (empty($company->parentid) ||
-                    $DB->get_record('company', ['id' => $company->parentid, 'suspended' => 0])) {
+                    $DB->get_record('local_iomad_companies', ['id' => $company->parentid, 'suspended' => 0])) {
                     $linkparams['suspend'] = $company->id;
                     $suspendurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_company_admin/editcompanies.php",
                                                  $linkparams);
@@ -613,7 +613,7 @@ if ($companies) {
         // Can we add child companies?
         if (iomad::has_capability('block/iomad_company_admin:company_add_child', $context) &&
             (iomad::has_capability('block/iomad_company_admin:company_add', $context) ||
-             $DB->get_records('company_users', ['companyid' => $company->id, 'userid' => $USER->id, 'managertype' => 1]))) {
+             $DB->get_records('local_iomad_company_users', ['companyid' => $company->id, 'userid' => $USER->id, 'managertype' => 1]))) {
             $childurl = new moodle_url(
                 $CFG->wwwroot . "/blocks/iomad_company_admin/company_edit_form.php",
                 ['createnew' => 1, 'parentid' => $company->id]

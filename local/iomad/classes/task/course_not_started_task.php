@@ -60,7 +60,7 @@ class course_not_started_task extends scheduled_task {
         mtrace("Running email report course not started task at ".date('d M Y h:i:s', $runtime));
 
         // Deal with courses where users have not yet started.
-        $warnnotstartedcourses = $DB->get_records_sql("SELECT * FROM {iomad_courses} ic
+        $warnnotstartedcourses = $DB->get_records_sql("SELECT * FROM {local_iomad_courses} ic
                                                        JOIN {course} co ON (ic.courseid = co.id)
                                                        WHERE warnnotstarted != 0
                                                        AND co.visible = 1");
@@ -69,7 +69,7 @@ class course_not_started_task extends scheduled_task {
             $checktime = time() - $warnnotstartedcourse->warnnotstarted * 60 * 60 * 24;
 
             // Get all of the users for this course.
-            $warnnotstartedusers = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
+            $warnnotstartedusers = $DB->get_records_sql("SELECT * FROM {local_iomad_tracks}
                                                        WHERE courseid = :courseid
                                                        AND notstartedstop = 0
                                                        AND (
@@ -89,11 +89,15 @@ class course_not_started_task extends scheduled_task {
             foreach ($warnnotstartedusers as $notstarteduser) {
                 if ($userrec = $DB->get_record('user', ['id' => $notstarteduser->userid, 'suspended' => 0, 'deleted' => 0])) {
                     if ($courserec = $DB->get_record('course', ['id' => $notstarteduser->courseid])) {
-                        if ($companyrec = $DB->get_record('company', ['id' => $notstarteduser->companyid])) {
+                        if ($companyrec = $DB->get_record('local_iomad_companies', ['id' => $notstarteduser->companyid])) {
                             // Get the company template info.
                             // Check against per company template repeat instead.
-                            if ($templateinfo = $DB->get_record('email_template', ['companyid' => $notstarteduser->companyid,
-                                                                                   'name' => 'course_not_started_warning'])) {
+                            if ($templateinfo = $DB->get_record(
+                                'local_iomad_email_templates',
+                                [
+                                    'companyid' => $notstarteduser->companyid,
+                                    'name' => 'course_not_started_warning',
+                                ])) {
                                 // Check if its the correct day, if not continue.
                                 if (!empty($templateinfo->repeatday) &&
                                     $templateinfo->repeatday != 99 &&
@@ -117,17 +121,17 @@ class course_not_started_task extends scheduled_task {
                             }
 
                             // Check if we have sent any emails and if they are within the period.
-                            if ($DB->count_records('email', ['userid' => $notstarteduser->userid,
+                            if ($DB->count_records('local_iomad_emails', ['userid' => $notstarteduser->userid,
                                                              'courseid' => $notstarteduser->courseid,
                                                              'templatename' => 'course_not_started_warning']) > 0) {
                                 if (!empty($notifyperiod)) {
-                                    if (!$DB->get_records_sql("SELECT id FROM {email}
+                                    if (!$DB->get_records_sql("SELECT id FROM {local_iomad_emails}
                                                               WHERE userid = :userid
                                                               AND courseid = :courseid
                                                               AND templatename = :templatename
                                                               $notifyperiod
                                                               AND id IN (
-                                                                 SELECT MAX(id) FROM {emai}l
+                                                                 SELECT MAX(id) FROM {local_iomad_emails}
                                                                  WHERE userid = :userid2
                                                                  AND courseid = :courseid2
                                                                  AND templatename = :templatename2)",
@@ -154,7 +158,7 @@ class course_not_started_task extends scheduled_task {
 
                             // Do we have a value for the template repeat?
                             if (!empty($templateinfo->repeatvalue)) {
-                                $sentcount = $DB->count_records_sql("SELECT count(id) FROM {email}
+                                $sentcount = $DB->count_records_sql("SELECT count(id) FROM {local_iomad_emails}
                                                                      WHERE userid =:userid
                                                                      AND courseid = :courseid
                                                                      AND templatename = :templatename
@@ -166,14 +170,14 @@ class course_not_started_task extends scheduled_task {
                                 if ($sentcount >= $templateinfo->repeatvalue) {
                                     $notstarteduser->notstartedstop = 1;
                                     $notstarteduser->modifiedtime = $runtime;
-                                    $DB->update_record('local_iomad_track', $notstarteduser);
+                                    $DB->update_record('local_iomad_tracks', $notstarteduser);
                                 }
                             }
                             if (empty($templateinfo->repeatperiod)) {
                                 // Set to never so mark it to stop.
                                 $notstarteduser->notstartedstop = 1;
                                 $notstarteduser->modifiedtime = $runtime;
-                                $DB->update_record('local_iomad_track', $notstarteduser);
+                                $DB->update_record('local_iomad_tracks', $notstarteduser);
                             }
                         }
                     }

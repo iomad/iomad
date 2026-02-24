@@ -129,7 +129,7 @@ abstract class company_base extends base {
         $strsharedhasenrollments = get_string('sharedhasenrollments', 'block_iomad_company_admin');
         foreach ($courselist as $id => $course) {
             if ($DB->get_record_sql("SELECT id
-                                     FROM {iomad_courses}
+                                     FROM {local_iomad_courses}
                                      WHERE courseid=$id
                                      AND shared = 0")) {  // Deal with own courses.
                 $context = context_course::instance($id);
@@ -140,7 +140,7 @@ abstract class company_base extends base {
                 }
             }
             if ($DB->get_record_sql("SELECT id
-                                     FROM {iomad_courses}
+                                     FROM {local_iomad_courses}
                                      WHERE courseid=$id
                                      AND shared = 2")) {  // Deal with closed shared courses.
                 if ($companygroup = company::get_company_group($this->companyid, $id)) {
@@ -167,7 +167,7 @@ abstract class company_base extends base {
         foreach ($allcourses as $id => $course) {
             $courseid = $id;
             if ($licenserecord) {
-                $courseid = $DB->get_field('companylicense_users', 'licensecourseid', ['id' => $id]);
+                $courseid = $DB->get_field('local_iomad_company_license_users', 'licensecourseid', ['id' => $id]);
             }
             if ($DB->get_record('course', ['id' => $courseid, 'visible' => 0])) {
                 $allcourses[$id]->fullname = $course->fullname . "(" . get_string('hidden', 'badges') . ")";
@@ -185,8 +185,8 @@ abstract class company_base extends base {
     protected function process_license_allocations(&$licensecourses, $userid) {
         global $CFG, $DB;
         foreach ($licensecourses as $id => $course) {
-            if ($DB->get_record_sql("SELECT clu.id FROM {companylicense_users} clu
-                                     JOIN {companylicense} cl
+            if ($DB->get_record_sql("SELECT clu.id FROM {local_iomad_company_license_users} clu
+                                     JOIN {local_iomad_company_licenses} cl
                                      ON (clu.licenseid = cl.id)
                                      WHERE clu.userid = :userid
                                      AND clu.licensecourseid = :licensecourseid

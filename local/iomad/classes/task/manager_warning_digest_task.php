@@ -62,7 +62,7 @@ class manager_warning_digest_task extends scheduled_task {
 
         // Course expiry warning digest.
         // Getting courses which have expiry settings.
-        if ($warningcourses = $DB->get_records_sql("SELECT courseid FROM {iomad_courses}
+        if ($warningcourses = $DB->get_records_sql("SELECT courseid FROM {local_iomad_courses}
                                                     WHERE warncompletion > 0")) {
             [$insql, $sqlparams] = $DB->get_in_or_equal(array_keys($warningcourses),
                                                         SQL_PARAMS_NAMED,
@@ -72,7 +72,7 @@ class manager_warning_digest_task extends scheduled_task {
             $warnsql = " AND lit.courseid {$insql}";
 
             // Get the companies who want this email.
-            $companies = $DB->get_records_sql("SELECT id FROM {company}
+            $companies = $DB->get_records_sql("SELECT id FROM {local_iomad_companies}
                                                WHERE managerdigestday = :dayofweek
                                                AND managernotify IN (1,3)",
                                               ['dayofweek' => $dayofweek]);
@@ -89,11 +89,11 @@ class manager_warning_digest_task extends scheduled_task {
                                                                       SQL_PARAMS_NAMED,
                                                                       'pcids');
                     $companyusql = " AND u.id NOT IN (
-                                    SELECT userid FROM {company_users}
+                                    SELECT userid FROM {local_iomad_company_users}
                                     WHERE managertype = 1
                                     AND companyid {$pcids}})";
                     $companysql = " AND userid NOT IN (
-                                    SELECT userid FROM {company_users}
+                                    SELECT userid FROM {local_iomad_company_users}
                                     WHERE managertype = 1
                                     AND companyid {$pcids}})";
                     $sqlparams = $sqlparams + $parentparams;
@@ -101,7 +101,7 @@ class manager_warning_digest_task extends scheduled_task {
 
                 // Get the managers for this company.
                 $sqlparams['companyid'] = $company->id;
-                $managers = $DB->get_records_sql("SELECT * FROM {company_users}
+                $managers = $DB->get_records_sql("SELECT * FROM {local_iomad_company_users}
                                                   WHERE companyid = :companyid
                                                   AND managertype != 0
                                                   $companysql",
@@ -109,7 +109,7 @@ class manager_warning_digest_task extends scheduled_task {
 
                 // We only want to report on the users - no educators.
                 $educatorsql = "";
-                $educatoruserids = $DB->get_records_sql("SELECT DISTINCT userid FROM {company_users}
+                $educatoruserids = $DB->get_records_sql("SELECT DISTINCT userid FROM {local_iomad_company_users}
                                                          WHERE educator = 1
                                                          AND companyid = :companyid",
                                                         ['companyid' => $company->id]);
@@ -134,10 +134,10 @@ class manager_warning_digest_task extends scheduled_task {
                     // If this is a manager of a parent company - skip them.
                     $parantparams['userid'] = $manager->userid;
                     if (!empty($parentslist) &&
-                        $DB->get_records_sql("SELECT id FROM {company_users}
+                        $DB->get_records_sql("SELECT id FROM {local_iomad_company_users}
                                               WHERE userid = :userid
                                               AND userid IN (
-                                                  SELECT userid FROM {company_users}
+                                                  SELECT userid FROM {local_iomad_company_users}
                                                   WHERE managertype > 0
                                                   AND companyid {$parinsql}
                                               )",
@@ -170,9 +170,9 @@ class manager_warning_digest_task extends scheduled_task {
                                                u.email,
                                                u.lang,
                                                ic.warncompletion * 86400 AS warningtime
-                                        FROM {local_iomad_track} lit
-                                        JOIN {company} c ON (lit.companyid = c.id)
-                                        JOIN {iomad_courses} ic ON (lit.courseid = ic.courseid)
+                                        FROM {local_iomad_tracks} lit
+                                        JOIN {local_iomad_companies} c ON (lit.companyid = c.id)
+                                        JOIN {local_iomad_courses} ic ON (lit.courseid = ic.courseid)
                                         JOIN {user} u ON (lit.userid = u.id)
                                         JOIN {course} co ON (lit.courseid = co.id AND ic.courseid = co.id)
                                         WHERE co.visible = 1
@@ -205,7 +205,7 @@ class manager_warning_digest_task extends scheduled_task {
                     $foundusers = false;
                     foreach ($managerusers as $manageruser) {
                         // Don't remprt on company managers if you are a department manager.
-                        if ($departmentmanager && $DB->get_record('company_users', ['companyid' => $company->id,
+                        if ($departmentmanager && $DB->get_record('local_iomad_company_users', ['companyid' => $company->id,
                                                                                     'managertype' => 1,
                                                                                     'userid' => $manageruser->userid])) {
                             continue;
@@ -219,10 +219,10 @@ class manager_warning_digest_task extends scheduled_task {
 
                         // Get the user's departments.
                         $userdepartments = $DB->get_records_sql("SELECT DISTINCT d.name
-                                                                 FROM {department} d
-                                                                 JOIN {company_users} cu ON (
+                                                                 FROM {local_iomad_company_departments} d
+                                                                 JOIN {local_iomad_company_users} cu ON (
                                                                      d.id = cu.departmentid
-                                                                     AND d.company = cu.companyid
+                                                                     AND d.companyid = cu.companyid
                                                                  )
                                                                  WHERE cu.userid = :userid
                                                                  AND cu.companyid = :companyid",

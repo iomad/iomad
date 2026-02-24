@@ -78,7 +78,7 @@ class current_company extends company_base {
         // Deal with licensed courses.
         $licensesql = "";
         if (!$this->licenses) {
-            if ($licensecourses = $DB->get_records('iomad_courses', ['licensed' => 1], null, 'courseid')) {
+            if ($licensecourses = $DB->get_records('local_iomad_courses', ['licensed' => 1], null, 'courseid')) {
                 [$notinsql, $notinparams] = $DB->get_in_or_equal(array_keys($licensecourses),
                                                                  SQL_PARAMS_NAMED,
                                                                  'licids',
@@ -92,7 +92,7 @@ class current_company extends company_base {
         if ($this->shared) {
             if ($this->licenses) {
                 $sharedsql = " FROM {course} c
-                               JOIN {iomad_courses} pc ON c.id=pc.courseid
+                               JOIN {local_iomad_courses} pc ON c.id=pc.courseid
                                WHERE $wherecondition
                                AND pc.shared = 1
                                AND pc.licensed = 1";
@@ -100,28 +100,28 @@ class current_company extends company_base {
                                       WHERE $wherecondition
                                       AND c.id IN
                                        (SELECT pc.courseid
-                                        FROM {iomad_courses} pc
-                                        JOIN {company_shared_courses} csc ON pc.courseid=csc.courseid
+                                        FROM {local_iomad_courses} pc
+                                        JOIN {local_iomad_company_shared_courses} csc ON pc.courseid=csc.courseid
                                         WHERE pc.shared = 2
                                         AND pc.licensed = 1
                                         AND csc.companyid = :companyid)";
             } else {
                 $sharedsql = " FROM {course} c
-                               JOIN {iomad_courses} pc ON c.id=pc.courseid
+                               JOIN {local_iomad_courses} pc ON c.id=pc.courseid
                                WHERE $wherecondition
                                AND pc.shared = 1
                                AND pc.licensed = 0";
                 $partialsharedsql = " FROM {course} c
                                     WHERE $wherecondition
                                     AND c.id IN (
-                                        SELECT pc.courseid FROM {iomad_courses} pc
-                                        JOIN {company_shared_courses} csc ON pc.courseid=csc.courseid
+                                        SELECT pc.courseid FROM {local_iomad_courses} pc
+                                        JOIN {local_iomad_company_shared_courses} csc ON pc.courseid=csc.courseid
                                         WHERE pc.shared = 2
                                         AND pc.licensed = 0
                                         AND csc.companyid = :companyid
                                     )
                                     AND c.id IN (
-                                       SELECT courseid FROM {company_course}
+                                       SELECT courseid FROM {local_iomad_company_courses}
                                        WHERE departmentid = :departmentid
                                     )";
             }
@@ -132,7 +132,7 @@ class current_company extends company_base {
         }
 
         $sql = " FROM {course} c
-                JOIN {company_course} cc ON (
+                JOIN {local_iomad_company_courses} cc ON (
                     c.id = cc.courseid
                     AND cc.companyid = :companyid
                 )

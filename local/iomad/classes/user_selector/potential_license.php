@@ -48,7 +48,7 @@ class potential_license extends company_base {
 
         parent::__construct($name, $options);
 
-        $this->license = $DB->get_record('companylicense', ['id' => $this->licenseid]);
+        $this->license = $DB->get_record('local_iomad_company_licenses', ['id' => $this->licenseid]);
 
         unset($this->courses[0]);
     }
@@ -99,14 +99,14 @@ class potential_license extends company_base {
         }
         if ($this->program) {
             $usersql = "SELECT DISTINCT clu.userid
-                        FROM {companylicense_users} clu
+                        FROM {local_iomad_company_license_users} clu
                         WHERE clu.licenseid = :licenseid
                         AND clu.timecompleted IS NULL";
         } else {
             $usersql = "SELECT clu.userid,
                         count(clu.licensecourseid) AS coursecount
-                        FROM {companylicense_users} clu
-                        JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+                        FROM {local_iomad_company_license_users} clu
+                        JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
                         WHERE clu.timecompleted IS NULL
                         AND cl.companyid = :companyid
                         $coursesql
@@ -131,19 +131,19 @@ class potential_license extends company_base {
         }
 
         if (!$DB->get_records_sql("SELECT pc.id
-                                   FROM {iomad_courses} pc
-                                   JOIN {companylicense_courses} clc
+                                   FROM {local_iomad_courses} pc
+                                   JOIN {local_iomad_company_license_courses} clc
                                    ON clc.courseid = pc.courseid
                                    WHERE clc.licenseid = :licenseid
                                    AND pc.shared = 1",
                                   ['licenseid' => $this->licenseid])) {
 
             // Check if we are a shared course or not.
-            $courses = $DB->get_records('companylicense_courses', ['licenseid' => $this->licenseid]);
+            $courses = $DB->get_records('local_iomad_company_license_courses', ['licenseid' => $this->licenseid]);
             $shared = false;
             foreach ($courses as $course) {
                 if ($DB->get_record_select(
-                    'iomad_courses',
+                    'local_iomad_courses',
                     "courseid = :courseid AND shared <> 0",
                     ['courseid' => $course->courseid])) {
                     $shared = true;
@@ -151,12 +151,12 @@ class potential_license extends company_base {
             }
 
             $sql = "SELECT DISTINCT d.id
-                    FROM {department} d
-                    JOIN {company_course} cc ON (d.id = cc.departmentid)
-                    JOIN {companylicense_courses} clc ON (cc.courseid = clc.courseid)
+                    FROM {local_iomad_company_departments} d
+                    JOIN {local_iomad_company_courses} cc ON (d.id = cc.departmentid)
+                    JOIN {local_iomad_company_license_courses} clc ON (cc.courseid = clc.courseid)
                     WHERE
                     clc.licenseid = :licenseid
-                    AND d.company = :companyid";
+                    AND d.companyid = :companyid";
             $departments = $DB->get_records_sql($sql, ['companyid' => $this->companyid,
                                                        'licenseid' => $this->licenseid]);
 
@@ -212,7 +212,7 @@ class potential_license extends company_base {
         if ($this->license->type > 1) {
             $edusql = " AND u.id IN (
                             SELECT userid
-                            FROM {company_users}
+                            FROM {local_iomad_company_users}
                             WHERE educator = 1
                         ) ";
         }
@@ -244,7 +244,7 @@ class potential_license extends company_base {
                                                        SQL_PARAMS_NAMED,
                                                        'pcids');
             $userfilter .= " AND u.id NOT IN (
-                                 SELECT userid FROM {company_users}
+                                 SELECT userid FROM {local_iomad_company_users}
                                  WHERE managertype = 1
                                  AND companyid {$insql}
                              )";
@@ -264,8 +264,8 @@ class potential_license extends company_base {
         $params = $params + $inparams;
 
         $sql = " FROM {user} u
-                 JOIN {company_users} du ON du.userid = u.id
-                 JOIN {department} d ON d.id = du.departmentid
+                 JOIN {local_iomad_company_users} du ON du.userid = u.id
+                 JOIN {local_iomad_company_departments} d ON d.id = du.departmentid
                  LEFT JOIN {user_info_data} ui ON (
                      ui.userid = u.id
                      AND ui.userid = du.userid

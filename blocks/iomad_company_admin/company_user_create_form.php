@@ -190,14 +190,14 @@ if ($mform->is_cancelled()) {
 
     // Assign any licenses.
     if (!empty($licenseid)) {
-        $licenserecord = (array) $DB->get_record('companylicense',  ['id' => $licenseid]);
+        $licenserecord = (array) $DB->get_record('local_iomad_company_licenses',  ['id' => $licenseid]);
 
         // Is this ia program license?
         if (!empty($licenserecord['program'])) {
             // Yes, so the courses are not passed automatically from the form.
             $data->licensecourses = $DB->get_records_sql_menu(
                 "SELECT c.id, clc.courseid
-                 FROM {companylicense_courses} clc
+                 FROM {local_iomad_company_license_courses} clc
                  JOIN {course} c ON (
                      clc.courseid = c.id
                      AND clc.licenseid = :licenseid
@@ -215,14 +215,14 @@ if ($mform->is_cancelled()) {
                 if ($count >= $numberoflicenses) {
                     // Set the used amount and redirect to the form with an error.
                     $licenserecord['used'] = $count;
-                    $DB->update_record('companylicense', $licenserecord);
+                    $DB->update_record('local_iomad_company_licenses', $licenserecord);
                     redirect(new moodle_url("/blocks/iomad_company_admin/company_license_users_form.php",
                                               ['licenseid' => $licenseid, 'error' => 1]));
                 }
 
                 // Add the license record.
                 $issuedate = time();
-                $DB->insert_record('companylicense_users',
+                $DB->insert_record('local_iomad_company_license_users',
                                    ['userid' => $userdata->id,
                                     'licenseid' => $licenseid,
                                     'issuedate' => $issuedate,

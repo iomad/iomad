@@ -98,7 +98,7 @@ if ($delete && confirm_sesskey()) {
     }
 
     // Sanity checking.
-    $license = $DB->get_record('companylicense', ['id' => $delete], '*', MUST_EXIST);
+    $license = $DB->get_record('local_iomad_company_licenses', ['id' => $delete], '*', MUST_EXIST);
 
     // Show the confirmation page.
     if ($confirm != md5($delete)) {
@@ -120,7 +120,7 @@ if ($delete && confirm_sesskey()) {
         }
     } else if (data_submitted()) {
         // Actually delete license.
-        if (!$DB->delete_records('companylicense', ['id' => $delete])) {
+        if (!$DB->delete_records('local_iomad_company_licenses', ['id' => $delete])) {
             throw new moodle_exception('error while deleting license');
         }
 
@@ -224,8 +224,8 @@ $sqlparams['companyid'] = $companyid;
 $sqlparams['time'] = time();
 $table->set_sql(
     "cl.*, c.name AS companyname",
-    "{companylicense} cl
-    JOIN {company} c ON (cl.companyid = c.id)",
+    "{local_iomad_company_licenses} cl
+    JOIN {local_iomad_companies} c ON (cl.companyid = c.id)",
     "(cl.companyid = :companyid $childsql) $expiredsql",
     $sqlparams);
 

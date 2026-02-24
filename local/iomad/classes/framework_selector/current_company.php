@@ -64,13 +64,13 @@ class current_company extends company_base {
         // Deal with shared frameworks.
         if ($this->shared) {
             $sharedsql = " FROM {competency_framework} cf
-                           JOIN {iomad_frameworks} if ON cf.id=if.frameworkid
+                           JOIN {local_iomad_frameworks} if ON cf.id=if.frameworkid
                            WHERE if.shared = 1";
         } else {
             $sharedsql = " FROM {competency_framework} cf WHERE 1 = 2";
         }
         $sql = " FROM {competency_framework} cf
-                JOIN {company_comp_frameworks} ccf ON (
+                JOIN {local_iomad_company_comp_frameworks} ccf ON (
                     cf.id = ccf.frameworkid
                     AND ccf.companyid = :companyid
                 )

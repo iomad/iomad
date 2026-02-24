@@ -58,7 +58,7 @@ class company_license_expiring_task extends \core\task\scheduled_task {
         mtrace("Running email report company license expiring task at ".date('d M Y h:i:s', $runtime));
 
         // Get all of the licenses which are going to expire in the next 30 days and have un-unsed slots.
-        $licenses = $DB->get_records_sql("SELECT * FROM {companylicense}
+        $licenses = $DB->get_records_sql("SELECT * FROM {local_iomad_company_licenses}
                                           WHERE used < allocation
                                           AND expirydate > :now
                                           AND expirydate < :warn",
@@ -76,13 +76,13 @@ class company_license_expiring_task extends \core\task\scheduled_task {
                                                             SQL_PARAMS_NAMED,
                                                             'cids');
                 $companysql = " AND userid NOT IN (
-                                SELECT userid FROM {company_users}
+                                SELECT userid FROM {local_iomad_company_users}
                                 WHERE managertype = 1
                                 AND companyid {$insql}";
             }
             $sqlparams['companyid'] = $company->id;
 
-            $managers = $DB->get_records_sql("SELECT * FROM {company_users}
+            $managers = $DB->get_records_sql("SELECT * FROM {local_iomad_company_users}
                                               WHERE companyid = :companyid
                                               AND managertype = 1
                                               $companysql",

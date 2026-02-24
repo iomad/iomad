@@ -493,7 +493,7 @@ class emailtemplate {
             $email->customheaders['template'] = $this->template;
             $email->headers = serialize($email->customheaders);
 
-            return $DB->insert_record('email', $email);
+            return $DB->insert_record('local_iomad_emails', $email);
         } else {
             // Can't queue it for cron, attempt to send it immediately.
             return $this->email_to_user();
@@ -1074,8 +1074,8 @@ class emailtemplate {
         if (!isset($companyid) ||
             !$template = $DB->get_record_sql(
                 "SELECT et.*, ets.lang, ets.subject, ets.body, ets.signature
-                 FROM {email_template} et
-                 JOIN {email_template_strings} ets ON (et.id = ets.templateid)
+                 FROM {local_iomad_email_templates} et
+                 JOIN {local_iomad_email_template_strings} ets ON (et.id = ets.templateid)
                  WHERE et.companyid = :companyid
                  AND et.name = :name
                  AND ets.lang = :lang",
@@ -1084,8 +1084,8 @@ class emailtemplate {
                  'lang' => $this->user->lang])) {
             if (!$template = $DB->get_record_sql(
                 "SELECT et.*, ets.lang, ets.subject, ets.body, ets.signature
-                 FROM {email_template} et
-                 JOIN {email_template_strings} ets ON (et.id = ets.templateid)
+                 FROM {local_iomad_email_templates} et
+                 JOIN {local_iomad_email_template_strings} ets ON (et.id = ets.templateid)
                  WHERE et.companyid = :companyid
                  AND et.name = :name
                  AND ets.lang = :lang",
@@ -1177,7 +1177,7 @@ class emailtemplate {
         global $DB;
 
         // Is this template enabled for the company.
-        if ($DB->get_records('email_template', ['name' => $this->templatename,
+        if ($DB->get_records('local_iomad_email_templates', ['name' => $this->templatename,
                                                 'companyid' => $this->company->id,
                                                 'disabled' => 1])) {
             return false;
@@ -1185,7 +1185,7 @@ class emailtemplate {
 
         if ($type == 2 || strpos('supervisor', $this->templatename) !== false) {
             // Is this template enabled for the supervisor.
-            if ($DB->get_records('email_template', ['name' => $this->templatename,
+            if ($DB->get_records('local_iomad_email_templates', ['name' => $this->templatename,
                                                     'companyid' => $this->company->id,
                                                     'disabledsupervisor' => 1])) {
                 return false;
@@ -1194,7 +1194,7 @@ class emailtemplate {
 
         if ($type == 3 || strpos('manager', $this->templatename) !== false) {
             // Is this template enabled for the supervisor.
-            if ($DB->get_records('email_template', ['name' => $this->templatename,
+            if ($DB->get_records('local_iomad_email_templates', ['name' => $this->templatename,
                                                     'companyid' => $this->company->id,
                                                     'disabledmanager' => 1])) {
                 return false;
@@ -1301,20 +1301,20 @@ class emailtemplate {
         // Process them.
         foreach ($templates as $template) {
             // Check if we we have it already...
-            if (!$DB->get_record('email_template', ['companyid' => $companyid, 'name' => $template])) {
+            if (!$DB->get_record('local_iomad_email_templates', ['companyid' => $companyid, 'name' => $template])) {
                 // And if not, create it.
                 $templaterec = (object) [];
                 $templaterec->companyid = $companyid;
                 $templaterec->name = $template;
-                $templaterec->id = $DB->insert_record('email_template', $templaterec);
+                $templaterec->id = $DB->insert_record('local_iomad_email_templates', $templaterec);
             }
 
             // Process each language pack.
             foreach ($langs as $lang) {
                 // Check if we have it already....
-                if (!$DB->get_record('email_template_strings', ['templateid' => $templaterec->id, 'lang' => $lang])) {
+                if (!$DB->get_record('local_iomad_email_template_strings', ['templateid' => $templaterec->id, 'lang' => $lang])) {
                     // And if not, create it.
-                    $DB->insert_record('email_template_strings', ['templateid' => $templaterec->id, 'lang' => $lang]);
+                    $DB->insert_record('local_iomad_email_template_strings', ['templateid' => $templaterec->id, 'lang' => $lang]);
                 }
             }
         }
@@ -1350,10 +1350,10 @@ class emailtemplate {
         $oldlang = $event->other['langcode'];
 
         // Delete for templatesets.
-        $DB->delete_records('email_templateset_templates_strings', ['lang' => $oldlang]);
+        $DB->delete_records('local_iomad_email_templateset_template_strings', ['lang' => $oldlang]);
 
         // Delete for companies.
-        $DB->delete_records('email_template_strings', ['lang' => $oldlang]);
+        $DB->delete_records('local_iomad_email_template_strings', ['lang' => $oldlang]);
 
         return true;
     }

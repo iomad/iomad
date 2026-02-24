@@ -56,7 +56,7 @@ class company_license_updated extends base {
     protected function init() {
         $this->data['crud'] = 'c';
         $this->data['edulevel'] = self::LEVEL_OTHER;
-        $this->data['objecttable'] = 'companylicense';
+        $this->data['objecttable'] = 'local_iomad_company_licenses';
     }
 
     /**

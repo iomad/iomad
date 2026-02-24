@@ -74,7 +74,7 @@ if (!$new) {
 
     // Set adding to false and get the company record.
     $isadding = false;
-    $companyrecord = $DB->get_record('company', ['id' => $companyid], '*', MUST_EXIST);
+    $companyrecord = $DB->get_record('local_iomad_companies', ['id' => $companyid], '*', MUST_EXIST);
 
     // Set the role template value so it displays nicely on the form.
     if ($companyrecord->previousroletemplateid == -1 ) {
@@ -99,12 +99,12 @@ if (!$new) {
 
     // Deal with email templates.
     $companyrecord->templates = [];
-    if ($companytemplates = $DB->get_records('company_role_templates_ass', ['companyid' => $companyid], null, 'templateid')) {
+    if ($companytemplates = $DB->get_records('local_iomad_company_role_templates_ass', ['companyid' => $companyid], null, 'templateid')) {
         $companyrecord->templates = array_keys($companytemplates);
     }
 
     // Get the dashboard page - if there is one.
-    if ($companydashboard = $DB->get_record('company_pages', ['companyid' => $companyid, 'type' => 'dashboard'])) {
+    if ($companydashboard = $DB->get_record('local_iomad_company_pages', ['companyid' => $companyid, 'type' => 'dashboard'])) {
         $companyrecord->dashboard = $companydashboard->pageid;
     }
 } else {
@@ -119,7 +119,7 @@ if (!$new) {
     $companycontext = $systemcontext;
 
     // Get any default email templates.
-    if ($emailtemplateset = $DB->get_record('email_templateset', ['isdefault' => 1])) {
+    if ($emailtemplateset = $DB->get_record('local_iomad_email_templatesets', ['isdefault' => 1])) {
         $companyrecord->emailtemplate = $emailtemplateset->id;
     }
 
@@ -134,7 +134,7 @@ if (!$new) {
 
             // Can this user manage this parentid?
             if (!iomad::has_capability('block/iomad_company_admin:company_add', $companycontext) &&
-                !$DB->get_record('company_users', ['companyid' => $parentid, 'userid' => $USER->id, 'managertype' => 1])) {
+                !$DB->get_record('local_iomad_company_users', ['companyid' => $parentid, 'userid' => $USER->id, 'managertype' => 1])) {
                 // No.
                 throw new moodle_exception(
                     get_string('invalidcompany', 'block_iomad_company_admin'),
@@ -209,7 +209,7 @@ $PAGE->set_heading($linktext);
 dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Are there any existing companies?
-$firstcompany = !$DB->record_exists('company', []);
+$firstcompany = !$DB->record_exists('local_iomad_companies', []);
 
 // Set the dashboard URL as default.
 $companylist = new moodle_url('/blocks/iomad_company_admin/index.php');
@@ -280,7 +280,7 @@ if (!empty($new) && !empty($parentid)) {
     $companyrecord->companycertificatewatermark = $draftcompanycertificatewatermarkid;
 
     // Deal with the image display options.
-    $parentcompanyoptions = $DB->get_record('companycertificate', ['companyid' => $parentid]);
+    $parentcompanyoptions = $DB->get_record('local_iomad_company_certificates', ['companyid' => $parentid]);
     $companyrecord->uselogo = $parentcompanyoptions->uselogo;
     $companyrecord->usesignature = $parentcompanyoptions->usesignature;
     $companyrecord->useborder = $parentcompanyoptions->useborder;
@@ -370,7 +370,7 @@ if (!empty($new) && !empty($parentid)) {
                             ['subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1]);
     $companyrecord->companycertificatewatermark = $draftcompanycertificatewatermarkid;
 }
-if ($domains = $DB->get_records('company_domains', ['companyid' => $companyid])) {
+if ($domains = $DB->get_records('local_iomad_company_domains', ['companyid' => $companyid])) {
     $companyrecord->companydomains = '';
     foreach ($domains as $domain) {
         $companyrecord->companydomains .= $domain->domain ."\n";
@@ -392,12 +392,12 @@ if (!empty($parentid)) {
 }
 
 // Get email template info.
-if ($companytemplates = $DB->get_records('company_role_templates_ass', ['companyid' => $companyid], null, 'templateid')) {
+if ($companytemplates = $DB->get_records('local_iomad_company_role_templates_ass', ['companyid' => $companyid], null, 'templateid')) {
     $companyrecord->templates = array_keys($companytemplates);
 }
 
 // Get certificate info.
-if ($certificateinfo = $DB->get_record('companycertificate', ['companyid' => $companyid])) {
+if ($certificateinfo = $DB->get_record('local_iomad_company_certificates', ['companyid' => $companyid])) {
     $companyrecord->uselogo = $certificateinfo->uselogo;
     $companyrecord->usesignature = $certificateinfo->usesignature;
     $companyrecord->useborder = $certificateinfo->useborder;
@@ -428,7 +428,7 @@ if ($mform->is_cancelled()) {
             $catdata = (object) [];
             $catdata->sortorder = $DB->count_records('user_info_category') + 1;
             $catdata->name = $data->shortname;
-            $data->profileid = $DB->insert_record('user_info_category', $catdata);
+            $data->profilecategoryid = $DB->insert_record('user_info_category', $catdata);
 
             // Deal with leading/trailing spaces.
             $data->name = trim($data->name);
@@ -441,7 +441,7 @@ if ($mform->is_cancelled()) {
             $data->custom3 = trim($data->custom3);
 
             // We hit create.
-            $companyid = $DB->insert_record('company', $data);
+            $companyid = $DB->insert_record('local_iomad_companies', $data);
             $company = new company($companyid);
 
             $eventother = ['companyid' => $companyid];
@@ -468,9 +468,9 @@ if ($mform->is_cancelled()) {
             $categorycontext->mark_dirty();
             $DB->update_record('course_categories', $coursecat);
             fix_course_sortorder();
-            $companydetails = $DB->get_record('company', ['id' => $companyid]);
+            $companydetails = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
             $companydetails->category = $coursecat->id;
-            $DB->update_record('company', $companydetails);
+            $DB->update_record('local_iomad_companies', $companydetails);
             $redirectmessage = get_string('companycreatedok', 'block_iomad_company_admin');
 
             // Deal with any parent company assignments.
@@ -493,7 +493,7 @@ if ($mform->is_cancelled()) {
                 'usewatermark' => $data->usewatermark,
                 'showgrade' => $data->showgrade,
             ];
-            $DB->insert_record('companycertificate', $certificateinforec);
+            $DB->insert_record('local_iomad_company_certificates', $certificateinforec);
         } else {
             // Stash the current form information to use when it reloads.
             $redirectmessage = "";
@@ -513,17 +513,17 @@ if ($mform->is_cancelled()) {
 
         // Set some defaults.
         if (!empty($data->usedefaultpaymentaccount)) {
-            $data->paymentaccount = '';
+            $data->paymentaccountid = '';
         }
         $company = new company($companyid);
-        $oldcompany = $DB->get_record('company', ['id' => $companyid]);
+        $oldcompany = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
         $oldtheme = $company->get_theme();
         $themechanged = $oldtheme != $data->theme;
 
         // Check if we have a new expiration date.
         if (!empty($data->validto)) {
-            if (!empty($oldcompany->companyterminated) && $data->validto > $oldcompany->validto) {
-                $data->companyterminated = 0;
+            if (!empty($oldcompany->terminated) && $data->validto > $oldcompany->validto) {
+                $data->terminated = 0;
             }
         }
 
@@ -537,7 +537,7 @@ if ($mform->is_cancelled()) {
             if ($topdepartment->name != $data->name) {
                 $topdepartment->name = $data->name;
                 $topdepartment->shortname = $data->shortname;
-                $DB->update_record('department', $topdepartment);
+                $DB->update_record('local_iomad_company_departments', $topdepartment);
             }
         }
 
@@ -554,7 +554,7 @@ if ($mform->is_cancelled()) {
             }
 
             // Update the company record.
-            $DB->update_record('company', $data);
+            $DB->update_record('local_iomad_companies', $data);
 
             if (!empty($data->parentid)) {
                 // Assign the new ones.
@@ -576,7 +576,7 @@ if ($mform->is_cancelled()) {
             $data->previousemailtemplateid = $data->emailtemplate;
         }
 
-        $DB->update_record('company', $data);
+        $DB->update_record('local_iomad_companies', $data);
         // Fire an event for this.
         $eventother = ['companyid' => $companyid,
                             'oldcompany' => json_encode($oldcompany)];
@@ -590,14 +590,14 @@ if ($mform->is_cancelled()) {
         $event->trigger();
 
         // Deal with certificate info.
-        $certificateinforec = (array) $DB->get_record('companycertificate', ['companyid' => $companyid]);
+        $certificateinforec = (array) $DB->get_record('local_iomad_company_certificates', ['companyid' => $companyid]);
         if (!empty($certificateinforec['id'])) {
             $certificateinforec['uselogo'] = $data->uselogo;
             $certificateinforec['usesignature'] = $data->usesignature;
             $certificateinforec['useborder'] = $data->useborder;
             $certificateinforec['usewatermark'] = $data->usewatermark;
             $certificateinforec['showgrade'] = $data->showgrade;
-            $DB->update_record('companycertificate', $certificateinforec);
+            $DB->update_record('local_iomad_company_certificates', $certificateinforec);
         } else {
             $certificateinforec = [
                 'companyid' => $companyid,
@@ -607,13 +607,13 @@ if ($mform->is_cancelled()) {
                 'usewatermark' => $data->usewatermark,
                 'showgrade' => $data->showgrade,
             ];
-            $DB->insert_record('companycertificate', $certificateinforec);
+            $DB->insert_record('local_iomad_company_certificates', $certificateinforec);
         }
 
         // Deal with an dashboard stuff.
-        $DB->delete_records('company_pages', ['companyid' => $companyid, 'type' => 'dashboard']);
+        $DB->delete_records('local_iomad_company_pages', ['companyid' => $companyid, 'type' => 'dashboard']);
         if (!empty($data->dashboard)) {
-            $DB->insert_record('company_pages', ['companyid' => $companyid, 'pageid' => $data->dashboard, 'type' => 'dashboard']);
+            $DB->insert_record('local_iomad_company_pages', ['companyid' => $companyid, 'pageid' => $data->dashboard, 'type' => 'dashboard']);
         }
 
         // Is the current user in the company?
@@ -753,14 +753,14 @@ if ($mform->is_cancelled()) {
         }
 
         // Delete any recorded domains for this company.
-        $DB->delete_records('company_domains', ['companyid' => $companyid]);
+        $DB->delete_records('local_iomad_company_domains', ['companyid' => $companyid]);
 
         // Add any new ones back in.
         if (!empty($data->companydomains)) {
             $domainsarray = preg_split('/[\r\n]+/', $data->companydomains, -1, PREG_SPLIT_NO_EMPTY);
             foreach ($domainsarray as $domain) {
                 if (!empty($domain)) {
-                    $DB->insert_record('company_domains', ['companyid' => $companyid, 'domain' => $domain]);
+                    $DB->insert_record('local_iomad_company_domains', ['companyid' => $companyid, 'domain' => $domain]);
                 }
             }
         }

@@ -80,7 +80,7 @@ class current_company extends company_base {
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM {competency_template} ct
-                JOIN {company_comp_templates} cct ON (
+                JOIN {local_iomad_company_comp_templates} cct ON (
                     ct.id = cct.templateid
                     AND cct.companyid = :companyid
                 )

@@ -54,7 +54,7 @@ class companylicense extends base {
      */
     protected function get_default_tables(): array {
         return [
-            'companylicense',
+            'local_iomad_company_licenses',
             'context',
         ];
     }
@@ -98,7 +98,7 @@ class companylicense extends base {
     protected function get_all_columns(): array {
         global $DB;
 
-        $companylicensealias = $this->get_table_alias('companylicense');
+        $companylicensealias = $this->get_table_alias('local_iomad_company_licenses');
         $contextalias = $this->get_table_alias('context');
 
         // Name.
@@ -297,7 +297,7 @@ class companylicense extends base {
      * @return filter[]
      */
     protected function get_all_filters(): array {
-        $companylicensealias = $this->get_table_alias('companylicense');
+        $companylicensealias = $this->get_table_alias('local_iomad_company_licenses');
 
         // Name.
         $filters[] = (new filter(

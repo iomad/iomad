@@ -71,9 +71,9 @@ class course_not_completed_task extends scheduled_task {
                             u.username,
                             u.email,
                             u.lang
-                            FROM {local_iomad_track} lit
-                            JOIN {company} c ON (lit.companyid = c.id)
-                            JOIN {iomad_courses} ic ON (lit.courseid = ic.courseid)
+                            FROM {local_iomad_tracks} lit
+                            JOIN {local_iomad_companies} c ON (lit.companyid = c.id)
+                            JOIN {local_iomad_courses} ic ON (lit.courseid = ic.courseid)
                             JOIN {user} u ON (lit.userid = u.id)
                             JOIN {course} co ON (lit.courseid = co.id AND ic.courseid = co.id)
                             WHERE co.visible = 1
@@ -104,7 +104,7 @@ class course_not_completed_task extends scheduled_task {
             if (!$course = $DB->get_record('course', ['id' => $compuser->courseid])) {
                 continue;
             }
-            if (!$company = $DB->get_record('company', ['id' => $compuser->companyid])) {
+            if (!$company = $DB->get_record('local_iomad_companies', ['id' => $compuser->companyid])) {
                 continue;
             }
 
@@ -116,7 +116,7 @@ class course_not_completed_task extends scheduled_task {
                                                            'pids');
                 $inparams['userid'] = $compuser->userid;
                 if ($DB->get_records_sql("SELECT userid
-                                          FROM {company_users}
+                                          FROM {local_iomad_company_users}
                                           WHERE managertype = 1
                                           AND companyid {$insql}
                                           AND userid = :userid",
@@ -150,13 +150,13 @@ class course_not_completed_task extends scheduled_task {
                 // We want to remove them from the future list.
                 $compuser->completedstop = 1;
                 $compuser->modifiedtime = $runtime;
-                $DB->update_record('local_iomad_track', $compuser);
+                $DB->update_record('local_iomad_tracks', $compuser);
                 continue;
             }
 
             // Get the company template info.
             // Check against per company template repeat instead.
-            if ($templateinfo = $DB->get_record('email_template', ['companyid' => $compuser->companyid,
+            if ($templateinfo = $DB->get_record('local_iomad_email_templates', ['companyid' => $compuser->companyid,
                                                                    'name' => 'completion_warn_user'])) {
                 // Check if its the correct day, if not continue.
                 if (!empty($templateinfo->repeatday) &&
@@ -181,17 +181,17 @@ class course_not_completed_task extends scheduled_task {
             }
 
             // Check if we have sent any emails and if they are within the period.
-            if ($DB->count_records('email', ['userid' => $compuser->userid,
+            if ($DB->count_records('local_iomad_emails', ['userid' => $compuser->userid,
                                              'courseid' => $compuser->courseid,
                                              'templatename' => 'completion_warn_user']) > 0) {
                 if (!empty($notifyperiod)) {
-                    if (!$DB->get_records_sql("SELECT id FROM {email}
+                    if (!$DB->get_records_sql("SELECT id FROM {local_iomad_emails}
                                               WHERE userid = :userid
                                               AND courseid = :courseid
                                               AND templatename = :templatename
                                               $notifyperiod
                                               AND id IN (
-                                                 SELECT MAX(id) FROM {email}
+                                                 SELECT MAX(id) FROM {local_iomad_emails}
                                                  WHERE userid = :userid2
                                                  AND courseid = :courseid2
                                                  AND templatename = :templatename2)",
@@ -217,7 +217,7 @@ class course_not_completed_task extends scheduled_task {
 
             // Do we have a value for the template repeat?
             if (!empty($templateinfo->repeatvalue)) {
-                $sentcount = $DB->count_records_sql("SELECT count(id) FROM {email}
+                $sentcount = $DB->count_records_sql("SELECT count(id) FROM {local_iomad_emails}
                                                      WHERE userid =:userid
                                                      AND courseid = :courseid
                                                      AND templatename = :templatename
@@ -229,13 +229,13 @@ class course_not_completed_task extends scheduled_task {
                 if ($sentcount >= $templateinfo->repeatvalue) {
                     $compuser->completedstop = 1;
                     $compuser->modifiedtime = $runtime;
-                    $DB->update_record('local_iomad_track', $compuser);
+                    $DB->update_record('local_iomad_tracks', $compuser);
                 }
             }
             if (empty($templateinfo->repeatperiod)) {
                 $compuser->completedstop = 1;
                 $compuser->modifiedtime = $runtime;
-                $DB->update_record('local_iomad_track', $compuser);
+                $DB->update_record('local_iomad_tracks', $compuser);
             }
         }
 

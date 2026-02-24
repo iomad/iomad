@@ -122,7 +122,7 @@ class company_course_users_form extends moodleform {
                 'selectedcourses' => $this->selectedcourses,
                 'departmentid' => $this->departmentid,
                 'subdepartments' => $this->subhierarchieslist,
-                'parentdepartmentid' => $this->parentlevel,
+                'parentdepartment' => $this->parentlevel,
                 'class' => 'local_iomad\user_selector\potential_course',
             ];
             if (empty($this->potentialusers)) {
@@ -212,7 +212,7 @@ class company_course_users_form extends moodleform {
             $mform->addElement('hidden', 'groupid', 0);
             $mform->setType('groupid', PARAM_INT);
         } else {
-            if ($DB->get_record('iomad_courses', ['courseid' => $course->id, 'shared' => 0])) {
+            if ($DB->get_record('local_iomad_courses', ['courseid' => $course->id, 'shared' => 0])) {
                 $mform->addElement('hidden', 'groupid', 0);
                 $mform->setType('groupid', PARAM_INT);
             } else {

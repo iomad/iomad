@@ -50,29 +50,29 @@ class companylicense_users extends datasource {
         $companylicenseusersentity = new companylicenseusers();
         $companylicenseusersalias = $companylicenseusersentity->get_table_alias('companylicenseusers');
         $companyusersentity = new companyusers();
-        $companyusersalias = $companyusersentity->get_table_alias('companyusers');
+        $companyusersalias = $companyusersentity->get_table_alias('local_iomad_company_users');
         $departmententity = new department();
-        $departmentalias = $departmententity->get_table_alias('department');
+        $departmentalias = $departmententity->get_table_alias('local_iomad_company_departments');
         $companylicenseentity = new companylicense();
-        $companylicensealias = $companylicenseentity->get_table_alias('companylicense');
+        $companylicensealias = $companylicenseentity->get_table_alias('local_iomad_company_licenses');
         $userentity = new user();
         $useralias = $userentity->get_table_alias('user');
         $courseentity = new course();
         $coursealias = $courseentity->get_table_alias('course');
         $companyentity = new company();
-        $companyalias = $companyentity->get_table_alias('company');
+        $companyalias = $companyentity->get_table_alias('local_iomad_companies');
 
-        $this->set_main_table('company', $companyalias);
+        $this->set_main_table('local_iomad_companies', $companyalias);
 
         $this->add_entity($companyentity);
 
         $this->add_entity($companyusersentity
-            ->add_join("JOIN {company_users} {$companyusersalias}
+            ->add_join("JOIN {local_iomad_company_users} {$companyusersalias}
                 ON {$companyusersalias}.companyid = {$companyalias}.id")
         );
 
         $this->add_entity($companylicenseusersentity
-            ->add_join("JOIN {companylicense_users} {$companylicenseusersalias}
+            ->add_join("JOIN {local_iomad_company_license_users} {$companylicenseusersalias}
                 ON ({$useralias}.id = {$companylicenseusersalias}.userid
                 AND {$companylicenseusersalias}.userid = {$companyusersalias}.userid
                 AND {$coursealias}.id = {$companylicenseusersalias}.licensecourseid)")
@@ -81,7 +81,7 @@ class companylicense_users extends datasource {
         // Join the department entity to the company entity.
 
         $this->add_entity($departmententity
-            ->add_join("JOIN {department} {$departmentalias}
+            ->add_join("JOIN {local_iomad_company_departments} {$departmentalias}
                 ON ({$departmentalias}.company = {$companyalias}.id
                     AND {$departmentalias}.id = {$companyusersalias}.departmentid)")
         );
@@ -89,7 +89,7 @@ class companylicense_users extends datasource {
         // Join the companylicense entity to the company entity.
 
         $this->add_entity($companylicenseentity
-            ->add_join("JOIN {companylicense} {$companylicensealias}
+            ->add_join("JOIN {local_iomad_company_licenses} {$companylicensealias}
                 ON ({$companylicensealias}.companyid = {$companyalias}.id
                     AND {$departmentalias}.company = {$companylicensealias}.companyid)")
         );

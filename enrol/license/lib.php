@@ -245,7 +245,7 @@ class enrol_license_plugin extends enrol_plugin {
             $this->enrol_user($instance, $USER->id, $instance->roleid, $timestart, $timeend);
         } else {
             // Educator role.
-            if ($DB->get_record('iomad_courses', ['courseid' => $instance->courseid,
+            if ($DB->get_record('local_iomad_courses', ['courseid' => $instance->courseid,
                                                   'shared' => 0])) {
                 // Not shared.
                 $role = $DB->get_record('role', ['shortname' => 'companycourseeditor']);
@@ -257,7 +257,7 @@ class enrol_license_plugin extends enrol_plugin {
         }
 
         // Update the userlicense record to mark it as in use.
-        $DB->set_field('companylicense_users', 'isusing', 1, ['id' => $userlicense->id]);
+        $DB->set_field('local_iomad_company_license_users', 'isusing', 1, ['id' => $userlicense->id]);
 
         // Fire an event to record this.
         $eventother = ['licenseid' => $userlicense->licenseid];
@@ -365,14 +365,14 @@ class enrol_license_plugin extends enrol_plugin {
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
 
         // Get the license information.
-        $sql = "SELECT cl.* FROM {companylicense} cl
-                JOIN {companylicense_users} clu ON (cl.id = clu.licenseid)
+        $sql = "SELECT cl.* FROM {local_iomad_company_licenses} cl
+                JOIN {local_iomad_company_license_users} clu ON (cl.id = clu.licenseid)
                 WHERE clu.userid = :userid
                 AND clu.isusing = 0
                 AND clu.licensecourseid = :courseid";
         if (!$license = $DB->get_record_sql($sql, ['userid' => $USER->id, 'courseid' => $instance->courseid])) {
-            $blanketsql = "SELECT * FROM {companylicense} cl
-                           JOIN {companylicense_courses} clc ON (cl.id = clc.licenseid)
+            $blanketsql = "SELECT * FROM {local_iomad_company_licenses} cl
+                           JOIN {local_iomad_company_license_courses} clc ON (cl.id = clc.licenseid)
                            WHERE clc.courseid = :courseid
                            AND cl.companyid =:companyid
                            AND cl.startdate < :startdate
@@ -426,8 +426,8 @@ class enrol_license_plugin extends enrol_plugin {
         if (true === $enrolstatus) {
             // Get the license information.
             $sql = "SELECT cl.*, clu.id AS userlicenseid
-                    FROM {companylicense} cl
-                    JOIN {companylicense_users} clu ON (cl.id = clu.licenseid)
+                    FROM {local_iomad_company_licenses} cl
+                    JOIN {local_iomad_company_license_users} clu ON (cl.id = clu.licenseid)
                     WHERE clu.userid = :userid
                     AND clu.isusing = 0
                     AND clu.licensecourseid = :courseid";
@@ -436,8 +436,8 @@ class enrol_license_plugin extends enrol_plugin {
                 // Set the companyid.
                 $companyid = iomad::get_my_companyid(context_system::instance(), false);
 
-                $blanketsql = "SELECT cl.* FROM {companylicense} cl
-                               JOIN {companylicense_courses} clc ON (cl.id = clc.licenseid)
+                $blanketsql = "SELECT cl.* FROM {local_iomad_company_licenses} cl
+                               JOIN {local_iomad_company_license_courses} clc ON (cl.id = clc.licenseid)
                                WHERE clc.courseid = :courseid
                                AND cl.companyid =:companyid
                                AND cl.startdate < :startdate
@@ -468,7 +468,7 @@ class enrol_license_plugin extends enrol_plugin {
                                                     'isusing' => 1,
                                                     'type' => $license->type,
                                                 ];
-                        $userlicense->id = $DB->insert_record('companylicense_users', $userlicense);
+                        $userlicense->id = $DB->insert_record('local_iomad_company_license_users', $userlicense);
 
                         // Create an event.
                         $eventother = [
@@ -490,7 +490,7 @@ class enrol_license_plugin extends enrol_plugin {
 
                 // Get the userlicense record.
                 if (empty($userlicense)) {
-                    $userlicense = $DB->get_record('companylicense_users', ['id' => $license->userlicenseid]);
+                    $userlicense = $DB->get_record('local_iomad_company_license_users', ['id' => $license->userlicenseid]);
                 }
                 if (empty($data) || true === $data) {
                     $data = (object) [];
@@ -623,8 +623,8 @@ class enrol_license_plugin extends enrol_plugin {
             $license = (object) [];
             if ($license = $DB->get_record_sql("SELECT lu.id, lu.licenseid, lu.userid, lu.isusing,
                                                 lu.timecompleted, lu.score, lu.result
-                                                FROM {companylicense_users} lu
-                                                JOIN {companylicense_courses} lc ON (
+                                                FROM {local_iomad_company_license_users} lu
+                                                JOIN {local_iomad_company_license_courses} lc ON (
                                                     lu.licensecourseid = lc.courseid
                                                     AND lu.licenseid = lc.licenseid
                                                 )
@@ -655,7 +655,7 @@ class enrol_license_plugin extends enrol_plugin {
 
                 // Tell the system the license is finished with.
                 $license->timecompleted = $runtime;
-                $DB->update_record('companylicense_users', (array) $license);
+                $DB->update_record('local_iomad_company_license_users', (array) $license);
             }
 
             $plugin->unenrol_user($instance, $userid);
@@ -682,8 +682,8 @@ class enrol_license_plugin extends enrol_plugin {
                 $license = (object) [];
                 if ($license = $DB->get_record_sql("SELECT lu.id, lu.licenseid, lu.userid, lu.isusing,
                                                     lu.timecompleted, lu.score, lu.result
-                                                    FROM {companylicense_users} lu
-                                                    JOIN {companylicense_courses} lc ON (
+                                                    FROM {local_iomad_company_license_users} lu
+                                                    JOIN {local_iomad_company_license_courses} lc ON (
                                                         lu.licensecourseid = lc.courseid
                                                         AND lu.licenseid = lc.licenseid
                                                     )
@@ -695,7 +695,7 @@ class enrol_license_plugin extends enrol_plugin {
 
                     // Tell the system the license is finished with.
                     $license->timecompleted = $runtime;
-                    $DB->update_record('companylicense_users', (array) $license);
+                    $DB->update_record('local_iomad_company_license_users', (array) $license);
                 }
 
                 // Get the grade item details.
@@ -722,7 +722,7 @@ class enrol_license_plugin extends enrol_plugin {
                 if (!empty($license->id)) {
                     // Update the user license information.
                     mtrace("updating license " . $license->id . " for user ".$user->userid);
-                    $DB->update_record('companylicense_users', (array) $license);
+                    $DB->update_record('local_iomad_company_license_users', (array) $license);
                 }
 
                 // Delete any completion data.

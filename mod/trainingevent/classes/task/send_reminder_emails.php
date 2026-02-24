@@ -74,7 +74,7 @@ class send_reminder_emails extends scheduled_task {
                     }
 
                     // How about the location?
-                    if (!$location = $DB->get_record('classroom', ['id' => $trainingevent->classroomid])) {
+                    if (!$location = $DB->get_record('local_iomad_training_locations', ['id' => $trainingevent->classroomid])) {
                         $DB->set_field('trainingevent', 'remindersent', 1, ['id' => $trainingevent->id]);
                         continue;
                     }

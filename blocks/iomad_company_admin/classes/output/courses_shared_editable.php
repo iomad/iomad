@@ -126,7 +126,7 @@ class courses_shared_editable extends inplace_editable {
         // Check permissions.
         iomad::require_capability('block/iomad_company_admin:managecourses', $companycontext);
 
-        if (!$courserec = $DB->get_record('iomad_courses', ['courseid' => $courseid])) {
+        if (!$courserec = $DB->get_record('local_iomad_courses', ['courseid' => $courseid])) {
             throw new coding_exception('Course is not under IOMAD control');
         }
 
@@ -142,16 +142,16 @@ class courses_shared_editable extends inplace_editable {
             $courseinfo->groupmodeforce = 1;
             $DB->update_record('course', $courseinfo);
             $courserec->shared = $shared;
-            $DB->update_record('iomad_courses', $courserec);
+            $DB->update_record('local_iomad_courses', $courserec);
 
             // Deal with any current enrolments.
-            if ($companycourses = $DB->get_records('company_course', ['courseid' => $courseid])) {
+            if ($companycourses = $DB->get_records('local_iomad_company_courses', ['courseid' => $courseid])) {
                 foreach ($companycourses as $companycourse) {
                     if ($shared == 2) {
                         $sharingrecord = (object) [];
                         $sharingrecord->courseid = $courseid;
                         $sharingrecord->companyid = $companycourse->companyid;
-                        $DB->insert_record('company_shared_courses', $sharingrecord);
+                        $DB->insert_record('local_iomad_company_shared_courses', $sharingrecord);
                     }
                     company::company_users_to_company_course_group($companycourse->companyid, $courseid);
                 }
@@ -164,7 +164,7 @@ class courses_shared_editable extends inplace_editable {
             $DB->update_record('course', $courseinfo);
 
             // Deal with enrolments.
-            if ($companygroups = $DB->get_records('company_course_groups', ['courseid' => $courseid])) {
+            if ($companygroups = $DB->get_records('local_iomad_company_course_groups', ['courseid' => $courseid])) {
                 // Got companies using it.
                 $count = 1;
 
@@ -180,19 +180,19 @@ class courses_shared_editable extends inplace_editable {
             }
         } else {
             // Changing from open sharing to closed sharing.
-            if ($companygroups = $DB->get_records('company_course_groups', ['courseid' => $courseid])) {
+            if ($companygroups = $DB->get_records('local_iomad_company_course_groups', ['courseid' => $courseid])) {
                 // Got companies using it.
                 foreach ($companygroups as $companygroup) {
                     $sharingrecord = (object) [];
                     $sharingrecord->courseid = $courseid;
                     $sharingrecord->companyid = $companygroup->companyid;
-                    $DB->insert_record('company_shared_courses', $sharingrecord);
+                    $DB->insert_record('local_iomad_company_shared_courses', $sharingrecord);
                 }
             }
         }
 
         // Process changes.
-        $DB->set_field('iomad_courses', 'shared', $shared, ['courseid' => $courseid]);
+        $DB->set_field('local_iomad_courses', 'shared', $shared, ['courseid' => $courseid]);
 
         // Fire an event for this.
         $eventother = ['iomadcourse' => (array) $courserec];

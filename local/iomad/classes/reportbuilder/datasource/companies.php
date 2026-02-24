@@ -46,9 +46,9 @@ class companies extends datasource {
      */
     protected function initialise(): void {
         $companyentity = new company();
-        $companyalias = $companyentity->get_table_alias('company');
+        $companyalias = $companyentity->get_table_alias('local_iomad_companies');
 
-        $this->set_main_table('company', $companyalias);
+        $this->set_main_table('local_iomad_companies', $companyalias);
 
         $this->add_entity($companyentity);
 

@@ -62,7 +62,7 @@ class fixcertificatetask extends adhoc_task {
                                               AND filearea = :filearea
                                               AND filename = :filename)",
                                              ['component' => 'local_iomad',
-                                              'filearea' => 'issue',
+                                              'filearea' => 'certificate_issue',
                                               'filename' => '.'])) {
 
             // Process them.
@@ -81,12 +81,12 @@ class fixcertificatetask extends adhoc_task {
                                            f.filename,
                                            lit.userid
                                            FROM {files} f
-                                           JOIN {local_iomad_track} lit ON (f.itemid = lit.id)
+                                           JOIN {local_iomad_tracks} lit ON (f.itemid = lit.id)
                                            JOIN {user} u ON (lit.userid = u.id)
                                            WHERE f.filearea = :filearea
                                            AND f.component = :component
                                            AND u.deleted = 0",
-                                           ['filearea' => 'issue',
+                                           ['filearea' => 'certificate_issue',
                                             'component' => 'local_iomad'])) {
 
             // Process the certificates.

@@ -108,7 +108,7 @@ class track {
 
         // Prepare file record object.
         $component = 'local_iomad';
-        $filearea = 'issue';
+        $filearea = 'certificate_issue';
         $filepath = '/';
 
         $fileinfo = [
@@ -171,7 +171,7 @@ class track {
         }
 
         // Is there a currently recorded certificate?
-        $trackinfo = $DB->get_record_sql("SELECT * FROM {local_iomad_track}
+        $trackinfo = $DB->get_record_sql("SELECT * FROM {local_iomad_tracks}
                                           WHERE id = :id
                                           AND timecompleted > 0",
                                           ['id' => $trackid]);
@@ -251,7 +251,7 @@ class track {
 
         // Does this course have a valid length?
         $offset = 0;
-        if ($iomadrec = $DB->get_record('iomad_courses', ['courseid' => $courseid])) {
+        if ($iomadrec = $DB->get_record('local_iomad_courses', ['courseid' => $courseid])) {
             if ($iomadrec->validlength > 0) {
                 $offset = $iomadrec->validlength * 24 * 60 * 60;
             }
@@ -272,7 +272,7 @@ class track {
 
         // Do we have a time start value for the enrolment?
         if (!empty($enrolrec->timestart)) {
-            if ($trackrecs = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
+            if ($trackrecs = $DB->get_records_sql("SELECT * FROM {local_iomad_tracks}
                                                    WHERE userid=:userid
                                                    AND courseid = :courseid
                                                    AND timeenrolled > :timelow
@@ -337,7 +337,7 @@ class track {
 
                     // Update the record in the tracking table.
                     $trackrec->modifiedtime = time();
-                    $DB->update_record('local_iomad_track', $trackrec);
+                    $DB->update_record('local_iomad_tracks', $trackrec);
 
                     // Fire the ad-hoc task to generate the certificate.
                     // Slower but avoids race conditions with course activity restictions that
@@ -380,14 +380,14 @@ class track {
                 }
 
                 // Are we setting license information?
-                if ($DB->get_record('iomad_courses', ['courseid' => $courseid, 'licensed' => 1])) {
+                if ($DB->get_record('local_iomad_courses', ['courseid' => $courseid, 'licensed' => 1])) {
                     // Its a licensed course, get the last license.
-                    $licenserecs = $DB->get_records_sql("SELECT * FROM {companylicense_users}
+                    $licenserecs = $DB->get_records_sql("SELECT * FROM {local_iomad_company_license_users}
                                                          WHERE userid = :userid
                                                          AND licensecourseid = :licensecourseid
                                                          AND issuedate < :issuedate
                                                          AND licenseid IN (
-                                                             SELECT id from {companylicense}
+                                                             SELECT id from {local_iomad_company_licenses}
                                                              WHERE companyid = :companyid)
                                                          ORDER BY issuedate DESC",
                                                         ['licensecourseid' => $courseid,
@@ -402,7 +402,7 @@ class track {
                     $licenseallocated = $licenserec->issuedate;
 
                     // Get the rest of the license details.
-                    if ($license = $DB->get_record('companylicense', ['id' => $licenserec->licenseid])) {
+                    if ($license = $DB->get_record('local_iomad_company_licenses', ['id' => $licenserec->licenseid])) {
                         $licenseid = $license->id;
                         $licensename = $license->name;
                     }
@@ -429,7 +429,7 @@ class track {
                 }
 
                 // Save the details.
-                $trackid = $DB->insert_record('local_iomad_track', $completion);
+                $trackid = $DB->insert_record('local_iomad_tracks', $completion);
 
                 // Fire the ad-hoc task to generate the certificate.
                 // Slower but avoids race conditions with course activity restictions that
@@ -456,7 +456,7 @@ class track {
         // Does the course exist?
         if ($courserec = $DB->get_record('course', ['id' => $courseid])) {
             // Get the existing entries for this course.
-            $entries = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
+            $entries = $DB->get_records_sql("SELECT * FROM {local_iomad_tracks}
                                              WHERE courseid = :courseid
                                              AND coursename != :coursename",
                                             ['courseid' => $courseid,
@@ -464,8 +464,8 @@ class track {
 
             // Update these entries.
             foreach ($entries as $entry) {
-                $DB->set_field('local_iomad_track', 'coursename', $courserec->fullname, ['id' => $entry->id]);
-                $DB->set_field('local_iomad_track', 'modifiedtime', $modifiedtime, ['id' => $entry->id]);
+                $DB->set_field('local_iomad_tracks', 'coursename', $courserec->fullname, ['id' => $entry->id]);
+                $DB->set_field('local_iomad_tracks', 'modifiedtime', $modifiedtime, ['id' => $entry->id]);
             }
         }
 
@@ -484,9 +484,9 @@ class track {
         $modifiedtime = $event->timecreated;
 
         // Does the license exist?
-        if ($licenserec = $DB->get_record('companylicense', ['id' => $licenseid])) {
+        if ($licenserec = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid])) {
             // Get the existing entries for this license.
-            $entries = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
+            $entries = $DB->get_records_sql("SELECT * FROM {local_iomad_tracks}
                                              WHERE licenseid = :licenseid
                                              AND licensename != :licensename",
                                             ['licenseid' => $licenseid,
@@ -494,8 +494,8 @@ class track {
 
             // Update these entries.
             foreach ($entries as $entry) {
-                $DB->set_field('local_iomad_track', 'licensename', $licenserec->name, ['id' => $entry->id]);
-                $DB->set_field('local_iomad_track', 'modifiedtime', $modifiedtime, ['id' => $entry->id]);
+                $DB->set_field('local_iomad_tracks', 'licensename', $licenserec->name, ['id' => $entry->id]);
+                $DB->set_field('local_iomad_tracks', 'modifiedtime', $modifiedtime, ['id' => $entry->id]);
             }
         }
 
@@ -521,13 +521,13 @@ class track {
         $expiredstop = 0;
 
         // Check if there is already an entry for this.
-        if ($entry = $DB->get_record('local_iomad_track', ['userid' => $userid,
+        if ($entry = $DB->get_record('local_iomad_tracks', ['userid' => $userid,
                                                            'courseid' => $courseid,
                                                            'licenseid' => $licenseid,
                                                            'timecompleted' => null])) {
 
             // Get the license record.
-            $licenserec = $DB->get_record('companylicense', ['id' => $licenseid]);
+            $licenserec = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid]);
 
             // Is this an educator license?
             if ($licenserec->type == 2 || $licenserec->type == 3) {
@@ -540,12 +540,12 @@ class track {
             // We already have an entry.  Change the issue time.
             $entry->licenseallocated = $issuedate;
             $entry->modifiedtime = time();
-            $DB->update_record('local_iomad_track', $entry);
+            $DB->update_record('local_iomad_tracks', $entry);
         } else {
             // Create one.
             if ($courserec = $DB->get_record('course', ['id' => $courseid])) {
                 // Get the license record.
-                $licenserec = $DB->get_record('companylicense', ['id' => $licenseid]);
+                $licenserec = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid]);
 
                 // Is this an educator license?
                 if ($licenserec->type == 2 || $licenserec->type == 3) {
@@ -569,7 +569,7 @@ class track {
                           'expiredstop' => $expiredstop,
                           'modifiedtime' => $modifiedtime,
                          ];
-                $DB->insert_record('local_iomad_track', $entry);
+                $DB->insert_record('local_iomad_tracks', $entry);
             }
         }
 
@@ -590,13 +590,13 @@ class track {
         $companyid = $event->companyid;
 
         // Check if there is already an entry for this.
-        if ($entry = $DB->get_record('local_iomad_track', ['userid' => $userid,
+        if ($entry = $DB->get_record('local_iomad_tracks', ['userid' => $userid,
                                                            'courseid' => $courseid,
                                                            'licenseid' => $licenseid,
                                                            'companyid' => $companyid,
                                                            'timeenrolled' => null])) {
             // We already have an entry.  Remove it.
-            $DB->delete_records('local_iomad_track', ['id' => $entry->id]);
+            $DB->delete_records('local_iomad_tracks', ['id' => $entry->id]);
         }
 
         return true;
@@ -644,7 +644,7 @@ class track {
                                   'license' => 'license'])) {
 
             // Is this course a license course?
-            if ($DB->get_record('iomad_courses', ['courseid' => $courseid, 'licensed' => 1])) {
+            if ($DB->get_record('local_iomad_courses', ['courseid' => $courseid, 'licensed' => 1])) {
 
                 // Ignore it we capture a different event for those.
                 return true;
@@ -660,15 +660,15 @@ class track {
         // Process self enrolment callbacks.
         if ($enrol->enrol == 'self') {
             // If this is an unassigned course or an open shared course...
-            if ($DB->get_record('iomad_courses', ['courseid' => $courseid, 'shared' => 1]) ||
-                !$DB->get_record('iomad_courses', ['courseid' => $courseid])) {
+            if ($DB->get_record('local_iomad_courses', ['courseid' => $courseid, 'shared' => 1]) ||
+                !$DB->get_record('local_iomad_courses', ['courseid' => $courseid])) {
                 // Then it's every company the user is assigned to.
                 $companies = array_keys(company::get_companies_select(false, false, false));
             } else {
                 // We only want the companies which the course is assigned to and the user belongs to.
                 $companies = $DB->get_records_sql("SELECT DISTINCT cu.companyid AS id
-                                                   FROM {company_users} cu
-                                                   JOIN {company_course} cc ON (cu.companyid = cc.companyid)
+                                                   FROM {local_iomad_company_users} cu
+                                                   JOIN {local_iomad_company_courses} cc ON (cu.companyid = cc.companyid)
                                                    WHERE cu.userid = :userid
                                                    AND cc.courseid = :courseid",
                                                   ['userid' => $userid,
@@ -682,7 +682,7 @@ class track {
         foreach ($companies as $companyid) {
             // Check if there is already an entry for this.
             $firstentry = null;
-            if ($entries = $DB->get_records('local_iomad_track', ['userid' => $userid,
+            if ($entries = $DB->get_records('local_iomad_tracks', ['userid' => $userid,
                                                                   'courseid' => $courseid,
                                                                   'timeenrolled' => $timeenrolled,
                                                                   'coursecleared' => 0,
@@ -701,11 +701,11 @@ class track {
 
                     // Update the database entry.
                     $entry->modifiedtime = $modifiedtime;
-                    $DB->update_record('local_iomad_track', $entry);
+                    $DB->update_record('local_iomad_tracks', $entry);
                 }
 
                 // Do we not have an entry for this company id?
-                if (!$DB->get_records('local_iomad_track', ['userid' => $userid,
+                if (!$DB->get_records('local_iomad_tracks', ['userid' => $userid,
                                                             'courseid' => $courseid,
                                                             'companyid' => $companyid,
                                                             'coursecleared' => 0,
@@ -714,7 +714,7 @@ class track {
 
                     // This will be the first entry - set the companyid.
                     $firstentry->companyid = $companyid;
-                    $DB->insert_record('local_iomad_track', $firstentry);
+                    $DB->insert_record('local_iomad_tracks', $firstentry);
                 }
             } else {
                 // Create one.
@@ -726,7 +726,7 @@ class track {
                               'timeenrolled' => $timeenrolled,
                               'timestarted' => $timeenrolled,
                               'modifiedtime' => $modifiedtime];
-                    $DB->insert_record('local_iomad_track', $entry);
+                    $DB->insert_record('local_iomad_tracks', $entry);
                 }
             }
         }
@@ -751,7 +751,7 @@ class track {
         $companyid = $event->companyid;
 
         // Check if there is already an entry for this.
-        if ($entries = $DB->get_records('local_iomad_track', ['userid' => $userid,
+        if ($entries = $DB->get_records('local_iomad_tracks', ['userid' => $userid,
                                                               'courseid' => $courseid,
                                                               'timecompleted' => null])) {
             // Get the enrolment record.
@@ -776,14 +776,14 @@ class track {
                     $entry->modifiedtime = $modifiedtime;
 
                     // Update the database.
-                    $DB->update_record('local_iomad_track', $entry);
+                    $DB->update_record('local_iomad_tracks', $entry);
                 }
             }
         } else {
             // Create one.
             if ($courserec = $DB->get_record('course', ['id' => $courseid]) &&
-                $licenserec = $DB->get_record('companylicense', ['id' => $licenseid]) &&
-                $userlicenserec = $DB->get_record('companylicense_users', ['id' => $licenserecordid])) {
+                $licenserec = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid]) &&
+                $userlicenserec = $DB->get_record('local_iomad_company_license_users', ['id' => $licenserecordid])) {
 
                 // Set up the entry data.
                 $entry = [
@@ -800,7 +800,7 @@ class track {
                          ];
 
                 // Write it to the database.
-                 $DB->insert_record('local_iomad_track', $entry);
+                 $DB->insert_record('local_iomad_tracks', $entry);
             }
         }
 
@@ -846,7 +846,7 @@ class track {
         }
 
         // Check if there is already an entry for this.
-        if ($entries = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
+        if ($entries = $DB->get_records_sql("SELECT * FROM {local_iomad_tracks}
                                              WHERE userid = :userid
                                              AND courseid = :courseid
                                              AND
@@ -864,8 +864,8 @@ class track {
 
             // Record the grade.
             foreach ($entries as $entry) {
-                $DB->set_field('local_iomad_track', 'finalscore', $mygrade, ['id' => $entry->id]);
-                $DB->set_field('local_iomad_track', 'modifiedtime', $event->timecreated, ['id' => $entry->id]);
+                $DB->set_field('local_iomad_tracks', 'finalscore', $mygrade, ['id' => $entry->id]);
+                $DB->set_field('local_iomad_tracks', 'modifiedtime', $event->timecreated, ['id' => $entry->id]);
             }
         }
 
@@ -880,9 +880,9 @@ class track {
         global $DB;
 
         // Check if there are any courses recorded for this user where the companyid == 0.
-        if ($DB->get_records('local_iomad_track', ['userid' => $event->relateduserid, 'companyid' => 0])) {
+        if ($DB->get_records('local_iomad_tracks', ['userid' => $event->relateduserid, 'companyid' => 0])) {
             $DB->set_field(
-                'local_iomad_track',
+                'local_iomad_tracks',
                 'companyid',
                 $event->objectid,
                 [
@@ -906,12 +906,12 @@ class track {
         $original = $event->other['iomadcourse'];
 
         // Check if the validlength has changed.
-        if ($current = $DB->get_record('iomad_courses', ['courseid' => $courseid])) {
+        if ($current = $DB->get_record('local_iomad_courses', ['courseid' => $courseid])) {
             if ($current->validlength != $original['validlength']) {
                 $offset = $current->validlength * 24 * 60 * 60;
 
                 // Hacky way of doing this, but quickest.
-                $DB->execute("UPDATE {local_iomad_track}
+                $DB->execute("UPDATE {local_iomad_tracks}
                               SET timeexpires = timecompleted + :offset
                               WHERE courseid = :courseid
                               AND timecompleted > 0",
@@ -945,7 +945,7 @@ class track {
                                          AND itemid = :itemid
                                          AND filename != '.'",
                                         ['component' => 'local_iomad',
-                                         'filearea' => 'issue',
+                                         'filearea' => 'certificate_issue',
                                          'itemid' => $trackid])) {
             $filedir1 = substr($file->contenthash, 0, 2);
             $filedir2 = substr($file->contenthash, 2, 2);
@@ -956,11 +956,11 @@ class track {
         // Remove it from the database.
         $DB->delete_records('files', ['itemid' => $trackid,
                                       'component' => 'local_iomad',
-                                      'filearea' => 'issue']);
+                                      'filearea' => 'certificate_issue']);
 
         // Are we getting rid of the full record?
         if ($full) {
-            $DB->delete_records('local_iomad_track', ['id' => $trackid]);
+            $DB->delete_records('local_iomad_tracks', ['id' => $trackid]);
         }
     }
 
@@ -1024,7 +1024,7 @@ class track {
             foreach ($allcourses as $course) {
                 $sqlparams['courseid'] = $course;
                 $sqlparams['companyid'] = $company->id;
-                $comprecords = $DB->get_records_select('local_iomad_track',
+                $comprecords = $DB->get_records_select('local_iomad_tracks',
                                                        $sqlselect,
                                                        $sqlparams);
                 // Did we get anything?
@@ -1039,7 +1039,7 @@ class track {
                                                                AND filename != '-'",
                                                               [
                                                                'component' => 'local_iomad',
-                                                               'filearea' => 'issue',
+                                                               'filearea' => 'certificate_issue',
                                                                'itemid' => $comprecord->id,
                                                               ])) {
 
@@ -1099,12 +1099,12 @@ class track {
                 if (file_exists($tempfilename)) {
                     unlink($tempfilename);
                 }
-                throw new moodle_exception('nocertificatesfound', 'local_iomad_track');
+                throw new moodle_exception('nocertificatesfound', 'local_iomad');
             }
         } else {
             throw new moodle_exception(
                 'erroropeningzip',
-                'local_iomad_track',
+                'local_iomad',
                 '',
                 'ZipArchive error code: ' . $zipresult
             );

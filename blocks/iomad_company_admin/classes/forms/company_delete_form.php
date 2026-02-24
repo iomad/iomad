@@ -55,7 +55,7 @@ class company_delete_form extends dynamic_form {
         $companyid = $this->optional_param('companyid', 0, PARAM_INT);
         $companyname = $this->optional_param('companyname', 0, PARAM_TEXT);
         $haschildren = false;
-        if ($DB->get_records('company', ['parentid' => $companyid])) {
+        if ($DB->get_records('local_iomad_companies', ['parentid' => $companyid])) {
             $haschildren = true;
         }
 
@@ -140,7 +140,7 @@ class company_delete_form extends dynamic_form {
         $data = $this->get_data();
 
         // Check the companyid is OK.
-        if (!$DB->get_record('company', ['id' => $data->companyid])) {
+        if (!$DB->get_record('local_iomad_companies', ['id' => $data->companyid])) {
             throw new moodle_exception('invalidcompany', 'block_iomad_company_admin');
         }
 

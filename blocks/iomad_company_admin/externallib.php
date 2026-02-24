@@ -96,6 +96,11 @@ class block_iomad_company_admin_external extends external_api {
                                 0),
                             'companyterminated' => new external_value(
                                 PARAM_INT,
+                                'Deprecated - Company contract is terminated when <> 0',
+                                VALUE_DEFAULT,
+                                0),
+                            'terminated' => new external_value(
+                                PARAM_INT,
                                 'Company contract is terminated when <> 0',
                                 VALUE_DEFAULT,
                                 0),
@@ -139,19 +144,22 @@ class block_iomad_company_admin_external extends external_api {
         foreach ($params['companies'] as $company) {
 
             // Does this company already exist?
-            if ($DB->get_record('company', ['name' => $company['name']])) {
+            if ($DB->get_record('local_iomad_companies', ['name' => $company['name']])) {
                 throw new invalid_parameter_exception('Company name ' . $company['name'] . ' is already being used');
             }
-            if ($DB->get_record('company', ['shortname' => $company['shortname']])) {
+            if ($DB->get_record('local_iomad_companies', ['shortname' => $company['shortname']])) {
                 throw new invalid_parameter_exception('Company shortname ' . $company['shortname'] . ' is already being used');
             }
             if (!empty($company['code']) &&
-                $DB->get_record('company', ['code' => $company['code']])) {
+                $DB->get_record('local_iomad_companies', ['code' => $company['code']])) {
                 throw new invalid_parameter_exception('Company code ' . $company['code'] . ' is already being used');
             }
 
             // Create the company record.
-            $companyid = $DB->insert_record('company', $company);
+            if (empty($$company->terminated) && !empty($company->companyterminated)) {
+                $company->terminated = $company->companyterminated;
+            }
+            $companyid = $DB->insert_record('local_iomad_companies', $company);
 
             // Deal with certificate info.
             $certificateinforec = [
@@ -162,7 +170,7 @@ class block_iomad_company_admin_external extends external_api {
                 'usewatermark' => 1,
                 'showgrade' => 1,
             ];
-            $DB->insert_record('companycertificate', $certificateinforec);
+            $DB->insert_record('local_iomad_company_certificates', $certificateinforec);
 
             // Fire an event for this.
             $eventother = ['companyid' => $companyid];
@@ -177,7 +185,7 @@ class block_iomad_company_admin_external extends external_api {
             // Set up default department.
             company::initialise_departments($companyid);
 
-            $newcompany = $DB->get_record('company', ['id' => $companyid]);
+            $newcompany = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
             $companyinfo[] = (array)$newcompany;
 
             // Set up course category for company.
@@ -190,12 +198,12 @@ class block_iomad_company_admin_external extends external_api {
             $categorycontext->mark_dirty();
             $DB->update_record('course_categories', $coursecat);
             fix_course_sortorder();
-            $companydetails = $DB->get_record('company', ['id' => $companyid]);
+            $companydetails = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
             $companydetails->category = $coursecat->id;
-            $DB->update_record('company', $companydetails);
+            $DB->update_record('local_iomad_companies', $companydetails);
 
             // Deal with default email template set.
-            if ($emailtemplateset = $DB->get_record('email_templateset', ['isdefault' => 1])) {
+            if ($emailtemplateset = $DB->get_record('local_iomad_email_templatesets', ['isdefault' => 1])) {
 
                 $companyobj = new company($companyid);
                 $companyobj->apply_email_templates($emailtemplateset->id);
@@ -240,7 +248,8 @@ class block_iomad_company_admin_external extends external_api {
                     'suspendafter' => new external_value(
                         PARAM_INT,
                         'Number of seconds after termination date to suspend the company'),
-                    'companyterminated' => new external_value(PARAM_INT, 'Company contract is terminated when <> 0'),
+                    'companyterminated' => new external_value(PARAM_INT, ' Deprecated - Company contract is terminated when <> 0'),
+                    'terminated' => new external_value(PARAM_INT, 'Company contract is terminated when <> 0'),
                     'theme' => new external_value(PARAM_TEXT, 'Company theme'),
                     'hostname' => new external_value(PARAM_TEXT, 'Company hostname'),
                     'maxusers' => new external_value(PARAM_INT, 'Company maximum number of users'),
@@ -443,7 +452,7 @@ It could very slow or timeout. The function is designed to search some specific 
             }
         }
 
-        $companies = $DB->get_records_select('company', $sql, $sqlparams, 'id ASC');
+        $companies = $DB->get_records_select('local_iomad_companies', $sql, $sqlparams, 'id ASC', '*,terminated AS companyterminated');
 
         return ['companies' => $companies, 'warnings' => $warnings];
     }
@@ -492,6 +501,11 @@ It could very slow or timeout. The function is designed to search some specific 
                                 VALUE_DEFAULT,
                                 0),
                             'companyterminated' => new external_value(
+                                PARAM_INT,
+                                'Deprecated - Company contract is terminated when <> 0',
+                                VALUE_DEFAULT,
+                                0),
+                            'terminated' => new external_value(
                                 PARAM_INT,
                                 'Company contract is terminated when <> 0',
                                 VALUE_DEFAULT,
@@ -557,6 +571,10 @@ It could very slow or timeout. The function is designed to search some specific 
                                 VALUE_OPTIONAL),
                             'companyterminated' => new external_value(
                                 PARAM_INT,
+                                'Deprecated - Company contract is terminated when <> 0',
+                                VALUE_OPTIONAL),
+                            'terminated' => new external_value(
+                                PARAM_INT,
                                 'Company contract is terminated when <> 0',
                                 VALUE_OPTIONAL),
                             'theme' => new external_value(PARAM_TEXT, 'Company theme', VALUE_OPTIONAL),
@@ -598,14 +616,17 @@ It could very slow or timeout. The function is designed to search some specific 
             $id = $company['id'];
 
             // Does this company exist?
-            if (!$oldcompany = $DB->get_record('company', ['id' => $id])) {
+            if (!$oldcompany = $DB->get_record('local_iomad_companies', ['id' => $id])) {
                 throw new invalid_parameter_exception("Company id=$id does not exist");
             }
 
             // Have we changed the contract end date?
+            if (empty($company->terminated) && !empty($company->companyterminated)) {
+                $company->terminated = $company->companyterminated;
+            }
             if (!empty($company->validto)) {
-                if (!empty($oldcompany->companyterminated) && $company->validto > $oldcompany->validto) {
-                    $company->companyterminated = 0;
+                if (!empty($oldcompany->terminated) && $company->validto > $oldcompany->validto) {
+                    $company->terminated = 0;
                 }
             }
 
@@ -618,26 +639,26 @@ It could very slow or timeout. The function is designed to search some specific 
             }
 
             // Check we haven't created a name clash.
-            if ($duplicate = $DB->get_record('company', ['name' => $oldcompany->name])) {
+            if ($duplicate = $DB->get_record('local_iomad_companies', ['name' => $oldcompany->name])) {
                 if ($duplicate->id != $oldcompany->id) {
                     throw new invalid_parameter_exception('Duplicate company name');
                 }
             }
-            if ($duplicate = $DB->get_record('company', ['shortname' => $oldcompany->shortname])) {
+            if ($duplicate = $DB->get_record('local_iomad_companies', ['shortname' => $oldcompany->shortname])) {
                 if ($duplicate->id != $oldcompany->id) {
                     throw new invalid_parameter_exception('Duplicate company shortname');
                 }
             }
 
             if (!empty($oldcompany->code) &&
-                $duplicate = $DB->get_record('company', ['code' => $oldcompany->code])) {
+                $duplicate = $DB->get_record('local_iomad_companies', ['code' => $oldcompany->code])) {
                 if ($duplicate->id != $oldcompany->id) {
                     throw new invalid_parameter_exception('Duplicate company code');
                 }
             }
 
             // Update the company record.
-            $DB->update_record('company', $oldcompany);
+            $DB->update_record('local_iomad_companies', $oldcompany);
 
             // Fire an event for this.
             $eventother = [
@@ -727,7 +748,7 @@ It could very slow or timeout. The function is designed to search some specific 
         $warnings = [];
         $sqlparams = [];
         $usedkeys = [];
-        $sql = ' company <> 0 ';
+        $sql = ' companyid <> 0 ';
 
         foreach ($params['criteria'] as $criteriaindex => $criteria) {
 
@@ -749,8 +770,8 @@ It could very slow or timeout. The function is designed to search some specific 
                 case 'shortname':
                     $paramtype = PARAM_RAW;
                     break;
-                case 'company':
-                case 'parent':
+                case 'companyid':
+                case 'parentid':
                     $paramtype = PARAM_INT;
                     break;
                 default:
@@ -778,8 +799,8 @@ It could very slow or timeout. The function is designed to search some specific 
                 // Create the SQL.
                 switch ($criteria['key']) {
                     case 'id':
-                    case 'company':
-                    case 'parent':
+                    case 'companyid':
+                    case 'parentid':
                         $sql .= $criteria['key'] . ' = :' . $criteria['key'];
                         $sqlparams[$criteria['key']] = $cleanedvalue;
                         break;
@@ -794,7 +815,7 @@ It could very slow or timeout. The function is designed to search some specific 
             }
         }
 
-        $departments = $DB->get_records_select('department', $sql, $sqlparams, 'id ASC');
+        $departments = $DB->get_records_select('local_iomad_company_departments', $sql, $sqlparams, 'id ASC', '*,companyid AS company, parentid AS parent');
 
         return ['departments' => $departments, 'warnings' => $warnings];
     }
@@ -814,6 +835,8 @@ It could very slow or timeout. The function is designed to search some specific 
                             'id' => new external_value(PARAM_INT, 'Department ID'),
                             'name' => new external_value(PARAM_TEXT, 'Department name'),
                             'shortname' => new external_value(PARAM_TEXT, 'Department short name'),
+                            'companyid' => new external_value(PARAM_INT, 'Company ID'),
+                            'parentid' => new external_value(PARAM_INT, 'Department parent id'),
                             'company' => new external_value(PARAM_INT, 'Company ID'),
                             'parent' => new external_value(PARAM_INT, 'Department parent id'),
                         ]
@@ -876,13 +899,13 @@ It could very slow or timeout. The function is designed to search some specific 
 
         if (!empty($params['companyid'])) {
             $companies = $DB->get_records(
-                'company',
+                'local_iomad_companies',
                 ['id' => $params['companyid']],
                 'id',
                 'id,name,shortname,code,address,city,region,postcode,country,custom1,custom2,custom3');
         } else {
             $companies = $DB->get_records(
-                'company',
+                'local_iomad_companies',
                 ['suspended' => 0],
                 'id',
                 'id,name,shortname,code,address,city,region,postcode,country,custom1,custom2,custom3');
@@ -1355,7 +1378,7 @@ It could very slow or timeout. The function is designed to search some specific 
                 $departmentusers = $DB->get_records_sql(
                     "SELECT u.id, u.firstname, u.lastname, u.email, cu.companyid, cu.departmentid
                      FROM {user} u
-                     JOIN {company_users} cu ON (u.id = cu.userid)
+                     JOIN {local_iomad_company_users} cu ON (u.id = cu.userid)
                      WHERE cu.departmentid = :departmentid",
                     ['departmentid' => $departmentid]
                 );
@@ -1580,12 +1603,12 @@ It could very slow or timeout. The function is designed to search some specific 
                 $succeeded = false;
                 continue;
             }
-            if (!$currentrecord = $DB->get_record('iomad_courses', ['courseid' => $courserecord['courseid']])) {
+            if (!$currentrecord = $DB->get_record('local_iomad_courses', ['courseid' => $courserecord['courseid']])) {
                 $succeeded = false;
             } else {
                 // Replace the record with the new one.
                 $courserecord['id'] = $currentrecord->id;
-                if (!$DB->update_record('iomad_courses', $courserecord)) {
+                if (!$DB->update_record('local_iomad_courses', $courserecord)) {
                     $succeeded = false;
                 }
 
@@ -1654,9 +1677,9 @@ It could very slow or timeout. The function is designed to search some specific 
 
         // Get course records.
         if (empty($courseids)) {
-            $courses = $DB->get_records('iomad_courses');
+            $courses = $DB->get_records('local_iomad_courses');
         } else {
-            $courses = $DB->get_records_list('iomad_courses', 'id', $params['courseids']);
+            $courses = $DB->get_records_list('local_iomad_courses', 'id', $params['courseids']);
         }
 
         // Convert to suitable format.
@@ -1831,7 +1854,7 @@ It could very slow or timeout. The function is designed to search some specific 
             }
         }
 
-        $licenses = $DB->get_records_select('companylicense', $sql, $sqlparams, 'id ASC');
+        $licenses = $DB->get_records_select('local_iomad_company_licenses', $sql, $sqlparams, 'id ASC');
 
         return ['licenses' => $licenses, 'warnings' => $warnings];
     }
@@ -1947,16 +1970,16 @@ It could very slow or timeout. The function is designed to search some specific 
             }
 
             // Create the License record.
-            $licenseid = $DB->insert_record('companylicense', $license);
+            $licenseid = $DB->insert_record('local_iomad_company_licenses', $license);
 
             // Deal with the courses.
             foreach ($license['courses'] as $course) {
-                $DB->insert_record('companylicense_courses', ['licenseid' => $licenseid,
+                $DB->insert_record('local_iomad_company_license_courses', ['licenseid' => $licenseid,
                                                                           'courseid' => $course['courseid']]);
             }
 
             // Create an event to deal with an parent license allocations.
-            $newlicense = $DB->get_record('companylicense', ['id' => $licenseid]);
+            $newlicense = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid]);
             $eventother = [
                 'licenseid' => $licenseid,
                 'parentid' => $newlicense->parentid,
@@ -2095,17 +2118,17 @@ It could very slow or timeout. The function is designed to search some specific 
             $licenseid = $license['id'];
 
             // Does this company exist?
-            if (!$oldlicense = $DB->get_record('companylicense', ['id' => $licenseid])) {
+            if (!$oldlicense = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid])) {
                 throw new invalid_parameter_exception("License id=$licenseid does not exist");
             }
 
             // Deal with course allocations if there are any.
             // Capture them for checking.
-            $oldcourses = $DB->get_records('companylicense_courses', ['licenseid' => $licenseid], null, 'courseid');
+            $oldcourses = $DB->get_records('local_iomad_company_license_courses', ['licenseid' => $licenseid], null, 'courseid');
             // Clear down all of them initially.
-            $DB->delete_records('companylicense_courses', ['licenseid' => $licenseid]);
+            $DB->delete_records('local_iomad_company_license_courses', ['licenseid' => $licenseid]);
             foreach ($license['courses'] as $course) {
-                $DB->insert_record('companylicense_courses', ['licenseid' => $licenseid,
+                $DB->insert_record('local_iomad_company_license_courses', ['licenseid' => $licenseid,
                                                               'courseid' => $course['courseid']]);
             }
 
@@ -2129,7 +2152,7 @@ It could very slow or timeout. The function is designed to search some specific 
             }
 
             // Update the company record.
-            $DB->update_record('companylicense', $oldlicense);
+            $DB->update_record('local_iomad_company_licenses', $oldlicense);
 
             // Create an event to deal with an parent license allocations.
             $eventother = [
@@ -2234,11 +2257,11 @@ It could very slow or timeout. The function is designed to search some specific 
             $licenseid = $license['id'];
 
             // Does this license exist?
-            if (!$oldlicense = $DB->get_record('companylicense', ['id' => $licenseid])) {
+            if (!$oldlicense = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid])) {
                 throw new invalid_parameter_exception("License id=$licenseid does not exist");
             }
 
-            $DB->delete_records('companylicense', ['id' => $licenseid]);
+            $DB->delete_records('local_iomad_company_licenses', ['id' => $licenseid]);
 
             // Create an event to deal with parent license allocations.
             $eventother = [
@@ -2316,12 +2339,12 @@ It could very slow or timeout. The function is designed to search some specific 
             $licenseid = $license['licenseid'];
 
             // Does this license exist?
-            if (!$oldlicense = $DB->get_record('companylicense', ['id' => $licenseid])) {
+            if (!$oldlicense = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid])) {
                 throw new invalid_parameter_exception("License id=$licenseid does not exist");
             }
 
             // What about the company?
-            if (!$DB->get_record('company', ['id' => $oldlicense->companyid])) {
+            if (!$DB->get_record('local_iomad_companies', ['id' => $oldlicense->companyid])) {
                 throw new invalid_parameter_exception("Company does not match for license id=$licenseid");
             }
 
@@ -2339,7 +2362,7 @@ It could very slow or timeout. The function is designed to search some specific 
             }
 
             // Does the license include this course?
-            if (!$DB->get_record('companylicense_courses', ['courseid' => $license['licensecourseid'],
+            if (!$DB->get_record('local_iomad_company_license_courses', ['courseid' => $license['licensecourseid'],
                                                                  'licenseid' => $licenseid])) {
                 throw new invalid_parameter_exception("Course id = " .
                                                       $license['licensecourseid'] .
@@ -2358,13 +2381,13 @@ It could very slow or timeout. The function is designed to search some specific 
 
             // Are we double allocating?
             $license['isusing'] = 0;
-            if ($DB->get_record('companylicense_users', $license)) {
+            if ($DB->get_record('local_iomad_company_license_users', $license)) {
                 throw new invalid_parameter_exception("User id=" . $user->id ." already has an unused license for that course.");
             }
 
             // Set up the rest of the record.
             $license['issuedate'] = $timestamp;
-            $DB->insert_record('companylicense_users', $license);
+            $DB->insert_record('local_iomad_company_license_users', $license);
 
             // Create an event.
             $eventother = [
@@ -2443,12 +2466,12 @@ It could very slow or timeout. The function is designed to search some specific 
             $licenseid = $license['licenseid'];
 
             // Does this license exist?
-            if (!$oldlicense = $DB->get_record('companylicense', ['id' => $licenseid])) {
+            if (!$oldlicense = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid])) {
                 throw new invalid_parameter_exception("License id=$licenseid does not exist");
             }
 
             // What about the company?
-            if (!$companyrec = $DB->get_record('company', ['id' => $oldlicense->companyid])) {
+            if (!$companyrec = $DB->get_record('local_iomad_companies', ['id' => $oldlicense->companyid])) {
                 throw new invalid_parameter_exception("Company does not match for license id=$licenseid");
             }
 
@@ -2466,7 +2489,7 @@ It could very slow or timeout. The function is designed to search some specific 
             }
 
             // Does the license include this course?
-            if (!$DB->get_record('companylicense_courses', ['courseid' => $license['licensecourseid'],
+            if (!$DB->get_record('local_iomad_company_license_courses', ['courseid' => $license['licensecourseid'],
                                                                  'licenseid' => $licenseid])) {
                 throw new invalid_parameter_exception("Course id = " .
                                                       $license['licensecourseid'] .
@@ -2485,12 +2508,12 @@ It could very slow or timeout. The function is designed to search some specific 
 
             // Can we remove this?
             $license['isusing'] = 0;
-            if (!$allocationrec = $DB->get_record('companylicense_users', $license)) {
+            if (!$allocationrec = $DB->get_record('local_iomad_company_license_users', $license)) {
                 throw new invalid_parameter_exception("User id=" . $user->id ." has used the license for that course.");
             }
 
             // Set up the rest of the record.
-            $DB->delete_record('companylicense_users', ['id' => $allocationrec->id]);
+            $DB->delete_record('local_iomad_company_license_users', ['id' => $allocationrec->id]);
 
             // Create an event.
             $eventother = ['licenseid' => $licenseid];
@@ -2578,8 +2601,8 @@ It could very slow or timeout. The function is designed to search some specific 
             // Does the course belong to a company?
             if (!$companycourses = $DB->get_records_sql(
                 "SELECT DISTINCT c.id AS companyid
-                 FROM {company} c
-                 JOIN {company_course} cc ON c.id = cc.companyid
+                 FROM {local_iomad_companies} c
+                 JOIN {local_iomad_company_courses} cc ON c.id = cc.companyid
                  WHERE cc.courseid = :courseid",
                 ['courseid' => $enrolment['courseid']])) {
                 if (!$company = company::by_userid($enrolment['userid'])) {
@@ -2624,13 +2647,13 @@ It could very slow or timeout. The function is designed to search some specific 
             }
 
             // Is the user already in this company?
-            if (!$DB->get_records('company_users', ['companyid' => $company->id, 'userid' => $enrolment['userid']])) {
+            if (!$DB->get_records('local_iomad_company_users', ['companyid' => $company->id, 'userid' => $enrolment['userid']])) {
                 // No - so we add them.
                 $company->assign_user_to_company($user->id, 0, 0, true, false);
             }
 
             // Is this a licensed course?
-            if ($DB->get_record('iomad_courses', ['courseid' => $enrolment['courseid'], 'licensed' => 1])) {
+            if ($DB->get_record('local_iomad_courses', ['courseid' => $enrolment['courseid'], 'licensed' => 1])) {
                 if (empty($enrolment['timestart'])) {
                     $enrolment['timestart'] = $runtime;
                 }
@@ -2666,8 +2689,8 @@ It could very slow or timeout. The function is designed to search some specific 
                     'companyid' => $company->id,
                     'instant' => true,
                 ];
-                $licenseid = $DB->insert_record('companylicense', $licenserec);
-                $DB->insert_record('companylicense_courses', ['licenseid' => $licenseid, 'courseid' => $enrolment['courseid']]);
+                $licenseid = $DB->insert_record('local_iomad_company_licenses', $licenserec);
+                $DB->insert_record('local_iomad_company_license_courses', ['licenseid' => $licenseid, 'courseid' => $enrolment['courseid']]);
 
                 // Fire the license create event.
                 $eventother = [
@@ -2691,7 +2714,7 @@ It could very slow or timeout. The function is designed to search some specific 
                                          'issuedate' => $runtime,
                                          'isusing' => 0];
 
-                    $recordarray['id'] = $DB->insert_record('companylicense_users', $recordarray);
+                    $recordarray['id'] = $DB->insert_record('local_iomad_company_license_users', $recordarray);
                     // Fire that event.
                     $eventother = [
                         'licenseid' => $licenseid,
@@ -2770,7 +2793,7 @@ It could very slow or timeout. The function is designed to search some specific 
         }
 
         if (!$DB->get_record_select(
-            'company_transient_tokens',
+            'local_iomad_company_transient_tokens',
             "userid = :userid AND expires > :time",
             ['userid' => $userrec->id, 'time' => time()])) {
             $result = [];
@@ -2837,9 +2860,9 @@ It could very slow or timeout. The function is designed to search some specific 
         if (!empty($CFG->commerce_externalshop_url)) {
             // Do all companies have access?
             if (empty($CFG->commerce_admin_enableall)) {
-                $companies = $DB->get_records('company', ['ecommerce' => 1]);
+                $companies = $DB->get_records('local_iomad_companies', ['ecommerce' => 1]);
             } else {
-                $companies = $DB->get_records('company');
+                $companies = $DB->get_records('local_iomad_companies');
             }
             // Do any have their own shop enabled?
             foreach ($companies as $id => $company) {
@@ -2862,7 +2885,7 @@ It could very slow or timeout. The function is designed to search some specific 
         $companysql = " AND cu.companyid {$insql}";
         $users = $DB->get_records_sql(
             "SELECT DISTINCT cu.userid
-             FROM {company_users} cu
+             FROM {local_iomad_company_users} cu
              JOIN {user} u ON (cu.userid = u.id)
              WHERE u.deleted = 0
              $companysql",
@@ -2942,7 +2965,7 @@ It could very slow or timeout. The function is designed to search some specific 
             // if box is unticked (false) an entry is created (or kept)
             // if box is ticked (true) any entry is deleted.
             $restriction = $DB->get_record(
-                'company_role_restriction',
+                'local_iomad_company_role_restrictions',
                 [
                     'roleid' => $params['roleid'],
                     'companyid' => $params['companyid'],
@@ -2955,11 +2978,11 @@ It could very slow or timeout. The function is designed to search some specific 
                     $restriction->companyid = $params['companyid'];
                     $restriction->roleid = $params['roleid'];
                     $restriction->capability = $params['capability'];
-                    $DB->insert_record('company_role_restriction', $restriction);
+                    $DB->insert_record('local_iomad_company_role_restrictions', $restriction);
                 }
             } else {
                 if ($restriction) {
-                    $DB->delete_records('company_role_restriction', ['id' => $restriction->id]);
+                    $DB->delete_records('local_iomad_company_role_restrictions', ['id' => $restriction->id]);
                 }
             }
         } else {
@@ -2967,7 +2990,7 @@ It could very slow or timeout. The function is designed to search some specific 
             // Dealing with a template restriction.
             // if box is unticked (false) an entry is created (or kept)
             // if box is ticked (true) any entry is deleted.
-            $restriction = $DB->get_record('company_role_templates_caps', [
+            $restriction = $DB->get_record('local_iomad_company_role_templates_caps', [
                     'roleid' => $params['roleid'],
                     'templateid' => $params['templateid'],
                     'capability' => $params['capability'],
@@ -2978,11 +3001,11 @@ It could very slow or timeout. The function is designed to search some specific 
                     $restriction->templateid = $params['templateid'];
                     $restriction->roleid = $params['roleid'];
                     $restriction->capability = $params['capability'];
-                    $DB->insert_record('company_role_templates_caps', $restriction);
+                    $DB->insert_record('local_iomad_company_role_templates_caps', $restriction);
                 }
             } else {
                 if ($restriction) {
-                    $DB->delete_records('company_role_templates_caps', ['id' => $restriction->id]);
+                    $DB->delete_records('local_iomad_company_role_templates_caps', ['id' => $restriction->id]);
                 }
             }
         }
@@ -3030,8 +3053,8 @@ It could very slow or timeout. The function is designed to search some specific 
         $context = context_system::instance();
         iomad::require_capability('block/iomad_company_admin:restrict_capabilities', $context);
 
-        $DB->delete_records('company_role_templates_caps', ['templateid' => $params['templateid']]);
-        $DB->delete_records('company_role_templates', ['id' => $params['templateid']]);
+        $DB->delete_records('local_iomad_company_role_templates_caps', ['templateid' => $params['templateid']]);
+        $DB->delete_records('local_iomad_company_role_templates', ['id' => $params['templateid']]);
 
         return true;
     }
@@ -3071,7 +3094,7 @@ It could very slow or timeout. The function is designed to search some specific 
         ]);
 
         // Get license.
-        $license = $DB->get_record('companylicense', ['id' => $params['licenseid']], '*', MUST_EXIST);
+        $license = $DB->get_record('local_iomad_company_licenses', ['id' => $params['licenseid']], '*', MUST_EXIST);
 
         // Security.
         $context = context_company::instance($license->companyid);
@@ -3080,7 +3103,7 @@ It could very slow or timeout. The function is designed to search some specific 
         // Get license courses (with extra).
         $sql = "SELECT co.id AS id, co.fullname AS fullname
                 FROM {course} co
-                JOIN {companylicense_courses} clc ON co.id = clc.courseid
+                JOIN {local_iomad_company_license_courses} clc ON co.id = clc.courseid
                 WHERE clc.licenseid = :licenseid
                 ORDER BY co.fullname";
         $liccourses = $DB->get_records_sql($sql, ['licenseid' => $params['licenseid']]);
@@ -3181,20 +3204,20 @@ It could very slow or timeout. The function is designed to search some specific 
         // Get all of the companies the users is in.
         $usercompanies = $DB->get_records_sql(
             "SELECT DISTINCT c.id,c.name
-             FROM {company} c
-             JOIN {company_users} cu ON (cu.companyid = c.id)
+             FROM {local_iomad_companies} c
+             JOIN {local_iomad_company_users} cu ON (cu.companyid = c.id)
              WHERE cu.userid = :userid",
             ['userid' => $user->id]);
 
         foreach ($usercompanies as $company) {
             $companydepartments = $DB->get_records_sql(
                 "SELECT d.id, d.name
-                 FROM {department} d
-                 JOIN {company_users} cu ON (
+                 FROM {local_iomad_company_departments} d
+                 JOIN {local_iomad_company_users} cu ON (
                      d.id = cu.departmentid
-                     AND d.company = cu.companyid
+                     AND d.companyid = cu.companyid
                  )
-                 WHERE d.company = :companyid
+                 WHERE d.companyid = :companyid
                  AND cu.userid = :userid",
                 ['companyid' => $company->id,
                  'userid' => $user->id]);

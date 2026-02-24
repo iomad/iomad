@@ -65,7 +65,7 @@ class iomad_approve_access {
         } else {
             // Work out what type of manager I am, if any?
             if ($manageruser = $DB->get_record_sql("SELECT DISTINCT managertype
-                                                    FROM {company_users}
+                                                    FROM {local_iomad_company_users}
                                                     WHERE userid = :userid
                                                     AND companyid = :companyid
                                                     AND managertype != 0",
@@ -143,7 +143,7 @@ class iomad_approve_access {
         } else {
             // Work out what type of manager I am, if any?
             if ($manageruser = $DB->get_record_sql("SELECT DISTINCT managertype
-                                                    FROM {company_users}
+                                                    FROM {local_iomad_company_users}
                                                     WHERE userid = :userid
                                                     AND companyid = :companyid
                                                     AND managertype != 0",
@@ -321,7 +321,7 @@ class iomad_approve_access {
         }
 
         // Does the location exist?
-        if (!$location = $DB->get_record('classroom', ['id' => $trainingevent->classroomid])) {
+        if (!$location = $DB->get_record('local_iomad_training_locations', ['id' => $trainingevent->classroomid])) {
             return false;
         }
 
@@ -402,7 +402,7 @@ class iomad_approve_access {
         }
 
         // Does the location exist?
-        if (!$location = $DB->get_record('classroom', ['id' => $trainingevent->classroomid])) {
+        if (!$location = $DB->get_record('local_iomad_training_locations', ['id' => $trainingevent->classroomid])) {
             return false;
         }
 

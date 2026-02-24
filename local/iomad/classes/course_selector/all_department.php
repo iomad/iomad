@@ -89,13 +89,13 @@ class all_department extends company_base {
         if ($this->license) {
             $licensesql = " AND c.id (
                                 SELECT courseid
-                                FROM {iomad_courses}
+                                FROM {local_iomad_courses}
                                 WHERE licensed = 1
                             ) ";
 
             // Are wew splitting an existing license?
             if (!empty($this->parentid)) {
-                if ($parentcourses = $DB->get_records('companylicense_courses',
+                if ($parentcourses = $DB->get_records('local_iomad_company_license_courses',
                                                       ['licenseid' => $this->parentid],
                                                       null,
                                                       'courseid')) {
@@ -112,13 +112,13 @@ class all_department extends company_base {
 
         $globalsql = " AND c.id IN (
                            SELECT csc.courseid
-                           FROM {company_shared_courses} csc
+                           FROM {local_iomad_company_shared_courses} csc
                            WHERE csc.companyid = :gcompanyid
                        ) ";
         $params['gcompanyid'] = $this->companyid;
 
         $sql = " FROM {course} c
-                JOIN {company_course} cc ON (
+                JOIN {local_iomad_company_courses} cc ON (
                     c.id = cc.courseid
                     AND cc.companyid = :companyid
                 )
@@ -154,7 +154,7 @@ class all_department extends company_base {
                              WHERE c.id <> '1'
                              AND c.id IN (
                                  SELECT pc.courseid
-                                 FROM {iomad_courses} pc
+                                 FROM {local_iomad_courses} pc
                                  WHERE pc.shared = 1
                                  AND pc.licensed = :pclicensedid
                              )

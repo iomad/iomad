@@ -78,7 +78,7 @@ class context_company extends context {
         global $DB;
 
         $name = '';
-        if ($company = $DB->get_record('company', ['id' => $this->_instanceid])) {
+        if ($company = $DB->get_record('local_iomad_companies', ['id' => $this->_instanceid])) {
             if ($withprefix) {
                 $name = get_string('company', 'block_iomad_company_admin') . ': ';
             }
@@ -141,7 +141,7 @@ class context_company extends context {
     /**
      * Returns company context instance.
      *
-     * @param int $companyid id from {company} table
+     * @param int $companyid id from {local_iomad_companies} table
      * @param int $strictness
      * @return context_company|false context instance
      */
@@ -152,12 +152,12 @@ class context_company extends context {
             return $context;
         }
 
-        if (!$DB->get_manager()->table_exists('company')) {
+        if (!$DB->get_manager()->table_exists('local_iomad_companies')) {
             return context_system::instance();
         }
 
         if (!$record = $DB->get_record('context', ['contextlevel' => CONTEXT_COMPANY, 'instanceid' => $companyid])) {
-            if ($company = $DB->get_record('company', ['id' => $companyid], 'id', $strictness)) {
+            if ($company = $DB->get_record('local_iomad_companies', ['id' => $companyid], 'id', $strictness)) {
                 $record = context::insert_context_record(CONTEXT_COMPANY, $company->id, '/'.SYSCONTEXTID, 0);
             }
         }
@@ -177,12 +177,12 @@ class context_company extends context {
     protected static function create_level_instances() {
         global $DB;
 
-        if (!$DB->get_manager()->table_exists('company')) {
+        if (!$DB->get_manager()->table_exists('local_iomad_companies')) {
             return;
         }
 
         $sql = "SELECT " . CONTEXT_COMPANY . ", c.id
-                FROM {company} c
+                FROM {local_iomad_companies} c
                 WHERE 1=1
                 AND NOT EXISTS (
                     SELECT 'x'
@@ -204,7 +204,7 @@ class context_company extends context {
     protected static function get_cleanup_sql() {
         global $DB;
 
-        if (!$DB->get_manager()->table_exists('company')) {
+        if (!$DB->get_manager()->table_exists('local_iomad_companies')) {
             $sql = "
                     SELECT cx.*
                     FROM {context} cx
@@ -214,7 +214,7 @@ class context_company extends context {
             $sql = "
                      SELECT cx.*
                     FROM {context} cx
-                    LEFT OUTER JOIN {company} c ON (cx.instanceid = c.id)
+                    LEFT OUTER JOIN {local_iomad_companies} c ON (cx.instanceid = c.id)
                     WHERE c.id IS NULL
                     AND cx.contextlevel = " . CONTEXT_COMPANY . "
                    ";

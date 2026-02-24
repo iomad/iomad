@@ -82,7 +82,7 @@ class block_iomad_welcome extends block_base {
         }
 
         // Only display until companies have been created.
-        if ($DB->record_exists('company', [])) {
+        if ($DB->record_exists('local_iomad_companies', [])) {
             return;
         }
 

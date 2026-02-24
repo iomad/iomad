@@ -98,7 +98,7 @@ class current_group extends company_base {
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM {user} u
-                 JOIN {company_users} cu  ON (
+                 JOIN {local_iomad_company_users} cu  ON (
                      cu.userid = u.id
                  )
                  LEFT JOIN {user_info_data} ui ON (
@@ -117,7 +117,7 @@ class current_group extends company_base {
                  )
                  OR cu.userid IN (
                    SELECT userid
-                   FROM {companylicense_users}
+                   FROM {local_iomad_company_license_users}
                    WHERE isusing = 0
                    AND licensecourseid = :liccourseid
                    AND groupid = :licgroupid

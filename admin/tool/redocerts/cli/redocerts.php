@@ -81,7 +81,7 @@ if (!empty($courseid)) {
     $usersql[] = " lit.courseid = $courseid ";
 }
 if (!empty($companyid)) {
-    $usersql[] = " lit.userid IN (SELECT userid FROM {company_users} WHERE companyid = $companyid) ";
+    $usersql[] = " lit.userid IN (SELECT userid FROM {local_iomad_company_users} WHERE companyid = $companyid) ";
 }
 if (!empty($idnumber)) {
     $usersql[] = " lit.id > $idnumber ";
@@ -99,7 +99,7 @@ if (!empty($usersql)) {
 }
 // Delete the initial records.
 $oldrecords = $DB->get_records_sql("SELECT lit.*
-                                    FROM {local_iomad_track} lit
+                                    FROM {local_iomad_tracks} lit
                                     JOIN {course} c ON (c.id = lit.courseid)
                                     JOIN {user} u ON (lit.userid = u.id and u.deleted = 0 )
                                     $extrasql
@@ -121,7 +121,7 @@ foreach ($oldrecords as $track) {
                                      AND itemid = :itemid
                                      AND filename != '.'",
                                     ['component' => 'local_iomad',
-                                     'filearea' => 'issue',
+                                     'filearea' => 'certificate_issue',
                                      'itemid' => $track->id])) {
         $filedir1 = substr($file->contenthash, 0, 2);
         $filedir2 = substr($file->contenthash, 2, 2);
@@ -132,7 +132,7 @@ foreach ($oldrecords as $track) {
     }
 
     $DB->delete_records('files', ['itemid' => $track->id,
-                                  'filearea' => 'issue',
+                                  'filearea' => 'certificate_issue',
                                   'component' => 'local_iomad']);
 
     mtrace ("adding Certificate");

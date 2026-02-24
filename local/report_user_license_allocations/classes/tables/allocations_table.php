@@ -196,7 +196,7 @@ class allocations_table extends table_sql {
             // Try and get it from local_iomad_track table.
             if (!empty($row->licenseid) &&
                 $litinfos = $DB->get_records(
-                    'local_iomad_track',
+                    'local_iomad_tracks',
                     ['licenseid' => $row->licenseid],
                     '',
                     '*',
@@ -300,8 +300,8 @@ class allocations_table extends table_sql {
     public function col_department($row) {
         global $DB;
 
-        $departments = $DB->get_records_sql("SELECT d.name FROM {department} d
-                                             JOIN {company_users} cu
+        $departments = $DB->get_records_sql("SELECT d.name FROM {local_iomad_company_departments} d
+                                             JOIN {local_iomad_company_users} cu
                                              ON (d.id = cu.departmentid)
                                              WHERE cu.userid = :userid
                                              AND cu.companyid = :companyid

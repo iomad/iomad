@@ -222,8 +222,8 @@ class enrol_license_external extends external_api {
 
                 // Get the license information.
                 $sql = "SELECT cl.*, clu.id AS userlicenseid
-                        FROM {companylicense} cl
-                        JOIN {companylicense_users} clu ON (cl.id = clu.licenseid)
+                        FROM {local_iomad_company_licenses} cl
+                        JOIN {local_iomad_company_license_users} clu ON (cl.id = clu.licenseid)
                         WHERE clu.userid = :userid
                         AND clu.isusing = 0
                         AND clu.licensecourseid = :courseid";
@@ -232,8 +232,8 @@ class enrol_license_external extends external_api {
                     // Set the companyid.
                     $companyid = iomad::get_my_companyid(context_system::instance(), false);
 
-                    $blanketsql = "SELECT cl.* FROM {companylicense} cl
-                                   JOIN {companylicense_courses} clc ON (cl.id = clc.licenseid)
+                    $blanketsql = "SELECT cl.* FROM {local_iomad_company_licenses} cl
+                                   JOIN {local_iomad_company_license_courses} clc ON (cl.id = clc.licenseid)
                                    WHERE clc.courseid = :courseid
                                    AND cl.companyid =:companyid
                                    AND cl.startdate < :startdate
@@ -263,7 +263,7 @@ class enrol_license_external extends external_api {
                                                 'isusing' => 1,
                                                 'type' => $license->type,
                                             ];
-                    $userlicense->id = $DB->insert_record('companylicense_users', $userlicense);
+                    $userlicense->id = $DB->insert_record('local_iomad_company_license_users', $userlicense);
 
                     // Create an event.
                     $eventother = [
@@ -284,7 +284,7 @@ class enrol_license_external extends external_api {
 
                 // Get the userlicense record.
                 if (empty($userlicense)) {
-                    $userlicense = $DB->get_record('companylicense_users', ['id' => $license->userlicenseid]);
+                    $userlicense = $DB->get_record('local_iomad_company_license_users', ['id' => $license->userlicenseid]);
                 }
 
                 // Do the enrolment.

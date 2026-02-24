@@ -55,10 +55,10 @@ function do_redocerts($user = 0,
         $usersql[] = " lit.courseid = $courseid ";
     }
     if (!empty($company)) {
-        $usersql[] = " lit.userid IN (SELECT userid FROM {company_users} WHERE companyid = $company) ";
+        $usersql[] = " lit.userid IN (SELECT userid FROM {local_iomad_company_users} WHERE companyid = $company) ";
     }
     if (!empty($companyid)) {
-        $usersql[] = " lit.userid IN (SELECT userid FROM {company_users} WHERE companyid = $companyid) ";
+        $usersql[] = " lit.userid IN (SELECT userid FROM {local_iomad_company_users} WHERE companyid = $companyid) ";
     }
     if ($fromdate != null) {
         $usersql[] = " lit.timecompleted > $fromdate ";
@@ -73,7 +73,7 @@ function do_redocerts($user = 0,
     }
     // Delete the initial records.
     $oldrecords = $DB->get_records_sql("SELECT lit.*
-                                        FROM {local_iomad_track} lit
+                                        FROM {local_iomad_tracks} lit
                                         JOIN {course} c ON (c.id = lit.courseid)
                                         JOIN {user} u ON (lit.userid = u.id AND u.deleted = 0 )
                                         $extrasql ORDER BY lit.id ASC");

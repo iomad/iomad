@@ -71,7 +71,12 @@ class oidc_sync {
                         $users = self::get_users($accesstoken, $company->syncgroupid, $graphproperties);
 
                         // Do we have a list of email domains?
-                        $companydomains = $DB->get_records_menu('company_domains', ['companyid' => $company->id], '', 'id,domain');
+                        $companydomains = $DB->get_records_menu(
+                            'local_iomad_company_domains',
+                            ['companyid' => $company->id],
+                            '',
+                            'id,domain'
+                        );
 
                         if (!empty($users)) {
                             // Process them.
@@ -106,7 +111,7 @@ class oidc_sync {
 
         // Set up the SQL.
         $selectsql = "c.*, lios.useroption, lios.tenantnameorguid, lios.syncgroupid, lios.unsuspendonsync";
-        $fromsql = "{company} c JOIN {local_iomad_oidc_sync} lios ON (c.id = lios.companyid), {config_plugins} cp";
+        $fromsql = "{local_iomad_companies} c JOIN {local_iomad_oidc_sync} lios ON (c.id = lios.companyid), {config_plugins} cp";
         $wheresql = "lios.approved = 1
                      AND lios.enabled = 1
                      AND cp.plugin = 'auth_iomadoidc'
@@ -323,7 +328,7 @@ class oidc_sync {
 
             // Find if there are any users in the company where auth is iomadoidc and are not in this list.
             $missingselect = "SELECT u.id FROM {user} u
-                              JOIN {company_users} cu ON (u.id = cu.userid)
+                              JOIN {local_iomad_company_users} cu ON (u.id = cu.userid)
                               WHERE u.deleted = 0
                               $suspendsql
                               AND u.auth = :authtype

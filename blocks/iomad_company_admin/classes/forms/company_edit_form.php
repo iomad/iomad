@@ -110,7 +110,7 @@ class company_edit_form extends company_moodleform {
             $this->companyrecord->theme = $CFG->theme;
         }
         if ($parentcompanyid) {
-            $this->parentcompany = $DB->get_record('company', ['id' => $parentcompanyid], '*', MUST_EXIST);
+            $this->parentcompany = $DB->get_record('local_iomad_companies', ['id' => $parentcompanyid], '*', MUST_EXIST);
             $this->context = context_company::instance($parentcompanyid);
         }
         if (!empty($companyid)) {
@@ -140,9 +140,9 @@ class company_edit_form extends company_moodleform {
         $mform->setType('companyid', PARAM_INT);
         $mform->addElement('hidden', 'currentparentid', $this->parentcompanyid);
         $mform->setType('currentparentid', PARAM_INT);
-        $mform->addElement('hidden', 'companyterminated');
-        $mform->setType('companyterminated', PARAM_INT);
-        $mform->setDefault('companyterminated', 0);
+        $mform->addElement('hidden', 'terminated');
+        $mform->setType('terminated', PARAM_INT);
+        $mform->setDefault('terminated', 0);
 
         // If this is the first company then some extra help is displayed.
         if ($this->firstcompany) {
@@ -272,7 +272,7 @@ class company_edit_form extends company_moodleform {
             "SELECT id, name
              FROM {user_info_field}
              WHERE categoryid NOT IN (
-                 SELECT profileid from {company}
+                 SELECT profilecategoryid from {local_iomad_companies}
              )");
         if (!$this->isadding) {
             // Get the company info.
@@ -280,8 +280,8 @@ class company_edit_form extends company_moodleform {
                 "SELECT id,name
                  FROM {user_info_field}
                  WHERE categoryid = (
-                     SELECT profileid
-                     FROM {company}
+                     SELECT profilecategoryid
+                     FROM {local_iomad_companies}
                      WHERE id = :companyid
                  )",
                 ['companyid' => $this->companyid]);
@@ -338,7 +338,7 @@ class company_edit_form extends company_moodleform {
 
         if (iomad::has_capability('block/iomad_company_admin:company_add', $this->context)) {
             // Add in the template selector for the company.
-            $templates = $DB->get_records_menu('company_role_templates', [], 'name', 'id,name');
+            $templates = $DB->get_records_menu('local_iomad_company_role_templates', [], 'name', 'id,name');
             $mform->addElement(
                 'autocomplete',
                 'templates',
@@ -350,7 +350,7 @@ class company_edit_form extends company_moodleform {
             // Add the parent company selector.
             $companies = $DB->get_records_sql_menu(
                 "SELECT id,name
-                 FROM {company}
+                 FROM {local_iomad_companies}
                  WHERE id <> :companyid
                  ORDER BY name",
                 ['companyid' => $this->companyid]);
@@ -390,7 +390,7 @@ class company_edit_form extends company_moodleform {
             $mform->setDefault('ecommerce', 0);
             $accounts = \core_payment\helper::get_payment_accounts_menu($systemcontext);
             if (empty($CFG->commerce_enable_external) && !empty($accounts)) {
-                if (empty($this->companyrecord->paymentaccount)) {
+                if (empty($this->companyrecord->paymentaccountid)) {
                     $usedefaultpaymentaccountvalue = "checked";
                 } else {
                     $usedefaultpaymentaccountvalue = "";
@@ -403,13 +403,13 @@ class company_edit_form extends company_moodleform {
                 if ($accounts) {
                     $accounts = ((count($accounts) > 1) ? ['' => ''] : []) + $accounts;
                 }
-                $mform->addElement('select', 'paymentaccount', get_string('paymentaccount', 'payment'), $accounts);
-                $mform->hideIf('paymentaccount', 'usedefaultpaymentaccount', 'checked');
-                $mform->disabledIf('paymentaccount', 'usedefaultpaymentaccount', 'checked');
+                $mform->addElement('select', 'paymentaccountid', get_string('paymentaccount', 'payment'), $accounts);
+                $mform->hideIf('paymentaccountid', 'usedefaultpaymentaccount', 'checked');
+                $mform->disabledIf('paymentaccountid', 'usedefaultpaymentaccount', 'checked');
             }
         } else {
             $mform->addElement('hidden', 'ecommerce');
-            $mform->addElement('hidden', 'paymentaccount');
+            $mform->addElement('hidden', 'paymentaccountid');
         }
 
         // Deal with potential custom dashboard.
@@ -470,7 +470,7 @@ class company_edit_form extends company_moodleform {
 
         $mform->setType('parentid', PARAM_INT);
         $mform->setType('ecommerce', PARAM_INT);
-        $mform->setType('paymentaccount', PARAM_INT);
+        $mform->setType('paymentaccountid', PARAM_INT);
         $mform->setType('templates', PARAM_RAW);
 
         // Add custom fields.
@@ -495,7 +495,7 @@ class company_edit_form extends company_moodleform {
                  FROM {user_info_field}
                  WHERE datatype = :datatype
                  AND categoryid NOT IN (
-                     SELECT profileid FROM {company}
+                     SELECT profilecategoryid FROM {local_iomad_companies}
                  )",
                 ['datatype' => 'menu']);
             $companymenufields = $DB->get_records_sql_menu(
@@ -503,7 +503,7 @@ class company_edit_form extends company_moodleform {
                  FROM {user_info_field}
                  WHERE datatype = :datatype
                  AND categoryid = (
-                     SELECT profileid FROM {company}
+                     SELECT profilecategoryid FROM {local_iomad_companies}
                      WHERE id = :companyid
                  )",
                 ['companyid' => $this->companyid,
@@ -886,7 +886,7 @@ class company_edit_form extends company_moodleform {
             die;
         }
 
-        if ($foundcompanies = $DB->get_records('company', ['name' => $data['name']])) {
+        if ($foundcompanies = $DB->get_records('local_iomad_companies', ['name' => $data['name']])) {
             if (!empty($this->companyid)) {
                 unset($foundcompanies[$this->companyid]);
             }
@@ -903,7 +903,7 @@ class company_edit_form extends company_moodleform {
         if (!preg_match('/^[A-Za-z0-9_]+$/', $data['shortname'])) {
             // Check allowed pattern (numbers, letters and underscore).
             $errors['shortname'] = get_string('invalidshortnameerror', 'core_customfield');
-        } else if ($foundcompanies = $DB->get_records('company', ['shortname' => trim($data['shortname'])])) {
+        } else if ($foundcompanies = $DB->get_records('local_iomad_companies', ['shortname' => trim($data['shortname'])])) {
             if (!empty($this->companyid)) {
                 unset($foundcompanies[$this->companyid]);
             }
@@ -919,7 +919,7 @@ class company_edit_form extends company_moodleform {
         }
 
         if (!empty($data['code']) &&
-            $foundcompanies = $DB->get_records('company', ['code' => $data['code']])) {
+            $foundcompanies = $DB->get_records('local_iomad_companies', ['code' => $data['code']])) {
             if (!empty($this->companyid)) {
                 unset($foundcompanies[$this->companyid]);
             }
@@ -934,7 +934,7 @@ class company_edit_form extends company_moodleform {
             }
         }
 
-        if (!empty($data['hostname']) && $foundcompanies = $DB->get_records('company', ['hostname' => $data['hostname']])) {
+        if (!empty($data['hostname']) && $foundcompanies = $DB->get_records('local_iomad_companies', ['hostname' => $data['hostname']])) {
             if (!empty($this->companyid)) {
                 unset($foundcompanies[$this->companyid]);
             }

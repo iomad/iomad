@@ -53,11 +53,11 @@ class fixcourseclearedtask extends adhoc_task {
         global $DB;
 
         // Deal with the local_iomad_track entries.
-        $allentries = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
+        $allentries = $DB->get_records_sql("SELECT * FROM {local_iomad_tracks}
                                             WHERE timecompleted > 0
                                             AND coursecleared = 0");
         foreach ($allentries as $entry) {
-            if ($DB->count_records_sql("SELECT COUNT(id) FROM {local_iomad_track}
+            if ($DB->count_records_sql("SELECT COUNT(id) FROM {local_iomad_tracks}
                                         WHERE userid = :userid
                                         AND courseid = :courseid
                                         AND (
@@ -68,10 +68,10 @@ class fixcourseclearedtask extends adhoc_task {
                                         'courseid' => $entry->courseid,
                                         'timecompleted' => $entry->timecompleted]) > 0) {
 
-                $DB->set_field('local_iomad_track', 'coursecleared', 1, ['id' => $entry->id]);
-                $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $entry->id]);
+                $DB->set_field('local_iomad_tracks', 'coursecleared', 1, ['id' => $entry->id]);
+                $DB->set_field('local_iomad_tracks', 'modifiedtime', time(), ['id' => $entry->id]);
             } else if (!empty($entry->licenseid) && !empty($entry->licenseallocated)) {
-                if ($DB->get_record_sql("SELECT id FROM {companylicense_users}
+                if ($DB->get_record_sql("SELECT id FROM {local_iomad_company_license_users}
                                          WHERE licenseid = :licenseid
                                          AND licensecourseid = :courseid
                                          AND issuedate = :licenseallocated
@@ -80,9 +80,9 @@ class fixcourseclearedtask extends adhoc_task {
                                          'courseid' => $entry->courseid,
                                          'licenseallocated' => $entry->licenseallocated])) {
 
-                    $DB->set_field('local_iomad_track', 'coursecleared', 1, ['id' => $entry->id]);
-                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $entry->id]);
-                } else if ($licenserec = $DB->get_record_sql("SELECT id FROM {companylicense_users}
+                    $DB->set_field('local_iomad_tracks', 'coursecleared', 1, ['id' => $entry->id]);
+                    $DB->set_field('local_iomad_tracks', 'modifiedtime', time(), ['id' => $entry->id]);
+                } else if ($licenserec = $DB->get_record_sql("SELECT id FROM {local_iomad_company_license_users}
                                                               WHERE id = :licenseid
                                                               AND licensecourseid = :courseid
                                                               AND issuedate = :licenseallocated
@@ -91,9 +91,9 @@ class fixcourseclearedtask extends adhoc_task {
                                                              'courseid' => $entry->courseid,
                                                              'licenseallocated' => $entry->licenseallocated])) {
 
-                    $DB->set_field('local_iomad_track', 'coursecleared', 1, ['id' => $entry->id]);
-                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $entry->id]);
-                    $DB->set_field('local_iomad_track', 'licenseid', $licenserec->licenseid, ['id' => $entry->id]);
+                    $DB->set_field('local_iomad_tracks', 'coursecleared', 1, ['id' => $entry->id]);
+                    $DB->set_field('local_iomad_tracks', 'modifiedtime', time(), ['id' => $entry->id]);
+                    $DB->set_field('local_iomad_tracks', 'licenseid', $licenserec->licenseid, ['id' => $entry->id]);
                 }
             }
         }

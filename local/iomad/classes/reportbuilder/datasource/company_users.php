@@ -46,22 +46,22 @@ class company_users extends datasource {
      */
     protected function initialise(): void {
         $companyentity = new company();
-        $companyalias = $companyentity->get_table_alias('company');
+        $companyalias = $companyentity->get_table_alias('local_iomad_companies');
 
-        $this->set_main_table('company', $companyalias);
+        $this->set_main_table('local_iomad_companies', $companyalias);
 
         $this->add_entity($companyentity);
 
         // Get the tables and aliases.
         $companyusersentity = new companyusers();
-        $companyusersalias = $companyusersentity->get_table_alias('companyusers');
+        $companyusersalias = $companyusersentity->get_table_alias('local_iomad_company_users');
         $departmententity = new department();
-        $departmentalias = $departmententity->get_table_alias('department');
+        $departmentalias = $departmententity->get_table_alias('local_iomad_company_departments');
         $userentity = new user();
         $useralias = $userentity->get_table_alias('user');
 
         $this->add_entity($companyusersentity
-            ->add_join("JOIN {company_users} {$companyusersalias}
+            ->add_join("JOIN {local_iomad_company_users} {$companyusersalias}
                 ON ({$companyusersalias}.companyid = {$companyalias}.id
                     AND {$departmentalias}.id = {$companyusersalias}.departmentid)")
         );
@@ -69,7 +69,7 @@ class company_users extends datasource {
         // Join the department entity to the company entity.
 
         $this->add_entity($departmententity
-            ->add_join("JOIN {department} {$departmentalias}
+            ->add_join("JOIN {local_iomad_company_departments} {$departmentalias}
                 ON {$departmentalias}.company = {$companyalias}.id")
         );
 

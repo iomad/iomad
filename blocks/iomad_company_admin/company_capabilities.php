@@ -53,7 +53,7 @@ iomad::require_capability('block/iomad_company_admin:restrict_capabilities', $co
 if (empty($templateid)) {
     $linktext = get_string('restrictcapabilitiesfor', 'block_iomad_company_admin', $company->get_name());
 } else {
-    $template = $DB->get_record('company_role_templates', ['id' => $templateid], '*', MUST_EXIST);
+    $template = $DB->get_record('local_iomad_company_role_templates', ['id' => $templateid], '*', MUST_EXIST);
     $linktext = get_string('roletemplate', 'block_iomad_company_admin') . ' ' . $template->name;
 }
 
@@ -114,7 +114,7 @@ if ($roleid) {
 } else if ($manage) {
 
     // Display the list of templates.
-    $templates = $DB->get_records('company_role_templates', [], 'name');
+    $templates = $DB->get_records('local_iomad_company_role_templates', [], 'name');
     $roletemplates = new roletemplates($templates, $linkurl);
 
     // Add required buttons.

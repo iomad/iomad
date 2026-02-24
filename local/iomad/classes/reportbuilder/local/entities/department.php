@@ -53,7 +53,7 @@ class department extends base {
      */
     protected function get_default_tables(): array {
         return [
-            'department',
+            'local_iomad_company_departments',
             'context',
         ];
     }
@@ -97,7 +97,7 @@ class department extends base {
     protected function get_all_columns(): array {
         global $DB;
 
-        $departmentalias = $this->get_table_alias('department');
+        $departmentalias = $this->get_table_alias('local_iomad_company_departments');
         $contextalias = $this->get_table_alias('context');
 
         // Name.
@@ -124,7 +124,7 @@ class department extends base {
 
         // Company.
         $columns[] = (new column(
-            'company',
+            'companyid',
             new lang_string('company', 'block_iomad_company_admin'),
             $this->get_entity_name()
         ))
@@ -153,7 +153,7 @@ class department extends base {
      * @return filter[]
      */
     protected function get_all_filters(): array {
-        $departmentalias = $this->get_table_alias('department');
+        $departmentalias = $this->get_table_alias('local_iomad_company_departments');
 
         // Name.
         $filters[] = (new filter(

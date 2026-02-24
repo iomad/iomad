@@ -49,7 +49,7 @@ class potential_user_license extends company_base {
     public function __construct($name, $options) {
         global $DB;
 
-        $this->license = $DB->get_record('companylicense', ['id' => $this->licenseid]);
+        $this->license = $DB->get_record('local_iomad_company_licenses', ['id' => $this->licenseid]);
 
         parent::__construct($name, $options);
     }
@@ -88,8 +88,8 @@ class potential_user_license extends company_base {
         $distinctfields = 'SELECT DISTINCT ' . $this->required_fields_sql('c');
 
         $sql = " FROM {course} c,
-                 JOIN {companylicense_courses} clc ON (c.id = clc.courseid)
-                 JOIN {companylicense} cl ON (clc.licenseid = cl.id)
+                 JOIN {local_iomad_company_license_courses} clc ON (c.id = clc.courseid)
+                 JOIN {local_iomad_company_licenses} cl ON (clc.licenseid = cl.id)
                  WHERE cl.companyid = :companyid
                  AND cl.id = :licenseid
                  AND $wherecondition
@@ -97,12 +97,12 @@ class potential_user_license extends company_base {
                  AND cl.expirydate >= :timestamp
                  AND c.id NOT IN (
                      SELECT clu.licensecourseid
-                     FROM {companylicense_users} clu
+                     FROM {local_iomad_company_license_users} clu
                      WHERE clu.userid = :userid
                      AND clu.timecompleted IS NULL
                      AND clu.licenseid IN (
                          SELECT id
-                         FROM {companylicense}
+                         FROM {local_iomad_company_licenses}
                          WHERE companyid = :licensecompanyid
                      )
                  )";

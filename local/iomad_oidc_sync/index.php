@@ -137,7 +137,7 @@ if (iomad::has_capability('block/iomad_company_admin:company_view_all', $systemc
 
 // Set up the initial SQL for the form.
 $selectsql = "c.*,lios.approved, lios.tenantnameorguid,lios.enabled";
-$fromsql = "{company} c JOIN {config_plugins} cp LEFT JOIN {local_iomad_oidc_sync} lios ON (c.id = lios.companyid)";
+$fromsql = "{local_iomad_companies} c JOIN {config_plugins} cp LEFT JOIN {local_iomad_oidc_sync} lios ON (c.id = lios.companyid)";
 $wheresql = "cp.plugin = 'auth_iomadoidc' AND cp.name = CONCAT('clientid_', c.id) AND cp.value !='' $companysql";
 $sqlparams = [];
 

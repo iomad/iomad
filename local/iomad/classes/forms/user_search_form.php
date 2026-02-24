@@ -185,7 +185,7 @@ class user_search_form extends moodleform {
         if ($category = $DB->get_record_sql(
             "SELECT uic.id, uic.name
              FROM {user_info_category} uic
-             JOIN {company} c ON (uic.id = c.profileid)
+             JOIN {local_iomad_companies} c ON (uic.id = c.profilecategoryid)
              WHERE c.id = :companyid",
             ['companyid' => $this->_customdata['companyid']])) {
 
@@ -209,7 +209,7 @@ class user_search_form extends moodleform {
         if ($categories = $DB->get_records_sql("SELECT id
                                                 FROM {user_info_category}
                                                 WHERE id NOT IN (
-                                                    SELECT profileid FROM {company})")) {
+                                                    SELECT profilecategoryid FROM {local_iomad_companies})")) {
             foreach ($categories as $category) {
                 // Get fields from company category.
                 if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {

@@ -241,7 +241,7 @@ abstract class company_base extends \user_selector_base {
         $companyprofilecategories = $DB->get_records_sql("SELECT uif.id,uif.name FROM {user_info_category} uic
                                                           JOIN {user_info_field} uif ON (uic.id = uif.categoryid)
                                                           WHERE uic.id NOT IN (
-                                                              SELECT profileid FROM {company}
+                                                              SELECT profilecategoryid FROM {local_iomad_companies}
                                                               WHERE id <> :companyid
                                                           )
                                                           ORDER BY uif.name DESC",

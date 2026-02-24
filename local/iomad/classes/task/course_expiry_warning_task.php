@@ -62,7 +62,7 @@ class course_expiry_warning_task extends scheduled_task {
         mtrace("Running email report course expiry warning task at ".date('d M Y h:i:s', $runtime));
 
         // Getting courses which have expiry settings.
-        $expirycourses = $DB->get_records_sql("SELECT * FROM {iomad_courses}
+        $expirycourses = $DB->get_records_sql("SELECT * FROM {local_iomad_courses}
                                                WHERE validlength > 0");
 
         // Deal with users.
@@ -71,8 +71,8 @@ class course_expiry_warning_task extends scheduled_task {
             mtrace("Dealing with course id $expirycourse->courseid");
             $targettime = $expirycourse->warnexpire * 86400;
             $expiredsql = "SELECT lit.*, c.name AS companyname, u.firstname,u.lastname,u.username,u.email,u.lang
-                           FROM {local_iomad_track} lit
-                           JOIN {company} c ON (lit.companyid = c.id)
+                           FROM {local_iomad_tracks} lit
+                           JOIN {local_iomad_companies} c ON (lit.companyid = c.id)
                            JOIN {user} u ON (lit.userid = u.id)
                            JOIN {course} co ON (lit.courseid = co.id)
                            WHERE co.visible = 1
@@ -84,7 +84,7 @@ class course_expiry_warning_task extends scheduled_task {
                            AND lit.expiredstop = 0
                            AND lit.id IN (
                                SELECT max(id)
-                               FROM {local_iomad_track}
+                               FROM {local_iomad_tracks}
                                WHERE courseid = co.id
                                AND companyid = c.id
                            GROUP BY userid,courseid)";
@@ -106,7 +106,7 @@ class course_expiry_warning_task extends scheduled_task {
                 if (!$course = $DB->get_record('course', ['id' => $compuser->courseid])) {
                     continue;
                 }
-                if (!$company = $DB->get_record('company', ['id' => $compuser->companyid])) {
+                if (!$company = $DB->get_record('local_iomad_companies', ['id' => $compuser->companyid])) {
                     continue;
                 }
 
@@ -119,7 +119,7 @@ class course_expiry_warning_task extends scheduled_task {
                     $inparams['userid'] = $compuser->userid;
 
                     // Is this a parent company manager?
-                    if ($DB->get_records_sql("SELECT userid FROM {company_users}
+                    if ($DB->get_records_sql("SELECT userid FROM {local_iomad_company_users}
                                               WHERE managertype = 1
                                               AND companyid {$insql}
                                               AND userid = :userid",
@@ -145,7 +145,7 @@ class course_expiry_warning_task extends scheduled_task {
 
                 // Get the company template info.
                 // Check against per company template repeat instead.
-                if ($templateinfo = $DB->get_record('email_template', ['companyid' => $company->id,
+                if ($templateinfo = $DB->get_record('local_iomad_email_templates', ['companyid' => $company->id,
                                                                        'name' => 'expiry_warn_user'])) {
 
                     // Check if its the correct day, if not continue.
@@ -171,17 +171,17 @@ class course_expiry_warning_task extends scheduled_task {
                 }
 
                 // Check if we have sent any emails and if they are within the period.
-                if ($DB->count_records('email', ['userid' => $compuser->userid,
+                if ($DB->count_records('local_iomad_emails', ['userid' => $compuser->userid,
                                                  'courseid' => $compuser->courseid,
                                                  'templatename' => 'expiry_warn_user']) > 0) {
                     if (!empty($notifyperiod)) {
-                        if (!$DB->get_records_sql("SELECT id FROM {email}
+                        if (!$DB->get_records_sql("SELECT id FROM {local_iomad_emails}
                                                   WHERE userid = :userid
                                                   AND courseid = :courseid
                                                       AND templatename = :templatename
                                                   $notifyperiod
                                                   AND id IN (
-                                                     SELECT MAX(id) FROM {email}
+                                                     SELECT MAX(id) FROM {local_iomad_emails}
                                                      WHERE userid = :userid2
                                                      AND courseid = :courseid2
                                                      AND templatename = :templatename2)",
@@ -205,7 +205,7 @@ class course_expiry_warning_task extends scheduled_task {
 
                 // Do we have a value for the template repeat?
                 if (!empty($templateinfo->repeatvalue)) {
-                    $sentcount = $DB->count_records_sql("SELECT count(id) FROM {email}
+                    $sentcount = $DB->count_records_sql("SELECT count(id) FROM {local_iomad_emails}
                                                          WHERE userid =:userid
                                                          AND courseid = :courseid
                                                          AND templatename = :templatename
@@ -217,28 +217,28 @@ class course_expiry_warning_task extends scheduled_task {
                     if ($sentcount >= $templateinfo->repeatvalue) {
                         $compuser->expiredstop = 1;
                         $compuser->modifiedtime = $runtime;
-                        $DB->update_record('local_iomad_track', $compuser);
+                        $DB->update_record('local_iomad_tracks', $compuser);
                     }
                 }
                 if (empty($templateinfo->repeatperiod)) {
                     // Set to never so mark it to stop.
                     $compuser->expiredstop = 1;
                     $compuser->modifiedtime = $runtime;
-                    $DB->update_record('local_iomad_track', $compuser);
+                    $DB->update_record('local_iomad_tracks', $compuser);
                 }
             }
         }
 
         // Deal with users who have passed the expired threshold.
         mtrace("getting expiry courses");
-        $completionexpirycourses = $DB->get_records_sql("SELECT * FROM {iomad_courses}
+        $completionexpirycourses = $DB->get_records_sql("SELECT * FROM {local_iomad_courses}
                                                          WHERE expireafter > 0");
         foreach ($completionexpirycourses as $completionexpirecourse) {
             // Get all of the users who have a time completed time > this time.
             $expiretime = 24 * 60 * 60 * $completionexpirecourse->expireafter;
             $userlist = $DB->get_records_sql(
                 "SELECT lit.*
-                 FROM {local_iomad_track} lit
+                 FROM {local_iomad_tracks} lit
                  JOIN {user_enrolments} ue ON (
                      lit.userid = ue.userid
                      AND lit.timestarted = ue.timestart
@@ -260,7 +260,7 @@ class course_expiry_warning_task extends scheduled_task {
 
             // Cycle through any found users.
             foreach ($userlist as $founduser) {
-                if (!$DB->get_records('local_iomad_track', ['userid' => $founduser->userid,
+                if (!$DB->get_records('local_iomad_tracks', ['userid' => $founduser->userid,
                                                             'courseid' => $founduser->courseid,
                                                             'timecompleted' => null])) {
                     // Expire the user from the course.

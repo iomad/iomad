@@ -107,7 +107,7 @@ class potential_thread extends company_base {
                                                        SQL_PARAMS_NAMED,
                                                        'pcids');
             $userfilter = " AND u.id NOT IN (
-                                SELECT userid FROM {company_users}
+                                SELECT userid FROM {local_iomad_company_users}
                                 WHERE managertype = 1
                                 AND companyid {$insql}
                             )";
@@ -118,7 +118,7 @@ class potential_thread extends company_base {
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM {user} u
-                 JOIN {company_users} cu ON cu.userid = u.id
+                 JOIN {local_iomad_company_users} cu ON cu.userid = u.id
                  LEFT JOIN {user_info_data} ui ON (
                      ui.userid = u.id
                      AND ui.userid = cu.userid

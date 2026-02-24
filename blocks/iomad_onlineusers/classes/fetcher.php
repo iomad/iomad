@@ -115,7 +115,7 @@ class fetcher {
         // Set the companyid.
         $companyid = iomad::get_my_companyid($systemcontext, false);
         if (!empty($companyid)) {
-            $companysql = " AND u.id IN (SELECT userid FROM {company_users} WHERE companyid = :companyid) ";
+            $companysql = " AND u.id IN (SELECT userid FROM {local_iomad_company_users} WHERE companyid = :companyid) ";
             $params['companyid'] = $companyid;
         } else {
             if (iomad::has_capability('block/iomad_company_admin:company_add', $systemcontext)) {

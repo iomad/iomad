@@ -77,7 +77,7 @@ class company_user {
         };
 
         // Deal with manager email CCs.
-        $companyrec = $DB->get_record('company', ['id' => $company->id]);
+        $companyrec = $DB->get_record('local_iomad_companies', ['id' => $company->id]);
         if ($companyrec->managernotify == 0) {
             $headers = null;
         } else {
@@ -110,11 +110,10 @@ class company_user {
                     'firstname' => $user->firstname,
                     'lastname' => $user->lastname,
                     'email' => $user->email,
-                ]
-            )) {
+                ])) {
             // It only clashes if the existing user is in a different tenant and
             // the option to enforce clash on username isn't on.
-            if (!$DB->get_records('company_users', ['companyid' => $company->id,
+            if (!$DB->get_records('local_iomad_company_users', ['companyid' => $company->id,
                                                     'userid' => $existinguser->id])) {
                 $clashed = true;
             }
@@ -237,7 +236,7 @@ class company_user {
         // Attach user to company.
         // Do we have a department?
         if (empty($data->departmentid)) {
-            $departmentinfo = $DB->get_record('department', ['company' => $company->id, 'parent' => 0]);
+            $departmentinfo = $DB->get_record('local_iomad_company_departments', ['companyid' => $company->id, 'parentid' => 0]);
             $data->departmentid = $departmentinfo->id;
         }
         // Deal with unset variable.
@@ -247,17 +246,16 @@ class company_user {
 
         // Check if this hasn't already been called elsewhere.
         if (!$DB->get_record(
-            'company_users',
+            'local_iomad_company_users',
             [
                 'userid' => $user->id,
                 'companyid' => $company->id,
                 'managertype' => $data->managertype,
                 'departmentid' => $data->departmentid,
-            ]
-        )) {
+            ])) {
 
             // Create the user association.
-            $DB->insert_record('company_users', [
+            $DB->insert_record('local_iomad_company_users', [
                 'userid' => $user->id,
                 'companyid' => $company->id,
                 'managertype' => $data->managertype,
@@ -303,7 +301,7 @@ class company_user {
         $companycontext = context_company::instance($company->id);
 
         // Check if the user was a company manager.
-        if ($DB->get_records('company_users', [
+        if ($DB->get_records('local_iomad_company_users', [
             'userid' => $userid,
             'managertype' => 1,
             'companyid' => $company->id,
@@ -311,7 +309,7 @@ class company_user {
             $companymanagerrole = $DB->get_record('role', ['shortname' => 'companymanager']);
             role_unassign($companymanagerrole->id, $userid, $companycontext->id);
         }
-        if ($DB->get_records('company_users', [
+        if ($DB->get_records('local_iomad_company_users', [
             'userid' => $userid,
             'managertype' => 2,
             'companyid' => $company->id,
@@ -321,13 +319,13 @@ class company_user {
         }
 
         // Remove the user from the company.
-        $DB->delete_records('company_users', ['userid' => $userid, 'companyid' => $companyid]);
+        $DB->delete_records('local_iomad_company_users', ['userid' => $userid, 'companyid' => $companyid]);
 
         // Deal with the company theme.
         $DB->set_field('user', 'theme', '', ['id' => $userid]);
 
         // Only really delete the user if they aren't in any other company.
-        if (!$DB->get_records('company_users', ['userid' => $userid])) {
+        if (!$DB->get_records('local_iomad_company_users', ['userid' => $userid])) {
             // Delete the user.
             delete_user($user);
         }
@@ -353,7 +351,7 @@ class company_user {
         }
 
         // Get the users company record.
-        $DB->set_field('company_users', 'suspended', 1, [
+        $DB->set_field('local_iomad_company_users', 'suspended', 1, [
             'userid' => $userid,
             'companyid' => $company->id,
         ]);
@@ -361,28 +359,27 @@ class company_user {
         // Clear up any unused licenses.
         if ($userlicenses = $DB->get_records_sql(
             "SELECT clu.*
-             FROM {companylicense_users} clu
-             JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+             FROM {local_iomad_company_license_users} clu
+             JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
              WHERE cl.companyid = :companyid
              AND clu.userid = :userid
              AND clu.isusing = 0",
             [
                 'userid' => $userid,
                 'companyid' => $company->id,
-            ]
-        )) {
+            ])) {
             foreach ($userlicenses as $userlicense) {
-                $DB->delete_records('companylicense_users', ['id' => $userlicense->id]);
-                if ($licenserecord = $DB->get_record('companylicense', ['id' => $userlicense->licenseid])) {
-                    $licensecount = $DB->count_records('companylicense_users', ['licenseid' => $licenserecord->id]);
+                $DB->delete_records('local_iomad_company_license_users', ['id' => $userlicense->id]);
+                if ($licenserecord = $DB->get_record('local_iomad_company_licenses', ['id' => $userlicense->licenseid])) {
+                    $licensecount = $DB->count_records('local_iomad_company_license_users', ['licenseid' => $licenserecord->id]);
                     $licenserecord->used = $licensecount;
-                    $DB->update_record('companylicense', $licenserecord);
+                    $DB->update_record('local_iomad_company_licenses', $licenserecord);
                 }
             }
         }
 
         // Only really suspend the user if they aren't in any other company.
-        if (!$DB->get_records('company_users', ['userid' => $userid, 'suspended' => 0])) {
+        if (!$DB->get_records('local_iomad_company_users', ['userid' => $userid, 'suspended' => 0])) {
             // Mark user as suspended.
             $DB->set_field('user', 'suspended', 1, ['id' => $userid]);
 
@@ -409,7 +406,7 @@ class company_user {
         }
 
         // Get the users company record.
-        $DB->set_field('company_users', 'suspended', 0, [
+        $DB->set_field('local_iomad_company_users', 'suspended', 0, [
             'userid' => $userid,
             'companyid' => $company->id,
         ]);
@@ -439,37 +436,34 @@ class company_user {
             [
                 'username' => $data['username'],
                 'email' => $data['email'],
-            ]
-        )) {
+            ])) {
             $errors['username'] = get_string('usernameexists');
             if (get_config('local_iomad', 'signup_useemail')) {
                 $errors['email'] = get_string('emailexists');
             }
         } else if ($DB->get_records_sql(
             "SELECT u.id FROM {user} u
-             JOIN {company_users} cu ON u.id = cu.userid
+             JOIN {local_iomad_company_users} cu ON u.id = cu.userid
              WHERE cu.companyid = :companyid
              AND u.username = :username",
             [
                 'companyid' => $companyid,
                 'username' => $data['username'],
-            ]
-        )) {
+            ])) {
             $errors['username'] = get_string('usernameexists');
             if (get_config('local_iomad', 'signup_useemail')) {
                 $errors['email'] = get_string('emailexists');
             }
         } else if ($currentuserid = $DB->get_record_sql(
             "SELECT DISTINCT u.id FROM {user} u
-             JOIN {company_users} cu ON u.id = cu.userid
+             JOIN {local_iomad_company_users} cu ON u.id = cu.userid
              WHERE cu.companyid != :companyid
              AND u.username = :username
              AND password != ''",
             [
                 'companyid' => $companyid,
                 'username' => $data['username'],
-            ]
-        )) {
+            ])) {
             $SESSION->signupuserinothercompany = true;
             $SESSION->clasheduserid = $currentuserid->id;
             return ['companyid' => get_string('error')];
@@ -531,7 +525,7 @@ class company_user {
             }
 
             // Check if course is shared.
-            if ($courseinfo = $DB->get_record('iomad_courses', ['courseid' => $courseid])) {
+            if ($courseinfo = $DB->get_record('local_iomad_courses', ['courseid' => $courseid])) {
                 if ($courseinfo->licensed == 1) {
 
                     continue;
@@ -576,7 +570,7 @@ class company_user {
                                                                           'enrolid' => $manualcache[$courseid]->id])) {
                     $manual->enrol_user($manualcache[$courseid], $user->id, $rid, $today, $timeend, ENROL_USER_ACTIVE);
                 } else if ($completedrecords = $DB->get_records_select(
-                    'local_iomad_track',
+                    'local_iomad_tracks',
                     "userid = :userid
                      AND courseid = :courseid
                      AND timecompleted IS NOT NULL
@@ -586,14 +580,13 @@ class company_user {
                         'userid' => $user->id,
                         'courseid' => $courseid,
                         'timeallocated' => $userenrolment->timestart,
-                    ]
-                )) {
+                    ])) {
                     // All previous attempts have been completed so enrol again.
                     foreach ($completedrecords as $completedrecord) {
                         // Complete any license allocations.
                         if (
                             !empty($completedrecord->licenseid) &&
-                            $licenserecord = $DB->get_record('companylicense_users', [
+                            $licenserecord = $DB->get_record('local_iomad_company_license_users', [
                                 'userid' => $completedrecord->userid,
                                 'licensecourseid' => $completedrecord->courseid,
                                 'licenseid' => $completedrecord->licenseid,
@@ -601,10 +594,15 @@ class company_user {
                             ])
                         ) {
                             if (empty($licenserecord->timecompleted)) {
-                                $DB->set_field('companylicense_users', 'timecompleted', $timestart, ['id' => $licenserecord->id]);
+                                $DB->set_field(
+                                    'local_iomad_company_license_users',
+                                    'timecompleted',
+                                    $timestart,
+                                    ['id' => $licenserecord->id]
+                                );
                             }
                         }
-                        $DB->set_field('local_iomad_track', 'completedstop', 1, ['id' => $completedrecord->id]);
+                        $DB->set_field('local_iomad_tracks', 'completedstop', 1, ['id' => $completedrecord->id]);
                     }
                     // Clear them from the course.
                     self::delete_user_course($user->id, $courseid, 'autodelete');
@@ -671,7 +669,7 @@ class company_user {
         // Did we get passed a course id in the user (Comes from a selector)?
         if (!empty($user->courseid)) {
             // Skip if course is licensed.
-            if (!$DB->get_record('iomad_courses', ['courseid' => $user->courseid, 'licensed' => true])) {
+            if (!$DB->get_record('local_iomad_courses', ['courseid' => $user->courseid, 'licensed' => true])) {
                 $coursecontext = context_course::instance($user->courseid);
                 $roles = get_user_roles($coursecontext, $user->id, false);
                 foreach ($roles as $role) {
@@ -682,7 +680,7 @@ class company_user {
                     }
                 }
                 if (!$isstudent) {
-                    if (!$DB->get_record('iomad_courses', ['courseid' => $user->courseid, 'shared' => 0])) {
+                    if (!$DB->get_record('local_iomad_courses', ['courseid' => $user->courseid, 'shared' => 0])) {
                         $shared = true;
                     } else {
                         $shared = false;
@@ -711,18 +709,18 @@ class company_user {
             }
 
             // Check if there is a user enroled email which hasn't been sent yet.
-            if ($emails = $DB->get_records('email', ['userid' => $user->id,
+            if ($emails = $DB->get_records('local_iomad_emails', ['userid' => $user->id,
                                                      'courseid' => $user->courseid,
                                                      'templatename' => 'user_added_to_course',
                                                      'sent' => null])) {
                 foreach ($emails as $email) {
-                    $DB->delete_records('email', ['id' => $email->id]);
+                    $DB->delete_records('local_iomad_emails', ['id' => $email->id]);
                 }
             }
         } else {
             foreach ($courseids as $courseid) {
                 // Skip if course is licensed.
-                if ($DB->get_record('iomad_courses', ['courseid' => $courseid, 'licensed' => true])) {
+                if ($DB->get_record('local_iomad_courses', ['courseid' => $courseid, 'licensed' => true])) {
                     continue;
                 }
                 $coursecontext = context_course::instance($courseid);
@@ -735,7 +733,7 @@ class company_user {
                     }
                 }
                 if (!$isstudent) {
-                    if (!$DB->get_record('iomad_courses', ['courseid' => $courseid, 'shared' => 0])) {
+                    if (!$DB->get_record('local_iomad_courses', ['courseid' => $courseid, 'shared' => 0])) {
                         $shared = true;
                     } else {
                         $shared = false;
@@ -763,19 +761,19 @@ class company_user {
                 }
 
                 // Check if there is a user enroled email which hasn't been sent yet.
-                if ($emails = $DB->get_records('email', ['userid' => $user->id,
+                if ($emails = $DB->get_records('local_iomad_emails', ['userid' => $user->id,
                                                          'courseid' => $courseid,
                                                          'templatename' => 'user_added_to_course',
                                                          'sent' => null])) {
                     foreach ($emails as $email) {
-                        $DB->delete_records('email', ['id' => $email->id]);
+                        $DB->delete_records('local_iomad_emails', ['id' => $email->id]);
                     }
                 }
 
                 if (!is_enrolled(context_course::instance($courseid), $user->id)) {
                     // Remove the tracking info if the user hasn't completed the course
                     // and doesn't still have a role in the course.
-                    $DB->delete_records('local_iomad_track', ['courseid' => $courseid,
+                    $DB->delete_records('local_iomad_tracks', ['courseid' => $courseid,
                                                               'userid' => $user->id,
                                                               'timecompleted' => null]);
                 }
@@ -1027,8 +1025,8 @@ class company_user {
 
         $userdepartments = $DB->get_records_sql(
             "SELECT d.name
-             FROM {department} d
-             JOIN {company_users} cu ON cu.departmentid = d.id
+             FROM {local_iomad_company_departments} d
+             JOIN {local_iomad_company_users} cu ON cu.departmentid = d.id
              WHERE
              cu.userid = :userid
              AND cu.companyid = :companyid",
@@ -1054,8 +1052,8 @@ class company_user {
         // Deal with any licenses.
         if ($licenserecords = $DB->get_records_sql(
             "SELECT clu.id
-             FROM {companylicense_users} clu
-             JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+             FROM {local_iomad_company_license_users} clu
+             JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
              WHERE cl.companyid = :companyid
              AND clu.licensecourseid = :licensecourseid
              AND clu.userid = :userid
@@ -1064,14 +1062,14 @@ class company_user {
              'userid' => $user->id,
              'companyid' => $companyid])) {
             foreach ($licenserecords as $licenserecord) {
-                $DB->set_field('companylicense_users', 'groupid', $groupid, ['id' => $licenserecord->id]);
+                $DB->set_field('local_iomad_company_license_users', 'groupid', $groupid, ['id' => $licenserecord->id]);
             }
         }
 
         // Are we adding to another group or moving to another group?
         if ($move) {
             // Clear down the user from all of the other company course groups.
-            $companygroups = $DB->get_records('company_course_groups', ['companyid' => $companyid,
+            $companygroups = $DB->get_records('local_iomad_company_course_groups', ['companyid' => $companyid,
                                                                         'courseid' => $courseid]);
             foreach ($companygroups as $companygroup) {
                 groups_remove_member($companygroup->groupid, $user->id);
@@ -1120,8 +1118,8 @@ class company_user {
             // Deal with any licenses.
             if ($licenserecords = $DB->get_records_sql(
                 "SELECT clu.id
-                 FROM {companylicense_users} clu
-                 JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+                 FROM {local_iomad_company_license_users} clu
+                 JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
                  WHERE cl.companyid = :companyid
                  AND clu.licensecourseid = :licensecourseid
                  AND clu.userid = :userid
@@ -1131,7 +1129,7 @@ class company_user {
                  'companyid' => $companyid])) {
                 foreach ($licenserecords as $licenserecord) {
                     $DB->set_field(
-                        'companylicense_users',
+                        'local_iomad_company_license_users',
                         'groupid',
                         $companygroup->id,
                         ['id' => $licenserecord->id]);
@@ -1157,18 +1155,17 @@ class company_user {
 
         // Is this more complicated than 1 entry?
         if (!empty($litid)) {
-            $litrec = $DB->get_record('local_iomad_track', ['id' => $litid]);
+            $litrec = $DB->get_record('local_iomad_tracks', ['id' => $litid]);
             if ($DB->record_exists_sql(
                 "SELECT DISTINCT userid
-                 FROM {local_iomad_track}
+                 FROM {local_iomad_tracks}
                  WHERE userid = :userid
                  AND courseid = :courseid
                  AND timecompleted IS NULL
                  AND coursecleared = 0
                  AND timeenrolled >= :timeenrolled
                  AND id != :id",
-                (array) $litrec
-            )) {
+                (array) $litrec)) {
                 $singleentry = false;
             }
         }
@@ -1298,7 +1295,7 @@ class company_user {
             $litparams = [];
             $litsql = "";
             if (!empty($litid)) {
-                $litrec = $DB->get_record('local_iomad_track', ['id' => $litid]);
+                $litrec = $DB->get_record('local_iomad_tracks', ['id' => $litid]);
                 $litparams['litid'] = $litid;
                 $params['licenseid'] = $litrec->licenseid;
                 $litsql = "id = :litid AND ";
@@ -1307,11 +1304,11 @@ class company_user {
             // Deal with Iomad track table stuff.
             if ($action == 'delete' || $action == 'revoke') {
                 if (empty($litid)) {
-                    $DB->delete_records('local_iomad_track', ['userid' => $userid,
+                    $DB->delete_records('local_iomad_tracks', ['userid' => $userid,
                                                               'courseid' => $courseid,
                                                               'timecompleted' => null]);
                 } else {
-                    $DB->delete_records('local_iomad_track', ['id' => $litid]);
+                    $DB->delete_records('local_iomad_tracks', ['id' => $litid]);
                 }
             } else {
                 $litparams = $litparams +
@@ -1320,27 +1317,33 @@ class company_user {
                         'courseid' => $courseid,
                     ];
                 $litsql .= "userid = :userid AND courseid = :courseid";
-                $DB->set_field_select('local_iomad_track', 'coursecleared', 1, $litsql, $litparams);
+                $DB->set_field_select('local_iomad_tracks', 'coursecleared', 1, $litsql, $litparams);
             }
             // Fix company licenses.
-            if ($licenses = $DB->get_records('companylicense_users', $params)) {
+            if ($licenses = $DB->get_records('local_iomad_company_license_users', $params)) {
                 foreach ($licenses as $license) {
                     if ($action != 'delete') {
                         $license->timecompleted = time();
-                        $DB->update_record('companylicense_users', $license);
+                        $DB->update_record('local_iomad_company_license_users', $license);
                     }
                     if ($action == 'clear') {
                         // Fix the usagecount.
-                        $licenserecord = $DB->get_record('companylicense', ['id' => $license->licenseid]);
-                        $licenserecord->used = $DB->count_records('companylicense_users', ['licenseid' => $license->licenseid]);
-                        $DB->update_record('companylicense', $licenserecord);
+                        $licenserecord = $DB->get_record(
+                            'local_iomad_company_licenses',
+                            ['id' => $license->licenseid]
+                        );
+                        $licenserecord->used = $DB->count_records(
+                            'local_iomad_company_license_users',
+                            ['licenseid' => $license->licenseid]
+                        );
+                        $DB->update_record('local_iomad_company_licenses', $licenserecord);
                         if (!empty(get_config('local_iomad', 'autoreallocate_licenses'))) {
                             $newlicense = $license;
                             $newlicense->isusing = 0;
                             $newlicense->issuedate = time();
                             $newlicense->timecompleted = null;
                             if ($licenserecord->used < $licenserecord->allocation && $licenserecord->expirydate > time()) {
-                                $newlicenseid = $DB->insert_record('companylicense_users', (array) $newlicense);
+                                $newlicenseid = $DB->insert_record('local_iomad_company_license_users', (array) $newlicense);
 
                                 // Create an event.
                                 $eventother = [
@@ -1380,11 +1383,11 @@ class company_user {
                     }
                     if ($action == 'delete' || $action == 'revoke') {
                         if ($license->isusing == 0) {
-                            $DB->delete_records('companylicense_users', ['id' => $license->id]);
+                            $DB->delete_records('local_iomad_company_license_users', ['id' => $license->id]);
                             company::update_license_usage($license->id);
                         } else {
                             $license->timecompleted = time();
-                            $DB->update_record('companylicense_users', $license);
+                            $DB->update_record('local_iomad_company_license_users', $license);
                         }
                     }
                 }
@@ -1418,8 +1421,8 @@ class company_user {
 
         // Can we get a newer license?
         if ($latestlicenses = $DB->get_records_sql(
-            "SELECT cl.* FROM {companylicense} cl
-             JOIN {companylicense_courses} clc ON (cl.id = clc.licenseid)
+            "SELECT cl.* FROM {local_iomad_company_licenses} cl
+             JOIN {local_iomad_company_license_courses} clc ON (cl.id = clc.licenseid)
              WHERE clc.courseid = :courseid
              AND cl.companyid = :companyid
              AND cl.program = 0
@@ -1432,8 +1435,7 @@ class company_user {
                 'date' => time(),
             ],
             0,
-            1
-        )) {
+            1)) {
             $latestlicense = array_pop($latestlicenses);
             $newlicense = (object) [
                 'userid' => $userid,
@@ -1443,7 +1445,7 @@ class company_user {
                 'licensecourseid' => $courseid,
                 'licenseid' => $latestlicense->id,
             ];
-            $newlicense->id = $DB->insert_record('companylicense_users', (array) $newlicense);
+            $newlicense->id = $DB->insert_record('local_iomad_company_license_users', (array) $newlicense);
 
             return $newlicense;
         } else {
@@ -1460,10 +1462,10 @@ class company_user {
         global $DB, $USER, $CFG;
 
         // Do clear up of old tokens.
-        $DB->delete_records_select('company_transient_tokens', "expires < :time", ['time' => time() + 30]);
+        $DB->delete_records_select('local_iomad_company_transient_tokens', "expires < :time", ['time' => time() + 30]);
 
         // Does the user have a current token?
-        if ($current = $DB->get_record('company_transient_tokens', ['userid' => $USER->id])) {
+        if ($current = $DB->get_record('local_iomad_company_transient_tokens', ['userid' => $USER->id])) {
             return $current->token;
         }
 
@@ -1473,7 +1475,7 @@ class company_user {
         $newtoken->userid = $USER->id;
         $newtoken->token = $generatedtoken;
         $newtoken->expires = time() + $CFG->commerce_externalshop_link_timeout;
-        $DB->insert_record('company_transient_tokens', $newtoken);
+        $DB->insert_record('local_iomad_company_transient_tokens', $newtoken);
         return $generatedtoken;
     }
 

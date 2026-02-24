@@ -118,9 +118,9 @@ iomad::require_capability('local/report_emails:view', $companycontext);
 $fieldnames = [];
 $allfields = [];
 if ($category = $DB->get_record_sql("SELECT uic.id, uic.name
-                                     FROM {user_info_category} uic, {company} c
+                                     FROM {user_info_category} uic, {local_iomad_companies} c
                                      WHERE c.id = :companyid
-                                     AND c.profileid=uic.id",
+                                     AND c.profilecategoryid=uic.id",
                                     ['companyid' => $companyid])) {
     // Get field names from company category.
     if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
@@ -138,7 +138,7 @@ if ($category = $DB->get_record_sql("SELECT uic.id, uic.name
 if ($categories = $DB->get_records_sql("SELECT id
                                         FROM {user_info_category}
                                         WHERE id NOT IN (
-                                            SELECT profileid FROM {company})")) {
+                                            SELECT profilecategoryid FROM {local_iomad_companies})")) {
     foreach ($categories as $category) {
         if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
             foreach ($fields as $field) {
@@ -233,7 +233,7 @@ $parentparams = [];
 if ($parentslist = $company->get_parent_companies_recursive()) {
     [$parentsql, $parentparams] = $DB->get_in_or_equal(array_keys($parentslist), SQL_PARAMS_NAMED, 'pcompid');
     $companysql = " AND u.id NOT IN (
-                    SELECT userid FROM {company_users}
+                    SELECT userid FROM {local_iomad_company_users}
                     WHERE managertype = 1
                     AND companyid {$parentsql} )";
 }
@@ -261,7 +261,7 @@ $baseurl = new moodle_url('/local/report_emails/index.php', $params);
 if ($emailid && confirm_sesskey()) {
 
     // Resend email, after confirmation.
-    $email = $DB->get_record('email', ['id' => $emailid], '*', MUST_EXIST);
+    $email = $DB->get_record('local_iomad_emails', ['id' => $emailid], '*', MUST_EXIST);
     if ($confirm != md5($emailid)) {
         echo $OUTPUT->header();
         echo $OUTPUT->heading(get_string('resendemail', 'local_report_emails'));
@@ -276,7 +276,7 @@ if ($emailid && confirm_sesskey()) {
         echo $OUTPUT->footer();
         die;
     } else {
-        $DB->set_field('email', 'sent', null, ['id' => $emailid]);
+        $DB->set_field('local_iomad_emails', 'sent', null, ['id' => $emailid]);
         redirect($baseurl);
         die;
     }
@@ -285,15 +285,15 @@ if ($emailid && confirm_sesskey()) {
 // Do we have any additional reporting fields?
 $extrafields = [];
 if (!empty(get_config('local_iomad', 'report_fields'))) {
-    $companyrec = $DB->get_record('company', ['id' => $companyid]);
+    $companyrec = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
     foreach (explode(',', get_config('local_iomad', 'report_fields')) as $extrafield) {
         $extrafields[$extrafield] = (object) [];
         $extrafields[$extrafield]->name = $extrafield;
         if (strpos($extrafield, 'profile_field') !== false) {
             // Its an optional profile field.
             $profilefield = $DB->get_record('user_info_field', ['shortname' => str_replace('profile_field_', '', $extrafield)]);
-            if ($profilefield->categoryid == $companyrec->profileid ||
-                !$DB->get_record('company', ['profileid' => $profilefield->categoryid])) {
+            if ($profilefield->categoryid == $companyrec->profilecategoryid ||
+                !$DB->get_record('local_iomad_companies', ['profilecategoryid' => $profilefield->categoryid])) {
                 $extrafields[$extrafield]->title = $profilefield->name;
                 $extrafields[$extrafield]->fieldid = $profilefield->id;
             } else {
@@ -383,9 +383,9 @@ if ($allemails && confirm_sesskey()) {
         // Get all of the emails.
         $allemails = $DB->get_records_sql("SELECT DISTINCT e.id FROM
                                            {user} u
-                                           JOIN {email} e ON (u.id = e.userid)
-                                           JOIN {company_users} cu ON (u.id = cu.userid AND e.userid = cu.userid)
-                                           JOIN {department} d ON (cu.departmentid = d.id)
+                                           JOIN {local_iomad_emails} e ON (u.id = e.userid)
+                                           JOIN {local_iomad_company_users} cu ON (u.id = cu.userid AND e.userid = cu.userid)
+                                           JOIN {local_iomad_company_departments} d ON (cu.departmentid = d.id)
                                            JOIN {course} c on (e.courseid = c.id)
                                            $fromsql
                                            WHERE " .  $searchinfo->sqlsearch . "
@@ -395,7 +395,7 @@ if ($allemails && confirm_sesskey()) {
                                            $companysql",
                                            $sqlparams + $parentparams + $departmentparams);
         foreach ($allemails as $email) {
-            $DB->set_field('email', 'sent', null, ['id' => $email->id]);
+            $DB->set_field('local_iomad_emails', 'sent', null, ['id' => $email->id]);
         }
 
         redirect($baseurl);
@@ -484,9 +484,9 @@ $selectsql = " DISTINCT e.id AS emailid,
                e.subject";
 
 $fromsql = "{user} u
-            JOIN {email} e ON (u.id = e.userid)
-            JOIN {company_users} cu ON (u.id = cu.userid AND e.userid = cu.userid)
-            JOIN {department} d ON (cu.departmentid = d.id)
+            JOIN {local_iomad_emails} e ON (u.id = e.userid)
+            JOIN {local_iomad_company_users} cu ON (u.id = cu.userid AND e.userid = cu.userid)
+            JOIN {local_iomad_company_departments} d ON (cu.departmentid = d.id)
             JOIN {course} c on (e.courseid = c.id)";
 $wheresql = $searchinfo->sqlsearch . " AND cu.companyid = :companyid $templatesql $departmentsql $companysql";
 $countsql = "SELECT COUNT(DISTINCT e.id) FROM $fromsql WHERE $wheresql";

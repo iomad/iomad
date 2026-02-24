@@ -91,7 +91,7 @@ class condition extends \core_availability\condition {
 
         // Get all companys the user belongs to.
         $companies = $DB->get_records_sql("SELECT DISTINCT companyid
-                                           FROM {company_users}
+                                           FROM {local_iomad_company_users}
                                            WHERE userid = :userid",
                                           ['userid' => $userid]);
         if ($this->companyid) {

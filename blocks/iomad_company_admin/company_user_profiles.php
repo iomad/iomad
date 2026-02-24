@@ -135,21 +135,21 @@ if ($DB->count_records('user_info_category') == 0) {
 
 // Check if we have a company ID, if so just pull that one back.
 if (!empty($companyid)) {
-    $company = $DB->get_record('company', ['id' => $companyid], '*', MUST_EXIST);
+    $company = $DB->get_record('local_iomad_companies', ['id' => $companyid], '*', MUST_EXIST);
 
     // Get the company category.
     $categories = [];
     $profileinfo = new stdclass();
-    $profileinfo->profileid = $company->profileid;
-    $categories[$company->profileid] = $profileinfo;
+    $profileinfo->profilecategoryid = $company->profilecategoryid;
+    $categories[$company->profilecategoryid] = $profileinfo;
 } else {
     // Check what the user can see.
     if (!iomad::has_capability('block/iomad_company_admin:allcompany_user_profiles', $companycontext)) {
         // Get the company from the users profile.
-        $categories = $DB->get_records('company', ['id' => $companyid], 'sortorder ASC', 'profileid');
+        $categories = $DB->get_records('local_iomad_companies', ['id' => $companyid], 'sortorder ASC', 'profilecategoryid');
     } else {
         // Get all the companies/categories.
-        $categories = $DB->get_records_sql("SELECT id AS profileid FROM {user_info_category}");
+        $categories = $DB->get_records_sql("SELECT id AS profilecategoryid FROM {user_info_category}");
     }
 }
 
@@ -162,14 +162,14 @@ foreach ($categories as $category) {
     $table->attributes['class'] = 'generaltable profilefield';
     $table->data = [];
 
-    if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->profileid], 'sortorder ASC')) {
+    if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->profilecategoryid], 'sortorder ASC')) {
         foreach ($fields as $field) {
             $table->data[] = [format_string($field->name), profile_field_icons($field)];
         }
     }
 
     // Get the category name.
-    $categoryinfo = $DB->get_record('user_info_category', ['id' => $category->profileid]);
+    $categoryinfo = $DB->get_record('user_info_category', ['id' => $category->profilecategoryid]);
 
     echo $OUTPUT->heading(format_string($categoryinfo->name));
     if (count($table->data)) {

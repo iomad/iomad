@@ -48,7 +48,7 @@ class coursesettings extends datasource {
         $iomadcoursesentity = new iomadcourses();
         $iomadcoursesalias = $iomadcoursesentity->get_table_alias('iomadcourses');
 
-        $this->set_main_table('iomad_courses', $iomadcoursesalias);
+        $this->set_main_table('local_iomad_courses', $iomadcoursesalias);
 
         $this->add_entity($iomadcoursesentity);
 

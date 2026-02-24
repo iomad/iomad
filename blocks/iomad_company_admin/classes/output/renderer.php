@@ -432,7 +432,7 @@ class renderer extends plugin_renderer_base {
         if (empty($departmentid)) {
             $returnhtml = html_writer::tag('h4', get_string('department', 'block_iomad_company_admin'));
         } else {
-            $departmentrec = $DB->get_record('department', ['id' => $departmentid]);
+            $departmentrec = $DB->get_record('local_iomad_company_departments', ['id' => $departmentid]);
             $returnhtml = html_writer::tag('h4', get_string('departmentwithname', 'block_iomad_company_admin', $departmentrec));
         }
         $returnhtml .= html_writer::start_tag('div', ['class' => 'iomadclear']);

@@ -110,13 +110,13 @@ if (empty($templatesetid)) {
     }
 } else {
     if (empty($action)) {
-        if ($templatesetinfo = $DB->get_record('email_templateset', ['id' => $templatesetid])) {
+        if ($templatesetinfo = $DB->get_record('local_iomad_email_templatesets', ['id' => $templatesetid])) {
             $linktext = get_string('email_templates_for', 'local_iomad', $templatesetinfo->templatesetname);
         } else {
             $linktext = get_string('email_templates_for', 'local_iomad', $company->get_name());
         }
     } else {
-        if ($templatesetinfo = $DB->get_record('email_templateset', ['id' => $templatesetid])) {
+        if ($templatesetinfo = $DB->get_record('local_iomad_email_templatesets', ['id' => $templatesetid])) {
             if ($action == 'edit') {
                 $linktext = format_string(get_string('edittemplateset', 'local_iomad'). " " . $templatesetinfo->templatesetname);
             } else {
@@ -218,7 +218,7 @@ if ($action == 'delete' && confirm_sesskey()) {
     if ($confirm != md5($templatesetid)) {
         echo $output->header();
 
-        if (!$templatesetinfo = $DB->get_record('email_templateset', ['id' => $templatesetid])) {
+        if (!$templatesetinfo = $DB->get_record('local_iomad_email_templatesets', ['id' => $templatesetid])) {
             throw new moodle_exception('templatesetnotfound', 'local_iomad');
         }
 
@@ -235,12 +235,12 @@ if ($action == 'delete' && confirm_sesskey()) {
         die;
     } else {
         // Delete the template.
-        $templatesetstrings = $DB->get_records('email_templateset_templates', ['templateset' => $templatesetid]);
+        $templatesetstrings = $DB->get_records('local_iomad_email_templateset_templates', ['templateset' => $templatesetid]);
         foreach ($templatesetstrings as $templatesetstring) {
-            $DB->delete_records('email_templateset_template_strings', ['templatesetid' => $templatesetstring->id]);
+            $DB->delete_records('local_iomad_email_templateset_template_strings', ['templatesetid' => $templatesetstring->id]);
         }
-        $DB->delete_records('email_templateset_templates', ['templateset' => $templatesetid]);
-        $DB->delete_records('email_templateset', ['id' => $templatesetid]);
+        $DB->delete_records('local_iomad_email_templateset_templates', ['templateset' => $templatesetid]);
+        $DB->delete_records('local_iomad_email_templatesets', ['id' => $templatesetid]);
         if ($SESSION->currenttemplatesetid == $templatesetid) {
             unset($SESSION->currenttemplatesetid);
         }
@@ -251,7 +251,7 @@ if ($action == 'delete' && confirm_sesskey()) {
     if ($confirm != md5($templatesetid)) {
         echo $output->header();
 
-        if (!$templatesetinfo = $DB->get_record('email_templateset', ['id' => $templatesetid])) {
+        if (!$templatesetinfo = $DB->get_record('local_iomad_email_templatesets', ['id' => $templatesetid])) {
             throw new moodle_exception('templatesetnotfound', 'local_iomad');
         }
 
@@ -270,8 +270,8 @@ if ($action == 'delete' && confirm_sesskey()) {
         die;
     } else {
         // Set the template set as default.
-        $DB->set_field('email_templateset', 'isdefault', 0, []);
-        $DB->set_field('email_templateset', 'isdefault', 1, ['id' => $templatesetid]);
+        $DB->set_field('local_iomad_email_templatesets', 'isdefault', 0, []);
+        $DB->set_field('local_iomad_email_templatesets', 'isdefault', 1, ['id' => $templatesetid]);
         redirect($finishedurl, get_string('templatesetsetdefault', 'local_iomad'), null, \core\output\notification::NOTIFY_SUCCESS);
         die;
     }
@@ -279,7 +279,7 @@ if ($action == 'delete' && confirm_sesskey()) {
     if ($confirm != md5($templatesetid)) {
         echo $output->header();
 
-        if (!$templatesetinfo = $DB->get_record('email_templateset', ['id' => $templatesetid])) {
+        if (!$templatesetinfo = $DB->get_record('local_iomad_email_templatesets', ['id' => $templatesetid])) {
             throw new moodle_exception('templatesetnotfound', 'local_iomad');
         }
 
@@ -298,7 +298,7 @@ if ($action == 'delete' && confirm_sesskey()) {
         die;
     } else {
         // Set the template set as default.
-        $DB->set_field('email_templateset', 'isdefault', 0, []);
+        $DB->set_field('local_iomad_email_templatesets', 'isdefault', 0, []);
         redirect($finishedurl, get_string('templatesetsetdefault', 'local_iomad'), null, \core\output\notification::NOTIFY_SUCCESS);
         die;
     }
@@ -309,16 +309,16 @@ $mform = new local_iomad\forms\company_templateset_save_form($linkurl, $companyi
 
 if ($data = $mform->get_data()) {
     // Save the template.
-    $templatesetid = $DB->insert_record('email_templateset', ['templatesetname' => $data->templatesetname]);
-    $emailtemplates = $DB->get_records('email_template', ['companyid' => $companyid]);
+    $templatesetid = $DB->insert_record('local_iomad_email_templatesets', ['templatesetname' => $data->templatesetname]);
+    $emailtemplates = $DB->get_records('local_iomad_email_templates', ['companyid' => $companyid]);
     foreach ($emailtemplates as $emailtemplate) {
         $emailtemplate->templateset = $templatesetid;
-        $templateid = $DB->insert_record('email_templateset_templates', $emailtemplate);
-        $stringtemplates = $DB->get_records('email_template_strings', ['templateid' => $emailtemplate->id]);
+        $templateid = $DB->insert_record('local_iomad_email_templateset_templates', $emailtemplate);
+        $stringtemplates = $DB->get_records('local_iomad_email_template_strings', ['templateid' => $emailtemplate->id]);
         foreach ($stringtemplates as $stringtemplate) {
             $stringtemplate->templatesetid = $templateid;
             unset($stringtemplate->id);
-            $DB->insert_record('email_templateset_template_strings', $stringtemplate);
+            $DB->insert_record('local_iomad_email_templateset_template_strings', $stringtemplate);
         }
     }
     redirect($linkurl, get_string('emailtemplatesetsaved', 'local_iomad'), null, \core\output\notification::NOTIFY_SUCCESS);
@@ -336,7 +336,7 @@ if (empty($manage)) {
                                 ['manage' => 1]);
     $backbutton = '';
     if (!empty($templatesetid)) {
-        if ($DB->get_record('email_templateset', ['id' => $templatesetid])) {
+        if ($DB->get_record('local_iomad_email_templatesets', ['id' => $templatesetid])) {
             $backurl = new moodle_url('/local/iomad/template_list.php', ['finished' => true, 'manage' => 1]);
             $backbutton = $output->single_button($backurl, get_string('backtocompanytemplates', 'local_iomad'), 'get');
             $buttons .= $backbutton;
@@ -355,7 +355,7 @@ echo $output->header();
 
 if (!empty($save)) {
     if (!empty($templatesetid)) {
-        $templateset = $DB->get_record('email_templateset', ['id' => $templatesetid]);
+        $templateset = $DB->get_record('local_iomad_email_templatesets', ['id' => $templatesetid]);
         $mform->set_data($templateset);
     }
 
@@ -388,7 +388,7 @@ if ($manage) {
 
         // Display the list of templates.
         $table = new local_iomad\tables\templatesets_table('email_templatessets_table');
-        $table->set_sql('*', '{email_templateset}', $searchsql, $sqlparams);
+        $table->set_sql('*', '{local_iomad_email_templatesets}', $searchsql, $sqlparams);
         $table->define_baseurl($baseurl);
         $table->define_columns(['templatesetname', 'actions']);
         $table->define_headers([get_string('name'), '']);
@@ -430,8 +430,8 @@ if ($manage) {
                   ets.id as templatestringid,
                   :prefix AS prefix";
     if (empty($templatesetid)) {
-        $fromsql = "{email_template} et
-                    JOIN {email_template_strings} ets ON (et.id = ets.templateid)
+        $fromsql = "{local_iomad_email_templates} et
+                    JOIN {local_iomad_email_template_strings} ets ON (et.id = ets.templateid)
                     JOIN {tool_customlang} cl ON (
                         ets.lang=cl.lang
                         AND cl.stringid = CONCAT(et.name, '_name')
@@ -442,8 +442,8 @@ if ($manage) {
                      AND tcc.name = :component
                      $searchsql";
     } else {
-        $fromsql = "{email_templateset_templates} et
-                    JOIN {email_templateset_template_strings} ets ON (et.id = ets.templatesetid)
+        $fromsql = "{local_iomad_email_templateset_templates} et
+                    JOIN {local_iomad_email_templateset_template_strings} ets ON (et.id = ets.templatesetid)
                     JOIN {tool_customlang} cl ON (
                         ets.lang=cl.lang
                         AND cl.stringid = CONCAT(et.name, '_name')

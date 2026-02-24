@@ -90,7 +90,7 @@ if (empty($company) && !empty($companyid)) {
 
 // Do we need to change something?
 if (!empty($update)) {
-    if (!$frameworkdetails = $DB->get_record('iomad_frameworks', ['frameworkid' => $frameworkid])) {
+    if (!$frameworkdetails = $DB->get_record('local_iomad_frameworks', ['frameworkid' => $frameworkid])) {
         throw new moodle_exception(get_string('invaliddetails', 'block_iomad_company_admin'));
     } else {
         // Process shared changes.
@@ -100,12 +100,12 @@ if (!empty($update)) {
             if ($previousshared == 0 && $shared != 0) {
                 // Turning sharing on.
                 // Deal with any current companies.
-                if ($companyframework = $DB->get_record('company_comp_frameworks', ['frameworkid' => $frameworkid])) {
+                if ($companyframework = $DB->get_record('local_iomad_company_comp_frameworks', ['frameworkid' => $frameworkid])) {
                     if ($shared == 2) {
                         $sharingrecord = new stdclass();
                         $sharingrecord->frameworkid = $frameworkid;
                         $sharingrecord->companyid = $companyframework->companyid;
-                        $DB->insert_record('company_shared_frameworks', $sharingrecord);
+                        $DB->insert_record('local_iomad_company_shared_frameworks', $sharingrecord);
                     }
                 }
             } else if ($shared == 0 && $previousshared != 0) {
@@ -121,19 +121,19 @@ if (!empty($update)) {
                             continue;
                         }
                         // Clear everyone else.
-                        $DB->delete_records('company_shared_frameworks', ['id' => $companygroup->id]);
+                        $DB->delete_records('local_iomad_company_shared_frameworks', ['id' => $companygroup->id]);
                     }
                 }
             }
 
             // Update the field in the DB.
-            $DB->set_field('iomad_frameworks', 'shared', $shared, ['id' => $frameworkdetails->id]);
+            $DB->set_field('local_iomad_frameworks', 'shared', $shared, ['id' => $frameworkdetails->id]);
         }
     }
 }
 
 // Get the list of companies and display it as a drop down select..
-$companyids = $DB->get_records_menu('company', [], 'id, name');
+$companyids = $DB->get_records_menu('local_iomad_companies', [], 'id, name');
 $companyids['none'] = get_string('nocompanyframeworks', 'block_iomad_company_admin');
 $companyids['all'] = get_string('allframeworks', 'block_iomad_company_admin');
 ksort($companyids);
@@ -158,7 +158,7 @@ if (!empty($company)) {
             'competency_framework',
             $select . "id NOT IN (
                            SELECT frameworkid
-                           FROM {company_comp_frameworks}
+                           FROM {local_iomad_company_comp_frameworks}
                        )",
                       $selectparams);
     } else if ($company == 'all') {
@@ -176,7 +176,7 @@ if (!empty($company)) {
         }
         $sql = "SELECT cf.*
                 FROM {competency_framework} cf
-                JOIN {company_comp_frameworks} ccf ON (cf.id = ccf.frameworkid)
+                JOIN {local_iomad_company_comp_frameworks} ccf ON (cf.id = ccf.frameworkid)
                 WHERE ccf.companyid = :companyid
                 $select";
         $selectparams['companyid'] = $company;
@@ -200,9 +200,9 @@ $sharedselectbutton = ['0' => get_string('no'),
                        '2' => get_string('closed', 'block_iomad_company_admin')];
 
 foreach ($frameworks as $framework) {
-    if (!$iomaddetails = $DB->get_record('iomad_frameworks', ['frameworkid' => $framework->id])) {
+    if (!$iomaddetails = $DB->get_record('local_iomad_frameworks', ['frameworkid' => $framework->id])) {
         $iomadrecord = ['frameworkid' => $framework->id, 'licensed' => 0, 'shared' => 0];
-        $iomadrecord['id'] = $DB->insert_record('iomad_frameworks', $iomadrecord);
+        $iomadrecord['id'] = $DB->insert_record('local_iomad_frameworks', $iomadrecord);
         $iomaddetails = (object) $iomadrecord;
     }
     $linkparams = $params;
@@ -216,8 +216,8 @@ foreach ($frameworks as $framework) {
     $companyname = "";
     if ($tablecompany = $DB->get_records_sql(
         "SELECT c.shortname
-         FROM {company} c
-         JOIN {company_comp_frameworks} ccf ON (c.id = ccf.companyid)
+         FROM {local_iomad_companies} c
+         JOIN {local_iomad_company_comp_frameworks} ccf ON (c.id = ccf.companyid)
          WHERE ccf.frameworkid = :frameworkid",
         ['frameworkid' => $framework->id])) {
         $companyname = format_string(implode(',', array_keys($tablecompany)));

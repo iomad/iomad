@@ -58,7 +58,7 @@ class importmoodlecompletioninformation extends adhoc_task {
 
         // Get all of the missing records.
         $comprecords = $DB->get_records_sql("SELECT DISTINCT cc.* FROM {course_completions} cc
-                                             JOIN {company_users} cu
+                                             JOIN {local_iomad_company_users} cu
                                              ON (cc.userid = cu.userid)");
         foreach ($comprecords as $comprec) {
             $userid = $comprec->userid;
@@ -66,7 +66,7 @@ class importmoodlecompletioninformation extends adhoc_task {
 
             // Does this course have a valid length?
             $offset = 0;
-            if ($iomadrec = $DB->get_record('iomad_courses', ['courseid' => $courseid])) {
+            if ($iomadrec = $DB->get_record('local_iomad_courses', ['courseid' => $courseid])) {
                 if ($iomadrec->validlength > 0) {
                     $offset = $iomadrec->validlength * 24 * 60 * 60;
                 }
@@ -86,7 +86,7 @@ class importmoodlecompletioninformation extends adhoc_task {
 
             // Is this a duplicate event?
             if (!empty($enrolrec->timecreated) &&
-                 $DB->get_record_sql("SELECT id FROM {local_iomad_track}
+                 $DB->get_record_sql("SELECT id FROM {local_iomad_tracks}
                                       WHERE userid = :userid
                                       AND courseid = :courseid
                                       AND timeenrolled = :timeenrolled
@@ -130,7 +130,7 @@ class importmoodlecompletioninformation extends adhoc_task {
                 $DB->update_record('course_completions', $comprec);
             }
 
-            if (!$currententries = $DB->get_records('local_iomad_track', ['courseid' => $courseid,
+            if (!$currententries = $DB->get_records('local_iomad_tracks', ['courseid' => $courseid,
                                                                           'userid' => $userid,
                                                                           'timecompleted' => null])) {
                 // For some reason we don't already have a record.
@@ -139,17 +139,17 @@ class importmoodlecompletioninformation extends adhoc_task {
                 foreach ($mycompanies as $mycompanyid => $dump) {
                     // Get the rest of the data.
                     $usercompany = new company($mycompanyid);
-                    $companyrec = $DB->get_record('company', ['id' => $usercompany->id]);
+                    $companyrec = $DB->get_record('local_iomad_companies', ['id' => $usercompany->id]);
                     $courserec = $DB->get_record('course', ['id' => $courseid]);
-                    if ($DB->get_record('iomad_courses', ['courseid' => $courseid, 'licensed' => 1])) {
+                    if ($DB->get_record('local_iomad_courses', ['courseid' => $courseid, 'licensed' => 1])) {
                         // Its a licensed course, get the last license.
-                        $licenserecs = $DB->get_records_sql("SELECT * FROM {companylicense_users}
+                        $licenserecs = $DB->get_records_sql("SELECT * FROM {local_iomad_company_license_users}
                                                              WHERE userid = :userid
                                                              AND licensecourseid = :licensecourseid
                                                              AND issuedate < :issuedate
                                                              AND licenseid IN (
                                                                 SELECT id
-                                                                FROM {companylicense}
+                                                                FROM {local_iomad_company_licenses}
                                                                 WHERE companyid = :companyid)
                                                              ORDER BY issuedate DESC",
                                                             ['licensecourseid' => $courseid,
@@ -159,7 +159,7 @@ class importmoodlecompletioninformation extends adhoc_task {
                                                             0,
                                                             1);
                         $licenserec = array_pop($licenserecs);
-                        if ($license = $DB->get_record('companylicense', ['id' => $licenserec->licenseid])) {
+                        if ($license = $DB->get_record('local_iomad_company_licenses', ['id' => $licenserec->licenseid])) {
                             $licenseid = $license->id;
                             $licensename = $license->name;
                         } else {
@@ -190,7 +190,7 @@ class importmoodlecompletioninformation extends adhoc_task {
                         $completion->timeexpires = $completion->timecompleted + $offset;
                     }
 
-                    $trackid = $DB->insert_record('local_iomad_track', $completion);
+                    $trackid = $DB->insert_record('local_iomad_tracks', $completion);
 
                     // Generate any certificates.
                     track::record_certificates($courseid, $userid, $trackid);
@@ -245,7 +245,7 @@ class importmoodlecompletioninformation extends adhoc_task {
                     }
 
                     $current->modifiedtime = time();
-                    $DB->update_record('local_iomad_track', $current);
+                    $DB->update_record('local_iomad_tracks', $current);
                     $trackid = $current->id;
                 }
 

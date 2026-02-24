@@ -50,7 +50,7 @@ class current_license extends company_base {
         parent::__construct($name, $options);
 
         if (!empty($this->licenseid)) {
-            $this->license = $DB->get_record('companylicense', ['id' => $this->licenseid]);
+            $this->license = $DB->get_record('local_iomad_company_licenses', ['id' => $this->licenseid]);
         } else {
             $this->license = [];
         }
@@ -78,7 +78,7 @@ class current_license extends company_base {
     protected function process_license_allocations(&$licenseusers) {
         global $DB;
         foreach ($licenseusers as $id => $user) {
-            if ($licenseinfo = $DB->get_record('companylicense_users', ['userid' => $id,
+            if ($licenseinfo = $DB->get_record('local_iomad_company_license_users', ['userid' => $id,
                                                                         'licenseid' => $this->licenseid,
                                                                         'timecompleted' => null])) {
                 if ($licenseinfo->isusing == 1) {
@@ -133,7 +133,7 @@ class current_license extends company_base {
                        clu.isusing ';
             $countfields = 'SELECT COUNT(1)';
 
-            $sql = " FROM {companylicense_users} clu
+            $sql = " FROM {local_iomad_company_license_users} clu
                      JOIN {user} u ON (clu.userid = u.id)
                      LEFT JOIN {user_info_data} ui ON (
                          ui.userid = u.id
@@ -148,7 +148,7 @@ class current_license extends company_base {
                      $coursesql
                      AND clu.userid IN (
                         SELECT userid
-                        FROM {company_users}
+                        FROM {local_iomad_company_users}
                         WHERE $departmentsql
                      )";
             $order = ' ORDER BY u.firstname , u.lastname, c.fullname ASC';
@@ -160,7 +160,7 @@ class current_license extends company_base {
                        clu.isusing ';
             $countfields = 'SELECT COUNT(1)';
 
-            $sql = " FROM {companylicense_users} clu
+            $sql = " FROM {local_iomad_company_license_users} clu
                      JOIN {user} u ON (clu.userid = u.id)
                      LEFT JOIN {user_info_data} ui ON (
                          ui.userid = u.id
@@ -172,7 +172,7 @@ class current_license extends company_base {
                      AND clu.timecompleted IS NULL
                      AND clu.userid IN (
                         SELECT userid
-                        FROM {company_users}
+                        FROM {local_iomad_company_users}
                         WHERE $departmentsql
                      )";
             $order = ' ORDER BY u.firstname ASC, u.lastname ASC';

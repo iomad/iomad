@@ -123,7 +123,7 @@ class company_license_users_form extends moodleform {
         $this->parentlevel = company::get_company_parentnode($company->id);
         $this->companydepartment = $this->parentlevel->id;
         $this->licenseid = $licenseid;
-        $this->license = $DB->get_record('companylicense', ['id' => $licenseid]);
+        $this->license = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid]);
         $this->selectedcourses = $selectedcourses;
         $this->error = $error;
 
@@ -197,7 +197,7 @@ class company_license_users_form extends moodleform {
                 'licenseid' => $this->licenseid,
                 'departmentid' => $this->departmentid,
                 'subdepartments' => $this->subhierarchieslist,
-                'parentdepartmentid' => $this->parentlevel,
+                'parentdepartment' => $this->parentlevel,
                 'program' => $this->license->program,
                 'selectedcourses' => $this->selectedcourses,
                 'courses' => $this->courseselect,
@@ -506,8 +506,8 @@ class company_license_users_form extends moodleform {
 
                                 // Check if we are not assigning multiple times.
                                 if (!$DB->get_record_sql("SELECT clu.id
-                                                          FROM {companylicense_users} clu
-                                                          JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+                                                          FROM {local_iomad_company_license_users} clu
+                                                          JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
                                                           WHERE clu.userid = :userid
                                                           AND cl.companyid = :companyid
                                                           AND clu.licensecourseid = :licensecourseid
@@ -516,7 +516,7 @@ class company_license_users_form extends moodleform {
                                     $recordarray['licenseid'] = $this->licenseid;
                                     $recordarray['issuedate'] = time();
                                     $recordarray['isusing'] = 0;
-                                    $recordarray['id'] = $DB->insert_record('companylicense_users', $recordarray);
+                                    $recordarray['id'] = $DB->insert_record('local_iomad_company_license_users', $recordarray);
                                     $count++;
                                     $due = optional_param_array('due', [], PARAM_INT);
                                     if (!empty($due)) {
@@ -582,16 +582,16 @@ class company_license_users_form extends moodleform {
                     foreach ($licensestounassign as $licenserecid) {
 
                         // Get the user from the initial license ID passed.
-                        $userlic = $DB->get_record('companylicense_users', ['id' => $licenserecid], '*', MUST_EXIST);
+                        $userlic = $DB->get_record('local_iomad_company_license_users', ['id' => $licenserecid], '*', MUST_EXIST);
                         [$insql, $sqlparams] = $DB->get_in_or_equal($licensestounassign,
                                                                     SQL_PARAMS_NAMED,
                                                                     'licuids');
                         $sqlparams['licenseid'] = $this->license->id;
-                        $userrecords = $userrecords + array_keys($DB->get_records_sql("SELECT id FROM {companylicense_users}
+                        $userrecords = $userrecords + array_keys($DB->get_records_sql("SELECT id FROM {local_iomad_company_license_users}
                                                                                        WHERE licenseid = :licenseid
                                                                                        AND userid IN (
                                                                                            SELECT userid
-                                                                                           FROM {companylicense_users}
+                                                                                           FROM {local_iomad_company_license_users}
                                                                                            WHERE id {$insql}
                                                                                        )",
                                                                                       $sqlparams));
@@ -602,7 +602,7 @@ class company_license_users_form extends moodleform {
                     } else {
                         $canremove = true;
                         foreach ($licensestounassign as $unassignid) {
-                            if ($DB->get_record('companylicense_users' , ['id' => $unassignid, 'isusing' => 1])) {
+                            if ($DB->get_record('local_iomad_company_license_users' , ['id' => $unassignid, 'isusing' => 1])) {
                                 $canremove = false;
                             }
                         }
@@ -614,7 +614,7 @@ class company_license_users_form extends moodleform {
 
                 if (!empty($licensestounassign)) {
                     foreach ($licensestounassign as $unassignid) {
-                        $licensedata = $DB->get_record('companylicense_users' , ['id' => $unassignid], '*', MUST_EXIST);
+                        $licensedata = $DB->get_record('local_iomad_company_license_users' , ['id' => $unassignid], '*', MUST_EXIST);
 
                         // Check the userid is valid.
                         if (!company::check_valid_user($this->selectedcompany, $licensedata->userid, $this->departmentid)) {
@@ -622,11 +622,11 @@ class company_license_users_form extends moodleform {
                         }
 
                         if (!$licensedata->isusing || $this->license->type == 1 || $this->license->type == 3) {
-                            $DB->delete_records('companylicense_users', ['id' => $unassignid]);
+                            $DB->delete_records('local_iomad_company_license_users', ['id' => $unassignid]);
 
                             // Remove the report data if license hasn't been used.
                             if (!$licensedata->isusing) {
-                                $DB->delete_records('local_iomad_track', [
+                                $DB->delete_records('local_iomad_tracks', [
                                     'userid' => $licensedata->userid,
                                     'licenseid' => $licensedata->id,
                                     'courseid' => $licensedata->licensecourseid,

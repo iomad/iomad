@@ -39,7 +39,7 @@ function do_fixbrokenlicenses($brokenlicenses) {
     foreach ($brokenlicenses as $brokenlicense) {
         // Check what is broken.
         if (empty($brokenlicense->licenseallocated)) {
-            if ($licenseallocation = $DB->get_record('companylicense_users',
+            if ($licenseallocation = $DB->get_record('local_iomad_company_license_users',
                                                      ['userid' => $brokenlicense->userid,
                                                       'licensecourseid' => $brokenlicense->courseid,
                                                       'timecompleted' => $brokenlicense->timecompleted])) {
@@ -48,7 +48,7 @@ function do_fixbrokenlicenses($brokenlicenses) {
                 } else {
                     $brokenlicense->licenseallocated = $brokenlicense->modifiedtime;
                     $licenseallocation->issuedate = $brokenlicense->modifiedtime;
-                    $DB->update_record('companylicense_users', $licenseallocation);
+                    $DB->update_record('local_iomad_company_license_users', $licenseallocation);
                 }
             } else {
                 $brokenlicense->licenseallocated = $brokenlicense->timeenrolled;
@@ -56,25 +56,25 @@ function do_fixbrokenlicenses($brokenlicenses) {
         }
         if (empty($brokenlicense->licenseid) || empty($brokenlicense->licensename)) {
             if (!empty($licenseallocation)) {
-                if ($licenserec = $DB->get_record('companylicense', ['id' => $licenseallocation->licenseid])) {
+                if ($licenserec = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseallocation->licenseid])) {
                     $brokenlicense->licenseid = $licenseallocation->licenseid;
                     $brokenlicense->licensename = $licenserec->name;
                 }
             } else {
                 if (!empty($brokenlicense->licenseid)) {
-                    if ($licenserec = $DB->get_record('companylicense', ['id' => $licenseallocation->licenseid])) {
+                    if ($licenserec = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseallocation->licenseid])) {
                         $brokenlicense->licenseid = $licenseallocation->licenseid;
                         $brokenlicense->licensename = $licenserec->name;
                     }
                 } else {
                     if (!empty($brokenlicense->licenseallocated)) {
-                        if ($licenseallocation = $DB->get_record('companylicense_users',
+                        if ($licenseallocation = $DB->get_record('local_iomad_company_license_users',
                                                                 ['userid' => $brokenlicense->userid,
                                                                  'licensecourseid' => $brokenlicense->courseid,
                                                                  'timecompleted' => $brokenlicense->timecompleted,
                                                                  'issuedate' => $brokenlicense->issuedate])) {
 
-                            if ($licenserec = $DB->get_record('companylicense', ['id' => $licenseallocation->licenseid])) {
+                            if ($licenserec = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseallocation->licenseid])) {
                                 $brokenlicense->licenseid = $licenseallocation->licenseid;
                                 $brokenlicense->licensename = $licenserec->name;
                             }
@@ -84,7 +84,7 @@ function do_fixbrokenlicenses($brokenlicenses) {
             }
         }
         if (!empty($brokenlicense->licenseallocated) && !empty($brokenlicense->licenseid) && !empty($brokenlicense->licensename)) {
-            $DB->update_record('local_iomad_track', $brokenlicense);
+            $DB->update_record('local_iomad_tracks', $brokenlicense);
             $fixed[$brokenlicense->id] = $brokenlicense;
         } else {
             $stillbroken[$brokenlicense->id] = $brokenlicense;
@@ -162,7 +162,7 @@ function do_fixbrokencompletions($brokencompletions) {
             }
         }
         if (!empty($brokencompletion->timestarted) && !empty($brokencompletion->timeenrolled)) {
-            $DB->update_record('local_iomad_track', $brokencompletion);
+            $DB->update_record('local_iomad_tracks', $brokencompletion);
             $fixed[$brokencompletion->id] = $brokencompletion;
         } else {
             $broken[$brokencompletion->id] = $brokencompletion;

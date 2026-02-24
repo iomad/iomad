@@ -975,8 +975,8 @@ workaround_max_input_vars();
 // IOMAD - Set the theme if the server hostname matches one of ours.
 if(!CLI_SCRIPT && !during_initial_install()){
     // Does this match a company hostname?
-    if ($DB->get_manager()->table_exists('company') &&
-        ($companyrec = $DB->get_record('company', array('hostname' => $_SERVER['SERVER_NAME'])))) {
+    if ($DB->get_manager()->table_exists('local_iomad_companies') &&
+        ($companyrec = $DB->get_record('local_iomad_companies', array('hostname' => $_SERVER['SERVER_NAME'])))) {
         try {
             $themeconfig = theme_config::load($companyrec->theme);
             // Makes sure the theme can be loaded without errors.

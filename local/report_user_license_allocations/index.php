@@ -190,7 +190,7 @@ if ($parentslist = $company->get_parent_companies_recursive()) {
                                                 SQL_PARAMS_NAMED,
                                                 'pcids');
     $companysql = " AND u.id NOT IN (
-                    SELECT userid FROM {company_users}
+                    SELECT userid FROM {local_iomad_company_users}
                     WHERE managertype = 1
                     AND companyid {$insql})";
 }
@@ -252,7 +252,7 @@ if ($departmentid == 0 ) {
 // Get the appropriate list of licenses.
 $licenselist = [0 => get_string('all')];
 $licenses = $DB->get_records(
-    'companylicense',
+    'local_iomad_company_licenses',
     ['companyid' => $companyid],
     'expirydate DESC',
     'id, name, startdate, expirydate');
@@ -289,14 +289,14 @@ $licenseselectoutput = html_writer::tag('div', $output->render($select), ['id' =
 $courselist = [ 0 => get_string('all')];
 if (empty($licensid)) {
     $courserecs = $DB->get_records_sql_menu("SELECT DISTINCT courseid,coursename
-                                        FROM {local_iomad_track}
+                                        FROM {local_iomad_tracks}
                                         WHERE companyid = :companyid
                                         AND licenseid IS NOT NULL
                                         ORDER BY coursename",
                                         ['companyid' => $company->id]);
 } else {
     $courserecs = $DB->get_records_sql_menu("SELECT DISTINCT courseid,coursename
-                                        FROM {local_iomad_track}
+                                        FROM {local_iomad_tracks}
                                         WHERE companyid = :companyid
                                         AND licenseid = :licenseid
                                         ORDER BY coursename",
@@ -375,15 +375,15 @@ $returnurl = $CFG->wwwroot."/local/report_user_license_allocations/index.php";
 // Do we have any additional reporting fields?
 $extrafields = [];
 if (!empty(get_config('local_iomad', 'report_fields'))) {
-    $companyrec = $DB->get_record('company', ['id' => $companyid]);
+    $companyrec = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
     foreach (explode(',', get_config('local_iomad', 'report_fields')) as $extrafield) {
         $extrafields[$extrafield] = new stdclass();
         $extrafields[$extrafield]->name = $extrafield;
         if (strpos($extrafield, 'profile_field') !== false) {
             // Its an optional profile field.
             $profilefield = $DB->get_record('user_info_field', ['shortname' => str_replace('profile_field_', '', $extrafield)]);
-            if ($profilefield->categoryid == $companyrec->profileid ||
-                !$DB->get_record('company', ['profileid' => $profilefield->categoryid])) {
+            if ($profilefield->categoryid == $companyrec->profilecategoryid ||
+                !$DB->get_record('local_iomad_companies', ['profilecategoryid' => $profilefield->categoryid])) {
                 $extrafields[$extrafield]->title = $profilefield->name;
                 $extrafields[$extrafield]->fieldid = $profilefield->id;
             } else {
@@ -396,7 +396,7 @@ if (!empty(get_config('local_iomad', 'report_fields'))) {
 }
 
 // Get the license information.
-$license = $DB->get_record('companylicense', ['id' => $licenseid]);
+$license = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid]);
 
 // Deal with where we are on the department tree.
 $currentdepartment = company::get_departmentbyid($departmentid);
@@ -442,13 +442,13 @@ $selectsql = "DISTINCT " .
               cl.name as licensename";
 $fromsql = " {local_report_user_lic_allocs} urla
             JOIN {user} u ON (urla.userid = u.id)
-            JOIN {company_users} cu ON (u.id = cu.userid)
-            JOIN {department} d ON (
+            JOIN {local_iomad_company_users} cu ON (u.id = cu.userid)
+            JOIN {local_iomad_company_departments} d ON (
                 cu.departmentid = d.id
-                AND cu.companyid = d.company
+                AND cu.companyid = d.companyid
             )
             JOIN {course} c ON (urla.courseid = c.id)
-            LEFT JOIN {companylicense} cl ON (urla.licenseid = cl.id)";
+            LEFT JOIN {local_iomad_company_licenses} cl ON (urla.licenseid = cl.id)";
 $wheresql = $searchinfo->sqlsearch . " AND cu.companyid = :companyid $departmentsql $companysql $licensesql $coursesql";
 $countsql = "SELECT COUNT(DISTINCT " .
     $DB->sql_concat(

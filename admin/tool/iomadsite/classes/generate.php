@@ -320,7 +320,7 @@ class generate {
         $company->lang = 'en';
         $company->theme = 'iomadboost';
         $company->category = $this->company_category($fullname);
-        $company->profileid = $this->company_profile($shortname);
+        $company->profilecategoryid = $this->company_profile($shortname);
         $company->suspended = 0;
         $company->emailprofileid = 0;
         $company->supervisorprofileid = 0;
@@ -330,8 +330,8 @@ class generate {
         $company->managerdigestday = 0;
         $company->previousroletemplateid = 0;
 
-        $companyid = $DB->insert_record('company', $company);
-        $company = $DB->get_record('company', ['id' => $companyid]);
+        $companyid = $DB->insert_record('local_iomad_companies', $company);
+        $company = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
 
         company::initialise_departments($companyid);
 
@@ -402,7 +402,7 @@ class generate {
         $license->program = 0;
         $license->reference = '';
         $license->instant = 0;
-        $id = $DB->insert_record('companylicense', $license);
+        $id = $DB->insert_record('local_iomad_company_licenses', $license);
 
         return $id;
     }
@@ -457,7 +457,7 @@ class generate {
         foreach ($this->companynames as $shortname => $fullname) {
 
             // Make sure it doesn't already exist.
-            if (!$company = $DB->get_record('company', ['shortname' => $shortname])) {
+            if (!$company = $DB->get_record('local_iomad_companies', ['shortname' => $shortname])) {
                 mtrace("Making company - $fullname");
                 $company = $this->company_record($shortname, $fullname);
             }

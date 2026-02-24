@@ -64,7 +64,7 @@ require_logout();
 
 // IOMAD - We want the company/theme to persist.
 if (!empty($currentcompanyid)) {
-    $company = $DB->get_record('company', array('id' => $currentcompanyid));
+    $company = $DB->get_record('local_iomad_companies', array('id' => $currentcompanyid));
     $redirect .= "?id=" . $company->id . "&code=" . $company->shortname;
 }
 

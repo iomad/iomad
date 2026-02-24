@@ -70,40 +70,40 @@ class addtemplate extends adhoc_task {
         $langs = array_keys(get_string_manager()->get_list_of_translations(true));
 
         // Deal with the templatesets.
-        $templatesets = $DB->get_records('email_templateset', [], 'id', 'id');
+        $templatesets = $DB->get_records('local_iomad_email_templatesets', [], 'id', 'id');
 
         foreach ($templatesets as $templateset) {
-            if (!$DB->get_record('email_templateset_templates', ['templateset' => $templateset->id,
+            if (!$DB->get_record('local_iomad_email_templateset_templates', ['templateset' => $templateset->id,
                                                                  'name' => $customdata->templatename])) {
                 $templaterec = (object) [];
                 $templaterec->templateset = $templateset->id;
                 $templaterec->name = $customdata->templatename;
                 $templaterec->disabled = $customdata->disabled;
-                $templateid = $DB->insert_record('email_templateset_templates', $templaterec);
+                $templateid = $DB->insert_record('local_iomad_email_templateset_templates', $templaterec);
                 foreach ($langs as $lang) {
                     $templatelangrec = (object) [];
                     $templatelangrec->templatesetid = $templateid;
-                    $DB->insert_record('email_templateset_template_strings', $templaterec);
+                    $DB->insert_record('local_iomad_email_templateset_template_strings', $templaterec);
                 }
             }
         }
 
         // Deal with the companies.
-        $companies = $DB->get_records('company', [], 'id', 'id');
+        $companies = $DB->get_records('local_iomad_companies', [], 'id', 'id');
 
         foreach ($companies as $company) {
-            if (!$DB->get_record('email_template', ['companyid' => $company->id,
+            if (!$DB->get_record('local_iomad_email_templates', ['companyid' => $company->id,
                                                     'name' => $customdata->templatename])) {
                 $templaterec = (object) [];
                 $templaterec->companyid = $company->id;
                 $templaterec->name = $customdata->templatename;
                 $templaterec->disabled = $customdata->disabled;
-                $templateid = $DB->insert_record('email_template', $templaterec);
+                $templateid = $DB->insert_record('local_iomad_email_templates', $templaterec);
                 foreach ($langs as $lang) {
                     $templatelangrec = (object) [];
                     $templaterec->templateid = $templateid;
                     $templaterec->lang = $lang;
-                    $DB->insert_record('email_template_strings', $templaterec);
+                    $DB->insert_record('local_iomad_email_template_strings', $templaterec);
                 }
             }
         }

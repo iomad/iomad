@@ -52,7 +52,7 @@ class iomad {
 
         // Add in the missing data.
         $data['siteurl'] = $CFG->wwwroot;
-        $data['tenants'] = $DB->count_records('company');
+        $data['tenants'] = $DB->count_records('local_iomad_companies');
         $data['siteid'] = get_site_identifier();
         $url = new moodle_url(
             'https://www.iomad.org/wp-json/contact-form-7/v1/contact-forms/4445/feedback',
@@ -88,7 +88,7 @@ class iomad {
             (empty($USER->id) &&
                 (empty($SESSION->currenteditingcompany) &&
                     empty($CFG->foundcompanyid))) ||
-            !$DB->get_manager()->table_exists('company')
+            !$DB->get_manager()->table_exists('local_iomad_companies')
         ) {
             return -1;
         }
@@ -141,7 +141,13 @@ class iomad {
 
         if ($user->id == $USER->id && !empty($SESSION->currenteditingcompany)) {
             return $SESSION->currenteditingcompany;
-        } else if ($usercompanies = $DB->get_records('company_users', ['userid' => $user->id], 'id', 'id,companyid', 0, 1)) {
+        } else if ($usercompanies = $DB->get_records(
+            'local_iomad_company_users',
+            ['userid' => $user->id],
+            'id',
+            'id,companyid',
+            0,
+            1)) {
             $usercompany = array_pop($usercompanies);
 
             // Cache this if it's the current user.
@@ -169,7 +175,7 @@ class iomad {
             $user = $USER;
         }
 
-        if ($usercompany = $DB->get_record('company_users', ['userid' => $user->id])) {
+        if ($usercompany = $DB->get_record('local_iomad_company_users', ['userid' => $user->id])) {
             if ($usercompany->managertype > 0) {
                 return $usercompany->companyid;
             } else {
@@ -241,7 +247,7 @@ class iomad {
     public static function get_company_customcss(int $companyid): string {
         global $DB;
 
-        if ($companycustomcss = $DB->get_field('company', 'customcss', ['id' => $companyid])) {
+        if ($companycustomcss = $DB->get_field('local_iomad_companies', 'customcss', ['id' => $companyid])) {
             return $companycustomcss;
         } else {
             return '';
@@ -257,7 +263,7 @@ class iomad {
     public static function get_company_maincolor(int $companyid): string {
         global $DB;
 
-        if ($companyothercss = $DB->get_field('company', 'maincolor', ['id' => $companyid])) {
+        if ($companyothercss = $DB->get_field('local_iomad_companies', 'maincolor', ['id' => $companyid])) {
             return 'body {color: ' . $companyothercss . ' !important}';
         } else {
             return '';
@@ -273,7 +279,7 @@ class iomad {
     public static function get_company_headingcolor(int $companyid): string {
         global $DB;
 
-        if ($companyothercss = $DB->get_field('company', 'headingcolor', ['id' => $companyid])) {
+        if ($companyothercss = $DB->get_field('local_iomad_companies', 'headingcolor', ['id' => $companyid])) {
             return '.block .header .title h2, .block .content h3 {color: ' . $companyothercss . ' !important}';
         } else {
             return '';
@@ -289,7 +295,7 @@ class iomad {
     public static function get_company_linkcolor(int $companyid): string {
         global $DB;
 
-        if ($companyothercss = $DB->get_field('company', 'linkcolor', ['id' => $companyid])) {
+        if ($companyothercss = $DB->get_field('local_iomad_companies', 'linkcolor', ['id' => $companyid])) {
             return 'a {color: ' . $companyothercss . ' !important}';
         } else {
             return '';
@@ -305,8 +311,8 @@ class iomad {
     public static function join_company_course(string $alias = "{course}"): string {
         $companyid = self::companyid();
         if ($companyid > 0) {
-            return " INNER JOIN {company_course} ON $alias.id = {company_course}.courseid
-                     AND {company_course}.companyid = $companyid ";
+            return " INNER JOIN {local_iomad_company_courses} ON $alias.id = {local_iomad_company_courses}.courseid
+                     AND {local_iomad_company_courses}.companyid = $companyid ";
         } else {
             return "";
         }
@@ -345,7 +351,7 @@ class iomad {
             'course',
             "id IN (
                  SELECT clu.licensecourseid
-                 FROM {companylicense_users} clu
+                 FROM {local_iomad_company_license_users} clu
                  WHERE clu.userid = :userid
                  AND clu.isusing = 0
              )",
@@ -369,13 +375,13 @@ class iomad {
             $sharedcourses = $DB->get_records_select(
                 'course',
                 "id IN (
-                     SELECT courseid FROM {iomad_courses}
+                     SELECT courseid FROM {local_iomad_courses}
                      WHERE shared=1
                      AND licensed = 0
                  ) OR id IN (
                      SELECT pc.courseid FROM
-                     {iomad_courses} pc
-                     JOIN {company_shared_courses} csc
+                     {local_iomad_courses} pc
+                     JOIN {local_iomad_company_shared_courses} csc
                      ON (
                          csc.courseid=pc.courseid
                          AND csc.companyid = :companyid
@@ -387,7 +393,7 @@ class iomad {
             $sharedcourses = $DB->get_records_select(
                 'course',
                 "id IN (
-                     SELECT courseid FROM {iomad_courses}
+                     SELECT courseid FROM {local_iomad_courses}
                      WHERE shared=1
                  )");
         }
@@ -418,7 +424,7 @@ class iomad {
             if (empty($companyid)) {
                 $companyid = self::get_my_companyid(context_system::instance(), false);
             }
-            $user->company = $DB->get_record('company', ['id' => $companyid]);
+            $user->company = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
         } else {
             $user = $DB->get_record('user', ['id' => $userid]);
             $user->company = company::get_company_byuserid($userid);
@@ -428,7 +434,7 @@ class iomad {
         foreach ($categories as $id => $category) {
 
             // Try to find category in company list.
-            if ($company = $DB->get_record('company', ['profileid' => $id])) {
+            if ($company = $DB->get_record('local_iomad_companies', ['profilecategoryid' => $id])) {
 
                 // If this is not the user's company then do not include.
                 if (!empty($user->company->id)) {
@@ -457,7 +463,7 @@ class iomad {
         $contextsystem = context_system::instance();
 
         // If we aren't already set up - do nothing.
-        if (!$DB->get_manager()->table_exists('company')) {
+        if (!$DB->get_manager()->table_exists('local_iomad_companies')) {
             return $categories;
         }
 
@@ -467,7 +473,7 @@ class iomad {
         }
 
         if ($companyid = self::get_my_companyid($contextsystem)) {
-            $company = $DB->get_record('company', ['id' => $companyid]);
+            $company = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
         } else {
             $company = (object) ['id' => 0];
         }
@@ -480,14 +486,14 @@ class iomad {
         // Get all of the company course categories including children.
         if (!$allcompanycategories = $allcompanycategoriescache->get('all')) {
             $allcompanycategories = [];
-            $companyroots = $DB->get_records('company', [], 'category', 'category');
+            $companyroots = $DB->get_records('local_iomad_companies', [], 'coursecategoryid', 'coursecategoryid');
             foreach ($companyroots as $companyroot) {
-                $allcompanycategories[$companyroot->category] = $companyroot->category;
+                $allcompanycategories[$companyroot->coursecategoryid] = $companyroot->coursecategoryid;
                 $children = $DB->get_records_sql(
                     "SELECT DISTINCT id
                      FROM {course_categories}
                      WHERE " . $DB->sql_like("path", ":parentpath"),
-                    ['parentpath' => "/" . $companyroot->category . "/%"]);
+                    ['parentpath' => "/" . $companyroot->coursecategoryid . "/%"]);
                 foreach ($children as $child) {
                     $allcompanycategories[$child->id] = $child->id;
                 }
@@ -496,13 +502,13 @@ class iomad {
         }
 
         // Get the current company course categories.
-        if (!empty($company->category)) {
+        if (!empty($company->coursecategoryid)) {
             if (!$mycompanycategories = $companycategoriescache->get($company->id)) {
                 $mycompanycategories = $DB->get_records_sql(
                     "SELECT DISTINCT id
                      FROM {course_categories}
                      WHERE " . $DB->sql_like('path', ':companycategorysearch'),
-                    ['companycategorysearch' => '/' . $company->category . '%']);
+                    ['companycategorysearch' => '/' . $company->coursecategoryid . '%']);
                 $companycategoriescache->set($company->id, $mycompanycategories);
             }
         } else {
@@ -524,7 +530,7 @@ class iomad {
             $companycourses = $DB->get_records_sql(
                 "SELECT distinct c.category
                  FROM {course} c
-                 JOIN {company_course} cc ON (c.id = cc.courseid)
+                 JOIN {local_iomad_company_courses} cc ON (c.id = cc.courseid)
                  WHERE cc.companyid = :companyid",
                 ['companyid' => $companyid]
             );
@@ -537,7 +543,7 @@ class iomad {
             "SELECT distinct cc.path
              FROM {course} c
              JOIN {course_categories} cc ON (c.category = cc.id)
-             JOIN {iomad_courses} ic ON (c.id = ic.courseid)
+             JOIN {local_iomad_courses} ic ON (c.id = ic.courseid)
              WHERE ic.shared = 1")) {
             foreach ($sharedcategories as $sharedcategory) {
                 $sharedpaths = explode('/', $sharedcategory->path);
@@ -606,19 +612,19 @@ class iomad {
         $iomadcourses = [];
         foreach ($courses as $id => $course) {
             // Try to find category in company list.
-            if ($DB->get_record('company_course', [
+            if ($DB->get_record('local_iomad_company_courses', [
                 'courseid' => $id,
                 'companyid' => $mycompanyid,
             ])) {
                 // Include as tied to company.
                 $iomadcourses[$id] = $course;
-            } else if ($DB->get_record('iomad_courses', [
+            } else if ($DB->get_record('local_iomad_courses', [
                 'courseid' => $id,
                 'shared' => 1,
             ])) {
                 // Include as open shared.
                 $iomadcourses[$id] = $course;
-            } else if (!$DB->get_records('company_course', ['courseid' => $id])) {
+            } else if (!$DB->get_records('local_iomad_company_courses', ['courseid' => $id])) {
                 // Include as not a companycourse.
                 $iomadcourses[$id] = $course;
             }
@@ -659,7 +665,7 @@ class iomad {
                  WHERE e.enrol = :enrol
                  AND e.status = 0
                  AND c.id IN (
-                    SELECT courseid FROM {company_course}
+                    SELECT courseid FROM {local_iomad_company_courses}
                     WHERE companyid = :companyid)",
                 [
                     'companyid' => $companyid,
@@ -689,7 +695,7 @@ class iomad {
                  WHERE e.enrol = :enrol
                  AND e.status = 0
                  AND c.id IN (
-                    SELECT courseid FROM {iomad_courses}
+                    SELECT courseid FROM {local_iomad_courses}
                     WHERE shared = 1)",
                 ['enrol' => 'self']
             );
@@ -700,7 +706,7 @@ class iomad {
 
             // Check if there are any courses from 'blanket' licenses.
             if ($blanketlicenses = $DB->get_records_select(
-                'companylicense',
+                'local_iomad_company_licenses',
                 "companyid = :companyid
                  AND type = :type
                  AND startdate < :startdate
@@ -725,7 +731,7 @@ class iomad {
                                          c.groupmode,
                                          c.visible
                          FROM {course} c
-                         JOIN {companylicense_courses} clc ON (c.id = clc.courseid)
+                         JOIN {local_iomad_company_license_courses} clc ON (c.id = clc.courseid)
                          JOIN {trainingevent} t ON (c.id = t.course AND clc.courseid = t.course)
                          WHERE clc.licenseid = :licenseid",
                         ['licenseid' => $blanketlicense->id]
@@ -750,7 +756,7 @@ class iomad {
                                   c.groupmodeforce,
                                   c.groupmode,
                                   c.visible
-                 FROM {companylicense_users} clu
+                 FROM {local_iomad_company_license_users} clu
                  JOIN {course} c ON (c.id = clu.licensecourseid)
                  JOIN {trainingevent} t ON (c.id = t.course AND clu.licensecourseid = t.course)
                  WHERE clu.userid = :userid
@@ -779,9 +785,9 @@ class iomad {
     public static function get_company_frameworkids(int $companyid): array {
         global $DB;
 
-        $companyframeworks = $DB->get_records('company_comp_frameworks', ['companyid' => $companyid]);
-        $closedsharedframeworks = $DB->get_records('company_shared_frameworks', ['companyid' => $companyid]);
-        $opensharedframeworks = $DB->get_records('iomad_frameworks', ['shared' => 1]);
+        $companyframeworks = $DB->get_records('local_iomad_company_comp_frameworks', ['companyid' => $companyid]);
+        $closedsharedframeworks = $DB->get_records('local_iomad_company_shared_frameworks', ['companyid' => $companyid]);
+        $opensharedframeworks = $DB->get_records('local_iomad_frameworks', ['shared' => 1]);
         $return = [];
         foreach ($companyframeworks as $framework) {
             $return[$framework->frameworkid] = $framework->frameworkid;
@@ -804,9 +810,9 @@ class iomad {
     public static function get_company_templateids(int $companyid): array {
         global $DB;
 
-        $companytemplates = $DB->get_records('company_comp_templates', ['companyid' => $companyid]);
-        $closedsharedtemplates = $DB->get_records('company_shared_templates', ['companyid' => $companyid]);
-        $opensharedtemplates = $DB->get_records('iomad_templates', ['shared' => 1]);
+        $companytemplates = $DB->get_records('local_iomad_company_comp_templates', ['companyid' => $companyid]);
+        $closedsharedtemplates = $DB->get_records('local_iomad_company_shared_templates', ['companyid' => $companyid]);
+        $opensharedtemplates = $DB->get_records('local_iomad_templates', ['shared' => 1]);
         $return = [];
         foreach ($companytemplates as $template) {
             $return[$template->templateid] = $template->templateid;
@@ -836,10 +842,10 @@ class iomad {
         }
 
         // Try to find the category in company list.
-        if (!empty($category->id) && $company = $DB->get_record('company', ['category' => $category->id])) {
+        if (!empty($category->id) && $company = $DB->get_record('local_iomad_companies', ['coursecategoryid' => $category->id])) {
 
             // If this is not the user's company then we return false.
-            if ($DB->get_record('company_users', ['userid' => $USER->id, 'companyid' => $company->id])) {
+            if ($DB->get_record('local_iomad_company_users', ['userid' => $USER->id, 'companyid' => $company->id])) {
                 // User is not assigned to this company - hide the category.
                 return true;
             } else {
@@ -866,10 +872,10 @@ class iomad {
         }
 
         // Try to find the category in company list.
-        if (!empty($categoryid) && $company = $DB->get_record('company', ['category' => $categoryid])) {
+        if (!empty($categoryid) && $company = $DB->get_record('local_iomad_companies', ['coursecategoryid' => $categoryid])) {
 
             // If this is not the user's company then we return false.
-            if ($DB->get_record('company_users', ['userid' => $USER->id, 'companyid' => $company->id])) {
+            if ($DB->get_record('local_iomad_company_users', ['userid' => $USER->id, 'companyid' => $company->id])) {
                 // User is not assigned to this company - hide the category.
                 return true;
             } else {
@@ -1019,9 +1025,9 @@ class iomad {
         $idlist = [];
         $foundfields = false;
 
-        if ($companyinfo = $DB->get_record('company', ['id' => $companyid])) {
+        if ($companyinfo = $DB->get_record('local_iomad_companies', ['id' => $companyid])) {
             // Get field names from company category.
-            if ($fields = $DB->get_records('user_info_field', ['categoryid' => $companyinfo->profileid])) {
+            if ($fields = $DB->get_records('user_info_field', ['categoryid' => $companyinfo->profilecategoryid])) {
                 foreach ($fields as $field) {
                     $fieldnames[$field->id] = 'profile_field_' . $field->shortname;
                     ${'profile_field_' . $field->shortname} = optional_param('profile_field_' . $field->shortname, null, PARAM_RAW);
@@ -1033,7 +1039,7 @@ class iomad {
         if ($globalfields = $DB->get_records_select(
             'user_info_field',
             "categoryid NOT IN (
-                 SELECT profileid FROM {company}
+                 SELECT profilecategoryid FROM {local_iomad_companies}
              )")) {
             foreach ($globalfields as $field) {
                 if ($field->shortname != 'company') {
@@ -1164,7 +1170,7 @@ class iomad {
         if (!empty($params['compfrom'])) {
             $params['courseid2'] = $params['courseid'];
             if ($compfromids = $DB->get_records_select(
-                'local_iomad_track',
+                'local_iomad_tracks',
                 "(
                      courseid = :courseid
                      AND timecompleted < :compfrom
@@ -1186,7 +1192,7 @@ class iomad {
 
         if (!empty($params['compto'])) {
             if ($comptoids = $DB->get_records_select(
-                'local_iomad_track',
+                'local_iomad_tracks',
                 "courseid = :courseid
                  AND timecompleted > :compto",
                 $params,
@@ -1387,7 +1393,7 @@ class iomad {
             } else {
                 $suspendedsql = "";
             }
-            $tempcreatesql = "INSERT INTO {" . $temptablename . "} (userid) SELECT userid from {company_users}
+            $tempcreatesql = "INSERT INTO {" . $temptablename . "} (userid) SELECT userid from {local_iomad_company_users}
                               WHERE departmentid IN (" . implode(',', array_keys($alldepartments)) . ") $suspendedsql";
         } else {
             $tempcreatesql = "";
@@ -1464,7 +1470,7 @@ class iomad {
         // Populate it.
         $alldepartments = company::get_all_subdepartments($searchinfo->departmentid);
         if (count($alldepartments) > 0) {
-            $tempcreatesql = "INSERT INTO {" . $temptablename . "} (userid) SELECT userid from {company_users}
+            $tempcreatesql = "INSERT INTO {" . $temptablename . "} (userid) SELECT userid from {local_iomad_company_users}
                               WHERE departmentid IN (" . implode(',', array_keys($alldepartments)) . ")";
         } else {
             $tempcreatesql = "";
@@ -1528,11 +1534,18 @@ class iomad {
                 cc.timecompleted AS timecompleted,
                 d.name as department,
                 gg.finalgrade as result ";
-        $fromsql = " FROM {user} u, {course_completions} cc, {department} d, {company_users} du, {" . $temptablename . "} tt
-                     LEFT JOIN {grade_grades} gg ON ( gg.itemid = (
-                       SELECT id FROM {grade_items} WHERE courseid = $courseid AND itemtype='course'))
+        $fromsql =
+        " FROM {user} u,
+               {course_completions} cc,
+               {local_iomad_company_departments} d,
+               {local_iomad_company_users} du,
+               {" . $temptablename . "} tt
+          LEFT JOIN {grade_grades} gg ON ( gg.itemid = (
+                    SELECT id FROM {grade_items}
+                    WHERE courseid = $courseid
+                          AND itemtype='course'))
 
-                WHERE $searchinfo->sqlsearch
+          WHERE $searchinfo->sqlsearch
                 AND tt.userid = u.id
                 AND cc.course = $courseid
                 AND u.id = cc.userid
@@ -1610,8 +1623,8 @@ class iomad {
                 '0' as result ";
         $fromsql = " FROM {user} u
                     JOIN {course_completions} cc ON (u.id = cc.userid)
-                    JOIN {company_users} du ON (u.id = du.userid AND cc.userid = du.userid)
-                    JOIN {department} d ON (cu.departmentid = d.id)
+                    JOIN {local_iomad_company_users} du ON (u.id = du.userid AND cc.userid = du.userid)
+                    JOIN {local_iomad_company_departments} d ON (cu.departmentid = d.id)
                     JOIN {" . $temptablename . "} tt ON (
                         u.id = tt.userid
                         AND cc.userid = tt.userid
@@ -1772,7 +1785,7 @@ class iomad {
             } else {
                 $suspendedsql = "";
             }
-            $tempcreatesql = "INSERT INTO {" . $temptablename . "} (userid) SELECT userid from {company_users}
+            $tempcreatesql = "INSERT INTO {" . $temptablename . "} (userid) SELECT userid from {local_iomad_company_users}
                               WHERE departmentid IN (" . implode(',', array_keys($alldepartments)) . ") $suspendedsql";
         } else {
             $tempcreatesql = "";
@@ -1794,9 +1807,9 @@ class iomad {
             $courseobj = (object) [];
             $courseobj->id = $course->courseid;
             $timestamp = time();
-            $courseobj->numlicenses = $DB->count_records_sql("SELECT COUNT(clu.id) FROM {companylicense_users} clu
+            $courseobj->numlicenses = $DB->count_records_sql("SELECT COUNT(clu.id) FROM {local_iomad_company_license_users} clu
                                                    JOIN {" . $temptablename . "} tt ON (clu.userid = tt.userid)
-                                                   JOIN {companylicense} cl ON (cl.id = clu.licenseid)
+                                                   JOIN {local_iomad_company_licenses} cl ON (cl.id = clu.licenseid)
                                                    WHERE
                                                    clu.licensecourseid = :courseid
                                                    AND cl.expirydate > :timestamp",
@@ -1804,9 +1817,9 @@ class iomad {
                 'courseid' => $course->courseid,
                 'timestamp' => $timestamp,
             ]);
-            $courseobj->numused = $DB->count_records_sql("SELECT COUNT(clu.id) FROM {companylicense_users} clu
+            $courseobj->numused = $DB->count_records_sql("SELECT COUNT(clu.id) FROM {local_iomad_company_license_users} clu
                                                    JOIN {" . $temptablename . "} tt ON (clu.userid = tt.userid)
-                                                   JOIN {companylicense} cl ON (cl.id = clu.licenseid)
+                                                   JOIN {local_iomad_company_licenses} cl ON (cl.id = clu.licenseid)
                                                    WHERE
                                                    clu.licensecourseid = :courseid
                                                    AND cl.expirydate > :timestamp
@@ -1896,12 +1909,12 @@ class iomad {
 				clu.issuedate,
                 '0' as result ";
         $fromsql = " FROM {user} u,
-                     JOIN {companylicense_users} clu ON (u.id = clu.userid)
-                     JOIN {company_users} cu ON (u.id = cu.userid AND clu.userid = cu.userid)
-                     JOIN {department} d ON (cu.departmentid = d.it)
+                     JOIN {local_iomad_company_license_users} clu ON (u.id = clu.userid)
+                     JOIN {local_iomad_company_users} cu ON (u.id = cu.userid AND clu.userid = cu.userid)
+                     JOIN {local_iomad_company_departments} d ON (cu.departmentid = d.it)
                      JOIN {" . $temptablename . "} tt ON (u.id = tt.userid)
                      JOIN {course} co ON (clu.licensecourseid = co.id)
-                     JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+                     JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
 
                 WHERE $searchinfo->sqlsearch
                 AND cl.expirydate > :timestamp
@@ -1974,7 +1987,7 @@ class iomad {
         // Warning: will return UNCONFIRMED USERS!
         return $DB->get_records_sql(
             "SELECT *, 0 as depth
-                                     FROM {company}
+                                     FROM {local_iomad_companies}
                                      WHERE $select $sort",
             $params,
             $page,
@@ -2040,11 +2053,11 @@ class iomad {
                 d.name AS department,
                 cl.name AS licensename ";
         $fromsql = " FROM {user} u
-                    JOIN {companylicense_users} clu ON (u.id = clu.userid)
+                    JOIN {local_iomad_company_license_users} clu ON (u.id = clu.userid)
                     JOIN {comany_users} cu ON (u.id = cu.userid AND clu.userid = cu.userid)
-                    JOIN {department} d ON (clu.departmentid = d.id)
+                    JOIN {local_iomad_company_departments} d ON (clu.departmentid = d.id)
                     JOIN {" . $temptablename . "} tt ON (tt.userid = u.id)
-                    JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+                    JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
 
                     WHERE $searchinfo->sqlsearch
                     AND clu.licensecourseid = $courseid
@@ -2140,7 +2153,7 @@ class iomad {
                 }
             }
             // CAP_ALLOW in any role means the user has a permission, we continue only to detect prohibits.
-            $restriction = $DB->get_record('company_role_restriction',
+            $restriction = $DB->get_record('local_iomad_company_role_restrictions',
             [
                 'companyid' => $companyid,
                 'roleid' => $roleid,
@@ -2178,7 +2191,7 @@ class iomad {
 
         // If companyid supplied then check the user is a member.
         if ($companyid) {
-            if (!$DB->record_exists('company_users', ['companyid' => $companyid, 'userid' => $USER->id])) {
+            if (!$DB->record_exists('local_iomad_company_users', ['companyid' => $companyid, 'userid' => $USER->id])) {
                 return false;
             }
         } else {
@@ -2235,7 +2248,7 @@ class iomad {
 
         // Otherwise we redirect when the URL doesn't match the company URL.
         if ($rurl['host'] != $wwwroot['host']) {
-            if ($companyrec = $DB->get_record('company', ['hostname' => $rurl['host']])) {
+            if ($companyrec = $DB->get_record('local_iomad_companies', ['hostname' => $rurl['host']])) {
                 $redirecturl = new moodle_url(
                     $CFG->wwwroot . '/login/index.php',
                     [

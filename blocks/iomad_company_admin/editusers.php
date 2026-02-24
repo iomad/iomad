@@ -151,8 +151,8 @@ if (!empty($departmentid)) {
     if (!company::check_valid_department($companyid, $departmentid)) {
         throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
     }
-    $deprecord = $DB->get_record('department', ['id' => $departmentid]);
-    $selectedcompanyid = $deprecord->company;
+    $deprecord = $DB->get_record('local_iomad_company_departments', ['id' => $departmentid]);
+    $selectedcompanyid = $deprecord->companyid;
 } else {
     $selectedcompanyid = $companyid;
 }
@@ -191,7 +191,7 @@ if (!$showall &&
     $category = $DB->get_record_sql(
         "SELECT uic.id, uic.name
          FROM {user_info_category} uic
-         JOIN {company} c ON (uic.id = c.profileid)
+         JOIN {local_iomad_companies} c ON (uic.id = c.profilecategoryid)
          WHERE c.id = :companyid",
         ['companyid' => $companyid])) {
     // Get field names from company category.
@@ -210,7 +210,7 @@ if (!$showall &&
         "SELECT id
          FROM {user_info_category}
          WHERE id NOT IN (
-             SELECT profileid FROM {company}
+             SELECT profilecategoryid FROM {local_iomad_companies}
          )")) {
         foreach ($categories as $category) {
             if ($fields = $DB->get_records('user_info_field',  ['categoryid' => $category->id])) {
@@ -470,15 +470,15 @@ if ($confirmuser && confirm_sesskey()) {
 // Do we have any additional reporting fields?
 $extrafields = [];
 if (!empty(get_config('local_iomad', 'report_fields'))) {
-    $companyrec = $DB->get_record('company',  ['id' => $companyid]);
+    $companyrec = $DB->get_record('local_iomad_companies',  ['id' => $companyid]);
     foreach (explode(',', get_config('local_iomad', 'report_fields')) as $extrafield) {
         $extrafields[$extrafield] = new stdclass();
         $extrafields[$extrafield]->name = $extrafield;
         if (strpos($extrafield, 'profile_field') !== false) {
             // Its an optional profile field.
             $profilefield = $DB->get_record('user_info_field',  ['shortname' => str_replace('profile_field_', '', $extrafield)]);
-            if ($profilefield->categoryid == $companyrec->profileid ||
-                !$DB->get_record('company',  ['profileid' => $profilefield->categoryid])) {
+            if ($profilefield->categoryid == $companyrec->profilecategoryid ||
+                !$DB->get_record('local_iomad_companies',  ['profilecategoryid' => $profilefield->categoryid])) {
                 $extrafields[$extrafield]->title = $profilefield->name;
                 $extrafields[$extrafield]->fieldid = $profilefield->id;
             } else {
@@ -529,7 +529,7 @@ if (empty($showall)) {
                                                    SQL_PARAMS_NAMED,
                                                    'pcids');
         $companysql = " AND c.id = :companyid AND u.id NOT IN (
-                          SELECT userid FROM {company_users}
+                          SELECT userid FROM {local_iomad_company_users}
                           WHERE managertype = 1 AND
                           companyid {$insql}
                         )";
@@ -548,14 +548,14 @@ $selectsql = "DISTINCT " . $DB->sql_concat("u.id", $DB->sql_concat("'-'", "c.id"
               cu.educator,
               cu.suspended AS companysuspended";
 $fromsql = "{user} u
-            JOIN {company_users} cu ON (u.id = cu.userid)
-            JOIN {department} d ON (
+            JOIN {local_iomad_company_users} cu ON (u.id = cu.userid)
+            JOIN {local_iomad_company_departments} d ON (
                 cu.departmentid = d.id
-                AND cu.companyid = d.company
+                AND cu.companyid = d.companyid
             )
-            JOIN {company} c ON (
+            JOIN {local_iomad_companies} c ON (
                 cu.companyid = c.id
-                AND d.company = c.id
+                AND d.companyid = c.id
             )";
 $wheresql = $searchinfo->sqlsearch . " $sqlsearch $companysql $managertypesql";
 $sqlparams = $sqlparams + $searchinfo->searchparams + $params + ['companyid' => $selectedcompanyid];

@@ -216,7 +216,7 @@ class attendees_table extends table_sql {
     public function col_department($row) {
         global $CFG, $DB, $companyid;
 
-        $userdepartments = $DB->get_records_sql("select d.* FROM {department} d JOIN {company_users} cu ON (d.id = cu.departmentid)
+        $userdepartments = $DB->get_records_sql("select d.* FROM {local_iomad_company_departments} d JOIN {local_iomad_company_users} cu ON (d.id = cu.departmentid)
                                                  WHERE cu.userid = :userid
                                                  AND cu.companyid = :companyid",
                                                  ['userid' => $row->id,

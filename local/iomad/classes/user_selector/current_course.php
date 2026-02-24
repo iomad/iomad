@@ -111,7 +111,7 @@ class current_course extends company_base {
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM {user} u
-                 JOIN {company_users} cu ON (
+                 JOIN {local_iomad_company_users} cu ON (
                      cu.userid = u.id
                  )
                  LEFT JOIN {user_info_data} ui ON (
@@ -123,7 +123,7 @@ class current_course extends company_base {
                      ue.enrolid = e.id
                  )
                  JOIN {course} c ON (e.courseid = c.id)
-                 JOIN {local_iomad_track} lit ON (
+                 JOIN {local_iomad_tracks} lit ON (
                      c.id = lit.courseid
                      AND e.courseid = lit.courseid
                      AND cu.userid = lit.userid

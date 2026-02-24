@@ -61,7 +61,7 @@ class revoke_expired_factors extends \core\task\scheduled_task {
         // IOMAD
         // Get all of the tenants
         $configuredtenants = [];
-        $alltenants = $DB->get_records("SELECT id FROM {company} WHERE suspended = 0");
+        $alltenants = $DB->get_records("SELECT id FROM {local_iomad_companies} WHERE suspended = 0");
         foreach ($alltenants as $tenantid) {
             // If config is not set, pull out.
             $duration = get_config('factor_grace', 'graceperiod_' . $tenantid);
@@ -76,7 +76,7 @@ class revoke_expired_factors extends \core\task\scheduled_task {
                             WHERE timecreated < :revoketime
                             AND factor = :factor
                             AND userid IN (
-                                SELECT userid FROM {company_users}
+                                SELECT userid FROM {local_iomad_company_users}
                                  WHERE companyid = :companyid)";
                 $DB->execute($sql, ['timemodified' => time(), 'revoketime' => $revoketime, 'factor' => 'grace', 'companyid' => $tenantid]);
             }
@@ -93,7 +93,7 @@ class revoke_expired_factors extends \core\task\scheduled_task {
         $tenantsql = "";
         if (!empty($configuredtenants)) {
             $tenantsql = " AND userid NOT IN (
-                              SELECT userid FROM {company_users}
+                              SELECT userid FROM {local_iomad_company_users}
                               WHERE companyid NOT IN (" . implode(',', array_keys($configuredtenants)) . "))";
             $sql = "UPDATE {tool_mfa}
                         SET revoked = 1,

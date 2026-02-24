@@ -256,7 +256,7 @@ if (!empty($data)) {
             iomad::require_capability('local/report_users:redocertificates', $companycontext);
             echo $OUTPUT->header();
             foreach ($data->redo_certificates as $redocertificate) {
-                if ($trackrec = $DB->get_record('local_iomad_track', ['id' => $redocertificate])) {
+                if ($trackrec = $DB->get_record('local_iomad_tracks', ['id' => $redocertificate])) {
                     echo html_writer::start_tag('p');
                     track::delete_entry($redocertificate);
                     track::record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, true, false);
@@ -355,11 +355,11 @@ if (!empty($data)) {
         if (!empty($data->finalscore)) {
             foreach ($data->finalscore as $key => $value) {
                 if ($data->origfinalscore[$key] != $value && confirm_sesskey()) {
-                    $DB->set_field('local_iomad_track', 'finalscore', $value, ['id' => $key]);
-                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $key]);
+                    $DB->set_field('local_iomad_tracks', 'finalscore', $value, ['id' => $key]);
+                    $DB->set_field('local_iomad_tracks', 'modifiedtime', time(), ['id' => $key]);
 
                     // Re-generate the certificate.
-                    if ($trackrec = $DB->get_record('local_iomad_track', ['id' => $key])) {
+                    if ($trackrec = $DB->get_record('local_iomad_tracks', ['id' => $key])) {
                         track::delete_entry($key);
                         track::record_certificates(
                             $trackrec->courseid,
@@ -377,8 +377,8 @@ if (!empty($data)) {
                 $senttime = strtotime($value['year'] . "-" . $value['month'] . "-" . $value['day']);
 
                 if ($testtime != $senttime && confirm_sesskey()) {
-                    $DB->set_field('local_iomad_track', 'licenseallocated', $senttime, ['id' => $key]);
-                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $key]);
+                    $DB->set_field('local_iomad_tracks', 'licenseallocated', $senttime, ['id' => $key]);
+                    $DB->set_field('local_iomad_tracks', 'modifiedtime', time(), ['id' => $key]);
                 }
             }
         }
@@ -388,24 +388,24 @@ if (!empty($data)) {
                 $senttime = strtotime($value['year'] . "-" . $value['month'] . "-" . $value['day']);
 
                 if ($testtime != $senttime && confirm_sesskey()) {
-                    $DB->set_field('local_iomad_track', 'timeenrolled', $senttime, ['id' => $key]);
-                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $key]);
+                    $DB->set_field('local_iomad_tracks', 'timeenrolled', $senttime, ['id' => $key]);
+                    $DB->set_field('local_iomad_tracks', 'modifiedtime', time(), ['id' => $key]);
                 }
             }
         }
         if (!empty($data->timecompleted)) {
             foreach ($data->timecompleted as $key => $value) {
-                if ($trackrec = $DB->get_record('local_iomad_track', ['id' => $key])) {
+                if ($trackrec = $DB->get_record('local_iomad_tracks', ['id' => $key])) {
                     $testtime = strtotime("0:00", $data->origtimecompleted[$key]);
                     $senttime = strtotime($value['year'] . "-" . $value['month'] . "-" . $value['day']);
 
                     if ($testtime != $senttime && confirm_sesskey()) {
-                        $DB->set_field('local_iomad_track', 'timecompleted', $senttime, ['id' => $key]);
-                        $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $key]);
-                        if ($iomadcourseinfo = $DB->get_record('iomad_courses', ['courseid' => $trackrec->courseid])) {
+                        $DB->set_field('local_iomad_tracks', 'timecompleted', $senttime, ['id' => $key]);
+                        $DB->set_field('local_iomad_tracks', 'modifiedtime', time(), ['id' => $key]);
+                        if ($iomadcourseinfo = $DB->get_record('local_iomad_courses', ['courseid' => $trackrec->courseid])) {
                             if (!empty($iomadcourseinfo->validlength)) {
                                 $DB->set_field(
-                                    'local_iomad_track',
+                                    'local_iomad_tracks',
                                     'timeexpires',
                                     $senttime + ($iomadcourseinfo->validlength * 24 * 60 * 60),
                                     ['id' => $key]);
@@ -464,7 +464,7 @@ if (!empty($action)) {
     } else {
         if (!empty($confirm) && confirm_sesskey()) {
             if ($action == 'redocert' && !empty($redocertificate)) {
-                if ($trackrec = $DB->get_record('local_iomad_track', ['id' => $redocertificate])) {
+                if ($trackrec = $DB->get_record('local_iomad_tracks', ['id' => $redocertificate])) {
                     track::delete_entry($redocertificate);
                     if (track::record_certificates(
                         $trackrec->courseid,
@@ -548,9 +548,9 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Set the companyid.
 if ($viewchildren && $canseechildren && !empty($departmentid) && company::can_manage_department($departmentid)) {
-    $departmentrec = $DB->get_record('department', ['id' => $departmentid]);
+    $departmentrec = $DB->get_record('local_iomad_company_departments', ['id' => $departmentid]);
     $realcompanyid = $companyid;
-    $companyid = $departmentrec->company;
+    $companyid = $departmentrec->companyid;
     $realcompany = $company;
     $selectedcompany = new company($companyid);
 } else {
@@ -743,7 +743,7 @@ if (empty($courseid)) {
     // Are we wanting mandatory courses only?
     $mandatorysql = "";
     if ($mandatoryonly) {
-        $mandatorysql = " JOIN {company_course_options} cca ON (
+        $mandatorysql = " JOIN {local_iomad_company_course_options} cca ON (
                             lit.companyid = cca.companyid
                             AND lit.courseid = cca.courseid
                             AND cca.mandatory = 1)";
@@ -757,7 +757,7 @@ if (empty($courseid)) {
                   $showsuspended AS showsuspended,
                   lit.companyid AS companyid,
                   ic.licensed AS islicensed";
-    $fromsql = "{local_iomad_track} lit JOIN {iomad_courses} ic ON (lit.courseid = ic.courseid) $mandatorysql";
+    $fromsql = "{local_iomad_tracks} lit JOIN {local_iomad_courses} ic ON (lit.courseid = ic.courseid) $mandatorysql";
     $sqlparams = ['companyid' => $companyid] + $searchparams;
 
     $wheresql = "lit.companyid = :companyid $coursesearchsql GROUP BY lit.courseid, lit.coursename, lit.companyid, ic.licensed";
@@ -769,9 +769,9 @@ if (empty($courseid)) {
 
     // Set up the rest of the headers for the table.
     $haslicenses = !empty($DB->count_records_sql("SELECT COUNT(lit.id)
-                                                  FROM {local_iomad_track} lit
+                                                  FROM {local_iomad_tracks} lit
                                                   WHERE lit.courseid IN (
-                                                     SELECT courseid FROM {iomad_courses}
+                                                     SELECT courseid FROM {local_iomad_courses}
                                                      WHERE licensed = 1)
                                                   $coursesearchsql",
                                                   $sqlparams));
@@ -850,15 +850,15 @@ if (empty($courseid)) {
     // Do we have any additional reporting fields?
     $extrafields = [];
     if (!empty(get_config('local_iomad', 'report_fields'))) {
-        $companyrec = $DB->get_record('company', ['id' => $companyid]);
+        $companyrec = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
         foreach (explode(',', get_config('local_iomad', 'report_fields')) as $extrafield) {
             $extrafields[$extrafield] = new stdclass();
             $extrafields[$extrafield]->name = $extrafield;
             if (strpos($extrafield, 'profile_field') !== false) {
                 // Its an optional profile field.
                 $profilefield = $DB->get_record('user_info_field', ['shortname' => str_replace('profile_field_', '', $extrafield)]);
-                if ($profilefield->categoryid == $companyrec->profileid ||
-                    !$DB->get_record('company', ['profileid' => $profilefield->categoryid])) {
+                if ($profilefield->categoryid == $companyrec->profilecategoryid ||
+                    !$DB->get_record('local_iomad_companies', ['profilecategoryid' => $profilefield->categoryid])) {
                     $extrafields[$extrafield]->title = $profilefield->name;
                     $extrafields[$extrafield]->fieldid = $profilefield->id;
                 } else {
@@ -939,7 +939,7 @@ if (empty($courseid)) {
                                                    SQL_PARAMS_NAMED,
                                                    'pcids');
         $companysql = " AND u.id NOT IN (
-                        SELECT userid FROM {company_users}
+                        SELECT userid FROM {local_iomad_company_users}
                         WHERE managertype = 1
                         AND companyid {$insql})";
         $sqlparams = $sqlparams + $inparams;
@@ -1029,14 +1029,18 @@ if (empty($courseid)) {
                   {$fieldsql->selects}";
 
     $educatorsql = " AND cu.educator = 0";
-    if ($DB->get_record('iomad_courses', ['courseid' => $courseid, 'licensed' => 1])) {
-        $educatorsql = " AND lit.licenseid NOT IN (SELECT id FROM {companylicense} WHERE type IN (2,3))";
+    if ($DB->get_record('local_iomad_courses', ['courseid' => $courseid, 'licensed' => 1])) {
+        $educatorsql = " AND lit.licenseid NOT IN (SELECT id FROM {local_iomad_company_licenses} WHERE type IN (2,3))";
     }
     $fromsql = "{user} u
-                JOIN {local_iomad_track} lit ON (u.id = lit.userid)
-                JOIN {company_users} cu ON (u.id = cu.userid AND lit.userid = cu.userid AND lit.companyid = cu.companyid)
-                JOIN {department} d ON (cu.departmentid = d.id)
-                JOIN {iomad_courses} ic ON (lit.courseid = ic.courseid)";
+                JOIN {local_iomad_tracks} lit ON (u.id = lit.userid)
+                JOIN {local_iomad_company_users} cu ON (
+                    u.id = cu.userid
+                    AND lit.userid = cu.userid
+                    AND lit.companyid = cu.companyid
+                )
+                JOIN {local_iomad_company_departments} d ON (cu.departmentid = d.id)
+                JOIN {local_iomad_courses} ic ON (lit.courseid = ic.courseid)";
     $wheresql = $searchinfo->sqlsearch .
                 " AND u.deleted = 0 $suspendedsql $educatorsql $departmentsql $companysql $datesql $coursesql $validsql";
     $sqlparams = $sqlparams + $searchinfo->searchparams;
@@ -1100,8 +1104,8 @@ if (empty($courseid)) {
 
     // Is this licensed?
     if ($courseid == 1 ||
-        $DB->get_record('iomad_courses', ['courseid' => $courseid, 'licensed' => 1]) ||
-        $DB->count_records_sql("SELECT count(id) FROM {local_iomad_track}
+        $DB->get_record('local_iomad_courses', ['courseid' => $courseid, 'licensed' => 1]) ||
+        $DB->count_records_sql("SELECT count(id) FROM {local_iomad_tracks}
                                 WHERE courseid = :courseid
                                 AND licensename IS NOT NULL",
                                 ['courseid' => $courseid]) > 0) {
@@ -1123,16 +1127,16 @@ if (empty($courseid)) {
     // Does this course have an expiry time?
     if (($courseid == 1 &&
         $DB->get_records_sql(
-            "SELECT id FROM {iomad_courses}
+            "SELECT id FROM {local_iomad_courses}
              WHERE courseid IN (
                  SELECT courseid
-                 FROM {local_iomad_track}
+                 FROM {local_iomad_tracks}
                  WHERE companyid = :companyid
              )
              AND expireafter != 0",
             ['companyid' => $company->id])) ||
         $DB->get_record_sql(
-            "SELECT id FROM {iomad_courses}
+            "SELECT id FROM {local_iomad_courses}
              WHERE courseid = :courseid
               AND validlength > 0",
             ['courseid' => $courseid])) {
@@ -1143,16 +1147,16 @@ if (empty($courseid)) {
     // Does this course have an visible grade?
     if (($courseid == 1 &&
          $DB->get_records_sql(
-            "SELECT id FROM {iomad_courses}
+            "SELECT id FROM {local_iomad_courses}
              WHERE courseid IN (
                  SELECT courseid
-                 FROM {local_iomad_track}
+                 FROM {local_iomad_tracks}
                  WHERE companyid = :companyid
              )
              AND hasgrade = 1",
             ['companyid' => $company->id])) ||
         $DB->get_record_sql(
-            "SELECT id FROM {iomad_courses}
+            "SELECT id FROM {local_iomad_courses}
              WHERE courseid = :courseid
              AND hasgrade = 1",
             ['courseid' => $courseid])) {
@@ -1228,14 +1232,14 @@ if (empty($courseid)) {
         $totalcompleted = !empty($total) ? number_format($totalcompleted * 100 / $total, 2) : 0;
         $totalcompletedstring = get_string('percents', 'moodle', $totalcompleted);
     } else if ($showpercentage == 1) {
-        $totalcompanyusers = $DB->count_records_sql("SELECT count(DISTINCT lit.userid) FROM {company_users} lit
+        $totalcompanyusers = $DB->count_records_sql("SELECT count(DISTINCT lit.userid) FROM {local_iomad_company_users} lit
                                                      JOIN {user} u ON (lit.userid = u.id)
-                                                     JOIN {department} d ON (lit.departmentid = d.id)
-                                                     JOIN {company_users} cu ON (u.id = cu.userid
+                                                     JOIN {local_iomad_company_departments} d ON (lit.departmentid = d.id)
+                                                     JOIN {local_iomad_company_users} cu ON (u.id = cu.userid
                                                                                  AND lit.userid = cu.userid
                                                                                  AND d.id = cu.departmentid
                                                                                  AND lit.companyid = cu.companyid
-                                                                                 AND d.company = cu.companyid)
+                                                                                 AND d.companyid = cu.companyid)
                                                      WHERE u.deleted=0 $suspendedsql $educatorsql $companysql $departmentsql",
                                                      $sqlparams);
             $remainder = !empty($totalcompanyusers) ? 100 - ((($total - $totalstarted) / $total) * 100) : 0;

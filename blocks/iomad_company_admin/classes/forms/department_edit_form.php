@@ -74,7 +74,7 @@ class department_edit_form extends company_moodleform {
         $this->departmentid = $departmentid;
         $this->output = $output;
         if (!empty($departmentid)) {
-            $this->department = $DB->get_record('department', ['id' => $departmentid]);
+            $this->department = $DB->get_record('local_iomad_company_departments', ['id' => $departmentid]);
             $this->parentid = $this->department->parent;
         } else {
             $this->parentid = 0;
@@ -149,9 +149,9 @@ class department_edit_form extends company_moodleform {
         $errors = [];
 
         if ($departmentbyname = $DB->get_record(
-            'department',
+            'local_iomad_company_departments',
             [
-                'company' => $this->selectedcompany,
+                'companyid' => $this->selectedcompany,
                 'shortname' => trim($data['shortname']),
             ])) {
             if ($departmentbyname->id != $this->departmentid) {
@@ -167,3 +167,4 @@ class department_edit_form extends company_moodleform {
         return $errors;
     }
 }
+

@@ -101,8 +101,8 @@ class users_table extends table_sql {
     public function col_department($row) {
         global $DB;
 
-        $departments = $DB->get_records_sql("SELECT d.name FROM {department} d
-                                             JOIN {company_users} cu
+        $departments = $DB->get_records_sql("SELECT d.name FROM {local_iomad_company_departments} d
+                                             JOIN {local_iomad_company_users} cu
                                              ON (d.id = cu.departmentid)
                                              WHERE cu.userid = :userid
                                              AND cu.companyid = :companyid

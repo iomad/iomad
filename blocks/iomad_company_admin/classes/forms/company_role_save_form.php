@@ -95,7 +95,7 @@ class company_role_save_form extends moodleform {
 
         $errors = parent::validation($data, $files);
 
-        if ($DB->get_record('company_role_templates', ['name' => $data['name']])) {
+        if ($DB->get_record('local_iomad_company_role_templates', ['name' => $data['name']])) {
             $errors['name'] = get_string('templatenamealreadyinuse', 'block_iomad_company_admin');
         }
 

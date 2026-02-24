@@ -92,7 +92,7 @@ class add_entry_form extends moodleform {
             $errors['licenseallocated'] = get_string('licenseallocatedoutofordererror', 'block_iomad_company_admin');
         }
 
-        if ($DB->get_record('iomad_courses', ['courseid' => $data['courseid'], 'licensed' => 1]) &&
+        if ($DB->get_record('local_iomad_courses', ['courseid' => $data['courseid'], 'licensed' => 1]) &&
             empty($data['licenseallocated'])) {
             $errors['licenseallocated'] = get_string('courseislicensedrequired', 'block_iomad_company_admin');
         }

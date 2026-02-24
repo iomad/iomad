@@ -47,7 +47,7 @@ if (empty($SESSION->company)) {
     $wantedcompanyid = optional_param('id', 0, PARAM_INT);
     if (!empty($wantedcompanyid)) {
         $wantedcompanyshort = required_param('code', PARAM_CLEAN);
-        if (!$SESSION->company = $DB->get_record('company', ['id' => $wantedcompanyid, 'shortname' => $wantedcompanyshort])) {
+        if (!$SESSION->company = $DB->get_record('local_iomad_companies', ['id' => $wantedcompanyid, 'shortname' => $wantedcompanyshort])) {
              throw new moodle_exception(get_string('unknown_company', 'local_iomad_signup'));
          }
     } else {
@@ -100,12 +100,12 @@ if (empty($SESSION->wantsurl)) {
 }
 
 // Check if the company being passed is valid.
-if (!empty($wantedcompanyid) &&!$company = $DB->get_record('company', array('id'=> $wantedcompanyid, 'shortname'=>$wantedcompanyshort))) {
+if (!empty($wantedcompanyid) &&!$company = $DB->get_record('local_iomad_companies', array('id'=> $wantedcompanyid, 'shortname'=>$wantedcompanyshort))) {
     throw new moodle_exception(get_string('unknown_company', 'local_iomad_signup'));
 }
 // Check if the company can have more users?.
 if (!empty($wantedcompanyid) && $company->maxusers > 0) {
-    $currentusers = $DB->count_records('company_users', array('companyid' => $wantedcompanyid));
+    $currentusers = $DB->count_records('local_iomad_company_users', array('companyid' => $wantedcompanyid));
     if ($currentusers >= $company->maxusers) {
         throw new moodle_exception(get_string('maxuserswarning', 'local_iomad_signup', $company->maxusers));
     }
@@ -114,7 +114,7 @@ if (!empty($wantedcompanyid)) {
     $company->deptid = 0;
     $SESSION->company->deptid = 0;
     if (!empty($wanteddepartment)) {
-        if ($department=$DB->get_record('department', array('company' => $company->id, 'shortname' => urldecode($wanteddepartment)))) {
+        if ($department=$DB->get_record('local_iomad_company_departments', ['companyid' => $company->id, 'shortname' => urldecode($wanteddepartment)])) {
             $company->deptid = $department->id;
             $SESSION->company->deptid = $department->id;
         }
@@ -173,7 +173,7 @@ if ($mform_signup->is_cancelled()) {
 
     // If we don't have a company, do we have a default one set?
     if (empty($SESSION->company) && !empty(get_config('local_iomad', 'signup_company'))) {
-        if ($defaultcompany = $DB->get_record('company', array('id' => get_config('local_iomad', 'signup_company')))) {
+        if ($defaultcompany = $DB->get_record('local_iomad_companies', array('id' => get_config('local_iomad', 'signup_company')))) {
             $SESSION->company = $defaultcompany;
             $SESSION->currenteditingcompany = $defaultcompany;
         }

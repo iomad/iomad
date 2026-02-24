@@ -97,7 +97,7 @@ class company extends base {
     protected function get_all_columns(): array {
         global $DB;
 
-        $companyalias = $this->get_table_alias('company');
+        $companyalias = $this->get_table_alias('local_iomad_companies');
         $contextalias = $this->get_table_alias('context');
 
         // ID.
@@ -278,13 +278,13 @@ class company extends base {
 
         // Companyterminated.
         $columns[] = (new column(
-            'companyterminated',
+            'terminated',
             new lang_string('companyterminated', 'block_iomad_company_admin'),
             $this->get_entity_name()
         ))
             ->add_joins($this->get_joins())
             ->set_type(column::TYPE_TEXT)
-            ->add_field("{$companyalias}.companyterminated")
+            ->add_field("{$companyalias}.terminated")
             ->set_is_sortable(true);
 
         return $columns;
@@ -296,7 +296,7 @@ class company extends base {
      * @return filter[]
      */
     protected function get_all_filters(): array {
-        $companyalias = $this->get_table_alias('company');
+        $companyalias = $this->get_table_alias('local_iomad_companies');
 
         // ID.
         $filters[] = (new filter(

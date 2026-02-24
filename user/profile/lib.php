@@ -678,13 +678,13 @@ function profile_get_user_fields_with_data(int $userid): array {
     $params = array('userid' => $userid);
 
     // IOMAD - Filter the categories
-    if ($DB->get_manager()->table_exists('company')) {
+    if ($DB->get_manager()->table_exists('local_iomad_companies')) {
         if(!iomad::has_capability('block/iomad_company_admin:allcompany_user_profiles', context_system::instance())){
             $companyid = iomad::get_my_companyid(context_system::instance(), false);
             $sql .= " WHERE (uif.categoryid IN (
-                      SELECT profileid FROM {company} where id = :companyid)
+                      SELECT profilecategoryid FROM {local_iomad_companies} where id = :companyid)
                       OR uif.categoryid IN (
-                      SELECT id FROM {user_info_category} WHERE id NOT IN (SELECT profileid from {company}))) ";
+                      SELECT id FROM {user_info_category} WHERE id NOT IN (SELECT profilecategoryid from {local_iomad_companies}))) ";
             $params['companyuserid'] = $userid;
 	    $params['companyid'] = $companyid;
         }

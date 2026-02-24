@@ -133,7 +133,7 @@ class inprogress_view implements renderable, templatable {
                 $showgrade = true;
 
                 // Do we show the grade?
-                if ($DB->get_record('iomad_courses', ['courseid' => $course->id, 'hasgrade' => 0])) {
+                if ($DB->get_record('local_iomad_courses', ['courseid' => $course->id, 'hasgrade' => 0])) {
                     $showgrade = false;
                 }
 
