@@ -140,9 +140,9 @@ class company_edit_form extends company_moodleform {
         $mform->setType('companyid', PARAM_INT);
         $mform->addElement('hidden', 'currentparentid', $this->parentcompanyid);
         $mform->setType('currentparentid', PARAM_INT);
-        $mform->addElement('hidden', 'terminated');
-        $mform->setType('terminated', PARAM_INT);
-        $mform->setDefault('terminated', 0);
+        $mform->addElement('hidden', 'isterminated');
+        $mform->setType('isterminated', PARAM_INT);
+        $mform->setDefault('isterminated', 0);
 
         // If this is the first company then some extra help is displayed.
         if ($this->firstcompany) {

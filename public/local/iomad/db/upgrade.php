@@ -804,11 +804,11 @@ function xmldb_local_iomad_upgrade($oldversion) {
         // Launch rename field profilecategoryid.
         $dbman->rename_field($table, $field, 'profilecategoryid');
 
-        // Rename field companyterminated on table company to terminated.
+        // Rename field companyterminated on table company to isterminated.
         $field = new xmldb_field('companyterminated', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'suspendafter');
 
         // Launch rename field companyterminated.
-        $dbman->rename_field($table, $field, 'terminated');
+        $dbman->rename_field($table, $field, 'isterminated');
 
         // Define index shortname (unique) to be added to company.
         $index = new xmldb_index(

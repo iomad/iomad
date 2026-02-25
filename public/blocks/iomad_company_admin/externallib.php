@@ -99,9 +99,9 @@ class block_iomad_company_admin_external extends external_api {
                                 'Deprecated - Company contract is terminated when <> 0',
                                 VALUE_DEFAULT,
                                 0),
-                            'terminated' => new external_value(
+                            'isterminated' => new external_value(
                                 PARAM_INT,
-                                'Company contract is terminated when <> 0',
+                                'Company contract is isterminated when <> 0',
                                 VALUE_DEFAULT,
                                 0),
                             'theme' => new external_value(PARAM_TEXT, 'Company theme', VALUE_DEFAULT, ''),
@@ -156,8 +156,8 @@ class block_iomad_company_admin_external extends external_api {
             }
 
             // Create the company record.
-            if (empty($$company->terminated) && !empty($company->companyterminated)) {
-                $company->terminated = $company->companyterminated;
+            if (empty($company->isterminated) && !empty($company->companyterminated)) {
+                $company->isterminated = $company->companyterminated;
             }
             $companyid = $DB->insert_record('local_iomad_companies', $company);
 
@@ -249,7 +249,7 @@ class block_iomad_company_admin_external extends external_api {
                         PARAM_INT,
                         'Number of seconds after termination date to suspend the company'),
                     'companyterminated' => new external_value(PARAM_INT, ' Deprecated - Company contract is terminated when <> 0'),
-                    'terminated' => new external_value(PARAM_INT, 'Company contract is terminated when <> 0'),
+                    'isterminated' => new external_value(PARAM_INT, 'Company contract is terminated when <> 0'),
                     'theme' => new external_value(PARAM_TEXT, 'Company theme'),
                     'hostname' => new external_value(PARAM_TEXT, 'Company hostname'),
                     'maxusers' => new external_value(PARAM_INT, 'Company maximum number of users'),
@@ -452,7 +452,7 @@ It could very slow or timeout. The function is designed to search some specific 
             }
         }
 
-        $companies = $DB->get_records_select('local_iomad_companies', $sql, $sqlparams, 'id ASC', '*,terminated AS companyterminated');
+        $companies = $DB->get_records_select('local_iomad_companies', $sql, $sqlparams, 'id ASC', '*,isterminated AS companyterminated');
 
         return ['companies' => $companies, 'warnings' => $warnings];
     }
@@ -505,7 +505,7 @@ It could very slow or timeout. The function is designed to search some specific 
                                 'Deprecated - Company contract is terminated when <> 0',
                                 VALUE_DEFAULT,
                                 0),
-                            'terminated' => new external_value(
+                            'isterminated' => new external_value(
                                 PARAM_INT,
                                 'Company contract is terminated when <> 0',
                                 VALUE_DEFAULT,
@@ -573,7 +573,7 @@ It could very slow or timeout. The function is designed to search some specific 
                                 PARAM_INT,
                                 'Deprecated - Company contract is terminated when <> 0',
                                 VALUE_OPTIONAL),
-                            'terminated' => new external_value(
+                            'isterminated' => new external_value(
                                 PARAM_INT,
                                 'Company contract is terminated when <> 0',
                                 VALUE_OPTIONAL),
@@ -621,12 +621,12 @@ It could very slow or timeout. The function is designed to search some specific 
             }
 
             // Have we changed the contract end date?
-            if (empty($company->terminated) && !empty($company->companyterminated)) {
-                $company->terminated = $company->companyterminated;
+            if (empty($company->isterminated) && !empty($company->companyterminated)) {
+                $company->isterminated = $company->companyterminated;
             }
             if (!empty($company->validto)) {
-                if (!empty($oldcompany->terminated) && $company->validto > $oldcompany->validto) {
-                    $company->terminated = 0;
+                if (!empty($oldcompany->isterminated) && $company->validto > $oldcompany->validto) {
+                    $company->isterminated = 0;
                 }
             }
 

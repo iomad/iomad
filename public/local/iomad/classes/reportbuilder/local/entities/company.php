@@ -278,13 +278,13 @@ class company extends base {
 
         // Companyterminated.
         $columns[] = (new column(
-            'terminated',
+            'isterminated',
             new lang_string('companyterminated', 'block_iomad_company_admin'),
             $this->get_entity_name()
         ))
             ->add_joins($this->get_joins())
             ->set_type(column::TYPE_TEXT)
-            ->add_field("{$companyalias}.terminated")
+            ->add_field("{$companyalias}.isterminated")
             ->set_is_sortable(true);
 
         return $columns;

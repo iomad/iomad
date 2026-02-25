@@ -29,28 +29,29 @@ import {
     exception as displayException,
 } from 'core/notification';
 const selectors = {
-    showDeletecompanyform: '[data-action="show-deletecompanyform"]',
+    showDeleteclassroomform: '[data-action="show-deleteclassroomform"]',
 };
 
 export const init = () => {
-    const showDeletecompanyform = document.querySelectorAll(selectors.showDeletecompanyform);
-    if (showDeletecompanyform === null) {
+    const showDeleteclassroomform = document.querySelectorAll(selectors.showDeleteclassroomform);
+    if (showDeleteclassroomform === null) {
         return;
     }
 
-    for (let i = 0; i < showDeletecompanyform.length; i++) {
-        showDeletecompanyform[i].addEventListener('click', event => {
+    for (let i = 0; i < showDeleteclassroomform.length; i++) {
+        showDeleteclassroomform[i].addEventListener('click', event => {
             event.preventDefault();
 
-            const title = getString('deletecompany', 'block_iomad_company_admin');
+            const title = getString('classroom_delete', 'block_iomad_company_admin');
             const form = new ModalForm({
-                formClass: 'block_iomad_company_admin\\forms\\company_delete_form',
+                formClass: 'block_iomad_company_admin\\forms\\classroom_delete_form',
                 args: {
-                    companyid: showDeletecompanyform[i].getAttribute('data-companyid'),
-                    coursename: showDeletecompanyform[i].getAttribute('data-companyname'),
+                    classroomid: showDeleteclassroomform[i].getAttribute('data-classroomid'),
+                    companyid: showDeleteclassroomform[i].getAttribute('data-companyid'),
+                    classroomname: showDeleteclassroomform[i].getAttribute('data-classroomname'),
                 },
                 modalConfig: {title},
-                returnFocus: showDeletecompanyform[i],
+                returnFocus: showDeleteclassroomform[i],
             });
             form.show().then(() => {
                 addToastRegion(form.modal.getRoot()[0]);
@@ -63,7 +64,9 @@ export const init = () => {
                 const regions = modalElement.querySelectorAll('.toast-wrapper');
                 regions.forEach((reg) => reg.remove());
                 if (e.detail.result) {
-                    if (e.detail.result == false) {
+                    if (e.detail.result == false
+                        && e.detail.returnmessage != ''
+                    ) {
                         toastAdd(e.detail.returnmessage,
                             {
                                 type: 'warning',

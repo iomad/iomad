@@ -149,7 +149,11 @@ class teaching_locations_table extends table_sql {
                     ]
                 ),
                 [
-                    'href' => $deleteurl,
+                    'href' => '#',
+                    'data-action' => 'show-deleteclassroomform',
+                    'data-classroomid' => $row->id,
+                    'data-companyid' => $row->companyid,
+                    'data-classroomname' => format_string($row->name),
                 ]
             );
         }
@@ -170,7 +174,10 @@ class teaching_locations_table extends table_sql {
                     ]
                 ),
                 [
-                    'href' => $editurl,
+                    'href' => '#',
+                    'data-action' => 'show-editclassroomform',
+                    'data-classroomid' => $row->id,
+                    'data-companyid' => $row->companyid,
                 ]
             );
         }

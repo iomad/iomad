@@ -174,7 +174,7 @@ class cron_task extends scheduled_task {
         // Terminate any companies which need it.
         mtrace("Terminating any companies which need it");
         if ($terminatecompanies = $DB->get_records_sql("SELECT * FROM {local_iomad_companies}
-                                                        WHERE terminated = 0
+                                                        WHERE isterminated = 0
                                                         AND validto IS NOT NULL
                                                         AND suspendafter > 0
                                                         AND validto + suspendafter < :runtime",
