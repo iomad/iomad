@@ -26,7 +26,6 @@
 namespace block_iomad_company_admin\forms;
 
 use context;
-use context_system;
 use core_form\dynamic_form;
 use html_writer;
 use local_iomad\custom_context\context_company;
@@ -88,7 +87,6 @@ class course_delete_form extends dynamic_form {
                 get_string('destroy', 'block_iomad_company_admin'));
         }
     }
-
 
     /**
      * Process the form submission, used if form was submitted via AJAX.

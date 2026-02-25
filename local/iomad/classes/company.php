@@ -3988,8 +3988,8 @@ class company {
                 }
             }
 
-            // Set the terminated field for the company.
-            $DB->set_field('local_iomad_companies', 'terminated', true, ['id' => $this->id]);
+            // Set the isterminated field for the company.
+            $DB->set_field('local_iomad_companies', 'isterminated', true, ['id' => $this->id]);
 
             // Deal with local_iomad_track lines too.
             $DB->set_field('local_iomad_tracks', 'timeenrolled', $runtime, ['companyid' => $this->id, 'timeenrolled' => null]);

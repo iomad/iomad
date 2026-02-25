@@ -29,28 +29,35 @@ import {
     exception as displayException,
 } from 'core/notification';
 const selectors = {
-    showDeletecompanyform: '[data-action="show-deletecompanyform"]',
+    showSuspendcompanyform: '[data-action="show-suspendcompanyform"]',
 };
 
 export const init = () => {
-    const showDeletecompanyform = document.querySelectorAll(selectors.showDeletecompanyform);
-    if (showDeletecompanyform === null) {
+    const showSuspendcompanyform = document.querySelectorAll(selectors.showSuspendcompanyform);
+    if (showSuspendcompanyform === null) {
         return;
     }
 
-    for (let i = 0; i < showDeletecompanyform.length; i++) {
-        showDeletecompanyform[i].addEventListener('click', event => {
+    for (let i = 0; i < showSuspendcompanyform.length; i++) {
+        showSuspendcompanyform[i].addEventListener('click', event => {
             event.preventDefault();
 
-            const title = getString('deletecompany', 'block_iomad_company_admin');
+            // What title are we showing?
+            var suspended = showSuspendcompanyform[i].getAttribute('data-suspended');
+            if (suspended == 0) {
+                var title = getString('suspendcompany', 'block_iomad_company_admin');
+            } else {
+                var title = getString('unsuspendcompany', 'block_iomad_company_admin');
+            }
             const form = new ModalForm({
-                formClass: 'block_iomad_company_admin\\forms\\company_delete_form',
+                formClass: 'block_iomad_company_admin\\forms\\company_suspend_form',
                 args: {
-                    companyid: showDeletecompanyform[i].getAttribute('data-companyid'),
-                    coursename: showDeletecompanyform[i].getAttribute('data-companyname'),
+                    companyid: showSuspendcompanyform[i].getAttribute('data-companyid'),
+                    companyname: showSuspendcompanyform[i].getAttribute('data-companyname'),
+                    suspended: showSuspendcompanyform[i].getAttribute('data-suspended'),
                 },
                 modalConfig: {title},
-                returnFocus: showDeletecompanyform[i],
+                returnFocus: showSuspendcompanyform[i],
             });
             form.show().then(() => {
                 addToastRegion(form.modal.getRoot()[0]);

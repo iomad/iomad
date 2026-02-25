@@ -37,9 +37,6 @@ require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
 require_once(__DIR__ . '/lib.php');
 
-$delete = optional_param('delete', 0, PARAM_INT);
-$suspend = optional_param('suspend', 0, PARAM_INT);
-$unsuspend = optional_param('unsuspend', 0, PARAM_INT);
 $enableecommerce = optional_param('enableecommerce', 0, PARAM_INT);
 $disableecommerce = optional_param('disableecommerce', 0, PARAM_INT);
 $showsuspended = optional_param('showsuspended', 0, PARAM_INT);
@@ -61,10 +58,8 @@ $custom1 = optional_param('ccustom1', '', PARAM_CLEAN);
 $custom2 = optional_param('ccustom2', '', PARAM_CLEAN);
 $custom3 = optional_param('ccustom3', '', PARAM_CLEAN);
 $showchild = optional_param('showchild', 1, PARAM_INT);
-$resetbutton = optional_param('resetbutton', '', PARAM_CLEAN);
 
 $params = [
-    'suspend' => $suspend ? $suspend : $unsuspend,
     'showsuspended' => $showsuspended,
     'confirm' => $confirm,
     'confirmcompany' => $confirmcompany,
@@ -117,6 +112,7 @@ $PAGE->set_heading($linktext);
 
 // Add the modal forms.
 $PAGE->requires->js_call_amd('block_iomad_company_admin/delete_company', 'init');
+$PAGE->requires->js_call_amd('block_iomad_company_admin/suspend_company', 'init');
 
 // Log this page view.
 dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
@@ -206,115 +202,8 @@ $strcreatechild = html_writer::tag(
     ]
 );
 
-// Reset form?
-if ($resetbutton) {
-    redirect(new moodle_url('/blocks/iomad_company_admin/editcompanies.php'));
-}
-
-// Are we deleting something?
-if (!empty($delete) && confirm_sesskey()) {
-    iomad::require_capability('block/iomad_company_admin:company_delete', $context);
-    $deleteform = new company_delete_form($baseurl, $delete);
-    if (!$deleteform->is_cancelled()) {
-        // If we got something back from the form - do the action.
-        if ($deletedata = $deleteform->get_data()) {
-            // Create an event for this.  This handles the actual lifting.
-            $eventother = ['companyid' => $delete];
-            $event = company_deleted::create([
-                'context' => $context,
-                'objectid' => $delete,
-                'userid' => $USER->id,
-                'other' => $eventother,
-            ]);
-            $event->trigger();
-
-            notification::success(get_string('companydeletescheduled', 'block_iomad_company_admin'));
-        } else {
-            // Display the delete form.
-            echo $OUTPUT->header();
-            echo $deleteform->display();
-            echo $OUTPUT->footer();
-            die;
-        }
-    }
-}
-
-// Are we suspending a tenant?
-if ($suspend && confirm_sesskey()) {
-
-    // Suspend a company, after confirmation.
-    $company = $DB->get_record('local_iomad_companies', ['id' => $suspend], '*', MUST_EXIST);
-    if ($confirm != md5($suspend)) {
-        $fullname = $company->name;
-        echo $OUTPUT->header();
-        echo $OUTPUT->heading(get_string('suspendcompany', 'block_iomad_company_admin'). " " . $fullname);
-        $optionsyes = [
-            'suspend' => $suspend,
-            'confirm' => md5($suspend),
-            'showsuspended' => $showsuspended,
-            'sesskey' => sesskey(),
-        ];
-
-        echo $OUTPUT->confirm(get_string('suspendcompanycheckfull', 'block_iomad_company_admin', "'$fullname'"),
-                              new moodle_url('editcompanies.php', $optionsyes), 'editcompanies.php');
-        echo $OUTPUT->footer();
-        die;
-    } else {
-        // Suspend the company
-        // Create an event for this.  This handles the actual lifting.
-        $eventother = ['companyid' => $company->id];
-        $event = company_suspended::create([
-            'context' => context_system::instance(),
-            'objectid' => $company->id,
-            'userid' => $USER->id,
-            'other' => $eventother,
-        ]);
-        $event->trigger();
-        $returnurl->param('suspend', 0);
-        $returnurl->param('unsuspend', 0);
-        $returnurl->param('showsuspended', $showsuspended);
-        redirect($returnurl);
-        die;
-    }
-} else if ($unsuspend && confirm_sesskey()) {
-
-    // Unsuspends a selected company, after confirmation.
-    $company = $DB->get_record('local_iomad_companies', ['id' => $unsuspend], '*', MUST_EXIST);
-    if (!empty($company->parentid) && $DB->get_record('local_iomad_companies', ['id' => $company->parentid, 'suspended' => 1])) {
-        throw new moodle_exception('parentcompanysuspended', 'block_iomad_company_admin');
-    }
-
-    if ($confirm != md5($unsuspend)) {
-        $fullname = $company->name;
-        echo $OUTPUT->header();
-        echo $OUTPUT->heading(get_string('unsuspendcompany', 'block_iomad_company_admin'). " " . $fullname);
-        $optionsno = ['unsuspend' => $unsuspend,
-                            'confirm' => md5($unsuspend),
-                            'showsuspended' => $showsuspended,
-                            'sesskey' => sesskey()];
-        echo $OUTPUT->confirm(get_string('unsuspendcompanycheckfull', 'block_iomad_company_admin', "'$fullname'"),
-                              new moodle_url('editcompanies.php', $optionsno), 'editcompanies.php');
-        echo $OUTPUT->footer();
-        die;
-    } else {
-        // Unsuspend the company
-        // Create an event for this.  This handles the actual lifting.
-        $eventother = ['companyid' => $company->id];
-        $event = company_unsuspended::create([
-            'context' => context_system::instance(),
-            'objectid' => $company->id,
-            'userid' => $USER->id,
-            'other' => $eventother,
-        ]);
-        $event->trigger();
-        $returnurl->param('unsuspend', 0);
-        $returnurl->param('suspend', 0);
-        $returnurl->param('showsuspended', $showsuspended);
-        redirect($returnurl);
-        die;
-    }
-
-} else if ($enableecommerce && confirm_sesskey()) {
+// Process any incoming actions.
+if ($enableecommerce && confirm_sesskey()) {
 
     // Enables ecommerce for a selected company.
     $company = $DB->get_record('local_iomad_companies', ['id' => $enableecommerce], '*', MUST_EXIST);
@@ -557,7 +446,11 @@ if ($companies) {
                         $strunsuspend,
                         [
                             'role' => 'button',
-                            'href' => $suspendurl,
+                            'href' => '#',
+                            'data-action' => 'show-suspendcompanyform',
+                            'data-companyid' => $company->id,
+                            'data-suspended' => $company->suspended,
+                            'data-companyname' => format_string($company->name),
                         ]);
                 }
             } else if (iomad::has_capability('block/iomad_company_admin:suspendcompanies', $companycontext)) {
@@ -572,7 +465,11 @@ if ($companies) {
                         $strsuspend,
                         [
                             'role' => 'button',
-                            'href' => $suspendurl,
+                            'href' => '#',
+                            'data-action' => 'show-suspendcompanyform',
+                            'data-companyid' => $company->id,
+                            'data-suspended' => $company->suspended,
+                            'data-companyname' => format_string($company->name),
                         ]);
                 }
             }

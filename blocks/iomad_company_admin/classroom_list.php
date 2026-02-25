@@ -70,6 +70,10 @@ $PAGE->set_title($linktext);
 $PAGE->set_heading(get_string('classrooms_for', 'block_iomad_company_admin', $company->get_name()));
 $PAGE->navbar->add($linktext, $linkurl);
 
+// Add the modal forms.
+$PAGE->requires->js_call_amd('block_iomad_company_admin/edit_classroom', 'init');
+$PAGE->requires->js_call_amd('block_iomad_company_admin/delete_classroom', 'init');
+
 // Log this page view.
 dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
@@ -86,51 +90,21 @@ $baseurl = new moodle_url(
 );
 $returnurl = $baseurl;
 
-// Handle any deletion requests.
-if ($delete && confirm_sesskey()) {
-
-    // Sanity checking.
-    iomad::require_capability('block/iomad_company_admin:classrooms_delete', $companycontext);
-    $classroom = $DB->get_record('local_iomad_training_locations', ['id' => $delete], '*', MUST_EXIST);
-
-    // Are we showing the confirmation page?
-    if ($confirm != md5($delete)) {
-        echo $OUTPUT->header();
-        $name = $classroom->name;
-        echo $OUTPUT->heading(get_string('classroom_delete', 'block_iomad_company_admin'), 2, 'headingblock header');
-        $optionsyes = ['delete' => $delete, 'confirm' => md5($delete), 'sesskey ' => sesskey()];
-        echo $OUTPUT->confirm(get_string('classroom_delete_checkfull', 'block_iomad_company_admin', "'$name'"),
-                              new moodle_url('classroom_list.php', $optionsyes),
-                              'classroom_list.php');
-        echo $OUTPUT->footer();
-        die;
-    } else if (data_submitted()) {
-        // Do the deletion.
-        $transaction = $DB->start_delegated_transaction();
-
-        if ($DB->delete_records('local_iomad_training_locations', ['id' => $delete])) {
-            // Worked - commit and redirect with a message.
-            $transaction->allow_commit();
-            redirect($returnurl, get_string('classroomdeletedok', 'block_iomad_company_admin'), null, notification::NOTIFY_SUCCESS);
-            die;
-        } else {
-            // Failed - roll back and display a message.
-            $transaction->rollback();
-            echo $OUTPUT->header();
-            redirect($returnurl, get_string('deletednot', '', $classroom->name), null, notification::NOTIFY_ERROR);
-            die;
-        }
-
-        // Something went wrong - roll back.
-        $transaction->rollback();
-    }
-}
-
 // Set up the page buttons.
 $buttons = "";
 if (iomad::has_capability('block/iomad_company_admin:classrooms_add', $companycontext)) {
-    $linkurl = new moodle_url('/blocks/iomad_company_admin/classroom_edit_form.php');
-    $buttons = $OUTPUT->single_button($linkurl, get_string('classrooms_add', 'block_iomad_company_admin'), 'get');
+    //$linkurl = new moodle_url('/blocks/iomad_company_admin/classroom_edit_form.php');
+    //$linkurl = new moodle_url('#', ['data-action' => 'show-editclassroomform', 'data-companyid' => $companyid]);
+    $buttons = html_writer::tag(
+        'a',
+        get_string('classrooms_add', 'block_iomad_company_admin'),
+        [
+            'role' => 'button',
+            'class' => 'btn btn-secondary',
+            'href' => '#',
+            'data-action' => 'show-editclassroomform',
+            'data-companyid' => $companyid,
+        ]);
 }
 $PAGE->set_button($buttons);
 
@@ -188,13 +162,6 @@ $table->define_headers($tableheaders);
 $table->sort_default_column = 'name DESC';
 $table->no_sorting('actions');
 $table->no_sorting('address');
-
-// Conditionally add a button to add a new location.
-if (iomad::has_capability('block/iomad_company_admin:classrooms_add', $companycontext)) {
-    $buttonlink = new moodle_url($CFG->wwwroot . "/blocks/iomad_company_admin/classroom_edit_form.php");
-    $buttoncaption = get_string('classrooms_add', 'block_iomad_company_admin');
-    $PAGE->set_button($OUTPUT->single_button($buttonlink, $buttoncaption, 'get'));
-}
 
 // Display the page.
 echo $OUTPUT->header();

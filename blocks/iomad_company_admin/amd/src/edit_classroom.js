@@ -14,7 +14,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * IOMAD dashboard delete company Modal form.
+ * IOMAD dashboard clone course Modal form.
  *
  * @module     block_iomad_company_admin
  * @copyright  2026 E-Learn Design
@@ -29,28 +29,33 @@ import {
     exception as displayException,
 } from 'core/notification';
 const selectors = {
-    showDeletecompanyform: '[data-action="show-deletecompanyform"]',
+    showEditclassroomform: '[data-action="show-editclassroomform"]',
 };
 
 export const init = () => {
-    const showDeletecompanyform = document.querySelectorAll(selectors.showDeletecompanyform);
-    if (showDeletecompanyform === null) {
+    const showEditclassroomform = document.querySelectorAll(selectors.showEditclassroomform);
+    if (showEditclassroomform === null) {
         return;
     }
 
-    for (let i = 0; i < showDeletecompanyform.length; i++) {
-        showDeletecompanyform[i].addEventListener('click', event => {
+    for (let i = 0; i < showEditclassroomform.length; i++) {
+        showEditclassroomform[i].addEventListener('click', event => {
             event.preventDefault();
 
-            const title = getString('deletecompany', 'block_iomad_company_admin');
+            var existing = showEditclassroomform[i].getAttribute('data-classroomid');
+            if (existing == 0) {
+                var title = getString('classrooms_add', 'block_iomad_company_admin');
+            } else {
+                var title = getString('classrooms_edit', 'block_iomad_company_admin');
+            }
             const form = new ModalForm({
-                formClass: 'block_iomad_company_admin\\forms\\company_delete_form',
+                formClass: 'block_iomad_company_admin\\forms\\classroom_edit_form',
                 args: {
-                    companyid: showDeletecompanyform[i].getAttribute('data-companyid'),
-                    coursename: showDeletecompanyform[i].getAttribute('data-companyname'),
+                    companyid: showEditclassroomform[i].getAttribute('data-companyid'),
+                    id: showEditclassroomform[i].getAttribute('data-classroomid'),
                 },
                 modalConfig: {title},
-                returnFocus: showDeletecompanyform[i],
+                returnFocus: showEditclassroomform[i],
             });
             form.show().then(() => {
                 addToastRegion(form.modal.getRoot()[0]);
