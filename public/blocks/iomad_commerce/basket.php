@@ -60,11 +60,11 @@ if (!empty($SESSION->basketid)) {
         // check that the record to be removed is on the current user's basket
         // (and not on an invoice or on somebody else's basket).
         if ($DB->record_exists_sql("SELECT ii.id
-                                      FROM {invoiceitem} ii
+                                      FROM {block_iomad_commerce_invoice_items} ii
                                      WHERE ii.id = :toberemoved
                                        AND
                                     EXISTS ( SELECT id
-                                             FROM {invoice} i
+                                             FROM {block_iomad_commerce_invoices} i
                                              WHERE i.id = :basketid
                                              AND i.status = :status
                                              AND i.id = ii.invoiceid
@@ -74,7 +74,7 @@ if (!empty($SESSION->basketid)) {
                                     'toberemoved' => $remove])) {
 
             // The remove it.
-            $DB->delete_records('invoiceitem', ['id' => $remove]);
+            $DB->delete_records('block_iomad_commerce_invoice_items', ['id' => $remove]);
         }
     }
 

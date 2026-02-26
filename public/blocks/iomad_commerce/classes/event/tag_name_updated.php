@@ -45,7 +45,7 @@ class tag_name_updated extends base {
     protected function init() {
         $this->data['crud'] = 'u';
         $this->data['edulevel'] = self::LEVEL_OTHER;
-        $this->data['objecttable'] = 'shoptag';
+        $this->data['objecttable'] = 'block_iomad_commerce_shoptags';
     }
 
     /**

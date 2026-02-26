@@ -27,6 +27,7 @@ namespace block_iomad_commerce\output;
 
 use block_iomad_commerce\event\course_shoptag_deleted;
 use block_iomad_commerce\event\course_shoptag_created;
+use context_system;
 use core_external;
 use local_iomad\custom_context\context_company;
 use local_iomad\iomad;
@@ -121,7 +122,7 @@ class course_shoptag_editable extends \core\output\inplace_editable {
         $itemid = array_map(fn($v) => clean_param($v, PARAM_INT), json_decode($newvalue));
 
         // Define the company id.
-        $companyid = iomad::get_my_companyid($context, true);
+        $companyid = iomad::get_my_companyid(context_system::instance(), true);
 
         // Define the context.
         $context = context_company::instance($companyid);
@@ -142,14 +143,14 @@ class course_shoptag_editable extends \core\output\inplace_editable {
 
         // Delete records which where the shop tag has been removed from the item.
         $params['shoptagid'] = $shoptagid;
-        if ($records = $DB->get_records_sql("SELECT id FROM {course_shoptag}
+        if ($records = $DB->get_records_sql("SELECT id FROM {block_iomad_commerce_product_shoptags}
                                              WHERE shoptagid = :shoptagid
                                              $sql",
                                             $params)) {
 
             // Delete these records.
             foreach ($records as $record) {
-                $DB->delete_records('course_shoptag', ['id' => $record->id]);
+                $DB->delete_records('block_iomad_commerce_product_shoptags', ['id' => $record->id]);
 
                 // Create a event and trigger it.
                 $event = course_shoptag_deleted::create(['context' => $context,
@@ -161,7 +162,7 @@ class course_shoptag_editable extends \core\output\inplace_editable {
 
         // Create records which don't exist for the shop items which have been assigned the shop tag.
         foreach ($itemid as $i) {
-            if (!$DB->record_exists('course_shoptag', ['shoptagid' => $shoptagid, 'itemid' => $i])) {
+            if (!$DB->record_exists('block_iomad_commerce_product_shoptags', ['shoptagid' => $shoptagid, 'itemid' => $i])) {
 
                 // Create a object for the new record.
                 $record = (object) [];
@@ -169,7 +170,7 @@ class course_shoptag_editable extends \core\output\inplace_editable {
                 $record->itemid = $i;
 
                 // Create the record and return the id.
-                $newid = $DB->insert_record('course_shoptag', $record, true);
+                $newid = $DB->insert_record('block_iomad_commerce_product_shoptags', $record, true);
 
                 // Create a event with data for the 'other' parameter and then trigger the event.
                 $eventother = ['companyid' => $companyid, 'itemid' => $i];
@@ -182,8 +183,8 @@ class course_shoptag_editable extends \core\output\inplace_editable {
         }
 
         // Define variables to be passed back to the class.
-        $assignableitems = $DB->get_records_menu('course_shopsettings', ['companyid' => $companyid], 'name', 'id, name');
-        $name = $DB->get_record('shoptag', ['id' => $shoptagid])->name;
+        $assignableitems = $DB->get_records_menu('block_iomad_commerce_products', ['companyid' => $companyid], 'name', 'id, name');
+        $name = $DB->get_record('block_iomad_commerce_shoptags', ['id' => $shoptagid])->name;
         return new self($companyid, $shoptagid, $itemid, $assignableitems, $name);
     }
 }

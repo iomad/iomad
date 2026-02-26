@@ -58,7 +58,7 @@ class provider implements
      */
     public static function get_metadata(collection $collection): collection {
         $collection->add_database_table(
-            'invoice',
+            'block_iomad_commerce_invoices',
             [
                 'id' => 'privacy:metadata:invoice:id',
                 'reference' => 'privacy:metadata:invoice:reference',
@@ -78,7 +78,7 @@ class provider implements
                 'lastname' => 'privacy:metadata:invoice:lastname',
                 'date' => 'privacy:metadata:invoice:date',
             ],
-            'privacy:metadata:invoice'
+            'privacy:metadata:block_iomad_commerce_invoices'
         );
 
         return $collection;
@@ -123,7 +123,7 @@ class provider implements
         $context = context_system::instance();
 
         // Get the invoice information.
-        if ($invoices = $DB->get_records('invoice', ['userid' => $user->id])) {
+        if ($invoices = $DB->get_records('block_iomad_commerce_invoices', ['userid' => $user->id])) {
             $invoicesout = (object) [];
             $invoicesout->invoices = $invoices;
             writer::with_context($context)->export_data([get_string('pluginname', 'block_iomad_commerce')], $invoicesout);
@@ -141,7 +141,7 @@ class provider implements
         if (empty($context)) {
             return;
         }
-        $DB->delete_records('invoice');
+        $DB->delete_records('block_iomad_commerce_invoices');
     }
 
     /**
@@ -157,7 +157,7 @@ class provider implements
         }
 
         $userid = $contextlist->get_user()->id;
-        $DB->delete_records('invoice', ['userid' => $userid]);
+        $DB->delete_records('block_iomad_commerce_invoices', ['userid' => $userid]);
     }
 
     /**
@@ -178,7 +178,7 @@ class provider implements
         ];
 
         $sql = "SELECT i.userid as userid
-                  FROM {invoice} i
+                  FROM {block_iomad_commerce_invoices} i
                   JOIN {context} ctx
                        ON ctx.instanceid = i.userid
                        AND ctx.contextlevel = :contextuser
@@ -198,7 +198,7 @@ class provider implements
         $context = $userlist->get_context();
 
         if ($context instanceof context_user) {
-            $DB->delete_records('invoice', ['userid' => $context->id]);
+            $DB->delete_records('block_iomad_commerce_invoices', ['userid' => $context->id]);
         }
     }
 }

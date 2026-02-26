@@ -48,14 +48,14 @@ $context = $PAGE->context;
 
 // Get or create basket.
 if (!empty($SESSION->basketid)) {
-    if (!$basket = $DB->get_record('invoice',
+    if (!$basket = $DB->get_record('block_iomad_commerce_invoices',
                                    ['id' => $SESSION->basketid,
                                     'status' => block_iomad_commerce\helper::INVOICESTATUS_BASKET])) {
         $basket = (object) [];
         $basket->userid = $USER->id;
         $basket->status = block_iomad_commerce\helper::INVOICESTATUS_BASKET;
         $basket->date = time();
-        $basket->id = $DB->insert_record('invoice', $basket, true);
+        $basket->id = $DB->insert_record('block_iomad_commerce_invoices', $basket, true);
         $SESSION->basketid = $basket->id;
     }
 } else {
@@ -63,7 +63,7 @@ if (!empty($SESSION->basketid)) {
     $basket->userid = $USER->id;
     $basket->status = block_iomad_commerce\helper::INVOICESTATUS_BASKET;
     $basket->date = time();
-    $basket->id = $DB->insert_record('invoice', $basket, true);
+    $basket->id = $DB->insert_record('block_iomad_commerce_invoices', $basket, true);
     $SESSION->basketid = $basket->id;
 }
 
@@ -90,7 +90,7 @@ if ($nlicenses) {
 } else {
 
     // Single purchase.
-    if ($course = $DB->get_record('course_shopsettings', ['id' => $itemid], '*', MUST_EXIST)) {
+    if ($course = $DB->get_record('block_iomad_commerce_products', ['id' => $itemid], '*', MUST_EXIST)) {
         $invoiceitem->currency = $course->single_purchase_currency;
         $invoiceitem->price = $course->single_purchase_price;
         $invoiceitem->invoiceableitemtype = 'singlepurchase';
@@ -102,7 +102,7 @@ if ($nlicenses) {
 }
 
 // Add the new invoice item.
-$DB->insert_record('invoiceitem', $invoiceitem);
+$DB->insert_record('block_iomad_commerce_invoice_items', $invoiceitem);
 
 // Redirect to the user's basket.
 redirect(new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/basket.php'));

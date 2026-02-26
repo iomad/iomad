@@ -26,7 +26,7 @@
 /**
  * IOMAD eCommerce block upgrade function
  *
- * @param [type] $oldversion
+ * @param int $oldversion
  * @return void
  */
 function xmldb_block_iomad_commerce_upgrade($oldversion) {
@@ -34,91 +34,6 @@ function xmldb_block_iomad_commerce_upgrade($oldversion) {
 
     $result = true;
     $dbman = $DB->get_manager();
-
-    if ($oldversion < 2012012800) {
-
-        // Changing type of field invoiceableitemtype on table invoiceitem to char.
-        $table = new xmldb_table('invoiceitem');
-        $field = new xmldb_field('invoiceableitemtype',
-                                  XMLDB_TYPE_CHAR,
-                                  '20',
-                                  null,
-                                  XMLDB_NOTNULL,
-                                  null,
-                                  null,
-                                  'invoiceableitemid');
-
-        // Launch change of type for field invoiceableitemtype.
-        $dbman->change_field_type($table, $field);
-
-        // Iomad_commerce savepoint reached.
-        upgrade_block_savepoint(true, 2012012800, 'iomad_commerce');
-    }
-
-    if ($oldversion < 2012012801) {
-
-        // Define field date to be added to invoice.
-        $table = new xmldb_table('invoice');
-        $field = new xmldb_field('date', XMLDB_TYPE_INTEGER, '20', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '0', 'pp_reason');
-
-        // Conditionally launch add field date.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Iomad_commerce savepoint reached.
-        upgrade_block_savepoint(true, 2012012801, 'iomad_commerce');
-    }
-
-    if ($oldversion < 2012012802) {
-
-        // Define field single_purchase_shelflife to be added to course_shopsettings.
-        $table = new xmldb_table('course_shopsettings');
-        $field = new xmldb_field('single_purchase_shelflife',
-                                 XMLDB_TYPE_INTEGER,
-                                 '20',
-                                 XMLDB_UNSIGNED,
-                                 XMLDB_NOTNULL,
-                                 null,
-                                 '0',
-                                 'single_purchase_validlength');
-
-        // Conditionally launch add field single_purchase_shelflife.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Iomad_commerce savepoint reached.
-        upgrade_block_savepoint(true, 2012012802, 'iomad_commerce');
-    }
-
-    if ($oldversion < 2017011000) {
-
-        // Define field state to be added to invoice.
-        $table = new xmldb_table('invoice');
-        $field = new xmldb_field('state', XMLDB_TYPE_CHAR, '120', null, null, null, null, 'city');
-
-        // Conditionally launch add field state.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Iomad_commerce savepoint reached.
-        upgrade_block_savepoint(true, 2017011000, 'iomad_commerce');
-    }
-
-    if ($oldversion < 2017030700) {
-
-        // Changing type of field company on table invoice to char.
-        $table = new xmldb_table('invoice');
-        $field = new xmldb_field('company', XMLDB_TYPE_CHAR, '50', null, null, null, null, 'pp_payerstatus');
-
-        // Launch change of type for field company.
-        $dbman->change_field_type($table, $field);
-
-        // Iomad_commerce savepoint reached.
-        upgrade_block_savepoint(true, 2017030700, 'iomad_commerce');
-    }
 
     if ($oldversion < 2023021000) {
 
@@ -500,7 +415,7 @@ function xmldb_block_iomad_commerce_upgrade($oldversion) {
             $dbman->add_field($table, $field);
         }
 
-        // Rename field itemid on table course_shoptag to NEWNAMEGOESHERE.
+        // Rename field courseid on table course_shoptag to itemid.
         $table = new xmldb_table('course_shoptag');
         $field = new xmldb_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, 'id');
 
@@ -594,6 +509,271 @@ function xmldb_block_iomad_commerce_upgrade($oldversion) {
 
         // Iomad_commerce savepoint reached.
         upgrade_block_savepoint(true, 2026013100, 'iomad_commerce');
+    }
+
+    if ($oldversion < 2026022600) {
+
+        // Invoiceitem table restructure.
+        $table = new xmldb_table('invoiceitem');
+
+        // Define key invoiceid (foreign) to be dropped form invoiceitem.
+        $key = new xmldb_key('invoiceid', XMLDB_KEY_FOREIGN, ['invoiceid'], 'invoice', ['id']);
+
+        // Launch drop key invoiceid.
+        $dbman->drop_key($table, $key);
+
+        // Define key invoiceableitemid (foreign) to be dropped form invoiceitem.
+        $key = new xmldb_key('invoiceableitemid', XMLDB_KEY_FOREIGN, ['invoiceableitemid'], 'course_shopsettings', ['id']);
+
+        // Launch drop key invoiceableitemid.
+        $dbman->drop_key($table, $key);
+
+        // Launch rename table to block_iomad_commerce_invoice_items.
+        $dbman->rename_table($table, 'block_iomad_commerce_invoice_items');
+
+        // Course_shopblockprice table restructure.
+        $table = new xmldb_table('course_shopblockprice');
+
+        // Define key itemid (foreign) to be dropped form course_shopblockprice.
+        $key = new xmldb_key('itemid', XMLDB_KEY_FOREIGN, ['itemid'], 'course_shopsettings', ['id']);
+
+        // Launch drop key itemid.
+        $dbman->drop_key($table, $key);
+
+        // Launch rename table to block_iomad_commerce_product_blockprices.
+        $dbman->rename_table($table, 'block_iomad_commerce_product_blockprices');
+
+        // Course_shoptag table restructure.
+        $table = new xmldb_table('course_shoptag');
+
+        // Define key shoptagid (foreign) to be dropped form course_shoptag.
+        $key = new xmldb_key('shoptagid', XMLDB_KEY_FOREIGN, ['shoptagid'], 'shoptag', ['id']);
+
+        // Launch drop key shoptagid.
+        $dbman->drop_key($table, $key);
+
+        // Define key itemid (foreign) to be dropped form course_shoptag.
+        $key = new xmldb_key('itemid', XMLDB_KEY_FOREIGN, ['itemid'], 'course_shopsettings', ['id']);
+
+        // Launch drop key itemid.
+        $dbman->drop_key($table, $key);
+
+        // Launch rename table to block_iomad_commerce_product_shoptags.
+        $dbman->rename_table($table, 'block_iomad_commerce_product_shoptags');
+
+        // Shoptag table restructure.
+        $table = new xmldb_table('shoptag');
+
+        // Define key fk_companyid (foreign) to be added to shoptag.
+        $key = new xmldb_key(
+            'fkcompanyid', XMLDB_KEY_FOREIGN, ['companyid'], 'local_iomad_companies', ['id']);
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to block_iomad_commerce_shoptags.
+        $dbman->rename_table($table, 'block_iomad_commerce_shoptags');
+
+        // Course_shopsettings_courses table restructure.
+        $table = new xmldb_table('course_shopsettings_courses');
+
+        // Define key courseid (foreign) to be dropped form course_shopsettings_courses.
+        $key = new xmldb_key('courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
+
+        // Launch drop key courseid.
+        $dbman->drop_key($table, $key);
+
+        // Define key itemid (foreign) to be dropped form course_shopsettings_courses.
+        $key = new xmldb_key('itemid', XMLDB_KEY_FOREIGN, ['itemid'], 'course_shopsettings', ['id']);
+
+        // Launch drop key itemid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_courseid (foreign) to be added to course_shopsettings_courses.
+        $key = new xmldb_key(
+            'fkcourseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
+
+        // Launch add key fk_courseid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to block_iomad_commerce_product_courses.
+        $dbman->rename_table($table, 'block_iomad_commerce_product_courses');
+
+        // Course_shopsettings_paths table restructure.
+        $table = new xmldb_table('course_shopsettings_paths');
+
+        // Define key itemid (foreign) to be dropped form course_shopsettings_paths.
+        $key = new xmldb_key('itemid', XMLDB_KEY_FOREIGN, ['itemid'], 'course_shopsettings', ['id']);
+
+        // Launch drop key itemid.
+        $dbman->drop_key($table, $key);
+
+        // Define key pathid (foreign) to be dropped form course_shopsettings_paths.
+        $key = new xmldb_key('pathid', XMLDB_KEY_FOREIGN, ['pathid'], 'iomad_learningpath', ['id']);
+
+        // Launch drop key pathid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_pathid (foreign) to be added to course_shopsettings_paths.
+        $key = new xmldb_key(
+            'fkpathid', XMLDB_KEY_FOREIGN, ['pathid'], 'iomad_learningpath', ['id']);
+
+        // Launch add key fk_pathid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to block_iomad_commerce_product_learningpaths.
+        $dbman->rename_table($table, 'block_iomad_commerce_product_learningpaths');
+
+        // Invoice table restructure.
+        $table = new xmldb_table('invoice');
+
+        // Define key userid (foreign) to be dropped form invoice.
+        $key = new xmldb_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+
+        // Launch drop key userid.
+        $dbman->drop_key($table, $key);
+
+        // Define key paymentid (foreign) to be dropped form invoice.
+        $key = new xmldb_key('paymentid', XMLDB_KEY_FOREIGN, ['paymentid'], 'payments', ['id']);
+
+        // Launch drop key paymentid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_userid (foreign) to be added to invoice.
+        $key = new xmldb_key(
+            'fkuserid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+
+        // Launch add key fk_userid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_paymentid (foreign) to be added to invoice.
+        $key = new xmldb_key(
+            'fkpaymentid',
+            XMLDB_KEY_FOREIGN,
+            ['paymentid'],
+            'payments',
+            ['id']
+        );
+
+        // Launch add key fk_paymentid.
+        $dbman->add_key($table, $key);
+
+        // Define index uniquereference (unique) to be dropped form invoice.
+        $index = new xmldb_index('uniquereference', XMLDB_INDEX_UNIQUE, ['reference']);
+
+        // Conditionally launch drop index uniquereference.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define index reference (unique) to be added to invoice.
+        $index = new xmldb_index('reference', XMLDB_INDEX_UNIQUE, ['reference']);
+
+        // Conditionally launch add index reference.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Launch rename table to block_iomad_commerce_invoices.
+        $dbman->rename_table($table, 'block_iomad_commerce_invoices');
+
+        // Course_shopsettings table restructure.
+        $table = new xmldb_table('course_shopsettings');
+
+        // Launch rename table to block_iomad_commerce_products.
+        $dbman->rename_table($table, 'block_iomad_commerce_products');
+
+        // Add back in all of the foreign keys.
+
+        // Define key fk_invoiceid (foreign) to be added to invoiceitem.
+        $table = new xmldb_table('block_iomad_commerce_invoice_items');
+        $key = new xmldb_key(
+            'fkinvoiceid',
+            XMLDB_KEY_FOREIGN,
+            ['invoiceid'],
+            'block_iomad_commerce_invoices',
+            ['id']
+        );
+
+        // Launch add key fk_invoiceid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_invoiceableitemid (foreign) to be added to invoiceitem.
+        $table = new xmldb_table('block_iomad_commerce_invoice_items');
+        $key = new xmldb_key(
+            'fk_invoiceableitemid',
+            XMLDB_KEY_FOREIGN,
+            ['invoiceableitemid'],
+            'block_iomad_commerce_products',
+            ['id']
+        );
+
+        // Launch add key fk_invoiceableitemid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_itemid (foreign) to be added to block_iomad_commerce_product_blockprices.
+        $table = new xmldb_table('block_iomad_commerce_product_blockprices');
+        $key = new xmldb_key(
+            'fkitemid',
+            XMLDB_KEY_FOREIGN,
+            ['itemid'],
+            'block_iomad_commerce_products',
+            ['id']
+        );
+
+        // Launch add key fk_itemid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_shoptagid (foreign) to be added to course_shoptag.
+        $table = new xmldb_table('block_iomad_commerce_product_shoptags');
+        $key = new xmldb_key(
+            'fkshoptagid',
+            XMLDB_KEY_FOREIGN,
+            ['shoptagid'],
+            'block_iomad_commerce_shoptags',
+            ['id']
+        );
+
+        // Launch add key fk_shoptagid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_itemid (foreign) to be added to course_shoptag.
+        $table = new xmldb_table('block_iomad_commerce_product_shoptags');
+        $key = new xmldb_key(
+            'fkitemid',
+            XMLDB_KEY_FOREIGN,
+            ['itemid'],
+            'block_iomad_commerce_products',
+            ['id']
+        );
+
+        // Launch add key fk_itemid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_itemid (foreign) to be added to course_shopsettings_courses.
+        $table = new xmldb_table('block_iomad_commerce_product_courses');
+        $key = new xmldb_key(
+            'fkitemid', XMLDB_KEY_FOREIGN, ['itemid'],
+            'block_iomad_commerce_products', ['id']);
+
+        // Launch add key fk_itemid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_itemid (foreign) to be added to course_shopsettings_paths.
+        $table = new xmldb_table('block_iomad_commerce_product_learningpaths');
+        $key = new xmldb_key(
+            'fkitemid',
+            XMLDB_KEY_FOREIGN,
+            ['itemid'],
+            'block_iomad_commerce_products',
+            ['id']
+        );
+
+        // Launch add key fk_itemid.
+        $dbman->add_key($table, $key);
+
+        // Iomad_commerce savepoint reached.
+        upgrade_block_savepoint(true, 2026022600, 'iomad_commerce');
     }
 
     return $result;

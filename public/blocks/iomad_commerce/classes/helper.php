@@ -157,8 +157,8 @@ class helper {
                                             i.id,
                                             sum(quantity*license_allocation*price) AS total
                                            FROM
-                                            {invoice} i
-                                            INNER JOIN {invoiceitem} ii ON ii.invoiceid = i.id
+                                            {block_iomad_commerce_invoices} i
+                                            INNER JOIN {block_iomad_commerce_invoice_items} ii ON ii.invoiceid = i.id
                                            WHERE
                                             i.status = :status
                                             AND
@@ -191,8 +191,8 @@ class helper {
                                             i.id,
                                             sum(quantity*license_allocation*price) AS total
                                            FROM
-                                            {invoice} i
-                                            INNER JOIN {invoiceitem} ii ON ii.invoiceid = i.id
+                                            {block_iomad_commerce_invoices} i
+                                            INNER JOIN {block_iomad_commerce_invoice_items} ii ON ii.invoiceid = i.id
                                            WHERE
                                             i.status = :status
                                             AND
@@ -203,8 +203,8 @@ class helper {
                                            'status' => $status])) {
 
             $currency = $DB->get_record_sql("SELECT DISTINCT ii.currency
-                                             FROM {invoice} i
-                                             INNER JOIN {invoiceitem} ii ON ii.invoiceid = i.id
+                                             FROM {block_iomad_commerce_invoices} i
+                                             INNER JOIN {block_iomad_commerce_invoice_items} ii ON ii.invoiceid = i.id
                                              WHERE
                                              i.status = :status
                                              AND
@@ -228,7 +228,7 @@ class helper {
         global $SESSION, $DB;
 
         if (!empty($SESSION->basketid)) {
-            return $DB->get_record('invoice', ['id' => $SESSION->basketid], $fields);
+            return $DB->get_record('block_iomad_commerce_invoices', ['id' => $SESSION->basketid], $fields);
         }
 
         return false;
@@ -261,7 +261,7 @@ class helper {
                 $invoice->userid = $USER->id;
             }
         }
-        $DB->update_record('invoice', $invoice);
+        $DB->update_record('block_iomad_commerce_invoices', $invoice);
     }
 
     /**
@@ -273,7 +273,7 @@ class helper {
      */
     public static function get_invoice($invoiceid, $fields = '*') {
         global $DB;
-        return $DB->get_record('invoice', ['id' => $invoiceid], $fields);
+        return $DB->get_record('block_iomad_commerce_invoices', ['id' => $invoiceid], $fields);
     }
 
     /**
@@ -285,7 +285,7 @@ class helper {
      */
     public static function get_invoice_by_reference($invoicereference, $fields = '*') {
         global $DB;
-        return $DB->get_record('invoice', ['reference' => $invoicereference], $fields);
+        return $DB->get_record('block_iomad_commerce_invoices', ['reference' => $invoicereference], $fields);
     }
 
     /**
@@ -298,11 +298,11 @@ class helper {
 
         if (!empty($SESSION->basketid)) {
             $nitems = $DB->count_records_sql("SELECT COUNT(*)
-                                              FROM {invoiceitem} ii
+                                              FROM {block_iomad_commerce_invoice_items} ii
                                               INNER JOIN {course} c ON ii.invoiceableitemid = c.id
                                               WHERE EXISTS (
                                                   SELECT id
-                                                  FROM {invoice} i
+                                                  FROM {block_iomad_commerce_invoices} i
                                                   WHERE i.id = :basketid
                                                   AND i.status = :status
                                                   AND i.id = ii.invoiceid
@@ -343,11 +343,11 @@ class helper {
 
         if (!empty($SESSION->basketid)) {
             $nitems = $DB->count_records_sql("SELECT COUNT(*)
-                                              FROM {invoiceitem} ii
+                                              FROM {block_iomad_commerce_invoice_items} ii
                                               INNER JOIN {course} c ON ii.invoiceableitemid = c.id
                                               WHERE EXISTS (
                                                   SELECT id
-                                                  FROM {invoice} i
+                                                  FROM {block_iomad_commerce_invoices} i
                                                   WHERE i.id = :basketid
                                                   AND i.status = :status
                                                   AND i.id = ii.invoiceid
@@ -393,7 +393,7 @@ class helper {
                                         'token' => $token]);
                 $shoplink = "" . get_string('gotoshop', 'block_iomad_commerce') . '|' . $link->out() . "\n\r";
             } else {
-                if ($DB->get_records('course_shopsettings', ['companyid' => $companyrec->id, 'enabled' => 1])) {
+                if ($DB->get_records('block_iomad_commerce_products', ['companyid' => $companyrec->id, 'enabled' => 1])) {
                     $shoplink = "" . get_string('buycourses', 'block_iomad_commerce') . "|#\n\r";
                     $shoplink .= "-" . get_string('gotoshop', 'block_iomad_commerce') . "|/blocks/iomad_commerce/shop.php\n\r";
                     $shoplink .= self::get_basket_menu_link();
@@ -472,7 +472,7 @@ class helper {
         global $DB;
 
         $currencycount = $DB->count_records_sql('SELECT count(DISTINCT currency)
-                                                 FROM {invoiceitem}
+                                                 FROM {block_iomad_commerce_invoice_items}
                                                  WHERE invoiceid = :invoiceid',
                                                 ['invoiceid' => $invoiceid]);
 
@@ -522,8 +522,8 @@ class helper {
         $currentcurrency = '';
 
         if ($basketitems = $DB->get_records_sql("SELECT ii.*, css.name
-                                                 FROM {invoiceitem} ii
-                                                 INNER JOIN {course_shopsettings} css ON ii.invoiceableitemid = css.id
+                                                 FROM {block_iomad_commerce_invoice_items} ii
+                                                 INNER JOIN {block_iomad_commerce_products} css ON ii.invoiceableitemid = css.id
                                                  WHERE ii.invoiceid = :invoiceid
                                                  ORDER BY ii.id",
                                                 ['invoiceid' => $invoiceid])) {
@@ -648,8 +648,8 @@ class helper {
         $currentcurrency = '';
 
         if ($basketitems = $DB->get_records_sql("SELECT ii.*, css.name
-                                                 FROM {invoiceitem} ii
-                                                 INNER JOIN {course_shopsettings} css ON ii.invoiceableitemid = css.id
+                                                 FROM {block_iomad_commerce_invoice_items} ii
+                                                 INNER JOIN {block_iomad_commerce_products} css ON ii.invoiceableitemid = css.id
                                                  WHERE ii.invoiceid = :invoiceid
                                                  ORDER BY ii.id",
                                                 ['invoiceid' => $invoiceid])) {
@@ -718,13 +718,13 @@ class helper {
         // If all is set to true, filter all shop tags which aren't being used by a shop item.
         $filter = '';
         if (!$all) {
-            $filter = 'AND EXISTS (SELECT cst.id FROM {course_shoptag} cst
-                                    INNER JOIN {course_shopsettings} css ON css.id = cst.itemid
+            $filter = 'AND EXISTS (SELECT cst.id FROM {block_iomad_commerce_product_shoptags} cst
+                                    INNER JOIN {block_iomad_commerce_products} css ON css.id = cst.itemid
                                     WHERE cst.shoptagid = st.id AND css.enabled = 1)';
         }
 
         // Get all relevant records from the database and then create a array of values to return.
-        if ($shoptags = $DB->get_records_sql('SELECT st.tag as tag FROM {shoptag} st
+        if ($shoptags = $DB->get_records_sql('SELECT st.tag as tag FROM {block_iomad_commerce_shoptags} st
                                               WHERE st.companyid = :companyid '.$filter.'
                                               ORDER BY st.tag',
                                               ['companyid' => iomad::get_my_companyid(context_system::instance(), true)])) {
@@ -745,8 +745,8 @@ class helper {
     public static function get_course_tags($itemid) {
         global $DB;
         // Get all records for the shop item id.
-        if ($shoptags = $DB->get_records_sql("SELECT st.tag as tag FROM {course_shoptag} cst
-                                              INNER JOIN {shoptag} st ON cst.shoptagid = st.id
+        if ($shoptags = $DB->get_records_sql("SELECT st.tag as tag FROM {block_iomad_commerce_product_shoptags} cst
+                                              INNER JOIN {block_iomad_commerce_shoptags} st ON cst.shoptagid = st.id
                                               WHERE cst.itemid = :itemid
                                               AND st.companyid = :companyid
                                               ORDER BY st.tag",
@@ -784,7 +784,12 @@ class helper {
     public static function set_new_invoice_reference($invoiceid) {
         global $DB;
         try {
-            return $DB->set_field('invoice', 'reference', self::random_invoice_reference(), ['id' => $invoiceid]);
+            return $DB->set_field(
+                'block_iomad_commerce_invoices',
+                'reference',
+                self::random_invoice_reference(),
+                ['id' => $invoiceid]
+            );
         } catch (Exception $e) {
             // Assume the issue we have is a unique index issue.
             return false;
@@ -848,33 +853,33 @@ class helper {
             $checkcourses = false;
         }
 
-        if ($shopitem = $DB->get_record('course_shopsettings', ['id' => $itemid])) {
+        if ($shopitem = $DB->get_record('block_iomad_commerce_products', ['id' => $itemid])) {
             unset($shopitem->id);
             $shopitem->companyid = $companyid;
-            if ($newitemid = $DB->insert_record('course_shopsettings', $shopitem)) {
-                if ($courses = $DB->get_records('course_shopsettings_courses', ['itemid' => $itemid])) {
+            if ($newitemid = $DB->insert_record('block_iomad_commerce_products', $shopitem)) {
+                if ($courses = $DB->get_records('block_iomad_commerce_product_courses', ['itemid' => $itemid])) {
                     foreach ($courses as $course) {
 
                         // Only bring in courses which the company can see.
                         if (!$checkcourses || !empty($companycourses[$course->courseid])) {
                             unset($course->id);
                             $course->itemid = $newitemid;
-                            $DB->insert_record('course_shopsettings_courses', $course);
+                            $DB->insert_record('block_iomad_commerce_product_courses', $course);
                         }
                     }
                 }
-                if ($blockprices = $DB->get_records('course_shopblockprice', ['itemid' => $itemid])) {
+                if ($blockprices = $DB->get_records('block_iomad_commerce_product_blockprices', ['itemid' => $itemid])) {
                     foreach ($blockprices as $blockid => $blockprice) {
                         unset($blockprice->id);
                         $blockprice->itemid = $newitemid;
-                        $DB->insert_record('course_shopblockprice', $blockprice);
+                        $DB->insert_record('block_iomad_commerce_product_blockprices', $blockprice);
                     }
                 }
-                if ($shoptags = $DB->get_records('course_shoptag', ['itemid' => $itemid])) {
+                if ($shoptags = $DB->get_records('block_iomad_commerce_product_shoptags', ['itemid' => $itemid])) {
                     foreach ($shoptags as $shoptagid => $shoptag) {
                         unset($shoptag->id);
                         $shoptag->itemid = $newitemid;
-                        $DB->insert_record('course_shoptag', $shoptag);
+                        $DB->insert_record('block_iomad_commerce_product_shoptags', $shoptag);
                     }
                 }
 

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="blocks/iomad_commerce/db" VERSION="20260222" COMMENT="XMLDB file for Moodle blocks/iomad_commerce"
+<XMLDB PATH="blocks/iomad_commerce/db" VERSION="20260226" COMMENT="XMLDB file for Moodle blocks/iomad_commerce"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="invoice" COMMENT="invoices and baskets">
+    <TABLE NAME="block_iomad_commerce_invoices" COMMENT="IOMAD eCommerce basket/invoice details">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="reference" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
@@ -27,15 +27,15 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
         <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
-        <KEY NAME="paymentid" TYPE="foreign" FIELDS="paymentid" REFTABLE="payments" REFFIELDS="id"/>
+        <KEY NAME="fk_paymentid" TYPE="foreign" FIELDS="paymentid" REFTABLE="payments" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="uniquereference" UNIQUE="true" FIELDS="reference"/>
+        <INDEX NAME="reference" UNIQUE="true" FIELDS="reference"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="invoiceitem" COMMENT="line items on invoice">
+    <TABLE NAME="block_iomad_commerce_invoice_items" COMMENT="IOMAD eCommerce product line items on invoices">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="invoiceid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -51,11 +51,11 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="invoiceid" TYPE="foreign" FIELDS="invoiceid" REFTABLE="invoice" REFFIELDS="id"/>
-        <KEY NAME="invoiceableitemid" TYPE="foreign" FIELDS="invoiceableitemid" REFTABLE="course_shopsettings" REFFIELDS="id"/>
+        <KEY NAME="fk_invoiceid" TYPE="foreign" FIELDS="invoiceid" REFTABLE="block_iomad_commerce_invoices" REFFIELDS="id"/>
+        <KEY NAME="fk_invoiceableitemid" TYPE="foreign" FIELDS="invoiceableitemid" REFTABLE="block_iomad_commerce_products" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="course_shopblockprice" COMMENT="license block prices">
+    <TABLE NAME="block_iomad_commerce_product_blockprices" COMMENT="IOMAD eCommerce product block prices">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="currency" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="£" SEQUENCE="false"/>
@@ -67,10 +67,10 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="itemid" TYPE="foreign" FIELDS="itemid" REFTABLE="course_shopsettings" REFFIELDS="id"/>
+        <KEY NAME="fk_itemid" TYPE="foreign" FIELDS="itemid" REFTABLE="block_iomad_commerce_products" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="course_shopsettings" COMMENT="course settings for shop">
+    <TABLE NAME="block_iomad_commerce_products" COMMENT="IOMAD eCommerce product settings">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="companyid" TYPE="int" LENGTH="20" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
@@ -95,7 +95,7 @@
         <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="shoptag" COMMENT="shoptags">
+    <TABLE NAME="block_iomad_commerce_shoptags" COMMENT="IOMAD eCommerce product tags">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="tag" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
@@ -103,9 +103,10 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="course_shoptag" COMMENT="links courses to shoptags">
+    <TABLE NAME="block_iomad_commerce_product_shoptags" COMMENT="IOMAD eCommerce product shoptag allocation">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="itemid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -113,11 +114,11 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="shoptagid" TYPE="foreign" FIELDS="shoptagid" REFTABLE="shoptag" REFFIELDS="id"/>
-        <KEY NAME="itemid" TYPE="foreign" FIELDS="itemid" REFTABLE="course_shopsettings" REFFIELDS="id"/>
+        <KEY NAME="fk_shoptagid" TYPE="foreign" FIELDS="shoptagid" REFTABLE="block_iomad_commerce_shoptags" REFFIELDS="id"/>
+        <KEY NAME="fk_itemid" TYPE="foreign" FIELDS="itemid" REFTABLE="block_iomad_commerce_products" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="course_shopsettings_courses" COMMENT="Table to hold the courses which are associated to the shop listing.">
+    <TABLE NAME="block_iomad_commerce_product_courses" COMMENT="IOMAD eCommerce product course assignments">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="itemid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
@@ -125,11 +126,11 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
-        <KEY NAME="itemid" TYPE="foreign" FIELDS="itemid" REFTABLE="course_shopsettings" REFFIELDS="id"/>
+        <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="fk_itemid" TYPE="foreign" FIELDS="itemid" REFTABLE="block_iomad_commerce_products" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="course_shopsettings_paths" COMMENT="Table stores the learning paths a shop item is linked to">
+    <TABLE NAME="block_iomad_commerce_product_learningpaths" COMMENT="IOMAD eCommerce product learning path assignments">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="itemid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="Uniquely identifies a record in the course_shopsettings table"/>
@@ -137,8 +138,8 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="itemid" TYPE="foreign" FIELDS="itemid" REFTABLE="course_shopsettings" REFFIELDS="id" COMMENT="Uniquely identifies a record in the course_shopsettings table"/>
-        <KEY NAME="pathid" TYPE="foreign" FIELDS="pathid" REFTABLE="iomad_learningpath" REFFIELDS="id" COMMENT="Uniquely identifies a record in the iomad_learningpath table"/>
+        <KEY NAME="fk_itemid" TYPE="foreign" FIELDS="itemid" REFTABLE="block_iomad_commerce_products" REFFIELDS="id"/>
+        <KEY NAME="fk_pathid" TYPE="foreign" FIELDS="pathid" REFTABLE="iomad_learningpath" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
   </TABLES>
