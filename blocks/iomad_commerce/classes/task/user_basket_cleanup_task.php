@@ -58,7 +58,7 @@ class user_basket_cleanup_task extends scheduled_task {
         mtrace("Running IOMAD eCommerce user basket cleanup task at ".date('d M Y h:i:s', $runtime));
 
         // Get all of the baskets which haven't been updated in 7 days and are unprocessed.
-        $baskets = $DB->get_records_select('invoice',
+        $baskets = $DB->get_records_select('block_iomad_commerce_invoices',
                                            "status = :status AND date < :timestamp",
                                            ['status' => 'b',
                                             'timestamp' => $runtime - 7 * 24 * 60 * 60]);
@@ -67,10 +67,10 @@ class user_basket_cleanup_task extends scheduled_task {
             mtrace("cleaning up " . count($baskets) . " abandonded baskets.");
             foreach ($baskets as $basket) {
                 // Remove all of the basket items.
-                $DB->delete_records('invoiceitem', ['invoiceid' => $basket->id]);
+                $DB->delete_records('block_iomad_commerce_invoice_items', ['invoiceid' => $basket->id]);
 
                 // Remove the basket.
-                $DB->delete_records('invoice', ['id' => $basket->id]);
+                $DB->delete_records('block_iomad_commerce_invoices', ['id' => $basket->id]);
             }
         }
 

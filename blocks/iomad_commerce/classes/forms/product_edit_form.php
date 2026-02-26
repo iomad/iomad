@@ -227,7 +227,7 @@ class product_edit_form extends moodleform {
             ];
 
             // Set the default number to be repeated.
-            if ($repeatno = $DB->count_records('course_shopblockprice', ['itemid' => $this->shopsettingsid])) {
+            if ($repeatno = $DB->count_records('block_iomad_commerce_product_blockprices', ['itemid' => $this->shopsettingsid])) {
                 $repeatno++;
             } else {
                 $repeatno = 1;
@@ -273,7 +273,7 @@ class product_edit_form extends moodleform {
                 $options .= "<option value='{$i}'>$i</option>";
             }
 
-            $select = "<select class='tags' onchange='iomad.onSelectTag(this)'>$options</select>";
+            $select = "<select class='tags custom-select' onchange='iomad.onSelectTag(this)'>$options</select>";
             $html = "<div class='fitem'><div class='fitemtitle'></div><div class='felement'>$select</div></div>";
 
             $mform->addElement('html', $html);

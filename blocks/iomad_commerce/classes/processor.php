@@ -67,7 +67,7 @@ class processor {
 
         self::process_all_items($invoice->id, 'onordercomplete', $invoice );
         $invoice->status = helper::INVOICESTATUS_PAID;
-        $DB->update_record('invoice', $invoice);
+        $DB->update_record('block_iomad_commerce_invoices', $invoice);
         self::email_invoices($invoice);
     }
 
@@ -83,7 +83,11 @@ class processor {
         global $DB;
 
         // Get any invoice items.
-        if ($items = $DB->get_records('invoiceitem', ['invoiceid' => $invoiceid, 'processed' => 0], null, '*')) {
+        if ($items = $DB->get_records(
+            'block_iomad_commerce_invoice_items',
+            ['invoiceid' => $invoiceid, 'processed' => 0],
+            null,
+            '*')) {
             // Process them.
             foreach ($items as $item) {
                 $processorname = $item->invoiceableitemtype;
@@ -104,7 +108,7 @@ class processor {
         global $DB;
 
         // Check the item exists and hasn't been processed already.
-        if ($item = $DB->get_record('invoiceitem', ['id' => $invoiceitemid, 'processed' => 0], '*')) {
+        if ($item = $DB->get_record('block_iomad_commerce_invoice_items', ['id' => $invoiceitemid, 'processed' => 0], '*')) {
             // Process it.
             $processorname = $item->invoiceableitemtype;
             $function = $processorname . "_onordercomplete";
@@ -122,7 +126,7 @@ class processor {
         global $DB;
 
         // Does the item exist?
-        if ($ii = $DB->get_record('invoiceitem', ['id' => $invoiceitem->id], '*')) {
+        if ($ii = $DB->get_record('block_iomad_commerce_invoice_items', ['id' => $invoiceitem->id], '*')) {
             // Is it an unprocessed license?
             if ($block = helper::get_license_block($ii->invoiceableitemid, $ii->license_allocation)) {
                 $ii->currency = $block->currency;
@@ -131,7 +135,7 @@ class processor {
                 $ii->license_shelflife = $block->shelflife;
 
                 // Process it.
-                $DB->update_record('invoiceitem', $ii);
+                $DB->update_record('block_iomad_commerce_invoice_items', $ii);
             }
         }
     }
@@ -152,11 +156,11 @@ class processor {
             // Get name for company license.
             $companyid = iomad::get_my_companyid(context_system::instance());
             $company = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
-            $item = $DB->get_record('course_shopsettings', ['id' => $invoiceitem->invoiceableitemid]);
-            $courses = $DB->get_records('course_shopsettings_courses', ['itemid' => $item->id]);
+            $item = $DB->get_record('block_iomad_commerce_products', ['id' => $invoiceitem->invoiceableitemid]);
+            $courses = $DB->get_records('block_iomad_commerce_product_courses', ['itemid' => $item->id]);
 
             // Get any learning paths.
-            $paths = $DB->get_records('course_shopsettings_paths', ['itemid' => $item->id]);
+            $paths = $DB->get_records('block_iomad_commerce_product_learningpaths', ['itemid' => $item->id]);
 
             // Create name for any licenses.
             $licensename = $company->shortname .
@@ -214,13 +218,21 @@ class processor {
 
                 // Add the courses to the license.
                 foreach ($pathcoursesarray as $pathcourse) {
-                    $DB->insert_record('local_iomad_company_license_courses', ['licenseid' => $companylicenseid, 'courseid' => $pathcourse]);
-                    $DB->insert_record('local_iomad_company_license_users', (object)['licenseid' => $companylicenseid,
-                                                                        'userid' => $invoice->userid,
-                                                                        'isusing' => 0,
-                                                                        'licensecourseid' => $pathcourse,
-                                                                        'issuedate' => $runtime,
-                                                                        'groupid' => 0]);
+                    $DB->insert_record(
+                        'local_iomad_company_license_courses',
+                        ['licenseid' => $companylicenseid, 'courseid' => $pathcourse]
+                    );
+                    $DB->insert_record(
+                        'local_iomad_company_license_users',
+                        (object)[
+                            'licenseid' => $companylicenseid,
+                            'userid' => $invoice->userid,
+                            'isusing' => 0,
+                            'licensecourseid' => $pathcourse,
+                            'issuedate' => $runtime,
+                            'groupid' => 0,
+                        ]
+                    );
                 }
             } else if (!empty($courses)) {
                 // Define the type of license.
@@ -247,7 +259,7 @@ class processor {
 
             // Mark the invoice item as processed.
             $invoiceitem->processed = 1;
-            $DB->update_record('invoiceitem', $invoiceitem);
+            $DB->update_record('block_iomad_commerce_invoice_items', $invoiceitem);
 
             // No errors, so we commit.
             $transaction->allow_commit();
@@ -271,8 +283,8 @@ class processor {
                     css.single_purchase_currency,
                     css.single_purchase_price,
                     css.single_purchase_validlength
-             FROM {invoiceitem} ii
-             INNER JOIN {course_shopsettings} css ON css.id = ii.invoiceableitemid
+             FROM {block_iomad_commerce_invoice_items} ii
+             INNER JOIN {block_iomad_commerce_products} css ON css.id = ii.invoiceableitemid
              WHERE ii.id = :invoiceitemid",
             ['invoiceitemid' => $invoiceitem->id])) {
 
@@ -282,7 +294,7 @@ class processor {
             $ii->license_validlength = $ii->single_purchase_validlength;
 
             // Update the record.
-            $DB->update_record('invoiceitem', $ii);
+            $DB->update_record('block_iomad_commerce_invoice_items', $ii);
         }
     }
 
@@ -301,21 +313,21 @@ class processor {
 
         try {
             // Get the item's single purchase details.
-            $iteminfo = $DB->get_record('course_shopsettings', ['id' => $invoiceitem->invoiceableitemid]);
+            $iteminfo = $DB->get_record('block_iomad_commerce_products', ['id' => $invoiceitem->invoiceableitemid]);
 
             // Get the courses.
-            $courses = $DB->get_records('course_shopsettings_courses', ['itemid' => $iteminfo->id]);
+            $courses = $DB->get_records('block_iomad_commerce_product_courses', ['itemid' => $iteminfo->id]);
 
             // Get the number of licenses.
             $licensecoursecount = $DB->count_records_sql(
-                "SELECT COUNT(csc.id) FROM {course_shopsettings_courses} csc
+                "SELECT COUNT(csc.id) FROM {block_iomad_commerce_product_courses} csc
                  JOIN {local_iomad_courses} ic ON (csc.courseid = ic.courseid)
                  WHERE ic.licensed = 1
                  AND csc.itemid = :itemid",
             ['itemid' => $iteminfo->id]);
 
             // Deal with any learning paths.
-            $paths = $DB->get_records('course_shopsettings_paths', ['itemid' => $iteminfo->id]);
+            $paths = $DB->get_records('block_iomad_commerce_product_learningpaths', ['itemid' => $iteminfo->id]);
             if (!empty($paths) || $licensecoursecount > 0) {
 
                 // Get the company id.
@@ -393,12 +405,17 @@ class processor {
                                                                       'courseid' => $pathcourse]);
 
                         // Assign the license and course to the user.
-                        $licenseuserid = $DB->insert_record('local_iomad_company_license_users', (object)['licenseid' => $companylicenseid,
-                                                                                            'userid' => $invoice->userid,
-                                                                                            'isusing' => 0,
-                                                                                            'licensecourseid' => $pathcourse,
-                                                                                            'issuedate' => $runtime,
-                                                                                            'groupid' => 0]);
+                        $licenseuserid = $DB->insert_record(
+                            'local_iomad_company_license_users',
+                            (object)[
+                                'licenseid' => $companylicenseid,
+                                'userid' => $invoice->userid,
+                                'isusing' => 0,
+                                'licensecourseid' => $pathcourse,
+                                'issuedate' => $runtime,
+                                'groupid' => 0,
+                            ]
+                        );
 
                         // Create an event to assign the license.
                         $eventother = ['licenseid' => $companylicenseid,
@@ -451,12 +468,17 @@ class processor {
                         $DB->insert_record('local_iomad_company_license_courses', ['licenseid' => $companylicenseid,
                                                                       'courseid' => $course->courseid]);
                         // Assign the course/license to the user.
-                        $licenseuserid = $DB->insert_record('local_iomad_company_license_users', (object)['licenseid' => $companylicenseid,
-                                                                                            'userid' => $invoice->userid,
-                                                                                            'isusing' => 0,
-                                                                                            'licensecourseid' => $course->id,
-                                                                                            'issuedate' => $runtime,
-                                                                                            'groupid' => 0]);
+                        $licenseuserid = $DB->insert_record(
+                            'local_iomad_company_license_users',
+                            (object)[
+                                'licenseid' => $companylicenseid,
+                                'userid' => $invoice->userid,
+                                'isusing' => 0,
+                                'licensecourseid' => $course->id,
+                                'issuedate' => $runtime,
+                                'groupid' => 0,
+                            ]
+                        );
 
                         // Create an event to assign the license.
                         $eventother = ['licenseid' => $companylicenseid,
@@ -484,7 +506,7 @@ class processor {
 
             // Mark the invoice item as processed.
             $invoiceitem->processed = 1;
-            $DB->update_record('invoiceitem', $invoiceitem);
+            $DB->update_record('block_iomad_commerce_invoice_items', $invoiceitem);
 
             // No errors so commit the transaction.
             $transaction->allow_commit();

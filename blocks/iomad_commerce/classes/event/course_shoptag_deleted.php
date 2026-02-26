@@ -46,7 +46,7 @@ class course_shoptag_deleted extends base {
     protected function init() {
         $this->data['crud'] = 'd';
         $this->data['edulevel'] = self::LEVEL_OTHER;
-        $this->data['objecttable'] = 'course_shoptag';
+        $this->data['objecttable'] = 'block_iomad_commerce_product_shoptags';
     }
 
     /**

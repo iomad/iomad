@@ -85,8 +85,8 @@ if (isset($SESSION->shoptag) && $SESSION->shoptag != '') {
     $tagfilters = html_writer::tag('li', get_string('filtered_by_tag',
                                                     'block_iomad_commerce',
                                                     '<em>' . $SESSION->shoptag . '</em>' ));
-    $tagjoin = 'INNER JOIN {course_shoptag} cst ON cst.itemid = css.id
-                INNER JOIN {shoptag} st ON cst.shoptagid = st.id';
+    $tagjoin = 'INNER JOIN {block_iomad_commerce_product_shoptags} cst ON cst.itemid = css.id
+                INNER JOIN {block_iomad_commerce_shoptags} st ON cst.shoptagid = st.id';
     $tagwhere = ' AND st.tag = :tag ';
     $sqlparams['tag'] = $SESSION->shoptag;
 } else {
@@ -162,10 +162,10 @@ if (!iomad::has_capability('block/iomad_commerce:buyinbulk', $companycontext)) {
     $typewhere = " AND css.allow_single_purchase = 1 ";
 }
 
-$sql = "FROM {course_shopsettings} css
-        LEFT JOIN {course_shopsettings_courses} csc ON (css.id = csc.itemid)
+$sql = "FROM {block_iomad_commerce_products} css
+        LEFT JOIN {block_iomad_commerce_product_courses} csc ON (css.id = csc.itemid)
         LEFT JOIN {course} c ON (csc.courseid = c.id)
-        LEFT JOIN {course_shopsettings_paths} cssp ON (css.id = cssp.itemid)
+        LEFT JOIN {block_iomad_commerce_product_learningpaths} cssp ON (css.id = cssp.itemid)
         LEFT JOIN {iomad_learningpath} ilp ON (cssp.pathid = ilp.id)
         $tagjoin
         LEFT JOIN {course_shopblockprice} sbp ON (css.id = sbp.itemid

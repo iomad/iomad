@@ -84,7 +84,7 @@ if ($delete && confirm_sesskey()) {
     }
 
     // Check that the record exists.
-    if (!$DB->record_exists('shoptag', ['id' => $delete])) {
+    if (!$DB->record_exists('block_iomad_commerce_shoptags', ['id' => $delete])) {
         throw new moodle_exception('notag', 'error');
     }
     if ($confirm != md5($delete)) {
@@ -93,15 +93,19 @@ if ($delete && confirm_sesskey()) {
         echo $OUTPUT->header();
 
         // Get the shop tag name and output it to the heading.
-        echo $OUTPUT->heading(get_string('deleteshoptag', $component, $DB->get_record('shoptag', ['id' => $delete], 'tag')->tag));
+        echo $OUTPUT->heading(get_string(
+            'deleteshoptag',
+            $component,
+            $DB->get_record('block_iomad_commerce_shoptags', ['id' => $delete], 'tag')->tag
+        ));
 
         // Get all shop items using the current tag and create a list.
         $shopitems = $DB->get_records_sql("SELECT id, name
-                                           FROM {course_shopsettings}
+                                           FROM {block_iomad_commerce_products}
                                            WHERE companyid = :companyid
                                            AND id IN (
                                                SELECT itemid
-                                               FROM {course_shoptag}
+                                               FROM {block_iomad_commerce_product_shoptags}
                                                WHERE shoptagid = :shoptagid)
                                            ORDER BY name ASC",
                                           ['shoptagid' => $delete,
@@ -127,11 +131,11 @@ if ($delete && confirm_sesskey()) {
         die;
     } else {
         // Create data for the other parameter of the event.
-        $eventother = ['tag' => $DB->get_record('shoptag', ['id' => $delete], 'tag')->tag];
+        $eventother = ['tag' => $DB->get_record('block_iomad_commerce_shoptags', ['id' => $delete], 'tag')->tag];
 
         // Delete the tag.
-        $DB->delete_records('course_shoptag', ['shoptagid' => $delete]);
-        $DB->delete_records('shoptag', ['id' => $delete]);
+        $DB->delete_records('block_iomad_commerce_product_shoptags', ['shoptagid' => $delete]);
+        $DB->delete_records('block_iomad_commerce_shoptags', ['id' => $delete]);
 
         // Create the event and then trigger it.
         $event = block_iomad_commerce\event\shoptag_deleted::create(['context' => $companycontext,
@@ -146,11 +150,11 @@ if ($delete && confirm_sesskey()) {
 echo $OUTPUT->header();
 
 // Check if there are any tags for the current company.
-if ($tags = $DB->record_exists('shoptag', ['companyid' => $companyid])) {
+if ($tags = $DB->record_exists('block_iomad_commerce_shoptags', ['companyid' => $companyid])) {
 
     // Define SQL for the table.
     $selectsql = "id, tag";
-    $fromsql = "{shoptag}";
+    $fromsql = "{block_iomad_commerce_shoptags}";
     $wheresql = "companyid = :companyid";
     $sqlparams = ["companyid" => $companyid];
 

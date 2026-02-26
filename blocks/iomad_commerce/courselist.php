@@ -93,7 +93,12 @@ if ($delete && confirm_sesskey()) {
 
     iomad::require_capability('block/iomad_commerce:delete_course', $companycontext);
 
-    $invoiceableitem = $DB->get_record('course_shopsettings', ['id' => $delete, 'companyid' => $companyid], '*', MUST_EXIST);
+    $invoiceableitem = $DB->get_record(
+        'block_iomad_commerce_products',
+        ['id' => $delete, 'companyid' => $companyid],
+        '*',
+        MUST_EXIST
+    );
 
     if ($confirm != md5($delete)) {
         echo $OUTPUT->header();
@@ -110,7 +115,7 @@ if ($delete && confirm_sesskey()) {
     } else if (data_submitted()) {
         $transaction = $DB->start_delegated_transaction();
 
-        if ($DB->delete_records('course_shopsettings', ['id' => $delete, 'companyid' => $companyid])) {
+        if ($DB->delete_records('block_iomad_commerce_products', ['id' => $delete, 'companyid' => $companyid])) {
             $transaction->allow_commit();
             redirect($returnurl);
         } else {
@@ -129,7 +134,7 @@ if ($import && confirm_sesskey()) {
 
     iomad::require_capability('block/iomad_commerce:delete_course', $companycontext);
 
-    $invoiceableitem = $DB->get_record('course_shopsettings', ['id' => $import, 'companyid' => 0], '*', MUST_EXIST);
+    $invoiceableitem = $DB->get_record('block_iomad_commerce_products', ['id' => $import, 'companyid' => 0], '*', MUST_EXIST);
 
     if ($confirm != md5($import)) {
         echo $OUTPUT->header();
@@ -164,7 +169,7 @@ if ($export && confirm_sesskey()) {
 
     iomad::require_capability('block/iomad_commerce:delete_course', $companycontext);
 
-    $invoiceableitem = $DB->get_record('course_shopsettings',
+    $invoiceableitem = $DB->get_record('block_iomad_commerce_products',
                                        ['id' => $export,
                                         'companyid' => $companyid],
                                        '*',
@@ -199,13 +204,13 @@ if ($export && confirm_sesskey()) {
 }
 
 if ($hide) {
-    if ($courserecord = $DB->get_record('course_shopsettings', ['id' => $hide, 'companyid' => $mycompanyid])) {
+    if ($courserecord = $DB->get_record('block_iomad_commerce_products', ['id' => $hide, 'companyid' => $mycompanyid])) {
         if ($courserecord->enabled == 0 ) {
             $courserecord->enabled = 1;
         } else {
             $courserecord->enabled = 0;
         }
-        $DB->update_record('course_shopsettings', $courserecord);
+        $DB->update_record('block_iomad_commerce_products', $courserecord);
         redirect(new moodle_url($baseurl));
     }
 }
@@ -225,13 +230,13 @@ if (!block_iomad_commerce\helper::is_commerce_configured()) {
 // Check we can actually do anything on this page.
 
 // Get the number of products.
-$objectcount = $DB->count_records('course_shopsettings', ['companyid' => $companyid]);
+$objectcount = $DB->count_records('block_iomad_commerce_products', ['companyid' => $companyid]);
 echo $OUTPUT->paging_bar($objectcount, $page, $perpage, $baseurl);
 
 flush();
 
 if ($courses = $DB->get_recordset_sql('SELECT *
-                                       FROM {course_shopsettings} css
+                                       FROM {block_iomad_commerce_products} css
                                        WHERE companyid = :companyid
                                        ORDER BY name',
                                        ['companyid' => $companyid], $page * $perpage, $perpage)) {

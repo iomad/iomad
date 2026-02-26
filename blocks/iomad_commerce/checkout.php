@@ -86,7 +86,7 @@ if (empty($basketid) || $mform->is_cancelled()) {
     $data->companyid = $companyid;
 
     // Update the invoice details from the form.
-    $DB->update_record('invoice', $data, ['id' => $data->id]);
+    $DB->update_record('block_iomad_commerce_invoices', $data, ['id' => $data->id]);
 
     // Set up the payment options and details.
     $basketsummary = trim(html_to_text(block_iomad_commerce\helper::get_invoice_summary($basketid, 0, 0, 0)));

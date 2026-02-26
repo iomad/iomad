@@ -111,7 +111,7 @@ class tag_name_editable extends inplace_editable {
         iomad::require_capability('block/iomad_commerce:manage_tags', $context);
 
         // Check the record to be updated exists in the shoptag table and is within the users current company.
-        if (!$DB->record_exists('shoptag', ['id' => $itemid, 'companyid' => $companyid])) {
+        if (!$DB->record_exists('block_iomad_commerce_shoptags', ['id' => $itemid, 'companyid' => $companyid])) {
             throw new moodle_exception('shoptag record does not exists for the id provided', 'error');
         }
 
@@ -121,12 +121,14 @@ class tag_name_editable extends inplace_editable {
         $record->tag = $newvalue;
 
         // Update the shop tag record.
-        $DB->update_record('shoptag', $record);
+        $DB->update_record('block_iomad_commerce_shoptags', $record);
 
         // Create a event and trigger it.
-        $event = tag_name_updated::create(['context' => $context,
-                                           'objectid' => $itemid,
-                                           'userid' => $USER->id]);
+        $event = tag_name_updated::create([
+            'context' => $context,
+            'objectid' => $itemid,
+            'userid' => $USER->id,
+        ]);
         $event->trigger();
 
         // Define variables to be passed back to the class.

@@ -58,7 +58,7 @@ $PAGE->set_title($linktext);
 $PAGE->navbar->add($linktext, $linkurl);
 $PAGE->requires->js_call_amd('block_iomad_commerce/item_license_amount_form', 'init');
 
-if ($item = $DB->get_record('course_shopsettings', ['id' => $itemid, 'enabled' => 1, 'companyid' => $companyid])) {
+if ($item = $DB->get_record('block_iomad_commerce_products', ['id' => $itemid, 'enabled' => 1, 'companyid' => $companyid])) {
     $PAGE->navbar->add($item->name);
 }
 
@@ -110,7 +110,11 @@ if ($item) {
         $form = '';
 
         if ($item->allow_license_blocks) {
-            $priceblocks = $DB->get_records('course_shopblockprice', ['itemid' => $item->id], 'price_bracket_start');
+            $priceblocks = $DB->get_records(
+                'block_iomad_commerce_product_blockprices',
+                ['itemid' => $item->id],
+                'price_bracket_start'
+            );
 
             if (count($priceblocks)) {
                 if (iomad::has_capability('block/iomad_commerce:buyinbulk', $companycontext)) {

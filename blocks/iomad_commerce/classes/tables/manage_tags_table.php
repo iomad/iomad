@@ -88,7 +88,7 @@ class manage_tags_table extends table_sql {
 
         // Get the company id and stored it.
         $this->companyid = iomad::get_my_companyid(context_system::instance());
-        $this->assignableitems = $DB->get_records('course_shopsettings',
+        $this->assignableitems = $DB->get_records('block_iomad_commerce_products',
                                                   ['companyid' => $this->companyid],
                                                   'name ASC',
                                                   'id, name');
@@ -131,10 +131,10 @@ class manage_tags_table extends table_sql {
         $itemsusedby = [];
 
         // Get the relevant records from the database and check if any exist.
-        if ($records = $DB->get_records_sql("SELECT id, name FROM {course_shopsettings}
+        if ($records = $DB->get_records_sql("SELECT id, name FROM {block_iomad_commerce_products}
                                              WHERE companyid = :companyid
                                              AND id IN (
-                                                 SELECT itemid FROM {course_shoptag}
+                                                 SELECT itemid FROM {block_iomad_commerce_product_shoptags}
                                                  WHERE shoptagid = :shoptagid)
                                              ORDER BY name ASC",
                                             ['shoptagid' => $row->id,
@@ -147,7 +147,7 @@ class manage_tags_table extends table_sql {
             if (!empty($USER->editing)) {
 
                 // Create a array which displays as id => name.
-                $assignableitems = $DB->get_records_menu('course_shopsettings',
+                $assignableitems = $DB->get_records_menu('block_iomad_commerce_products',
                                                          ['companyid' => $this->companyid],
                                                          'name',
                                                          'id,name');

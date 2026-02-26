@@ -82,15 +82,20 @@ $selectsql = "i.id,
               i.date,
               p.gateway,
               p.accountid,
-              (SELECT SUM(price * quantity * license_allocation) FROM {invoiceitem} ii WHERE ii.invoiceid = i.id)
-              AS value,
-              (SELECT SUM(quantity * license_allocation) FROM {invoiceitem} ii WHERE ii.invoiceid = i.id AND processed = 0)
-              AS unprocesseditems,
-              (SELECT DISTINCT(currency) FROM {invoiceitem} ii WHERE ii.invoiceid = i.id)
+              (SELECT SUM(price * quantity * license_allocation)
+               FROM {block_iomad_commerce_invoice_items} ii
+               WHERE ii.invoiceid = i.id) AS value,
+              (SELECT SUM(quantity * license_allocation)
+               FROM {block_iomad_commerce_invoice_items} ii
+               WHERE ii.invoiceid = i.id
+               AND processed = 0)AS unprocesseditems,
+              (SELECT DISTINCT(currency) FROM {block_iomad_commerce_invoice_items} ii WHERE ii.invoiceid = i.id)
               AS currency,
               u.firstname AS firstname,
               u.lastname AS lastname " . $usersql->selects;
-$fromsql = "{invoice} i JOIN {user} u ON (i.userid = u.id) LEFT JOIN {payments} p ON (i.paymentid = p.id)";
+$fromsql = "{block_iomad_commerce_invoices} i
+            JOIN {user} u ON (i.userid = u.id)
+            LEFT JOIN {payments} p ON (i.paymentid = p.id)";
 $wheresql = " i.companyid = :companyid";
 $sqlparams = ['companyid' => $companyid];
 
