@@ -69,8 +69,8 @@ class path {
         $completioncoursecount = 0;
 
         $sql = 'SELECT c.id courseid, c.shortname shortname, c.fullname fullname, c.summary summary, lpc.*
-            FROM {iomad_learningpathcourse} lpc JOIN {course} c ON lpc.course = c.id
-            WHERE lpc.path = :pathid
+            FROM {block_iomad_learningpath_courses} lpc JOIN {course} c ON lpc.courseid = c.id
+            WHERE lpc.pathid = :pathid
             AND lpc.groupid = :groupid
             ORDER BY lpc.sequence';
         $courses = $DB->get_records_sql($sql, ['pathid' => $pathid, 'groupid' => $groupid]);
@@ -140,7 +140,7 @@ class path {
         $cumulativeprogress = 0;
         $completiongroupcount = 0;
 
-        $groups = $DB->get_records('iomad_learningpathgroup', ['learningpath' => $pathid]);
+        $groups = $DB->get_records('block_iomad_learningpath_groups', ['pathid' => $pathid]);
         foreach ($groups as $group) {
             list($courses, $progress) = $this->get_courselist($pathid, $group->id, $group->sequence);
             $group->progress = $progress !== null ? $progress : 0;
@@ -171,9 +171,9 @@ class path {
     public function get_user_paths($userid) {
         global $DB;
 
-        $sql = 'SELECT lp.* FROM {iomad_learningpath} lp
-            JOIN {iomad_learningpathuser} lpu ON lpu.pathid = lp.id
-            WHERE lp.company = :companyid
+        $sql = 'SELECT lp.* FROM {block_iomad_learningpath} lp
+            JOIN {block_iomad_learningpath_users} lpu ON lpu.pathid = lp.id
+            WHERE lp.companyid = :companyid
             AND lpu.userid = :userid
             AND lp.active = 1
             ORDER BY lp.name ASC';

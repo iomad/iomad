@@ -44,8 +44,8 @@ class editgroup_form extends moodleform {
         $mform = $this->_form;
 
         // Learning Path Id.
-        $mform->addElement('hidden', 'learningpath');
-        $mform->setType('learningpath', PARAM_INT);
+        $mform->addElement('hidden', 'pathid');
+        $mform->setType('pathid', PARAM_INT);
 
         // Group id.
         $mform->addElement('hidden', 'id');

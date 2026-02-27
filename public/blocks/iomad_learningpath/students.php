@@ -66,7 +66,7 @@ $path = $companypaths->get_path($id);
 // Javascript initialise.
 $PAGE->requires->js_call_amd('block_iomad_learningpath/students', 'init', [$companyid, $id]);
 
-// Add the management button
+// Add the management button.
 $buttons = $OUTPUT->single_button($manageurl, get_string('managetitle', 'block_iomad_learningpath'), 'get');
 $PAGE->set_button($buttons);
 

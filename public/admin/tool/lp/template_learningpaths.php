@@ -45,27 +45,32 @@ if (!$canreadtemplate) {
 // Get my company id.
 
 // Set up the page.
-$url = new moodle_url('/admin/tool/lp/template_learningpaths.php', array(
+$url = new moodle_url('/admin/tool/lp/template_learningpaths.php', [
     'id' => $id,
-    'pagecontextid' => $pagecontextid
-));
+    'pagecontextid' => $pagecontextid,
+]);
 list($title, $subtitle) = \tool_lp\page_helper::setup_for_template($pagecontextid, $url, $template,
     get_string('learningpathssyncedtotemplate', 'block_iomad_learningpath'));
 
 // Remove Learning path.
-if ($canmanagetemplate && ($removelearningpath = optional_param('removelearningpath', false, PARAM_INT)) !== false && confirm_sesskey()) {
+if ($canmanagetemplate &&
+    ($removelearningpath = optional_param('removelearningpath', false, PARAM_INT)) !== false &&
+     confirm_sesskey()) {
     \core_competency\api::delete_template_learningpath($template, $removelearningpath);
 }
 
 // Capture the form submission.
 $existinglearningpathsql =
-    'SELECT c.id
+    'SELECT il.id
        FROM {' . \core_competency\template_learningpath::TABLE . '} tc
-       JOIN {iomad_learningpath} c ON c.id = tc.learningpathid
+       JOIN {block_iomad_learningpath} il ON il.id = tc.learningpathid
       WHERE tc.templateid = :templateid
-       AND c.company = :companyid';
+       AND il.companyid = :companyid';
 
-$existinglearningpaths = $DB->get_records_sql_menu($existinglearningpathsql, ['templateid' => $template->get('id'), 'companyid' => $companyid]);
+$existinglearningpaths = $DB->get_records_sql_menu(
+    $existinglearningpathsql,
+    ['templateid' => $template->get('id'), 'companyid' => $companyid]
+);
 
 $form = new \tool_lp\form\template_learningpaths($url->out(false), [
     'pagecontextid' => $pagecontextid,

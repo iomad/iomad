@@ -92,9 +92,9 @@ if ($form->is_cancelled()) {
     $group->name = $data->name;
     $group->sequence = $data->sequence;
     if ($id == 0) {
-        $id = $DB->insert_record('iomad_learningpathgroup', $group);
+        $id = $DB->insert_record('block_iomad_learningpath_groups', $group);
     } else {
-        $DB->update_record('iomad_learningpathgroup', $group);
+        $DB->update_record('block_iomad_learningpath_groups', $group);
     }
 
     redirect($exiturl);

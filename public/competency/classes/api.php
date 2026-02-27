@@ -2431,13 +2431,13 @@ class api {
 
         $learningpath = $learningpathorid;
         if (!is_object($learningpath)) {
-            $learningpath = $DB->get_record('iomad_learningpath', array('id' => $learningpath), '*', MUST_EXIST);
+            $learningpath = $DB->get_record('block_iomad_learningpath', array('id' => $learningpath), '*', MUST_EXIST);
         }
 
         // Check thet the user can see this learning path.
         $context = \context_system::instance();
         $companyid = iomad::get_my_companyid($context, false);
-        if (!iomad::has_capability('block/iomad_learningpath:manage', $context) || $learningpath->company != $companyid) {
+        if (!iomad::has_capability('block/iomad_learningpath:manage', $context) || $learningpath->companyid != $companyid) {
             throw new required_capability_exception($context, 'block/iomad_learningpath:manage', 'nopermissions', '');
         }
 
@@ -2498,7 +2498,7 @@ class api {
 
         $learningpath = $learningpathorid;
         if (!is_object($learningpath)) {
-            $learningpath = $DB->get_record('iomad_learningpath', array('id' => $learningpath), '*', MUST_EXIST);
+            $learningpath = $DB->get_record('block_iomad_learningpath', array('id' => $learningpath), '*', MUST_EXIST);
         }
 
         $tpllearningpath = template_learningpath::get_relation($template->get('id'), $learningpath->id);
@@ -2840,10 +2840,10 @@ class api {
         }
 
         // Check thet the user can see this learning path.
-        $learningpath = $DB->get_record('iomad_learningpath', array('id' => $learningpathid), '*', MUST_EXIST);
+        $learningpath = $DB->get_record('block_iomad_learningpath', array('id' => $learningpathid), '*', MUST_EXIST);
         $context = \context_system::instance();
         $companyid = iomad::get_my_companyid($context, false);
-        if (!iomad::has_capability('block/iomad_learningpath:manage', $context) || $learningpath->company != $companyid) {
+        if (!iomad::has_capability('block/iomad_learningpath:manage', $context) || $learningpath->companyid != $companyid) {
             throw new required_capability_exception($context, 'block/iomad_learningpath:manage', 'nopermissions', '');
         }
 

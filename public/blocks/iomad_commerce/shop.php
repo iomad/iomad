@@ -166,7 +166,7 @@ $sql = "FROM {block_iomad_commerce_products} css
         LEFT JOIN {block_iomad_commerce_product_courses} csc ON (css.id = csc.itemid)
         LEFT JOIN {course} c ON (csc.courseid = c.id)
         LEFT JOIN {block_iomad_commerce_product_learningpaths} cssp ON (css.id = cssp.itemid)
-        LEFT JOIN {iomad_learningpath} ilp ON (cssp.pathid = ilp.id)
+        LEFT JOIN {block_iomad_learningpath} ilp ON (cssp.pathid = ilp.id)
         $tagjoin
         LEFT JOIN {course_shopblockprice} sbp ON (css.id = sbp.itemid
                                               AND sbp.id = (SELECT id FROM {course_shopblockprice}
@@ -183,9 +183,9 @@ $sql = "FROM {block_iomad_commerce_products} css
             OR (
                 ilp.id IS NOT NULL
                 AND ilp.id IN (
-                    SELECT path
-                    FROM {iomad_learningpathcourse}
-                    WHERE path = ilp.id)))
+                    SELECT pathid
+                    FROM {block_iomad_learningpath_courses}
+                    WHERE pathid = ilp.id)))
         $tagwhere
         $searchwhere
         $typewhere

@@ -67,7 +67,7 @@ $PAGE->set_title(get_string('managetitle', 'block_iomad_learningpath'));
 $PAGE->set_heading(get_string('managecourses', 'block_iomad_learningpath', $path->name));
 $output = $PAGE->get_renderer('block_iomad_learningpath');
 
-// Add the management button
+// Add the management button.
 $buttons = $OUTPUT->single_button($manageurl, get_string('managetitle', 'block_iomad_learningpath'), 'get');
 $PAGE->set_button($buttons);
 
@@ -83,7 +83,8 @@ $coursellistpage = new courselist_page($companycontext, $path, $groups, $categor
 // Display the page.
 echo $OUTPUT->header();
 
-// Display the
+// Display the course selectors.
 echo $output->render($coursellistpage);
 
+// Display the footer.
 echo $OUTPUT->footer();
