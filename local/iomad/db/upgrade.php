@@ -1113,8 +1113,8 @@ function xmldb_local_iomad_upgrade($oldversion) {
         // Launch drop key companyid.
         $dbman->drop_key($table, $key);
 
-        // Define key companyid (foreign) to be dropped form invoice.
-        $table = new xmldb_table('invoice');
+        // Define key companyid (foreign) to be dropped form block_iomad_commerce_invoices.
+        $table = new xmldb_table('block_iomad_commerce_invoices');
         $key = new xmldb_key(
             'companyid',
             XMLDB_KEY_FOREIGN,
@@ -1126,8 +1126,8 @@ function xmldb_local_iomad_upgrade($oldversion) {
         // Launch drop key companyid.
         $dbman->drop_key($table, $key);
 
-        // Define key companyid (foreign) to be dropped form course_shopsettings.
-        $table = new xmldb_table('course_shopsettings');
+        // Define key companyid (foreign) to be dropped form block_iomad_commerce_products.
+        $table = new xmldb_table('block_iomad_commerce_products');
         $key = new xmldb_key(
             'companyid',
             XMLDB_KEY_FOREIGN,
@@ -1304,8 +1304,8 @@ function xmldb_local_iomad_upgrade($oldversion) {
         // Launch drop key licenseid.
         $dbman->drop_key($table, $key);
 
-        // Define key licenseid (foreign) to be dropped form iomad_learningpath.
-        $table = new xmldb_table('iomad_learningpath');
+        // Define key licenseid (foreign) to be dropped form block_iomad_learningpath.
+        $table = new xmldb_table('block_iomad_learningpath');
         $key = new xmldb_key(
             'licenseid',
             XMLDB_KEY_FOREIGN,
@@ -2371,7 +2371,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
             'invoiceid',
             XMLDB_KEY_FOREIGN,
             ['invoiceid'],
-            'invoice',
+            'block_iomad_commerce_invoices',
             ['id']
         );
 
@@ -2419,7 +2419,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
             'fk_invoiceid',
             XMLDB_KEY_FOREIGN,
             ['invoiceid'],
-            'invoice',
+            'block_iomad_commerce_invoices',
             ['id']
         );
 
@@ -2730,8 +2730,8 @@ function xmldb_local_iomad_upgrade($oldversion) {
         // Launch add key fk_companyid.
         $dbman->add_key($table, $key);
 
-        // Define key fk_companyid (foreign) to be added to invoice.
-        $table = new xmldb_table('invoice');
+        // Define key fk_companyid (foreign) to be added to block_iomad_commerce_invoices.
+        $table = new xmldb_table('block_iomad_commerce_invoices');
         $key = new xmldb_key(
             'fk_companyid',
             XMLDB_KEY_FOREIGN,
@@ -2743,8 +2743,8 @@ function xmldb_local_iomad_upgrade($oldversion) {
         // Launch add key fk_companyid.
         $dbman->add_key($table, $key);
 
-        // Define key fk_companyid (foreign) to be added to course_shopsettings.
-        $table = new xmldb_table('course_shopsettings');
+        // Define key fk_companyid (foreign) to be added to block_iomad_commerce_products.
+        $table = new xmldb_table('block_iomad_commerce_products');
         $key = new xmldb_key(
             'fk_companyid',
             XMLDB_KEY_FOREIGN,
@@ -2834,8 +2834,8 @@ function xmldb_local_iomad_upgrade($oldversion) {
         // Launch add key fk_licenseid.
         $dbman->add_key($table, $key);
 
-        // Define key fk_licenseid (foreign) to be added to iomad_learningpath.
-        $table = new xmldb_table('iomad_learningpath');
+        // Define key fk_licenseid (foreign) to be added to block_iomad_learningpath.
+        $table = new xmldb_table('block_iomad_learningpath');
         $key = new xmldb_key(
             'fk_licenseid',
             XMLDB_KEY_FOREIGN,

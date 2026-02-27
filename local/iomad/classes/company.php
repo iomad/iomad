@@ -3507,14 +3507,14 @@ class company {
         global $DB, $CFG;
 
         // Check if the course is associated to any learning path.
-        if (!$DB->get_records('iomad_learningpathcourse', ['course' => $courseid])) {
+        if (!$DB->get_records('block_iomad_learningpath_courses', ['courseid' => $courseid])) {
             return true;
         }
 
         // Check if the license is associated to a learning path.
         if (!$learningpath = $DB->get_record_sql("SELECT lp.*
-                                                  FROM {iomad_learningpath} lp
-                                                  JOIN {iomad_learningpathuser} lpu ON (lp.id = lpu.pathid)
+                                                  FROM {block_iomad_learningpath} lp
+                                                  JOIN {block_iomad_learningpath_users} lpu ON (lp.id = lpu.pathid)
                                                   WHERE lp.licenseid = :licenseid
                                                   AND lpu.userid = :userid",
                                                  ['licenseid' => $licenseid,
@@ -3526,7 +3526,7 @@ class company {
         if (!$groupinfo = $DB->get_record_sql(
             "SELECT lpc.*
              FROM {iomad_learninpathcourse}
-             JOIN {iomad_learningpathgroup} lpg ON (lpc.groupid = lpg.id)
+             JOIN {block_iomad_learningpath_groups} lpg ON (lpc.groupid = lpg.id)
              WHERE lpc.courseid = :courseid
              AND lpc.path = :learningpath
              AND lpg.sequence = 1",
@@ -3536,7 +3536,7 @@ class company {
         }
 
         // Check if the user has met all the conditions.
-        $groupcourses = $DB->get_records('iomad_learningpathcourse', ['groupid' => $groupinfo->groupid], 'sequence ASC');
+        $groupcourses = $DB->get_records('block_iomad_learningpath_courses', ['groupid' => $groupinfo->groupid], 'sequence ASC');
         foreach ($groupcourses as $groupcourse) {
             // Is this the next course?
             if ($groupcourse->courseid == $courseid) {

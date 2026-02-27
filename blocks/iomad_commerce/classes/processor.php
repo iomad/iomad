@@ -202,9 +202,9 @@ class processor {
                 // Process the paths.
                 foreach ($paths as $path) {
                     // Get the courses.
-                    $pathcourses = $DB->get_records('iomad_learningpathcourse', ['path' => $path->pathid]);
+                    $pathcourses = $DB->get_records('block_iomad_learningpath_courses', ['pathid' => $path->pathid]);
                     foreach ($pathcourses as $pathcourse) {
-                        $pathcoursesarray[] = $pathcourse->course;
+                        $pathcoursesarray[] = $pathcourse->courseid;
                         $totalcourses++;
                     }
                 }
@@ -372,17 +372,17 @@ class processor {
                 // Deal with them.
                 foreach ($paths as $path) {
                     // Get the courses.
-                    $pathcourses = $DB->get_records('iomad_learningpathcourse', ['path' => $path->pathid]);
+                    $pathcourses = $DB->get_records('block_iomad_learningpath_courses', ['pathid' => $path->pathid]);
 
                     // Process them.
                     foreach ($pathcourses as $pathcourse) {
                         // Is this a licensed course or a manual enrol course?
-                        if ($DB->get_record('local_iomad_courses', ['courseid' => $pathcourse->course,
+                        if ($DB->get_record('local_iomad_courses', ['courseid' => $pathcourse->courseid,
                                                               'licensed' => 1])) {
-                            $pathcoursesarray[] = $pathcourse->course;
+                            $pathcoursesarray[] = $pathcourse->courseid;
                             $totalcourses++;
                         } else {
-                            $pathcourseenrol[] = $pathcourse->course;
+                            $pathcourseenrol[] = $pathcourse->courseid;
                         }
                     }
                 }

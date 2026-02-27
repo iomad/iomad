@@ -67,7 +67,7 @@ function block_iomad_learningpath_pre_course_delete($course) {
     global $DB, $OUTPUT;
 
     // Clear references from the iomad_learningpathcourse table.
-    $DB->delete_records('iomad_learningpathcourse', ['course' => $course->id]);
+    $DB->delete_records('block_iomad_learningpath_courses', ['courseid' => $course->id]);
 
     return true;
 }

@@ -82,7 +82,7 @@ class companypaths {
     public function get_paths(): array {
         global $DB;
 
-        $paths = $DB->get_records('iomad_learningpath', ['company' => $this->companyid]);
+        $paths = $DB->get_records('block_iomad_learningpath', ['companyid' => $this->companyid]);
 
         return $paths;
     }
@@ -96,8 +96,8 @@ class companypaths {
     public function get_path(int $id, bool $create = true): object {
         global $DB;
 
-        if ($path = $DB->get_record('iomad_learningpath', ['id' => $id])) {
-            if ($path->company != $this->companyid) {
+        if ($path = $DB->get_record('block_iomad_learningpath', ['id' => $id])) {
+            if ($path->companyid != $this->companyid) {
                 throw new moodle_exception('companymismatch', 'block_iomad_learningpath');
             }
 
@@ -107,7 +107,7 @@ class companypaths {
                 throw new moodle_exception('nopath', 'block_iomad_learningpath');
             }
             $path = new \stdClass;
-            $path->company = $this->companyid;
+            $path->companyid = $this->companyid;
             $path->timecreated = time();
             $path->timeupdated = time();
             $path->name = '';
@@ -130,11 +130,11 @@ class companypaths {
         if ($groupid) {
 
             // Enforce the pathid even though just the id will do.
-            $group = $DB->get_record('iomad_learningpathgroup', ['learningpath' => $pathid, 'id' => $groupid], '*', MUST_EXIST);
+            $group = $DB->get_record('block_iomad_learningpath_groups', ['pathid' => $pathid, 'id' => $groupid], '*', MUST_EXIST);
             return $group;
         } else {
             $group = new \stdClass;
-            $group->learningpath = $pathid;
+            $group->pathid = $pathid;
             $group->name = get_string('untitledgroup', 'block_iomad_learningpath');
             $group->sequence = 0;
 
@@ -150,13 +150,13 @@ class companypaths {
     public function check_group(int $pathid) {
         global $DB;
 
-        if (!$DB->count_records('iomad_learningpathgroup', ['learningpath' => $pathid])) {
+        if (!$DB->count_records('block_iomad_learningpath_groups', ['pathid' => $pathid])) {
             $group = $this->get_group($pathid, 0);
-            $groupid = $DB->insert_record('iomad_learningpathgroup', $group);
-            if ($courses = $DB->get_records('iomad_learningpathcourse', ['path' => $pathid])) {
+            $groupid = $DB->insert_record('block_iomad_learningpath_groups', $group);
+            if ($courses = $DB->get_records('block_iomad_learningpath_courses', ['pathid' => $pathid])) {
                 foreach ($courses as $course) {
                     $course->groupid = $groupid;
-                    $DB->update_record('iomad_learningpathcourse', $course);
+                    $DB->update_record('block_iomad_learningpath_courses', $course);
                 }
             }
         }
@@ -171,10 +171,10 @@ class companypaths {
         global $DB;
 
         // Remove group courses from LP.
-        $DB->delete_records('iomad_learningpathcourse', ['path' => $pathid, 'groupid' => $groupid]);
+        $DB->delete_records('block_iomad_learningpath_courses', ['pathid' => $pathid, 'groupid' => $groupid]);
 
         // Remove group.
-        $DB->delete_records('iomad_learningpathgroup', ['learningpath' => $pathid, 'id' => $groupid]);
+        $DB->delete_records('block_iomad_learningpath_groups', ['pathid' => $pathid, 'id' => $groupid]);
     }
 
     /**
@@ -363,8 +363,8 @@ class companypaths {
         global $DB;
 
         $sql = 'SELECT c.id courseid, c.shortname shortname, c.fullname fullname, lpc.*
-            FROM {iomad_learningpathcourse} lpc JOIN {course} c ON lpc.course = c.id
-            WHERE lpc.path = :pathid ';
+            FROM {block_iomad_learningpath_courses} lpc JOIN {course} c ON lpc.courseid = c.id
+            WHERE lpc.pathid = :pathid ';
         $params = ['pathid' => $pathid];
         if ($groupid) {
             $sql .= 'AND lpc.groupid = :groupid ';
@@ -397,7 +397,7 @@ class companypaths {
     public function get_display_courselist(int $pathid): array {
         global $DB;
 
-        $groups = $DB->get_records('iomad_learningpathgroup', ['learningpath' => $pathid]);
+        $groups = $DB->get_records('block_iomad_learningpath_groups', ['pathid' => $pathid]);
         foreach ($groups as $group) {
             if ($group->sequence) {
                 $group->name = get_string('groupnamesequential', 'block_iomad_learningpath', $group->name);
@@ -450,7 +450,10 @@ class companypaths {
 
             // Do not include courses NOT in selected license.
             if ($programlicenseid) {
-                if (!$DB->get_record('local_iomad_company_license_courses', ['id' => $programlicenseid, 'courseid' => $course->id])) {
+                if (!$DB->get_record(
+                    'local_iomad_company_license_courses',
+                    ['id' => $programlicenseid, 'courseid' => $course->id]
+                )) {
                     continue;
                 }
             }
@@ -504,7 +507,7 @@ class companypaths {
         global $DB;
 
         $programlicenses = $DB->get_records('local_iomad_company_licenses', ['companyid' => $this->companyid, 'program' => 1]);
-        $path = $DB->get_record('iomad_learningpath', ['id' => $pathid]);
+        $path = $DB->get_record('block_iomad_learningpath', ['id' => $pathid]);
 
         // Loop over licenses and get full(er) information.
         $program0 = (object)['id' => 0, 'name' => get_string('none')];
@@ -515,7 +518,7 @@ class companypaths {
         }
         $programs = [0 => $program0];
         foreach ($programlicenses as $programlicense) {
-            $license = new \stdClass;
+            $license = (object) [];
             $license->id = $programlicense->id;
             $license->name = $programlicense->name;
             if ($path->licenseid == $programlicense->id) {
@@ -542,13 +545,13 @@ class companypaths {
         $allcourses = $this->get_prospective_courses($pathid);
 
         // Get existing list.
-        $count = $DB->count_records('iomad_learningpathcourse', ['path' => $pathid]);
+        $count = $DB->count_records('block_iomad_learningpath_courses', ['pathid' => $pathid]);
 
         // Check/get groupid.
         if ($groupid) {
-            $group = $DB->get_record('iomad_learningpathgroup', ['learningpath' => $pathid, 'id' => $groupid], '*', MUST_EXIST);
+            $group = $DB->get_record('block_iomad_learningpath_groups', ['pathid' => $pathid, 'id' => $groupid], '*', MUST_EXIST);
         } else {
-            $groups = $DB->get_records('iomad_learningpathgroup', ['learningpath' => $pathid]);
+            $groups = $DB->get_records('block_iomad_learningpath_groups', ['pathid' => $pathid]);
             if (!$group = reset($groups)) {
                 throw new \Exception('No groups for learning path id = ' . $pathid);
             }
@@ -563,18 +566,18 @@ class companypaths {
             }
 
             // If course already in the list then just skip it.
-            if ($course = $DB->get_record('iomad_learningpathcourse', ['path' => $pathid, 'course' => $courseid])) {
+            if ($course = $DB->get_record('block_iomad_learningpath_courses', ['pathid' => $pathid, 'course' => $courseid])) {
                 continue;
             }
 
             // Add at the end.
             $count++;
             $course = new \stdClass;
-            $course->path = $pathid;
-            $course->course = $courseid;
+            $course->pathid = $pathid;
+            $course->courseid = $courseid;
             $course->sequence = $count;
             $course->groupid = $group->id;
-            $DB->insert_record('iomad_learningpathcourse', $course);
+            $DB->insert_record('block_iomad_learningpath_courses', $course);
         }
     }
 
@@ -588,7 +591,7 @@ class companypaths {
 
         // Work through courses.
         foreach ($courseids as $courseid) {
-            $DB->delete_records('iomad_learningpathcourse', ['course' => $courseid, 'path' => $pathid]);
+            $DB->delete_records('block_iomad_learningpath_courses', ['courseid' => $courseid, 'pathid' => $pathid]);
         }
 
         // Fix the sequence.
@@ -603,11 +606,11 @@ class companypaths {
     public function fix_sequence(int $pathid) {
         global $DB;
 
-        $courses = $DB->get_records('iomad_learningpathcourse', ['path' => $pathid], 'sequence ASC');
+        $courses = $DB->get_records('block_iomad_learningpath_courses', ['pathid' => $pathid], 'sequence ASC');
         $count = 1;
         foreach ($courses as $course) {
             $course->sequence = $count;
-            $DB->update_record('iomad_learningpathcourse', $course);
+            $DB->update_record('block_iomad_learningpath_courses', $course);
             $count++;
         }
     }
@@ -626,17 +629,17 @@ class companypaths {
         }
 
         // Delete courses from path.
-        $DB->delete_records('iomad_learningpathcourse', ['path' => $pathid]);
+        $DB->delete_records('block_iomad_learningpath_courses', ['pathid' => $pathid]);
 
         // Delete groups from path.
-        $DB->delete_records('iomad_learningpathgroup', ['learningpath' => $pathid]);
+        $DB->delete_records('block_iomad_learningpath_groups', ['pathid' => $pathid]);
 
         // Delete image from path (if any).
         foreach (['picture', 'mainpicture', 'thumbnail'] as $component) {
             $this->delete_file($this->context->id, 'block_iomad_learningpath', $component, $pathid, true);
         }
         // Delete path itself.
-        $DB->delete_records('iomad_learningpath', ['id' => $pathid]);
+        $DB->delete_records('block_iomad_learningpath', ['id' => $pathid]);
     }
 
     /**
@@ -681,11 +684,11 @@ class companypaths {
         global $DB;
 
         // Get original path.
-        $path = $DB->get_record('iomad_learningpath', ['id' => $pathid], '*', MUST_EXIST);
+        $path = $DB->get_record('block_iomad_learningpath', ['id' => $pathid], '*', MUST_EXIST);
 
         // Work out what new name will be.
         $count = 1;
-        while ($DB->get_record('iomad_learningpath', ['name' => $path->name . " Copy $count"])) {
+        while ($DB->get_record('block_iomad_learningpath', ['name' => $path->name . " Copy $count"])) {
             $count++;
             if ($count >= 9999) {
                 throw new \coding_exception('countlimit', 'Failed to find new name for path');
@@ -694,39 +697,39 @@ class companypaths {
         $newname = $path->name . " Copy $count";
 
         // Create new path.
-        $newpath = new \stdClass;
-        $newpath->company = $path->company;
+        $newpath = (object) [];
+        $newpath->companyid = $path->companyid;
         $newpath->name = $newname;
         $newpath->description = $path->description;
         $newpath->active = false;
         $newpath->timecreated = time();
         $newpath->timeupdated = time();
-        $newpathid = $DB->insert_record('iomad_learningpath', $newpath);
+        $newpathid = $DB->insert_record('block_iomad_learningpath', $newpath);
 
         // Copy images.
         $this->copy_image($this->context->id, 'block_iomad_learningpath', 'mainpicture', $pathid, 'picture', $newpathid);
         $this->copy_image($this->context->id, 'block_iomad_learningpath', 'thumbnail', $pathid, 'thumbnail', $newpathid);
 
         // Copy groups.
-        $groups = $DB->get_records('iomad_learningpathgroup', ['learningpath' => $pathid]);
+        $groups = $DB->get_records('block_iomad_learningpath_groups', ['pathid' => $pathid]);
         foreach ($groups as $group) {
-            $group->learningpath = $newpathid;
-            $group->newid = $DB->insert_record('iomad_learningpathgroup', $group);
+            $group->pathid = $newpathid;
+            $group->newid = $DB->insert_record('block_iomad_learningpath_groups', $group);
         }
 
         // Copy courses.
-        $courses = $DB->get_records('iomad_learningpathcourse', ['path' => $pathid]);
+        $courses = $DB->get_records('block_iomad_learningpath_courses', ['pathid' => $pathid]);
         foreach ($courses as $course) {
-            $course->path = $newpathid;
+            $course->pathid = $newpathid;
             $course->groupid = $groups[$course->groupid]->newid;
-            $DB->insert_record('iomad_learningpathcourse', $course);
+            $DB->insert_record('block_iomad_learningpath_courses', $course);
         }
 
         // Copy students over.
-        $pathusers = $DB->get_records('iomad_learningpathuser', ['pathid' => $pathid]);
+        $pathusers = $DB->get_records('block_iomad_learningpath_users', ['pathid' => $pathid]);
         foreach ($pathusers as $pathuser) {
             $pathuser->pathid = $newpathid;
-            $DB->insert_record('iomad_learningpathuser', $pathuser);
+            $DB->insert_record('block_iomad_learningpath_users', $pathuser);
         }
     }
 
@@ -740,7 +743,7 @@ class companypaths {
         global $DB;
 
         $sql = "SELECT u.*
-            FROM {user} u JOIN {iomad_learningpathuser} lpu ON lpu.userid = u.id
+            FROM {user} u JOIN {block_iomad_learningpath_users} lpu ON lpu.userid = u.id
             WHERE u.deleted = 0
             AND u.suspended = 0
             AND lpu.pathid = :pathid
@@ -837,12 +840,15 @@ class companypaths {
         foreach ($userids as $userid) {
 
             // Check userid is really in this company.
-            if (!$companyuser = $DB->get_record('local_iomad_company_users', ['companyid' => $this->companyid, 'userid' => $userid])) {
+            if (!$companyuser = $DB->get_record(
+                'local_iomad_company_users',
+                ['companyid' => $this->companyid, 'userid' => $userid]
+            )) {
                 throw new \coding_exception('invaliduserid', 'User is not a member of current company - id = ' . $userid);
             }
 
             // Is the userid already in the path.
-            if ($user = $DB->get_record('iomad_learningpathuser', ['pathid' => $pathid, 'userid' => $userid])) {
+            if ($user = $DB->get_record('block_iomad_learningpath_users', ['pathid' => $pathid, 'userid' => $userid])) {
                 continue;
             }
 
@@ -850,7 +856,7 @@ class companypaths {
             $user = new \stdClass;
             $user->pathid = $pathid;
             $user->userid = $userid;
-            $DB->insert_record('iomad_learningpathuser', $user);
+            $DB->insert_record('block_iomad_learningpath_users', $user);
         }
 
         return true;
@@ -867,11 +873,14 @@ class companypaths {
         foreach ($userids as $userid) {
 
             // Check userid is really in this company.
-            if (!$companyuser = $DB->get_record('local_iomad_company_users', ['companyid' => $this->companyid, 'userid' => $userid])) {
+            if (!$companyuser = $DB->get_record(
+                'local_iomad_company_users',
+                ['companyid' => $this->companyid, 'userid' => $userid]
+            )) {
                 throw new \coding_exception('invaliduserid', 'User is not a member of current company - id = ' . $userid);
             }
 
-            $DB->delete_records('iomad_learningpathuser', ['pathid' => $pathid, 'userid' => $userid]);
+            $DB->delete_records('block_iomad_learningpath_users', ['pathid' => $pathid, 'userid' => $userid]);
         }
 
         return true;
@@ -886,12 +895,12 @@ class companypaths {
     public function assign_license_to_plan(int $pathid, int $licenseid) {
         global $DB;
 
-        $path = $DB->get_record('iomad_learningpath', ['id' => $pathid]);
+        $path = $DB->get_record('block_iomad_learningpath', ['id' => $pathid]);
 
         // If we are removing a license.
         if (($licenseid == 0 && !empty($path->licenseid)) || $path->licenseid != $licenseid) {
             // Remove the courses from the learning path.
-            if ($courses = $DB->get_records('iomad_learningpathcourse', ['path' => $pathid], 'course', 'course')) {
+            if ($courses = $DB->get_records('block_iomad_learningpath_courses', ['pathid' => $pathid], 'courseid', 'course')) {
                 self::remove_courses($pathid, array_keys($courses));
             }
         }
@@ -899,13 +908,18 @@ class companypaths {
         // Are we adding a license?
         if (!empty($licenseid) && $path->licenseid != $licenseid) {
             // Get the license courses.
-            if ($newcourses = $DB->get_records('local_iomad_company_license_courses', ['licenseid' => $licenseid], 'courseid', 'courseid')) {
+            if ($newcourses = $DB->get_records(
+                'local_iomad_company_license_courses',
+                ['licenseid' => $licenseid],
+                'courseid',
+                'courseid'
+            )) {
                 self::add_courses($pathid, array_keys($newcourses));
             }
         }
 
         // Update the path.
-        $DB->set_field('iomad_learningpath', 'licenseid', $licenseid, ['id' => $pathid]);
+        $DB->set_field('block_iomad_learningpath', 'licenseid', $licenseid, ['id' => $pathid]);
     }
 
     /** Events **/
@@ -932,7 +946,7 @@ class companypaths {
         }
 
         // Check if this license is tied to a path.
-        if (!$path = $DB->get_record('iomad_learningpath', ['licenseid' => $licenseid])) {
+        if (!$path = $DB->get_record('block_iomad_learningpath', ['licenseid' => $licenseid])) {
             return;
         }
 
@@ -964,7 +978,7 @@ class companypaths {
         }
 
         // Check if this license is tied to a path.
-        if (!$path = $DB->get_record('iomad_learningpath', ['licenseid' => $licenseid])) {
+        if (!$path = $DB->get_record('block_iomad_learningpath', ['licenseid' => $licenseid])) {
             return;
         }
 
@@ -973,7 +987,12 @@ class companypaths {
         if (!empty($licenserecord->program)) {
             // This is a program of courses.
             // If it's been updated we need to deal with any course changes.
-            $currentcourses = $DB->get_records('local_iomad_company_license_courses', ['licenseid' => $licenseid], null, 'courseid');
+            $currentcourses = $DB->get_records(
+                'local_iomad_company_license_courses',
+                ['licenseid' => $licenseid],
+                null,
+                'courseid'
+            );
             $oldcourses = (array) json_decode($event->other['oldcourses'], true);
 
             // Check for courses which have been removed.
@@ -1020,7 +1039,7 @@ class companypaths {
         }
 
         // Check if this license is tied to a path.
-        if (!$path = $DB->get_record('iomad_learningpath', ['licenseid' => $licenseid])) {
+        if (!$path = $DB->get_record('block_iomad_learningpath', ['licenseid' => $licenseid])) {
             return;
         }
 
@@ -1056,7 +1075,7 @@ class companypaths {
         }
 
         // Check if this license is tied to a path.
-        if (!$path = $DB->get_record('iomad_learningpath', ['licenseid' => $licenseid])) {
+        if (!$path = $DB->get_record('block_iomad_learningpath', ['licenseid' => $licenseid])) {
             return;
         }
 

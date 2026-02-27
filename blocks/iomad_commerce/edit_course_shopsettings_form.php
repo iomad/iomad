@@ -70,13 +70,13 @@ if ($default && iomad::has_capability('block/iomad_commerce:manage_default', $co
 
 // Get all learning paths that have courses and are active.
 $companypaths = $DB->get_records_sql_menu("SELECT ilp.id, ilp.name
-                                           FROM {iomad_learningpath} ilp
-                                           WHERE ilp.company = :companyid
+                                           FROM {block_iomad_learningpath} ilp
+                                           WHERE ilp.companyid = :companyid
                                            AND ilp.active = 1
                                            AND ilp.id IN (
-                                               SELECT path
-                                               FROM {iomad_learningpathcourse} ilpc
-                                               WHERE ilp.id = ilpc.path)",
+                                               SELECT pathid
+                                               FROM {block_iomad_learningpath_courses} ilpc
+                                               WHERE ilp.id = ilpc.pathid)",
                                            ['companyid' => $companyid]);
 
 $priceblocks = [];

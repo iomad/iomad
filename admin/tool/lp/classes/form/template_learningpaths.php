@@ -53,11 +53,17 @@ class template_learningpaths extends moodleform {
             $excludesql = "AND id NOT IN (" . implode(',', $this->_customdata['excludelearningpaths']) .")";
         }
 
-        $learningpaths = $DB->get_records_sql_menu("SELECT id,name FROM {iomad_learningpath}
-                                                    WHERE company = :companyid
+        $learningpaths = $DB->get_records_sql_menu("SELECT id,name FROM {block_iomad_learningpath}
+                                                    WHERE companyid = :companyid
                                                     $excludesql
                                                     ORDER BY name", ['companyid' => $companyid]);
-        $mform->addElement('autocomplete', 'learningpaths', get_string('selectlearningpathstosync', 'block_iomad_learningpath'), $learningpaths, ['multiple' => true]);
+        $mform->addElement(
+            'autocomplete',
+            'learningpaths',
+            get_string('selectlearningpathstosync', 'block_iomad_learningpath'),
+            $learningpaths,
+            ['multiple' => true]
+        );
         $mform->addElement('submit', 'submit', get_string('addlearningpaths', 'block_iomad_learningpath'));
     }
 }

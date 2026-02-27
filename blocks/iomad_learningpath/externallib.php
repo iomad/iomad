@@ -71,12 +71,12 @@ class block_iomad_learningpath_external extends external_api {
         $params = self::validate_parameters(self::activate_parameters(), ['pathid' => $pathid, 'state' => $state]);
 
         // Find the learning path.
-        if (!$path = $DB->get_record('iomad_learningpath', ['id' => $params['pathid']])) {
+        if (!$path = $DB->get_record('block_iomad_learningpath', ['id' => $params['pathid']])) {
             throw new invalid_parameter_exception("Learning Path with id = $pathid does not exist");
         }
 
         // Find/validate company.
-        $companyid = $path->company;
+        $companyid = $path->companyid;
         if (!$company = $DB->get_record('local_iomad_companies', ['id' => $companyid])) {
             throw new invalid_parameter_exception("Company with id = $companyid does not exist");
         }
@@ -93,7 +93,7 @@ class block_iomad_learningpath_external extends external_api {
 
         // Set the new state.
         $path->active = $params['state'];
-        $DB->update_record('iomad_learningpath', $path);
+        $DB->update_record('block_iomad_learningpath', $path);
 
         return true;
     }
@@ -146,8 +146,8 @@ class block_iomad_learningpath_external extends external_api {
             ['pathid' => $pathid, 'filter' => $filter, 'category' => $category, 'program' => $program]);
 
         // Find learning path and company.
-        $path = $DB->get_record('iomad_learningpath', ['id' => $params['pathid']], '*', MUST_EXIST);
-        $company = $DB->get_record('local_iomad_companies', ['id' => $path->company]);
+        $path = $DB->get_record('block_iomad_learningpath', ['id' => $params['pathid']], '*', MUST_EXIST);
+        $company = $DB->get_record('local_iomad_companies', ['id' => $path->companyid]);
         $companyid = $company->id;
 
         // Security.
@@ -229,12 +229,12 @@ class block_iomad_learningpath_external extends external_api {
         );
 
         // Get path.
-        if (!$path = $DB->get_record('iomad_learningpath', ['id' => $params['pathid']])) {
+        if (!$path = $DB->get_record('block_iomad_learningpath', ['id' => $params['pathid']])) {
             throw new invalid_parameter_exception("Path with id = $pathid does not exist");
         }
 
         // Find/validate company.
-        $companyid = $path->company;
+        $companyid = $path->companyid;
         if (!$company = $DB->get_record('local_iomad_companies', ['id' => $companyid])) {
             throw new invalid_parameter_exception("Company with id = $companyid does not exist");
         }
@@ -288,12 +288,12 @@ class block_iomad_learningpath_external extends external_api {
         $params = self::validate_parameters(self::removecourses_parameters(), ['pathid' => $pathid, 'courseids' => $courseids]);
 
         // Get path.
-        if (!$path = $DB->get_record('iomad_learningpath', ['id' => $params['pathid']])) {
+        if (!$path = $DB->get_record('block_iomad_learningpath', ['id' => $params['pathid']])) {
             throw new invalid_parameter_exception("Path with id = $pathid does not exist");
         }
 
         // Find/validate company.
-        $companyid = $path->company;
+        $companyid = $path->companyid;
         if (!$company = $DB->get_record('local_iomad_companies', ['id' => $companyid])) {
             throw new invalid_parameter_exception("Company with id = $companyid does not exist");
         }
@@ -354,12 +354,12 @@ class block_iomad_learningpath_external extends external_api {
         $params = self::validate_parameters(self::getcourses_parameters(), ['pathid' => $pathid, 'groupid' => $groupid]);
 
         // Get path.
-        if (!$path = $DB->get_record('iomad_learningpath', ['id' => $params['pathid']])) {
+        if (!$path = $DB->get_record('block_iomad_learningpath', ['id' => $params['pathid']])) {
             throw new invalid_parameter_exception("Path with id = $pathid does not exist");
         }
 
         // Find/validate company.
-        $companyid = $path->company;
+        $companyid = $path->companyid;
         if (!$company = $DB->get_record('local_iomad_companies', ['id' => $companyid])) {
             throw new invalid_parameter_exception("Company with id = $companyid does not exist");
         }
@@ -447,12 +447,12 @@ class block_iomad_learningpath_external extends external_api {
         $params = self::validate_parameters(self::ordercourses_parameters(), ['pathid' => $pathid, 'courses' => $courses]);
 
         // Get path.
-        if (!$path = $DB->get_record('iomad_learningpath', ['id' => $params['pathid']])) {
+        if (!$path = $DB->get_record('block_iomad_learningpath', ['id' => $params['pathid']])) {
             throw new invalid_parameter_exception("Path with id = $pathid does not exist");
         }
 
         // Find/validate company.
-        $companyid = $path->company;
+        $companyid = $path->companyid;
         if (!$company = $DB->get_record('local_iomad_companies', ['id' => $companyid])) {
             throw new invalid_parameter_exception("Company with id = $companyid does not exist");
         }
@@ -468,16 +468,19 @@ class block_iomad_learningpath_external extends external_api {
         $courseids = [];
         foreach ($params['courses'] as $course) {
             $courseids[] = $course['courseid'];
-            if (!$DB->record_exists('iomad_learningpathcourse', ['path' => $params['pathid'], 'course' => $course['courseid']])) {
+            if (!$DB->record_exists(
+                'block_iomad_learningpath_courses',
+                ['pathid' => $params['pathid'], 'courseid' => $course['courseid']]
+            )) {
                 $companypaths->add_courses($path->id, [$course['courseid']], $course['groupid']);
             }
         }
 
         // Find any missing ones and delete them.
-        $oldcourses = $DB->get_records('iomad_learningpathcourse', ['path' => $params['pathid']]);
+        $oldcourses = $DB->get_records('block_iomad_learningpath_courses', ['pathid' => $params['pathid']]);
         foreach ($oldcourses as $oldcourse) {
-            if (!in_array($oldcourse->course, $courseids)) {
-                $companypaths->remove_courses($path->id, [$oldcourse->course]);
+            if (!in_array($oldcourse->courseid, $courseids)) {
+                $companypaths->remove_courses($path->id, [$oldcourse->courseid]);
             }
         }
 
@@ -485,10 +488,10 @@ class block_iomad_learningpath_external extends external_api {
         $sequence = 1;
         foreach ($params['courses'] as $course) {
             $oldcourse = $DB->get_record(
-                'iomad_learningpathcourse',
+                'block_iomad_learningpath_courses',
                 [
-                    'path' => $params['pathid'],
-                    'course' => $course['courseid'],
+                    'pathid' => $params['pathid'],
+                    'courseid' => $course['courseid'],
                 ],
                 '*',
                 MUST_EXIST
@@ -498,7 +501,7 @@ class block_iomad_learningpath_external extends external_api {
             $oldcourse->groupid = $course['groupid'];
             $oldcourse->sequence = $sequence;
             $sequence++;
-            $DB->update_record('iomad_learningpathcourse', $oldcourse);
+            $DB->update_record('block_iomad_learningpath_courses', $oldcourse);
         }
 
         return true;
@@ -536,12 +539,12 @@ class block_iomad_learningpath_external extends external_api {
         $params = self::validate_parameters(self::deletepath_parameters(), ['pathid' => $pathid]);
 
         // Get path.
-        if (!$path = $DB->get_record('iomad_learningpath', ['id' => $params['pathid']])) {
+        if (!$path = $DB->get_record('block_iomad_learningpath', ['id' => $params['pathid']])) {
             throw new invalid_parameter_exception("Path with id = $pathid does not exist");
         }
 
         // Find/validate company.
-        $companyid = $path->company;
+        $companyid = $path->companyid;
         if (!$company = $DB->get_record('local_iomad_companies', ['id' => $companyid])) {
             throw new invalid_parameter_exception("Company with id = $companyid does not exist");
         }
@@ -592,12 +595,12 @@ class block_iomad_learningpath_external extends external_api {
         $params = self::validate_parameters(self::copypath_parameters(), ['pathid' => $pathid]);
 
         // Get path.
-        if (!$path = $DB->get_record('iomad_learningpath', ['id' => $params['pathid']])) {
+        if (!$path = $DB->get_record('block_iomad_learningpath', ['id' => $params['pathid']])) {
             throw new invalid_parameter_exception("Path with id = $pathid does not exist");
         }
 
         // Find/validate company.
-        $companyid = $path->company;
+        $companyid = $path->companyid;
         if (!$company = $DB->get_record('local_iomad_companies', ['id' => $companyid])) {
             throw new invalid_parameter_exception("Company with id = $companyid does not exist");
         }
@@ -712,12 +715,12 @@ class block_iomad_learningpath_external extends external_api {
         $params = self::validate_parameters(self::addusers_parameters(), ['pathid' => $pathid, 'userids' => $userids]);
 
         // Get path.
-        if (!$path = $DB->get_record('iomad_learningpath', ['id' => $params['pathid']])) {
+        if (!$path = $DB->get_record('block_iomad_learningpath', ['id' => $params['pathid']])) {
             throw new invalid_parameter_exception("Path with id = $pathid does not exist");
         }
 
         // Find/validate company.
-        $companyid = $path->company;
+        $companyid = $path->companyid;
         if (!$company = $DB->get_record('local_iomad_companies', ['id' => $companyid])) {
             throw new invalid_parameter_exception("Company with id = $companyid does not exist");
         }
@@ -841,12 +844,12 @@ class block_iomad_learningpath_external extends external_api {
         $params = self::validate_parameters(self::removeusers_parameters(), ['pathid' => $pathid, 'userids' => $userids]);
 
         // Get path.
-        if (!$path = $DB->get_record('iomad_learningpath', ['id' => $params['pathid']])) {
+        if (!$path = $DB->get_record('block_iomad_learningpath', ['id' => $params['pathid']])) {
             throw new invalid_parameter_exception("Path with id = $pathid does not exist");
         }
 
         // Find/validate company.
-        $companyid = $path->company;
+        $companyid = $path->companyid;
         if (!$company = $DB->get_record('local_iomad_companies', ['id' => $companyid])) {
             throw new invalid_parameter_exception("Company with id = $companyid does not exist");
         }

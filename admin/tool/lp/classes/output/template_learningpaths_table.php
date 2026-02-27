@@ -87,7 +87,7 @@ class template_learningpaths_table extends table_sql {
 
         $action = new \confirm_action(get_string('areyousure'));
         $url = new moodle_url($this->baseurl);
-        $url->params(array('removelearningpath' => $row->id, 'sesskey' => sesskey()));
+        $url->params(['removelearningpath' => $row->id, 'sesskey' => sesskey()]);
         $actionlink = $OUTPUT->action_link($url, '', $action, null, new \pix_icon('t/delete',
             get_string('stopsyncinglearningpath', 'block_iomad_learningpath')));
 
@@ -100,9 +100,9 @@ class template_learningpaths_table extends table_sql {
      */
     protected function define_table_columns() {
         // Define headers and columns.
-        $cols = array(
+        $cols = [
             'name' => get_string('pluginname', 'block_iomad_learningpath'),
-        );
+        ];
 
         if ($this->template->can_manage()) {
             $cols['actions'] = get_string('actions');
@@ -130,7 +130,7 @@ class template_learningpaths_table extends table_sql {
      */
     protected function get_sql_and_params($count = false) {
         global $companyid;
-        $fields = 'c.id, c.name';
+        $fields = 'il.id, il.name';
 
         if ($count) {
             $select = "COUNT(1)";
@@ -140,18 +140,18 @@ class template_learningpaths_table extends table_sql {
 
         $sql = "SELECT $select
                   FROM {" . \core_competency\template_learningpath::TABLE . "} tc
-                  JOIN {iomad_learningpath} c ON c.id = tc.learningpathid
+                  JOIN {block_iomad_learningpath} il ON il.id = tc.learningpathid
                  WHERE tc.templateid = :templateid
-                  AND company = :companyid";
-        $params = array('templateid' => $this->template->get('id'),
-                        'companyid' => $companyid);
+                  AND il.companyid = :companyid";
+        $params = ['templateid' => $this->template->get('id'),
+                        'companyid' => $companyid];
 
         // Add order by if needed.
         if (!$count && $sqlsort = $this->get_sql_sort()) {
             $sql .= " ORDER BY " . $sqlsort;
         }
 
-        return array($sql, $params);
+        return [$sql, $params)]
     }
 
     /**

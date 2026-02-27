@@ -93,20 +93,20 @@ class editpath_form extends moodleform {
         global $DB;
         $errors = [];
         if ($this->_customdata['id'] != 0
-        && $DB->record_exists('iomad_learningpath', ['id' => $this->_customdata['id']])) {
+        && $DB->record_exists('block_iomad_learningpath', ['id' => $this->_customdata['id']])) {
             if (!empty($DB->get_record_sql(
-                "SELECT id, name, company
-                FROM {iomad_learningpath}
-                WHERE id != ? AND name = ? AND company = ?",
+                "SELECT id, name, companyid
+                FROM {block_iomad_learningpath}
+                WHERE id != ? AND name = ? AND companyid = ?",
                 [$this->_customdata['id'], $data['name'], $this->_customdata['companyid']]))) {
                 $errors['name'] = get_string('learningpathnameused', 'block_iomad_learningpath');
             } else {
                 return $errors;
             }
         } else if (!empty($DB->get_record_sql(
-            "SELECT company, name
-            FROM {iomad_learningpath}
-            WHERE company = ?
+            "SELECT companyid, name
+            FROM {block_iomad_learningpath}
+            WHERE companyid = ?
             AND name = ?",
             [$this->_customdata['companyid'], $data['name']]))) {
             $errors['name'] = get_string('learningpathnameused', 'block_iomad_learningpath');

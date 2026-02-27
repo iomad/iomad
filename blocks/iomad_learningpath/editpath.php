@@ -94,9 +94,9 @@ if ($form->is_cancelled()) {
     if ($id == 0) {
         $path->timecreated = time();
         $path->active = 0;
-        $id = $DB->insert_record('iomad_learningpath', $path);
+        $id = $DB->insert_record('block_iomad_learningpath', $path);
     } else {
-        $DB->update_record('iomad_learningpath', $path);
+        $DB->update_record('block_iomad_learningpath', $path);
     }
     // Check if a file has been uploaded.
     $fs = get_file_storage();

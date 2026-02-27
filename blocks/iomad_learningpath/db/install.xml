@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="blocks/iomad_learningpath/db" VERSION="20260222" COMMENT="XMLDB file for Moodle blocks/iomad_learningpath"
+<XMLDB PATH="blocks/iomad_learningpath/db" VERSION="20260227" COMMENT="XMLDB file for Moodle blocks/iomad_learningpath"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="iomad_learningpath" COMMENT="List of learning paths">
+    <TABLE NAME="block_iomad_learningpath" COMMENT="IOMAD learningpath list">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="company" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Company ID"/>
+        <FIELD NAME="companyid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Company ID"/>
         <FIELD NAME="name" TYPE="char" LENGTH="80" NOTNULL="true" SEQUENCE="false" COMMENT="Learning path name"/>
         <FIELD NAME="description" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Learning path description"/>
         <FIELD NAME="active" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Is the learning path available"/>
@@ -20,42 +20,38 @@
         <KEY NAME="fk_licenseid" TYPE="foreign" FIELDS="licenseid" REFTABLE="local_iomad_company_licenses" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="ix_com" UNIQUE="false" FIELDS="company" COMMENT="Index on company id [Foreign Key, company, company, id]"/>
-        <INDEX NAME="uix_comnam" UNIQUE="true" FIELDS="company, name" COMMENT="Unique index of company and name"/>
+        <INDEX NAME="companyid" UNIQUE="false" FIELDS="companyid"/>
+        <INDEX NAME="companyid-name" UNIQUE="true" FIELDS="companyid, name"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="iomad_learningpathcourse" COMMENT="Courses for each learning path">
+    <TABLE NAME="block_iomad_learningpath_courses" COMMENT="IOMAD learningpath courses">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="course" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false" COMMENT="Link to id in course table"/>
-        <FIELD NAME="path" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false" COMMENT="link to id in iomad_learningpath id"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false" COMMENT="Link to id in course table"/>
+        <FIELD NAME="pathid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false" COMMENT="link to id in block_iomad_learningpaths"/>
         <FIELD NAME="sequence" TYPE="int" LENGTH="11" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Order presented to student"/>
         <FIELD NAME="groupid" TYPE="int" LENGTH="11" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Group membership (if any)"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="course" TYPE="foreign" FIELDS="course" REFTABLE="course" REFFIELDS="id"/>
-        <KEY NAME="group" TYPE="foreign" FIELDS="groupid" REFTABLE="iomad_learningpathgroup" REFFIELDS="id"/>
+        <KEY NAME="fk_groupid" TYPE="foreign" FIELDS="groupid" REFTABLE="block_iomad_learningpath_groups" REFFIELDS="id"/>
+        <KEY NAME="fk_pathid" TYPE="foreign" FIELDS="pathid" REFTABLE="block_iomad_learningpath" REFFIELDS="id"/>
+        <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
       </KEYS>
-      <INDEXES>
-        <INDEX NAME="ix_pa" UNIQUE="false" FIELDS="path" COMMENT="[Foreign Key, path, iomad_learningpath, id]"/>
-      </INDEXES>
     </TABLE>
-    <TABLE NAME="iomad_learningpathgroup" COMMENT="Group together courses in path">
+    <TABLE NAME="block_iomad_learningpath_groups" COMMENT="IOMAD learningpath groups">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="learningpath" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="pathid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="name" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="sequence" TYPE="int" LENGTH="11" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_pathid" TYPE="foreign" FIELDS="pathid" REFTABLE="block_iomad_learningpath" REFFIELDS="id"/>
       </KEYS>
-      <INDEXES>
-        <INDEX NAME="ix_lp" UNIQUE="false" FIELDS="learningpath" COMMENT="[Foreign Key, learningpath, iomad_learningpath, id]"/>
-      </INDEXES>
     </TABLE>
-    <TABLE NAME="iomad_learningpathuser" COMMENT="User's assigned to learning path">
+    <TABLE NAME="block_iomad_learningpath_users" COMMENT="IOMAD learningpath user assignments">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="pathid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false" COMMENT="Path ID"/>
@@ -63,28 +59,27 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="fk_pathid" TYPE="foreign" FIELDS="pathid" REFTABLE="block_iomad_learningpath" REFFIELDS="id"/>
       </KEYS>
-      <INDEXES>
-        <INDEX NAME="ix_pa" UNIQUE="false" FIELDS="pathid" COMMENT="[Foreign Key, pathid, iomad_learningpath, id]"/>
-      </INDEXES>
     </TABLE>
-    <TABLE NAME="competency_templatelearnpath" COMMENT="Default comment for the table, please edit me">
+    <TABLE NAME="block_iomad_learningpath_competency_templates" COMMENT="IOMAD learningpaths competency templates">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="templateid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
-        <FIELD NAME="learningpathid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="pathid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_pathid" TYPE="foreign" FIELDS="pathid" REFTABLE="block_iomad_learningpath" REFFIELDS="id"/>
+        <KEY NAME="fk_templateid" TYPE="foreign" FIELDS="templateid" REFTABLE="competency_template" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="comptemp_temlp_uix" UNIQUE="true" FIELDS="templateid, learningpathid" COMMENT="[Foreign Key, learningpathid, iomad_learningpath, id]"/>
-        <INDEX NAME="comptemp_temlp2" UNIQUE="false" FIELDS="templateid" COMMENT="[Foreign Key, templateid, competency_template, id]"/>
-        <INDEX NAME="comptemp_uselp2" UNIQUE="false" FIELDS="usermodified"/>
+        <INDEX NAME="usermodified" UNIQUE="false" FIELDS="usermodified"/>
+        <INDEX NAME="templateid-pathid" UNIQUE="true" FIELDS="templateid, pathid"/>
       </INDEXES>
     </TABLE>
   </TABLES>

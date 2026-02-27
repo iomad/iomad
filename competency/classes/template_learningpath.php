@@ -23,7 +23,6 @@
  */
 
 namespace core_competency;
-defined('MOODLE_INTERNAL') || die();
 
 use lang_string;
 use core_competency\template;
@@ -37,7 +36,8 @@ use core_competency\template;
  */
 class template_learningpath extends persistent {
 
-    const TABLE = 'competency_templatelearnpath';
+    /** Database table to be used for this */
+    const TABLE = 'block_iomad_learningpath_competency_templates';
 
     /** 2 hours of threshold to prevent expired plans **/
     const DUEDATE_THRESHOLD = 7200;
@@ -48,14 +48,14 @@ class template_learningpath extends persistent {
      * @return array Where keys are the property names.
      */
     protected static function define_properties() {
-        return array(
-            'templateid' => array(
-                'type' => PARAM_INT
-            ),
-            'learningpathid' => array(
-                'type' => PARAM_INT
-            )
-        );
+        return [
+            'templateid' => [
+                'type' => PARAM_INT,
+            ],
+            'pathid' => [
+                'type' => PARAM_INT,
+            ],
+        ];
     }
 
     /**
@@ -64,9 +64,9 @@ class template_learningpath extends persistent {
      * @param  int $value The learningpath ID.
      * @return true|lang_string
      */
-    protected function validate_learningpathid($value) {
+    protected function validate_pathid($value) {
         global $DB;
-        if (!$DB->record_exists('iomad_learningpath', array('id' => $value))) {
+        if (!$DB->record_exists('block_iomad_learningpath', ['id' => $value])) {
             return new lang_string('invaliddata', 'error');
         }
         return true;
@@ -95,29 +95,29 @@ class template_learningpath extends persistent {
      * This method ignores the due date of the template.
      *
      * @param  int     $templateid The template ID.
-     * @param  int     $learningpathid The learningpath ID.
+     * @param  int     $pathid The learningpath ID.
      * @param  boolean $unlinkedaremissing When true, unlinked plans are considered as missing.
      * @return int[]   User IDs.
      */
-    public static function get_missing_plans($templateid, $learningpathid, $unlinkedaremissing = false) {
+    public static function get_missing_plans($templateid, $pathid, $unlinkedaremissing = false) {
         global $DB;
 
         $skipsql = '';
-        $skipparams = array();
+        $skipparams = [];
         if (!$unlinkedaremissing) {
             $skipsql = 'OR p.origtemplateid = :origtemplateid';
-            $skipparams = array('origtemplateid' => $templateid);
+            $skipparams = ['origtemplateid' => $templateid];
         }
 
         $sql = "SELECT cm.userid
-                  FROM {iomad_learningpathuser} cm
+                  FROM {block_iomad_learningpath_users} cm
              LEFT JOIN {" . plan::TABLE . "} p
                     ON p.userid = cm.userid
                    AND (p.templateid = :templateid
                         $skipsql)
-                 WHERE cm.pathid = :learningpathid
+                 WHERE cm.pathid = :pathid
                    AND p.id IS NULL";
-        $params = array('templateid' => $templateid, 'learningpathid' => $learningpathid) + $skipparams;
+        $params = ['templateid' => $templateid, 'pathid' => $pathid] + $skipparams;
 
         return $DB->get_fieldset_sql($sql, $params);
     }
@@ -129,16 +129,16 @@ class template_learningpath extends persistent {
      * then it is loaded in a the model, if not then it is up to the developer to save the model.
      *
      * @param int $templateid
-     * @param int $learningpathid
+     * @param int $pathid
      * @return template_learningpath
      */
-    public static function get_relation($templateid, $learningpathid) {
+    public static function get_relation($templateid, $pathid) {
         global $DB;
 
-        $params = array(
+        $params = [
             'templateid' => $templateid,
-            'learningpathid' => $learningpathid
-        );
+            'pathid' => $pathid,
+        ];
 
         $relation = new static(null, (object) $params);
         if ($record = $DB->get_record(self::TABLE, $params)) {
@@ -160,11 +160,11 @@ class template_learningpath extends persistent {
     public static function get_relations_by_templateid($templateid) {
         global $DB;
 
-        $params = array(
-            'templateid' => $templateid
-        );
+        $params = [
+            'templateid' => $templateid,
+        ];
 
-        $relations = array();
+        $relations = [];
         $records = $DB->get_records(self::TABLE, $params);
         foreach ($records as $record) {
             $relations[] = new template_learningpath(0, $record);
@@ -198,8 +198,8 @@ class template_learningpath extends persistent {
         }
 
         $sql = "SELECT " . $DB->sql_concat('cm.userid', 'tc.templateid') . " as uniqueid, cm.userid, t.*
-                  FROM {iomad_learningpathuser} cm
-                  JOIN {" . self::TABLE . "} tc ON cm.pathid = tc.learningpathid
+                  FROM {block_iomad_learningpath_users} cm
+                  JOIN {" . self::TABLE . "} tc ON cm.pathid = tc.pathid
                   JOIN {" . template::TABLE . "} t
                     ON (tc.templateid = t.id AND t.visible = 1)
                    AND (t.duedate = 0 OR t.duedate > :time1)
@@ -207,12 +207,12 @@ class template_learningpath extends persistent {
                   $planwhereclause
               ORDER BY t.id";
 
-        $params = array('time1' => time(), 'time2' => time(),
+        $params = ['time1' => time(), 'time2' => time(),
                         'lastruntime1' => $lastruntime, 'lastruntime2' => $lastruntime,
-                        'lastruntime3' => $lastruntime, 'lastruntime4' => $lastruntime);
+                        'lastruntime3' => $lastruntime, 'lastruntime4' => $lastruntime];
         $results = $DB->get_records_sql($sql, $params);
 
-        $missingplans = array();
+        $missingplans = [];
         foreach ($results as $usertemplate) {
             $userid = $usertemplate->userid;
 
