@@ -151,7 +151,7 @@ class template_learningpaths_table extends table_sql {
             $sql .= " ORDER BY " . $sqlsort;
         }
 
-        return [$sql, $params)]
+        return [$sql, $params];
     }
 
     /**
