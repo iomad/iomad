@@ -91,7 +91,7 @@ $PAGE->set_button($buttons);
 // Delete any valid nuggets.
 if ($deleteid) {
     // Check the thread is valid.
-    if (!$nuggetinfo = $DB->get_record('microlearning_nugget', ['id' => $deleteid])) {
+    if (!$nuggetinfo = $DB->get_record('block_iomad_microlearning_nuggets', ['id' => $deleteid])) {
         throw new moodle_exception('invalidnugget', 'block_iomad_microlearning');
     }
 
@@ -119,7 +119,7 @@ if ($deleteid) {
 $nuggettable = new nugget_table('block_microlearning_nuggets');
 $sqlparams = ['threadid' => $threadid];
 $selectsql = "*";
-$fromsql = "{microlearning_nugget}";
+$fromsql = "{block_iomad_microlearning_nuggets}";
 $wheresql = "threadid = :threadid";
 
 $headers = [

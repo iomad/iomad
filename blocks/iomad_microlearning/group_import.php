@@ -128,7 +128,7 @@ if (!empty($fileimport)) {
                 $upt->track('line', $linenum);
                 foreach ($line as $key => $value) {
                     if ($columns[$key] == 'thread') {
-                        if (!$threadrec = $DB->get_record('microlearning_thread', ['name' => $value,
+                        if (!$threadrec = $DB->get_record('block_iomad_microlearning_threads', ['name' => $value,
                                                                                    'companyid' => $companyid])) {
                             $grouperrors++;
                             $errornum++;
@@ -164,9 +164,9 @@ if (!empty($fileimport)) {
                         }
                     } else if ($columns[$key] == 'group') {
                         $threadkey = array_search('thread', $columns);
-                        if ($threadrec = $DB->get_record('microlearning_thread', ['name' => $line[$threadkey],
+                        if ($threadrec = $DB->get_record('block_iomad_microlearning_threads', ['name' => $line[$threadkey],
                                                                                   'companyid' => $companyid])) {
-                            if (!$groupinfo = $DB->get_record('microlearning_thread_group', ['name' => $value,
+                            if (!$groupinfo = $DB->get_record('block_iomad_microlearning_thread_groups', ['name' => $value,
                                                                                              'threadid' => $threadrec->id,
                                                                                              'companyid' => $companyid])) {
                                 $grouperrors++;
@@ -195,9 +195,9 @@ if (!empty($fileimport)) {
                 $upt->track('email', $grouprec->email);
                 $upt->track('thread', $grouprec->thread);
                 $upt->track('group', $grouprec->groupname);
-                if ($DB->get_records('microlearning_thread_user', ['threadid' => $grouprec->threadid,
+                if ($DB->get_records('block_iomad_microlearning_thread_users', ['threadid' => $grouprec->threadid,
                                                                    'userid' => $grouprec->userid])) {
-                    $DB->set_field('microlearning_thread_user',
+                    $DB->set_field('block_iomad_microlearning_thread_users',
                                    'groupid',
                                    $grouprec->groupid,
                                    ['threadid' => $grouprec->threadid, 'userid' => $grouprec->userid]);

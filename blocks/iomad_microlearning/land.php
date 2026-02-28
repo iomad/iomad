@@ -39,7 +39,7 @@ if (!$user = $DB->get_record('user', ['id' => $userid, 'deleted' => 0, 'suspende
 }
 
 // Check the nugget id still valid.
-if (!$nugget = $DB->get_record('microlearning_nugget', ['id' => $nuggetid])) {
+if (!$nugget = $DB->get_record('block_iomad_microlearning_nuggets', ['id' => $nuggetid])) {
     throw new moodle_exception('invalidnugget', 'block_iomad_microlearning');
 }
 
@@ -48,7 +48,7 @@ $allowcontinue = false;
 if (isloggedin() && !isguestuser()) {
     $allowcontinue = true;
 } else if ($DB->get_record_sql(
-    "SELECT id FROM {microlearning_thread_user}
+    "SELECT id FROM {block_iomad_microlearning_thread_users}
      WHERE userid = :userid
      AND nuggetid = :nuggetid
      AND accesskey = :accesskey

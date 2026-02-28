@@ -82,7 +82,7 @@ $PAGE->set_button($buttons);
 // Import any valid threads.
 if ($importid) {
     // Check the thread is valid.
-    if (!$threadinfo = $DB->get_record('microlearning_thread', ['id' => $importid])) {
+    if (!$threadinfo = $DB->get_record('block_iomad_microlearning_threads', ['id' => $importid])) {
         throw new moodle_exception('invalidthread', 'block_iomad_microlearning');
     }
 
@@ -107,7 +107,7 @@ if ($importid) {
 $threadtable = new thread_import_table('block_microlearning_thread_import');
 $sqlparams = ['companyid' => $companyid];
 $selectsql = "mt.*, c.name as companyname";
-$fromsql = "{microlearning_thread} mt JOIN {local_iomad_companies} c ON (mt.companyid = c.id)";
+$fromsql = "{block_iomad_microlearning_threads} mt JOIN {local_iomad_companies} c ON (mt.companyid = c.id)";
 $wheresql = "mt.companyid <> :companyid";
 if (!empty($search)) {
     $wheresql .= " AND mt.name like :search ";

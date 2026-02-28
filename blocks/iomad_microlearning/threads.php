@@ -80,7 +80,7 @@ dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 // Delete any valid threads.
 if ($deleteid) {
     // Check the thread is valid.
-    if (!$threadinfo = $DB->get_record('microlearning_thread', ['id' => $deleteid])) {
+    if (!$threadinfo = $DB->get_record('block_iomad_microlearning_threads', ['id' => $deleteid])) {
         throw new moodle_exception('invalidthread', 'block_iomad_microlearning');
     }
 
@@ -110,7 +110,7 @@ if ($deleteid) {
 // Clone any valid threads.
 if ($cloneid) {
     // Check the thread is valid.
-    if (!$threadinfo = $DB->get_record('microlearning_thread', ['id' => $cloneid])) {
+    if (!$threadinfo = $DB->get_record('block_iomad_microlearning_threads', ['id' => $cloneid])) {
         throw new moodle_exception('invalidthread', 'block_iomad_microlearning');
     }
 
@@ -141,7 +141,7 @@ if ($cloneid) {
 $threadtable = new thread_table('block_microlearning_threads');
 $sqlparams = ['companyid' => $companyid];
 $selectsql = "*";
-$fromsql = "{microlearning_thread}";
+$fromsql = "{block_iomad_microlearning_threads}";
 $wheresql = "companyid = :companyid";
 if (!empty($search)) {
     $wheresql .= " AND name like :search ";

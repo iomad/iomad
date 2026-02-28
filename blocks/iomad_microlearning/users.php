@@ -135,10 +135,10 @@ if ($companyid > 0) {
     if ($threadid != 0) {
         if ($data = $threadsform->get_data() || !empty($selectedthread)) {
             if ($threadid > 0) {
-                if (!$thread = $DB->get_record('microlearning_thread', ['id' => $threadid])) {
+                if (!$thread = $DB->get_record('block_iomad_microlearning_threads', ['id' => $threadid])) {
                     throw new moodle_exception('invalidthreadid', 'block_iomad_microlearning');
                 }
-                if (!$DB->get_records('microlearning_nugget', ['threadid' => $thread->id])) {
+                if (!$DB->get_records('block_iomad_microlearning_nuggets', ['threadid' => $thread->id])) {
                     // We don't have anything to assign.
                     echo $output->notification(get_string('nonuggets', 'block_iomad_microlearning'), 'info', false);
 
@@ -166,11 +166,11 @@ if ($companyid > 0) {
             }
             echo $usersform->display();
         } else if ($threadid > 0) {
-            $thread = $DB->get_record('microlearning_thread', ['id' => $threadid]);
-            if (!$thread = $DB->get_record('microlearning_thread', ['id' => $threadid])) {
+            $thread = $DB->get_record('block_iomad_microlearning_threads', ['id' => $threadid]);
+            if (!$thread = $DB->get_record('block_iomad_microlearning_threads', ['id' => $threadid])) {
                 throw new moodle_exception('invalidthreadid', 'block_iomad_microlearning');
             }
-            if (!$DB->get_records('microlearning_nugget', ['threadid' => $thread->id])) {
+            if (!$DB->get_records('block_iomad_microlearning_nuggets', ['threadid' => $thread->id])) {
                 // We don't have anything to assign.
                 echo $output->notification(get_string('nonuggets', 'block_iomad_microlearning'), 'info', false);
 

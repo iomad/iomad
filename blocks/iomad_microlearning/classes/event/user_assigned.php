@@ -46,7 +46,7 @@ class user_assigned extends base {
     protected function init() {
         $this->data['crud'] = 'c';
         $this->data['edulevel'] = self::LEVEL_OTHER;
-        $this->data['objecttable'] = 'microlearning_thread';
+        $this->data['objecttable'] = 'block_iomad_microlearning_threads';
     }
 
     /**

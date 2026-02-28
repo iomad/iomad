@@ -81,13 +81,13 @@ $buttons = $OUTPUT->single_button($buttonlink, $buttoncaption, 'get');
 $PAGE->set_button($buttons);
 
 // Check the thread is valid.
-if (!$threadinfo = $DB->get_record('microlearning_thread', ['id' => $threadid])) {
+if (!$threadinfo = $DB->get_record('block_iomad_microlearning_threads', ['id' => $threadid])) {
     throw new moodle_exception('invalidthread', 'block_iomad_microlearning');
 }
 
 if ($deleteid && confirm_sesskey() && $confirm == md5($deleteid)) {
     // Check the thread is valid.
-    if (!$threadinfo = $DB->get_record('microlearning_thread', ['id' => $threadid])) {
+    if (!$threadinfo = $DB->get_record('block_iomad_microlearning_threads', ['id' => $threadid])) {
         throw new moodle_exception('invalidthread', 'block_iomad_microlearning');
     }
 
@@ -98,7 +98,7 @@ if ($deleteid && confirm_sesskey() && $confirm == md5($deleteid)) {
 }
 
 // Get the nuggets for this thread.
-$nuggets = $DB->get_records('microlearning_nugget', ['threadid' => $threadid], 'nuggetorder ASC');
+$nuggets = $DB->get_records('block_iomad_microlearning_nuggets', ['threadid' => $threadid], 'nuggetorder ASC');
 
 // Set up the form.
 $editform = new thread_schedule_form($PAGE->url, $threadid, $nuggets);
@@ -138,7 +138,7 @@ if ($scheduledata = $editform->get_data()) {
 }
 // Trap if we are resetting the schedule.
 if (!empty($threadid) && !empty($deleteid) && $confirm == md5($threadid) && confirm_sesskey()) {
-    $threadinfo = $DB->get_record('microlearning_thread', ['id' => $threadid], '*', MUST_EXIST);
+    $threadinfo = $DB->get_record('block_iomad_microlearning_threads', ['id' => $threadid], '*', MUST_EXIST);
     microlearning::reset_thread_schedule($threadinfo);
     $redirectmessage = get_string('threadscheduleresetok', 'block_iomad_microlearning');
     redirect($threadlist, $redirectmessage, null, notification::NOTIFY_SUCCESS);

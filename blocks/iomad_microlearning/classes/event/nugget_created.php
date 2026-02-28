@@ -46,7 +46,7 @@ class nugget_created extends base {
     protected function init() {
         $this->data['crud'] = 'c';
         $this->data['edulevel'] = self::LEVEL_OTHER;
-        $this->data['objecttable'] = 'microlearning_nugget';
+        $this->data['objecttable'] = 'block_iomad_microlearning_nuggets';
     }
 
     /**

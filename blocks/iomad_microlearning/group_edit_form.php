@@ -81,7 +81,7 @@ dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 // Set up the initial forms.
 $editform = new group_edit_form($PAGE->url, $companyid, $groupid, $output);
 if (!empty($groupid)) {
-    $group = $DB->get_record('microlearning_thread_group', ['id' => $groupid]);
+    $group = $DB->get_record('block_iomad_microlearning_thread_groups', ['id' => $groupid]);
     $group->fullname = $group->name;
     $editform->set_data($group);
 }
@@ -98,17 +98,17 @@ if ($editform->is_cancelled()) {
     // Create or update the group.
     if (empty($createdata->id)) {
         // We are creating a new group.
-        $DB->insert_record('microlearning_thread_group',
+        $DB->insert_record('block_iomad_microlearning_thread_groups',
                            ['name' => $createdata->name,
                             'companyid' => $createdata->companyid,
                             'threadid' => $createdata->threadid]);
         $redirectmessage = get_string('groupcreatedok', 'block_iomad_microlearning');
     } else {
         // We are editing a current group.
-        $current = $DB->get_record('microlearning_thread_group', ['id' => $createdata->id]);
+        $current = $DB->get_record('block_iomad_microlearning_thread_groups', ['id' => $createdata->id]);
         $current->name = $createdata->name;
         $current->threadid = $createdata->threadid;
-        $DB->update_record('microlearning_thread_group', $current);
+        $DB->update_record('block_iomad_microlearning_thread_groups', $current);
         $redirectmessage = get_string('groupupdatedok', 'block_iomad_microlearning');
     }
 
@@ -121,7 +121,7 @@ echo $output->header();
 
 // Do we have anything to assign?
 
-if (!$DB->get_records('microlearning_thread', ['companyid' => $companyid])) {
+if (!$DB->get_records('block_iomad_microlearning_threads', ['companyid' => $companyid])) {
     echo $output->notification(get_string('nolearningthreads', 'block_iomad_microlearning'), 'info', false);
 
     // Add the button to manage nuggets.

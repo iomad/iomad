@@ -60,7 +60,12 @@ class group_edit_form extends moodleform {
 
         $this->companyid = $companyid;
         $this->groupid = $groupid;
-        $this->availablethreads = $DB->get_records_menu('microlearning_thread', ['companyid' => $companyid],  'name', 'id,name');
+        $this->availablethreads = $DB->get_records_menu(
+            'block_iomad_microlearning_threads',
+            ['companyid' => $companyid],
+            'name',
+            'id,name'
+        );
 
         parent::__construct($actionurl);
     }
@@ -105,7 +110,7 @@ class group_edit_form extends moodleform {
         $errors = [];
 
         if ($groupbyname = $DB->get_record(
-            'microlearning_thread_group',
+            'block_iomad_microlearning_thread_groups',
             [
                 'companyid' => $this->companyid,
                 'name' => trim($data['name']),

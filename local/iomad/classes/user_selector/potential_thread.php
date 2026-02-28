@@ -131,7 +131,7 @@ class potential_thread extends company_base {
                  $userfilter
                  AND u.id NOT IN (
                    SELECT DISTINCT userid
-                   FROM {microlearning_thread_user}
+                   FROM {block_iomad_microlearning_thread_users}
                    WHERE threadid=:threadid
                  )";
 

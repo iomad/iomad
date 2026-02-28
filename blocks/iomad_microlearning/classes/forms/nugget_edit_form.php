@@ -50,7 +50,7 @@ class nugget_edit_form extends moodleform {
     public function __construct($actionurl, $threadid, $nuggetid = 0) {
         global $DB;
 
-        $nuggetcount = $DB->count_records('microlearning_nugget', ['threadid' => $threadid]);
+        $nuggetcount = $DB->count_records('block_iomad_microlearning_nuggets', ['threadid' => $threadid]);
         if (empty($nuggetid)) {
             // We are adding so count is whatever is there plus this one.
             $nuggetcount++;
@@ -127,7 +127,7 @@ class nugget_edit_form extends moodleform {
 
         $errors = [];
 
-        if ($nuggetbyname = $DB->get_record('microlearning_nugget', ['threadid' => $data['threadid'],
+        if ($nuggetbyname = $DB->get_record('block_iomad_microlearning_nuggets', ['threadid' => $data['threadid'],
                                                                      'name' => trim($data['name'])])) {
             if ($nuggetbyname->id != $data['id']) {
                 $errors['name'] = get_string('nameinuse', 'block_iomad_microlearning');
@@ -138,14 +138,14 @@ class nugget_edit_form extends moodleform {
         }
         if (!empty($data['cmid']) &&
             $DB->get_records_sql(
-                "SELECT id FROM {microlearning_nugget}
+                "SELECT id FROM {block_iomad_microlearning_nuggets}
                 WHERE threadid = :threadid
                 AND cmid = :cmid
                 AND id <> :id", $data)) {
             $errors['cmid'] = get_string('cmidalreadyinuse', 'block_iomad_microlearning');
         } else if (!empty($data['sectionid']) &&
         $DB->get_records_sql(
-            "SELECT id FROM {microlearning_nugget}
+            "SELECT id FROM {block_iomad_microlearning_nuggets}
             WHERE threadid = :threadid
             AND sectionid = :sectionid
             AND id <> :id", $data)) {
