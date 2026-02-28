@@ -115,7 +115,7 @@ class current_thread extends company_base {
                  $departmentsql
                  AND cu.userid IN (
                    SELECT DISTINCT userid
-                   FROM {microlearning_thread_user}
+                   FROM {block_iomad_microlearning_thread_users}
                    WHERE threadid = :threadid
                    $groupsql
                  )";
@@ -137,8 +137,8 @@ class current_thread extends company_base {
         foreach ($availableusers as $id => $user) {
             if ($threadgroup = $DB->get_record_sql("
                 SELECT DISTINCT tg.name
-                FROM {microlearning_thread_group} tg
-                JOIN {microlearning_thread_user} tu ON (tg.id = tu.groupid)
+                FROM {block_iomad_microlearning_thread_groups} tg
+                JOIN {block_iomad_microlearning_thread_users} tu ON (tg.id = tu.groupid)
                 WHERE tu.userid = $user->id
                 AND tu.threadid = :threadid",
                 ['userid' => $user->id,

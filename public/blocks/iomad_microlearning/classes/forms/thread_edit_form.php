@@ -141,7 +141,7 @@ class thread_edit_form extends moodleform {
 
         $errors = [];
 
-        if ($threadbyname = $DB->get_record('microlearning_thread', ['companyid' => $data['companyid'],
+        if ($threadbyname = $DB->get_record('block_iomad_microlearning_threads', ['companyid' => $data['companyid'],
                                                                      'name' => trim($data['name'])])) {
             if ($threadbyname->id != $data['id']) {
                 $errors['name'] = get_string('nameinuse', 'block_iomad_microlearning');

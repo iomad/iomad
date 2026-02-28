@@ -79,11 +79,11 @@ $editform = new nugget_edit_form($PAGE->url, $threadid, $nuggetid);
 
 // Set up the initial forms.
 if (!empty($nuggetid)) {
-    $nugget = $DB->get_record('microlearning_nugget', ['id' => $nuggetid]);
+    $nugget = $DB->get_record('block_iomad_microlearning_nuggets', ['id' => $nuggetid]);
 } else {
     $nugget = (object) [];
     $nugget->threadid = $threadid;
-    $threadrec = $DB->get_record('microlearning_thread', ['id' => $threadid]);
+    $threadrec = $DB->get_record('block_iomad_microlearning_threads', ['id' => $threadid]);
     $nugget->halt_until_fulfilled = $threadrec->halt_until_fulfilled;
 }
 $editform->set_data($nugget);
@@ -104,11 +104,11 @@ if ($editform->is_cancelled()) {
         $createdata->threadid = $threadid;
 
         // Set the order.
-        $nuggetcount = $DB->count_records('microlearning_nugget', ['threadid' => $threadid]);
+        $nuggetcount = $DB->count_records('block_iomad_microlearning_nuggets', ['threadid' => $threadid]);
         $createdata->nuggetorder = $nuggetcount;
 
 
-        $nuggetid = $DB->insert_record('microlearning_nugget', $createdata);
+        $nuggetid = $DB->insert_record('block_iomad_microlearning_nuggets', $createdata);
         $redirectmessage = get_string('nuggetcreatedok', 'block_iomad_microlearning');
 
         // Fire an Event for this.
@@ -123,7 +123,7 @@ if ($editform->is_cancelled()) {
         $event->trigger();
     } else {
         // We are editing a current nugget.
-        $DB->update_record('microlearning_nugget', $createdata);
+        $DB->update_record('block_iomad_microlearning_nuggets', $createdata);
         $redirectmessage = get_string('nuggetcupdatedok', 'block_iomad_microlearning');
 
         // Fire an Event for this.

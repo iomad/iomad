@@ -115,8 +115,13 @@ class microlearning_thread_users_form extends company_moodleform {
         } else {
             $this->departmentid = $departmentid;
         }
-        $this->thread = $DB->get_record('microlearning_thread', ['id' => $threadid]);
-        $this->groups = $DB->get_records_menu('microlearning_thread_group', ['threadid' => $threadid], 'name', 'id,name');
+        $this->thread = $DB->get_record('block_iomad_microlearning_threads', ['id' => $threadid]);
+        $this->groups = $DB->get_records_menu(
+            'block_iomad_microlearning_thread_groups',
+            ['threadid' => $threadid],
+            'name',
+            'id,name'
+        );
         $this->groups = [0 => get_string('none'), '-1' => get_string('all')] + $this->groups;
         $this->scheduletypes = [get_string('standard', 'block_iomad_microlearning'),
                                 get_string('starttoday', 'block_iomad_microlearning'),
@@ -209,7 +214,7 @@ class microlearning_thread_users_form extends company_moodleform {
             die('No thread selected.');
         }
 
-        $thread = $DB->get_record('microlearning_thread', ['id' => $this->thread->id]);
+        $thread = $DB->get_record('block_iomad_microlearning_threads', ['id' => $this->thread->id]);
         $mform->addElement('header', 'header',
                             get_string('company_users_for', 'block_iomad_microlearning',
                             format_string($thread->name, true, 1) ));

@@ -29,9 +29,11 @@ use block_iomad_microlearning\event\{
     nugget_created,
     nugget_deleted,
     nugget_moved,
+    nugget_updated,
     thread_deleted,
     thread_created,
     thread_schedule_updated,
+    thread_updated,
 };
 use context_system;
 use html_writer;
@@ -63,9 +65,9 @@ class microlearning {
                     mn.sectionid,
                     mn.url AS url,
                     mt.name AS threadname
-             FROM {microlearning_thread_user} mtu
-             JOIN {microlearning_nugget} mn ON (mtu.nuggetid = mn.id)
-             JOIN {microlearning_thread} mt ON (mtu.threadid = mt.id)
+             FROM {block_iomad_microlearning_thread_users} mtu
+             JOIN {block_iomad_microlearning_nuggets} mn ON (mtu.nuggetid = mn.id)
+             JOIN {block_iomad_microlearning_threads} mt ON (mtu.threadid = mt.id)
              WHERE mtu.userid = :userid
              AND mtu.timecompleted IS NULL
              ORDER BY mn.name,mtu.schedule_date",
@@ -111,7 +113,7 @@ class microlearning {
      */
     public static function check_valid_thread($companyid, $threadid) {
         global $DB;
-        if ($DB->get_record('microlearning_thread', ['id' => $threadid, 'companyid' => $companyid])) {
+        if ($DB->get_record('block_iomad_microlearning_threads', ['id' => $threadid, 'companyid' => $companyid])) {
             return true;
         } else {
             return false;
@@ -127,7 +129,7 @@ class microlearning {
     public static function delete_thread($threadid) {
         global $DB, $USER;
 
-        if (!$threadrec = $DB->get_record('microlearning_thread', ['id' => $threadid])) {
+        if (!$threadrec = $DB->get_record('block_iomad_microlearning_threads', ['id' => $threadid])) {
             return false;
         }
 
@@ -136,27 +138,27 @@ class microlearning {
         $errors = false;
 
         // Delete users.
-        if (!$DB->delete_records('microlearning_thread_user', ['threadid' => $threadid])) {
+        if (!$DB->delete_records('block_iomad_microlearning_thread_users', ['threadid' => $threadid])) {
             $errors = true;
         }
 
         // Delete nuggets.
-        $nuggets = $DB->get_records('microlearning_nugget', ['threadid' => $threadid]);
+        $nuggets = $DB->get_records('block_iomad_microlearning_nuggets', ['threadid' => $threadid]);
         foreach ($nuggets as $nugget) {
 
             // Delete nugget schedules.
-            if (!$DB->delete_records('microlearning_nugget_sched', ['nuggetid' => $nugget->id])) {
+            if (!$DB->delete_records('block_iomad_microlearning_nugget_schedules', ['nuggetid' => $nugget->id])) {
                 $errors = true;
             }
         }
 
         // Finally delete the nugget.
-        if (!$DB->delete_records('microlearning_nugget', ['threadid' => $threadid])) {
+        if (!$DB->delete_records('block_iomad_microlearning_nuggets', ['threadid' => $threadid])) {
             $errors = true;
         }
 
         // Delete thread.
-        if (!$DB->delete_records('microlearning_thread', ['id' => $threadid])) {
+        if (!$DB->delete_records('block_iomad_microlearning_threads', ['id' => $threadid])) {
             $errors = true;
         }
 
@@ -196,7 +198,7 @@ class microlearning {
     public static function clone_thread($threadid) {
         global $DB, $USER;
 
-        if (!$threadrec = $DB->get_record('microlearning_thread', ['id' => $threadid])) {
+        if (!$threadrec = $DB->get_record('block_iomad_microlearning_threads', ['id' => $threadid])) {
             return false;
         }
 
@@ -208,27 +210,29 @@ class microlearning {
         $originalthreadid = $threadrec->id;
         unset($threadrec->id);
         $threadrec->name = $threadrec->name . get_string('copy', 'block_iomad_microlearning');
-        if (!$threadrec->id = $DB->insert_record('microlearning_thread', $threadrec)) {
+        if (!$threadrec->id = $DB->insert_record('block_iomad_microlearning_threads', $threadrec)) {
             $errors = true;
         }
 
         // Clone nuggets.
-        $nuggets = $DB->get_records('microlearning_nugget', ['threadid' => $originalthreadid]);
+        $nuggets = $DB->get_records('block_iomad_microlearning_nuggets', ['threadid' => $originalthreadid]);
         foreach ($nuggets as $nugget) {
 
             // Copy the nugget.
             $originalnuggetid = $nugget->id;
             unset($nugget->id);
             $nugget->threadid = $threadrec->id;
-            if (!$nugget->id = $DB->insert_record('microlearning_nugget', $nugget)) {
+            if (!$nugget->id = $DB->insert_record('block_iomad_microlearning_nuggets', $nugget)) {
                 $errors = true;
             }
 
             // Deal with the schedules.
-            if ($nuggetschedule = $DB->get_record('microlearning_nugget_sched', ['nuggetid' => $originalnuggetid])) {
+            if ($nuggetschedule = $DB->get_record(
+                'block_iomad_microlearning_nugget_schedules',
+                ['nuggetid' => $originalnuggetid])) {
                 // Copy nugget schedules.
                 $nuggetschedule->nuggetid = $nugget->id;
-                if (!$DB->insert_record('microlearning_nugget_sched', $nuggetschedule)) {
+                if (!$DB->insert_record('block_iomad_microlearning_nugget_schedules', $nuggetschedule)) {
                     $errors = true;
                 }
             }
@@ -268,7 +272,7 @@ class microlearning {
     public static function import_thread($threadid, $companyid) {
         global $DB, $USER;
 
-        if (!$threadrec = $DB->get_record('microlearning_thread', ['id' => $threadid])) {
+        if (!$threadrec = $DB->get_record('block_iomad_microlearning_threads', ['id' => $threadid])) {
             return false;
         }
 
@@ -281,28 +285,30 @@ class microlearning {
         unset($threadrec->id);
         $threadrec->companyid = $companyid;
         $threadrec->name = $threadrec->name . get_string('copy', 'block_iomad_microlearning');
-        if (!$threadrec->id = $DB->insert_record('microlearning_thread', $threadrec)) {
+        if (!$threadrec->id = $DB->insert_record('block_iomad_microlearning_threads', $threadrec)) {
             $errors = true;
         }
 
         // Clone nuggets.
-        $nuggets = $DB->get_records('microlearning_nugget', ['threadid' => $originalthreadid]);
+        $nuggets = $DB->get_records('block_iomad_microlearning_nuggets', ['threadid' => $originalthreadid]);
         foreach ($nuggets as $nugget) {
 
             // Copy the nugget.
             $originalnuggetid = $nugget->id;
             unset($nugget->id);
             $nugget->threadid = $threadrec->id;
-            if (!$nugget->id = $DB->insert_record('microlearning_nugget', $nugget)) {
+            if (!$nugget->id = $DB->insert_record('block_iomad_microlearning_nuggets', $nugget)) {
                 $errors = true;
             }
 
             // Deal with the schedules.
-            if ($nuggetschedule = $DB->get_record('microlearning_nugget_sched', ['nuggetid' => $originalnuggetid])) {
+            if ($nuggetschedule = $DB->get_record(
+                'block_iomad_microlearning_nugget_schedules',
+                ['nuggetid' => $originalnuggetid])) {
 
                 // Copy nugget schedules.
                 $nuggetschedule->nuggetid = $nugget->id;
-                if (!$DB->insert_record('microlearning_nugget_sched', $nuggetschedule)) {
+                if (!$DB->insert_record('block_iomad_microlearning_nugget_schedules', $nuggetschedule)) {
                     $errors = true;
                 }
             }
@@ -342,7 +348,7 @@ class microlearning {
         global $DB, $USER;
 
         // Does the nugget exist.
-        if (!$nugget = $DB->get_record('microlearning_nugget', ['id' => $nuggetid])) {
+        if (!$nugget = $DB->get_record('block_iomad_microlearning_nuggets', ['id' => $nuggetid])) {
             return false;
         }
 
@@ -351,7 +357,7 @@ class microlearning {
         $transaction = $DB->start_delegated_transaction();
 
         // Get any nuggets after this one.
-        if ($afters = $DB->get_records_sql("SELECT * FROM {microlearning_nugget}
+        if ($afters = $DB->get_records_sql("SELECT * FROM {block_iomad_microlearning_nuggets}
                                             WHERE threadid = :threadid
                                             AND nuggetorder > :current",
                                            ['threadid' => $nugget->threadid,
@@ -362,12 +368,12 @@ class microlearning {
                 if ($after->nuggetorder < 0) {
                     $after->nuggetorder = 0;
                 }
-                $DB->update_record('microlearning_nugget', $after);
+                $DB->update_record('block_iomad_microlearning_nuggets', $after);
             }
         }
 
         // Delete the nugget.
-        if (!$DB->delete_records('microlearning_nugget', ['id' => $nugget->id])) {
+        if (!$DB->delete_records('block_iomad_microlearning_nuggets', ['id' => $nugget->id])) {
             try {
                 throw new Exception('Could not delete nugget');
             } catch (\Exception $e) {
@@ -404,7 +410,7 @@ class microlearning {
         global $DB, $USER;
 
         // Does the nugget exist.
-        if (!$nugget = $DB->get_record('microlearning_nugget', ['id' => $nuggetid])) {
+        if (!$nugget = $DB->get_record('block_iomad_microlearning_nuggets', ['id' => $nuggetid])) {
             return false;
         }
 
@@ -414,24 +420,24 @@ class microlearning {
         }
 
         // Get any nuggets after this one.
-        if ($above = $DB->get_record_sql("SELECT * FROM {microlearning_nugget}
+        if ($above = $DB->get_record_sql("SELECT * FROM {block_iomad_microlearning_nuggets}
                                           WHERE threadid = :threadid
                                           AND nuggetorder = :above",
                                          ['threadid' => $nugget->threadid,
                                           'above' => $nugget->nuggetorder - 1])) {
             $above->nuggetorder++;
-            $DB->update_record('microlearning_nugget', $above);
+            $DB->update_record('block_iomad_microlearning_nuggets', $above);
             $nugget->nuggetorder--;
-            $DB->update_record('microlearning_nugget', $nugget);
+            $DB->update_record('block_iomad_microlearning_nuggets', $nugget);
             if ($nugget->nuggetorder < 0) {
                 // We need to re-order all of the nuggets as something went wrong....
-                $threadnuggets = $DB->get_records('microlearning_nugget',
+                $threadnuggets = $DB->get_records('block_iomad_microlearning_nuggets',
                                                   ['threadid' => $nugget->threadid],
                                                   'nuggetorder',
                                                   'id');
                 $newcount = 0;
                 foreach ($threadnuggets as $threadnugget) {
-                    $DB->set_field('microlearning_nugget', 'nuggetorder', $newcount, ['id' => $threadnugget->id]);
+                    $DB->set_field('block_iomad_microlearning_nuggets', 'nuggetorder', $newcount, ['id' => $threadnugget->id]);
                     $newcount++;
                 }
             }
@@ -460,20 +466,20 @@ class microlearning {
         global $DB, $USER;
 
         // Does the nugget exist.
-        if (!$nugget = $DB->get_record('microlearning_nugget', ['id' => $nuggetid])) {
+        if (!$nugget = $DB->get_record('block_iomad_microlearning_nuggets', ['id' => $nuggetid])) {
             return false;
         }
 
         // Get any nuggets after this one.
-        if ($below = $DB->get_record_sql("SELECT * FROM {microlearning_nugget}
+        if ($below = $DB->get_record_sql("SELECT * FROM {block_iomad_microlearning_nuggets}
                                           WHERE threadid = :threadid
                                           AND nuggetorder = :below",
                                          ['threadid' => $nugget->threadid,
                                           'below' => $nugget->nuggetorder + 1])) {
             $below->nuggetorder--;
-            $DB->update_record('microlearning_nugget', $below);
+            $DB->update_record('block_iomad_microlearning_nuggets', $below);
             $nugget->nuggetorder++;
-            $DB->update_record('microlearning_nugget', $nugget);
+            $DB->update_record('block_iomad_microlearning_nuggets', $nugget);
         }
 
         // Fire an Event for this.
@@ -532,7 +538,7 @@ class microlearning {
                 continue;
             }
             // Check if we already have a schedule.
-            if ($schedule = $DB->get_record('microlearning_nugget_sched', ['nuggetid' => $nugget->id])) {
+            if ($schedule = $DB->get_record('block_iomad_microlearning_nugget_schedules', ['nuggetid' => $nugget->id])) {
                 if (!$passedtime || $startdate < $schedule->scheduledate) {
                     $startdate = $schedule->scheduledate;
                     $schedulearray[$nugget->id] = $schedule->scheduledate;
@@ -592,9 +598,9 @@ class microlearning {
         global $DB, $USER;
 
         // Delete the current schedules for any nuggets.
-        if ($nuggets = $DB->get_records('microlearning_nugget', ['threadid' => $threadinfo->id])) {
+        if ($nuggets = $DB->get_records('block_iomad_microlearning_nuggets', ['threadid' => $threadinfo->id])) {
             foreach ($nuggets as $nugget) {
-                $DB->delete_records('microlearning_nugget_sched', ['nuggetid' => $nugget->id]);
+                $DB->delete_records('block_iomad_microlearning_nugget_schedules', ['nuggetid' => $nugget->id]);
             }
 
             // Get the new schedule info.
@@ -615,27 +621,27 @@ class microlearning {
         // Process the scheduledata.
         foreach (array_keys($scheduledata->schedulearray) as $nuggetid) {
             // Does it exist already?
-            if ($DB->record_exists('microlearning_nugget_sched', ['nuggetid' => $nuggetid])) {
+            if ($DB->record_exists('block_iomad_microlearning_nugget_schedules', ['nuggetid' => $nuggetid])) {
                 // Update the stored nugget schedules.
-                $DB->set_field('microlearning_nugget_sched',
+                $DB->set_field('block_iomad_microlearning_nugget_schedules',
                                'scheduledate',
                                $scheduledata->schedulearray[$nuggetid],
                                ['nuggetid' => $nuggetid]);
-                $DB->set_field('microlearning_nugget_sched',
+                $DB->set_field('block_iomad_microlearning_nugget_schedules',
                                'due_date',
                                $scheduledata->duedatearray[$nuggetid],
                                ['nuggetid' => $nuggetid]);
                 if (empty($scheduledata->reminder1array[$nuggetid])) {
                     $scheduledata->reminder1array[$nuggetid] = 0;
                 }
-                $DB->set_field('microlearning_nugget_sched',
+                $DB->set_field('block_iomad_microlearning_nugget_schedules',
                                'reminder1_date',
                                $scheduledata->reminder1array[$nuggetid],
                                ['nuggetid' => $nuggetid]);
                 if (empty($scheduledata->reminder2array[$nuggetid])) {
                     $scheduledata->reminder2array[$nuggetid] = 0;
                 }
-                $DB->set_field('microlearning_nugget_sched',
+                $DB->set_field('block_iomad_microlearning_nugget_schedules',
                                'reminder2_date',
                                $scheduledata->reminder2array[$nuggetid],
                                ['nuggetid' => $nuggetid]);
@@ -657,7 +663,7 @@ class microlearning {
                     $scheduledata->threadinfo->send_reminder = 0;
                 }
                 $DB->insert_record(
-                    'microlearning_nugget_sched',
+                    'block_iomad_microlearning_nugget_schedules',
                     [
                         'scheduledate' => $scheduledata->schedulearray[$nuggetid],
                         'nuggetid' => $nuggetid,
@@ -673,7 +679,7 @@ class microlearning {
 
             // Update the user nugget schedules.
             $DB->set_field(
-                'microlearning_thread_user',
+                'block_iomad_microlearning_thread_users',
                 'schedule_date',
                 $scheduledata->schedulearray[$nuggetid],
                 [
@@ -682,7 +688,7 @@ class microlearning {
                 ]
             );
             $DB->set_field(
-                'microlearning_thread_user',
+                'block_iomad_microlearning_thread_users',
                 'due_date',
                 $scheduledata->duedatearray[$nuggetid],
                 [
@@ -691,7 +697,7 @@ class microlearning {
                 ]
             );
             $DB->set_field(
-                'microlearning_thread_user',
+                'block_iomad_microlearning_thread_users',
                 'reminder1_date',
                 $scheduledata->reminder1array[$nuggetid],
                 [
@@ -700,7 +706,7 @@ class microlearning {
                 ]
             );
             $DB->set_field(
-                'microlearning_thread_user',
+                'block_iomad_microlearning_thread_users',
                 'reminder2_date',
                 $scheduledata->reminder2array[$nuggetid],
                 [
@@ -741,7 +747,7 @@ class microlearning {
         }
 
         // Check the thread is valid.
-        if (!$threadinfo = $DB->get_record('microlearning_thread', ['id' => $threadid])) {
+        if (!$threadinfo = $DB->get_record('block_iomad_microlearning_threads', ['id' => $threadid])) {
             return false;
         }
 
@@ -766,7 +772,7 @@ class microlearning {
         }
 
         // Get the thread nuggets.
-        $nuggets = $DB->get_records('microlearning_nugget', ['threadid' => $threadid]);
+        $nuggets = $DB->get_records('block_iomad_microlearning_nuggets', ['threadid' => $threadid]);
         if (empty($threadinfo->halt_until_fulfilled)) {
             $scheduleinfo = self::get_schedules($threadinfo, $nuggets, $starttime);
         } else {
@@ -847,7 +853,7 @@ class microlearning {
                 $schedulerec->timecompleted = null;
             }
             $schedulerec->accesskey = self::generate_accesskey();
-            if (!$DB->insert_record('microlearning_thread_user', $schedulerec)) {
+            if (!$DB->insert_record('block_iomad_microlearning_thread_users', $schedulerec)) {
                 $errors = true;
             }
 
@@ -886,7 +892,7 @@ class microlearning {
         }
 
         // Check the thread is valid.
-        if (!$threadinfo = $DB->get_record('microlearning_thread', ['id' => $threadid])) {
+        if (!$threadinfo = $DB->get_record('block_iomad_microlearning_threads', ['id' => $threadid])) {
             return false;
         }
 
@@ -894,7 +900,7 @@ class microlearning {
         $transaction = $DB->start_delegated_transaction();
         $errors = false;
 
-        if (!$DB->delete_records('microlearning_thread_user', ['userid' => $userid, 'threadid' => $threadid])) {
+        if (!$DB->delete_records('block_iomad_microlearning_thread_users', ['userid' => $userid, 'threadid' => $threadid])) {
             try {
                 throw new Exception('Could not remove user from thread');
             } catch (\Exception $e) {
@@ -954,7 +960,7 @@ class microlearning {
     public static function get_menu_threads($companyid) {
         global $DB, $USER;
 
-        $threads = $DB->get_records_menu('microlearning_thread', ['companyid' => $companyid], 'name', 'id,name');
+        $threads = $DB->get_records_menu('block_iomad_microlearning_threads', ['companyid' => $companyid], 'name', 'id,name');
         $menuthreads = [0 => get_string('selectthread', 'block_iomad_microlearning')];
 
         // Deal with any language formatting.
@@ -988,7 +994,7 @@ class microlearning {
         }
 
         // The thread?
-        if (!$threadrec = $DB->get_record('microlearning_thread', ['id' => $threadid, 'companyid' => $companyid])) {
+        if (!$threadrec = $DB->get_record('block_iomad_microlearning_threads', ['id' => $threadid, 'companyid' => $companyid])) {
             return false;
         }
 
@@ -1030,7 +1036,7 @@ class microlearning {
         }
 
         // The thread?
-        if (!$threadrec = $DB->get_record('microlearning_thread', ['id' => $threadid, 'companyid' => $companyid])) {
+        if (!$threadrec = $DB->get_record('block_iomad_microlearning_threads', ['id' => $threadid, 'companyid' => $companyid])) {
             return false;
         }
 
@@ -1147,7 +1153,7 @@ class microlearning {
         global $DB, $USER;
 
         // Delete all of the schedules for this user.
-        $DB->delete_records('microlearning_thread_user', ['userid' => $event->objectid]);
+        $DB->delete_records('block_iomad_microlearning_thread_users', ['userid' => $event->objectid]);
     }
 
     /**
@@ -1163,8 +1169,8 @@ class microlearning {
         $found = false;
         $threads = [];
         if ($nuggets = $DB->get_records_sql(
-            "SELECT mtu.* FROM {microlearning_thread_user} mtu
-             JOIN {microlearning_nugget} mn ON (mtu.nuggetid = mn.id)
+            "SELECT mtu.* FROM {block_iomad_microlearning_thread_users} mtu
+             JOIN {block_iomad_microlearning_nuggets} mn ON (mtu.nuggetid = mn.id)
              WHERE mtu.userid = :userid
              AND mn.cmid = :cmid",
             ['userid' => $userid, 'cmid' => $cmid])) {
@@ -1176,7 +1182,7 @@ class microlearning {
                     }
                     $threads[$nugget->threadid][$nugget->nuggetid] = $nugget->nuggetid;
                 }
-                $DB->set_field('microlearning_thread_user',
+                $DB->set_field('block_iomad_microlearning_thread_users',
                                'timecompleted',
                                $event->timecreated,
                                ['id' => $nugget->id, 'userid' => $userid]);
@@ -1186,8 +1192,8 @@ class microlearning {
         // Check if there is a section set instead.
         $cmidrec = $DB->get_record('course_modules', ['id' => $cmid]);
         if ($nuggets = $DB->get_records_sql(
-            "SELECT mtu.* FROM {microlearning_thread_user} mtu
-             JOIN {microlearning_nugget} mn ON (mtu.nuggetid = mn.id)
+            "SELECT mtu.* FROM {block_iomad_microlearning_thread_users} mtu
+             JOIN {block_iomad_microlearning_nuggets} mn ON (mtu.nuggetid = mn.id)
              WHERE mtu.userid = :userid
              AND mn.sectionid = :sectionid",
             ['userid' => $userid, 'sectionid' => $cmidrec->section])) {
@@ -1219,7 +1225,7 @@ class microlearning {
                         $threads[$nugget->threadid] = [];
                     }
                     $threads[$nugget->threadid][$nugget->nuggetid] = $nugget->nuggetid;
-                    $DB->set_field('microlearning_thread_user',
+                    $DB->set_field('block_iomad_microlearning_thread_users',
                                    'timecompleted',
                                    $event->timecreated,
                                    ['id' => $nugget->id]);
@@ -1230,11 +1236,13 @@ class microlearning {
         // Did we find anything?  Check if we need to anything else if it's a halted thread.
         if ($found) {
             foreach ($threads as $threadid => $threadnuggets) {
-                if (!$threadrec = $DB->get_record('microlearning_thread', ['id' => $threadid, 'halt_until_fulfilled' => 1])) {
+                if (!$threadrec = $DB->get_record(
+                    'block_iomad_microlearning_threads',
+                    ['id' => $threadid, 'halt_until_fulfilled' => 1])) {
                     continue;
                 }
                 // Get the nuggets from the thread.
-                $mynuggets = $DB->get_records('microlearning_nugget', ['threadid' => $threadid], 'nuggetorder', '*');
+                $mynuggets = $DB->get_records('block_iomad_microlearning_nuggets', ['threadid' => $threadid], 'nuggetorder', '*');
                 $found = false;
                 foreach ($mynuggets as $nugget) {
                     if (!empty($threadnuggets[$nugget->id])) {
@@ -1311,7 +1319,7 @@ class microlearning {
                             $schedulerec->timecompleted = null;
                         }
                         $schedulerec->accesskey = self::generate_accesskey();
-                        if (!$DB->insert_record('microlearning_thread_user', $schedulerec)) {
+                        if (!$DB->insert_record('block_iomad_microlearning_thread_users', $schedulerec)) {
                             $errors = true;
                         }
 
@@ -1335,7 +1343,7 @@ class microlearning {
         global $DB;
 
         // Get the thread info.
-        $thread = $DB->get_record('microlearning_thread', ['id' => $threadid]);
+        $thread = $DB->get_record('block_iomad_microlearning_threads', ['id' => $threadid]);
 
         $now = time();
         $send = $thread->startdate;
@@ -1369,8 +1377,8 @@ class microlearning {
         mtrace("getting list of users who have a new nugget");
         if ($scheduleusers = $DB->get_records_sql(
             "SELECT mtu.*, mt.companyid
-             FROM {microlearning_thread_user} mtu
-             JOIN {microlearning_thread} mt ON (
+             FROM {block_iomad_microlearning_thread_users} mtu
+             JOIN {block_iomad_microlearning_threads} mt ON (
                  mtu.threadid = mt.id
                  AND mt.send_message = 1
                  AND mtu.message_delivered = 0
@@ -1387,7 +1395,7 @@ class microlearning {
                                                      'suspended' => 0,
                                                      'deleted' => 0])) {
                     // Get the email payload.
-                    if ($nugget = $DB->get_record('microlearning_nugget', ['id' => $scheduleuser->nuggetid])) {
+                    if ($nugget = $DB->get_record('block_iomad_microlearning_nuggets', ['id' => $scheduleuser->nuggetid])) {
                         $company = new company($scheduleuser->companyid);
 
                         // Get the nugget link.
@@ -1403,7 +1411,7 @@ class microlearning {
                         emailtemplate::send('microlearning_nugget_scheduled', ['user' => $user,
                                                                                'company' => $company,
                                                                                'nugget' => $nugget]);
-                        $DB->set_field('microlearning_thread_user',
+                        $DB->set_field('block_iomad_microlearning_thread_users',
                                        'message_delivered',
                                        true,
                                        ['id' => $scheduleuser->id]);
@@ -1411,7 +1419,7 @@ class microlearning {
                 }
 
                 // Update the record.
-                $DB->update_record('microlearning_thread_user', $scheduleuser);
+                $DB->update_record('block_iomad_microlearning_thread_users', $scheduleuser);
             }
         }
         // Remove the working array.
@@ -1421,8 +1429,8 @@ class microlearning {
         mtrace("getting list of users for first reminder");
         if ($reminder1users = $DB->get_records_sql(
             "SELECT mtu.*,mt.companyid
-             FROM {microlearning_thread_user} mtu
-             JOIN {microlearning_thread} mt ON (mtu.threadid = mt.id)
+             FROM {block_iomad_microlearning_thread_users} mtu
+             JOIN {block_iomad_microlearning_threads} mt ON (mtu.threadid = mt.id)
              WHERE mt.send_reminder = 1
              AND mt.active = 1
              AND mtu.timecompleted IS NULL
@@ -1442,7 +1450,7 @@ class microlearning {
                                                      'suspended' => 0,
                                                      'deleted' => 0])) {
                     // Get the email payload.
-                    if ($nugget = $DB->get_record('microlearning_nugget', ['id' => $reminder1user->nuggetid])) {
+                    if ($nugget = $DB->get_record('block_iomad_microlearning_nuggets', ['id' => $reminder1user->nuggetid])) {
                         $company = new company($reminder1user->companyid);
                         // Fix the payload.
                         $nugget->name = format_text($nugget->name);
@@ -1462,7 +1470,7 @@ class microlearning {
                 }
 
                 // Update the record.
-                $DB->update_record('microlearning_thread_user', $reminder1user);
+                $DB->update_record('block_iomad_microlearning_thread_users', $reminder1user);
             }
         }
 
@@ -1473,8 +1481,8 @@ class microlearning {
         mtrace("getting list of users for second reminder");
         if ($reminder2users = $DB->get_records_sql(
             "SELECT mtu.*,mt.companyid
-             FROM {microlearning_thread_user} mtu
-             JOIN {microlearning_thread} mt
+             FROM {block_iomad_microlearning_thread_users} mtu
+             JOIN {block_iomad_microlearning_threads} mt
              ON (mtu.threadid = mt.id)
              WHERE mt.send_reminder = 1
              AND mt.active = 1
@@ -1496,7 +1504,7 @@ class microlearning {
                                                      'suspended' => 0,
                                                      'deleted' => 0])) {
                     // Get the email payload.
-                    if ($nugget = $DB->get_record('microlearning_nugget', ['id' => $reminder2user->nuggetid])) {
+                    if ($nugget = $DB->get_record('block_iomad_microlearning_nuggets', ['id' => $reminder2user->nuggetid])) {
                         $company = new company($reminder2user->companyid);
 
                         // Fix the payload.
@@ -1516,7 +1524,7 @@ class microlearning {
                                                                                'nugget' => $nugget]);
                     }
                 }
-                $DB->update_record('microlearning_thread_user', $reminder2user);
+                $DB->update_record('block_iomad_microlearning_thread_users', $reminder2user);
             }
         }
         unset($reminder2users);

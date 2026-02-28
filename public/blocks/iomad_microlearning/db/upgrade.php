@@ -37,78 +37,6 @@ function xmldb_block_iomad_microlearning_upgrade($oldversion) {
     $result = true;
     $dbman = $DB->get_manager();
 
-    if ($oldversion < 2019101400) {
-
-        // Define field url to be added to microlearning_nugget.
-        $table = new xmldb_table('microlearning_nugget');
-        $field = new xmldb_field('url', XMLDB_TYPE_TEXT, null, null, null, null, null, 'cmid');
-
-        // Conditionally launch add field url.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Iomad_microlearning savepoint reached.
-        upgrade_block_savepoint(true, 2019101400, 'iomad_microlearning');
-    }
-
-    if ($oldversion < 2019120800) {
-
-        // Rename field releaseinterval on table microlearning_thread to releaseinterval.
-        $table = new xmldb_table('microlearning_thread');
-        $field = new xmldb_field('interval', XMLDB_TYPE_INTEGER, '20', null, null, null, '0', 'timecreated');
-
-        // Conditionally launch add field interval.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Launch rename field releaseinterval.
-        $dbman->rename_field($table, $field, 'releaseinterval');
-
-        // Changing precision of field accesskey on table microlearning_thread_user to (240).
-        $table = new xmldb_table('microlearning_thread_user');
-        $field = new xmldb_field('accesskey', XMLDB_TYPE_CHAR, '240', null, XMLDB_NOTNULL, null, null, 'timecompleted');
-
-        // Launch change of precision for field accesskey.
-        $dbman->change_field_precision($table, $field);
-
-        // Iomad_microlearning savepoint reached.
-        upgrade_block_savepoint(true, 2019120800, 'iomad_microlearning');
-    }
-
-    if ($oldversion < 2021102500) {
-
-        // Define table microlearning_thread_group to be created.
-        $table = new xmldb_table('microlearning_thread_group');
-
-        // Adding fields to table microlearning_thread_group.
-        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('threadid', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('companyid', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('name', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, null, null);
-
-        // Adding keys to table microlearning_thread_group.
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
-
-        // Conditionally launch create table for microlearning_thread_group.
-        if (!$dbman->table_exists($table)) {
-            $dbman->create_table($table);
-        }
-
-        // Define field groupid to be added to microlearning_thread_user.
-        $table = new xmldb_table('microlearning_thread_user');
-        $field = new xmldb_field('groupid', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, '0', 'nuggetid');
-
-        // Conditionally launch add field groupid.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Iomad_microlearning savepoint reached.
-        upgrade_block_savepoint(true, 2021102500, 'iomad_microlearning');
-    }
-
     if ($oldversion < 2024103000) {
 
         // Rename field remainder1 on table microlearning_thread to reminder1.
@@ -230,6 +158,114 @@ function xmldb_block_iomad_microlearning_upgrade($oldversion) {
 
         // Iomad_microlearning savepoint reached.
         upgrade_block_savepoint(true, 2025011500, 'iomad_microlearning');
+    }
+
+    if ($oldversion < 2026022800) {
+
+        // Microlearning_nugget_sched table restructure.
+        $table = new xmldb_table('microlearning_nugget_sched');
+
+        // Define key nuggetid (foreign) to be dropped form microlearning_nugget_sched.
+        $key = new xmldb_key('nuggetid', XMLDB_KEY_FOREIGN, ['nuggetid'], 'microlearning_nugget', ['id']);
+
+        // Launch drop key nuggetid.
+        $dbman->drop_key($table, $key);
+
+        // Launch rename table to block_iomad_microlearning_nugget_schedules.
+        $dbman->rename_table($table, 'block_iomad_microlearning_nugget_schedules');
+
+        // Microlearning_nugget table restructure.
+        $table = new xmldb_table('microlearning_nugget');
+
+        // Define key fk_cmid (foreign) to be dropped form microlearning_nugget.
+        $key = new xmldb_key('cmid', XMLDB_KEY_FOREIGN, ['cmid'], 'course_modules', ['id']);
+
+        // Launch drop key fk_cmid.
+        $dbman->drop_key($table, $key);
+
+        // Define key threadid (foreign) to be dropped form microlearning_nugget.
+        $key = new xmldb_key('threadid', XMLDB_KEY_FOREIGN, ['threadid'], 'microlearning_thread', ['id']);
+
+        // Launch drop key threadid.
+        $dbman->drop_key($table, $key);
+
+        // Define key sectionid (foreign) to be dropped form microlearning_nugget.
+        $key = new xmldb_key('sectionid', XMLDB_KEY_FOREIGN, ['sectionid'], 'course_sections', ['id']);
+
+        // Launch drop key sectionid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_cmid (foreign) to be added to microlearning_nugget.
+        $key = new xmldb_key('fk_cmid', XMLDB_KEY_FOREIGN, ['cmid'], 'course_modules', ['id']);
+
+        // Launch add key fk_cmid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_sectionid (foreign) to be added to microlearning_nugget.
+        $key = new xmldb_key('fk_sectionid', XMLDB_KEY_FOREIGN, ['sectionid'], 'course_sections', ['id']);
+
+        // Launch add key fk_sectionid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to block_iomad_microlearning_nuggets.
+        $dbman->rename_table($table, 'block_iomad_microlearning_nuggets');
+
+        // Microlearning_thread_group table restructure.
+        $table = new xmldb_table('microlearning_thread_group');
+
+        // Define key threadid (foreign) to be dropped form microlearning_thread_group.
+        $key = new xmldb_key('threadid', XMLDB_KEY_FOREIGN, ['threadid'], 'microlearning_thread', ['id']);
+
+        // Launch drop key threadid.
+        $dbman->drop_key($table, $key);
+
+        // Launch rename table to block_iomad_microlearning_thread_groups.
+        $dbman->rename_table($table, 'block_iomad_microlearning_thread_groups');
+
+        // Microlearning_thread_user table restructure.
+        $table = new xmldb_table('microlearning_thread_user');
+
+        // Define key userid (foreign) to be dropped form microlearning_thread_user.
+        $key = new xmldb_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+
+        // Launch drop key userid.
+        $dbman->drop_key($table, $key);
+
+        // Define key nuggetid (foreign) to be dropped form microlearning_thread_user.
+        $key = new xmldb_key('nuggetid', XMLDB_KEY_FOREIGN, ['nuggetid'], 'microlearning_nugget', ['id']);
+
+        // Launch drop key nuggetid.
+        $dbman->drop_key($table, $key);
+
+        // Define key threadid (foreign) to be dropped form microlearning_thread_user.
+        $key = new xmldb_key('threadid', XMLDB_KEY_FOREIGN, ['threadid'], 'microlearning_thread', ['id']);
+
+        // Launch drop key threadid.
+        $dbman->drop_key($table, $key);
+
+        // Define key groupid (foreign) to be dropped form microlearning_thread_user.
+        $key = new xmldb_key('groupid', XMLDB_KEY_FOREIGN, ['groupid'], 'microlearning_thread_group', ['id']);
+
+        // Launch drop key groupid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_userid (foreign) to be added to microlearning_thread_user.
+        $key = new xmldb_key('fk_userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+
+        // Launch add key fk_userid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to block_iomad_microlearning_thread_users.
+        $dbman->rename_table($table, 'block_iomad_microlearning_thread_users');
+
+        // Microlearning_thread table restructure.
+        $table = new xmldb_table('microlearning_thread');
+
+        // Launch rename table to block_iomad_microlearning_threads.
+        $dbman->rename_table($table, 'block_iomad_microlearning_threads');
+
+        // Iomad_microlearning savepoint reached.
+        upgrade_block_savepoint(true, 2026022800, 'iomad_microlearning');
     }
 
     return $result;

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="blocks/iomad_microlearning/db" VERSION="20260222" COMMENT="XMLDB file for Moodle blocks/iomad_microlearning"
+<XMLDB PATH="blocks/iomad_microlearning/db" VERSION="20260228" COMMENT="XMLDB file for Moodle blocks/iomad_microlearning"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -12,7 +12,7 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="microlearning_thread" COMMENT="Default comment for the table, please edit me">
+    <TABLE NAME="block_iomad_microlearning_threads" COMMENT="IOMAD microlearning thread definitions">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="companyid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -35,7 +35,7 @@
         <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="microlearning_nugget" COMMENT="Default comment for the table, please edit me">
+    <TABLE NAME="block_iomad_microlearning_nuggets" COMMENT="IOMAD microlearning learning nugget definitions">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="name" TYPE="char" LENGTH="1333" NOTNULL="true" SEQUENCE="false"/>
@@ -49,12 +49,12 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="cmid" TYPE="foreign" FIELDS="cmid" REFTABLE="course_modules" REFFIELDS="id"/>
-        <KEY NAME="threadid" TYPE="foreign" FIELDS="threadid" REFTABLE="microlearning_thread" REFFIELDS="id"/>
-        <KEY NAME="sectionid" TYPE="foreign" FIELDS="sectionid" REFTABLE="course_sections" REFFIELDS="id"/>
+        <KEY NAME="fk_cmid" TYPE="foreign" FIELDS="cmid" REFTABLE="course_modules" REFFIELDS="id"/>
+        <KEY NAME="fk_threadid" TYPE="foreign" FIELDS="threadid" REFTABLE="block_iomad_microlearning_threads" REFFIELDS="id"/>
+        <KEY NAME="fk_sectionid" TYPE="foreign" FIELDS="sectionid" REFTABLE="course_sections" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="microlearning_nugget_sched" COMMENT="Default comment for the table, please edit me">
+    <TABLE NAME="block_iomad_microlearning_nugget_schedules" COMMENT="IOMAD microlearning nugget schedule information">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="nuggetid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
@@ -66,10 +66,10 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="nuggetid" TYPE="foreign" FIELDS="nuggetid" REFTABLE="microlearning_nugget" REFFIELDS="id"/>
+        <KEY NAME="fk_nuggetid" TYPE="foreign" FIELDS="nuggetid" REFTABLE="block_iomad_microlearning_nuggets" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="microlearning_thread_user" COMMENT="Default comment for the table, please edit me">
+    <TABLE NAME="block_iomad_microlearning_thread_users" COMMENT="IOMAD microlearning thread user details">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
@@ -90,13 +90,13 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
-        <KEY NAME="nuggetid" TYPE="foreign" FIELDS="nuggetid" REFTABLE="microlearning_nugget" REFFIELDS="id"/>
-        <KEY NAME="threadid" TYPE="foreign" FIELDS="threadid" REFTABLE="microlearning_thread" REFFIELDS="id"/>
-        <KEY NAME="groupid" TYPE="foreign" FIELDS="groupid" REFTABLE="microlearning_thread_group" REFFIELDS="id"/>
+        <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="fk_nuggetid" TYPE="foreign" FIELDS="nuggetid" REFTABLE="block_iomad_microlearning_nuggets" REFFIELDS="id"/>
+        <KEY NAME="fk_threadid" TYPE="foreign" FIELDS="threadid" REFTABLE="block_iomad_microlearning_threads" REFFIELDS="id"/>
+        <KEY NAME="fk_groupid" TYPE="foreign" FIELDS="groupid" REFTABLE="block_iomad_microlearning_thread_groups" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="microlearning_thread_group" COMMENT="Default comment for the table, please edit me">
+    <TABLE NAME="block_iomad_microlearning_thread_groups" COMMENT="IOMAD microlearning thread company groups">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="threadid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
@@ -105,7 +105,7 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="threadid" TYPE="foreign" FIELDS="threadid" REFTABLE="microlearning_thread" REFFIELDS="id"/>
+        <KEY NAME="fk_threadid" TYPE="foreign" FIELDS="threadid" REFTABLE="block_iomad_microlearning_threads" REFFIELDS="id"/>
         <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
       </KEYS>
     </TABLE>

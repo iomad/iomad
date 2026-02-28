@@ -58,7 +58,7 @@ class provider implements
      */
     public static function get_metadata(collection $collection): collection {
         $collection->add_database_table(
-            'microlearning_thread_user',
+            'block_iomad_microlearning_thread_users',
             [
                 'id' => 'privacy:metadata:microlearning_thread_user:id',
                 'userid' => 'privacy:metadata:microlearning_thread_user:userid',
@@ -77,7 +77,7 @@ class provider implements
                 'accesskey' => 'privacy:metadata:microlearning_thread_user:accesskey',
                 'timecreated' => 'privacy:metadata:microlearning_thread_user:timecreated',
             ],
-            'privacy:metadata:microlearning_thread_user'
+            'privacy:metadata:block_iomad_microlearning_thread_users'
         );
 
         return $collection;
@@ -122,7 +122,7 @@ class provider implements
         $context = context_system::instance();
 
         // Get the microlearning_thread_user information.
-        if ($microlearnings = $DB->get_records('microlearning_thread_user', ['userid' => $user->id])) {
+        if ($microlearnings = $DB->get_records('block_iomad_microlearning_thread_users', ['userid' => $user->id])) {
             $microlearningout = (object) [];
             foreach ($microlearnings as $id => $microlearning) {
                 if (!empty($microlearning->schedule_date)) {
@@ -161,7 +161,7 @@ class provider implements
         if (empty($context)) {
             return;
         }
-        $DB->delete_records('microlearning_thread_user');
+        $DB->delete_records('block_iomad_microlearning_thread_users');
     }
 
     /**
@@ -177,7 +177,7 @@ class provider implements
         }
 
         $userid = $contextlist->get_user()->id;
-        $DB->delete_records('microlearning_thread_user', ['userid' => $userid]);
+        $DB->delete_records('block_iomad_microlearning_thread_users', ['userid' => $userid]);
     }
 
     /**
@@ -198,7 +198,7 @@ class provider implements
         ];
 
         $sql = "SELECT i.userid as userid
-                  FROM {microlearning_thread_user} i
+                  FROM {block_iomad_microlearning_thread_users} i
                   JOIN {context} ctx
                        ON ctx.instanceid = i.userid
                        AND ctx.contextlevel = :contextuser
@@ -218,7 +218,7 @@ class provider implements
         $context = $userlist->get_context();
 
         if ($context instanceof context_user) {
-            $DB->delete_records('microlearning_thread_user', ['userid' => $context->id]);
+            $DB->delete_records('block_iomad_microlearning_thread_users', ['userid' => $context->id]);
         }
     }
 }

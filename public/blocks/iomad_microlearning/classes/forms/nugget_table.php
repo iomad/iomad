@@ -71,7 +71,7 @@ class nugget_table extends table_sql {
         global $DB;
 
         $html = "";
-        $count = $DB->count_records('microlearning_nugget', ['threadid' => $row->threadid]);
+        $count = $DB->count_records('block_iomad_microlearning_nuggets', ['threadid' => $row->threadid]);
 
         if ($row->nuggetorder != 0) {
             $uplink = new moodle_url('nuggets.php', ['action' => 'up', 'nuggetid' => $row->id, 'threadid' => $row->threadid]);

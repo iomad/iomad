@@ -59,7 +59,7 @@ class thread_schedule_form extends moodleform {
 
         $this->threadid = $threadid;
         $this->nuggets = $nuggets;
-        $this->threadinfo = $DB->get_record('microlearning_thread', ['id' => $threadid]);
+        $this->threadinfo = $DB->get_record('block_iomad_microlearning_threads', ['id' => $threadid]);
         parent::__construct($actionurl);
     }
 
