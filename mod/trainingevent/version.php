@@ -26,7 +26,7 @@
 defined('MOODLE_INTERNAL') || die;
 
 $plugin->release  = '4.5.8 (Build: 20251208)'; // Human-friendly version name.
-$plugin->version  = 2026012345;  // The current module version (Date: YYYYMMDDXX).
+$plugin->version  = 2026022845;  // The current module version (Date: YYYYMMDDXX).
 $plugin->requires = 2024100700;   // Requires this Moodle version.
 $plugin->component  = 'mod_trainingevent';
 $plugin->dependencies = ['local_iomad' => 2024090401];
