@@ -58,7 +58,7 @@ class provider implements
      */
     public static function get_metadata(collection $collection): collection {
         $collection->add_database_table(
-            'local_report_user_lic_allocs',
+            'local_report_user_license_allocations',
             [
                 'id' => 'privacy:metadata:local_report_user_lic_allocs:id',
                 'userid' => 'privacy:metadata:local_report_user_lic_allocs:userid',
@@ -67,7 +67,7 @@ class provider implements
                 'action' => 'privacy:metadata:local_report_user_lic_allocs:action',
                 'issuedate' => 'privacy:metadata:local_report_user_lic_allocs:issuedate',
             ],
-            'privacy:metadata:local_report_user_lic_allocs'
+            'privacy:metadata:local_report_user_license_allocations'
         );
 
         return $collection;
@@ -110,7 +110,7 @@ class provider implements
 
         $context = context_system::instance();
 
-        if ($tracks = $DB->get_records('local_report_user_lic_allocs', ['userid' => $user->id])) {
+        if ($tracks = $DB->get_records('local_report_user_license_allocations', ['userid' => $user->id])) {
             $trackout = (object) [];
             foreach ($tracks as $id => $track) {
                 if (!empty($track->issuedate)) {
@@ -141,7 +141,7 @@ class provider implements
             return;
         }
 
-        $DB->delete_records('local_report_user_lic_allocs');
+        $DB->delete_records('local_report_user_license_allocations');
     }
 
     /**
@@ -157,7 +157,7 @@ class provider implements
         }
 
         $userid = $contextlist->get_user()->id;
-        $DB->delete_records('local_report_user_lic_allocs', ['userid' => $userid]);
+        $DB->delete_records('local_report_user_license_allocations', ['userid' => $userid]);
     }
 
     /**
@@ -178,7 +178,7 @@ class provider implements
         ];
 
         $sql = "SELECT lrula.userid as userid
-                  FROM {local_report_user_lic_allocs} lrula
+                  FROM {local_report_user_license_allocations} lrula
                   JOIN {context} ctx
                        ON ctx.instanceid = lrula.userid
                        AND ctx.contextlevel = :contextuser
@@ -198,7 +198,7 @@ class provider implements
         $context = $userlist->get_context();
 
         if ($context instanceof context_user) {
-            $DB->delete_records('local_report_user_lic_allocs', ['userid' => $context->id]);
+            $DB->delete_records('local_report_user_license_allocations', ['userid' => $context->id]);
         }
     }
 }

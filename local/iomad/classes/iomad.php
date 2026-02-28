@@ -1230,7 +1230,7 @@ class iomad {
 
         if (!empty($params['licenseallocatedfrom'])) {
             if ($licallocfromids = $DB->get_records_select(
-                'local_report_user_lic_allocs',
+                'local_report_user_license_allocations',
                 "issuedate > :licenseallocatedfrom
                  AND action = 1",
                 $params)) {
@@ -1247,7 +1247,7 @@ class iomad {
 
         if (!empty($params['licenseallocatedto'])) {
             if ($licalloctoids = $DB->get_records_select(
-                'local_report_user_lic_allocs',
+                'local_report_user_license_allocations',
                 "issuedate < :licenseallocatedto
                  AND action = 1",
                 $params)) {
@@ -1264,7 +1264,7 @@ class iomad {
 
         if (!empty($params['licenseunallocatedfrom'])) {
             if ($licunallocfromids = $DB->get_records_select(
-                'local_report_user_lic_allocs',
+                'local_report_user_license_allocations',
                 "issuedate > :licenseunallocatedfrom
                  AND action = 0",
                 $params)) {
@@ -1281,7 +1281,7 @@ class iomad {
 
         if (!empty($params['licenseunallocatedto'])) {
             if ($licunalloctoids = $DB->get_records_select(
-                'local_report_user_lic_allocs',
+                'local_report_user_license_allocations',
                 "issuedate < :licenseunallocatedto
                  AND action = 0",
                 $params)) {
@@ -1299,7 +1299,7 @@ class iomad {
         if (!empty($params['licenseusage'])) {
             $params['licenseusage']--;
             if ($licunalloctoids = $DB->get_records_select(
-                'local_report_user_lic_allocs',
+                'local_report_user_license_allocations',
                 "action = :licenseusage",
                 $params,
                 '',

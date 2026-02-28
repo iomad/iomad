@@ -45,13 +45,13 @@ class observer {
         global $DB;
 
         // Add the event.
-        if (!$DB->get_record('local_report_user_lic_allocs', [
+        if (!$DB->get_record('local_report_user_license_allocations', [
             'userid' => $event->userid,
             'licenseid' => $event->other['licenseid'],
             'issuedate' => $event->other['issuedate'],
             'courseid' => $event->courseid,
         ])) {
-            $DB->insert_record('local_report_user_lic_allocs', [
+            $DB->insert_record('local_report_user_license_allocations', [
                 'userid' => $event->userid,
                 'licenseid' => $event->other['licenseid'],
                 'issuedate' => $event->other['issuedate'],
@@ -72,7 +72,7 @@ class observer {
         global $DB;
 
         // Add the event.
-        $DB->insert_record('local_report_user_lic_allocs', [
+        $DB->insert_record('local_report_user_license_allocations', [
             'userid' => $event->userid,
             'licenseid' => $event->other['licenseid'],
             'issuedate' => $event->timecreated,

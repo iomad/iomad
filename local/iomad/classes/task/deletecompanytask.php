@@ -82,7 +82,7 @@ class deletecompanytask extends adhoc_task {
         mtrace("dealing with all license allocation reports");
         $licenses = $DB->get_records('local_iomad_company_licenses', ['companyid' => $companyrec->id]);
         foreach ($licenses as $license) {
-            $DB->delete_records('local_report_user_lic_allocs', ['licenseid' => $license->id]);
+            $DB->delete_records('local_report_user_license_allocations', ['licenseid' => $license->id]);
         }
 
         mtrace("dealing with all licenses");
