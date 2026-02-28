@@ -364,14 +364,14 @@ if (!empty($userlist)) {
     if (!empty($from)) {
         // We need to get the total allocated up to that date.
         if (empty($license->program)) {
-            $numallocations = $DB->count_records_sql("SELECT COUNT(id) FROM {local_report_user_lic_allocs}
+            $numallocations = $DB->count_records_sql("SELECT COUNT(id) FROM {local_report_user_license_allocations}
                                                       WHERE action = 1
                                                       AND licenseid = :licenseid
                                                       AND issuedate < :fromtime
                                                       AND userid IN (" . $departmentids . ")",
                                                       ['licenseid' => $licenseid,
                                                        'fromtime' => $from]);
-            $numunallocations = $DB->count_records_sql("SELECT COUNT(id) FROM {local_report_user_lic_allocs}
+            $numunallocations = $DB->count_records_sql("SELECT COUNT(id) FROM {local_report_user_license_allocations}
                                                         WHERE action = 0
                                                         AND licenseid = :licenseid
                                                         AND issuedate < :fromtime
@@ -381,7 +381,7 @@ if (!empty($userlist)) {
             $numstart = $numallocations - $numunallocations;
         } else {
             $coursecount = $DB->count_records('local_iomad_company_license_courses', ['licenseid' => $licenseid]);
-            $allocations = $DB->get_records_sql("SELECT * FROM {local_report_user_lic_allocs}
+            $allocations = $DB->get_records_sql("SELECT * FROM {local_report_user_license_allocations}
                                                  WHERE action = 1
                                                  AND license = :licenseid
                                                  AND issuedate < :fromtime
@@ -390,7 +390,7 @@ if (!empty($userlist)) {
                                                   'fromtime' => $from]);
 
             $numallocations = $allocations / $coursecount;
-            $unallocations = $DB->get_records_sql("SELECT * FROM {local_report_user_lic_allocs}
+            $unallocations = $DB->get_records_sql("SELECT * FROM {local_report_user_license_allocations}
                                                    WHERE action = 0
                                                    AND licenseid = :licenseid
                                                    AND issuedate < :fromtime
@@ -416,13 +416,13 @@ if (!empty($userlist)) {
     }
     // Get the number of allocations.
     if (empty($license->program)) {
-        $numallocations = $DB->count_records_sql("SELECT COUNT(id) FROM {local_report_user_lic_allocs}
+        $numallocations = $DB->count_records_sql("SELECT COUNT(id) FROM {local_report_user_license_allocations}
                                                   WHERE action = 1
                                                   AND licenseid = :licenseid
                                                   $timesql
                                                   AND userid IN (" . $departmentids . ")",
                                                   $sqlparams);
-        $numunallocations = $DB->count_records_sql("SELECT COUNT(id) FROM {local_report_user_lic_allocs}
+        $numunallocations = $DB->count_records_sql("SELECT COUNT(id) FROM {local_report_user_license_allocations}
                                                     WHERE action = 0
                                                     AND licenseid = :licenseid
                                                     $timesql
@@ -430,13 +430,13 @@ if (!empty($userlist)) {
                                                     $sqlparams);
     } else {
         $coursecount = $DB->count_records('local_iomad_company_license_courses', ['licenseid' => $licenseid]);
-        $allocations = $DB->count_records_sql("SELECT count(id) FROM {local_report_user_lic_allocs}
+        $allocations = $DB->count_records_sql("SELECT count(id) FROM {local_report_user_license_allocations}
                                              WHERE action = 1
                                              AND licenseid = :licenseid
                                              $timesql
                                              AND userid IN (" . $departmentids . ")",
                                              $sqlparams);
-        $unallocations = $DB->count_records_sql("SELECT count(id) FROM {local_report_user_lic_allocs}
+        $unallocations = $DB->count_records_sql("SELECT count(id) FROM {local_report_user_license_allocations}
                                                WHERE action = 0
                                                AND licenseid = :licenseid
                                                $timesql

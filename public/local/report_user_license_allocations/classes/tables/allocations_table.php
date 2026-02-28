@@ -79,7 +79,7 @@ class allocations_table extends table_sql {
     public function col_licenseallocated($row) {
         global $DB;
         $allocated = $DB->count_records(
-            'local_report_user_lic_allocs',
+            'local_report_user_license_allocations',
             [
                 'userid' => $row->id,
                 'licenseid' => $row->licenseid,
@@ -88,7 +88,7 @@ class allocations_table extends table_sql {
             ]
         );
         $unallocated = $DB->count_records(
-            'local_report_user_lic_allocs',
+            'local_report_user_license_allocations',
             [
                 'userid' => $row->id,
                 'licenseid' => $row->licenseid,
@@ -112,7 +112,7 @@ class allocations_table extends table_sql {
         global $CFG, $DB;
 
         $allocations = $DB->get_records(
-            'local_report_user_lic_allocs',
+            'local_report_user_license_allocations',
             [
                 'userid' => $row->id,
                 'licenseid' => $row->licenseid,
@@ -150,7 +150,7 @@ class allocations_table extends table_sql {
         global $CFG, $DB;
 
         $unallocations = $DB->get_records(
-            'local_report_user_lic_allocs',
+            'local_report_user_license_allocations',
             [
                 'userid' => $row->id,
                 'licenseid' => $row->licenseid,
@@ -263,7 +263,7 @@ class allocations_table extends table_sql {
         global $DB;
 
         return $DB->count_records(
-            'local_report_user_lic_allocs',
+            'local_report_user_license_allocations',
             [
                 'userid' => $row->id,
                 'licenseid' => $row->licenseid,
@@ -282,7 +282,7 @@ class allocations_table extends table_sql {
         global $DB;
 
         return $DB->count_records(
-            'local_report_user_lic_allocs',
+            'local_report_user_license_allocations',
             [
                 'userid' => $row->id,
                 'licenseid' => $row->licenseid,

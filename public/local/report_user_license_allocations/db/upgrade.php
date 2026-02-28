@@ -35,170 +35,54 @@ function xmldb_local_report_user_license_allocations_upgrade($oldversion) {
     $result = true;
     $dbman = $DB->get_manager();
 
-    if ($oldversion < 2019012100) {
+    if ($oldversion < 2026022800) {
 
-        upgrade_set_timeout(7200); // Set installation time to 2 hours as this takes a long time.
-
-        // Define table local_report_user_lic_allocs to be created.
+        // Local_report_user_lic_allocs table restructure.
         $table = new xmldb_table('local_report_user_lic_allocs');
 
-        // Adding fields to table local_report_user_lic_allocs.
-        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('userid', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('licenseid', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('courseid', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, '0');
-        $table->add_field('action', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('issuedate', XMLDB_TYPE_INTEGER, '20', null, null, null, null);
-        $table->add_field('modifiedtime', XMLDB_TYPE_INTEGER, '20', null, null, null, null);
+        // Define index userliccoursedate (unique) to be dropped form local_report_user_lic_allocs.
+        $index = new xmldb_index('userliccoursedate', XMLDB_INDEX_UNIQUE, ['userid', 'courseid', 'licenseid', 'issuedate']);
 
-        // Adding keys to table local_report_user_lic_allocs.
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
-
-        // Adding indexes to table local_report_user_lic_allocs.
-        $table->add_index('userliccoursedate', XMLDB_INDEX_UNIQUE, ['userid', 'courseid', 'licenseid', 'issuedate']);
-
-        // Conditionally launch create table for local_report_user_lic_allocs.
-        if (!$dbman->table_exists($table)) {
-            $dbman->create_table($table);
+        // Conditionally launch drop index userliccoursedate.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
         }
 
-        // Deal with historic license allocations as they may have dropped out of the logs or was before we fired an event.
-        // Find the first event.
-        if ($firstrec = $DB->get_records_sql(
-            "SELECT * FROM {logstore_standard_log}
-             WHERE eventname = :eventname
-             ORDER BY ID",
-            ['eventname' => '\block_iomad_company_admin\event\user_license_assigned'],
-            0, 1)) {
-            $first = array_pop($firstrec);
-            if ($oldallocations = $DB->get_records_sql("SELECT * FROM {local_iomad_company_license_users}
-                                                        WHERE issuedate < :first",
-                                                        ['first' => $first->timecreated])) {
-                $totalold = count($oldallocations);
-                mtrace("Dealing with old allocations $totalold to be processed");
-                $currentcount = 0;
-                $warn = 10;
+        // Define index userid-courseid-licenseid-issuedate (unique) to be added to local_report_user_lic_allocs.
+        $index = new xmldb_index(
+            'userid-courseid-licenseid-issuedate',
+            XMLDB_INDEX_UNIQUE,
+            ['userid', 'courseid', 'licenseid', 'issuedate']
+        );
 
-                foreach ($oldallocations as $oldallocation) {
-                    if (!$DB->get_record(
-                        'local_report_user_lic_allocs',
-                        [
-                            'userid' => $oldallocation->userid,
-                            'licenseid' => $oldallocation->licenseid,
-                            'courseid' => $oldallocation->licensecourseid,
-                            'action' => 1,
-                            'issuedate' => $oldallocation->issuedate,
-                        ]
-                    )) {
-
-                        $DB->insert_record(
-                            'local_report_user_lic_allocs',
-                            [
-                                'userid' => $oldallocation->userid,
-                                'licenseid' => $oldallocation->licenseid,
-                                'courseid' => $oldallocation->licensecourseid,
-                                'action' => 1,
-                                'issuedate' => $oldallocation->issuedate,
-                                'modifiedtime' => time(),
-                            ]
-                        );
-                    }
-                    $currentcount++;
-                    if ($currentcount * 100 / $totalold > $warn) {
-                        mtrace("$warn%");
-                        $warn = $warn + 10;
-                    }
-                }
-            }
-        }
-        $firstrec2 = $DB->get_records_sql("SELECT * FROM {logstore_standard_log}
-                                           WHERE eventname = :eventname
-                                           ORDER BY ID",
-                                           ['eventname' => '\block_iomad_company_admin\event\user_license_unassigned'],
-                                           0, 1);
-        if (count($firstrec2) > 0 || count($firstrec) > 0) {
-            // Populate the report table from any previous users.
-            $users = $DB->get_records_sql(
-                "SELECT id FROM {user} u
-                 WHERE  u.deleted=0
-                 AND EXISTS (
-                     SELECT 1 FROM {logstore_standard_log} l
-                     WHERE u.id = l.userid
-                     AND eventname IN (:eventname,:eventname2))",
-                [
-                    'eventname' => '\block_iomad_company_admin\event\user_license_assigned',
-                    'eventname2' => '\block_iomad_company_admin\event\user_license_unassigned',
-                ]
-            );
-
-            foreach ($users as $user) {
-                // Deal with any license allocations.
-                $licenseallocations = $DB->get_records(
-                    'logstore_standard_log',
-                    [
-                        'userid' => $user->id,
-                        'eventname' => '\block_iomad_company_admin\event\user_license_assigned',
-                    ]
-                );
-                foreach ($licenseallocations as $event) {
-                    // Get the payload.
-                    $evententries = unserialize($event->other);
-
-                    if (!$DB->get_record('local_report_user_lic_allocs', [
-                        'userid' => $user->id,
-                        'licenseid' => $evententries['licenseid'],
-                        'courseid' => $event->courseid,
-                        'action' => 1,
-                        'issuedate' => $event->timecreated,
-                    ])) {
-
-                        // Insert the record.
-                        $DB->insert_record('local_report_user_lic_allocs', [
-                            'userid' => $user->id,
-                            'licenseid' => $evententries['licenseid'],
-                            'courseid' => $event->courseid,
-                            'action' => 1,
-                            'issuedate' => $event->timecreated,
-                            'modifiedtime' => time(),
-                        ]);
-                    }
-                }
-
-                // Deal with any license unallocations.
-                $licenseunallocations = $DB->get_records(
-                    'logstore_standard_log',
-                    [
-                        'userid' => $user->id,
-                        'eventname' => '\block_iomad_company_admin\event\user_license_unassigned',
-                    ]
-                );
-                foreach ($licenseunallocations as $event) {
-                    // Get the payload.
-                    $evententries = unserialize($event->other);
-
-                    if (!$DB->get_record('local_report_user_lic_allocs', [
-                        'userid' => $user->id,
-                        'licenseid' => $evententries['licenseid'],
-                        'courseid' => $event->courseid,
-                        'action' => 0,
-                        'issuedate' => $event->timecreated,
-                    ])) {
-                        // Insert the record.
-                        $DB->insert_record('local_report_user_lic_allocs', [
-                            'userid' => $user->id,
-                            'licenseid' => $evententries['licenseid'],
-                            'courseid' => $event->courseid,
-                            'action' => 0,
-                            'issuedate' => $event->timecreated,
-                            'modifiedtime' => time(),
-                        ]);
-                    }
-                }
-            }
+        // Conditionally launch add index userid-courseid-licenseid-issuedate.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
         }
 
-        // Report_user_logins savepoint reached.
-        upgrade_plugin_savepoint(true, 2019012100, 'local', 'report_user_license_allocations');
+        // Define key fk_userid (foreign) to be added to local_report_user_lic_allocs.
+        $key = new xmldb_key('fk_userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+
+        // Launch add key fk_userid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_courseid (foreign) to be added to local_report_user_lic_allocs.
+        $key = new xmldb_key('fk_courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
+
+        // Launch add key fk_courseid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_licenseid (foreign) to be added to local_report_user_lic_allocs.
+        $key = new xmldb_key('fk_licenseid', XMLDB_KEY_FOREIGN, ['licenseid'], 'local_iomad_company_licenses', ['id']);
+
+        // Launch add key fk_licenseid.
+        $dbman->add_key($table, $key);
+
+        // Launch rename table to local_report_user_license_allocations.
+        $dbman->rename_table($table, 'local_report_user_license_allocations');
+
+        // Report_user_license_allocations savepoint reached.
+        upgrade_plugin_savepoint(true, 2026022800, 'local', 'report_user_license_allocations');
     }
 
     return $result;

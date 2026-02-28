@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/report_user_license_allocations/db" VERSION="20241209" COMMENT="XMLDB file for Moodle local/report_user_license_allocations"
+<XMLDB PATH="local/report_user_license_allocations/db" VERSION="20260228" COMMENT="XMLDB file for Moodle local/report_user_license_allocations"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="local_report_user_lic_allocs" COMMENT="Default comment for local_report_user_lic_allocs, please edit me">
+    <TABLE NAME="local_report_user_license_allocations" COMMENT="IOMAD user license allocation report main table">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
@@ -16,9 +16,12 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="fk_licenseid" TYPE="foreign" FIELDS="licenseid" REFTABLE="local_iomad_company_licenses" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="userliccoursedate" UNIQUE="true" FIELDS="userid, courseid, licenseid, issuedate" COMMENT="[Foreign Key, userid, user, id] [Foreign Key, courseid, course, id] [Foreign Key, licenseid, companylicense, id]"/>
+        <INDEX NAME="userid-courseid-licenseid-issuedate" UNIQUE="true" FIELDS="userid, courseid, licenseid, issuedate" COMMENT="[Foreign Key, userid, user, id] [Foreign Key, courseid, course, id] [Foreign Key, licenseid, companylicense, id]"/>
       </INDEXES>
     </TABLE>
   </TABLES>

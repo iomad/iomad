@@ -57,7 +57,7 @@ function xmldb_local_report_user_license_allocations_install() {
             $warn = 10;
             foreach ($oldallocations as $oldallocation) {
                 if (!$DB->get_record(
-                    'local_report_user_lic_allocs',
+                    'local_report_user_license_allocations',
                     [
                         'userid' => $oldallocation->userid,
                         'licenseid' => $oldallocation->licenseid,
@@ -68,7 +68,7 @@ function xmldb_local_report_user_license_allocations_install() {
                 )) {
 
                     $DB->insert_record(
-                        'local_report_user_lic_allocs',
+                        'local_report_user_license_allocations',
                         [
                             'userid' => $oldallocation->userid,
                             'licenseid' => $oldallocation->licenseid,
@@ -117,7 +117,7 @@ function xmldb_local_report_user_license_allocations_install() {
                 // Get the payload.
                 $evententries = unserialize($event->other);
 
-                if (!$DB->get_record('local_report_user_lic_allocs', [
+                if (!$DB->get_record('local_report_user_license_allocations', [
                     'userid' => $user->id,
                     'licenseid' => $evententries['licenseid'],
                     'courseid' => $event->courseid,
@@ -126,7 +126,7 @@ function xmldb_local_report_user_license_allocations_install() {
                 ])) {
 
                     // Insert the record.
-                    $DB->insert_record('local_report_user_lic_allocs', [
+                    $DB->insert_record('local_report_user_license_allocations', [
                         'userid' => $user->id,
                         'licenseid' => $evententries['licenseid'],
                         'courseid' => $event->courseid,
@@ -152,7 +152,7 @@ function xmldb_local_report_user_license_allocations_install() {
                 // Get the payload.
                 $evententries = unserialize($event->other);
 
-                if (!$DB->get_record('local_report_user_lic_allocs', [
+                if (!$DB->get_record('local_report_user_license_allocations', [
                     'userid' => $user->id,
                     'licenseid' => $evententries['licenseid'],
                     'courseid' => $event->courseid,
@@ -160,7 +160,7 @@ function xmldb_local_report_user_license_allocations_install() {
                     'issuedate' => $event->timecreated,
                 ])) {
                     // Insert the record.
-                    $DB->insert_record('local_report_user_lic_allocs', [
+                    $DB->insert_record('local_report_user_license_allocations', [
                         'userid' => $user->id,
                         'licenseid' => $evententries['licenseid'],
                         'courseid' => $event->courseid,

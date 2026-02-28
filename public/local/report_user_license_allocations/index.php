@@ -440,7 +440,7 @@ $selectsql = "DISTINCT " .
               c.fullname AS coursename,
               urla.licenseid,
               cl.name as licensename";
-$fromsql = " {local_report_user_lic_allocs} urla
+$fromsql = " {local_report_user_license_allocations} urla
             JOIN {user} u ON (urla.userid = u.id)
             JOIN {local_iomad_company_users} cu ON (u.id = cu.userid)
             JOIN {local_iomad_company_departments} d ON (
