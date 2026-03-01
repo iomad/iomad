@@ -24,7 +24,6 @@
  */
 
 use block_iomad_company_admin\event\dashboard_page_viewed;
-use block_iomad_microlearning\microlearning;
 use block_iomad_microlearning\tables\thread_table;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
@@ -32,10 +31,6 @@ use local_iomad\custom_context\context_company;
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->dirroot."/lib/tablelib.php");
 
-$threadid = optional_param('threadid', 0, PARAM_INT);
-$deleteid = optional_param('deleteid', 0, PARAM_INT);
-$cloneid = optional_param('cloneid', 0, PARAM_INT);
-$confirm = optional_param('confirm', null, PARAM_ALPHANUM);
 $search = optional_param('search', '', PARAM_ALPHANUM);
 $page = optional_param('page', 0, PARAM_INT);
 
@@ -74,68 +69,11 @@ $output = $PAGE->get_renderer('block_iomad_microlearning');
 // Set the page heading.
 $PAGE->set_heading($linktext);
 
+// Add the modal forms.
+$PAGE->requires->js_call_amd('block_iomad_microlearning/thread_edit', 'init');
+
 // Log this page view.
 dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
-
-// Delete any valid threads.
-if ($deleteid) {
-    // Check the thread is valid.
-    if (!$threadinfo = $DB->get_record('block_iomad_microlearning_threads', ['id' => $deleteid])) {
-        throw new moodle_exception('invalidthread', 'block_iomad_microlearning');
-    }
-
-    // Have we confirmed it?
-    if (confirm_sesskey() && $confirm == md5($deleteid)) {
-        // Get the list of thread ids which are to be removed..
-        if (!empty($deleteid)) {
-            // Check if thread is valid.
-            if (microlearning::check_valid_thread($companyid, $deleteid)) {
-                // If it is then delete it.
-                microlearning::delete_thread($deleteid, $deleteid);
-                redirect($linkurl);
-            }
-        }
-    } else {
-        // No - so show the confirmation question.
-        echo $output->header();
-        echo $output->heading(get_string('deletethread', 'block_iomad_microlearning'));
-        $optionsyes = ['deleteid' => $deleteid, 'confirm' => md5($deleteid), 'sesskey' => sesskey()];
-        echo $output->confirm(get_string('deletethreadcheckfull', 'block_iomad_microlearning', "'$threadinfo->name'"),
-                              new moodle_url('threads.php', $optionsyes), 'threads.php');
-    }
-    echo $output->footer();
-    die;
-}
-
-// Clone any valid threads.
-if ($cloneid) {
-    // Check the thread is valid.
-    if (!$threadinfo = $DB->get_record('block_iomad_microlearning_threads', ['id' => $cloneid])) {
-        throw new moodle_exception('invalidthread', 'block_iomad_microlearning');
-    }
-
-    // Have we confirmed it?
-    if (confirm_sesskey() && $confirm == md5($cloneid)) {
-        // Get the list of thread ids which are to be removed..
-        if (!empty($cloneid)) {
-            // Check if thread is valid.
-            if (microlearning::check_valid_thread($companyid, $cloneid)) {
-                // If it is then delete it.
-                microlearning::clone_thread($cloneid, $cloneid);
-                redirect($linkurl);
-            }
-        }
-    } else {
-        // No so show the confirmation question.
-        echo $output->header();
-        echo $output->heading(get_string('clonethread', 'block_iomad_microlearning'));
-        $optionsyes = ['cloneid' => $cloneid, 'confirm' => md5($cloneid), 'sesskey' => sesskey()];
-        echo $output->confirm(get_string('clonethreadcheckfull', 'block_iomad_microlearning', "'$threadinfo->name'"),
-                              new moodle_url('threads.php', $optionsyes), 'threads.php');
-    }
-    echo $output->footer();
-    die;
-}
 
 // Create the thread table.
 $threadtable = new thread_table('block_microlearning_threads');
@@ -144,7 +82,7 @@ $selectsql = "*";
 $fromsql = "{block_iomad_microlearning_threads}";
 $wheresql = "companyid = :companyid";
 if (!empty($search)) {
-    $wheresql .= " AND name like :search ";
+    $wheresql .= " AND " . $DB->sql_like('name', ':search');
     $sqlparams['search'] = "%search%";
 }
 

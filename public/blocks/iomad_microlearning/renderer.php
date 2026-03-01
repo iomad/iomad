@@ -38,17 +38,13 @@ class block_iomad_microlearning_renderer extends plugin_renderer_base {
     /**
      * Back to list of roles button
      */
-    public function threads_buttons($link) {
+    public function threads_buttons(array $attributes) {
         $out = html_writer::tag(
             'p',
             html_writer::tag(
                 'a',
                 get_string('add'),
-                [
-                    'class' => "btn btn-primary",
-                    'href' => $link,
-
-                ]
+                $attributes,
             )
         );
 
@@ -59,7 +55,7 @@ class block_iomad_microlearning_renderer extends plugin_renderer_base {
      * Back to list of roles button
      */
     public function threads_list_buttons($link, $link2, $link3, $link4) {
-        global $companycontext;
+        global $company, $companycontext;
 
         $out = html_writer::start_tag('p') .
             html_writer::tag(
@@ -67,8 +63,10 @@ class block_iomad_microlearning_renderer extends plugin_renderer_base {
                 get_string('add'),
                 [
                     'class' => "btn btn-primary",
-                    'href' => $link,
-
+                    'role' => 'button',
+                    'href' => '#',
+                    'data-action' => 'show-editthreadform',
+                    'data-companyid' => $company->id,
                 ]
             );
 

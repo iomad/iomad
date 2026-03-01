@@ -23,7 +23,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace block_iomad_microlearning\forms;
+namespace block_iomad_microlearning\tables;
 
 use html_writer;
 use local_iomad\iomad;
@@ -74,7 +74,6 @@ class nugget_table extends table_sql {
         $count = $DB->count_records('block_iomad_microlearning_nuggets', ['threadid' => $row->threadid]);
 
         if ($row->nuggetorder != 0) {
-            $uplink = new moodle_url('nuggets.php', ['action' => 'up', 'nuggetid' => $row->id, 'threadid' => $row->threadid]);
             $html .= html_writer::tag(
                 'a',
                 html_writer::tag(
@@ -87,12 +86,16 @@ class nugget_table extends table_sql {
                     ]
                 ),
                 [
-                    'href' => $uplink,
+                    'role' => 'button',
+                    'href' => '#',
+                    'data-action' => 'move-nugget',
+                    'data-direction' => 'up',
+                    'data-nuggetid' => $row->id,
+                    'data-threadid' => $row->threadid,
                 ]
             );
         }
         if (($row->nuggetorder + 1) < $count) {
-            $downlink = new moodle_url('nuggets.php', ['action' => 'down', 'nuggetid' => $row->id, 'threadid' => $row->threadid]);
             $html .= html_writer::tag(
                 'a',
                 html_writer::tag(
@@ -105,7 +108,12 @@ class nugget_table extends table_sql {
                     ]
                 ),
                 [
-                    'href' => $downlink,
+                    'role' => 'button',
+                    'href' => '#',
+                    'data-action' => 'move-nugget',
+                    'data-direction' => 'down',
+                    'data-nuggetid' => $row->id,
+                    'data-threadid' => $row->threadid,
                 ]
             );
         }
@@ -144,7 +152,7 @@ class nugget_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_actions($row) {
-        global $companycontext;
+        global $company, $companycontext;
 
         if ($this->is_downloading()) {
             return;
@@ -166,7 +174,12 @@ class nugget_table extends table_sql {
                     ]
                 ),
                 [
-                    'href' => $editlink,
+                    'role' => 'button',
+                    'href' => '#',
+                    'data-action' => 'show-editnuggetform',
+                    'data-companyid' => $company->id,
+                    'data-nuggetid' => $row->id,
+                    'data-threadid' => $row->threadid,
                 ]
             );
             $html .= html_writer::tag(
@@ -181,7 +194,12 @@ class nugget_table extends table_sql {
                     ]
                 ),
                 [
-                    'href' => $deletelink,
+                    'role' => 'button',
+                    'href' => '#',
+                    'data-action' => 'show-deletenuggetprompt',
+                    'data-companyid' => $company->id,
+                    'data-nuggetid' => $row->id,
+                    'data-name' => format_string($row->name),
                 ]
             );
         }

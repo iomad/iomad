@@ -23,22 +23,13 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use block_iomad_microlearning\microlearning;
-use core\output\notification;
-
+use block_iomad_microlearning\tables\list_groups_table;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
 require_once(dirname(__FILE__) . '/../../course/lib.php');
-
-$groupid = optional_param('groupid', 0, PARAM_INT);
-$deleteids = optional_param_array('groupids', null, PARAM_INT);
-$createnew = optional_param('createnew', 0, PARAM_INT);
-$deleteid = optional_param('deleteid', 0, PARAM_INT);
-$confirm = optional_param('confirm', null, PARAM_ALPHANUM);
-$submit = optional_param('submitbutton', '', PARAM_ALPHANUM);
 
 // Log in and set up $PAGE.
 require_login();
@@ -73,43 +64,17 @@ $output = $PAGE->get_renderer('block_iomad_microlearning');
 // Set the page heading.
 $PAGE->set_heading($linktext);
 
+// Add the modal forms.
+$PAGE->requires->js_call_amd('block_iomad_microlearning/group_edit', 'init');
+
 // Deal with the link back to the main microlearning page.
 $buttoncaption = get_string('threads', 'block_iomad_microlearning');
 $buttonlink = new moodle_url('/blocks/iomad_microlearning/threads.php');
 $buttons = $OUTPUT->single_button($buttonlink, $buttoncaption, 'get');
 $PAGE->set_button($buttons);
 
-// Delete any valid groups.
-if ($deleteid && confirm_sesskey()) {
-    if (!$group = $DB->get_record('block_iomad_microlearning_thread_groups', ['id' => $deleteid])) {
-        throw new moodle_exception('nogroup', 'block_iomad_microlearning');
-    }
-
-    if ($confirm == md5($deleteid)) {
-
-        // Get the list of group ids which are to be removed..
-        if (!empty($deleteid)) {
-            // Check if group has already been removed.
-            if ($DB->get_record('block_iomad_microlearning_thread_groups', ['id' => $deleteid])) {
-                // If not delete it.
-                $DB->delete_records('block_iomad_microlearning_thread_groups', ['id' => $deleteid]);
-                $DB->set_field('block_iomad_microlearning_thread_users', 'groupid', 0, ['groupid' => $deleteid]);
-                redirect($linkurl, get_string('groupdeletedok', 'block_iomad_microlearning'), null, notification::NOTIFY_SUCCESS);
-            }
-        }
-    } else {
-        echo $output->header();
-        echo $output->heading(get_string('deletegroup', 'block_iomad_microlearning', $group->name));
-        $optionsyes = ['deleteid' => $deleteid, 'confirm' => md5($deleteid), 'sesskey' => sesskey()];
-        echo $output->confirm(get_string('deletegroupcheckfull', 'block_iomad_microlearning', $group->name),
-                              new moodle_url('groups.php', $optionsyes), 'groups.php');
-        echo $output->footer();
-        die;
-    }
-}
-
 // Set up the table.
-$table = new \block_iomad_microlearning\tables\list_groups_table('block_iomad_microlearning_groups_table');
+$table = new list_groups_table('block_iomad_microlearning_groups_table');
 
 // Set up the initial SQL for the form.
 $selectsql = "mtg.*, mt.name as threadname";
@@ -139,8 +104,17 @@ echo $output->header();
 // If there are no threads - don't show the button to add.
 if ($DB->get_records_menu('block_iomad_microlearning_threads', ['companyid' => $companyid],  'name', 'id,name')) {
     echo html_writer::start_tag('div', ['class' => "buttons"]);
-    echo $OUTPUT->single_button(new moodle_url('group_edit_form.php'),
-                                get_string('creategroup', 'block_iomad_microlearning'));
+    echo html_writer::tag(
+        'a',
+        get_string('creategroup', 'block_iomad_microlearning'),
+        [
+            'href' => '#',
+            'data-action' => 'show-editgroupform',
+            'data-companyid' => $companyid,
+            'role' => 'button',
+            'class' => 'btn btn-secondary',
+        ]
+    );
     echo html_writer::end_tag('div');
 }
 

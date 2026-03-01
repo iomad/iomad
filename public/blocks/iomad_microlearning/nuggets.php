@@ -24,8 +24,7 @@
  */
 
 use block_iomad_company_admin\event\dashboard_page_viewed;
-use block_iomad_microlearning\forms\nugget_table;
-use block_iomad_microlearning\microlearning;
+use block_iomad_microlearning\tables\nugget_table;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
@@ -34,10 +33,6 @@ require_once($CFG->dirroot."/lib/tablelib.php");
 
 $threadid = required_param('threadid', PARAM_INT);
 $nuggetid = optional_param('nuggetid', 0, PARAM_INT);
-$deleteid = optional_param('deleteid', 0, PARAM_INT);
-$confirm = optional_param('confirm', null, PARAM_ALPHANUM);
-$action = optional_param('action', '', PARAM_ALPHA);
-$page = optional_param('page', 0, PARAM_INT);
 
 // Log in and set up $PAGE.
 require_login();
@@ -51,17 +46,9 @@ $company = new company($companyid);
 // Can we even do anything?
 iomad::require_capability('block/iomad_microlearning:edit_nuggets', $companycontext);
 
-// Deal with any actions.
-if (!empty($action) && !empty($nuggetid)) {
-    if ($action == 'up') {
-        microlearning::up_nugget($nuggetid);
-    } else if ($action == 'down') {
-        microlearning::down_nugget($nuggetid);
-    }
-}
 
 // Set the URLs.
-$urlparams = ['threadid' => $threadid, 'nuggetid' => $nuggetid, 'page' => $page];
+$urlparams = ['threadid' => $threadid, 'page' => $page];
 $companylist = new moodle_url('/blocks/iomad_company_admin/index.php', $urlparams);
 $linktext = get_string('nuggets', 'block_iomad_microlearning');
 $threadlink = new moodle_url('/blocks/iomad_microlearning/threads.php');
@@ -79,6 +66,9 @@ $output = $PAGE->get_renderer('block_iomad_microlearning');
 // Set the page heading.
 $PAGE->set_heading($linktext);
 
+// Add the modal forms.
+$PAGE->requires->js_call_amd('block_iomad_microlearning/nugget_edit', 'init');
+
 // Log this page view.
 dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
@@ -87,33 +77,6 @@ $buttoncaption = get_string('threads', 'block_iomad_microlearning');
 $buttonlink = new moodle_url('/blocks/iomad_microlearning/threads.php');
 $buttons = $OUTPUT->single_button($buttonlink, $buttoncaption, 'get');
 $PAGE->set_button($buttons);
-
-// Delete any valid nuggets.
-if ($deleteid) {
-    // Check the thread is valid.
-    if (!$nuggetinfo = $DB->get_record('block_iomad_microlearning_nuggets', ['id' => $deleteid])) {
-        throw new moodle_exception('invalidnugget', 'block_iomad_microlearning');
-    }
-
-    // Have we confirmed it?
-    if (confirm_sesskey() && $confirm == md5($deleteid)) {
-        // Get the list of thread ids which are to be removed..
-        if (!empty($deleteid)) {
-            microlearning::delete_nugget($deleteid);
-            redirect($linkurl);
-        }
-    } else {
-        // No so show the confirmation question.
-        echo $output->header();
-        echo $output->heading(get_string('deletenugget', 'block_iomad_microlearning'));
-        $optionsyes = ['threadid' => $threadid, 'deleteid' => $deleteid, 'confirm' => md5($deleteid), 'sesskey' => sesskey()];
-        echo $output->confirm(get_string('deletenuggetcheckfull', 'block_iomad_microlearning', "'$nuggetinfo->name'"),
-                              new moodle_url($CFG->wwwroot . '/blocks/iomad_microlearning/nuggets.php', $optionsyes),
-                              new moodle_url($CFG->wwwroot . '/blocks/iomad_microlearning/nuggets.php', ['threadid' => $threadid]));
-    }
-    echo $output->footer();
-    die;
-}
 
 // Create the thread table.
 $nuggettable = new nugget_table('block_microlearning_nuggets');
@@ -141,7 +104,15 @@ $nuggettable->sort_default_column = 'nuggetorder';
 echo $output->header();
 
 // Display the buttons.
-echo $output->threads_buttons(new moodle_url('nugget_edit.php', ['threadid' => $threadid]));
+$attributes = [
+    'class' => 'btn btn-primary',
+    'role' => 'button',
+    'href' => '#',
+    'data-action' => 'show-editnuggetform',
+    'data-companyid' => $company->id,
+    'data-threadid' => $threadid,
+];
+echo $output->threads_buttons($attributes);
 
 // Display the table.
 $nuggettable->out(30, true);

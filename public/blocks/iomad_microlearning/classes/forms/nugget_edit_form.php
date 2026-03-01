@@ -25,7 +25,12 @@
 
 namespace block_iomad_microlearning\forms;
 
-use moodleform;
+use context;
+use core_form\dynamic_form;
+use block_iomad_microlearning\event\{nugget_created, nugget_updated};
+use local_iomad\iomad;
+use local_iomad\custom_context\context_company;
+use moodle_url;
 
 /**
  * IOMAD microlearning block nugget edit form class
@@ -35,35 +40,7 @@ use moodleform;
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class nugget_edit_form extends moodleform {
-
-    /** @var array orderselect */
-    protected $orderselect = [];
-
-    /**
-     * Constructor function
-     *
-     * @param moodle_url $actionurl
-     * @param int $threadid
-     * @param int $nuggetid
-     */
-    public function __construct($actionurl, $threadid, $nuggetid = 0) {
-        global $DB;
-
-        $nuggetcount = $DB->count_records('block_iomad_microlearning_nuggets', ['threadid' => $threadid]);
-        if (empty($nuggetid)) {
-            // We are adding so count is whatever is there plus this one.
-            $nuggetcount++;
-        }
-        $this->orderselect = [];
-        $count = 1;
-        while ($count <= $nuggetcount) {
-            $this->orderselect[$count - 1] = $count;
-            $count++;
-        }
-
-        parent::__construct($actionurl);
-    }
+class nugget_edit_form extends dynamic_form {
 
     /**
      * Form definition
@@ -78,6 +55,9 @@ class nugget_edit_form extends moodleform {
 
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
+
+        $mform->addElement('hidden', 'companyid');
+        $mform->setType('companyid', PARAM_INT);
 
         $mform->addElement('hidden', 'threadid');
         $mform->setType('threadid', PARAM_INT);
@@ -112,7 +92,6 @@ class nugget_edit_form extends moodleform {
         $mform->addElement('hidden', 'nuggetorder');
         $mform->setType('nuggetorder', PARAM_INT);
 
-        $this->add_action_buttons();
     }
 
     /**
@@ -156,4 +135,159 @@ class nugget_edit_form extends moodleform {
         }
         return $errors;
     }
+
+    /**
+     * Process the form submission, used if form was submitted via AJAX.
+     *
+     * @return array
+     */
+    public function process_dynamic_submission(): array {
+        global $DB, $USER;
+
+        // Get the info from the form.
+        $data = $this->get_data();
+        $returnmessage = "";
+        $companycontext = context_company::instance($data->companyid);
+
+        // Deal with leading/trailing spaces.
+        $data->name = trim($data->name);
+
+        // Create or update the department.
+        if (empty($data->id)) {
+            $nuggetcount = $DB->count_records(
+                'block_iomad_microlearning_nuggets',
+                ['threadid' => $data->threadid]
+            );
+            $data->nuggetorder = $nuggetcount;
+            $data->timecreated = time();
+            $data->id = $DB->insert_record('block_iomad_microlearning_nuggets', $data);
+            $returnmessage = get_string('nuggetcreatedok', 'block_iomad_microlearning');
+
+            // Fire an Event for this.
+            $eventother = ['companyid' => $data->companyid];
+
+            $event = nugget_created::create([
+                'context' => $companycontext,
+                'userid' => $USER->id,
+                'objectid' => $data->id,
+                'other' => $eventother,
+            ]);
+        } else {
+            $DB->update_record('block_iomad_microlearning_nuggets', $data);
+            $returnmessage = get_string('nuggetcupdatedok', 'block_iomad_microlearning');
+
+            // Fire an Event for this.
+            $eventother = ['companyid' => $data->companyid];
+
+            $event = nugget_updated::create([
+                'context' => $companycontext,
+                'userid' => $USER->id,
+                'objectid' => $data->id,
+                'other' => $eventother,
+            ]);
+        }
+
+        // Fire the event.
+        $event->trigger();
+
+        // Return stuff to the JS.
+        return [
+            'result' => true,
+            'returnmessage' => $returnmessage,
+        ];
+    }
+
+    /**
+     * Load in existing data as form defaults (not applicable).
+     *
+     * @return void
+     */
+    public function set_data_for_dynamic_submission(): void {
+        global $DB;
+
+        // Set some defaults.
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $nuggetid = $this->optional_param('nuggetid', 0, PARAM_INT);
+        $threadid = $this->optional_param('threadid', 0, PARAM_INT);
+        $companycontext = context_company::instance($companyid);
+
+        // Can we even do anything?
+        iomad::require_capability('block/iomad_microlearning:edit_nuggets', $companycontext);
+
+        // Set the form data.
+        if (!empty($nuggetid)) {
+            $nugget = $DB->get_record('block_iomad_microlearning_nuggets', ['id' => $nuggetid]);
+        } else {
+            $nugget = (object) ['threadid' => $threadid];
+        }
+
+        // Set the company id.
+        $nugget->companyid = $companyid;
+
+        // Send it.
+        $this->set_data($nugget);
+    }
+
+    /**
+     * Check if current user has access to this form, otherwise throw exception.
+     *
+     * @return void
+     * @throws moodle_exception
+     */
+    protected function check_access_for_dynamic_submission(): void {
+        global $CFG, $DB;
+
+        $context = $this->get_context_for_dynamic_submission();
+        if (!iomad::has_capability('block/iomad_microlearning:edit_nuggets', $context)) {
+            $returnurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_microlearning/nuggets.php');
+            throw new moodle_exception(
+                'nopermissions',
+                '',
+                $returnurl->out(),
+                get_string(
+                    'block/iomad_microlearning:edit_nuggets',
+                    'block_iomad_microlearning'
+                )
+            );
+        }
+
+        // Does the thread belong to this company?
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $threadid = $this->optional_param('threadid', 0, PARAM_INT);
+        if (!$DB->get_record('block_iomad_microlearning_threads', ['id' => $threadid, 'companyid' => $companyid])) {
+            $returnurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_microlearning/nuggets.php');
+            throw new moodle_exception(
+                'nopermissions',
+                '',
+                $returnurl->out(),
+                get_string(
+                    'editnugget',
+                    'block_iomad_microlearning'
+                )
+            );
+        }
+    }
+
+    /**
+     * Return form context
+     *
+     * @return context
+     */
+    protected function get_context_for_dynamic_submission(): context {
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $companycontext = context_company::instance($companyid);
+
+        return $companycontext;
+    }
+
+    /**
+     * Returns url to set in $PAGE->set_url() when form is being rendered or submitted via AJAX.
+     *
+     * @return moodle_url
+     */
+    protected function get_page_url_for_dynamic_submission(): moodle_url {
+
+        return new moodle_url('/blocks/iomad_company_admin/nuggets.php');
+    }
 }
+

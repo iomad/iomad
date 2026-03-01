@@ -124,7 +124,10 @@ class thread_table extends table_sql {
                     ]
                 ),
                 [
-                    'href' => $editlink,
+                    'href' => '#',
+                    'data-action' => 'show-editthreadform',
+                    'data-threadid' => $row->id,
+                    'data-companyid' => $row->companyid,
                 ]
             ) . '&nbsp;';
         }
@@ -192,7 +195,11 @@ class thread_table extends table_sql {
                     ]
                 ),
                 [
-                    'href' => $clonelink,
+                    'href' => '#',
+                    'data-action' => 'show-clonethreadprompt',
+                    'data-threadid' => $row->id,
+                    'data-companyid' => $row->companyid,
+                    'data-name' => format_string($row->name),
                 ]
             ) . '&nbsp;';
         }
@@ -209,7 +216,11 @@ class thread_table extends table_sql {
                     ]
                 ),
                 [
-                    'href' => $deletelink,
+                    'href' => '#',
+                    'data-action' => 'show-deletethreadprompt',
+                    'data-threadid' => $row->id,
+                    'data-companyid' => $row->companyid,
+                    'data-name' => format_string($row->name),
                 ]
             );
         }
