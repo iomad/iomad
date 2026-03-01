@@ -68,12 +68,8 @@ class list_groups_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_actions($row) {
-        global $CFG;
+        global $company;
 
-        $deleteurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_microlearning/groups.php',
-                                    ['deleteid' => $row->id, 'sesskey' => sesskey()]);
-        $editurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_microlearning/group_edit_form.php',
-                                  ['id' => $row->id]);
         return html_writer::tag(
             'a',
             html_writer::tag(
@@ -86,7 +82,11 @@ class list_groups_table extends table_sql {
                 ]
             ),
             [
-                'href' => $editurl,
+                'href' => '#',
+                'data-action' => 'show-editgroupform',
+                'data-companyid' => $company->id,
+                'data-groupid' => $row->id,
+                'role' => 'button',
             ]
         ) . '&nbsp;' .
             html_writer::tag(
@@ -101,7 +101,12 @@ class list_groups_table extends table_sql {
                     ]
                 ),
                 [
-                    'href' => $deleteurl,
+                'href' => '#',
+                'data-action' => 'show-deletegroupprompt',
+                'data-companyid' => $company->id,
+                'data-groupid' => $row->id,
+                'data-name' => format_string($row->name),
+                'role' => 'button',
                 ]
             );
     }

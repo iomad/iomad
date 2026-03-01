@@ -37,34 +37,47 @@ function xmldb_block_iomad_approve_access_upgrade($oldversion) {
     $result = true;
     $dbman = $DB->get_manager();
 
-    if ($oldversion < 2013061100) {
+    if ($oldversion < 2026022800) {
 
-        // Define field companyid to be added to block_iomad_approve_access.
+        // Define key userid (foreign) to be dropped form block_iomad_approve_access.
         $table = new xmldb_table('block_iomad_approve_access');
-        $field = new xmldb_field('companyid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, 'userid');
+        $key = new xmldb_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
 
-        // Conditionally launch add field companyid.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
+        // Launch drop key userid.
+        $dbman->drop_key($table, $key);
+
+         // Define key courseid (foreign) to be dropped form block_iomad_approve_access.
+        $key = new xmldb_key('courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
+
+        // Launch drop key courseid.
+        $dbman->drop_key($table, $key);
+
+        // Define key activityid (foreign) to be dropped form block_iomad_approve_access.
+        $key = new xmldb_key('activityid', XMLDB_KEY_FOREIGN, ['activityid'], 'trainingevent', ['id']);
+
+        // Launch drop key activityid.
+        $dbman->drop_key($table, $key);
+
+        // Define key fk_userid (foreign) to be added to block_iomad_approve_access.
+        $key = new xmldb_key('fk_userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+
+        // Launch add key fk_userid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_courseid (foreign) to be added to block_iomad_approve_access.
+        $key = new xmldb_key('fk_courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
+
+        // Launch add key fk_courseid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_activityid (foreign) to be added to block_iomad_approve_access.
+        $key = new xmldb_key('fk_activityid', XMLDB_KEY_FOREIGN, ['activityid'], 'trainingevent', ['id']);
+
+        // Launch add key fk_activityid.
+        $dbman->add_key($table, $key);
 
         // Iomad_approve_access savepoint reached.
-        upgrade_block_savepoint(true, 2013061100, 'iomad_approve_access');
-    }
-
-    if ($oldversion < 2013071000) {
-
-        // Define field activityid to be added to block_iomad_approve_access.
-        $table = new xmldb_table('block_iomad_approve_access');
-        $field = new xmldb_field('activityid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '0', 'courseid');
-
-        // Conditionally launch add field activityid.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Iomad_approve_access savepoint reached.
-        upgrade_block_savepoint(true, 2013071000, 'iomad_approve_access');
+        upgrade_block_savepoint(true, 2026022800, 'iomad_approve_access');
     }
 
     return true;
