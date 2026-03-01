@@ -14,7 +14,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * IOMAD dashboard delete company Modal form.
+ * IOMAD dashboard suspend company Modal confirm.
  *
  * @module     block_iomad_company_admin
  * @copyright  2026 E-Learn Design
@@ -22,68 +22,53 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import ModalForm from 'core_form/modalform';
-import {get_string as getString} from 'core/str';
-import {add as toastAdd, addToastRegion} from 'core/toast';
-import {
-    exception as displayException,
-} from 'core/notification';
+import ajax from 'core/ajax';
+import {get_strings as getStrings} from 'core/str';
+import notification from 'core/notification';
+
 const selectors = {
-    showSuspendcompanyform: '[data-action="show-suspendcompanyform"]',
+    showSuspendcompanyprompt: '[data-action="show-suspendcompanyprompt"]',
 };
 
 export const init = () => {
-    const showSuspendcompanyform = document.querySelectorAll(selectors.showSuspendcompanyform);
-    if (showSuspendcompanyform === null) {
+    const showSuspendcompanyprompt = document.querySelectorAll(selectors.showSuspendcompanyprompt);
+    if (showSuspendcompanyprompt === null) {
         return;
     }
 
-    for (let i = 0; i < showSuspendcompanyform.length; i++) {
-        showSuspendcompanyform[i].addEventListener('click', event => {
+    for (let i = 0; i < showSuspendcompanyprompt.length; i++) {
+        showSuspendcompanyprompt[i].addEventListener('click', event => {
             event.preventDefault();
 
-            // What title are we showing?
-            var suspended = showSuspendcompanyform[i].getAttribute('data-suspended');
-            if (suspended == 0) {
-                var title = getString('suspendcompany', 'block_iomad_company_admin');
+            var currentvalue = showSuspendcompanyprompt[i].getAttribute('data-suspended');
+            var companyName = showSuspendcompanyprompt[i].getAttribute('data-name');
+            var companyid = showSuspendcompanyprompt[i].getAttribute('data-companyid');
+            if (currentvalue == 0) {
+                var title = 'suspendcompany';
+                var checktext = 'suspendcompanycheckfull';
             } else {
-                var title = getString('unsuspendcompany', 'block_iomad_company_admin');
+                var title = 'unsuspendcompany';
+                var checktext = 'unsuspendcompanycheckfull';
             }
-            const form = new ModalForm({
-                formClass: 'block_iomad_company_admin\\forms\\company_suspend_form',
-                args: {
-                    companyid: showSuspendcompanyform[i].getAttribute('data-companyid'),
-                    companyname: showSuspendcompanyform[i].getAttribute('data-companyname'),
-                    suspended: showSuspendcompanyform[i].getAttribute('data-suspended'),
-                },
-                modalConfig: {title},
-                returnFocus: showSuspendcompanyform[i],
-            });
-            form.show().then(() => {
-                addToastRegion(form.modal.getRoot()[0]);
-                return true;
-            }).catch(displayException);
-            form.addEventListener(form.events.FORM_SUBMITTED, (e) => {
-
-                // Remove toast region as if not it will be displayed on the closed modal.
-                const modalElement = form.modal.getRoot()[0];
-                const regions = modalElement.querySelectorAll('.toast-wrapper');
-                regions.forEach((reg) => reg.remove());
-                if (e.detail.result) {
-                    if (e.detail.result == false) {
-                        toastAdd(e.detail.returnmessage,
-                            {
-                                type: 'warning',
-                            }
-                        );
-                    } else {
-                        toastAdd(e.detail.returnmessage,
-                        {
-                            type: 'success',
-                        });
-                    }
-                }
-                window.location.reload(true);
+            getStrings([
+                { key: title, component: 'block_iomad_company_admin' },
+                { key: checktext, component: 'block_iomad_company_admin', param: companyName },
+                { key: 'yes' },
+                { key: 'no' }
+            ]).done(function (s) {
+                notification.confirm(s[0], s[1], s[2], s[3], function () {
+                    ajax.call([{
+                        methodname: 'block_iomad_company_admin_suspend_company',
+                        args: {
+                            companyid: companyid,
+                            currentvalue: currentvalue,
+                        },
+                        done: function () {
+                            location.reload();
+                        },
+                        fail: notification.exception,
+                    }]);
+                });
             });
         });
     }

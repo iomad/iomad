@@ -23,6 +23,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['actionfailed'] = 'Something went wrong with the last action.';
 $string['actions'] = 'Actions';
 $string['add_licenses_title'] = 'Add a new license';
 $string['addnewchildcompany'] = 'Add a new child company';
@@ -805,7 +806,7 @@ $string['suspendcheck'] = 'Do you really want to suspend this user?';
 $string['suspendcheckfull'] = 'Do you really want to suspend this user?';
 $string['suspendcompany'] = 'Suspend company';
 $string['suspendcompanycheck'] = 'Do you really want to suspend this company?';
-$string['suspendcompanycheckfull'] = 'Do you really want to suspend this company?  This will suspend all of the users who are associate to this company but will keep the courses and other company details intact.';
+$string['suspendcompanycheckfull'] = 'Do you really want to suspend company \'{$a}\'?  This will suspend all of the users who are associate to this company but will keep the courses and other company details intact.';
 $string['suspenduser'] = 'Suspend user';
 $string['takecontrol'] = 'Remove course {$a} from company control';
 $string['template'] = 'Competency template';
@@ -831,7 +832,7 @@ $string['unsuspendcheck'] = 'Do you really want to unsuspend this user';
 $string['unsuspendcheckfull'] = 'Do you really want to unsuspend this user';
 $string['unsuspendcompany'] = 'Unsuspend company';
 $string['unsuspendcompanycheck'] = 'Do you really want to unsuspend this company?';
-$string['unsuspendcompanycheckfull'] = 'Do you really want to unsuspend this company?  This will unsuspend all of the users who are associate to this company.';
+$string['unsuspendcompanycheckfull'] = 'Do you really want to unsuspend company \'{$a}\'?  This will unsuspend all of the users who are associate to this company.';
 $string['unsuspenduser'] = 'Unsuspend user';
 $string['updatedepartmentusersselection'] = 'Choose Department';
 $string['updatelicense'] = 'Update license allocation';
