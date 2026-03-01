@@ -37,11 +37,7 @@ require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
 require_once(__DIR__ . '/lib.php');
 
-$enableecommerce = optional_param('enableecommerce', 0, PARAM_INT);
-$disableecommerce = optional_param('disableecommerce', 0, PARAM_INT);
 $showsuspended = optional_param('showsuspended', 0, PARAM_INT);
-$confirm = optional_param('confirm', '', PARAM_ALPHANUM);   // Md5 confirmation hash.
-$confirmcompany = optional_param('confirmcompany', 0, PARAM_INT);
 $sort = optional_param('sort', 'name', PARAM_ALPHA);
 $dir = optional_param('dir', 'ASC', PARAM_ALPHA);
 $page = optional_param('page', 0, PARAM_INT);
@@ -61,8 +57,6 @@ $showchild = optional_param('showchild', 1, PARAM_INT);
 
 $params = [
     'showsuspended' => $showsuspended,
-    'confirm' => $confirm,
-    'confirmcompany' => $confirmcompany,
     'sort' => $sort,
     'dir' => $dir,
     'page' => $page,
@@ -113,6 +107,7 @@ $PAGE->set_heading($linktext);
 // Add the modal forms.
 $PAGE->requires->js_call_amd('block_iomad_company_admin/delete_company', 'init');
 $PAGE->requires->js_call_amd('block_iomad_company_admin/suspend_company', 'init');
+$PAGE->requires->js_call_amd('block_iomad_company_admin/company_ecommerce', 'init');
 
 // Log this page view.
 dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
@@ -201,22 +196,6 @@ $strcreatechild = html_writer::tag(
         'aria-label' => get_string('createchildcompany', 'block_iomad_company_admin'),
     ]
 );
-
-// Process any incoming actions.
-if ($enableecommerce && confirm_sesskey()) {
-
-    // Enables ecommerce for a selected company.
-    $company = $DB->get_record('local_iomad_companies', ['id' => $enableecommerce], '*', MUST_EXIST);
-    $enableecommercecompany = new company($company->id);
-    $enableecommercecompany->ecommerce(1);
-
-} else if ($disableecommerce && confirm_sesskey()) {
-
-    // Disables ecommerce for a selected company.
-    $company = $DB->get_record('local_iomad_companies', ['id' => $disableecommerce], '*', MUST_EXIST);
-    $enableecommercecompany = new company($company->id);
-    $enableecommercecompany->ecommerce(0);
-}
 
 // Carry on with the tenant listing.
 $columns = ["name", "city", "region", "country"];
@@ -438,47 +417,38 @@ if ($companies) {
                 // Is the parent suspended?
                 if (empty($company->parentid) ||
                     $DB->get_record('local_iomad_companies', ['id' => $company->parentid, 'suspended' => 0])) {
-                    $linkparams['unsuspend'] = $company->id;
-                    $suspendurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_company_admin/editcompanies.php",
-                                                $linkparams);
                     $suspendbutton = html_writer::tag(
                         'a',
                         $strunsuspend,
                         [
                             'role' => 'button',
                             'href' => '#',
-                            'data-action' => 'show-suspendcompanyform',
+                            'data-action' => 'show-suspendcompanyprompt',
                             'data-companyid' => $company->id,
                             'data-suspended' => $company->suspended,
-                            'data-companyname' => format_string($company->name),
+                            'data-name' => format_string($company->name),
                         ]);
                 }
             } else if (iomad::has_capability('block/iomad_company_admin:suspendcompanies', $companycontext)) {
                 // Is the parent suspended?
                 if (empty($company->parentid) ||
                     $DB->get_record('local_iomad_companies', ['id' => $company->parentid, 'suspended' => 0])) {
-                    $linkparams['suspend'] = $company->id;
-                    $suspendurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_company_admin/editcompanies.php",
-                                                 $linkparams);
                     $suspendbutton = html_writer::tag(
                         'a',
                         $strsuspend,
                         [
                             'role' => 'button',
                             'href' => '#',
-                            'data-action' => 'show-suspendcompanyform',
+                            'data-action' => 'show-suspendcompanyprompt',
                             'data-companyid' => $company->id,
                             'data-suspended' => $company->suspended,
-                            'data-companyname' => format_string($company->name),
+                            'data-name' => format_string($company->name),
                         ]);
                 }
             }
 
             // Can we delete the company?
             if (iomad::has_capability('block/iomad_company_admin:company_delete', $companycontext)) {
-                $linkparams['delete'] = $company->id;
-                unset($linkparams['suspend']);
-                $deleteurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_company_admin/editcompanies.php", $linkparams);
                 $deletebutton = html_writer::tag(
                     'a',
                     $strdelete,
@@ -533,28 +503,26 @@ if ($companies) {
         if (empty($CFG->commerce_admin_enableall) &&
             iomad::has_capability('block/iomad_company_admin:company_add', $context)) {
             if (!empty($company->ecommerce)) {
-                unset($linkparams['suspend']);
-                $linkparams['disableecommerce'] = $company->id;
-
-                $ecommerceurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_company_admin/editcompanies.php",
-                                            $linkparams);
                 $ecommercebutton = html_writer::tag(
                     'a',
                     $strdisableecommerce,
                     [
                         'role' => 'button',
-                        'href' => $ecommerceurl,
+                        'href' => '#',
+                        'data-action' => 'show-ecommercecompanyprompt',
+                        'data-companyid' => $company->id,
+                        'data-ecommerce' => $company->ecommerce,
                     ]);
             } else {
-                $linkparams['enableecommerce'] = $company->id;
-                $ecommerceurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_company_admin/editcompanies.php",
-                                           $linkparams);
                 $ecommercebutton = html_writer::tag(
                     'a',
                     $strenableecommerce,
                     [
                         'role' => 'button',
-                        'href' => $ecommerceurl,
+                        'href' => '#',
+                        'data-action' => 'show-ecommercecompanyprompt',
+                        'data-companyid' => $company->id,
+                        'data-ecommerce' => $company->ecommerce,
                     ]);
             }
         }

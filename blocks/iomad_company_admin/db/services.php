@@ -255,4 +255,20 @@ $functions = [
         'description' => 'Check is a user is enrolled or has a valid license for a course',
         'type' => 'read',
     ],
+
+    'block_iomad_company_admin_company_ecommerce' => [
+        'classname' => block_iomad_company_admin\external\company_ecommerce::class,
+        'description' => 'IOMAD Dashboard - enable/disable company ecommerce access',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'block/iomad_company_admin:company_add',
+    ],
+
+    'block_iomad_company_admin_suspend_company' => [
+        'classname' => block_iomad_company_admin\external\suspend_company::class,
+        'description' => 'IOMAD Dashboard - suspend/unsuspend a company',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'block/iomad_company_admin:suspendcompanies',
+    ],
 ];
