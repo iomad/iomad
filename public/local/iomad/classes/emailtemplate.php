@@ -1102,11 +1102,11 @@ class emailtemplate {
 
         // Deal with default lang strings.
         if (empty($template->subject)) {
-            $template->subject = (string) new lang_string($templatename . '_subject', 'new ', null, $this->user->lang);
+            $template->subject = (string) new lang_string($templatename . '_subject', 'local_iomad', null, $this->user->lang);
         }
 
         if (empty($template->body)) {
-            $template->body = (string) new lang_string($templatename . '_body', 'new ', null, $this->user->lang);
+            $template->body = (string) new lang_string($templatename . '_body', 'local_iomad', null, $this->user->lang);
         }
 
         return $template;
