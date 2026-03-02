@@ -469,7 +469,7 @@ if ($mform->is_cancelled()) {
             $DB->update_record('course_categories', $coursecat);
             fix_course_sortorder();
             $companydetails = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
-            $companydetails->category = $coursecat->id;
+            $companydetails->coursecategoryid = $coursecat->id;
             $DB->update_record('local_iomad_companies', $companydetails);
             $redirectmessage = get_string('companycreatedok', 'block_iomad_company_admin');
 
