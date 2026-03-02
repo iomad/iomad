@@ -19,6 +19,7 @@ namespace local_iomad\custom_context;
 use coding_exception;
 use context_system;
 use core\context;
+use local_iomad\iomad;
 use moodle_url;
 use stdClass;
 
@@ -154,6 +155,17 @@ class context_company extends context {
 
         if (!$DB->get_manager()->table_exists('local_iomad_companies')) {
             return context_system::instance();
+        }
+
+        // Do we have a valid companyid?
+        if (!($companyid > 0) &&
+            iomad::has_capability('block/iomad_company_admin:company_view_all', context_system::instance())) {
+            redirect(
+                new moodle_url(
+                    '/blocks/iomad_company_admin/index.php'
+                ),
+                get_string('pleaseselect', 'block_iomad_company_admin')
+            );
         }
 
         if (!$record = $DB->get_record('context', ['contextlevel' => CONTEXT_COMPANY, 'instanceid' => $companyid])) {
