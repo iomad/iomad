@@ -199,7 +199,7 @@ class block_iomad_company_admin_external extends external_api {
             $DB->update_record('course_categories', $coursecat);
             fix_course_sortorder();
             $companydetails = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
-            $companydetails->category = $coursecat->id;
+            $companydetails->coursecategoryid = $coursecat->id;
             $DB->update_record('local_iomad_companies', $companydetails);
 
             // Deal with default email template set.
