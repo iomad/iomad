@@ -33,6 +33,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 function xmldb_block_iomad_company_admin_install() {
+    global $DB;
 
     // Add admin block to default dashboard
     // yes, I know this isn't really what this is for!!
