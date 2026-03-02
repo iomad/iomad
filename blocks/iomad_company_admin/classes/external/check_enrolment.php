@@ -110,12 +110,12 @@ class check_enrolment extends external_api {
                      FROM {local_iomad_company_license_users} clu
                      JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
                      WHERE clu.userid = :userid
-                     AND clu.licensecourseid = :licensecourseid
+                     AND clu.courseid = :courseid
                      AND clu.isusing = 0
                      AND clu.timecompleted IS NULL
                      AND cl.expirydate > :currenttime",
                     ['userid' => $userid,
-                     'licensecourseid' => $courseid,
+                     'courseid' => $courseid,
                      'currenttime' => time()])) {
                     $enrolled = true;
                 }

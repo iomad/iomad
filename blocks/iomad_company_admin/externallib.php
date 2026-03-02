@@ -2306,6 +2306,7 @@ It could very slow or timeout. The function is designed to search some specific 
                              'licenseid' => new external_value(PARAM_INT, 'License ID'),
                              'userid' => new external_value(PARAM_INT, 'User ID'),
                              'licensecourseid' => new external_value(PARAM_INT, 'Course ID'),
+                             'courseid' => new external_value(PARAM_INT, 'Course ID', VALUE_OPTIONAL),
                         ]
                     )
                 ),
@@ -2357,15 +2358,18 @@ It could very slow or timeout. The function is designed to search some specific 
             }
 
             // The course?
-            if (!$course = $DB->get_record('course', ['id' => $license['licensecourseid']])) {
-                throw new invalid_parameter_exception("Course id=" . $license['licensecourseid'] ." does not exist");
+            if (empty($license['courseid'])) {
+                $license['courseid'] = $license['licensecourseid'];
+            }
+            if (!$course = $DB->get_record('course', ['id' => $license['courseid']])) {
+                throw new invalid_parameter_exception("Course id=" . $license['courseid'] ." does not exist");
             }
 
             // Does the license include this course?
-            if (!$DB->get_record('local_iomad_company_license_courses', ['courseid' => $license['licensecourseid'],
+            if (!$DB->get_record('local_iomad_company_license_courses', ['courseid' => $license['courseid'],
                                                                  'licenseid' => $licenseid])) {
                 throw new invalid_parameter_exception("Course id = " .
-                                                      $license['licensecourseid'] .
+                                                      $license['courseid'] .
                                                       " is not inculded in license id $licenseid");
             }
 
@@ -2433,6 +2437,7 @@ It could very slow or timeout. The function is designed to search some specific 
                              'licenseid' => new external_value(PARAM_INT, 'License ID'),
                              'userid' => new external_value(PARAM_INT, 'User ID'),
                              'licensecourseid' => new external_value(PARAM_INT, 'Course ID'),
+                             'courseid' => new external_value(PARAM_INT, 'Course ID', VALUE_OPTIONAL),
                         ]
                     )
                 ),
@@ -2484,15 +2489,18 @@ It could very slow or timeout. The function is designed to search some specific 
             }
 
             // The course?
-            if (!$course = $DB->get_record('course', ['id' => $license['licensecourseid']])) {
-                throw new invalid_parameter_exception("Course id=" . $license['licensecourseid'] ." does not exist");
+            if (empty($license['courseid'])) {
+                $license['courseid'] = $license['licensecourseid'];
+            }
+            if (!$course = $DB->get_record('course', ['id' => $license['courseid']])) {
+                throw new invalid_parameter_exception("Course id=" . $license['courseid'] ." does not exist");
             }
 
             // Does the license include this course?
-            if (!$DB->get_record('local_iomad_company_license_courses', ['courseid' => $license['licensecourseid'],
+            if (!$DB->get_record('local_iomad_company_license_courses', ['courseid' => $license['courseid'],
                                                                  'licenseid' => $licenseid])) {
                 throw new invalid_parameter_exception("Course id = " .
-                                                      $license['licensecourseid'] .
+                                                      $license['courseid'] .
                                                       " is not inculded in license id $licenseid");
             }
 
@@ -2708,7 +2716,7 @@ It could very slow or timeout. The function is designed to search some specific 
 
                 if ($enrolment['quantity'] == 1) {
                     // Allocate the license to the user.
-                    $recordarray = ['licensecourseid' => $enrolment['courseid'],
+                    $recordarray = ['courseid' => $enrolment['courseid'],
                                          'userid' => $user->id,
                                          'licenseid' => $licenseid,
                                          'issuedate' => $runtime,

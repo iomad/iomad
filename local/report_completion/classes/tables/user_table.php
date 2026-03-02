@@ -446,7 +446,7 @@ class user_table extends table_sql {
                         }
                     } else {
                         if ($DB->get_record('local_iomad_company_license_users', ['userid' => $row->userid,
-                                                                     'licensecourseid' => $row->courseid,
+                                                                     'courseid' => $row->courseid,
                                                                      'licenseid' => $row->licenseid,
                                                                      'issuedate' => $row->licenseallocated,
                                                                      'isusing' => 1])) {
@@ -461,7 +461,7 @@ class user_table extends table_sql {
                                 );
                             }
                         } else if ($DB->get_record('local_iomad_company_license_users', ['userid' => $row->userid,
-                                                                            'licensecourseid' => $row->courseid,
+                                                                            'courseid' => $row->courseid,
                                                                             'licenseid' => $row->licenseid,
                                                                             'issuedate' => $row->licenseallocated,
                                                                             'isusing' => 0])) {
@@ -624,7 +624,7 @@ class user_table extends table_sql {
                     if ($DB->get_record('local_iomad_company_license_users',
                                         ['licenseid' => $row->licenseid,
                                               'userid' => $row->userid,
-                                              'licensecourseid' => $row->courseid,
+                                              'courseid' => $row->courseid,
                                               'issuedate' => $row->licenseallocated])) {
                         if (!$this->is_downloading()) {
                             return '<div class="progress" style="height:20px" data-html="true" title="'.nl2br($tooltip).'">
@@ -652,7 +652,7 @@ class user_table extends table_sql {
                 !$DB->get_record('local_iomad_company_license_users',
                                 ['licenseid' => $row->licenseid,
                                       'userid' => $row->userid,
-                                      'licensecourseid' => $row->courseid,
+                                      'courseid' => $row->courseid,
                                       'issuedate' => $row->licenseallocated])) {
                 return get_string('suspended');
             }

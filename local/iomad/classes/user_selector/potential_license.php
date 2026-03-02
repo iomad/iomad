@@ -86,15 +86,15 @@ class potential_license extends company_base {
             [$insql, $inparams] = $DB->get_in_or_equal($this->selectedcourses,
                                                        SQL_PARAMS_NAMED,
                                                         'liccids');
-            $coursesql = " AND clu.licensecourseid {$insql} ";
-            $countsql = " HAVING count(clu.licensecourseid) = " . count($this->selectedcourses);
+            $coursesql = " AND clu.courseid {$insql} ";
+            $countsql = " HAVING count(clu.courseid) = " . count($this->selectedcourses);
             $params = $params + $inparams;
         } else {
             [$insql, $inparams] = $DB->get_in_or_equal(array_keys($this->courses),
                                                        SQL_PARAMS_NAMED,
                                                        'liccids');
-            $coursesql = " AND clu.licensecourseid {$insql} ";
-            $countsql = " HAVING count(clu.licensecourseid) = " . count($this->courses);
+            $coursesql = " AND clu.courseid {$insql} ";
+            $countsql = " HAVING count(clu.courseid) = " . count($this->courses);
             $params = $params + $inparams;
         }
         if ($this->program) {
@@ -104,7 +104,7 @@ class potential_license extends company_base {
                         AND clu.timecompleted IS NULL";
         } else {
             $usersql = "SELECT clu.userid,
-                        count(clu.licensecourseid) AS coursecount
+                        count(clu.courseid) AS coursecount
                         FROM {local_iomad_company_license_users} clu
                         JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
                         WHERE clu.timecompleted IS NULL

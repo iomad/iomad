@@ -61,7 +61,7 @@ function xmldb_local_report_user_license_allocations_install() {
                     [
                         'userid' => $oldallocation->userid,
                         'licenseid' => $oldallocation->licenseid,
-                        'courseid' => $oldallocation->licensecourseid,
+                        'courseid' => $oldallocation->courseid,
                         'action' => 1,
                         'issuedate' => $oldallocation->issuedate,
                     ]
@@ -72,7 +72,7 @@ function xmldb_local_report_user_license_allocations_install() {
                         [
                             'userid' => $oldallocation->userid,
                             'licenseid' => $oldallocation->licenseid,
-                            'courseid' => $oldallocation->licensecourseid,
+                            'courseid' => $oldallocation->courseid,
                             'action' => 1,
                             'issuedate' => $oldallocation->issuedate,
                             'modifiedtime' => time(),

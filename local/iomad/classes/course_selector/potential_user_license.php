@@ -96,7 +96,7 @@ class potential_user_license extends company_base {
                  AND cl.used < cl.allocation
                  AND cl.expirydate >= :timestamp
                  AND c.id NOT IN (
-                     SELECT clu.licensecourseid
+                     SELECT clu.courseid
                      FROM {local_iomad_company_license_users} clu
                      WHERE clu.userid = :userid
                      AND clu.timecompleted IS NULL

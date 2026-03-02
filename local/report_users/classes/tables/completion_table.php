@@ -275,7 +275,7 @@ class completion_table extends table_sql {
                             'local_iomad_company_license_users',
                             [
                                 'userid' => $row->userid,
-                                'licensecourseid' => $row->courseid,
+                                'courseid' => $row->courseid,
                                 'licenseid' => $row->licenseid,
                                 'issuedate' => $row->licenseallocated,
                                 'isusing' => 1,
@@ -294,7 +294,7 @@ class completion_table extends table_sql {
                             'local_iomad_company_license_users',
                             [
                                 'userid' => $row->userid,
-                                'licensecourseid' => $row->courseid,
+                                'courseid' => $row->courseid,
                                 'licenseid' => $row->licenseid,
                                 'issuedate' => $row->licenseallocated,
                                 'isusing' => 0,
@@ -525,7 +525,7 @@ class completion_table extends table_sql {
                     if ($DB->get_record('local_iomad_company_license_users',
                                         ['licenseid' => $row->licenseid,
                                          'userid' => $row->userid,
-                                         'licensecourseid' => $row->courseid,
+                                         'courseid' => $row->courseid,
                                          'issuedate' => $row->licenseallocated])) {
                         if (!$this->is_downloading()) {
                             return html_writer::start_tag(
@@ -583,7 +583,7 @@ class completion_table extends table_sql {
                 !$DB->get_record('local_iomad_company_license_users',
                                 ['licenseid' => $row->licenseid,
                                  'userid' => $row->userid,
-                                 'licensecourseid' => $row->courseid,
+                                 'courseid' => $row->courseid,
                                  'issuedate' => $row->licenseallocated])) {
                 return get_string('suspended');
             }

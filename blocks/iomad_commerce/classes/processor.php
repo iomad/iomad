@@ -228,7 +228,7 @@ class processor {
                             'licenseid' => $companylicenseid,
                             'userid' => $invoice->userid,
                             'isusing' => 0,
-                            'licensecourseid' => $pathcourse,
+                            'courseid' => $pathcourse,
                             'issuedate' => $runtime,
                             'groupid' => 0,
                         ]
@@ -411,7 +411,7 @@ class processor {
                                 'licenseid' => $companylicenseid,
                                 'userid' => $invoice->userid,
                                 'isusing' => 0,
-                                'licensecourseid' => $pathcourse,
+                                'courseid' => $pathcourse,
                                 'issuedate' => $runtime,
                                 'groupid' => 0,
                             ]
@@ -474,7 +474,7 @@ class processor {
                                 'licenseid' => $companylicenseid,
                                 'userid' => $invoice->userid,
                                 'isusing' => 0,
-                                'licensecourseid' => $course->id,
+                                'courseid' => $course->id,
                                 'issuedate' => $runtime,
                                 'groupid' => 0,
                             ]

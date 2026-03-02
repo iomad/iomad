@@ -369,7 +369,7 @@ class enrol_license_plugin extends enrol_plugin {
                 JOIN {local_iomad_company_license_users} clu ON (cl.id = clu.licenseid)
                 WHERE clu.userid = :userid
                 AND clu.isusing = 0
-                AND clu.licensecourseid = :courseid";
+                AND clu.courseid = :courseid";
         if (!$license = $DB->get_record_sql($sql, ['userid' => $USER->id, 'courseid' => $instance->courseid])) {
             $blanketsql = "SELECT * FROM {local_iomad_company_licenses} cl
                            JOIN {local_iomad_company_license_courses} clc ON (cl.id = clc.licenseid)
@@ -430,7 +430,7 @@ class enrol_license_plugin extends enrol_plugin {
                     JOIN {local_iomad_company_license_users} clu ON (cl.id = clu.licenseid)
                     WHERE clu.userid = :userid
                     AND clu.isusing = 0
-                    AND clu.licensecourseid = :courseid";
+                    AND clu.courseid = :courseid";
             if (!$license = $DB->get_record_sql($sql, ['userid' => $USER->id,
                                                        'courseid' => $instance->courseid])) {
                 // Set the companyid.
@@ -463,7 +463,7 @@ class enrol_license_plugin extends enrol_plugin {
                         $userlicense = (object) [
                                                     'licenseid' => $license->id,
                                                     'userid' => $USER->id,
-                                                    'licensecourseid' => $instance->courseid,
+                                                    'courseid' => $instance->courseid,
                                                     'issuedate' => $issuedate,
                                                     'isusing' => 1,
                                                     'type' => $license->type,
@@ -625,7 +625,7 @@ class enrol_license_plugin extends enrol_plugin {
                                                 lu.timecompleted, lu.score, lu.result
                                                 FROM {local_iomad_company_license_users} lu
                                                 JOIN {local_iomad_company_license_courses} lc ON (
-                                                    lu.licensecourseid = lc.courseid
+                                                    lu.courseid = lc.courseid
                                                     AND lu.licenseid = lc.licenseid
                                                 )
                                                 WHERE lu.userid = :userid
@@ -684,7 +684,7 @@ class enrol_license_plugin extends enrol_plugin {
                                                     lu.timecompleted, lu.score, lu.result
                                                     FROM {local_iomad_company_license_users} lu
                                                     JOIN {local_iomad_company_license_courses} lc ON (
-                                                        lu.licensecourseid = lc.courseid
+                                                        lu.courseid = lc.courseid
                                                         AND lu.licenseid = lc.licenseid
                                                     )
                                                     WHERE lu.userid = :userid

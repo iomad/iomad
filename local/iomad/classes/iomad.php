@@ -350,7 +350,7 @@ class iomad {
         $currentcourses = $DB->get_records_select(
             'course',
             "id IN (
-                 SELECT clu.licensecourseid
+                 SELECT clu.courseid
                  FROM {local_iomad_company_license_users} clu
                  WHERE clu.userid = :userid
                  AND clu.isusing = 0
@@ -757,8 +757,8 @@ class iomad {
                                   c.groupmode,
                                   c.visible
                  FROM {local_iomad_company_license_users} clu
-                 JOIN {course} c ON (c.id = clu.licensecourseid)
-                 JOIN {trainingevent} t ON (c.id = t.course AND clu.licensecourseid = t.course)
+                 JOIN {course} c ON (c.id = clu.courseid)
+                 JOIN {trainingevent} t ON (c.id = t.course AND clu.courseid = t.course)
                  WHERE clu.userid = :userid
                  AND clu.isusing = 0",
                 [
@@ -1811,7 +1811,7 @@ class iomad {
                                                    JOIN {" . $temptablename . "} tt ON (clu.userid = tt.userid)
                                                    JOIN {local_iomad_company_licenses} cl ON (cl.id = clu.licenseid)
                                                    WHERE
-                                                   clu.licensecourseid = :courseid
+                                                   clu.courseid = :courseid
                                                    AND cl.expirydate > :timestamp",
             [
                 'courseid' => $course->courseid,
@@ -1821,7 +1821,7 @@ class iomad {
                                                    JOIN {" . $temptablename . "} tt ON (clu.userid = tt.userid)
                                                    JOIN {local_iomad_company_licenses} cl ON (cl.id = clu.licenseid)
                                                    WHERE
-                                                   clu.licensecourseid = :courseid
+                                                   clu.courseid = :courseid
                                                    AND cl.expirydate > :timestamp
                                                    AND
                                                    clu.isusing = 1",
@@ -1913,7 +1913,7 @@ class iomad {
                      JOIN {local_iomad_company_users} cu ON (u.id = cu.userid AND clu.userid = cu.userid)
                      JOIN {local_iomad_company_departments} d ON (cu.departmentid = d.it)
                      JOIN {" . $temptablename . "} tt ON (u.id = tt.userid)
-                     JOIN {course} co ON (clu.licensecourseid = co.id)
+                     JOIN {course} co ON (clu.courseid = co.id)
                      JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
 
                 WHERE $searchinfo->sqlsearch
@@ -2060,7 +2060,7 @@ class iomad {
                     JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
 
                     WHERE $searchinfo->sqlsearch
-                    AND clu.licensecourseid = $courseid
+                    AND clu.courseid = $courseid
                     AND cl.expirydate > :timestamp
                     $showsuspendedsql
                     $showusedsql

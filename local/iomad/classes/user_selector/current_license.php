@@ -122,7 +122,7 @@ class current_license extends company_base {
                 [$insql, $inparams] = $DB->get_in_or_equal(array_values($this->selectedcourses),
                                                            SQL_PARAMS_NAMED,
                                                            'liccids');
-                $coursesql = " AND clu.licensecourseid {$insql} ";
+                $coursesql = " AND clu.courseid {$insql} ";
                 $params = $params + $inparams;
             }
             $maxcount = get_config('local_iomad', 'max_select_users');
@@ -139,7 +139,7 @@ class current_license extends company_base {
                          ui.userid = u.id
                          AND ui.userid = clu.userid
                      )
-                     JOIN {course} c ON (clu.licensecourseid = c.id)
+                     JOIN {course} c ON (clu.courseid = c.id)
 
                      WHERE $wherecondition
                      AND u.suspended = 0

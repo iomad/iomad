@@ -499,7 +499,7 @@ class company_license_users_form extends moodleform {
                         foreach ($courses as $courseid) {
                             $allow = true;
                             if ($allow) {
-                                $recordarray = ['licensecourseid' => $courseid,
+                                $recordarray = ['courseid' => $courseid,
                                                 'userid' => $adduser->id,
                                                 'companyid' => $this->selectedcompany,
                                                 'timecompleted' => null];
@@ -510,7 +510,7 @@ class company_license_users_form extends moodleform {
                                                           JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
                                                           WHERE clu.userid = :userid
                                                           AND cl.companyid = :companyid
-                                                          AND clu.licensecourseid = :licensecourseid
+                                                          AND clu.courseid = :courseid
                                                           AND clu.timecompleted = :timecompleted",
                                                          $recordarray)) {
                                     $recordarray['licenseid'] = $this->licenseid;
@@ -629,7 +629,7 @@ class company_license_users_form extends moodleform {
                                 $DB->delete_records('local_iomad_tracks', [
                                     'userid' => $licensedata->userid,
                                     'licenseid' => $licensedata->id,
-                                    'courseid' => $licensedata->licensecourseid,
+                                    'courseid' => $licensedata->courseid,
                                     'timeenrolled' => null,
                                 ]);
                             }
@@ -638,9 +638,9 @@ class company_license_users_form extends moodleform {
                             $eventother = ['licenseid' => $this->license->id,
                                                 'duedate' => 0];
                             $event = user_license_unassigned::create([
-                                'context' => context_course::instance($licensedata->licensecourseid),
+                                'context' => context_course::instance($licensedata->courseid),
                                 'objectid' => $this->license->id,
-                                'courseid' => $licensedata->licensecourseid,
+                                'courseid' => $licensedata->courseid,
                                 'userid' => $licensedata->userid,
                                 'other' => $eventother,
                             ]);

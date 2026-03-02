@@ -1095,7 +1095,7 @@ class company {
             foreach ($licenses as $license) {
                 // Delete anyone using the license for that course.
                 if (!$DB->delete_records('local_iomad_company_license_users', ['licenseid' => $license->id,
-                                                                  'licensecourseid' => $course->id])) {
+                                                                  'courseid' => $course->id])) {
                     $errors = true;
                 }
                 // Delete the course from the license.
@@ -2062,9 +2062,9 @@ class company {
                 $eventother = ['licenseid' => $reusablelicense->licenseid,
                                     'duedate' => 0];
                 $event = user_license_unassigned::create([
-                    'context' => context_course::instance($reusablelicense->licensecourseid),
+                    'context' => context_course::instance($reusablelicense->courseid),
                     'objectid' => $reusablelicense->licenseid,
-                    'courseid' => $reusablelicense->licensecourseid,
+                    'courseid' => $reusablelicense->courseid,
                     'userid' => $reusablelicense->userid,
                     'other' => $eventother,
                 ]);
@@ -2096,9 +2096,9 @@ class company {
                 $eventother = ['licenseid' => $nonprogramlicense->licenseid,
                                     'duedate' => 0];
                 $event = user_license_unassigned::create([
-                    'context' => context_course::instance($nonprogramlicense->licensecourseid),
+                    'context' => context_course::instance($nonprogramlicense->courseid),
                     'objectid' => $nonprogramlicense->licenseid,
-                    'courseid' => $nonprogramlicense->licensecourseid,
+                    'courseid' => $nonprogramlicense->courseid,
                     'userid' => $nonprogramlicense->userid,
                     'other' => $eventother,
                 ]);
@@ -2145,9 +2145,9 @@ class company {
                         $eventother = ['licenseid' => $licenserecord->licenseid,
                                             'duedate' => 0];
                         $event = user_license_unassigned::create([
-                            'context' => context_course::instance($licenserecord->licensecourseid),
+                            'context' => context_course::instance($licenserecord->courseid),
                             'objectid' => $licenserecord->licenseid,
-                            'courseid' => $licenserecord->licensecourseid,
+                            'courseid' => $licenserecord->courseid,
                             'userid' => $licenserecord->userid,
                             'other' => $eventother,
                         ]);
@@ -4957,7 +4957,7 @@ class company {
                                      WHERE userid = :userid
                                      AND course = :courseid
                                      AND timecompleted IS NOT NULL",
-                                    ['courseid' => $license->licensecourseid,
+                                    ['courseid' => $license->courseid,
                                      'userid' => $user->id])) {
                                 $complete = true;
                             }
@@ -5662,7 +5662,7 @@ class company {
                                     'local_iomad_company_license_users',
                                     [
                                         'userid' => $completedrecord->userid,
-                                        'licensecourseid' => $completedrecord->courseid,
+                                        'courseid' => $completedrecord->courseid,
                                         'licenseid' => $completedrecord->licenseid,
                                         'issuedate' => $completedrecord->licenseallocated,
                                     ])) {
@@ -5886,7 +5886,7 @@ class company {
                     }
                     $DB->delete_records(
                         'local_iomad_company_license_users',
-                        ['licensecourseid' => $oldcourseid, 'licenseid' => $licenseid]
+                        ['courseid' => $oldcourseid, 'licenseid' => $licenseid]
                     );
                 }
             }
@@ -5906,7 +5906,7 @@ class company {
                                 'licenseid' => $licenseid,
                                 'userid' => $licuser->userid,
                                 'isusing' => 0,
-                                'licensecourseid' => $currentcourse->courseid,
+                                'courseid' => $currentcourse->courseid,
                                 'issuedate' => time(),
                             ];
                             $userlicid = $DB->insert_record('local_iomad_company_license_users', $userlic);
@@ -6006,7 +6006,7 @@ class company {
                             // Check if they have a license allocated.
                             if (!$DB->get_record('local_iomad_company_license_users', [
                                 'userid' => $licuser->userid,
-                                'licensecourseid' => $currentcourse->courseid,
+                                'courseid' => $currentcourse->courseid,
                                 'licenseid' => $licenseid,
                             ])) {
                                 // If not, allocate it to them.
@@ -6014,7 +6014,7 @@ class company {
                                     'licenseid' => $licenseid,
                                     'userid' => $licuser->userid,
                                     'isusing' => 0,
-                                    'licensecourseid' => $currentcourse->courseid,
+                                    'courseid' => $currentcourse->courseid,
                                     'issuedate' => time(),
                                 ];
                                 $DB->insert_record('local_iomad_company_license_users', $userlic);

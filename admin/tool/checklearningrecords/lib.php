@@ -41,7 +41,7 @@ function do_fixbrokenlicenses($brokenlicenses) {
         if (empty($brokenlicense->licenseallocated)) {
             if ($licenseallocation = $DB->get_record('local_iomad_company_license_users',
                                                      ['userid' => $brokenlicense->userid,
-                                                      'licensecourseid' => $brokenlicense->courseid,
+                                                      'courseid' => $brokenlicense->courseid,
                                                       'timecompleted' => $brokenlicense->timecompleted])) {
                 if (!empty($licenseallocation->issuedate)) {
                     $brokenlicense->licenseallocated = $licenseallocation->issuedate;
@@ -70,7 +70,7 @@ function do_fixbrokenlicenses($brokenlicenses) {
                     if (!empty($brokenlicense->licenseallocated)) {
                         if ($licenseallocation = $DB->get_record('local_iomad_company_license_users',
                                                                 ['userid' => $brokenlicense->userid,
-                                                                 'licensecourseid' => $brokenlicense->courseid,
+                                                                 'courseid' => $brokenlicense->courseid,
                                                                  'timecompleted' => $brokenlicense->timecompleted,
                                                                  'issuedate' => $brokenlicense->issuedate])) {
 

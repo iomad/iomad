@@ -226,7 +226,7 @@ class enrol_license_external extends external_api {
                         JOIN {local_iomad_company_license_users} clu ON (cl.id = clu.licenseid)
                         WHERE clu.userid = :userid
                         AND clu.isusing = 0
-                        AND clu.licensecourseid = :courseid";
+                        AND clu.courseid = :courseid";
                 if (!$license = $DB->get_record_sql($sql, ['userid' => $USER->id,
                                                            'courseid' => $course->id])) {
                     // Set the companyid.
@@ -258,7 +258,7 @@ class enrol_license_external extends external_api {
                     $userlicense = (object) [
                                                 'licenseid' => $license->id,
                                                 'userid' => $USER->id,
-                                                'licensecourseid' => $instance->courseid,
+                                                'courseid' => $instance->courseid,
                                                 'issuedate' => $issuedate,
                                                 'isusing' => 1,
                                                 'type' => $license->type,

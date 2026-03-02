@@ -73,7 +73,7 @@ class fixcourseclearedtask extends adhoc_task {
             } else if (!empty($entry->licenseid) && !empty($entry->licenseallocated)) {
                 if ($DB->get_record_sql("SELECT id FROM {local_iomad_company_license_users}
                                          WHERE licenseid = :licenseid
-                                         AND licensecourseid = :courseid
+                                         AND courseid = :courseid
                                          AND issuedate = :licenseallocated
                                          AND timecompleted > 0",
                                         ['licenseid' => $entry->licenseid,
@@ -84,7 +84,7 @@ class fixcourseclearedtask extends adhoc_task {
                     $DB->set_field('local_iomad_tracks', 'modifiedtime', time(), ['id' => $entry->id]);
                 } else if ($licenserec = $DB->get_record_sql("SELECT id FROM {local_iomad_company_license_users}
                                                               WHERE id = :licenseid
-                                                              AND licensecourseid = :courseid
+                                                              AND courseid = :courseid
                                                               AND issuedate = :licenseallocated
                                                               AND timecompleted > 0",
                                                             ['licenseid' => $entry->licenseid,
