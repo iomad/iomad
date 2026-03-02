@@ -25,19 +25,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-<<<<<<<< HEAD:public/blocks/mycourses/version.php
 $plugin->release  = '5.0.2 (Build: 20250811)';    // Human-friendly version name.
 $plugin->version  = 2025041450;   // The (date) version of this plugin.
 $plugin->requires = 2025041400;   // Requires this Moodle version.
-$plugin->component = 'block_mycourses';
+$plugin->component = 'block_iomad_mycourses';
 $plugin->dependencies = ['local_iomad' => 2025041400];
 $plugin->supported = [500, 500];
-========
-$plugin->release  = '4.5.8 (Build: 20251208)'; // Human-friendly version name.
-$plugin->version  = 2024100745;   // The (date) version of this plugin.
-$plugin->requires = 2024100700;   // Requires this Moodle version.
-$plugin->component = 'block_iomad_mycourses';
-$plugin->dependencies = ['local_iomad' => 2024090401];
-$plugin->supported = [405, 405];
->>>>>>>> 18366179608 (IOMAD: renamed block_mycourses to block_iomad_mycourses - #2451):blocks/iomad_mycourses/version.php
 $plugin->maturity = MATURITY_STABLE;
