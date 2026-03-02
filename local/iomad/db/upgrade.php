@@ -1139,8 +1139,8 @@ function xmldb_local_iomad_upgrade($oldversion) {
         // Launch drop key companyid.
         $dbman->drop_key($table, $key);
 
-        // Define key companyid (foreign) to be dropped form microlearning_thread.
-        $table = new xmldb_table('microlearning_thread');
+        // Define key companyid (foreign) to be dropped form block_iomad_microlearning_threads.
+        $table = new xmldb_table('block_iomad_microlearning_threads');
         $key = new xmldb_key(
             'companyid',
             XMLDB_KEY_FOREIGN,
@@ -1165,8 +1165,8 @@ function xmldb_local_iomad_upgrade($oldversion) {
         // Launch drop key companyid.
         $dbman->drop_key($table, $key);
 
-        // Define key companyid (foreign) to be dropped form microlearning_thread_group.
-        $table = new xmldb_table('microlearning_thread_group');
+        // Define key companyid (foreign) to be dropped form block_iomad_microlearning_thread_groups.
+        $table = new xmldb_table('block_iomad_microlearning_thread_groups');
         $key = new xmldb_key(
             'companyid',
             XMLDB_KEY_FOREIGN,
@@ -2756,8 +2756,8 @@ function xmldb_local_iomad_upgrade($oldversion) {
         // Launch add key fk_companyid.
         $dbman->add_key($table, $key);
 
-        // Define key fk_companyid (foreign) to be added to microlearning_thread.
-        $table = new xmldb_table('microlearning_thread');
+        // Define key fk_companyid (foreign) to be added to block_iomad_microlearning_threads.
+        $table = new xmldb_table('block_iomad_microlearning_threads');
         $key = new xmldb_key(
             'fk_companyid',
             XMLDB_KEY_FOREIGN,
@@ -2782,8 +2782,8 @@ function xmldb_local_iomad_upgrade($oldversion) {
         // Launch add key fk_companyid.
         $dbman->add_key($table, $key);
 
-        // Define key fk_companyid (foreign) to be added to microlearning_thread_group.
-        $table = new xmldb_table('microlearning_thread_group');
+        // Define key fk_companyid (foreign) to be added to block_iomad_microlearning_thread_groups.
+        $table = new xmldb_table('block_iomad_microlearning_thread_groups');
         $key = new xmldb_key(
             'fk_companyid',
             XMLDB_KEY_FOREIGN,
