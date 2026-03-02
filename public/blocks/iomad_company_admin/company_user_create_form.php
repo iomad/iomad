@@ -28,7 +28,7 @@ use block_iomad_company_admin\forms\user_edit_form;
 use core\event\user_updated;
 use core\output\notification;
 
-use local_iomad\{company, emailtemplate, iomad};
+use local_iomad\{company, company_user, emailtemplate, iomad};
 use local_iomad\custom_context\context_company;
 
 require_once(__DIR__ . '/../../config.php');
