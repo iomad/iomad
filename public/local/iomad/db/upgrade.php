@@ -3016,6 +3016,94 @@ function xmldb_local_iomad_upgrade($oldversion) {
         // Launch add key fk_trackid.
         $dbman->add_key($table, $key);
 
+        // Define key fk_companyid (foreign) to be added to local_iomad_company_courses.
+        $table = new xmldb_table('local_iomad_company_courses');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_courseid (foreign) to be added to local_iomad_company_courses.
+        $key = new xmldb_key(
+            'fk_courseid',
+            XMLDB_KEY_FOREIGN,
+            ['courseid'],
+            'course',
+            ['id']
+        );
+
+        // Launch add key fk_courseid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_departmentid (foreign) to be added to local_iomad_company_courses.
+        $key = new xmldb_key(
+            'fk_departmentid',
+            XMLDB_KEY_FOREIGN,
+            ['departmentid'],
+            'local_iomad_company_departments',
+            ['id']
+        );
+
+        // Launch add key fk_departmentid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to local_iomad_company_licenses.
+        $table = new xmldb_table('local_iomad_company_licenses');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to local_iomad_company_users.
+        $table = new xmldb_table('local_iomad_company_users');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_departmentid (foreign) to be added to local_iomad_company_users.
+        $key = new xmldb_key(
+            'fk_departmentid',
+            XMLDB_KEY_FOREIGN,
+            ['departmentid'],
+            'local_iomad_company_departments',
+            ['id']
+        );
+
+        // Launch add key fk_departmentid.
+        $dbman->add_key($table, $key);
+
+        // Define key fk_companyid (foreign) to be added to local_iomad_company_role_restrictions.
+        $table = new xmldb_table('local_iomad_company_role_restrictions');
+        $key = new xmldb_key(
+            'fk_companyid',
+            XMLDB_KEY_FOREIGN,
+            ['companyid'],
+            'local_iomad_companies',
+            ['id']
+        );
+
+        // Launch add key fk_companyid.
+        $dbman->add_key($table, $key);
+
         mtrace("");
         mtrace("Uninstalling the old plugins.");
         $oldplugins = [

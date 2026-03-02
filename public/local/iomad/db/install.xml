@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/iomad/db" VERSION="20260223" COMMENT="XMLDB file for Moodle local/iomad"
+<XMLDB PATH="local/iomad/db" VERSION="20260302" COMMENT="XMLDB file for Moodle local/iomad"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -80,13 +80,16 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
+        <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="fk_departmentid" TYPE="foreign" FIELDS="departmentid" REFTABLE="local_iomad_company_departments" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="companyid-courseid" UNIQUE="false" FIELDS="companyid, courseid" COMMENT="[Foreign Key, companyid, company, id] [Foreign Key, courseid, course, id]"/>
         <INDEX NAME="departmentid-courseid" UNIQUE="false" FIELDS="departmentid, courseid" COMMENT="[Foreign Key, departmentid, department, id]"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="local_iomad_departments" COMMENT="IOMAD company department definitions">
+    <TABLE NAME="local_iomad_company_departments" COMMENT="IOMAD company department definitions">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Department Name"/>
@@ -125,6 +128,7 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="fk_parentid" TYPE="foreign" FIELDS="parentid" REFTABLE="local_iomad_company_licenses" REFFIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="id-companyid" UNIQUE="false" FIELDS="id, companyid" COMMENT="[Foreign Key, companyid, company, id]"/>
@@ -256,6 +260,8 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
+        <KEY NAME="fk_departmentid" TYPE="foreign" FIELDS="departmentid" REFTABLE="local_iomad_company_departments" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="companyid-userid-departmentid" UNIQUE="true" FIELDS="companyid, userid, departmentid" COMMENT="[Foreign Key, companyid, company, id] [Foreign Key, userid, user, id] [Foreign Key, departmentid, department, id]"/>
@@ -272,6 +278,7 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="local_iomad_companies" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="roleid-companyid-capability" UNIQUE="true" FIELDS="roleid, companyid, capability" COMMENT="[Foreign Key, roleid, role, id] [Foreign Key, companyid, company, id]"/>
