@@ -72,7 +72,7 @@ class current_user_license extends company_base {
         $countfields = 'SELECT COUNT(clu.id)';
 
         $sql = " FROM {course} c
-                JOIN {local_iomad_company_license_users} clu ON (c.id = clu.licensecourseid)
+                JOIN {local_iomad_company_license_users} clu ON (c.id = clu.courseid)
                 JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
                 WHERE $wherecondition
                 AND clu.userid = :userid

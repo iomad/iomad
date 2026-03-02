@@ -226,7 +226,7 @@ if ($mform->is_cancelled()) {
                                    ['userid' => $userdata->id,
                                     'licenseid' => $licenseid,
                                     'issuedate' => $issuedate,
-                                    'licensecourseid' => $licensecourse]);
+                                    'courseid' => $licensecourse]);
 
                 // Create an event.
                 $eventother = [

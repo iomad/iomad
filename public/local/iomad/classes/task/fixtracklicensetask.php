@@ -82,7 +82,7 @@ class fixtracklicensetask extends adhoc_task {
                 if ($new = $DB->get_record_sql("SELECT *
                                                 FROM {local_iomad_company_license_users}
                                                 WHERE userid = :userid
-                                                AND licensecourseid = :licensecourseid
+                                                AND courseid = :courseid
                                                 AND issuedate > :issuedate",
                                                 (array) $license)) {
 
@@ -90,8 +90,8 @@ class fixtracklicensetask extends adhoc_task {
                     $license->timecompleted = $new->issuedate;
                     $DB->update_record('local_iomad_company_license_users', $license);
                 } else if (!$DB->get_record('course_completions', ['userid' => $license->userid,
-                                                                   'course' => $license->licensecourseid])) {
-                    if ($track = $DB->get_record('local_iomad_tracks', ['courseid' => $license->licensecourseid,
+                                                                   'course' => $license->courseid])) {
+                    if ($track = $DB->get_record('local_iomad_tracks', ['courseid' => $license->courseid,
                                                                        'userid' => $license->userid,
                                                                        'licenseid' => $license->licenseid,
                                                                        'licenseallocated' => $license->issuedate])) {

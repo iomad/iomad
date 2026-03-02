@@ -46,7 +46,7 @@ function local_iomad_pre_course_delete($course) {
     $DB->delete_records('local_iomad_company_shared_courses', ['courseid' => $course->id]);
 
     // Deal with licenses allocations.
-    $DB->delete_records('local_iomad_company_license_users', ['licensecourseid' => $course->id]);
+    $DB->delete_records('local_iomad_company_license_users', ['courseid' => $course->id]);
 
     $courselicenses = $DB->get_records('local_iomad_company_license_courses', ['courseid' => $course->id]);
 

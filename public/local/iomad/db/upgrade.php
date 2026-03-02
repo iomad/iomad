@@ -1375,11 +1375,19 @@ function xmldb_local_iomad_upgrade($oldversion) {
             $dbman->drop_index($table, $index);
         }
 
+        // Rename field courseid on table local_iomad_company_license_users to licensecourseid.
+        $field = new xmldb_field('licensecourseid', XMLDB_TYPE_INTEGER, '10', null, null, null, '0', 'result');
+
+        // Launch rename field courseid.
+        $dbman->rename_field($table, $field, 'courseid');
+
+
+
         // Define key fk_licensecourseid (foreign) to be added to companylicense_users.
         $key = new xmldb_key(
-            'fk_licensecourseid',
+            'fk_courseid',
             XMLDB_KEY_FOREIGN,
-            ['licensecourseid'],
+            ['courseid'],
             'course',
             ['id']
         );
@@ -1411,11 +1419,11 @@ function xmldb_local_iomad_upgrade($oldversion) {
         // Launch add key fk_groupid.
         $dbman->add_key($table, $key);
 
-        // Define index userid-licenseid-licensecourseid (not unique) to be added to companylicense_users.
+        // Define index userid-licenseid-courseid (not unique) to be added to companylicense_users.
         $index = new xmldb_index(
-            'userid-licenseid-licensecourseid',
+            'userid-licenseid-courseid',
             XMLDB_INDEX_NOTUNIQUE,
-            ['userid', 'licenseid', 'licensecourseid']
+            ['userid', 'licenseid', 'courseid']
         );
 
         // Conditionally launch add index userid-licenseid-licensecourseid.

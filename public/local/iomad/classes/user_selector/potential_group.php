@@ -139,7 +139,7 @@ class potential_group extends company_base {
                      OR u.id IN (
                          SELECT userid
                          FROM {local_iomad_company_license_users}
-                         WHERE licensecourseid = :liccourseid
+                         WHERE courseid = :liccourseid
                          AND groupid <> :licgroupid
                      )
                  )";

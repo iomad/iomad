@@ -183,17 +183,17 @@ class helper {
         $mynotstartedlicense = $DB->get_records_sql(
             "SELECT clu.id,
                     clu.userid,
-                    clu.licensecourseid AS courseid,
+                    clu.courseid AS courseid,
                     c.fullname AS coursefullname,
                     c.summary AS coursesummary,
                     c.visible,
                     cca.mandatory
              FROM {local_iomad_company_license_users} clu
-             JOIN {course} c ON (c.id = clu.licensecourseid)
+             JOIN {course} c ON (c.id = clu.courseid)
              JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
              LEFT JOIN {local_iomad_company_course_options} cca ON (
                  cl.companyid = cca.companyid
-                 AND clu.licensecourseid = cca.courseid
+                 AND clu.courseid = cca.courseid
              )
              WHERE clu.userid = :userid
              AND clu.isusing = 0

@@ -454,7 +454,7 @@ class company_users_licenses_form extends moodleform {
                                     'userid' => $this->userid,
                                     'licenseid' => $licenserecord['id'],
                                     'isusing' => 0,
-                                    'licensecourseid' => $course->id,
+                                    'courseid' => $course->id,
                                 ];
 
                                 // Check we are not adding multiple times.
@@ -480,7 +480,7 @@ class company_users_licenses_form extends moodleform {
                             } else {
                                 $userlicenserecord = $DB->get_record('local_iomad_company_license_users', [
                                     'userid' => $this->userid,
-                                    'licensecourseid' => $course->id,
+                                    'courseid' => $course->id,
                                     'licenseid' => $licenserecord['id'],
                                 ]);
                                 if (!empty($userlicenserecord->id)) {
@@ -543,7 +543,7 @@ class company_users_licenses_form extends moodleform {
                                     'userid' => $this->userid,
                                     'licenseid' => $licenserecord['id'],
                                     'isusing' => 0,
-                                    'licensecourseid' => $addcourse->id,
+                                    'courseid' => $addcourse->id,
                                 ];
 
                                 // Check we are not adding multiple times.
@@ -592,9 +592,9 @@ class company_users_licenses_form extends moodleform {
                                     'duedate' => 0,
                                 ];
                                 $event = user_license_unassigned::create([
-                                    'context' => context_course::instance($userlicenserecord->licensecourseid),
+                                    'context' => context_course::instance($userlicenserecord->courseid),
                                     'objectid' => $licenserecord['id'],
-                                    'courseid' => $userlicenserecord->licensecourseid,
+                                    'courseid' => $userlicenserecord->courseid,
                                     'userid' => $this->userid,
                                     'other' => $eventother,
                                 ]);

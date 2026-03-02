@@ -119,7 +119,7 @@ class current_group extends company_base {
                    SELECT userid
                    FROM {local_iomad_company_license_users}
                    WHERE isusing = 0
-                   AND licensecourseid = :liccourseid
+                   AND courseid = :liccourseid
                    AND groupid = :licgroupid
                  )";
 

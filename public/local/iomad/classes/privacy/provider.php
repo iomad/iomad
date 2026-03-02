@@ -78,7 +78,7 @@ class provider implements
                 'timecompleted' => 'privacy:metadata:companylicense_users:timecompleted',
                 'score' => 'privacy:metadata:companylicense_users:score',
                 'result' => 'privacy:metadata:companylicense_users:result',
-                'licensecourseid' => 'privacy:metadata:companylicense_users:licensecourseid',
+                'courseid' => 'privacy:metadata:companylicense_users:courseid',
                 'issuedate' => 'privacy:metadata:companylicense_users:issuedate',
                 'groupid' => 'privacy:metadata:companylicense_users:groupid',
             ],

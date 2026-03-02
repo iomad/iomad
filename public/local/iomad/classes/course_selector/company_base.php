@@ -167,7 +167,7 @@ abstract class company_base extends base {
         foreach ($allcourses as $id => $course) {
             $courseid = $id;
             if ($licenserecord) {
-                $courseid = $DB->get_field('local_iomad_company_license_users', 'licensecourseid', ['id' => $id]);
+                $courseid = $DB->get_field('local_iomad_company_license_users', 'courseid', ['id' => $id]);
             }
             if ($DB->get_record('course', ['id' => $courseid, 'visible' => 0])) {
                 $allcourses[$id]->fullname = $course->fullname . "(" . get_string('hidden', 'badges') . ")";
@@ -189,12 +189,12 @@ abstract class company_base extends base {
                                      JOIN {local_iomad_company_licenses} cl
                                      ON (clu.licenseid = cl.id)
                                      WHERE clu.userid = :userid
-                                     AND clu.licensecourseid = :licensecourseid
+                                     AND clu.courseid = :courseid
                                      AND clu.timecompleted IS NULL
                                      AND clu.isusing = 1
                                      AND cl.type = 0",
                                      ['userid' => $userid,
-                                      'licensecourseid' => $course->id])) {
+                                      'courseid' => $course->id])) {
                 $licensecourses[$id]->fullname = $course->fullname . '*';
             }
         }

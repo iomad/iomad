@@ -143,19 +143,19 @@
         <FIELD NAME="timecompleted" TYPE="int" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="score" TYPE="number" LENGTH="10" NOTNULL="false" SEQUENCE="false" DECIMALS="5"/>
         <FIELD NAME="result" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
-        <FIELD NAME="licensecourseid" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="issuedate" TYPE="int" LENGTH="20" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="timestamp when the license was allocated"/>
         <FIELD NAME="groupid" TYPE="int" LENGTH="20" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="course groupid for the user."/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="fk_licenseid" TYPE="foreign" FIELDS="licenseid" REFTABLE="local_iomad_company_licenses" REFFIELDS="id"/>
-        <KEY NAME="fk_licensecourseid" TYPE="foreign" FIELDS="licensecourseid" REFTABLE="course" REFFIELDS="id"/>
         <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
         <KEY NAME="fk_groupid" TYPE="foreign" FIELDS="groupid" REFTABLE="groups" REFFIELDS="id"/>
+        <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="userid-licenseid-licensecourseid" UNIQUE="false" FIELDS="userid, licenseid, licensecourseid"/>
+        <INDEX NAME="userid-licenseid-courseid" UNIQUE="false" FIELDS="userid, licenseid, courseid"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="local_iomad_company_license_courses" COMMENT="IOMAD license courses allocations">

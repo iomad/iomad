@@ -588,7 +588,7 @@ class company_user {
                             !empty($completedrecord->licenseid) &&
                             $licenserecord = $DB->get_record('local_iomad_company_license_users', [
                                 'userid' => $completedrecord->userid,
-                                'licensecourseid' => $completedrecord->courseid,
+                                'courseid' => $completedrecord->courseid,
                                 'licenseid' => $completedrecord->licenseid,
                                 'issuedate' => $completedrecord->licenseallocated,
                             ])
@@ -1055,10 +1055,10 @@ class company_user {
              FROM {local_iomad_company_license_users} clu
              JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
              WHERE cl.companyid = :companyid
-             AND clu.licensecourseid = :licensecourseid
+             AND clu.courseid = :courseid
              AND clu.userid = :userid
              AND clu.timecompleted IS NULL",
-            ['licensecourseid' => $courseid,
+            ['courseid' => $courseid,
              'userid' => $user->id,
              'companyid' => $companyid])) {
             foreach ($licenserecords as $licenserecord) {
@@ -1121,10 +1121,10 @@ class company_user {
                  FROM {local_iomad_company_license_users} clu
                  JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
                  WHERE cl.companyid = :companyid
-                 AND clu.licensecourseid = :licensecourseid
+                 AND clu.courseid = :courseid
                  AND clu.userid = :userid
                  AND clu.timecompleted IS NULL",
-                ['licensecourseid' => $courseid,
+                ['courseid' => $courseid,
                  'userid' => $user->id,
                  'companyid' => $companyid])) {
                 foreach ($licenserecords as $licenserecord) {
@@ -1271,7 +1271,7 @@ class company_user {
             if ($action == 'autodelete') {
                 // If this is being called from the course expiry event then the parameters are slightly different.
                 $params = [
-                    'licensecourseid' => $courseid,
+                    'courseid' => $courseid,
                     'userid' => $userid,
                     'isusing' => 1,
                     'timecompleted' => null,
@@ -1279,13 +1279,13 @@ class company_user {
             } else if ($action == 'revoke') {
                 // If this is being called from the course expiry event then the parameters are slightly different.
                 $params = [
-                    'licensecourseid' => $courseid,
+                    'courseid' => $courseid,
                     'userid' => $userid,
                     'isusing' => 0,
                 ];
             } else {
                 $params = [
-                    'licensecourseid' => $courseid,
+                    'courseid' => $courseid,
                     'userid' => $userid,
                     'isusing' => 1,
                 ];
@@ -1442,7 +1442,7 @@ class company_user {
                 'isusing' => 0,
                 'issuedate' => time(),
                 'timecompleted' => null,
-                'licensecourseid' => $courseid,
+                'courseid' => $courseid,
                 'licenseid' => $latestlicense->id,
             ];
             $newlicense->id = $DB->insert_record('local_iomad_company_license_users', (array) $newlicense);

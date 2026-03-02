@@ -125,13 +125,13 @@ class companylicenseusers extends base {
 
         // Licensecourseid.
         $columns[] = (new column(
-            'licensecourseid',
+            'courseid',
             new lang_string('licensecourseid', 'block_iomad_company_admin'),
             $this->get_entity_name()
         ))
             ->add_joins($this->get_joins())
             ->set_type(column::TYPE_INTEGER)
-            ->add_field("{$companylicenseusersalias}.licensecourseid")
+            ->add_field("{$companylicenseusersalias}.courseid")
             ->set_is_sortable(false);
 
         // Issuedate.

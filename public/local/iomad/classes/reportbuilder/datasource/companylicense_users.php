@@ -75,7 +75,7 @@ class companylicense_users extends datasource {
             ->add_join("JOIN {local_iomad_company_license_users} {$companylicenseusersalias}
                 ON ({$useralias}.id = {$companylicenseusersalias}.userid
                 AND {$companylicenseusersalias}.userid = {$companyusersalias}.userid
-                AND {$coursealias}.id = {$companylicenseusersalias}.licensecourseid)")
+                AND {$coursealias}.id = {$companylicenseusersalias}.courseid)")
         );
 
         // Join the department entity to the company entity.

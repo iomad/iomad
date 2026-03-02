@@ -1282,12 +1282,12 @@ if (!empty($cancelled)) {
                     }
                     if ($DB->get_record_sql("SELECT id FROM {local_iomad_company_license_users}
                                              WHERE licenseid = :licenseid
-                                             AND licensecourseid = :licensecourseid
+                                             AND courseid = :courseid
                                              AND userid = :userid
                                              AND (isusing = 0 OR timecompleted IS NULL)",
                                             ['userid' => $user->id,
                                              'licenseid' => $formdata->licenseid,
-                                             'licensecourseid' => $licensecourse])) {
+                                             'courseid' => $licensecourse])) {
                         // Already assigned skip and error.
                         $numlicenseerrors++;
                         continue;
@@ -1300,7 +1300,7 @@ if (!empty($cancelled)) {
                     $userlicid = $DB->insert_record('local_iomad_company_license_users',
                                         ['userid' => $user->id,
                                          'licenseid' => $formdata->licenseid,
-                                         'licensecourseid' => $licensecourse,
+                                         'courseid' => $licensecourse,
                                          'issuedate' => $issuedate]);
 
                     // Create an event.

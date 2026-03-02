@@ -582,7 +582,7 @@ class global_navigation extends navigation_node {
                                    SELECT courseid FROM {local_iomad_company_shared_courses}
                                    WHERE companyid = $companyid))
                                OR c.id IN (
-                                   SELECT clu.licensecourseid FROM {local_iomad_company_license_users} clu
+                                   SELECT clu.courseid FROM {local_iomad_company_license_users} clu
                                    JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
                                    WHERE cl.companyid = $companyid
                                    AND clu.userid = " . $USER->id ."
@@ -731,7 +731,7 @@ class global_navigation extends navigation_node {
                                    SELECT courseid FROM {local_iomad_company_shared_courses}
                                    WHERE companyid = $companyid))
                                OR c.id IN (
-                                   SELECT clu.licensecourseid FROM {local_iomad_company_license_users} clu
+                                   SELECT clu.courseid FROM {local_iomad_company_license_users} clu
                                    JOIN {local_iomad_company_licenses} cl ON (clu.licenseid = cl.id)
                                    WHERE cl.companyid = $companyid
                                    AND clu.userid = " . $USER->id ."

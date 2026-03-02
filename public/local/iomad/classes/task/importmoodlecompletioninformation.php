@@ -145,14 +145,14 @@ class importmoodlecompletioninformation extends adhoc_task {
                         // Its a licensed course, get the last license.
                         $licenserecs = $DB->get_records_sql("SELECT * FROM {local_iomad_company_license_users}
                                                              WHERE userid = :userid
-                                                             AND licensecourseid = :licensecourseid
+                                                             AND courseid = :courseid
                                                              AND issuedate < :issuedate
                                                              AND licenseid IN (
                                                                 SELECT id
                                                                 FROM {local_iomad_company_licenses}
                                                                 WHERE companyid = :companyid)
                                                              ORDER BY issuedate DESC",
-                                                            ['licensecourseid' => $courseid,
+                                                            ['courseid' => $courseid,
                                                              'userid' => $userid,
                                                              'companyid' => $companyrec->id,
                                                              'issuedate' => $comprec->timecompleted],
