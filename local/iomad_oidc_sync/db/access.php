@@ -31,7 +31,7 @@ global $CFG;
 
 // Deal with change in contexts.
 $contextlevel = CONTEXT_SYSTEM;
-if ($CFG->branch > 402) {
+if (!empty($CFG->branch) && $CFG->branch > 402) {
     $contextlevel = CONTEXT_COMPANY;
 }
 
