@@ -39,13 +39,20 @@ function xmldb_block_iomad_company_admin_install() {
     $systemcontext = context_system::instance();
     $page = new moodle_page();
     $page->set_context( $systemcontext );
-    $page->set_pagetype( 'my-index' );
-    $page->set_pagelayout( 'mydashboard' );
-    $page->blocks->add_region('content');
-    $defaultblocks = [
-        'content' => ['iomad_company_admin'],
-        ];
-    $page->blocks->add_blocks($defaultblocks);
+
+    if ($defaultmypage = $DB->get_record('my_pages', ['userid' => null, 'name' => '__default', 'private' => 1])) {
+        $subpagepattern = $defaultmypage->id;
+    } else {
+        $subpagepattern = null;
+    }
+
+    $page->blocks->add_blocks($page->blocks->filter_nonexistent_blocks([
+        'content' => [
+            'iomad_company_admin',
+        ]]),
+        'my-index',
+        $subpagepattern
+    );
 
     return true;
 }
