@@ -146,7 +146,9 @@ class company extends context {
      * @return company|false context instance
      */
     public static function instance($companyid, $strictness = MUST_EXIST) {
-        global $DB;
+        global $CFG, $DB;
+
+        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
 
         if ($context = context::cache_get(self::LEVEL, $companyid)) {
             return $context;
@@ -154,6 +156,17 @@ class company extends context {
 
         if (!$DB->get_manager()->table_exists('company')) {
             return \context_system::instance();
+        }
+
+        // Do we have a valid companyid?
+        if (!($companyid > 0) &&
+            \iomad::has_capability('block/iomad_company_admin:company_view_all', \context_system::instance())) {
+            redirect(
+                new moodle_url(
+                    '/blocks/iomad_company_admin/index.php'
+                ),
+                get_string('pleaseselect', 'block_iomad_company_admin')
+            );
         }
 
         if (!$record = $DB->get_record('context', array('contextlevel' => self::LEVEL, 'instanceid' => $companyid))) {
