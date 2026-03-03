@@ -438,7 +438,7 @@ class renderer extends plugin_renderer_base {
         $returnhtml .= html_writer::start_tag('div', ['class' => 'iomadclear']);
         $returnhtml .= html_writer::start_tag('div', ['class' => 'fitem']);
         $returnhtml .= $treehtml;
-        $returnhtml .= html_writer::start_tag('div', ['style' => 'display:none']);
+        $returnhtml .= html_writer::start_tag('div', ['style' => 'display:none !important;']);
         $returnhtml .= $this->render($departmentselect);
         $returnhtml .= html_writer::end_tag('div');
         $returnhtml .= html_writer::end_tag('div');
@@ -503,7 +503,7 @@ class renderer extends plugin_renderer_base {
         }
 
         // This is getting hidden anyway, so no need for label.
-        $mform->addElement('html', html_writer::start_tag('div', ['class' => 'display:none;']));
+        $mform->addElement('html', html_writer::start_tag('div', ['style' => 'display:none !important;']));
         if (!$disableonchange) {
             $mform->addElement('select', 'deptid', ' ',
                                 $subhierarchieslist, ['class' => 'iomad_department_select', 'onchange' => 'this.form.submit()']);

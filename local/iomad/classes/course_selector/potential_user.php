@@ -106,7 +106,7 @@ class potential_user extends company_base {
                                                              'curcids',
                                                              false);
             $currentcoursesql = "AND c.id {$notinsql}";
-            $sqlparams = $sqlparams + $notinparams;
+            $params = $params + $notinparams;
         }
 
         // Deal with licensed courses.

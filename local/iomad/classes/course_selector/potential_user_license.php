@@ -87,7 +87,7 @@ class potential_user_license extends company_base {
         $countfields = 'SELECT COUNT(1)';
         $distinctfields = 'SELECT DISTINCT ' . $this->required_fields_sql('c');
 
-        $sql = " FROM {course} c,
+        $sql = " FROM {course} c
                  JOIN {local_iomad_company_license_courses} clc ON (c.id = clc.courseid)
                  JOIN {local_iomad_company_licenses} cl ON (clc.licenseid = cl.id)
                  WHERE cl.companyid = :companyid
