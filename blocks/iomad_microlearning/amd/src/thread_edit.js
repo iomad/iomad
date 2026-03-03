@@ -102,10 +102,9 @@ export const init = () => {
             getStrings([
                 { key: 'deletethread', component: 'block_iomad_microlearning' },
                 { key: 'deletethreadcheckfull', component: 'block_iomad_microlearning', param: threadName },
-                { key: 'yes' },
-                { key: 'no' }
+                { key: 'yes' }
             ]).done(function (s) {
-                notification.confirm(s[0], s[1], s[2], s[3], function () {
+                notification.deleteCancel(s[0], s[1], s[2], function () {
                     ajax.call([{
                         methodname: 'block_iomad_microlearning_delete_thread',
                         args: {

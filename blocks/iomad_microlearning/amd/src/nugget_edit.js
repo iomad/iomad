@@ -103,10 +103,9 @@ export const init = () => {
             getStrings([
                 { key: 'deletenugget', component: 'block_iomad_microlearning' },
                 { key: 'deletenuggetcheckfull', component: 'block_iomad_microlearning', param: nuggetName },
-                { key: 'yes' },
-                { key: 'no' }
+                { key: 'yes' }
             ]).done(function (s) {
-                notification.confirm(s[0], s[1], s[2], s[3], function () {
+                notification.deleteCancel(s[0], s[1], s[2], function () {
                     ajax.call([{
                         methodname: 'block_iomad_microlearning_delete_nugget',
                         args: {
