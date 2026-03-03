@@ -199,18 +199,7 @@ class course_group_users_form extends moodleform {
             die('No group selected.');
         }
 
-        $course = $DB->get_record('course', ['id' => $this->courseid]);
-        $group = $DB->get_record('groups', ['id' => $this->groupid]);
-
-        $company = $this->company;
-        $mform->addElement('static', 'departmenttitle', get_string('department', 'block_iomad_company_admin'));
         $output->display_tree_selector_form($this->company, $mform, $this->departmentid);
-        $stringobj = new stdclass();
-        $stringobj->group = $group->description;
-        $stringobj->course = $course->fullname;
-        $mform->addElement('header', 'header',
-                            get_string('group_users_for', 'block_iomad_company_admin',
-                            $stringobj));
 
         if ($this->isdefault) {
             $mform->addElement(
