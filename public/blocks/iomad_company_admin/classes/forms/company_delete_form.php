@@ -87,44 +87,44 @@ class company_delete_form extends dynamic_form {
             $mform->addElement(
                 'checkbox',
                 'confirmdeleteparent',
-                get_string('parentcompanydeletewarning', 'block_iomad_company_admin'),
-                get_string('deleteparent', 'block_iomad_company_admin'));
+                get_string('deleteparent', 'block_iomad_company_admin'),
+                get_string('parentcompanydeletewarning', 'block_iomad_company_admin'));
             $mform->addRule('confirmdeleteparent', $strrequired, 'required', null, 'client');
         }
 
         $mform->addElement(
             'checkbox',
             'confirmdeleteusers',
-            get_string('companyusersdeletewarning', 'block_iomad_company_admin'),
-            get_string('deleteusers', 'block_iomad_company_admin'));
+            get_string('deleteusers', 'block_iomad_company_admin'),
+            get_string('companyusersdeletewarning', 'block_iomad_company_admin'));
         $mform->addRule('confirmdeleteusers', $strrequired, 'required', null, 'client');
 
         $mform->addElement(
             'checkbox',
             'confirmdeletedepartments',
-            get_string('companydepartmentsdeletewarning', 'block_iomad_company_admin'),
-            get_string('deletedepartments', 'block_iomad_company_admin'));
+            get_string('deletedepartments', 'block_iomad_company_admin'),
+            get_string('companydepartmentsdeletewarning', 'block_iomad_company_admin'));
         $mform->addRule('confirmdeletedepartments', $strrequired, 'required', null, 'client');
 
         $mform->addElement(
             'checkbox',
             'confirmdeletecourses',
-            get_string('companycoursesdeletewarning', 'block_iomad_company_admin'),
-            get_string('deletecourses', 'block_iomad_company_admin'));
+            get_string('deletecourses', 'block_iomad_company_admin'),
+            get_string('companycoursesdeletewarning', 'block_iomad_company_admin'));
         $mform->addRule('confirmdeletecourses', $strrequired, 'required', null, 'client');
 
         $mform->addElement(
             'checkbox',
             'confirmdeletereports',
-            get_string('companyreportsdeletewarning', 'block_iomad_company_admin'),
-            get_string('deletereports', 'block_iomad_company_admin'));
+            get_string('deletereports', 'block_iomad_company_admin'),
+            get_string('companyreportsdeletewarning', 'block_iomad_company_admin'));
         $mform->addRule('confirmdeletereports', $strrequired, 'required', null, 'client');
 
         $mform->addElement(
             'checkbox',
             'confirmdeletecertificates',
-            get_string('companycertificatesdeletewarning', 'block_iomad_company_admin'),
-            get_string('deletecertificates', 'block_iomad_company_admin'));
+            get_string('deletecertificates', 'block_iomad_company_admin'),
+            get_string('companycertificatesdeletewarning', 'block_iomad_company_admin'));
         $mform->addRule('confirmdeletecertificates', $strrequired, 'required', null, 'client');
     }
 

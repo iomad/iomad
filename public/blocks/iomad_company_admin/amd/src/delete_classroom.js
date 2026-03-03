@@ -22,12 +22,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import ModalForm from 'core_form/modalform';
-import {get_string as getString} from 'core/str';
-import {add as toastAdd, addToastRegion} from 'core/toast';
-import {
-    exception as displayException,
-} from 'core/notification';
+import ajax from 'core/ajax';
+import {get_strings as getStrings} from 'core/str';
+import notification from 'core/notification';
+
 const selectors = {
     showDeleteclassroomform: '[data-action="show-deleteclassroomform"]',
 };
@@ -42,44 +40,27 @@ export const init = () => {
         showDeleteclassroomform[i].addEventListener('click', event => {
             event.preventDefault();
 
-            const title = getString('classroom_delete', 'block_iomad_company_admin');
-            const form = new ModalForm({
-                formClass: 'block_iomad_company_admin\\forms\\classroom_delete_form',
-                args: {
-                    classroomid: showDeleteclassroomform[i].getAttribute('data-classroomid'),
-                    companyid: showDeleteclassroomform[i].getAttribute('data-companyid'),
-                    classroomname: showDeleteclassroomform[i].getAttribute('data-classroomname'),
-                },
-                modalConfig: {title},
-                returnFocus: showDeleteclassroomform[i],
-            });
-            form.show().then(() => {
-                addToastRegion(form.modal.getRoot()[0]);
-                return true;
-            }).catch(displayException);
-            form.addEventListener(form.events.FORM_SUBMITTED, (e) => {
-
-                // Remove toast region as if not it will be displayed on the closed modal.
-                const modalElement = form.modal.getRoot()[0];
-                const regions = modalElement.querySelectorAll('.toast-wrapper');
-                regions.forEach((reg) => reg.remove());
-                if (e.detail.result) {
-                    if (e.detail.result == false
-                        && e.detail.returnmessage != ''
-                    ) {
-                        toastAdd(e.detail.returnmessage,
-                            {
-                                type: 'warning',
-                            }
-                        );
-                    } else {
-                        toastAdd(e.detail.returnmessage,
-                        {
-                            type: 'success',
-                        });
-                    }
-                }
-                window.location.reload(true);
+            var classroomid = showDeleteclassroomform[i].getAttribute('data-classroomid');
+            var classroomname = showDeleteclassroomform[i].getAttribute('data-classroomname');
+            var companyid = showDeleteclassroomform[i].getAttribute('data-companyid');
+            getStrings([
+                { key: 'classroom_delete', component: 'block_iomad_company_admin' },
+                { key: 'classroom_delete_checkfull', component: 'block_iomad_company_admin', param: classroomname },
+                { key: 'yes' }
+            ]).done(function (s) {
+                notification.deleteCancel(s[0], s[1], s[2], function () {
+                    ajax.call([{
+                        methodname: 'block_iomad_company_admin_delete_training_location',
+                        args: {
+                            companyid: companyid,
+                            classroomid: classroomid,
+                        },
+                        done: function () {
+                            location.reload();
+                        },
+                        fail: notification.exception,
+                    }]);
+                });
             });
         });
     }
