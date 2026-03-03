@@ -215,9 +215,6 @@ class microlearning_thread_users_form extends company_moodleform {
         }
 
         $thread = $DB->get_record('block_iomad_microlearning_threads', ['id' => $this->thread->id]);
-        $mform->addElement('header', 'header',
-                            get_string('company_users_for', 'block_iomad_microlearning',
-                            format_string($thread->name, true, 1) ));
 
         $mform->addElement(
             'html',
