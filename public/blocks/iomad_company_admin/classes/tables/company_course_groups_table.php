@@ -49,7 +49,11 @@ class company_course_groups_table extends table_sql {
      */
     public function col_name($row) {
 
-        return format_string($row->name);
+        if ($row->groupid != $row->defaultgroupid) {
+            return format_string($row->name);
+        } else {
+            return format_string($row->name . ' (' . get_string('default') . ')');
+        }
     }
 
 
