@@ -50,7 +50,6 @@ class teaching_locations_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_name($row) {
-        global $output;
 
         return format_string($row->name);
     }
@@ -61,7 +60,6 @@ class teaching_locations_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_address($row) {
-        global $output;
 
         if (!empty($row->isvirtual)) {
             return get_string('statusna');
@@ -88,6 +86,7 @@ class teaching_locations_table extends table_sql {
                         format_string($row->postcode) .
                         html_writer::empty_tag('br');
         }
+
         return $address;
     }
 
@@ -126,16 +125,15 @@ class teaching_locations_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_actions($row) {
-        global $CFG, $companycontext;
+        global $DB, $companycontext;
 
         $deletebutton = "";
         $editbutton = "";
-        $sesskey = sesskey();
+        $inuse = $DB->get_records('trainingevent', ['classroomid' => $row->id]);
 
-        if (iomad::has_capability('block/iomad_company_admin:classrooms_delete', $companycontext)) {
-            $deleteurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/classroom_list.php',
-                                        ['delete' => $row->id,
-                                        'sesskey' => $sesskey]);
+        if (iomad::has_capability('block/iomad_company_admin:classrooms_delete', $companycontext)
+            && count($inuse) == 0) {
+
             $deletebutton = html_writer::tag(
                 'a',
                 html_writer::tag(
@@ -159,8 +157,6 @@ class teaching_locations_table extends table_sql {
         }
 
         if (iomad::has_capability('block/iomad_company_admin:classrooms_edit', $companycontext)) {
-            $editurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/classroom_edit_form.php',
-                                      ['id' => $row->id]);
             $editbutton = html_writer::tag(
                 'a',
                 html_writer::tag(
@@ -183,6 +179,5 @@ class teaching_locations_table extends table_sql {
         }
 
         return $editbutton . "&nbsp" . $deletebutton;
-
     }
 }

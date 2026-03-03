@@ -279,4 +279,12 @@ $functions = [
         'ajax' => true,
         'capabilities' => 'block/iomad_company_admin:edit_groups',
     ],
+
+    'block_iomad_company_admin_delete_training_location' => [
+        'classname' => block_iomad_company_admin\external\delete_training_location::class,
+        'description' => 'Delete training location',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'block/iomad_company_admin:classrooms_delete',
+    ],
 ];
