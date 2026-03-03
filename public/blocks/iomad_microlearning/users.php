@@ -195,10 +195,9 @@ if ($companyid > 0) {
                                                              $groupid);
             echo $usersform->display();
         }
-    } else {
-        echo get_string('selectthread', 'block_iomad_microlearning');
     }
 }
+
 echo html_writer::end_tag('div');
 
 // Display the footer.
