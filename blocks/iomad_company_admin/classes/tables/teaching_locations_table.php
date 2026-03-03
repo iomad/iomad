@@ -50,8 +50,21 @@ class teaching_locations_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_name($row) {
+        global $DB;
 
-        return format_string($row->name);
+        // Is the training location being used?
+        $inuse = $DB->get_records('trainingevent', ['classroomid' => $row->id]);
+
+        if (count($inuse) == 0) {
+            return format_string($row->name);
+        } else {
+            return html_writer::tag(
+                'p',
+                format_string($row->name) .
+                html_writer::empty_tag('br') .
+                format_string('(' . get_string('inuse', 'block_iomad_company_admin') . ')'),
+            );
+        }
     }
 
     /**
