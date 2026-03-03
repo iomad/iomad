@@ -22,48 +22,51 @@ use core_external\external_api;
 use core_external\external_value;
 use local_iomad\custom_context\context_company;
 use local_iomad\{company, iomad};
-use core\exception\moodle_exception;
-use moodle_url;
 
 /**
- * Implementation of web service block_iomad_company_admin_company_ecommerce
+ * Implementation of web service block_iomad_company_admin_delete_company_group
  *
  * @package    block_iomad_company_admin
  * @copyright  2026 E-Learn Design https://www.e-learndesign.co.uk
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class company_ecommerce extends external_api {
+class delete_company_group extends external_api {
 
     /**
-     * Describes the parameters for block_iomad_company_admin_company_ecommerce
+     * Describes the parameters for block_iomad_company_admin_delete_company_group
      *
      * @return external_function_parameters
      */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'companyid' => new external_value(PARAM_INT, 'Company ID'),
-            'currentvalue' => new external_value(PARAM_BOOL, 'Current state'),
+            'courseid' => new external_value(PARAM_INT, 'Course ID'),
+            'groupid' => new external_value(PARAM_INT, 'Group ID'),
         ]);
     }
 
     /**
-     * Implementation of web service block_iomad_company_admin_company_ecommerce
+     * Implementation of web service block_iomad_company_admin_delete_company_group
      *
-     * @param mixed $param1
+     * @param mixed $companyid
+     * @param mixed $courseid
+     * @param mixed $groupid
      */
-    public static function execute($companyid, $currentvalue) {
-        global $CFG, $USER;
-
+    public static function execute($companyid, $courseid, $groupid) {
+        global $DB;
+        
         // Parameter validation.
         [
             'companyid' => $companyid,
-            'currentvalue' => $currentvalue,
-            ] = self::validate_parameters(
+            'courseid' => $courseid,
+            'groupid' => $groupid,
+        ] = self::validate_parameters(
             self::execute_parameters(),
             [
                 'companyid' => $companyid,
-                'currentvalue' => $currentvalue,
-                ]
+                'courseid' => $courseid,
+                'groupid' => $groupid,
+            ]
         );
 
         // From web services we don't call require_login(), but rather validate_context.
@@ -71,32 +74,40 @@ class company_ecommerce extends external_api {
         self::validate_context($companycontext);
 
         // Can we even do this?
-        iomad::require_capability('block/iomad_company_admin:company_add', $companycontext);
+        iomad::require_capability('block/iomad_company_admin:edit_groups', $companycontext);
 
-        // Can we change the state?
+        // Check everything is OK.
         $company = new company($companyid);
+        $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
+        $companygroup = $DB->get_record(
+            'local_iomad_company_course_groups',
+            [
+                'courseid' => $courseid,
+                'groupid' => $groupid,
+                'companyid' => $companyid,
+            ],
+            '*',
+            MUST_EXIST
+        );
 
-        // Is the parent suspended?
-        if (!empty($CFG->commerce_admin_enableall)) {
-            $returnurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/editcompanies.php');
-            throw new moodle_exception(
-                'nopermissions',
-                '',
-                $returnurl->out(),
-                get_string(
-                    'ecommerce',
-                    'block_iomad_company_admin'
-                )
-            );
-        }
+        $group = $DB->get_record(
+            'groups',
+            [
+                'id' => $companygroup->groupid,
+                'courseid' => $companygroup->courseid,
+            ],
+            '*',
+            MUST_EXIST
+        );
 
-        $company->ecommerce(!$currentvalue);
+        // Delete the group.
+        company::delete_company_course_group($company->id, $course, false, $group->id);
 
         return true;
     }
 
     /**
-     * Describe the return structure for block_iomad_company_admin_company_ecommerce
+     * Describe the return structure for block_iomad_company_admin_delete_company_group
      *
      * @return external_value
      */

@@ -25,7 +25,12 @@
 
 namespace block_iomad_company_admin\forms;
 
-use local_iomad\company;
+use context;
+use core_form\dynamic_form;
+use local_iomad\custom_context\context_company;
+use local_iomad\{company, iomad};
+use moodle_url;
+
 
 /**
  * IOMAD Dashboard group edit form class
@@ -35,47 +40,7 @@ use local_iomad\company;
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class group_edit_form extends company_moodleform {
-
-    /** @var int company ID */
-    protected $selectedcompany = 0;
-
-    /** @var object company */
-    protected $company = null;
-
-    /** @var int course ID */
-    protected $courseid = 0;
-
-    /** @var int group ID */
-    protected $groupid = 0;
-
-    /** @var object output */
-    protected $output = null;
-
-    /** @var string action */
-    protected $action = null;
-
-    /**
-     * Constructor function
-     *
-     * @param moodle_url $actionurl
-     * @param int $companyid
-     * @param int $courseid
-     * @param int $groupid
-     * @param object $output
-     * @param integer $action
-     */
-    public function __construct($actionurl, $companyid, $courseid, $groupid, $output, $action = 0) {
-
-        $this->selectedcompany = $companyid;
-        $this->courseid = $courseid;
-        $this->output = $output;
-        $this->groupid = $groupid;
-        $this->action = $action;
-        $this->company = new company($companyid);
-
-        parent::__construct($actionurl);
-    }
+class group_edit_form extends dynamic_form {
 
     /**
      * Form definition
@@ -87,24 +52,17 @@ class group_edit_form extends company_moodleform {
         // Set up the form.
         $mform =& $this->_form;
 
-        // Then show the fields about where this block appears.
-        if ($this->action == 0) {
-            $mform->addElement('header', 'header',
-                                get_string('creategroup', 'block_iomad_company_admin'));
-        } else {
-            $mform->addElement('header', 'header',
-                                get_string('editgroup', 'block_iomad_company_admin'));
-        }
-        $mform->addElement('hidden', 'courseid', $this->courseid);
+        $mform->addElement('hidden', 'companyid');
+        $mform->setType('companyid', PARAM_INT);
+        $mform->addElement('hidden', 'courseid');
         $mform->setType('courseid', PARAM_INT);
-        $mform->addElement('hidden', 'groupid', $this->groupid);
+        $mform->addElement('hidden', 'groupid');
         $mform->setType('groupid', PARAM_INT);
-        $mform->addElement('hidden', 'action', $this->action);
         $mform->setType('action', PARAM_INT);
         $mform->addElement('hidden', 'name');
         $mform->setType('name', PARAM_CLEAN);
 
-        $mform->addElement('hidden', 'selectedcourse', $this->courseid);
+        $mform->addElement('hidden', 'selectedcourse');
         $mform->setType('selectedcourse', PARAM_INT);
 
         $mform->addElement('text', 'description',
@@ -116,6 +74,114 @@ class group_edit_form extends company_moodleform {
                         'required', null, 'client');
         $mform->setType('description', PARAM_MULTILANG);
 
-        $this->add_action_buttons();
+    }
+
+    /**
+     * Process the form submission, used if form was submitted via AJAX.
+     *
+     * @return array
+     */
+    public function process_dynamic_submission(): array {
+
+        // Get the info from the form.
+        $data = $this->get_data();
+
+        // Deal with default data.
+        $context = context_company::instance($data->companyid);
+        iomad::require_capability('block/iomad_company_admin:edit_groups', $context);
+
+        company::create_company_course_group($data->companyid,
+                                             $data->selectedcourse,
+                                             $data);
+
+        // Return stuff to the JS.
+        return [
+            'result' => true,
+            'returnmessage' => get_string('eventgroupcreated', 'group'),
+        ];
+    }
+
+    /**
+     * Load in existing data as form defaults (not applicable).
+     *
+     * @return void
+     */
+    public function set_data_for_dynamic_submission(): void {
+        global $DB;
+
+        // Set some defaults.
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $groupid = $this->optional_param('groupid', 0, PARAM_INT);
+        $courseid = $this->optional_param('courseid', 0, PARAM_INT);
+        $selectedcourse = $this->optional_param('selectedcourse', 0, PARAM_INT);
+
+        // Do we have an existing record?
+        if (!$data = $DB->get_record_sql(
+            "SELECT cg.*,g.description
+             FROM {local_iomad_company_course_groups} cg
+             JOIN {groups} g ON (
+                 cg.groupid = g.id
+                 AND cg.courseid = g.courseid
+             )
+             WHERE cg.companyid = :companyid
+             AND cg.courseid = :courseid
+             AND cg.groupid = :groupid",
+            ['companyid' => $companyid, 'courseid' => $courseid, 'groupid' => $groupid]
+        )) {
+            $data = (object) [
+                'companyid' => $companyid,
+            ];
+        }
+
+        $data->selectedcourse = $selectedcourse;
+
+        // Send it.
+        $this->set_data($data);
+    }
+
+    /**
+     * Check if current user has access to this form, otherwise throw exception.
+     *
+     * @return void
+     * @throws moodle_exception
+     */
+    protected function check_access_for_dynamic_submission(): void {
+        global $CFG;
+
+        $context = $this->get_context_for_dynamic_submission();
+        if (!iomad::has_capability('block/iomad_company_admin:edit_groups', $context)) {
+            $returnurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/company_groups_create_form.php');
+            throw new moodle_exception(
+                'nopermissions',
+                '',
+                $returnurl->out(),
+                get_string(
+                    'block/iomad_company_admin:edit_groups',
+                    'block_iomad_company_admin'
+                )
+            );
+        }
+    }
+
+    /**
+     * Return form context
+     *
+     * @return context
+     */
+    protected function get_context_for_dynamic_submission(): context {
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $companycontext = context_company::instance($companyid);
+
+        return $companycontext;
+    }
+
+    /**
+     * Returns url to set in $PAGE->set_url() when form is being rendered or submitted via AJAX.
+     *
+     * @return moodle_url
+     */
+    protected function get_page_url_for_dynamic_submission(): moodle_url {
+
+        return new moodle_url('/blocks/iomad_company_admin/company_groups_create_form.php');
     }
 }

@@ -271,4 +271,12 @@ $functions = [
         'ajax' => true,
         'capabilities' => 'block/iomad_company_admin:suspendcompanies',
     ],
+
+    'block_iomad_company_admin_delete_company_group' => [
+        'classname' => block_iomad_company_admin\external\delete_company_group::class,
+        'description' => 'Delete company course group',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'block/iomad_company_admin:edit_groups',
+    ],
 ];

@@ -317,6 +317,7 @@ $string['deletedepartmentcheckfull'] = 'Are you absolutely sure you want to dele
 $string['deletedepartments'] = 'OK to delete departments';
 $string['deletedtrackentry'] = 'Report record entry {$a} has been <b>permanently removed</b>';
 $string['deletegroup'] = 'Delete group';
+$string['deletegroupcheckfull'] = 'Are you sure that you want to delete the course group \'{$a}\'?';
 $string['deletelicense'] = 'Delete license';
 $string['deleteparent'] = 'OK to delete parent company';
 $string['deletereports'] = 'OK to delete company reports';
