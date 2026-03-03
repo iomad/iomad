@@ -101,7 +101,7 @@ if (!empty($departmentid)) {
     // Existing department.
     $department = $DB->get_record('local_iomad_company_departments', ['id' => $departmentid]);
     $department->fullname = $department->name;
-    $department->deptid = $department->parent;
+    $department->deptid = $department->parentid;
     $editform->set_data($department);
 } else {
     $editform->set_data(['deptid' => $deptid]);
@@ -127,7 +127,7 @@ if ($editform->is_cancelled()) {
                                    $createdata->shortname,
                                    $createdata->deptid);
         $redirectmessage = get_string('departmentcreatedok', 'block_iomad_company_admin');
-    } else if ($current->parent == $createdata->deptid) {
+    } else if ($current->parentid == $createdata->deptid) {
         // Not moving, just saving it.
         company::create_department($createdata->departmentid,
                                    $companyid,

@@ -75,6 +75,9 @@ dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 // Set up the form.
 $mform = new department_display_form($PAGE->url, $companyid, $departmentid, $output);
 
+// Set default message.
+$noticestring = '';
+
 // Proces any delete requests.
 if ($deleteid && confirm_sesskey() && $confirm == md5($deleteid)) {
     // Get the list of department ids which are to be removed..
@@ -94,9 +97,6 @@ if ($mform->is_cancelled()) {
     redirect($dashboardurl);
 
 } else if ($data = $mform->get_data()) {
-    // Set default message.
-    $noticestring = '';
-
     // Are we creating a department?
     if (!empty($data->create) ) {
         redirect(new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/company_department_create_form.php',
@@ -136,7 +136,7 @@ if ($mform->is_cancelled()) {
         $departmentinfo = $DB->get_record('local_iomad_company_departments', ['id' => $departmentid], '*', MUST_EXIST);
 
         // Parent id havs to be > 0 as 0 is company top level department.
-        if (!empty($departmentinfo->parent)) {
+        if (!empty($departmentinfo->parentid)) {
 
             // Display the page.
             echo $output->header();
@@ -175,7 +175,7 @@ if ($mform->is_cancelled()) {
             if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
                 throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
             } else {
-                if (!empty($departmentrecord->parent)) {
+                if (!empty($departmentrecord->parentid)) {
                     // Go to the department edit form.
                     redirect(new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/company_department_create_form.php',
                                             ['departmentid' => $departmentid, 'deptid' => $departmentid]));
