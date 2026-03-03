@@ -194,15 +194,6 @@ class company_course_users_form extends moodleform {
             $course->fullname = $namestring;
             $course->id = 0;
         }
-        if (!empty($course->fullname)) {
-            $mform->addElement('header', 'header',
-                                get_string('company_users_for', 'block_iomad_company_admin',
-                                format_string($course->fullname, true, 1) ));
-        } else {
-            $mform->addElement('header', 'header',
-                                get_string('company_users_for', 'block_iomad_company_admin',
-                                '' ));
-        }
 
         $mform->addElement('date_time_selector', 'due', get_string('senddate', 'block_iomad_company_admin'));
         $mform->addHelpButton('due', 'senddate', 'block_iomad_company_admin');

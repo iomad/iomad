@@ -273,9 +273,6 @@ class company_license_users_form extends moodleform {
                 $mform->setType('courses', PARAM_INT);
             }
 
-            $mform->addElement('header', 'header', get_string('license_users_for',
-                                                              'block_iomad_company_admin',
-                                                              $this->license->name));
             if (!$this->license->program) {
                 $mform->addElement(
                     'html',

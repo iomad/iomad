@@ -95,10 +95,6 @@ class course_group_user_display_form extends company_moodleform {
         }
 
         // Then show the fields about where this block appears.
-        $mform->addElement('header', 'header',
-                            get_string('companygroupsusers', 'block_iomad_company_admin').
-                           $company->get_name());
-
         if (empty($coursegroups)) {
             $mform->addElement('html', html_writer::tag('h3', get_string('nogroups', 'block_iomad_company_admin')));
         } else {
