@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * IOMAD Dashboard teaching location listing table class
+ * IOMAD Dashboard training event user approval table class
  *
- * @package   block_iomad_company_admin
+ * @package   block_iomad_approve_access
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later

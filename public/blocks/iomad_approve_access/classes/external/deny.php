@@ -177,7 +177,7 @@ class deny extends external_api {
                     foreach ($usermanagers as $usermanager) {
                         if ($DB->get_record('local_iomad_company_users', [
                             'userid' => $usermanager->userid,
-                            'managertype' => 2
+                            'managertype' => 2,
                         ])) {
                             $nodeptmanagers = false;
                             break;
