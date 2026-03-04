@@ -63,6 +63,7 @@ use core\output\notification;
 use course_enrolment_manager;
 use iomad_commerce;
 use local_iomad\custom_context\context_company;
+use local_iomad\task\enroleducatortask;
 use local_iomadcustompage\event\iomadcustompage_deleted;
 use moodle_url;
 
@@ -1575,14 +1576,10 @@ class company {
 
                 // Deal with course permissions.
                 if (get_config('local_iomad', 'autoenrol_managers') && !empty($companycourses)) {
-                    foreach ($companycourses as $companycourse) {
-                        if ($DB->record_exists('course', ['id' => $companycourse->courseid])) {
-                            company_user::unenrol($userid,
-                                                  [$companycourse->courseid],
-                                                  $companycourse->companyid);
 
-                        }
-                    }
+                    // Fire the adhoc task to deal with their enrolments.
+                    $enroltask = new enroleducatortask();
+                    $enroltask->queue_task($userid, $companycourses, $managertype);
                 }
 
                 // Make sure all department records in the company match this.
@@ -1600,25 +1597,13 @@ class company {
                 // We have a company manager from another company.
                 // Deal with company courses.
                 if (get_config('local_iomad', 'autoenrol_managers') && !empty($companycourses)) {
-                    foreach ($companycourses as $companycourse) {
-                        if ($DB->record_exists('course', ['id' => $companycourse->courseid])) {
-                            if ($DB->record_exists('local_iomad_company_created_courses',
-                                                    ['companyid' => $companycourse->companyid,
-                                                     'courseid' => $companycourse->courseid])) {
-                                company_user::enrol($userid,
-                                                    [$companycourse->courseid],
-                                                    $companycourse->companyid,
-                                                    $companycourseeditorrole->id);
-                            } else {
-                                company_user::enrol($userid,
-                                                    [$companycourse->courseid],
-                                                    $companycourse->companyid,
-                                                    $companycoursenoneditorrole->id);
-                            }
-                        }
-                    }
-                    role_assign($companymanagerrole->id, $userid, $companycontext->id);
+
+                    // Fire the adhoc task to deal with their enrolments.
+                    $enroltask = new enroleducatortask();
+                    $enroltask->queue_task($userid, $companycourses, $managertype);
+
                     // External company managers don't go down the child company tree.
+                    role_assign($companymanagerrole->id, $userid, $companycontext->id);
                 }
             } else if ($managertype == 1) {
                 // Give them the company manager role.
@@ -1628,28 +1613,10 @@ class company {
 
                 // Deal with course permissions.
                 if (get_config('local_iomad', 'autoenrol_managers') && !empty($companycourses)) {
-                    foreach ($companycourses as $companycourse) {
-                        if ($DB->record_exists('course', ['id' => $companycourse->courseid])) {
-                            // If its a company created course then assign the editor role to the user.
-                            if ($DB->record_exists('local_iomad_company_created_courses',
-                                                    ['companyid' => $companyid,
-                                                     'courseid' => $companycourse->courseid])) {
-                                company_user::unenrol($userid,
-                                                      [$companycourse->courseid],
-                                                      $companycourse->companyid);
-                                company_user::enrol($userid,
-                                                    [$companycourse->courseid],
-                                                    $companycourse->companyid,
-                                                    $companycourseeditorrole->id);
 
-                            } else {
-                                 company_user::enrol($userid,
-                                                     [$companycourse->courseid],
-                                                     $companycourse->companyid,
-                                                     $companycoursenoneditorrole->id);
-                            }
-                        }
-                    }
+                    // Fire the adhoc task to deal with their enrolments.
+                    $enroltask = new enroleducatortask();
+                    $enroltask->queue_task($userid, $companycourses, $managertype);
                 }
 
                 $selectsql = "userid = :userid
@@ -1674,15 +1641,10 @@ class company {
 
                 // Deal with company course roles.
                 if (get_config('local_iomad', 'autoenrol_managers') && !empty($companycourses)) {
-                    foreach ($companycourses as $companycourse) {
-                        if ($DB->record_exists('course', ['id' => $companycourse->courseid])) {
-                            company_user::unenrol($userid, [$companycourse->courseid],
-                                                  $companycourse->companyid);
-                            company_user::enrol($userid, [$companycourse->courseid],
-                                                $companycourse->companyid,
-                                                $companycoursenoneditorrole->id);
-                        }
-                    }
+
+                    // Fire the adhoc task to deal with their enrolments.
+                    $enroltask = new enroleducatortask();
+                    $enroltask->queue_task($userid, $companycourses, $managertype);
                 }
 
                 // Make sure all department records in the company match this.
@@ -1740,28 +1702,10 @@ class company {
 
                     // Deal with course permissions.
                     if (get_config('local_iomad', 'autoenrol_managers') && !empty($companycourses)) {
-                        foreach ($companycourses as $companycourse) {
-                            if ($DB->record_exists('course', ['id' => $companycourse->courseid])) {
-                                // If its a company created course then assign the editor role to the user.
-                                if ($DB->record_exists('local_iomad_company_created_courses',
-                                                        ['companyid' => $companyid,
-                                                         'courseid' => $companycourse->courseid])) {
-                                    company_user::unenrol($userid,
-                                                          [$companycourse->courseid],
-                                                          $companycourse->companyid);
-                                    company_user::enrol($userid,
-                                                        [$companycourse->courseid],
-                                                        $companycourse->companyid,
-                                                        $companycourseeditorrole->id);
 
-                                } else {
-                                     company_user::enrol($userid,
-                                                         [$companycourse->courseid],
-                                                         $companycourse->companyid,
-                                                         $companycoursenoneditorrole->id);
-                                }
-                            }
-                        }
+                        // Fire the adhoc task to deal with their enrolments.
+                        $enroltask = new enroleducatortask();
+                        $enroltask->queue_task($userid, $companycourses, $managertype);
                     }
 
                     if ($user->managertype == 0) {
@@ -1787,17 +1731,10 @@ class company {
 
                     // Deal with company course roles.
                     if (get_config('local_iomad', 'autoenrol_managers') && !empty($companycourses)) {
-                        foreach ($companycourses as $companycourse) {
-                            if ($DB->record_exists('course', ['id' => $companycourse->courseid])) {
-                                company_user::unenrol($userid,
-                                                      [$companycourse->courseid],
-                                                      $companycourse->companyid);
-                                company_user::enrol($userid,
-                                                    [$companycourse->courseid],
-                                                    $companycourse->companyid,
-                                                    $companycoursenoneditorrole->id);
-                            }
-                        }
+
+                        // Fire the adhoc task to deal with their enrolments.
+                        $enroltask = new enroleducatortask();
+                        $enroltask->queue_task($userid, $companycourses, $managertype);
                     }
                     if ($user->managertype == 0) {
                         // Fire an email for this.
@@ -1812,43 +1749,16 @@ class company {
                 } else if ($managertype == 3 && !get_config('local_iomad', 'autoenrol_managers')) {
                     // Deal with company course roles.
                     if (get_config('local_iomad', 'autoenrol_managers') && !empty($companycourses)) {
-                        foreach ($companycourses as $companycourse) {
-                            if ($DB->record_exists('course', ['id' => $companycourse->courseid])) {
-                                if ($educator) {
-                                    // If its a company created course then assign the editor role to the user.
-                                    if ($DB->record_exists('local_iomad_company_created_courses',
-                                                            ['companyid' => $companyid,
-                                                                   'courseid' => $companycourse->courseid])) {
-                                        company_user::unenrol($userid,
-                                                              [$companycourse->courseid],
-                                                              $companycourse->companyid);
-                                        company_user::enrol($userid,
-                                                            [$companycourse->courseid],
-                                                            $companycourse->companyid,
-                                                            $companycourseeditorrole->id);
 
-                                    } else {
-                                         company_user::enrol($userid,
-                                                             [$companycourse->courseid],
-                                                             $companycourse->companyid,
-                                                             $companycoursenoneditorrole->id);
-                                    }
-                                } else {
-                                    if ($DB->record_exists('course', ['id' => $companycourse->courseid])) {
-                                        company_user::unenrol($userid,
-                                                              [$companycourse->courseid],
-                                                               $companycourse->companyid);
-                                    }
-                                }
-                            }
-                        }
+                        // Fire the adhoc task to deal with their enrolments.
+                        $enroltask = new enroleducatortask();
+                        $enroltask->queue_task($userid, $companycourses, $educator);
                     }
                 } else if ($managertype == 4 ) {
                     // Give them the company reporter role.
                     role_unassign($companymanagerrole->id, $userid, $companycontext->id);
                     role_unassign($departmentmanagerrole->id, $userid, $companycontext->id);
                     role_assign($companyreporterrole->id, $userid, $companycontext->id);
-
                 }
 
                 if ($managertype == 1 || $user->managertype == 1) {
@@ -1925,43 +1835,14 @@ class company {
                     $DB->set_field('local_iomad_company_users', 'managertype', 0, ['companyid' => $companyid, 'userid' => $userid]);
                 }
             }
-            if ($educator && $user->educator != 1 &&
-                 !get_config('local_iomad', 'autoenrol_managers') &&
-                 !empty($companycourses)) {
-                foreach ($companycourses as $companycourse) {
-                    if ($DB->record_exists('course', ['id' => $companycourse->courseid])) {
-                        // If its a company created course then assign the editor role to the user.
-                        if ($DB->record_exists('local_iomad_company_created_courses',
-                                                ['companyid' => $companyid,
-                                                       'courseid' => $companycourse->courseid])) {
-                            company_user::unenrol($userid,
-                                                  [$companycourse->courseid],
-                                                  $companycourse->companyid);
-                            company_user::enrol($userid,
-                                                [$companycourse->courseid],
-                                                $companycourse->companyid,
-                                                $companycourseeditorrole->id);
 
-                        } else {
-                             company_user::enrol($userid,
-                                                 [$companycourse->courseid],
-                                                 $companycourse->companyid,
-                                                 $companycoursenoneditorrole->id);
-                        }
-                    }
-                }
-            }
+            // Deal with any educator changes.
+            if (get_config('local_iomad', 'autoenrol_managers') &&
+                !empty($companycourses)) {
 
-            if (!$educator && $user->educator == 1 &&
-                 !get_config('local_iomad', 'autoenrol_managers') &&
-                 !empty($companycourses)) {
-                foreach ($companycourses as $companycourse) {
-                    if ($DB->record_exists('course', ['id' => $companycourse->courseid])) {
-                        company_user::unenrol($userid,
-                                              [$companycourse->courseid],
-                                              $companycourse->companyid);
-                    }
-                }
+                // Fire the adhoc task to deal with their enrolments.
+                $enroltask = new enroleducatortask();
+                $enroltask->queue_task($userid, $companycourses, $s['educator']);
             }
 
             // Are we updating the user record?
@@ -1983,10 +1864,13 @@ class company {
             'usertypename' => $managertypes[$managertype],
             'moved' => $move,
         ];
-        $event = company_user_assigned::create(['context' => $companycontext,
-                                                                                      'objectid' => $company->id,
-                                                                                      'userid' => $userid,
-                                                                                      'other' => $eventother]);
+        $event = company_user_assigned::create([
+            'context' => $companycontext,
+            'objectid' => $company->id,
+            'userid' => $userid,
+            'other' => $eventother,
+        ]);
+
         // Fire the event.
         $event->trigger();
 
