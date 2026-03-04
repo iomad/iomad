@@ -166,7 +166,10 @@ class user_roles_editable extends inplace_editable {
         }
 
         // Is the user already an educator?
-        $iseducator = $DB->get_records('local_iomad_company_users', ['userid' => $userid, 'companyid' => $companyid, 'educator' => 1]);
+        $iseducator = $DB->get_records(
+            'local_iomad_company_users',
+            ['userid' => $userid, 'companyid' => $companyid, 'educator' => 1]
+        );
         $canassigneducators = iomad::has_capability('block/iomad_company_admin:assign_educator', $companycontext);
 
         // Create the rest of the list.

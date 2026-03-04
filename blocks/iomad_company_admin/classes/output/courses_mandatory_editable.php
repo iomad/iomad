@@ -133,7 +133,9 @@ class courses_mandatory_editable extends inplace_editable {
         }
 
         // If this course isn't already in the company_course_options table, add it.
-        if (!$currentrec = $DB->get_record('local_iomad_company_course_options', ['companyid' => $companyid, 'courseid' => $courseid])) {
+        if (!$currentrec = $DB->get_record(
+            'local_iomad_company_course_options',
+            ['companyid' => $companyid, 'courseid' => $courseid])) {
             $currentrec = (object) ['companyid' => $companyid, 'courseid' => $courseid, 'mandatory' => 0];
             $currentrec->id = $DB->insert_record('local_iomad_company_course_options', $currentrec);
         }

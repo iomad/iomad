@@ -33,6 +33,7 @@ use local_iomad\forms\company_search_form;
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
 require_once($CFG->libdir . '/formslib.php');
+require_once($CFG->libdir.'/tablelib.php');
 
 $delete = optional_param('delete', 0, PARAM_INT);
 $confirm = optional_param('confirm', '', PARAM_ALPHANUM);
@@ -93,8 +94,6 @@ $returnurl = $baseurl;
 // Set up the page buttons.
 $buttons = "";
 if (iomad::has_capability('block/iomad_company_admin:classrooms_add', $companycontext)) {
-    //$linkurl = new moodle_url('/blocks/iomad_company_admin/classroom_edit_form.php');
-    //$linkurl = new moodle_url('#', ['data-action' => 'show-editclassroomform', 'data-companyid' => $companyid]);
     $buttons = html_writer::tag(
         'a',
         get_string('classrooms_add', 'block_iomad_company_admin'),

@@ -272,7 +272,9 @@ class company_users_licenses_form extends moodleform {
                 $mform->addHelpButton('allocate', 'programallocate', 'block_iomad_company_admin');
 
                 // Do we have any of these courses /license combo yet?
-                if ($DB->get_records('local_iomad_company_license_users', ['userid' => $this->userid, 'licenseid' => $this->licenseid])) {
+                if ($DB->get_records(
+                    'local_iomad_company_license_users',
+                    ['userid' => $this->userid, 'licenseid' => $this->licenseid])) {
                     $mform->addElement('hidden', 'inuse', true);
                     $mform->setType('inuse', PARAM_INT);
                     $programselect->setSelected(true);
@@ -582,9 +584,12 @@ class company_users_licenses_form extends moodleform {
                     foreach ($coursestounassign as $removecourse) {
                         if ($userlicenserecord = $DB->get_record('local_iomad_company_license_users',
                                                                  ['id' => $removecourse->id])) {
-                            $licenserecord = (array) $DB->get_record('local_iomad_company_licenses', ['id' => $userlicenserecord->licenseid]);
+                            $licenserecord = (array) $DB->get_record(
+                                'local_iomad_company_licenses',
+                                ['id' => $userlicenserecord->licenseid]
+                            );
                             if ($userlicenserecord->isusing == 0 || $licenserecord['type'] != 0) {
-					$DB->delete_records('local_iomad_company_license_users', ['id' => $userlicenserecord->id]);
+                                $DB->delete_records('local_iomad_company_license_users', ['id' => $userlicenserecord->id]);
 
                                 // Create an event.
                                 $eventother = [

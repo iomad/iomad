@@ -647,6 +647,7 @@ $string['missinglicensecourses'] = 'Missing courses for license';
 $string['missinglicenseduration'] = 'Missing license duration (this is required for a standard license)';
 $string['missinglicenseexpires'] = 'Missing license expires after';
 $string['missinglicensename'] = 'Missing license identifier';
+$string['missinglicenses'] = 'You have no available licenses';
 $string['missingroletemplatename'] = 'Missing the name for the role template';
 $string['missingshortnamedepartment'] = 'Missing department shortname';
 $string['missingstartdate'] = 'Missing license start date';

@@ -128,7 +128,9 @@ class courses_autoenrol_editable extends inplace_editable {
             throw new coding_exception('Course is not under IOMAD control');
         }
 
-        if (!$currentrec = $DB->get_record('local_iomad_company_course_options', ['companyid' => $companyid, 'courseid' => $courseid])) {
+        if (!$currentrec = $DB->get_record(
+            'local_iomad_company_course_options',
+            ['companyid' => $companyid, 'courseid' => $courseid])) {
             $currentrec = (object) ['companyid' => $companyid, 'courseid' => $courseid, 'autoenrol' => 0];
             $currentrec->id = $DB->insert_record('local_iomad_company_course_options', $currentrec);
         }

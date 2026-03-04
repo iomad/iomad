@@ -99,7 +99,11 @@ if (!$new) {
 
     // Deal with email templates.
     $companyrecord->templates = [];
-    if ($companytemplates = $DB->get_records('local_iomad_company_role_templates_ass', ['companyid' => $companyid], null, 'templateid')) {
+    if ($companytemplates = $DB->get_records(
+        'local_iomad_company_role_templates_ass',
+        ['companyid' => $companyid],
+        null,
+        'templateid')) {
         $companyrecord->templates = array_keys($companytemplates);
     }
 
@@ -134,7 +138,9 @@ if (!$new) {
 
             // Can this user manage this parentid?
             if (!iomad::has_capability('block/iomad_company_admin:company_add', $companycontext) &&
-                !$DB->get_record('local_iomad_company_users', ['companyid' => $parentid, 'userid' => $USER->id, 'managertype' => 1])) {
+                !$DB->get_record(
+                    'local_iomad_company_users',
+                    ['companyid' => $parentid, 'userid' => $USER->id, 'managertype' => 1])) {
                 // No.
                 throw new moodle_exception(
                     get_string('invalidcompany', 'block_iomad_company_admin'),
@@ -392,7 +398,11 @@ if (!empty($parentid)) {
 }
 
 // Get email template info.
-if ($companytemplates = $DB->get_records('local_iomad_company_role_templates_ass', ['companyid' => $companyid], null, 'templateid')) {
+if ($companytemplates = $DB->get_records(
+    'local_iomad_company_role_templates_ass',
+    ['companyid' => $companyid],
+    null,
+    'templateid')) {
     $companyrecord->templates = array_keys($companytemplates);
 }
 
@@ -613,7 +623,10 @@ if ($mform->is_cancelled()) {
         // Deal with an dashboard stuff.
         $DB->delete_records('local_iomad_company_pages', ['companyid' => $companyid, 'type' => 'dashboard']);
         if (!empty($data->dashboard)) {
-            $DB->insert_record('local_iomad_company_pages', ['companyid' => $companyid, 'pageid' => $data->dashboard, 'type' => 'dashboard']);
+            $DB->insert_record(
+                'local_iomad_company_pages',
+                ['companyid' => $companyid, 'pageid' => $data->dashboard, 'type' => 'dashboard']
+            );
         }
 
         // Is the current user in the company?

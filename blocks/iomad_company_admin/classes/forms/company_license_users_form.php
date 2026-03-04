@@ -584,14 +584,17 @@ class company_license_users_form extends moodleform {
                                                                     SQL_PARAMS_NAMED,
                                                                     'licuids');
                         $sqlparams['licenseid'] = $this->license->id;
-                        $userrecords = $userrecords + array_keys($DB->get_records_sql("SELECT id FROM {local_iomad_company_license_users}
-                                                                                       WHERE licenseid = :licenseid
-                                                                                       AND userid IN (
-                                                                                           SELECT userid
-                                                                                           FROM {local_iomad_company_license_users}
-                                                                                           WHERE id {$insql}
-                                                                                       )",
-                                                                                      $sqlparams));
+                        $userrecords = $userrecords + array_keys(
+                            $DB->get_records_sql(
+                                "SELECT id
+                                 FROM {local_iomad_company_license_users}
+                                 WHERE licenseid = :licenseid
+                                 AND userid IN (
+                                     SELECT userid
+                                     FROM {local_iomad_company_license_users}
+                                     WHERE id {$insql}
+                                 )",
+                                $sqlparams));
                     }
                     $licensestounassign = $userrecords;
                     if ($licenserecord['type'] == 1 || $licenserecord['type'] == 3) {
@@ -611,7 +614,12 @@ class company_license_users_form extends moodleform {
 
                 if (!empty($licensestounassign)) {
                     foreach ($licensestounassign as $unassignid) {
-                        $licensedata = $DB->get_record('local_iomad_company_license_users' , ['id' => $unassignid], '*', MUST_EXIST);
+                        $licensedata = $DB->get_record(
+                            'local_iomad_company_license_users',
+                            ['id' => $unassignid],
+                            '*',
+                            MUST_EXIST
+                        );
 
                         // Check the userid is valid.
                         if (!company::check_valid_user($this->selectedcompany, $licensedata->userid, $this->departmentid)) {
