@@ -174,6 +174,11 @@ class iomad_approve_access {
 
         // Then get the list of users I am responsible for.
         $myusers = company::get_my_users($companyid);
+        if (empty($myuserids)) {
+            return [];
+        }
+
+        // Return my list of users.
         [$insql, $sqlparams] = $DB->get_in_or_equal(
             array_keys($myusers),
             SQL_PARAMS_NAMED,
