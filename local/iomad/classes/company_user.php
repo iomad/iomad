@@ -1020,7 +1020,10 @@ class company_user {
      * @param integer $companyid
      * @return string
      */
-    public static function get_department_name(int $userid, int $companyid): string {
+    public static function get_department_name(int $userid,
+                                               int $companyid,
+                                               string $delimiter = ',',
+                                               bool $showsummary = false): string {
         global $DB;
 
         $userdepartments = $DB->get_records_sql(
@@ -1033,7 +1036,32 @@ class company_user {
             ['userid' => $userid,
              'companyid' => $companyid]);
 
-        return implode(',', array_keys($userdepartments));
+        // Set up the returned string.
+        $returnstr = "";
+        $count = count($userdepartments);
+        $current = 1;
+
+        // Are we showing this as a summary list?
+        if ($showsummary) {
+            if ($count > 5) {
+                $returnstr = "<details><summary>" . get_string('show') . "</summary>";
+            }
+        }
+
+        // Add the list of filtered department names with the delimiter.
+        foreach ($userdepartments as $department) {
+            $returnstr .= format_string($department->name);
+            if ($current < $count) {
+                $returnstr .= $delimiter;
+            }
+        }
+
+        // Conditionally add the summary close.
+        if ($showsummary && $count > 5) {
+            $returnstr .= "</details>";
+        }
+
+        return $returnstr;
     }
 
     /**

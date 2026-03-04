@@ -24,11 +24,13 @@
  */
 
 $string['approvecourse'] = "Approve training event";
+$string['approvetowaitlist'] = 'Approve and add to waiting list';
 $string['approveusers'] = 'Approve training events';
 $string['approveusers:addinstance'] = 'Add Approve training event instance';
 $string['approveusers:myaddinstance'] = 'Add Approve training event block to the page';
 $string['approveuserstitle'] = 'Manage access approvals';
 $string['deny'] = 'Decline';
+$string['denysuccessful'] = 'Approval request successfully declined';
 $string['enrolledcourse'] = "Enroled course";
 $string['fullybooked'] = "Event is full";
 $string['headerconfig'] = "Some header Config";
@@ -56,6 +58,7 @@ $string['privacy:metadata:block_iomad_approve_access:userid'] = 'User id';
 $string['request_denied'] = 'Request denied';
 $string['request_granted'] = 'Request granted';
 $string['request_raised'] = 'Request raised';
+$string['submitforapproval'] = 'Submit for final approval';
 $string['title'] = 'Approve users';
 $string['updatefailed'] = 'Approvaly request failed to update.';
 $string['updatesuccessful'] = 'Approval request updated successfully';
