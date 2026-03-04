@@ -593,7 +593,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026010600, 'local', 'iomad');
     }
 
-    if ($oldversion < 2026022345) {
+    if ($oldversion < 2026022300) {
 
         // Department table structure changes.
         mtrace("Restructuring department table");
@@ -1380,8 +1380,6 @@ function xmldb_local_iomad_upgrade($oldversion) {
 
         // Launch rename field courseid.
         $dbman->rename_field($table, $field, 'courseid');
-
-
 
         // Define key fk_licensecourseid (foreign) to be added to companylicense_users.
         $key = new xmldb_key(
@@ -3133,7 +3131,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
         }
 
         // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2026022345, 'local', 'iomad');
+        upgrade_plugin_savepoint(true, 2026022300, 'local', 'iomad');
     }
 
     return $result;
