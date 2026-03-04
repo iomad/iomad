@@ -25,10 +25,7 @@
 
 namespace block_iomad_company_admin\tables;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir.'/tablelib.php');
-
+use core\output\notification;
 use html_writer;
 use local_iomad\iomad;
 use moodle_url;
@@ -192,5 +189,27 @@ class teaching_locations_table extends table_sql {
         }
 
         return $editbutton . "&nbsp" . $deletebutton;
+    }
+
+    /**
+     * Override print_nothing_to_display to ensure that column headers are always added.
+     */
+    public function print_nothing_to_display() {
+        global $CFG, $companycontext, $OUTPUT;
+
+        $this->start_html();
+        $this->print_headers();
+        echo html_writer::end_tag('table');
+        echo html_writer::end_tag('div');
+        $this->wrap_html_finish();
+
+        $notificationmsg = get_string('nolocations', 'block_iomad_company_admin');
+        $notificationtype = notification::NOTIFY_INFO;
+
+        $notification = (new notification($notificationmsg, $notificationtype, false))
+            ->set_extra_classes(['mt-3']);
+        echo $OUTPUT->render($notification);
+
+        echo $this->get_dynamic_table_html_end();
     }
 }

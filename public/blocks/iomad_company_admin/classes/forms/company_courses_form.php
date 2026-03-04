@@ -206,8 +206,11 @@ class company_courses_form extends moodleform {
                     if ($DB->get_record_sql("SELECT id FROM {local_iomad_courses}
                                              WHERE courseid=$addcourse->id
                                              AND shared <> 0")) {
-                        if ($companycourserecord = $DB->get_record('local_iomad_company_courses', ['companyid' => $this->selectedcompany,
-                                                                                      'courseid' => $addcourse->id])) {
+                        if ($companycourserecord = $DB->get_record('
+                        local_iomad_company_courses', [
+                            'companyid' => $this->selectedcompany,
+                            'courseid' => $addcourse->id,
+                        ])) {
                             // Already assigned to the company so we are just moving it within it.
                             $companycourserecord->departmentid = $this->departmentid;
                             $DB->update_record('local_iomad_company_courses', $companycourserecord);

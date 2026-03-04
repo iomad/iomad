@@ -328,7 +328,10 @@ class user_edit_form extends moodleform {
                     $usedcount = $mylicensedetails->used;
                     // Is this a program license?
                     if (!empty($mylicense->program) && !empty($usedcount)) {
-                        $licensecourses = $DB->count_records('local_iomad_company_license_courses', ['licenseid' => $this->licenseid]);
+                        $licensecourses = $DB->count_records(
+                            'local_iomad_company_license_courses',
+                            ['licenseid' => $this->licenseid]
+                        );
                         if (!empty($licensecourses)) {
                             $usedcount = $usedcount / $licensecourses;
                         } else {
@@ -487,7 +490,9 @@ class user_edit_form extends moodleform {
         // Validate email.
         if ($existingusers = $DB->get_records('user', ['email' => $usernew->email, 'mnethostid' => $CFG->mnet_localhost_id])) {
             foreach ($existingusers as $existinguser) {
-                if ($DB->record_exists('local_iomad_company_users', ['userid' => $existinguser->id, 'companyid' => $this->company->id])) {
+                if ($DB->record_exists(
+                    'local_iomad_company_users',
+                    ['userid' => $existinguser->id, 'companyid' => $this->company->id])) {
                     if (empty($CFG->allowaccountssameemail)) {
                         $errors['email'] = get_string('emailexists');
                         break;

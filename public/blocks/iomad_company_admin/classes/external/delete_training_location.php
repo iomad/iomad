@@ -54,7 +54,7 @@ class delete_training_location extends external_api {
      */
     public static function execute($companyid, $classroomid) {
         global $CFG, $DB;
-        
+
         // Parameter validation.
         [
             'companyid' => $companyid,

@@ -295,14 +295,24 @@ $companyrecords = $DB->get_fieldset_select('local_iomad_companies', 'id', $sqlse
 if (!empty($params['showchild']) && !empty($params['name'])) {
     foreach ($companyrecords as $companyrecord) {
         $sqlsearch1 = " parentid = :companyrecord";
-        $companyrecords1 = $DB->get_fieldset_select('local_iomad_companies', 'id', $sqlsearch1, ['companyrecord' => $companyrecord]);
+        $companyrecords1 = $DB->get_fieldset_select(
+            'local_iomad_companies',
+            'id',
+            $sqlsearch1,
+            ['companyrecord' => $companyrecord]
+        );
         foreach ($companyrecords1 as $companyrecord1) {
             array_push($companyrecords, $companyrecord1);
         }
     }
     foreach ($companyrecords as $companyrecord) {
         $sqlsearch1 = " id = :companyrecord AND parentid  <> 0";
-        $companyrecords1 = $DB->get_fieldset_select('local_iomad_companies', 'parentid', $sqlsearch1, ['companyrecord' => $companyrecord]);
+        $companyrecords1 = $DB->get_fieldset_select(
+            'local_iomad_companies',
+            'parentid',
+            $sqlsearch1,
+            ['companyrecord' => $companyrecord]
+        );
         foreach ($companyrecords1 as $companyrecord1) {
             array_push($companyrecords, $companyrecord1);
         }
@@ -480,7 +490,9 @@ if ($companies) {
         // Can we add child companies?
         if (iomad::has_capability('block/iomad_company_admin:company_add_child', $context) &&
             (iomad::has_capability('block/iomad_company_admin:company_add', $context) ||
-             $DB->get_records('local_iomad_company_users', ['companyid' => $company->id, 'userid' => $USER->id, 'managertype' => 1]))) {
+             $DB->get_records(
+                'local_iomad_company_users',
+                ['companyid' => $company->id, 'userid' => $USER->id, 'managertype' => 1]))) {
             $childurl = new moodle_url(
                 $CFG->wwwroot . "/blocks/iomad_company_admin/company_edit_form.php",
                 ['createnew' => 1, 'parentid' => $company->id]

@@ -54,7 +54,7 @@ class delete_company_group extends external_api {
      */
     public static function execute($companyid, $courseid, $groupid) {
         global $DB;
-        
+
         // Parameter validation.
         [
             'companyid' => $companyid,

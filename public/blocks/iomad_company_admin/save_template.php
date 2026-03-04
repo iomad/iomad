@@ -76,7 +76,12 @@ if ($mform->is_cancelled()) {
 
     // Save the template.
     $templateid = $DB->insert_record('local_iomad_company_role_templates', ['name' => $data->name]);
-    $restrictions = $DB->get_records('local_iomad_company_role_restrictions', ['companyid' => $companyid], null, 'id, roleid, capability');
+    $restrictions = $DB->get_records(
+        'local_iomad_company_role_restrictions',
+        ['companyid' => $companyid],
+        null,
+        'id, roleid, capability'
+    );
     foreach ($restrictions as $restriction) {
         $DB->insert_record('local_iomad_company_role_templates_caps', [
             'templateid' => $templateid,

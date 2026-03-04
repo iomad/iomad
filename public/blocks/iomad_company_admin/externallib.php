@@ -452,7 +452,13 @@ It could very slow or timeout. The function is designed to search some specific 
             }
         }
 
-        $companies = $DB->get_records_select('local_iomad_companies', $sql, $sqlparams, 'id ASC', '*,isterminated AS companyterminated');
+        $companies = $DB->get_records_select(
+            'local_iomad_companies',
+            $sql,
+            $sqlparams,
+            'id ASC',
+            '*,isterminated AS companyterminated'
+        );
 
         return ['companies' => $companies, 'warnings' => $warnings];
     }
@@ -815,7 +821,13 @@ It could very slow or timeout. The function is designed to search some specific 
             }
         }
 
-        $departments = $DB->get_records_select('local_iomad_company_departments', $sql, $sqlparams, 'id ASC', '*,companyid AS company, parentid AS parent');
+        $departments = $DB->get_records_select(
+            'local_iomad_company_departments',
+            $sql,
+            $sqlparams,
+            'id ASC',
+            '*,companyid AS company, parentid AS parent'
+        );
 
         return ['departments' => $departments, 'warnings' => $warnings];
     }
@@ -2698,7 +2710,10 @@ It could very slow or timeout. The function is designed to search some specific 
                     'instant' => true,
                 ];
                 $licenseid = $DB->insert_record('local_iomad_company_licenses', $licenserec);
-                $DB->insert_record('local_iomad_company_license_courses', ['licenseid' => $licenseid, 'courseid' => $enrolment['courseid']]);
+                $DB->insert_record(
+                    'local_iomad_company_license_courses',
+                    ['licenseid' => $licenseid, 'courseid' => $enrolment['courseid']]
+                );
 
                 // Fire the license create event.
                 $eventother = [

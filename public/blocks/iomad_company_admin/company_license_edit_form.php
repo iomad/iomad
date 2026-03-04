@@ -117,7 +117,11 @@ if ($licenseinfo = $DB->get_record('local_iomad_company_licenses', ['id' => $lic
     // Are we splitting a current license?
     if (!empty($parentid)) {
         // Get the courses from that.
-        if ($currentcourses = $DB->get_records('local_iomad_company_license_courses', ['licenseid' => $parentid], null, 'courseid')) {
+        if ($currentcourses = $DB->get_records(
+            'local_iomad_company_license_courses',
+            ['licenseid' => $parentid],
+            null,
+            'courseid')) {
             foreach ($currentcourses as $currentcourse) {
                 $licenseinfo->licensecourses[] = $currentcourse->courseid;
             }
@@ -203,7 +207,10 @@ if ( $mform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL) ) {
         if (!empty($data->licensecourses)) {
             // Add the course license allocations.
             foreach ($data->licensecourses as $selectedcourse) {
-                $DB->insert_record('local_iomad_company_license_courses', ['licenseid' => $licenseid, 'courseid' => $selectedcourse]);
+                $DB->insert_record(
+                    'local_iomad_company_license_courses',
+                    ['licenseid' => $licenseid, 'courseid' => $selectedcourse]
+                );
             }
         }
 

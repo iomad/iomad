@@ -42,6 +42,7 @@ use block_iomad_company_admin\output\{
     courses_warnnotstarted_editable,
     enrolment_expireafter_editable};
 use context_system;
+use core\output\notification;
 use html_writer;
 use local_iomad\iomad;
 use moodle_url;
@@ -632,7 +633,10 @@ class iomad_courses_table extends table_sql {
             $companycreatedcourse = false;
             // If it's not a license course and it's in the company_created_courses table - then we can do more things with it.
             if (($row->licensed == 0 || $row->licensed = 3) &&
-                $DB->get_record('local_iomad_company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
+                $DB->get_record(
+                    'local_iomad_company_created_courses',
+                    ['companyid' => $company->id, 'courseid' => $row->courseid]
+                )) {
                 $companycreatedcourse = true;
             }
             // Is this a course the company could fully manage?
@@ -801,5 +805,36 @@ class iomad_courses_table extends table_sql {
         }
 
         return $actionsoutput;
+    }
+
+    /**
+     * Override print_nothing_to_display to ensure that column headers are always added.
+     */
+    public function print_nothing_to_display() {
+        global $CFG, $companycontext, $OUTPUT;
+
+        $this->start_html();
+        $this->print_headers();
+        echo html_writer::end_tag('table');
+        echo html_writer::end_tag('div');
+        $this->wrap_html_finish();
+
+        $notificationmsg = get_string('nocourses', 'block_iomad_company_admin');
+        $notificationtype = notification::NOTIFY_INFO;
+
+        $notification = (new notification($notificationmsg, $notificationtype, false))
+            ->set_extra_classes(['mt-3']);
+        echo $OUTPUT->render($notification);
+
+        echo $this->get_dynamic_table_html_end();
+
+        // Set up the add new user button.
+        if (iomad::has_capability('block/iomad_company_admin:user_create', $companycontext)) {
+            // Add the button to add a user.
+            echo $OUTPUT->single_button(
+                new moodle_url(
+                    $CFG->wwwroot . '/blocks/iomad_company_admin/company_course_create_form.php'),
+                    get_string('createcourse', 'block_iomad_company_admin'));
+        }
     }
 }

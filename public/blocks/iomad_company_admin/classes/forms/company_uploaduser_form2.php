@@ -288,7 +288,10 @@ class company_uploaduser_form2 extends company_moodleform {
                     $usedcount = $mylicensedetails->used;
                     // Is this a program license?
                     if (!empty($mylicense->program) && !empty($usedcount)) {
-                        $licensecourses = $DB->count_records('local_iomad_company_license_courses', ['licenseid' => $this->licenseid]);
+                        $licensecourses = $DB->count_records(
+                            'local_iomad_company_license_courses',
+                            ['licenseid' => $this->licenseid]
+                        );
                         if (!empty($licensecourses)) {
                             $usedcount = $usedcount / $licensecourses;
                         } else {

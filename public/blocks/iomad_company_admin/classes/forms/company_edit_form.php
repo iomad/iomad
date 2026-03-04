@@ -934,7 +934,8 @@ class company_edit_form extends company_moodleform {
             }
         }
 
-        if (!empty($data['hostname']) && $foundcompanies = $DB->get_records('local_iomad_companies', ['hostname' => $data['hostname']])) {
+        if (!empty($data['hostname']) &&
+            $foundcompanies = $DB->get_records('local_iomad_companies', ['hostname' => $data['hostname']])) {
             if (!empty($this->companyid)) {
                 unset($foundcompanies[$this->companyid]);
             }
