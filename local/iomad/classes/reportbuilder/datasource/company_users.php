@@ -45,32 +45,32 @@ class company_users extends datasource {
      * Initialise report
      */
     protected function initialise(): void {
-        $companyentity = new company();
-        $companyalias = $companyentity->get_table_alias('local_iomad_companies');
-
-        $this->set_main_table('local_iomad_companies', $companyalias);
-
-        $this->add_entity($companyentity);
-
-        // Get the tables and aliases.
         $companyusersentity = new companyusers();
         $companyusersalias = $companyusersentity->get_table_alias('local_iomad_company_users');
+
+        $this->set_main_table('local_iomad_company_users', $companyusersalias);
+
+        $this->add_entity($companyusersentity);
+
+        // Get the tables and aliases.
+        $companyentity = new company();
+        $companyalias = $companyentity->get_table_alias('local_iomad_companies');
         $departmententity = new department();
         $departmentalias = $departmententity->get_table_alias('local_iomad_company_departments');
         $userentity = new user();
         $useralias = $userentity->get_table_alias('user');
 
-        $this->add_entity($companyusersentity
-            ->add_join("JOIN {local_iomad_company_users} {$companyusersalias}
-                ON ({$companyusersalias}.companyid = {$companyalias}.id
-                    AND {$departmentalias}.id = {$companyusersalias}.departmentid)")
+        $this->add_entity($companyentity
+            ->add_join("JOIN {local_iomad_companies} {$companyalias}
+                ON {$companyusersalias}.companyid = {$companyalias}.id")
         );
 
         // Join the department entity to the company entity.
 
         $this->add_entity($departmententity
             ->add_join("JOIN {local_iomad_company_departments} {$departmentalias}
-                ON {$departmentalias}.company = {$companyalias}.id")
+                ON ({$departmentalias}.companyid = {$companyalias}.id
+                    AND {$companyusersalias}.departmentid = {$departmentalias}.id)")
         );
 
         // Join the user entity to the company issued entity.

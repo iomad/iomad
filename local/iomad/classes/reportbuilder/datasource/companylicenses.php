@@ -54,7 +54,7 @@ class companylicenses extends datasource {
 
         // Get the tables and aliases.
         $companylicenseentity = new companylicense();
-        $companylicensealias = $companylicenseentity->get_table_alias('companylicense');
+        $companylicensealias = $companylicenseentity->get_table_alias('local_iomad_company_licenses');
 
         $this->add_entity($companylicenseentity
             ->add_join("JOIN {local_iomad_company_licenses} {$companylicensealias}
@@ -72,16 +72,16 @@ class companylicenses extends datasource {
      */
     public function get_default_columns(): array {
         return [
-            'company:name',
-            'companylicense:name',
-            'companylicense:reference',
-            'companylicense:startdate',
-            'companylicense:expirydate',
-            'companylicense:humanallocation',
-            'companylicense:used',
-            'companylicense:program',
-            'companylicense:type',
-            'companylicense:cutoffdate',
+            'local_iomad_companies:name',
+            'local_iomad_company_licenses:name',
+            'local_iomad_company_licenses:reference',
+            'local_iomad_company_licenses:startdate',
+            'local_iomad_company_licenses:expirydate',
+            'local_iomad_company_licenses:humanallocation',
+            'local_iomad_company_licenses:used',
+            'local_iomad_company_licenses:program',
+            'local_iomad_company_licenses:type',
+            'local_iomad_company_licenses:cutoffdate',
         ];
     }
 
@@ -92,16 +92,16 @@ class companylicenses extends datasource {
      */
     public function get_default_filters(): array {
         return [
-            'company:name',
-            'companylicense:name',
-            'companylicense:reference',
-            'companylicense:startdate',
-            'companylicense:expirydate',
-            'companylicense:humanallocation',
-            'companylicense:used',
-            'companylicense:program',
-            'companylicense:type',
-            'companylicense:cutoffdate',
+            'local_iomad_companies:name',
+            'local_iomad_company_licenses:name',
+            'local_iomad_company_licenses:reference',
+            'local_iomad_company_licenses:startdate',
+            'local_iomad_company_licenses:expirydate',
+            'local_iomad_company_licenses:humanallocation',
+            'local_iomad_company_licenses:used',
+            'local_iomad_company_licenses:program',
+            'local_iomad_company_licenses:type',
+            'local_iomad_company_licenses:cutoffdate',
         ];
     }
 
@@ -112,16 +112,16 @@ class companylicenses extends datasource {
      */
     public function get_default_conditions(): array {
         return [
-            'company:name',
-            'companylicense:name',
-            'companylicense:reference',
-            'companylicense:startdate',
-            'companylicense:expirydate',
-            'companylicense:humanallocation',
-            'companylicense:used',
-            'companylicense:program',
-            'companylicense:type',
-            'companylicense:cutoffdate',
+            'local_iomad_companies:name',
+            'local_iomad_company_licenses:name',
+            'local_iomad_company_licenses:reference',
+            'local_iomad_company_licenses:startdate',
+            'local_iomad_company_licenses:expirydate',
+            'local_iomad_company_licenses:humanallocation',
+            'local_iomad_company_licenses:used',
+            'local_iomad_company_licenses:program',
+            'local_iomad_company_licenses:type',
+            'local_iomad_company_licenses:cutoffdate',
         ];
     }
 
@@ -132,16 +132,16 @@ class companylicenses extends datasource {
      */
     public function get_default_column_sorting(): array {
         return [
-            'company:name' => SORT_ASC,
-            'companylicense:name' => SORT_ASC,
-            'companylicense:reference' => SORT_ASC,
-            'companylicense:startdate' => SORT_ASC,
-            'companylicense:expirydate' => SORT_ASC,
-            'companylicense:humanallocation' => SORT_ASC,
-            'companylicense:used' => SORT_ASC,
-            'companylicense:program' => SORT_ASC,
-            'companylicense:type' => SORT_ASC,
-            'companylicense:cutoffdate' => SORT_ASC,
+            'local_iomad_companies:name' => SORT_ASC,
+            'local_iomad_company_licenses:name' => SORT_ASC,
+            'local_iomad_company_licenses:reference' => SORT_ASC,
+            'local_iomad_company_licenses:startdate' => SORT_ASC,
+            'local_iomad_company_licenses:expirydate' => SORT_ASC,
+            'local_iomad_company_licenses:humanallocation' => SORT_ASC,
+            'local_iomad_company_licenses:used' => SORT_ASC,
+            'local_iomad_company_licenses:program' => SORT_ASC,
+            'local_iomad_company_licenses:type' => SORT_ASC,
+            'local_iomad_company_licenses:cutoffdate' => SORT_ASC,
         ];
     }
 }

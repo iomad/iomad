@@ -53,7 +53,7 @@ class companyusers extends base {
      */
     protected function get_default_tables(): array {
         return [
-            'companyusers',
+            'local_iomad_company_users',
             'context',
         ];
     }
@@ -97,7 +97,7 @@ class companyusers extends base {
     protected function get_all_columns(): array {
         global $DB;
 
-        $companyusersalias = $this->get_table_alias('companyusers');
+        $companyusersalias = $this->get_table_alias('local_iomad_company_users');
         $contextalias = $this->get_table_alias('context');
 
         // Companyid.
@@ -164,7 +164,7 @@ class companyusers extends base {
      * @return filter[]
      */
     protected function get_all_filters(): array {
-        $companyusersalias = $this->get_table_alias('companyusers');
+        $companyusersalias = $this->get_table_alias('local_iomad_company_users');
 
         return [];
     }

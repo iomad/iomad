@@ -53,7 +53,7 @@ class company extends base {
      */
     protected function get_default_tables(): array {
         return [
-            'company',
+            'local_iomad_companies',
             'context',
         ];
     }

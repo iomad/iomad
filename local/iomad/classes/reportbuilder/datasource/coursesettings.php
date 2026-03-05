@@ -46,7 +46,7 @@ class coursesettings extends datasource {
      */
     protected function initialise(): void {
         $iomadcoursesentity = new iomadcourses();
-        $iomadcoursesalias = $iomadcoursesentity->get_table_alias('iomadcourses');
+        $iomadcoursesalias = $iomadcoursesentity->get_table_alias('local_iomad_courses');
 
         $this->set_main_table('local_iomad_courses', $iomadcoursesalias);
 
@@ -76,13 +76,13 @@ class coursesettings extends datasource {
         return [
             'course:fullname',
             'course:visible',
-            'iomadcourses:licensed',
-            'iomadcourses:shared',
-            'iomadcourses:validlength',
-            'iomadcourses:warnexpire',
-            'iomadcourses:expireafter',
-            'iomadcourses:warncompletion',
-            'iomadcourses:hasgrade',
+            'local_iomad_courses:licensed',
+            'local_iomad_courses:shared',
+            'local_iomad_courses:validlength',
+            'local_iomad_courses:warnexpire',
+            'local_iomad_courses:expireafter',
+            'local_iomad_courses:warncompletion',
+            'local_iomad_courses:hasgrade',
         ];
     }
 
@@ -95,13 +95,13 @@ class coursesettings extends datasource {
         return [
             'course:fullname',
             'course:visible',
-            'iomadcourses:licensed',
-            'iomadcourses:shared',
-            'iomadcourses:validlength',
-            'iomadcourses:warnexpire',
-            'iomadcourses:expireafter',
-            'iomadcourses:warncompletion',
-            'iomadcourses:hasgrade',
+            'local_iomad_courses:licensed',
+            'local_iomad_courses:shared',
+            'local_iomad_courses:validlength',
+            'local_iomad_courses:warnexpire',
+            'local_iomad_courses:expireafter',
+            'local_iomad_courses:warncompletion',
+            'local_iomad_courses:hasgrade',
         ];
     }
 
@@ -114,13 +114,13 @@ class coursesettings extends datasource {
         return [
             'course:fullname',
             'course:visible',
-            'iomadcourses:licensed',
-            'iomadcourses:shared',
-            'iomadcourses:validlength',
-            'iomadcourses:warnexpire',
-            'iomadcourses:expireafter',
-            'iomadcourses:warncompletion',
-            'iomadcourses:hasgrade',
+            'local_iomad_courses:licensed',
+            'local_iomad_courses:shared',
+            'local_iomad_courses:validlength',
+            'local_iomad_courses:warnexpire',
+            'local_iomad_courses:expireafter',
+            'local_iomad_courses:warncompletion',
+            'local_iomad_courses:hasgrade',
         ];
     }
 
@@ -133,13 +133,13 @@ class coursesettings extends datasource {
         return [
             'course:fullname' => SORT_ASC,
             'course:visible' => SORT_ASC,
-            'iomadcourses:licensed' => SORT_ASC,
-            'iomadcourses:shared' => SORT_ASC,
-            'iomadcourses:validlength' => SORT_ASC,
-            'iomadcourses:warnexpire' => SORT_ASC,
-            'iomadcourses:expireafter' => SORT_ASC,
-            'iomadcourses:warncompletion' => SORT_ASC,
-            'iomadcourses:hasgrade' => SORT_ASC,
+            'local_iomad_courses:licensed' => SORT_ASC,
+            'local_iomad_courses:shared' => SORT_ASC,
+            'local_iomad_courses:validlength' => SORT_ASC,
+            'local_iomad_courses:warnexpire' => SORT_ASC,
+            'local_iomad_courses:expireafter' => SORT_ASC,
+            'local_iomad_courses:warncompletion' => SORT_ASC,
+            'local_iomad_courses:hasgrade' => SORT_ASC,
         ];
     }
 }
