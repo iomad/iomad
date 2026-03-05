@@ -31,6 +31,8 @@ $capabilities = [
             'manager' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
             'student' => CAP_ALLOW,
         ],
     ],
@@ -42,6 +44,8 @@ $capabilities = [
             'editingteacher' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'student' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
         ],
     ],
 ];
