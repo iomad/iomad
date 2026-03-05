@@ -25,12 +25,11 @@
 
 namespace local_report_completion\tables;
 
-use context_course;
-use context_system;
 use context_user;
 use completion_info;
+use core\output\notification;
 use html_writer;
-use local_iomad\iomad;
+use local_iomad\{company_user, iomad};
 use moodle_url;
 use table_sql;
 
@@ -83,39 +82,12 @@ class user_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_department($row) {
-        global $CFG, $DB;
 
-        $userdepartments = $DB->get_records_sql(
-            "SELECT d.*
-             FROM {local_iomad_company_departments} d
-             JOIN {local_iomad_company_users} cu ON (d.id = cu.departmentid)
-             WHERE cu.userid = :userid
-             AND cu.companyid = :companyid",
-            ['userid' => $row->userid,
-             'companyid' => $row->companyid]);
-        $returnstr = "";
-
-        // Add a summary tag.
-        $count = count($userdepartments);
-        if ($count > 5) {
-            $returnstr = html_writer::start_tag('details') .
-                         html_writer::tag('summary', get_string('show'));
+        if ($this->is_downloading()) {
+            return company_user::get_department_name($row->userid, $row->companyid, "/n/r");
+        } else {
+            return company_user::get_department_name($row->userid, $row->companyid, ',<br>', true);
         }
-
-        // Stash the names somewhere.
-        $departments = [];
-        foreach ($userdepartments as $department) {
-            $departments[] = format_string($department->name);
-        }
-
-        $returnstr .= implode(',<br>', $departments);
-
-        // Close the summary tag.
-        if ($count > 5) {
-            $returnstr .= html_writer::end_tag('details');
-        }
-
-        return $returnstr;
     }
 
     /**
@@ -124,34 +96,12 @@ class user_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_company($row) {
-        global $DB;
-        $companies = $DB->get_records_sql("SELECT DISTINCT c.name FROM {local_iomad_companies} c
-                                           JOIN {local_iomad_company_users} cu ON (c.id = cu.companyid)
-                                           WHERE cu.userid = :userid",
-                                           ['userid' => $row->userid]);
-        $returnstr = "";
 
-        // Add a summary tag.
-        $count = count($companies);
-        if ($count > 5) {
-            $returnstr = html_writer::start_tag('details') .
-                         html_writer::tag('summary', get_string('show'));
+        if ($this->is_downloading()) {
+            return company_user::get_company_name($row->userid, "/n/r");
+        } else {
+            return company_user::get_company_name($row->userid, ',<br>', true);
         }
-
-        // Stash the names somewhere.
-        $companylist = [];
-        foreach ($companies as $company) {
-            $companylist[] = format_string($company->name);
-        }
-
-        $returnstr .= implode(',<br>', $companylist);
-
-        // Close the summary tag.
-        if ($count > 5) {
-            $returnstr .= html_writer::end_tag('details');
-        }
-
-        return $returnstr;
     }
 
     /**
@@ -160,7 +110,7 @@ class user_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_licenseallocated($row) {
-        global $CFG, $USER, $output;
+        global $USER, $output;
 
         if ($this->is_downloading() || empty($USER->editing)) {
             if (!empty($row->licenseallocated)) {
@@ -185,7 +135,7 @@ class user_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_timeenrolled($row) {
-        global $CFG, $USER, $output;
+        global $USER, $output;
 
         if ($this->is_downloading() || empty($USER->editing)) {
             if (!empty($row->timeenrolled)) {
@@ -209,7 +159,7 @@ class user_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_timecompleted($row) {
-        global $CFG, $USER, $output;
+        global $USER, $output;
 
         if ($this->is_downloading() || empty($USER->editing)) {
             if (!empty($row->timecompleted)) {
@@ -233,7 +183,6 @@ class user_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_timeexpires($row) {
-        global $CFG, $DB;
 
         if (empty($row->timecompleted)) {
             return;
@@ -252,7 +201,7 @@ class user_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_finalscore($row) {
-        global $CFG, $DB, $USER;
+        global $DB, $USER;
 
         if ($DB->get_record('local_iomad_courses', ['courseid' => $row->courseid, 'hasgrade' => 1])) {
             if ($this->is_downloading() || empty($USER->editing)) {
@@ -523,7 +472,7 @@ class user_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_modifiedtime($row) {
-        global $DB, $CFG;
+
         return userdate($row->modifiedtime, get_config('local_iomad', 'date_format'));
     }
 
@@ -533,23 +482,20 @@ class user_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_status($row) {
-        global $DB, $CFG;
+        global $DB;
 
         $tooltip = "";
         $course = $DB->get_record('course', ['id' => $row->courseid]);
         $info = new completion_info($course);
         $completions = $info->get_completions($row->userid);
         $showgrade = true;
-        if ($iomadcourse = $DB->get_record('local_iomad_courses', ['courseid' => $row->courseid, 'hasgrade' => 0])) {
+        if ($DB->record_exists('local_iomad_courses', ['courseid' => $row->courseid, 'hasgrade' => 0])) {
             $showgrade = false;
         }
 
         // Generate markup for criteria statuses.
         $totalcount = 0;
         $completed = 0;
-
-        // Flag to set if current completion data is inconsistent with what is stored in the database.
-        $pendingupdate = false;
 
         // Loop through course criteria.
         foreach ($completions as $completion) {
@@ -623,13 +569,27 @@ class user_table extends table_sql {
                 if (!empty($row->licenseid)) {
                     if ($DB->get_record('local_iomad_company_license_users',
                                         ['licenseid' => $row->licenseid,
-                                              'userid' => $row->userid,
-                                              'courseid' => $row->courseid,
-                                              'issuedate' => $row->licenseallocated])) {
+                                         'userid' => $row->userid,
+                                         'courseid' => $row->courseid,
+                                         'issuedate' => $row->licenseallocated])) {
                         if (!$this->is_downloading()) {
-                            return '<div class="progress" style="height:20px" data-html="true" title="'.nl2br($tooltip).'">
-                                    <div class="progress-bar" style="width:0%;height:20px">0%</div>
-                                    </div>';
+                            return html_writer::tag(
+                                'div',
+                                html_writer::tag(
+                                    'div',
+                                    '0%',
+                                    [
+                                        'class' => 'progress-bar',
+                                        'style' => 'width:0%;height:20px',
+                                    ]
+                                ),
+                                [
+                                    'class' => 'progress',
+                                    'style' => 'height:20px;',
+                                    'data-html' => 'true',
+                                    'title' => nl2br($tooltip),
+                                ]
+                            );
                         } else {
                             return get_string('completion-alt-auto-y', 'completion', "0%");
                         }
@@ -638,9 +598,23 @@ class user_table extends table_sql {
                     }
                 } else {
                     if (!$this->is_downloading()) {
-                        return '<div class="progress" style="height:20px" data-html="true" title="'.$tooltip.'">
-                                <div class="progress-bar" style="width:0%;height:20px">0%</div>
-                                </div>';
+                        return html_writer::tag(
+                            'div',
+                            html_writer::tag(
+                                'div',
+                                '0%',
+                                [
+                                    'class' => 'progress-bar',
+                                    'style' => 'width:0%;height:20px',
+                                ]
+                            ),
+                            [
+                                'class' => 'progress',
+                                'style' => 'height:20px;',
+                                'data-html' => 'true',
+                                'title' => $tooltip,
+                            ]
+                        );
                     } else {
                         return get_string('completion-alt-auto-y', 'completion', "0%");
                     }
@@ -658,9 +632,23 @@ class user_table extends table_sql {
             }
 
             if (!$this->is_downloading()) {
-                return '<div class="progress" style="height:20px" data-html="true" title="'.$tooltip.'">
-                        <div class="progress-bar" style="width:' . $progress . '%;height:20px">' . $progress . '%</div>
-                        </div>';
+                        return html_writer::tag(
+                            'div',
+                            html_writer::tag(
+                                'div',
+                                $progress . '%',
+                                [
+                                    'class' => 'progress-bar',
+                                    'style' => 'width:' . $progress . '%;height:20px',
+                                ]
+                            ),
+                            [
+                                'class' => 'progress',
+                                'style' => 'height:20px;',
+                                'data-html' => 'true',
+                                'title' => $tooltip,
+                            ]
+                        );
             } else {
                 return get_string('completion-alt-auto-y', 'completion', "$progress%");
             }
@@ -673,7 +661,7 @@ class user_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_licensename($row) {
-        global $DB, $departmentid, $companycontext;
+        global $departmentid, $companycontext;
 
         if ($this->is_downloading() ||
             !iomad::has_capability('local/report_user_license_allocations:view', $companycontext)) {
@@ -705,7 +693,7 @@ class user_table extends table_sql {
      * build_table which calls this method.
      */
     public function other_cols($column, $row) {
-        global $CFG, $DB;
+        global $DB;
 
         if (isset($row->$column) && ($column === 'email' || $column === 'idnumber') &&
                 (!$this->is_downloading() || $this->export_class_instance()->supports_html())) {
@@ -734,7 +722,7 @@ class user_table extends table_sql {
                         return null;
                     }
                 } else if ($type == 'grade') {
-                    if ($iomadcourse = $DB->get_record('local_iomad_courses', ['courseid' => $row->courseid, 'hasgrade' => 0])) {
+                    if ($DB->record_exists('local_iomad_courses', ['courseid' => $row->courseid, 'hasgrade' => 0])) {
                         return null;
                     }
                     // Get the criteria record.
@@ -911,5 +899,27 @@ class user_table extends table_sql {
 
         echo html_writer::end_tag('tr');
         echo html_writer::end_tag('thead');
+    }
+
+    /**
+     * Override print_nothing_to_display to ensure that column headers are always added.
+     */
+    public function print_nothing_to_display() {
+        global $OUTPUT;
+
+        $this->start_html();
+        $this->print_headers();
+        echo html_writer::end_tag('table');
+        echo html_writer::end_tag('div');
+        $this->wrap_html_finish();
+
+        $notificationmsg = get_string('nousersfound', 'block_iomad_company_admin');
+        $notificationtype = notification::NOTIFY_INFO;
+
+        $notification = (new notification($notificationmsg, $notificationtype, false))
+            ->set_extra_classes(['mt-3']);
+        echo $OUTPUT->render($notification);
+
+        echo $this->get_dynamic_table_html_end();
     }
 }
