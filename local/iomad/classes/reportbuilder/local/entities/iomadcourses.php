@@ -58,7 +58,7 @@ class iomadcourses extends base {
      */
     protected function get_default_tables(): array {
         return [
-            'iomadcourses',
+            'iomad_courses',
             'context',
         ];
     }
@@ -102,7 +102,7 @@ class iomadcourses extends base {
     protected function get_all_columns(): array {
         global $DB;
 
-        $iomadcoursesalias = $this->get_table_alias('iomadcourses');
+        $iomadcoursesalias = $this->get_table_alias('iomad_courses');
         $contextalias = $this->get_table_alias('context');
 
         // Courseid.
@@ -246,7 +246,7 @@ class iomadcourses extends base {
      * @return filter[]
      */
     protected function get_all_filters(): array {
-        $iomadcoursesalias = $this->get_table_alias('iomadcourses');
+        $iomadcoursesalias = $this->get_table_alias('iomad_courses');
 
         // Licensed.
         $filters[] = (new filter(

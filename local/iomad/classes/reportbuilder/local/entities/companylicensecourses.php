@@ -58,7 +58,7 @@ class companylicensecourses extends base {
      */
     protected function get_default_tables(): array {
         return [
-            'companylicensecourses',
+            'companylicense_courses',
             'context',
         ];
     }
@@ -102,7 +102,7 @@ class companylicensecourses extends base {
     protected function get_all_columns(): array {
         global $DB;
 
-        $companylicensecoursesalias = $this->get_table_alias('companylicensecourses');
+        $companylicensecoursesalias = $this->get_table_alias('companylicense_courses');
         $contextalias = $this->get_table_alias('context');
 
         // Licenseid.
@@ -136,7 +136,7 @@ class companylicensecourses extends base {
      * @return filter[]
      */
     protected function get_all_filters(): array {
-        $companylicensecoursesalias = $this->get_table_alias('companylicensecourses');
+        $companylicensecoursesalias = $this->get_table_alias('companylicense_courses');
 
         return [];
     }

@@ -59,7 +59,7 @@ class coursecompletions extends base {
      */
     protected function get_default_tables(): array {
         return [
-            'coursecompletions',
+            'local_iomad_track',
             'context',
         ];
     }
@@ -103,7 +103,7 @@ class coursecompletions extends base {
     protected function get_all_columns(): array {
         global $DB;
 
-        $coursecompletionsalias = $this->get_table_alias('coursecompletions');
+        $coursecompletionsalias = $this->get_table_alias('local_iomad_track');
         $contextalias = $this->get_table_alias('context');
 
         // Userid.
@@ -251,7 +251,7 @@ class coursecompletions extends base {
      * @return filter[]
      */
     protected function get_all_filters(): array {
-        $coursecompletionsalias = $this->get_table_alias('coursecompletions');
+        $coursecompletionsalias = $this->get_table_alias('local_iomad_track');
 
         // Companyid.
         $columns[] = (new column(

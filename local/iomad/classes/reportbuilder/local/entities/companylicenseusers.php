@@ -59,7 +59,7 @@ class companylicenseusers extends base {
      */
     protected function get_default_tables(): array {
         return [
-            'companylicenseusers',
+            'companylicense_users',
             'context',
         ];
     }
@@ -103,7 +103,7 @@ class companylicenseusers extends base {
     protected function get_all_columns(): array {
         global $DB;
 
-        $companylicenseusersalias = $this->get_table_alias('companylicenseusers');
+        $companylicenseusersalias = $this->get_table_alias('companylicense_users');
         $contextalias = $this->get_table_alias('context');
 
         // Licenseid.
@@ -190,7 +190,7 @@ class companylicenseusers extends base {
      * @return filter[]
      */
     protected function get_all_filters(): array {
-        $companylicenseusersalias = $this->get_table_alias('companylicenseusers');
+        $companylicenseusersalias = $this->get_table_alias('companylicense_users');
 
         // Issuedate.
         $filters[] = (new filter(
