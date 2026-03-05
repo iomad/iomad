@@ -489,9 +489,9 @@ class company_user {
     public static function enrol(object|int $user,
                                  int|array $courseids,
                                  int $companyid = 0,
-                                 int $rid = 0,
-                                 int $groupid = 0,
-                                 int $today = 0) {
+                                 ?int $rid = 0,
+                                 ?int $groupid = 0,
+                                 ?int $today = 0) {
         global $DB;
 
         // Did we get passed a user id?
