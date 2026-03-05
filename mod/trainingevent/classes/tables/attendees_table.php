@@ -79,7 +79,7 @@ class attendees_table extends table_sql {
                     '',
                     [
                         'class' => 'icon fa fa-exclamation-circle fa-fw ',
-                        'title' = $tooltip,
+                        'title' => $tooltip,
                         'role' => 'img',
                         'aria-label' => $tooltip,
                     ]
@@ -91,7 +91,7 @@ class attendees_table extends table_sql {
                     'data-toggle' => 'popover',
                     'data-placement' => 'right',
                     'data-bookingnotesid' => $row->id,
-                    'data-content' = html_writer::tag(
+                    'data-content' => html_writer::tag(
                         'div',
                         html_writer::tag('b', $tooltip) .
                             html_writer::empty_tag('br') .
@@ -227,7 +227,7 @@ class attendees_table extends table_sql {
                     'div',
                     [
                         'class' => 'col-md-9 form-inline align-items-start felement',
-                        'data-fieldtype' = 'text',
+                        'data-fieldtype' => 'text',
                     ]
                 ) .
                 html_writer::empty_tag(
@@ -307,5 +307,27 @@ class attendees_table extends table_sql {
                 ) .
                 html_writer::end_tag('form');
         }
+    }
+
+    /**
+     * Override print_nothing_to_display to ensure that column headers are always added.
+     */
+    public function print_nothing_to_display() {
+        global $OUTPUT;
+
+        $this->start_html();
+        $this->print_headers();
+        echo html_writer::end_tag('table');
+        echo html_writer::end_tag('div');
+        $this->wrap_html_finish();
+
+        $notificationmsg = get_string('nousersfound', 'block_iomad_company_admin');
+        $notificationtype = notification::NOTIFY_INFO;
+
+        $notification = (new notification($notificationmsg, $notificationtype, false))
+            ->set_extra_classes(['mt-3']);
+        echo $OUTPUT->render($notification);
+
+        echo $this->get_dynamic_table_html_end();
     }
 }
