@@ -69,29 +69,34 @@ class companylicense_users extends datasource {
         // Join the companylicense entity to the companylicense users entity.
         $companylicenseentity->add_join("JOIN {companylicense} {$companylicensealias}
                 ON {$companylicensealias}.id = {$companylicenseusersalias}.licenseid");
+        $this->add_entity($companylicenseentity);
 
         // Join in the company entity.
         $companyentity->add_joins($companylicenseentity->get_joins());
         $companyentity->add_join("JOIN {company} {$companyalias}
                 ON {$companylicensealias}.companyid = {$companyalias}.id");
+        $this->add_entity($companyentity);
 
-        // Join in the company user entity.
+        // Join in the company users entity.
         $companyusersentity->add_joins($companyentity->get_joins());
         $companyusersentity->add_join("JOIN {company_users} {$companyusersalias}
                 ON ({$companyusersalias}.userid = {$companylicenseusersalias}.userid
                     AND {$companyusersalias}.companyid = {$companylicensealias}.companyid
                     AND {$companyusersalias}.companyid = {$companyalias}.id)");
+        $this->add_entity($companyusersentity);
 
         // Join the department entity to the company entity.
         $departmententity->add_joins($companyusersentity->get_joins());
         $departmententity->add_join("JOIN {department} {$departmentalias}
                 ON ({$departmentalias}.company = {$companyalias}.id
                     AND {$departmentalias}.id = {$companyusersalias}.departmentid)");
+        $this->add_entity($departmententity);
 
         // Join the course entity to the company issued entity.
         $courseentity->add_joins($departmententity->get_joins());
         $courseentity->add_join("JOIN {course} {$coursealias}
                 ON {$coursealias}.id = {$companylicenseusersalias}.licensecourseid");
+        $this->add_entity($courseentity);
 
         // Finally add the join for the user entity.
         $this->add_entity($userentity
@@ -117,9 +122,9 @@ class companylicense_users extends datasource {
             'department:name',
             'companylicense:name',
             'course:fullname',
-            'companylicense_users:issuedate',
-            'companylicense_users:isusing',
-            'companylicense_users:timecompleted',
+            'companylicenseusers:issuedate',
+            'companylicenseusers:isusing',
+            'companylicenseusers:timecompleted',
         ];
     }
 
@@ -135,8 +140,8 @@ class companylicense_users extends datasource {
             'department:name',
             'companylicense:name',
             'course:fullname',
-            'companylicense_users:issuedate',
-            'companylicense_users:isusing',
+            'companylicenseusers:issuedate',
+            'companylicenseusers:isusing',
         ];
     }
 
@@ -152,8 +157,8 @@ class companylicense_users extends datasource {
             'department:name',
             'companylicense:name',
             'course:fullname',
-            'companylicense_users:issuedate',
-            'companylicense_users:isusing',
+            'companylicenseusers:issuedate',
+            'companylicenseusers:isusing',
         ];
     }
 
@@ -169,8 +174,8 @@ class companylicense_users extends datasource {
             'department:name' => SORT_ASC,
             'companylicense:name' => SORT_ASC,
             'course:fullname' => SORT_ASC,
-            'companylicense_users:issuedate' => SORT_ASC,
-            'companylicense_users:isusing' => SORT_ASC,
+            'companylicenseusers:issuedate' => SORT_ASC,
+            'companylicenseusers:isusing' => SORT_ASC,
         ];
     }
 }
