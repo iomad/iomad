@@ -45,36 +45,35 @@ class company_users extends datasource {
      * Initialise report
      */
     protected function initialise(): void {
-        $companyentity = new company();
-        $companyalias = $companyentity->get_table_alias('company');
+        $companyusersentity = new companyusers();
+        $companyusersalias = $companyusersentity->get_table_alias('company_users');
 
-        $this->set_main_table('company', $companyalias);
+        $this->set_main_table('company_users', $companyusersalias);
 
-        $this->add_entity($companyentity);
+        $this->add_entity($companyusersentity);
 
         // Get the tables and aliases.
-        $companyusersentity = new companyusers();
-        $companyusersalias = $companyusersentity->get_table_alias('companyusers');
+        $companyentity = new company();
+        $companyalias = $companyentity->get_table_alias('company');
         $departmententity = new department();
         $departmentalias = $departmententity->get_table_alias('department');
         $userentity = new user();
         $useralias = $userentity->get_table_alias('user');
 
-        $this->add_entity($companyusersentity
-            ->add_join("JOIN {company_users} {$companyusersalias}
-                ON ({$companyusersalias}.companyid = {$companyalias}.id
-                    AND {$departmentalias}.id = {$companyusersalias}.departmentid)")
+        // Add the company entity joins.
+        $this->add_entity($companyentity
+            ->add_join("JOIN {company} {$companyalias}
+                ON ({$companyusersalias}.companyid = {$companyalias}.id)")
         );
 
         // Join the department entity to the company entity.
-
         $this->add_entity($departmententity
             ->add_join("JOIN {department} {$departmentalias}
-                ON {$departmentalias}.company = {$companyalias}.id")
+                ON ({$departmentalias}.company = {$companyalias}.id
+                     AND {$companyusersalias}.departmentid = {$departmentalias}.id)")
         );
 
         // Join the user entity to the company issued entity.
-
         $this->add_entity($userentity
             ->add_joins($companyusersentity->get_joins())
             ->add_join("JOIN {user} {$useralias}

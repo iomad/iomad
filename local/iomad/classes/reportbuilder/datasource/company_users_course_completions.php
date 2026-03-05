@@ -50,7 +50,7 @@ class company_users_course_completions extends datasource {
 
         // Get the tables and aliases.
         $companyusersentity = new companyusers();
-        $companyusersalias = $companyusersentity->get_table_alias('companyusers');
+        $companyusersalias = $companyusersentity->get_table_alias('company_users');
         $departmententity = new department();
         $departmentalias = $departmententity->get_table_alias('department');
         $userentity = new user();
@@ -58,7 +58,7 @@ class company_users_course_completions extends datasource {
         $courseentity = new course();
         $coursealias = $courseentity->get_table_alias('course');
         $coursecompletionsentity = new coursecompletions();
-        $coursecompletionsalias = $coursecompletionsentity->get_table_alias('coursecompletions');
+        $coursecompletionsalias = $coursecompletionsentity->get_table_alias('local_iomad_track');
 
         $this->set_main_table('local_iomad_track', $coursecompletionsalias);
 

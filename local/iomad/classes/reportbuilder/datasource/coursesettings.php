@@ -46,7 +46,7 @@ class coursesettings extends datasource {
      */
     protected function initialise(): void {
         $iomadcoursesentity = new iomadcourses();
-        $iomadcoursesalias = $iomadcoursesentity->get_table_alias('iomadcourses');
+        $iomadcoursesalias = $iomadcoursesentity->get_table_alias('iomad_courses');
 
         $this->set_main_table('iomad_courses', $iomadcoursesalias);
 
