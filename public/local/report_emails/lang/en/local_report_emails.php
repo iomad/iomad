@@ -26,6 +26,7 @@
 $string['controls'] = 'Controls';
 $string['created'] = 'Date created';
 $string['due'] = 'Date due';
+$string['noemailsfound'] = 'No emails found';
 $string['pluginname'] = 'Outgoing Email Report';
 $string['privacy:metadata'] = 'The \'Local IOMAD email report\' only shows data stored in other locations.';
 $string['report_emails:resend'] = 'Resend IOMAD emails';

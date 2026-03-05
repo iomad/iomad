@@ -25,18 +25,13 @@
 
 namespace local_report_users\tables;
 
-use \table_sql;
-use \moodle_url;
-use \html_writer;
-use \completion_info;
+use context_user;
+use completion_info;
+use core\output\notification;
+use html_writer;
 use local_iomad\iomad;
-use \context_system;
-use \context_course;
-use \context_user;
-
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir.'/tablelib.php');
+use moodle_url;
+use table_sql;
 
 /**
  * IOMAD report users completion table class
@@ -742,5 +737,27 @@ class completion_table extends table_sql {
 
         echo html_writer::end_tag('tr');
         echo html_writer::end_tag('thead');
+    }
+
+    /**
+     * Override print_nothing_to_display to ensure that column headers are always added.
+     */
+    public function print_nothing_to_display() {
+        global $OUTPUT;
+
+        $this->start_html();
+        $this->print_headers();
+        echo html_writer::end_tag('table');
+        echo html_writer::end_tag('div');
+        $this->wrap_html_finish();
+
+        $notificationmsg = get_string('nocoursesfound', 'block_iomad_company_admin');
+        $notificationtype = notification::NOTIFY_INFO;
+
+        $notification = (new notification($notificationmsg, $notificationtype, false))
+            ->set_extra_classes(['mt-3']);
+        echo $OUTPUT->render($notification);
+
+        echo $this->get_dynamic_table_html_end();
     }
 }

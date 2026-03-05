@@ -1018,6 +1018,8 @@ class company_user {
      *
      * @param integer $userid
      * @param integer $companyid
+     * @param string $delimiter
+     * @param bool $showsummary
      * @return string
      */
     public static function get_department_name(int $userid,
@@ -1051,6 +1053,54 @@ class company_user {
         // Add the list of filtered department names with the delimiter.
         foreach ($userdepartments as $department) {
             $returnstr .= format_string($department->name);
+            if ($current < $count) {
+                $returnstr .= $delimiter;
+            }
+        }
+
+        // Conditionally add the summary close.
+        if ($showsummary && $count > 5) {
+            $returnstr .= "</details>";
+        }
+
+        return $returnstr;
+    }
+
+    /**
+     * Get the company name(s) the user is assigned to
+     *
+     * @param integer $userid
+     * @param string $delimiter
+     * @param bool $showsummary
+     * @return string
+     */
+    public static function get_company_name(int $userid,
+                                            string $delimiter = ',',
+                                            bool $showsummary = false): string {
+        global $DB;
+
+        $usercompanies = $DB->get_records_sql(
+            "SELECT DISTINCT c.name
+             FROM {local_iomad_companies} c
+             JOIN {local_iomad_company_users} cu ON (c.id = cu.companyid)
+             WHERE cu.userid = :userid",
+            ['userid' => $userid]);
+
+        // Set up the returned string.
+        $returnstr = "";
+        $count = count($usercompanies);
+        $current = 1;
+
+        // Are we showing this as a summary list?
+        if ($showsummary) {
+            if ($count > 5) {
+                $returnstr = "<details><summary>" . get_string('show') . "</summary>";
+            }
+        }
+
+        // Add the list of filtered department names with the delimiter.
+        foreach ($usercompanies as $company) {
+            $returnstr .= format_string($company->name);
             if ($current < $count) {
                 $returnstr .= $delimiter;
             }

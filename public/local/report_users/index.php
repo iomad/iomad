@@ -28,6 +28,7 @@ use local_iomad\custom_context\context_company;
 
 require_once(dirname(__FILE__).'/../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
+require_once($CFG->libdir.'/tablelib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 

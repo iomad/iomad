@@ -25,10 +25,10 @@
 
 namespace local_report_completion\tables;
 
-use context_system;
 use core\{chart_pie, chart_series};
+use core\output\notification;
 use html_writer;
-use local_iomad\{company, iomad};
+use local_iomad\{company, company_user, iomad};
 use moodle_url;
 use table_sql;
 
@@ -2217,5 +2217,27 @@ class course_table extends table_sql {
                        $remainderstring;
             }
         }
+    }
+
+    /**
+     * Override print_nothing_to_display to ensure that column headers are always added.
+     */
+    public function print_nothing_to_display() {
+        global $OUTPUT;
+
+        $this->start_html();
+        $this->print_headers();
+        echo html_writer::end_tag('table');
+        echo html_writer::end_tag('div');
+        $this->wrap_html_finish();
+
+        $notificationmsg = get_string('nocoursesfound', 'block_iomad_company_admin');
+        $notificationtype = notification::NOTIFY_INFO;
+
+        $notification = (new notification($notificationmsg, $notificationtype, false))
+            ->set_extra_classes(['mt-3']);
+        echo $OUTPUT->render($notification);
+
+        echo $this->get_dynamic_table_html_end();
     }
 }

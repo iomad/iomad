@@ -25,13 +25,14 @@
 
 namespace mod_trainingevent\tables;
 
-use table_sql;
-use local_iomad\iomad;
-use context_system;
-use moodle_url;
 use context_module;
-use single_select;
+use context_system;
+use core\output\notification;
+use local_iomad\iomad;
+use moodle_url;
 use html_writer;
+use single_select;
+use table_sql;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -53,7 +54,7 @@ class attendees_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_fullname($row) {
-        global $DB, $id, $company, $context;
+        global $context;
 
         $name = fullname($row, has_capability('moodle/site:viewfullnames', $context));
 
@@ -70,25 +71,41 @@ class attendees_table extends table_sql {
         }
 
         // Add the booking notes.
-        $name .= "&nbsp
-                  <a class='btn btn-link p-0'
-                     role='button'
-                     data-container='body'
-                     data-toggle='popover'
-                     data-placement='right'
-                     data-bookingnotesid='" . $row->id ."'
-                     data-content='<div class=\"no-overflow\">
-                                   <b>" . $tooltip . ":</b>
-                                   <br>" . $row->booking_notes .
-                                   "</div> '
-                     data-html='true'
-                     tabindex='0'
-                     data-trigger='focus'>
-                 <i class='icon fa fa-exclamation-circle fa-fw '
-                    title='$tooltip'
-                    role='img'
-                    aria-label='$tooltip'></i>
-                 </a>";
+        $name .= "&nbsp" .
+            html_writer::tag(
+                'a',
+                html_writer::tag(
+                    'i',
+                    '',
+                    [
+                        'class' => 'icon fa fa-exclamation-circle fa-fw ',
+                        'title' = $tooltip,
+                        'role' => 'img',
+                        'aria-label' => $tooltip,
+                    ]
+                ),
+                [
+                    'class' => 'btn btn-link p-0',
+                    'role' => 'button',
+                    'data-container' => 'body',
+                    'data-toggle' => 'popover',
+                    'data-placement' => 'right',
+                    'data-bookingnotesid' => $row->id,
+                    'data-content' = html_writer::tag(
+                        'div',
+                        html_writer::tag('b', $tooltip) .
+                            html_writer::empty_tag('br') .
+                            $row->booking_notes,
+                        [
+                            'class' => 'no-overflow',
+
+                        ]
+                    ),
+                    'data-html' => 'true',
+                    'tabindex' => '0',
+                    'data-trigger' => 'focus',
+                ]
+            );
 
         return $name;
     }
@@ -99,7 +116,6 @@ class attendees_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_bookingnotes($row) {
-        global $id, $DB;
 
         return $row->booking_notes;
     }
@@ -125,14 +141,23 @@ class attendees_table extends table_sql {
                                           'id' => $id,
                                           'action' => 'add',
                                           'view' => 1]);
-                $actionhtml .= "<a class='btn btn-link p-0'
-                                   role='button'
-                                   href='" . $addurl->out() ."'>
-                                  <i class='icon fa fa-plus fa-fw '
-                                     title='" . get_string('add') . "'
-                                     role='img'>
-                                  </i>
-                               </a>&nbsp";
+                $actionhtml .= html_writer::tag(
+                    'a',
+                    html_writer::tag(
+                        'i',
+                        '',
+                        [
+                            'class' => 'icon fa fa-plus fa-fw',
+                            'title' => get_string('add'),
+                            'role' => 'img',
+                        ]
+                    ),
+                    [
+                        'class' => 'btn btn-link p-0',
+                        'role' => 'button',
+                        'href' => $addurl->out(),
+                    ]
+                ) . "&nbsp";
             }
 
             // Add the edit handler.
@@ -146,26 +171,34 @@ class attendees_table extends table_sql {
                 $row->approvaltype = 0;
             }
 
-            $actionhtml .= "<a class='btn btn-link p-0'
-                               role='button'
-                               data-action='show-Attendanceform'
-                               data-companyid=" . $company->id ."
-                               data-trainingeventid='" . $row->trainingeventid . "'
-                               data-cmid='" . $id . "'
-                               data-waitlisted='" . $row->waitlisted . "'
-                               data-attendanceid='" . $row->attendanceid . "'
-                               data-approvaltype='" . $row->approvaltype . "'
-                               data-userid='" . $row->id . "'
-                               data-courseid='" . $row->courseid . "'
-                               data-requesttype='0'
-                               data-dorefresh='0'
-                               href='#'>
-                              <i class='icon fa fa-cog fa-fw '
-                                 title='$updatetitle'
-                                 role='img'>
-                              </i>
-                           </a>";
-
+            $actionhtml .= html_writer::tag(
+                'a',
+                html_writer::tag(
+                    'i',
+                    '',
+                    [
+                        'class' => 'icon fa fa-cog fa-fw',
+                        'title' => $updatetitle,
+                        'role' => 'img',
+                    ]
+                ),
+                [
+                    'class' => 'btn btn-link p-0',
+                    'role' => 'button',
+                    'data-action' => 'show-Attendanceform',
+                    'data-companyid' => $company->id,
+                    'data-trainingeventid' => $row->trainingeventid,
+                    'data-cmid' => $id,
+                    'data-waitlisted' => $row->waitlisted,
+                    'data-attendanceid' => $row->attendanceid,
+                    'data-approvaltype' => $row->approvaltype,
+                    'data-userid' => $row->id,
+                    'data-courseid' => $row->courseid,
+                    'data-requesttype' => '0',
+                    'data-dorefresh' => '0',
+                    'href' => '#',
+                ]
+            );
         }
         return $actionhtml;
     }
@@ -186,23 +219,38 @@ class attendees_table extends table_sql {
         }
 
         if (has_capability('mod/trainingevent:grade', context_module::instance($id)) && $waitingoption == 0) {
-            $gradehtml = '<input type="hidden" name="id" value="' . $id . '" />
-                         <input type="hidden" name="usergradeusers[]" value="'.$row->id.'" />
-                         <input type="hidden" name="action" value="grade" />
-                         <input type="hidden" name="view" value="1" />
-                         <div class="col-md-9 form-inline align-items-start felement" data-fieldtype="text">
-                         <input type="text"
-                                size="4"
-                                style="display: inline;"
-                                class="form-control"
-                                name="usergrades[]"
-                                id="id_usergrade' . $row->id .'"
-                                value="'.$usergradeentry->items[0]->grades[$row->id]->str_grade.'" />
-                         </div>
-                         <input type="submit"
-                                class="btn btn-secondary"
-                                value="' . get_string('grade', 'iomadcertificate') . '" />';
-
+            $gradehtml = html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $id]) .
+                html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'usergradeusers[]', 'value' => $row->id]) .
+                html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'grade']) .
+                html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'view', 'value' => '1']) .
+                html_writer::start_tag(
+                    'div',
+                    [
+                        'class' => 'col-md-9 form-inline align-items-start felement',
+                        'data-fieldtype' = 'text',
+                    ]
+                ) .
+                html_writer::empty_tag(
+                    'input',
+                    [
+                        'type' => 'text',
+                        'size' => '4',
+                        'style' => 'display: inline;',
+                        'class' => 'form-control',
+                        'name' => 'usergrades[]',
+                        'id' => 'id_usergrade' . $row->id,
+                        'value' => $usergradeentry->items[0]->grades[$row->id]->str_grade,
+                    ]
+                ) .
+                html_writer::end_tag('div') .
+                html_writer::empty_tag(
+                    'input',
+                    [
+                        'type' => 'submit',
+                        'class' => 'btn btn-secondary',
+                        'value' => get_string('grade', 'iomadcertificate'),
+                    ]
+                );
         }
 
         return $gradehtml;
@@ -214,35 +262,9 @@ class attendees_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_department($row) {
-        global $CFG, $DB, $companyid;
+        global $companyid;
 
-        $userdepartments = $DB->get_records_sql("select d.* FROM {local_iomad_company_departments} d JOIN {local_iomad_company_users} cu ON (d.id = cu.departmentid)
-                                                 WHERE cu.userid = :userid
-                                                 AND cu.companyid = :companyid",
-                                                 ['userid' => $row->id,
-                                                  'companyid' => $companyid]);
-        $count = count($userdepartments);
-        $current = 1;
-        $returnstr = "";
-        if ($count > 5) {
-            $returnstr = "<details><summary>" . get_string('show') . "</summary>";
-        }
-
-        $first = true;
-        foreach ($userdepartments as $department) {
-            $returnstr .= format_string($department->name);
-
-            if ($current < $count) {
-                $returnstr .= ",<br>";
-            }
-            $current++;
-        }
-
-        if ($count > 5) {
-            $returnstr .= "</details>";
-        }
-
-        return $returnstr;
+        return company_user::get_department_name($row->id, $companyid, ',<br>', true);
     }
 
     /**
@@ -251,10 +273,17 @@ class attendees_table extends table_sql {
      * @return void
      */
     public function wrap_html_start() {
-        global $params, $id, $waitingoption;
+        global $CFG, $id, $waitingoption;
 
         if (has_capability('mod/trainingevent:grade', context_module::instance($id)) && $waitingoption == 0) {
-            echo '<form action="view.php" class="mform" method="get">';
+            echo html_writer::start_tag(
+                'form',
+                [
+                    'action' => $CFG->wwwroot . '/mod/trainingevent/view.php',
+                    'class' => 'mform',
+                    'method' => 'get',
+                ]
+            );
         }
     }
 
@@ -264,11 +293,19 @@ class attendees_table extends table_sql {
      * @return void
      */
     public function wrap_html_finish() {
-        global $params, $id, $waitingoption;
+        global $id, $waitingoption;
 
         if (has_capability('mod/trainingevent:grade', context_module::instance($id)) && $waitingoption == 0) {
-            echo '<br><input type="submit" class="btn btn-secondary" value="' . get_string('grade', 'iomadcertificate') . '" />
-                  </form>';
+            echo html_writer::empty_tag('br') .
+                html_writer::empty_tag(
+                    'input',
+                    [
+                        'type' => 'submit',
+                        'class' => 'btn btn-secondary',
+                        'value' => get_string('grade', 'iomadcertificate'),
+                    ]
+                ) .
+                html_writer::end_tag('form');
         }
     }
 }

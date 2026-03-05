@@ -23,8 +23,9 @@
  */
 
 use block_iomad_company_admin\event\dashboard_page_viewed;
+use core\output\notification;
 use core\session\manager;
-use local_iomad\{company, iomad};
+use local_iomad\{company, company_user, iomad};
 use local_iomad\custom_context\context_company;
 use local_iomad\forms\{course_search_form, user_search_form};
 
@@ -715,7 +716,7 @@ if (!$bycourse) {
         if (empty($allcompanycourses[$courseid])) {
             continue;
         }
-        $courseusers = [];
+        $coursesusers = [];
         foreach ($userlist as $userid => $user) {
             if ($comprecord = $DB->get_record_sql($coursedetailsql, ['userid' => $userid, 'courseid' => $courseid])) {
                 $comprecord->indate = false;
@@ -796,9 +797,13 @@ if (!$bycourse) {
 }
 $table->head = $headers;
 
+// Keep track if there were rows added.
+$rowsadded = false;
+
 // Is the display by user or by course?
 if (!$bycourse) {
     foreach ($userlist as $user) {
+        $rowsadded = true;
         if (!$download) {
             $row = [
                 html_writer::tag(
@@ -817,34 +822,11 @@ if (!$bycourse) {
         } else {
             $row = [fullname($user)];
         }
-        $userdepartments = $DB->get_records_sql("SELECT d.name
-                                                 FROM {local_iomad_company_departments} d
-                                                 JOIN {local_iomad_company_users} cu
-                                                 ON d.id = cu.departmentid
-                                                 WHERE cu.userid = :userid
-                                                 AND cu.companyid = :companyid",
-                                                 ['userid' => $user->id, 'companyid' => $companyid]);
-        $departmentinfo = "";
-        $count = count($userdepartments);
-        $current = 1;
-        if ($count > 5 && !$download) {
-            $departmentinfo .= html_writer::start_tag('details') .
-                               html_writer::tag('summary', get_string('show'));
-        }
-        $departmentnames = [];
-        foreach ($userdepartments as $userdepartment) {
-            $departmentnames[] = format_string($userdepartment->name);
-        }
         if (!$download) {
-            $departmentinfo .= implode(",<br>", $departmentnames);
+            $row[] = company_user::get_department_name($user->id, $companyid, ',<br>', true);
         } else {
-            $departmentinfo .= implode(",\n", $departmentnames);
+            $row[] = company_user::get_department_name($user->id, $companyid, "\r\n");
         }
-
-        if ($count > 5) {
-            $departmentinfo .= html_writer::end_tag("details");
-        }
-        $row[] = $departmentinfo;
         $row[] = $user->email;
 
         $runtime = time();
@@ -1057,6 +1039,7 @@ if (!$bycourse) {
         if (empty($allcompanycourses[$course->courseid])) {
             continue;
         }
+        $rowsadded = true;
         $runtime = time();
         if (!$download) {
             $row = [
@@ -1252,6 +1235,22 @@ if (!$bycourse) {
 // Conditionally display the table and footer.
 if (!$download) {
     echo html_writer::table($table);
+
+    // Did we get any rows added??
+    if (!$rowsadded) {
+        if ($bycourse) {
+            $notificationmsg = get_string('nocoursesfound', 'block_iomad_company_admin');
+        } else {
+            $notificationmsg = get_string('nousersfound', 'block_iomad_company_admin');
+        }
+        $notificationtype = notification::NOTIFY_INFO;
+
+        $notification = (new notification($notificationmsg, $notificationtype, false))
+            ->set_extra_classes(['mt-3']);
+        echo $OUTPUT->render($notification);
+    }
+
+    // Display the footer.
     echo $output->footer();
 } else {
     // Get the download helper.

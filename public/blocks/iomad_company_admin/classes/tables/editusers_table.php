@@ -454,7 +454,7 @@ class editusers_table extends table_sql {
         echo html_writer::end_tag('div');
         $this->wrap_html_finish();
 
-        $notificationmsg = get_string('nousers', 'block_iomad_company_admin');
+        $notificationmsg = get_string('nousersfound', 'block_iomad_company_admin');
         $notificationtype = notification::NOTIFY_INFO;
 
         $notification = (new notification($notificationmsg, $notificationtype, false))

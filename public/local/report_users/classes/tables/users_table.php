@@ -25,10 +25,11 @@
 
 namespace local_report_users\tables;
 
-use table_sql;
-use moodle_url;
-use local_iomad\iomad;
+use core\output\notification;
 use html_writer;
+use local_iomad\{company_user, iomad};
+use moodle_url;
+use table_sql;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -99,35 +100,29 @@ class users_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_department($row) {
-        global $DB;
 
-        $departments = $DB->get_records_sql("SELECT d.name FROM {local_iomad_company_departments} d
-                                             JOIN {local_iomad_company_users} cu
-                                             ON (d.id = cu.departmentid)
-                                             WHERE cu.userid = :userid
-                                             AND cu.companyid = :companyid
-                                             ORDER BY d.name",
-                                            ['userid' => $row->id,
-                                             'companyid' => $row->companyid]);
-        $returnstr = "";
-        $count = count($departments);
-        $current = 1;
-        if ($count > 5) {
-            $returnstr = "<details><summary>" . get_string('show') . "</summary>";
-        }
+        return company_user::get_department_name($row->id, $row->companyid, ',<br>', true);
+    }
 
-        foreach ($departments as $department) {
-            $returnstr .= format_string($department->name);
-            if ($current < $count) {
-                $returnstr .= ",<br>";
-            }
-            $current++;
-        }
+    /**
+     * Override print_nothing_to_display to ensure that column headers are always added.
+     */
+    public function print_nothing_to_display() {
+        global $OUTPUT;
 
-        if ($count > 5) {
-            $returnstr .= "</details>";
-        }
+        $this->start_html();
+        $this->print_headers();
+        echo html_writer::end_tag('table');
+        echo html_writer::end_tag('div');
+        $this->wrap_html_finish();
 
-        return $returnstr;
+        $notificationmsg = get_string('nousers', 'block_iomad_company_admin');
+        $notificationtype = notification::NOTIFY_INFO;
+
+        $notification = (new notification($notificationmsg, $notificationtype, false))
+            ->set_extra_classes(['mt-3']);
+        echo $OUTPUT->render($notification);
+
+        echo $this->get_dynamic_table_html_end();
     }
 }
