@@ -204,7 +204,7 @@ class course_table extends table_sql {
 
         } else if ($params['showpercentage'] == 2) {
             $totalusers = $DB->count_records_sql(
-                "SELECT COUNT(lit.id)
+                "SELECT COUNT(DISTINCT lit.userid)
                  FROM {local_iomad_track} lit
                  JOIN {company_users} cu ON (
                      lit.userid = cu.userid
@@ -241,7 +241,7 @@ class course_table extends table_sql {
 
         // Count the unused licenses.
         $licensesunused = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_track} lit
              JOIN {company_users} cu ON (
                  lit.userid = cu.userid
@@ -261,7 +261,7 @@ class course_table extends table_sql {
 
         // Count the used licenses.
         $licensesallocated = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_track} lit
              JOIN {company_users} cu ON (
                  lit.userid = cu.userid
@@ -492,7 +492,7 @@ class course_table extends table_sql {
         }
         // Count the unused licenses.
         $licensesunused = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_track} lit
              JOIN {company_users} cu ON (
                  lit.userid = cu.userid
@@ -512,7 +512,7 @@ class course_table extends table_sql {
 
         // Count the used licenses.
         $licensesallocated = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_track} lit
              JOIN {company_users} cu ON (
                  lit.userid = cu.userid
@@ -655,7 +655,7 @@ class course_table extends table_sql {
 
         } else if ($params['showpercentage'] == 2) {
             $totalusers = $DB->count_records_sql(
-                "SELECT COUNT(lit.id)
+                "SELECT COUNT(DISTINCT lit.userid)
                  FROM {local_iomad_track} lit
                  JOIN {company_users} cu ON (
                      lit.userid = cu.userid
@@ -690,7 +690,7 @@ class course_table extends table_sql {
 
         // Count the unused licenses.
         $licensesunused = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_track} lit
              JOIN {company_users} cu ON (
                  lit.userid = cu.userid
@@ -833,7 +833,7 @@ class course_table extends table_sql {
 
         } else if ($params['showpercentage'] == 2) {
             $totalusers = $DB->count_records_sql(
-                "SELECT COUNT(lit.id)
+                "SELECT COUNT(DISTINCT lit.userid)
                  FROM {local_iomad_track} lit
                  JOIN {company_users} cu ON (
                      lit.userid = cu.userid
@@ -868,7 +868,7 @@ class course_table extends table_sql {
 
         // Count the used licenses.
         $licensesused = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_track} lit
              JOIN {company_users} cu ON (
                  lit.userid = cu.userid
@@ -1014,7 +1014,7 @@ class course_table extends table_sql {
 
         } else if ($params['showpercentage'] == 2) {
             $totalusers = $DB->count_records_sql(
-                "SELECT COUNT(lit.id)
+                "SELECT COUNT(DISTINCT lit.userid)
                  FROM {local_iomad_track} lit
                  JOIN {company_users} cu ON (
                      lit.userid = cu.userid
@@ -1072,7 +1072,7 @@ class course_table extends table_sql {
 
         // Count the enrolled users.
         $started = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_track} lit
              JOIN {company_users} cu ON (
                  lit.userid = cu.userid
@@ -1216,7 +1216,7 @@ class course_table extends table_sql {
 
         } else if ($params['showpercentage'] == 2) {
             $totalusers = $DB->count_records_sql(
-                "SELECT COUNT(lit.id)
+                "SELECT COUNT(DISTINCT lit.userid)
                  FROM {local_iomad_track} lit
                  JOIN {company_users} cu ON (
                      lit.userid = cu.userid
@@ -1273,7 +1273,7 @@ class course_table extends table_sql {
 
         // Count the enrolled users.
         $started = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_track} lit
              JOIN {company_users} cu ON (
                  lit.userid = cu.userid
@@ -1417,7 +1417,7 @@ class course_table extends table_sql {
 
         } else if ($params['showpercentage'] == 2) {
             $totalusers = $DB->count_records_sql(
-                "SELECT COUNT(lit.id)
+                "SELECT COUNT(DISTINCT lit.userid)
                  FROM {local_iomad_track} lit
                  JOIN {company_users} cu ON (
                      lit.userid = cu.userid
@@ -1474,7 +1474,7 @@ class course_table extends table_sql {
 
         // Count the completed users.
         $completed = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_track} lit
              JOIN {company_users} cu ON (
                  lit.userid = cu.userid
@@ -1617,7 +1617,7 @@ class course_table extends table_sql {
 
         } else if ($params['showpercentage'] == 2) {
             $totalusers = $DB->count_records_sql(
-                "SELECT COUNT(lit.id)
+                "SELECT COUNT(DISTINCT lit.userid)
                  FROM {local_iomad_track} lit
                  JOIN {company_users} cu ON (
                      lit.userid = cu.userid
@@ -1674,7 +1674,7 @@ class course_table extends table_sql {
 
         // Count the non started users.
         $notstarted = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_track} lit
              JOIN {company_users} cu ON (
                  lit.userid = cu.userid
@@ -1852,7 +1852,7 @@ class course_table extends table_sql {
 
         // Count the completed users.
         $completed = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_track} lit
              JOIN {company_users} cu ON (
                  lit.userid = cu.userid
@@ -1875,7 +1875,7 @@ class course_table extends table_sql {
 
         // Count the enrolled users.
         $started = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_track} lit
              JOIN {company_users} cu ON (
                  lit.userid = cu.userid
@@ -1898,7 +1898,7 @@ class course_table extends table_sql {
 
         // Count the non started users.
         $notstarted = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_track} lit
              JOIN {company_users} cu ON (
                  lit.userid = cu.userid
@@ -2042,7 +2042,7 @@ class course_table extends table_sql {
 
         } else if ($params['showpercentage'] == 2) {
             $totalusers = $DB->count_records_sql(
-                "SELECT COUNT(lit.id)
+                "SELECT COUNT(DISTINCT lit.userid)
                  FROM {local_iomad_track} lit
                  JOIN {company_users} cu ON (
                      lit.userid = cu.userid
@@ -2102,7 +2102,7 @@ class course_table extends table_sql {
 
         // Count the completed users.
         $completed = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_track} lit
              JOIN {company_users} cu ON (
                  lit.userid = cu.userid
@@ -2125,7 +2125,7 @@ class course_table extends table_sql {
 
         // Count the enrolled users.
         $started = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_track} lit
              JOIN {company_users} cu ON (
                  lit.userid = cu.userid
@@ -2148,7 +2148,7 @@ class course_table extends table_sql {
 
         // Count the non started users.
         $notstarted = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_track} lit
              JOIN {company_users} cu ON (
                  lit.userid = cu.userid
