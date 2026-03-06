@@ -25,14 +25,17 @@
 
 namespace local_iomad;
 
-use context_system;
-use context_course;
-use moodle_url;
+use block_iomad_company_admin\event\user_license_assigned;
 use cache;
+use completion_info;
+use context_course;
+use context_system;
+use core_completion\progress;
 use core\event\user_enrolment_created;
 use course_enrolment_manager;
-use block_iomad_company_admin\event\user_license_assigned;
+use html_writer;
 use local_iomad\custom_context\context_company;
+use moodle_url;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -1046,7 +1049,8 @@ class company_user {
         // Are we showing this as a summary list?
         if ($showsummary) {
             if ($count > 5) {
-                $returnstr = "<details><summary>" . get_string('show') . "</summary>";
+                $returnstr = html_writer::start_tag('details').
+                             html_writer::tag('summary', get_string('show'));
             }
         }
 
@@ -1060,7 +1064,7 @@ class company_user {
 
         // Conditionally add the summary close.
         if ($showsummary && $count > 5) {
-            $returnstr .= "</details>";
+            $returnstr .= html_writer::end_tag('details');
         }
 
         return $returnstr;
@@ -1094,7 +1098,8 @@ class company_user {
         // Are we showing this as a summary list?
         if ($showsummary) {
             if ($count > 5) {
-                $returnstr = "<details><summary>" . get_string('show') . "</summary>";
+                $returnstr = html_writer::start_tag('details').
+                             html_writer::tag('summary', get_string('show'));
             }
         }
 
@@ -1108,10 +1113,216 @@ class company_user {
 
         // Conditionally add the summary close.
         if ($showsummary && $count > 5) {
-            $returnstr .= "</details>";
+            $returnstr .= html_writer::end_tag('details');
         }
 
         return $returnstr;
+    }
+
+    /**
+     * Get progress information for a user/course
+     *
+     * @param integer $userid
+     * @param integer $courseid
+     * @param integer $timeenrolled
+     * @param integer $timecompleted
+     * @param integer $modifiedtime
+     * @param integer $licenseid
+     * @param integer $licenseallocated
+     * @param bool $downloading
+     * @return string
+     */
+    public static function get_course_progress(int $userid,
+                                               int $courseid,
+                                               ?int $timeenrolled,
+                                               ?int $timecompleted,
+                                               int $modifiedtime,
+                                               int $licenseid,
+                                               ?int $licenseallocated,
+                                               bool $downloading): string {
+        global $DB;
+
+        // Set up some defaults.
+        $tooltip = "";
+        $course = $DB->get_record('course', ['id' => $courseid]);
+        $info = new completion_info($course);
+        $completions = $info->get_completions($userid);
+        $showgrade = true;
+
+        // Do we show a grade?
+        if ($DB->record_exists('local_iomad_courses', ['courseid' => $courseid, 'hasgrade' => 0])) {
+            $showgrade = false;
+        }
+
+        // Loop through course criteria.
+        foreach ($completions as $completion) {
+            $criteria = $completion->get_criteria();
+            $complete = $completion->is_complete();
+
+            // Is the criteria complete?
+            if ($complete) {
+                $completestring = " - " . userdate($completion->timecompleted, get_config('local_iomad', 'date_format'));
+            } else if (!empty($timecompleted)) {
+                // Historic completion.
+                $completestring = " - " . userdate($timecompleted, get_config('local_iomad', 'date_format'));
+            } else {
+                $completestring = " - " . get_string('no');
+            }
+
+            // Get the module information.
+            if (!empty($criteria->moduleinstance)) {
+                $modinfo = get_coursemodule_from_id('', $criteria->moduleinstance);
+
+                // Get the user's grades.
+                $ggg = grade_get_grades(
+                    $modinfo->course,
+                    'mod',
+                    $modinfo->modname,
+                    $modinfo->instance,
+                    $userid
+                );
+
+                // Set up the grade string.
+                $gradestring = "";
+                if ($showgrade &&
+                    !empty($ggg->items[0]->grades[$userid])) {
+
+                    // If this isn't historic then we want to show the grade.
+                    if (!(!empty($timecompleted) &&
+                        empty($ggg->items[0]->grades[$userid]->grade))) {
+
+                        // If its a scale - just show the string.
+                        if ($ggg->items[0]->scaleid > 0) {
+                            $gradevalue = $ggg->items[0]->grades[$userid]->str_grade;
+                        } else {
+                            // Show the percentage.
+                            if (empty($ggg->items[0]->grades[$userid]->grade)) {
+                                $ggg->items[0]->grades[$userid]->grade = 0;
+                            }
+                            $gradevalue = format_string(
+                                round(
+                                    $ggg->items[0]->grades[$userid]->grade,
+                                    get_config('local_iomad', 'report_grade_places')
+                                ) . "%"
+                            );
+                        }
+                        $gradestring = " - " . $gradevalue;
+                    }
+                }
+
+                // Add this to the tooltip.
+                $tooltip .= $criteria->get_title() .
+                            " " . format_string($modinfo->name) .
+                            "$gradestring $completestring\r\n";
+            } else {
+                // Just show the completion information.
+                $tooltip = $criteria->get_title() . "$completestring \r\n" . $tooltip;
+            }
+        }
+
+        // Add in the modified time.
+        $tooltip .= format_string(get_string('lastmodified') . " - " .
+                    userdate($modifiedtime, get_config('local_iomad', 'date_format')));
+
+        // Get the progress.
+        if (!empty($timecompleted)) {
+            $progress = 100;
+        } else {
+            $progress = progress::get_course_progress_percentage($course, $userid);
+        }
+
+        // Generate the progress display.
+        if (is_null($progress)) {
+            if (empty($timeenrolled)) {
+                return get_string('notstarted', 'local_report_users');
+            } else {
+                if (!empty($licenseid)) {
+                    if ($DB->get_record('local_iomad_company_license_users',
+                                        ['licenseid' => $licenseid,
+                                         'userid' => $userid,
+                                         'courseid' => $courseid,
+                                         'issuedate' => $licenseallocated])) {
+                        if (!$downloading) {
+                            return html_writer::tag(
+                                'div',
+                                html_writer::tag(
+                                    'div',
+                                    '0%',
+                                    [
+                                        'class' => 'progress-bar',
+                                        'style' => 'width:0%;height:20px',
+                                    ]
+                                ),
+                                [
+                                    'class' => 'progress',
+                                    'style' => 'height:20px;',
+                                    'data-html' => 'true',
+                                    'title' => nl2br($tooltip),
+                                ]
+                            );
+                        } else {
+                            return get_string('completion-alt-auto-y', 'completion', "0%");
+                        }
+                    } else {
+                        return get_string('suspended');
+                    }
+                } else {
+                    if (!$downloading) {
+                        return html_writer::tag(
+                            'div',
+                            html_writer::tag(
+                                'div',
+                                '0%',
+                                [
+                                    'class' => 'progress-bar',
+                                    'style' => 'width:0%;height:20px',
+                                ]
+                            ),
+                            [
+                                'class' => 'progress',
+                                'style' => 'height:20px;',
+                                'data-html' => 'true',
+                                'title' => $tooltip,
+                            ]
+                        );
+                    } else {
+                        return get_string('completion-alt-auto-y', 'completion', "0%");
+                    }
+                }
+            }
+        } else {
+            if ($progress < 100 &&
+                !empty($licenseid) &&
+                !$DB->get_record('local_iomad_company_license_users',
+                                ['licenseid' => $licenseid,
+                                      'userid' => $userid,
+                                      'courseid' => $courseid,
+                                      'issuedate' => $licenseallocated])) {
+                return get_string('suspended');
+            }
+
+            if (!$downloading) {
+                return html_writer::tag(
+                    'div',
+                    html_writer::tag(
+                        'div',
+                        $progress . '%',
+                        [
+                            'class' => 'progress-bar',
+                            'style' => 'width:' . $progress . '%;height:20px',
+                        ]
+                    ),
+                    [
+                        'class' => 'progress',
+                        'style' => 'height:20px;',
+                        'data-html' => 'true',
+                        'title' => $tooltip,
+                    ]
+                );
+            } else {
+                return get_string('completion-alt-auto-y', 'completion', "$progress%");
+            }
+        }
     }
 
     /**
