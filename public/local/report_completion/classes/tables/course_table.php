@@ -49,7 +49,7 @@ class course_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_coursename($row) {
-        global $output, $params, $haslicenses, $companycontext;
+        global $DB, $output, $params, $haslicenses, $companycontext;
 
         // Are we downloading?
         if ($this->is_downloading()) {
@@ -65,29 +65,30 @@ class course_table extends table_sql {
 
         // Add the control buttons.
         if (iomad::has_capability('local/report_users:view', $companycontext)) {
-            $cell .= $output->single_button(
+            $cell .= html_writer::tag(
+                'p',
+                $output->single_button(
                 $courseuserslink,
                 get_string('usersummary', 'local_report_completion')
-            );
+            ));
         }
         if (iomad::has_capability('local/report_completion_monthly:view', $companycontext)) {
-            if (!empty($cell)) {
-                $cell .= html_writer::empty_tag('br');
-            }
-            $cell .= $output->single_button(
+            $cell .= html_writer::tag(
+                'p',
+                $output->single_button(
                 $coursemonthlylink,
                 get_string('pluginname', 'local_report_completion_monthly')
-            );
+            ));
         }
         if (iomad::has_capability('local/report_user_license_allocations:view', $companycontext) &&
+            $DB->record_exists('local_iomad_courses', ['courseid' => $row->id, 'licensed' => 1]) &&
             $haslicenses) {
-            if (!empty($cell)) {
-                $cell .= html_writer::empty_tag('br');
-            }
-            $cell .= $output->single_button(
+            $cell .= html_writer::tag(
+                'p',
+                $output->single_button(
                 $courselicenselink,
                 get_string('pluginname', 'local_report_user_license_allocations')
-            );
+            ));
         }
 
         return $cell;
@@ -204,7 +205,7 @@ class course_table extends table_sql {
 
         } else if ($params['showpercentage'] == 2) {
             $totalusers = $DB->count_records_sql(
-                "SELECT COUNT(lit.id)
+                "SELECT COUNT(DISTINCT lit.userid)
                  FROM {local_iomad_tracks} lit
                  JOIN {local_iomad_company_users} cu ON (
                      lit.userid = cu.userid
@@ -241,7 +242,7 @@ class course_table extends table_sql {
 
         // Count the unused licenses.
         $licensesunused = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_tracks} lit
              JOIN {local_iomad_company_users} cu ON (
                  lit.userid = cu.userid
@@ -261,7 +262,7 @@ class course_table extends table_sql {
 
         // Count the used licenses.
         $licensesallocated = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_tracks} lit
              JOIN {local_iomad_company_users} cu ON (
                  lit.userid = cu.userid
@@ -492,7 +493,7 @@ class course_table extends table_sql {
         }
         // Count the unused licenses.
         $licensesunused = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_tracks} lit
              JOIN {local_iomad_company_users} cu ON (
                  lit.userid = cu.userid
@@ -512,7 +513,7 @@ class course_table extends table_sql {
 
         // Count the used licenses.
         $licensesallocated = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_tracks} lit
              JOIN {local_iomad_company_users} cu ON (
                  lit.userid = cu.userid
@@ -655,7 +656,7 @@ class course_table extends table_sql {
 
         } else if ($params['showpercentage'] == 2) {
             $totalusers = $DB->count_records_sql(
-                "SELECT COUNT(lit.id)
+                "SELECT COUNT(DISTINCT lit.userid)
                  FROM {local_iomad_tracks} lit
                  JOIN {local_iomad_company_users} cu ON (
                      lit.userid = cu.userid
@@ -690,7 +691,7 @@ class course_table extends table_sql {
 
         // Count the unused licenses.
         $licensesunused = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_tracks} lit
              JOIN {local_iomad_company_users} cu ON (
                  lit.userid = cu.userid
@@ -833,7 +834,7 @@ class course_table extends table_sql {
 
         } else if ($params['showpercentage'] == 2) {
             $totalusers = $DB->count_records_sql(
-                "SELECT COUNT(lit.id)
+                "SELECT COUNT(DISTINCT lit.userid)
                  FROM {local_iomad_tracks} lit
                  JOIN {local_iomad_company_users} cu ON (
                      lit.userid = cu.userid
@@ -868,7 +869,7 @@ class course_table extends table_sql {
 
         // Count the used licenses.
         $licensesused = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_tracks} lit
              JOIN {local_iomad_company_users} cu ON (
                  lit.userid = cu.userid
@@ -1014,7 +1015,7 @@ class course_table extends table_sql {
 
         } else if ($params['showpercentage'] == 2) {
             $totalusers = $DB->count_records_sql(
-                "SELECT COUNT(lit.id)
+                "SELECT COUNT(DISTINCT lit.userid)
                  FROM {local_iomad_tracks} lit
                  JOIN {local_iomad_company_users} cu ON (
                      lit.userid = cu.userid
@@ -1072,7 +1073,7 @@ class course_table extends table_sql {
 
         // Count the enrolled users.
         $started = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_tracks} lit
              JOIN {local_iomad_company_users} cu ON (
                  lit.userid = cu.userid
@@ -1216,7 +1217,7 @@ class course_table extends table_sql {
 
         } else if ($params['showpercentage'] == 2) {
             $totalusers = $DB->count_records_sql(
-                "SELECT COUNT(lit.id)
+                "SELECT COUNT(DISTINCT lit.userid)
                  FROM {local_iomad_tracks} lit
                  JOIN {local_iomad_company_users} cu ON (
                      lit.userid = cu.userid
@@ -2042,7 +2043,7 @@ class course_table extends table_sql {
 
         } else if ($params['showpercentage'] == 2) {
             $totalusers = $DB->count_records_sql(
-                "SELECT COUNT(lit.id)
+                "SELECT COUNT(DISTINCT lit.userid)
                  FROM {local_iomad_tracks} lit
                  JOIN {local_iomad_company_users} cu ON (
                      lit.userid = cu.userid
@@ -2102,7 +2103,7 @@ class course_table extends table_sql {
 
         // Count the completed users.
         $completed = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_tracks} lit
              JOIN {local_iomad_company_users} cu ON (
                  lit.userid = cu.userid
@@ -2125,7 +2126,7 @@ class course_table extends table_sql {
 
         // Count the enrolled users.
         $started = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_tracks} lit
              JOIN {local_iomad_company_users} cu ON (
                  lit.userid = cu.userid
@@ -2148,7 +2149,7 @@ class course_table extends table_sql {
 
         // Count the non started users.
         $notstarted = $DB->count_records_sql(
-            "SELECT COUNT(lit.id)
+            "SELECT COUNT(DISTINCT lit.userid)
              FROM {local_iomad_tracks} lit
              JOIN {local_iomad_company_users} cu ON (
                  lit.userid = cu.userid
