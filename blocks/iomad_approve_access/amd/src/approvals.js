@@ -33,14 +33,13 @@ const selectors = {
 };
 
 export const init = () => {
+
+    // Add approve request handler.
     const approveRequest = document.querySelectorAll(selectors.approveRequest);
     const denyRequest = document.querySelectorAll(selectors.denyRequest);
     if (approveRequest === null && denyRequest === null) {
         return;
     }
-
-    //addToastRegion(document.body);
-
     for (let i = 0; i < approveRequest.length; i++) {
         approveRequest[i].addEventListener('click', event => {
             event.preventDefault();
@@ -88,6 +87,7 @@ export const init = () => {
         });
     }
 
+    // Add deny request handler.
     for (let i = 0; i < denyRequest.length; i++) {
         denyRequest[i].addEventListener('click', event => {
             event.preventDefault();
