@@ -145,7 +145,7 @@ if ($format) {
 
     $userids = $DB->get_records_sql_menu("SELECT DISTINCT userid, userid as id
         FROM
-            {local_iomad_company_users}
+            {local_iomad_company_users} u
         WHERE
             companyid = :companyid
             " . $sqlsearch, $params);
