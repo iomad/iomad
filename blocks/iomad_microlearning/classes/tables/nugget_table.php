@@ -25,9 +25,9 @@
 
 namespace block_iomad_microlearning\tables;
 
+use block_iomad_microlearning\output\nugget_name_editable;
 use html_writer;
 use local_iomad\iomad;
-use moodle_url;
 use table_sql;
 
 /**
@@ -46,7 +46,21 @@ class nugget_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_name($row) {
-        return format_string($row->name, true, 1);
+        global $company, $OUTPUT, $USER;
+
+        // Display the name of inplace editable.
+        if (!empty($USER->editing)) {
+            $editable = new nugget_name_editable(
+                $row->id,
+                $company->id,
+                $row->threadid,
+                $row->name
+            );
+
+            return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
+        } else {
+            return format_string($row->name, true, 1);
+        }
     }
 
     /**
@@ -55,6 +69,7 @@ class nugget_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_target($row) {
+        
         if (!empty($row->active)) {
             return get_string('no');
         } else {
@@ -137,7 +152,6 @@ class nugget_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_timecreated($row) {
-        global $CFG;
 
         if (!empty($row->timecreated)) {
             return userdate($row->timecreated, get_config('local_iomad', 'date_format'));
@@ -159,8 +173,6 @@ class nugget_table extends table_sql {
         }
 
         $html = "";
-        $deletelink = new moodle_url('nuggets.php', ['deleteid' => $row->id, 'threadid' => $row->threadid, 'sesskey' => sesskey()]);
-        $editlink = new moodle_url('nugget_edit.php', ['nuggetid' => $row->id, 'threadid' => $row->threadid]);
         if (iomad::has_capability('block/iomad_microlearning:edit_nuggets', $companycontext)) {
             $html .= html_writer::tag(
                 'a',

@@ -25,11 +25,12 @@
 
 namespace block_iomad_microlearning\forms;
 
+use block_iomad_microlearning\event\{thread_created, thread_updated};
 use context;
 use core_form\dynamic_form;
-use block_iomad_microlearning\event\{thread_created, thread_updated};
-use local_iomad\iomad;
+use core\notification;
 use local_iomad\custom_context\context_company;
+use local_iomad\iomad;
 use moodle_url;
 
 
@@ -226,6 +227,9 @@ class thread_edit_form extends dynamic_form {
 
         // Fire the event.
         $event->trigger();
+
+        // Add the notification for the page reload.
+        notification::success($returnmessage);
 
         // Return stuff to the JS.
         return [

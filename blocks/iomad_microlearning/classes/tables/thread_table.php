@@ -25,6 +25,7 @@
 
 namespace block_iomad_microlearning\tables;
 
+use block_iomad_microlearning\output\thread_name_editable;
 use html_writer;
 use local_iomad\iomad;
 use moodle_url;
@@ -45,7 +46,20 @@ class thread_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_name($row) {
-        return format_string($row->name, true, 1);
+        global $company, $OUTPUT, $USER;
+
+        // Display the name of inplace editable.
+        if (!empty($USER->editing)) {
+            $editable = new thread_name_editable(
+                $row->id,
+                $company->id,
+                $row->name
+            );
+
+            return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
+        } else {
+            return format_string($row->name, true, 1);
+        }
     }
 
     /**
@@ -54,6 +68,7 @@ class thread_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_active($row) {
+        
         if (empty($row->active)) {
             return get_string('no');
         } else {
@@ -67,7 +82,6 @@ class thread_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_timecreated($row) {
-        global $CFG;
 
         if (!empty($row->timecreated)) {
             return userdate($row->timecreated, get_config('local_iomad', 'date_format'));
@@ -83,7 +97,6 @@ class thread_table extends table_sql {
      * @return string
      */
     public function col_startdate($row) {
-        global $CFG;
 
         if (!empty($row->startdate)) {
             return userdate($row->startdate, get_config('local_iomad', 'date_format'));
@@ -105,9 +118,6 @@ class thread_table extends table_sql {
         }
 
         $html = "";
-        $deletelink = new moodle_url('threads.php', ['deleteid' => $row->id, 'sesskey' => sesskey()]);
-        $clonelink = new moodle_url('threads.php', ['cloneid' => $row->id, 'sesskey' => sesskey()]);
-        $editlink = new moodle_url('thread_edit.php', ['threadid' => $row->id]);
         $nuggetlink = new moodle_url('nuggets.php', ['threadid' => $row->id]);
         $userlink = new moodle_url('users.php', ['threadid' => $row->id]);
         $schedulelink = new moodle_url('thread_schedule.php', ['threadid' => $row->id]);
