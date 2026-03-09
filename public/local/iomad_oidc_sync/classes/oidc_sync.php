@@ -140,7 +140,7 @@ class oidc_sync {
         $profilecategories = iomad::iomad_filter_profile_categories($DB->get_records('user_info_category'), 0, $companyid);
         $customfields = [];
         if (!empty($profilecategories)) {
-            [$insql, $inparams] - $DB->get_in_or_equal(array_keys($profilecategories),
+            [$insql, $inparams] = $DB->get_in_or_equal(array_keys($profilecategories),
                                                        SQL_PARAMS_NAMED,
                                                        'uicids');
             $customfields = $DB->get_records_select_menu(
