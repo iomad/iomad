@@ -22,8 +22,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+import $ from 'jquery';
 import ajax from 'core/ajax';
 import {get_strings as getStrings} from 'core/str';
+import {add as toastAdd} from 'core/toast';
 import notification from 'core/notification';
 
 const selectors = {
@@ -43,6 +45,7 @@ export const init = () => {
             var classroomid = showDeleteclassroomform[i].getAttribute('data-classroomid');
             var classroomname = showDeleteclassroomform[i].getAttribute('data-classroomname');
             var companyid = showDeleteclassroomform[i].getAttribute('data-companyid');
+            var tableRow = $(showDeleteclassroomform[i]).closest('tr');
             getStrings([
                 { key: 'classroom_delete', component: 'block_iomad_company_admin' },
                 { key: 'classroom_delete_checkfull', component: 'block_iomad_company_admin', param: classroomname },
@@ -55,8 +58,26 @@ export const init = () => {
                             companyid: companyid,
                             classroomid: classroomid,
                         },
-                        done: function () {
-                            location.reload();
+                        done: function (e) {
+                            if (e.result) {
+                                if (e.result == false) {
+                                    toastAdd(e.returnmessage,
+                                        {
+                                            type: 'warning',
+                                            autohide: true,
+                                            closeButton: true,
+                                        }
+                                    );
+                                } else {
+                                    toastAdd(e.returnmessage,
+                                        {
+                                            type: 'success',
+                                            autohide: true,
+                                            closeButton: true,
+                                        });
+                                    tableRow.remove();
+                                }
+                            }
                         },
                         fail: notification.exception,
                     }]);

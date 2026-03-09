@@ -25,9 +25,10 @@
 
 namespace block_iomad_company_admin\forms;
 
+use block_iomad_company_admin\event\{classroom_created, classroom_updated};
 use context;
 use core_form\dynamic_form;
-use block_iomad_company_admin\event\{classroom_created, classroom_updated};
+use core\notification;
 use html_writer;
 use local_iomad\custom_context\context_company;
 use local_iomad\{company, iomad};
@@ -244,10 +245,12 @@ class classroom_edit_form extends dynamic_form {
         $DB->set_field('local_iomad_training_locations', 'description', $editordata->description, ['id' => $data->id]);
         $DB->set_field('local_iomad_training_locations', 'descriptionformat', $editordata->descriptionformat, ['id' => $data->id]);
 
+        notification::success($returnmessage);
+
         // Return stuff to the JS.
         return [
             'result' => true,
-            'returnmessage' => $returnmessage,
+            'returnmessage' => '',
         ];
     }
 

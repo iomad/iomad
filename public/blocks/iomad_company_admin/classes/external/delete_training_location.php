@@ -108,15 +108,22 @@ class delete_training_location extends external_api {
             );
         }
 
-        return $return;
+        return [
+            'result' => $result,
+            'returnmessage' => get_string('classroomdeletedok', 'block_iomad_company_admin'),
+        ];
+
     }
 
     /**
      * Describe the return structure for block_iomad_company_admin_delete_training_location
      *
-     * @return external_value
+     * @return external_single_structure
      */
-    public static function execute_returns(): external_value {
-        return new external_value(PARAM_BOOL, 'Success or failure');
+    public static function execute_returns(): external_single_structure {
+        return new external_single_structure([
+            'result' => new external_value(PARAM_BOOL, 'Outcome'),
+            'returnmessage' => new external_value(PARAM_TEXT, 'Details'),
+        ]);
     }
 }

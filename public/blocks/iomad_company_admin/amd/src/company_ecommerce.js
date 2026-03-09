@@ -25,6 +25,8 @@
 import $ from 'jquery';
 import ajax from 'core/ajax';
 import notification from 'core/notification';
+import {add as toastAdd} from 'core/toast';
+import {get_string as getString} from 'core/str';
 
 const selectors = {
     showEcommercecompanyprompt: '[data-action="show-ecommercecompanyprompt"]',
@@ -61,6 +63,7 @@ export const init = () => {
             var currentvalue = showEcommercecompanyprompt[i].getAttribute('data-ecommerce');
             var companyid = showEcommercecompanyprompt[i].getAttribute('data-companyid');
             var icon = $(showEcommercecompanyprompt[i]).find('i');
+            var success = getString('companyupdated', 'block_iomad_company_admin');
 
             ajax.call([{
                 methodname: 'block_iomad_company_admin_company_ecommerce',
@@ -76,6 +79,12 @@ export const init = () => {
                     }
                     showEcommercecompanyprompt[i].setAttribute('data-ecommerce', state);
                     _redraw(icon, state);
+                    toastAdd(success,
+                        {
+                            type: 'success',
+                            autohide: true,
+                            closeButton: true,
+                        });
                 },
                 fail: notification.exception,
             }]);

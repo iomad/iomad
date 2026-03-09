@@ -547,18 +547,16 @@ if ($companies) {
 
         // Is the company suspended?
         if (!empty($company->suspended)) {
-            $fullname = $company->name . ' (S)';
-            $table->rowclasses[] = 'table-dark';
+            $table->rowclasses[] = 'dimmed_text';
         } else {
-            $fullname = $company->name;
             $table->rowclasses[] = '';
         }
 
         // Indent child companies.
         if ($company->depth == 0) {
-            $fullname = html_writer::tag('b', format_string($fullname));
+            $fullname = html_writer::tag('b', format_string($company->name));
         } else {
-            $fullname = str_repeat('&emsp;&emsp;', $company->depth) . format_string($fullname);
+            $fullname = str_repeat('&emsp;&emsp;', $company->depth) . format_string($company->name);
         }
 
         $table->data[] = [
