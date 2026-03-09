@@ -24,7 +24,7 @@
 
 import ModalForm from 'core_form/modalform';
 import {get_string as getString} from 'core/str';
-import {add as toastAdd, addToastRegion} from 'core/toast';
+import {addToastRegion} from 'core/toast';
 import {
     exception as displayException,
 } from 'core/notification';
@@ -61,27 +61,13 @@ export const init = () => {
                 addToastRegion(form.modal.getRoot()[0]);
                 return true;
             }).catch(displayException);
-            form.addEventListener(form.events.FORM_SUBMITTED, (e) => {
+            form.addEventListener(form.events.FORM_SUBMITTED, () => {
 
                 // Remove toast region as if not it will be displayed on the closed modal.
                 const modalElement = form.modal.getRoot()[0];
                 const regions = modalElement.querySelectorAll('.toast-wrapper');
                 regions.forEach((reg) => reg.remove());
-                if (e.detail.result) {
-                    if (e.detail.result == false) {
-                        toastAdd(e.detail.returnmessage,
-                            {
-                                type: 'warning',
-                            }
-                        );
-                    } else {
-                        toastAdd(e.detail.returnmessage,
-                        {
-                            type: 'success',
-                        });
-                    }
-                }
-                window.location.reload(true);
+                location.reload();
             });
         });
     }

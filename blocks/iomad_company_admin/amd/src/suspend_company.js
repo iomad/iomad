@@ -22,9 +22,12 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+import $ from 'jquery';
 import ajax from 'core/ajax';
 import {get_strings as getStrings} from 'core/str';
 import notification from 'core/notification';
+import {add as toastAdd} from 'core/toast';
+import {get_string as getString} from 'core/str';
 
 const selectors = {
     showSuspendcompanyprompt: '[data-action="show-suspendcompanyprompt"]',
@@ -43,12 +46,17 @@ export const init = () => {
             var currentvalue = showSuspendcompanyprompt[i].getAttribute('data-suspended');
             var companyName = showSuspendcompanyprompt[i].getAttribute('data-name');
             var companyid = showSuspendcompanyprompt[i].getAttribute('data-companyid');
+            var tableRow = $(showSuspendcompanyprompt[i]).closest('tr');
+            var myIcon = $(showSuspendcompanyprompt[i]).find('i');
+
             if (currentvalue == 0) {
                 var title = 'suspendcompany';
                 var checktext = 'suspendcompanycheckfull';
+                var success = getString('companysuspended', 'block_iomad_company_admin');
             } else {
                 var title = 'unsuspendcompany';
                 var checktext = 'unsuspendcompanycheckfull';
+                var success = getString('companyunsuspended', 'block_iomad_company_admin');
             }
             getStrings([
                 { key: title, component: 'block_iomad_company_admin' },
@@ -64,7 +72,27 @@ export const init = () => {
                             currentvalue: currentvalue,
                         },
                         done: function () {
-                            location.reload();
+                            toastAdd(success,
+                                {
+                                    type: 'success',
+                                    autohide: true,
+                                    closeButton: true,
+                                });
+                            if (currentvalue == 0) {
+                                tableRow.removeClass('dimmed_text');
+                                tableRow.addClass('dimmed_text');
+
+                                // Change icon to closed eye.
+                                myIcon.removeClass('fa-eye').addClass('fa-eye-slash');
+                                showSuspendcompanyprompt[i].setAttribute('data-suspended', '1');
+                            } else {
+                                tableRow.removeClass('dimmed_text');
+
+                                // Change icon to open eye.
+                                myIcon.removeClass('fa-eye');
+                                myIcon.removeClass('fa-eye-slash').addClass('fa-eye');
+                                showSuspendcompanyprompt[i].setAttribute('data-suspended', '0');
+                            }
                         },
                         fail: notification.exception,
                     }]);

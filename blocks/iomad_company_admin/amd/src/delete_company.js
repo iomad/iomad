@@ -22,6 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+import $ from 'jquery';
 import ModalForm from 'core_form/modalform';
 import {get_string as getString} from 'core/str';
 import {add as toastAdd, addToastRegion} from 'core/toast';
@@ -43,6 +44,8 @@ export const init = () => {
             event.preventDefault();
 
             const title = getString('deletecompany', 'block_iomad_company_admin');
+            var tableRow = $(showDeletecompanyform[i]).closest('tr');
+
             const form = new ModalForm({
                 formClass: 'block_iomad_company_admin\\forms\\company_delete_form',
                 args: {
@@ -67,16 +70,20 @@ export const init = () => {
                         toastAdd(e.detail.returnmessage,
                             {
                                 type: 'warning',
+                                autohide: true,
+                                closeButton: true,
                             }
                         );
                     } else {
                         toastAdd(e.detail.returnmessage,
                         {
                             type: 'success',
+                            autohide: true,
+                            closeButton: true,
                         });
+                        tableRow.remove();
                     }
                 }
-                window.location.reload(true);
             });
         });
     }
