@@ -48,7 +48,7 @@ iomad::require_capability('block/iomad_microlearning:edit_nuggets', $companycont
 
 
 // Set the URLs.
-$urlparams = ['threadid' => $threadid, 'page' => $page];
+$urlparams = ['threadid' => $threadid, 'nuggetid' => $nuggetid];
 $companylist = new moodle_url('/blocks/iomad_company_admin/index.php', $urlparams);
 $linktext = get_string('nuggets', 'block_iomad_microlearning');
 $threadlink = new moodle_url('/blocks/iomad_microlearning/threads.php');

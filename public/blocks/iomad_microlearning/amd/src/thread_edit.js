@@ -22,6 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+import $ from 'jquery';
 import ModalForm from 'core_form/modalform';
 import {get_string as getString} from 'core/str';
 import {add as toastAdd, addToastRegion} from 'core/toast';
@@ -31,6 +32,7 @@ import {
 import notification from 'core/notification';
 import ajax from 'core/ajax';
 import {get_strings as getStrings} from 'core/str';
+import {eventTypes as inplaceEditableEvents} from 'core/local/inplace_editable/events';
 
 const selectors = {
     showEditthreadform: '[data-action="show-editthreadform"]',
@@ -39,6 +41,8 @@ const selectors = {
 };
 
 export const init = () => {
+
+    // Add the thread edit form handler.
     const showEditthreadform = document.querySelectorAll(selectors.showEditthreadform);
     if (showEditthreadform === null) {
         return;
@@ -67,31 +71,18 @@ export const init = () => {
                 addToastRegion(form.modal.getRoot()[0]);
                 return true;
             }).catch(displayException);
-            form.addEventListener(form.events.FORM_SUBMITTED, (e) => {
+            form.addEventListener(form.events.FORM_SUBMITTED, () => {
 
                 // Remove toast region as if not it will be displayed on the closed modal.
                 const modalElement = form.modal.getRoot()[0];
                 const regions = modalElement.querySelectorAll('.toast-wrapper');
                 regions.forEach((reg) => reg.remove());
-                if (e.detail.result) {
-                    if (e.detail.result == false) {
-                        toastAdd(e.detail.returnmessage,
-                            {
-                                type: 'warning',
-                            }
-                        );
-                    } else {
-                        toastAdd(e.detail.returnmessage,
-                        {
-                            type: 'success',
-                        });
-                    }
-                }
                 window.location.reload(true);
             });
         });
     }
 
+    // Add the thread delete prompt handler.
     const showDeletethreadprompt = document.querySelectorAll(selectors.showDeletethreadprompt);
     for (let i = 0; i < showDeletethreadprompt.length; i++) {
         showDeletethreadprompt[i].addEventListener('click', event => {
@@ -99,6 +90,8 @@ export const init = () => {
             var threadid = showDeletethreadprompt[i].getAttribute('data-threadid');
             var threadName = showDeletethreadprompt[i].getAttribute('data-name');
             var companyid = showDeletethreadprompt[i].getAttribute('data-companyid');
+            var tableRow = $(showDeletethreadprompt[i]).closest('tr');
+            var success = getString('threaddeleted', 'block_iomad_microlearning');
             getStrings([
                 { key: 'deletethread', component: 'block_iomad_microlearning' },
                 { key: 'deletethreadcheckfull', component: 'block_iomad_microlearning', param: threadName },
@@ -112,7 +105,13 @@ export const init = () => {
                             companyid: companyid,
                         },
                         done: function () {
-                            location.reload();
+                            toastAdd(success,
+                                {
+                                    type: 'success',
+                                    autohide: true,
+                                    closeButton: true,
+                                });
+                            tableRow.remove();
                         },
                         fail: notification.exception,
                     }]);
@@ -121,6 +120,7 @@ export const init = () => {
         });
     }
 
+    // Add clone thread handler.
     const showClonethreadprompt = document.querySelectorAll(selectors.showClonethreadprompt);
     for (let i = 0; i < showClonethreadprompt.length; i++) {
         showClonethreadprompt[i].addEventListener('click', event => {
@@ -150,4 +150,24 @@ export const init = () => {
             });
         });
     }
+
+    // Add inplace editable error handler.
+    $('body').on(inplaceEditableEvents.elementUpdateFailed, '[data-inplaceeditable]', async(e) => {
+        var exception = e.detail.exception; // The exception object returned by the callback.
+
+        if (exception.errorcode !== 'nameemptyerror' &&
+            exception.errorcode !== 'nameinuse'
+        ) {
+            return;
+        }
+        e.preventDefault(); // This will prevent default error dialogue.
+
+        toastAdd(exception.message,
+            {
+                type: 'warning',
+                autohide: true,
+                closeButton: true,
+            }
+        );
+    });
 };

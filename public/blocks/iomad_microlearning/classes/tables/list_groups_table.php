@@ -25,8 +25,8 @@
 
 namespace block_iomad_microlearning\tables;
 
+use block_iomad_microlearning\output\group_name_editable;
 use html_writer;
-use moodle_url;
 use table_sql;
 
 defined('MOODLE_INTERNAL') || die();
@@ -49,6 +49,7 @@ class list_groups_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_threadname($row) {
+
         return format_string($row->threadname);
     }
 
@@ -58,8 +59,21 @@ class list_groups_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_name($row) {
+        global $company, $OUTPUT, $USER;
 
-        return format_string($row->name);
+        // Display the name of inplace editable.
+        if (!empty($USER->editing)) {
+            $editable = new group_name_editable(
+                $row->id,
+                $company->id,
+                $row->threadid,
+                $row->name
+            );
+
+            return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
+        } else {
+            return format_string($row->name, true, 1);
+        }
     }
 
     /**

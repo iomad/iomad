@@ -17,6 +17,7 @@
 namespace block_iomad_microlearning\external;
 
 use block_iomad_microlearning\microlearning;
+use core\notification;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_api;
@@ -91,6 +92,9 @@ class clone_thread extends external_api {
 
         // Do the work.
         microlearning::clone_thread($threadid);
+
+        // Add the notification to the page reload.
+        notification::success(get_string('threadcloned', 'block_iomad_microlearning'));
 
         return true;
     }

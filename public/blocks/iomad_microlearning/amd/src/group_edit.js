@@ -22,6 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+import $ from 'jquery';
 import ModalForm from 'core_form/modalform';
 import {get_string as getString} from 'core/str';
 import {add as toastAdd, addToastRegion} from 'core/toast';
@@ -31,6 +32,7 @@ import {
 import notification from 'core/notification';
 import ajax from 'core/ajax';
 import {get_strings as getStrings} from 'core/str';
+import {eventTypes as inplaceEditableEvents} from 'core/local/inplace_editable/events';
 
 const selectors = {
     showEditgroupform: '[data-action="show-editgroupform"]',
@@ -66,26 +68,12 @@ export const init = () => {
                 addToastRegion(form.modal.getRoot()[0]);
                 return true;
             }).catch(displayException);
-            form.addEventListener(form.events.FORM_SUBMITTED, (e) => {
+            form.addEventListener(form.events.FORM_SUBMITTED, () => {
 
                 // Remove toast region as if not it will be displayed on the closed modal.
                 const modalElement = form.modal.getRoot()[0];
                 const regions = modalElement.querySelectorAll('.toast-wrapper');
                 regions.forEach((reg) => reg.remove());
-                if (e.detail.result) {
-                    if (e.detail.result == false) {
-                        toastAdd(e.detail.returnmessage,
-                            {
-                                type: 'warning',
-                            }
-                        );
-                    } else {
-                        toastAdd(e.detail.returnmessage,
-                        {
-                            type: 'success',
-                        });
-                    }
-                }
                 window.location.reload(true);
             });
         });
@@ -98,6 +86,8 @@ export const init = () => {
             var groupid = showDeletegroupprompt[i].getAttribute('data-groupid');
             var groupName = showDeletegroupprompt[i].getAttribute('data-name');
             var companyid = showDeletegroupprompt[i].getAttribute('data-companyid');
+            var tableRow = $(showDeletegroupprompt[i]).closest('tr');
+            var success = getString('groupdeletedok', 'block_iomad_microlearning');
             getStrings([
                 { key: 'deletegroup', component: 'block_iomad_microlearning', param: groupName },
                 { key: 'deletegroupcheckfull', component: 'block_iomad_microlearning', param: groupName },
@@ -111,7 +101,13 @@ export const init = () => {
                             companyid: companyid,
                         },
                         done: function () {
-                            location.reload();
+                            toastAdd(success,
+                                {
+                                    type: 'success',
+                                    autohide: true,
+                                    closeButton: true,
+                                });
+                            tableRow.remove();
                         },
                         fail: notification.exception,
                     }]);
@@ -119,4 +115,24 @@ export const init = () => {
             });
         });
     }
+
+    // Add inplace editable error handler.
+    $('body').on(inplaceEditableEvents.elementUpdateFailed, '[data-inplaceeditable]', async(e) => {
+        var exception = e.detail.exception; // The exception object returned by the callback.
+
+        if (exception.errorcode !== 'nameemptyerror' &&
+            exception.errorcode !== 'nameinuse'
+        ) {
+            return;
+        }
+        e.preventDefault(); // This will prevent default error dialogue.
+
+        toastAdd(exception.message,
+            {
+                type: 'warning',
+                autohide: true,
+                closeButton: true,
+            }
+        );
+    });
 };
