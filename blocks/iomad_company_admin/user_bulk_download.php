@@ -142,7 +142,7 @@ if ($format) {
 
     $userids = $DB->get_records_sql_menu("SELECT DISTINCT userid, userid as id
         FROM
-            {company_users}
+            {company_users} u
         WHERE
             companyid = :companyid
             " . $sqlsearch, $params);
