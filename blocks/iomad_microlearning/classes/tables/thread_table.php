@@ -68,7 +68,7 @@ class thread_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_active($row) {
-        
+
         if (empty($row->active)) {
             return get_string('no');
         } else {
