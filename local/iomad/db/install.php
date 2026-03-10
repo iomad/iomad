@@ -57,138 +57,119 @@ function xmldb_local_iomad_install() {
 
     // Set up the new roles for IOMAD.
     // Create the Company Manager role.
-    if (!$companymanager = $DB->get_record('role', ['shortname' => 'companymanager'])) {
-        $companymanagerid = create_role('Company Manager',
-                                        'companymanager',
-                                        '(IOMAD) Manages individual companies - can upload users etc.',
-                                        'companymanager'
-                                        );
-
-        // If not done already, allow assignment at system context.
-        $levels = get_role_contextlevels( $companymanagerid );
-        if (empty($levels)) {
-            $level = (object) [];
-            $level->roleid = $companymanagerid;
-            $level->contextlevel = CONTEXT_COMPANY;
-            $DB->insert_record('role_context_levels', $level);
-        }
+    if (!$companymanagerrole = $DB->get_record('role', ['shortname' => 'companymanager'])) {
+        $companymanagerid = create_role(
+            'Company Manager',
+            'companymanager',
+            '(IOMAD) Manages individual companies - can upload users etc.',
+            'companymanager'
+        );
+    } else {
+        $companymanagerid = $companymanagerrole->id;
     }
+
+    // If not done already, allow assignment at company context.
+    set_role_contextlevels($companymanagerid, [CONTEXT_COMPANY]);
 
     // Create new Company Department Manager role.
-    if (!$companydepartmentmanager = $DB->get_record('role',
-                                     ['shortname' => 'companydepartmentmanager'])) {
-        $companydepartmentmanagerid = create_role('Company Department Manager',
-                                                  'companydepartmentmanager',
-                                                  '(IOMAD) Manages departments within companies - can upload users etc.',
-                                                  'companydepartmentmanager'
-                                                  );
-
-        // If not done already, allow assignment at system context.
-        $levels = get_role_contextlevels( $companydepartmentmanagerid );
-        if (empty($levels)) {
-            $level = (object) [];
-            $level->roleid = $companydepartmentmanagerid;
-            $level->contextlevel = CONTEXT_COMPANY;
-            $DB->insert_record('role_context_levels', $level);
-        }
+    if (!$companydepartmentmanager = $DB->get_record('role', ['shortname' => 'companydepartmentmanager'])) {
+        $companydepartmentmanagerid = create_role(
+            'Company Department Manager',
+            'companydepartmentmanager',
+            '(IOMAD) Manages departments within companies - can upload users etc.',
+            'companydepartmentmanager'
+        );
+    } else {
+        $companydepartmentmanagerid = $companydepartmentmanager->id;
     }
 
+    // If not done already, allow assignment at system context.
+    set_role_contextlevels($companydepartmentmanagerid, [CONTEXT_COMPANY]);
+
     // Create the Company Course Editor.
-    if (!$companycourseeditor = $DB->get_record('role',
-                                                ['shortname' => 'companycourseeditor'])) {
+    if (!$companycourseeditor = $DB->get_record('role', ['shortname' => 'companycourseeditor'])) {
         $companycourseeditorid = create_role(
             'Company Course Editor',
             'companycourseeditor',
             '(IOMAD) Teacher style role for Company manager provided to them when they create their own course.',
             'companycourseeditor'
         );
-
-        // If not done already, allow assignment at system context.
-        $levels = get_role_contextlevels( $companycourseeditorid );
-        if (empty($levels)) {
-            $level = (object) [];
-            $level->roleid = $companycourseeditorid;
-            $level->contextlevel = CONTEXT_COURSE;
-            $DB->insert_record('role_context_levels', $level );
-        }
+    } else {
+        $companycourseeditorid = $companycourseeditor->id;
     }
+
+    // If not done already, allow assignment at system context.
+    set_role_contextlevels($companycourseeditorid, [CONTEXT_COURSE]);
 
     // Create new Company Course Non Editor role.
-    if (!$companycoursenoneditor = $DB->get_record('role',
-                                        ['shortname' => 'companycoursenoneditor'])) {
-        $companycoursenoneditorid = create_role('Company Course Non Editor',
-                                                'companycoursenoneditor',
-                                                '(IOMAD) Non editing teacher style role form Company and department managers',
-                                                'companycoursenoneditor'
-                                                );
-
-        // If not done already, allow assignment at system context.
-        $levels = get_role_contextlevels( $companycoursenoneditorid );
-        if (empty($levels)) {
-            $level = (object) [];
-            $level->roleid = $companycoursenoneditorid;
-            $level->contextlevel = CONTEXT_COURSE;
-            $DB->insert_record('role_context_levels', $level);
-        }
+    if (!$companycoursenoneditor = $DB->get_record( 'role', ['shortname' => 'companycoursenoneditor'])) {
+        $companycoursenoneditorid = create_role(
+            'Company Course Non Editor',
+            'companycoursenoneditor',
+            '(IOMAD) Non editing teacher style role form Company and department managers',
+            'companycoursenoneditor'
+        );
+    } else {
+        $companycoursenoneditorid = $companycoursenoneditor->id;
     }
+
+    // If not done already, allow assignment at system context.
+    set_role_contextlevels($companycoursenoneditorid, [CONTEXT_COURSE]);
 
     // Create new Company reporter role.
     if (!$companyreporter = $DB->get_record('role', ['shortname' => 'companyreporter'])) {
-        $companyreporterid = create_role('Company Report Only',
-                                         'companyreporter',
-                                         '(IOMAD) Access to company reports only..',
-                                         'companyreporter'
-                                         );
-
-        // If not done already, allow assignment at system context.
-        $levels = get_role_contextlevels( $companyreporterid );
-        if (empty($levels)) {
-            $level = (object) [];
-            $level->roleid = $companyreporterid;
-            $level->contextlevel = CONTEXT_COMPANY;
-            $DB->insert_record('role_context_levels', $level);
-        }
+        $companyreporterid = create_role(
+            'Company Report Only',
+            'companyreporter',
+            '(IOMAD) Access to company reports only..',
+            'companyreporter'
+        );
+    } else {
+        $companyreporterid = $companyreporter->id;
     }
+
+    // If not done already, allow assignment at system context.
+    set_role_contextlevels($companyreporterid, [CONTEXT_COMPANY]);
 
     // Create new Client administrator role.
     if (!$clientadministrator = $DB->get_record('role', ['shortname' => 'clientadministrator'])) {
-        $clientadministratorid = create_role('Client Administrator',
-                                        'clientadministrator',
-                                        '(IOMAD) Client access to all companies..',
-                                        'clientadministrator'
-                                        );
-
-        // If not done already, allow assignment at system context.
-        $levels = get_role_contextlevels( $clientadministratorid );
-        if (empty($levels)) {
-            $level = (object) [];
-            $level->roleid = $clientadministratorid;
-            $level->contextlevel = CONTEXT_SYSTEM;
-            $DB->insert_record('role_context_levels', $level);
-        }
+        $clientadministratorid = create_role(
+            'Client Administrator',
+            'clientadministrator',
+            '(IOMAD) Client access to all companies..',
+            'clientadministrator'
+        );
+    } else {
+        $clientadministratorid = $clientadministrator->id;
     }
+
+    // If not done already, allow assignment at system context.
+    set_role_contextlevels($clientadministratorid, [CONTEXT_SYSTEM]);
 
     // Create new Client reporter role.
     if (!$clientreporter = $DB->get_record('role', ['shortname' => 'clientreporter'])) {
-        $clientreporterid = create_role('Client Report Only',
-                                        'clientreporter',
-                                        '(IOMAD) Client access to all company reports only..',
-                                        'clientreporter'
-                                        );
-
-        // If not done already, allow assignment at system context.
-        $levels = get_role_contextlevels( $clientreporterid );
-        if (empty($levels)) {
-            $level = (object) [];
-            $level->roleid = $clientreporterid;
-            $level->contextlevel = CONTEXT_SYSTEM;
-            $DB->insert_record('role_context_levels', $level );
-        }
+        $clientreporterid = create_role(
+            'Client Report Only',
+            'clientreporter',
+            '(IOMAD) Client access to all company reports only..',
+            'clientreporter'
+        );
+    } else {
+        $clientreporterid = $clientreporter->id;
     }
+
+    // If not done already, allow assignment at system context.
+    set_role_contextlevels($clientreporterid, [CONTEXT_SYSTEM]);
 
     // Create an adhoctask to set up these roles once cron runs again.
     $roleresettask = new resetrolestask();
+
     // Queue the task.
     manager::queue_adhoc_task($roleresettask);
+
+    // Set the refreshlangpacks task to run ASAP.
+    set_config('local_iomad_email_templates_migrating', 1);
+    $refreshinstalltask = new langpackinitialinstall();
+    manager::queue_adhoc_task($refreshinstalltask);
 
 }
