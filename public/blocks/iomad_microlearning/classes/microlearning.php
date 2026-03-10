@@ -785,7 +785,7 @@ class microlearning {
         $stop = false;
         $completed = false;
         foreach ($nuggets as $nugget) {
-            $schedulerec = new stdclass();
+            $schedulerec = (object) [];
             $schedulerec->userid = $userid;
             $schedulerec->threadid = $threadid;
             $schedulerec->groupid = $groupid;
