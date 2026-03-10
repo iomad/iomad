@@ -25,7 +25,8 @@
 namespace tool_checklearningrecords\task;
 
 use core\task\adhoc_task;
-
+use core\task\manager;
+use tool_checklearningrecords\helper;
 /**
  * Adhoc class definition
  */
@@ -46,8 +47,6 @@ class checklearningrecordstask extends adhoc_task {
     public function execute() {
         global $DB;
 
-        require_once(__DIR__.'/../../lib.php');
-
         // Get the incomplete completion records.
         $brokencompletions = $DB->get_records_sql("SELECT * FROM {local_iomad_tracks}
                                                    WHERE
@@ -60,7 +59,7 @@ class checklearningrecordstask extends adhoc_task {
                                                    (timestarted > 0
                                                     AND timeenrolled IS NULL)");
 
-        do_fixbrokencompletions($brokencompletions);
+        helper::fixbrokencompletions($brokencompletions);
 
         // Get the incomplete license records.
         $brokenlicenses = $DB->get_records_sql("SELECT * FROM {local_iomad_tracks}
@@ -72,7 +71,7 @@ class checklearningrecordstask extends adhoc_task {
                                                  AND licenseallocated > 0
                                                  AND licensename != 'HISTORIC')");
 
-        do_fixbrokenlicenses($brokenlicenses);
+        helper::fixbrokenlicenses($brokenlicenses);
 
         // Get the incomplete completion records.
         $missingcompletions = $DB->get_records_sql("SELECT lit.*,cc.id AS ccid,
@@ -87,7 +86,7 @@ class checklearningrecordstask extends adhoc_task {
                                                     AND lit.timecompleted IS NULL
                                                     AND lit.timestarted > 0");
 
-        do_fixmissingcompletions($missingcompletions);
+        helper::fixmissingcompletions($missingcompletions);
 
         // Sort out all expiry.
         // Calculate the timeexpired for all users.
@@ -112,7 +111,7 @@ class checklearningrecordstask extends adhoc_task {
     public static function queue_task() {
 
         // Let's set up the adhoc task.
-        $task = new \local_iomad_track\task\checklearningrecordstask();
-        \core\task\manager::queue_adhoc_task($task, true);
+        $task = new checklearningrecordstask();
+        manager::queue_adhoc_task($task, true);
     }
 }

@@ -23,6 +23,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use tool_checklearningrecords\helper;
+
 define('CLI_SCRIPT', true);
 
 require(__DIR__.'/../../../../config.php');
@@ -76,7 +78,7 @@ if ($options['fix']) {
                                                (timestarted > 0
                                                 AND timeenrolled IS NULL)");
 
-    do_fixbrokencompletions($brokencompletions);
+    helper::fixbrokencompletions($brokencompletions);
 
     // Get the incomplete license records.
     $brokenlicenses = $DB->get_records_sql("SELECT * FROM {local_iomad_tracks}
@@ -88,7 +90,7 @@ if ($options['fix']) {
                                              AND licenseallocated > 0
                                              AND licensename != 'HISTORIC')");
 
-    do_fixbrokenlicenses($brokenlicenses);
+    helper::fixbrokenlicenses($brokenlicenses);
 
     // Get the incomplete completion records.
     $missingcompletions = $DB->get_records_sql("SELECT lit.*,cc.id AS ccid,
@@ -103,7 +105,7 @@ if ($options['fix']) {
                                                 AND lit.timecompleted IS NULL
                                                 AND lit.timestarted > 0");
 
-    do_fixmissingcompletions($missingcompletions);
+    helper::fixmissingcompletions($missingcompletions);
 
     // Sort out all expiry.
     // Calculate the timeexpired for all users.
