@@ -95,7 +95,7 @@ class current_group extends company_base {
         }
 
         $fields = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
-        $countfields = 'SELECT COUNT(1)';
+        $countfields = 'SELECT COUNT(DISTINCT u.id)';
 
         $sql = " FROM {user} u
                  JOIN {local_iomad_company_users} cu  ON (

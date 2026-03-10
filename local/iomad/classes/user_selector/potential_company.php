@@ -86,7 +86,7 @@ class potential_company extends company_base {
 
         // Set up the SQL.
         $fields = 'SELECT DISTINCT ' . $this->required_fields_sql('u') . ',u.institution';
-        $countfields = 'SELECT COUNT(1)';
+        $countfields = 'SELECT COUNT(DISTINCT u.id)';
 
         $sql = " FROM {user} u
                  LEFT JOIN {user_info_data} ui ON ui.userid = u.id
