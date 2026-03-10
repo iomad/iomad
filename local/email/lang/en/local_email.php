@@ -71,6 +71,7 @@ $string['from'] = 'From';
 $string['fromother'] = 'Manual From address';
 $string['fromothername'] = 'Manual From name';
 $string['importlangpackadhoc'] = 'Import language pack ad-hoc task';
+$string['langpackinitialinstalladhoc'] = 'Adhoc task run at installation to ensure the lang packs are loaded into tool_customlang tables.';
 $string['managetemplatesets'] = 'Manage template sets';
 $string['migratetemplatesadhoc'] = 'Migrate email templates ad-hoc task';
 $string['missingtemplatesetname'] = 'Please enter a template set name';
