@@ -151,7 +151,7 @@ class potential_department extends company_base {
         $params['departmentid'] = $this->departmentid;
 
         $fields = 'SELECT DISTINCT ' . $this->required_fields_sql('u') . ", u.email";
-        $countfields = 'SELECT DISTINCT COUNT(u.id)';
+        $countfields = 'SELECT COUNT(DISTINCT u.id)';
 
         // Deal with current department users.
         $departmentusers = $this->get_department_user_ids();

@@ -108,7 +108,7 @@ class current_course extends company_base {
                                    u.email,
                                    c.id AS courseid,
                                    c.fullname';
-        $countfields = 'SELECT COUNT(1)';
+        $countfields = 'SELECT COUNT(DISTINCT ue.id)';
 
         $sql = " FROM {user} u
                  JOIN {local_iomad_company_users} cu ON (

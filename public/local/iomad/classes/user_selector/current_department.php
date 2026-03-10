@@ -112,7 +112,7 @@ class current_department extends company_base {
         $params['thiscompanyid'] = $this->companyid;
 
         $fields = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
-        $countfields = 'SELECT COUNT(1)';
+        $countfields = 'SELECT COUNT(DISTINCT u.id)';
 
         // Deal with external managers.
         $othermanagersql = "";
