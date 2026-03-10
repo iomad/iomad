@@ -139,12 +139,32 @@ class manager_warning_digest_task extends \core\task\scheduled_task {
                         $departmentusersql = " AND 1 = 2 ";
                     }
 
-                    $manageruserssql = "SELECT lit.*, c.name AS companyname, ic.notifyperiod, u.firstname,u.lastname,u.username,u.email,u.lang,ic.warncompletion * 86400 AS warningtime
+                    $manageruserssql = "SELECT lit.*,
+                                               c.name AS companyname,
+                                               ic.notifyperiod,
+                                               u.firstname,
+                                               u.lastname,
+                                               u.username,
+                                               u.email,
+                                               u.lang,
+                                               ic.warncompletion * 86400 AS warningtime
                                         FROM {local_iomad_track} lit
                                         JOIN {company} c ON (lit.companyid = c.id)
                                         JOIN {iomad_courses} ic ON (lit.courseid = ic.courseid)
                                         JOIN {user} u ON (lit.userid = u.id)
                                         JOIN {course} co ON (lit.courseid = co.id AND ic.courseid = co.id)
+                                        JOIN {user_enrolments} ue ON (
+                                            ue.userid = u.id
+                                            AND ue.userid = lit.userid
+                                            AND ue.timestart = lit.timeenrolled
+                                        )
+                                        JOIN {enrol} e ON (
+                                            ue.enrolid = e.id
+                                            AND e.courseid = co.id
+                                            AND e.courseid = ic.courseid
+                                            AND e.courseid = lit.courseid
+                                            AND e.status = 0
+                                        )
                                         WHERE co.visible = 1
                                         AND ic.warncompletion > 0
                                         AND u.deleted = 0
