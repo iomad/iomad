@@ -253,7 +253,9 @@ class oidc_sync {
                     mtrace("failed to create user " . $userrec->username);
                     continue;
                 }
-                $userrec->id = $userid;
+
+                // Get the user record again as there may be changes due to company default settings.
+                $userrec = $DB->get_record('user', ['id' => $userid]);
 
                 // Save custom profile fields data and fire the creation.
                 foreach ($mappedfields as $profilefield => $mapping) {
