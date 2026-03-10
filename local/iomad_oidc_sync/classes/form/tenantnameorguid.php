@@ -69,6 +69,9 @@ class tenantnameorguid extends dynamic_form {
                                     'tenantnameorguid' => '',
                                     'syncgroupid' => ''];
             $companyrec->id = $DB->insert_record('local_iomad_oidc_sync', $companyrec);
+        } else {
+            // Capture the old name in case we need to check for changes.
+            $oldname = $companyrec->tenantnameorguid;
         }
 
         // Check if there have been changes to the Tenant name of GUID.
