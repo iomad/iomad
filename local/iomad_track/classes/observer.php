@@ -245,19 +245,19 @@ class observer {
                             $finalscore = $graderec->finalgrade / $graderec->rawgrademax * 100;
                         }
                     }
-            
+
                     // Is the record broken?
                     $broken = false;
                     if (empty($comprec->timeenrolled)) {
                         $broken = true;
                         $comprec->timeenrolled = $enrolrec->timestart;
                     }
-            
+
                     if (empty($comprec->timestarted)) {
                         $broken = true;
                         $comprec->timestarted = $enrolrec->timestart;
                     }
-            
+
                     if ($broken) {
                         // Update the completion record.
                         $DB->update_record('course_completions', $comprec);
@@ -324,7 +324,7 @@ class observer {
                         $licensename = $license->name;
                     }
                 }
-    
+
                 // Record the completion event.
                 $completion = new \StdClass();
                 $completion->courseid = $courseid;
@@ -339,12 +339,12 @@ class observer {
                 $completion->licensename = $licensename;
                 $completion->licenseallocated = $licenseallocated;
                 $completion->modifiedtime = time();
-    
+
                 // Deal with completion valid length.
                 if (!empty($offset)) {
                     $completion->timeexpires = $completion->timecompleted + $offset;
                 }
-    
+
                 $trackid = $DB->insert_record('local_iomad_track', $completion);
 
                 // Fire the ad-hoc task to generate the certificate.
@@ -514,7 +514,15 @@ class observer {
 
         // We only care about company users.
         if (empty($companyid)) {
-            return true;
+            // Try and get a company id for the user - as it may not be set when the event is fired.
+            if ($company = company::by_userid($userid, true)) {
+                $companyid = $company->id;
+            }
+
+            // Do we now have a companyid?
+            if (empty($companyid) || !($companyid > 0)) {
+                return true;
+            }
         }
 
         // Get the enrolment information.
@@ -551,7 +559,7 @@ class observer {
         $enrol = $DB->get_record('enrol', ['id' => $enrolrec->enrolid]);
         $companies = [$companyid];
         if ($enrol->enrol == 'self') {
-            // If this is an unassigned course or an open shared course - 
+            // If this is an unassigned course or an open shared course -
             if ($DB->get_record('iomad_courses', ['courseid' => $courseid, 'shared' => 1]) ||
                 !$DB->get_record('iomad_courses', ['courseid' => $courseid])) {
               // The it's evey company the user is assigned to.
