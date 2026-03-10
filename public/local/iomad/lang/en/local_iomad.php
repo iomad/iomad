@@ -213,6 +213,7 @@ $string['iomadcertificate_signature'] = 'Default signature for IOMAD Company cer
 $string['iomadcertificate_signaturedesc'] = 'This is the default signature image used for the IOMAD Company certificate type. You can override it in the company edit pages. The uploaded image should be 31 pixels x 150 pixels and have a transparent background.';
 $string['iomadcertificate_watermark'] = 'Default watermark for IOMAD Company certificate';
 $string['iomadcertificate_watermarkdesc'] = 'This is the default watermark image used for the IOMAD Company certificate type. You can override it in the company edit pages. The uploaded image should be no more than 800 pixels x 604 pixels.';
+$string['langpackinitialinstalladhoc'] = 'Adhoc task run at installation to ensure the lang packs are loaded into tool_customlang tables.';
 $string['lastnamefilter'] = 'Last name contains';
 $string['logininfo'] = 'Fill out the form below to create a new user. An email will be sent to the email address you specify to verify the account and allow access.';
 $string['manager_completion_digest_task'] = 'Email reports - Manager recent completions digest task';
