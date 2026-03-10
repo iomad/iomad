@@ -619,9 +619,17 @@ class track {
 
         // We only care about company users.
         if (empty($companyid)) {
-            return true;
-        }
+            // Try and get a company id for the user - as it may not be set when the event is fired.
+            if ($company = company::by_userid($userid, true)) {
+                $companyid = $company->id;
+            }
 
+            // Do we now have a companyid?
+            if (empty($companyid) || !($companyid > 0)) {
+                return true;
+            }
+        }
+        
         // Get the enrolment information.
         if (!$enrolrec = $DB->get_record('user_enrolments', ['id' => $event->objectid])) {
             // Enrolment doesn't exist.
