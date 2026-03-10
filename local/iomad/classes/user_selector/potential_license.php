@@ -204,7 +204,7 @@ class potential_license extends company_base {
         $params['companyid'] = $this->companyid;
 
         $fields = 'SELECT DISTINCT ' . $this->required_fields_sql('u').', u.email ';
-        $countfields = 'SELECT COUNT(1)';
+        $countfields = 'SELECT COUNT(DISTINCT u.id)';
         $myusers = company::get_my_users($this->companyid);
 
         // Are we dealing with an educator license?
@@ -220,7 +220,7 @@ class potential_license extends company_base {
         // Get the current license user ids.
         $userfilter = "";
         $licenseusers = $this->get_license_user_ids();
-        if (count($licenseusers) > 0 && (!$this->multiselect || !$this->program)) {
+        if (count($licenseusers) > 0 && ($this->multiselect || $this->program)) {
             [$notinsql, $notinparams] = $DB->get_in_or_equal($licenseusers,
                                                              SQL_PARAMS_NAMED,
                                                             'licuids',
