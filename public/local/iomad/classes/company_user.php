@@ -387,7 +387,7 @@ class company_user {
             $DB->set_field('user', 'suspended', 1, ['id' => $userid]);
 
             // Log the user out.
-            \core\session\manager::kill_user_sessions($userid);
+            \core\session\manager::destroy_user_sessions($userid);
         }
     }
 
