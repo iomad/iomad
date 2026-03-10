@@ -579,20 +579,11 @@ class company_license_users_form extends \moodleform {
                 if (!empty($licenserecord['program'])) {
                     $userrecords = [];
                     foreach ($licensestounassign as $licenserecid) {
-
-                        // Get the user from the initial license ID passed.
-                        $userlic = $DB->get_record('companylicense_users', ['id' => $licenserecid], '*', MUST_EXIST);
-                        [$insql, $sqlparams] = $DB->get_in_or_equal($licensestounassign,
-                                                                    SQL_PARAMS_NAMED,
-                                                                    'licuids');
                         $sqlparams['licenseid'] = $this->license->id;
+                        $sqlparams['userid'] = $licenserecid;
                         $userrecords = $userrecords + array_keys($DB->get_records_sql("SELECT id FROM {companylicense_users}
                                                                                        WHERE licenseid = :licenseid
-                                                                                       AND userid IN (
-                                                                                           SELECT userid
-                                                                                           FROM {companylicense_users}
-                                                                                           WHERE id {$insql}
-                                                                                       )",
+                                                                                       AND userid = :userid",
                                                                                       $sqlparams));
                     }
                     $licensestounassign = $userrecords;

@@ -1290,7 +1290,8 @@ class potential_license_user_selector extends company_user_selector_base {
             $edusql = "";
         }
         $licenseusers = $this->get_license_user_ids();
-        if (count($licenseusers) > 0 && (!$this->multiselect || !$this->program)) {
+
+        if (count($licenseusers) > 0 && ($this->multiselect || $this->program)) {
             $userfilter = " AND NOT u.id in (" . implode(',', $licenseusers) . ") ";
         } else {
             $userfilter = "";
@@ -1337,9 +1338,7 @@ class potential_license_user_selector extends company_user_selector_base {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }
-
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
-
         if (empty($availableusers)) {
             return [];
         }
@@ -1507,7 +1506,7 @@ class current_license_user_selector extends company_user_selector_base {
             }
             $maxcount = $CFG->iomad_max_select_users;
             $fields      = 'SELECT DISTINCT clu.id as licenseid, ' . $this->required_fields_sql('u') . ', u.email, c.fullname, clu.isusing ';
-            $countfields = 'SELECT COUNT(1)';
+            $countfields = 'SELECT COUNT(DISTINCT clu.id)';
 
             $sql = " FROM {companylicense_users} clu
                      LEFT JOIN {user} u ON (clu.userid = u.id)
@@ -1527,7 +1526,7 @@ class current_license_user_selector extends company_user_selector_base {
             $order = ' ORDER BY u.firstname , u.lastname, c.fullname ASC';
         } else {
             $maxcount = $CFG->iomad_max_select_users * count($this->courses);
-            $fields      = 'SELECT clu.id as licenseid, ' . $this->required_fields_sql('u') . ', u.email, clu.isusing ';
+            $fields      = 'SELECT DISTINCT clu.userid as licenseid, ' . $this->required_fields_sql('u') . ', u.email, clu.isusing ';
             $countfields = 'SELECT COUNT(1)';
 
             $sql = " FROM {companylicense_users} clu
