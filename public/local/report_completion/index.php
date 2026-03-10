@@ -847,29 +847,6 @@ if (empty($courseid)) {
         echo $output->footer();
     }
 } else {
-    // Do we have any additional reporting fields?
-    $extrafields = [];
-    if (!empty(get_config('local_iomad', 'report_fields'))) {
-        $companyrec = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
-        foreach (explode(',', get_config('local_iomad', 'report_fields')) as $extrafield) {
-            $extrafields[$extrafield] = new stdclass();
-            $extrafields[$extrafield]->name = $extrafield;
-            if (strpos($extrafield, 'profile_field') !== false) {
-                // Its an optional profile field.
-                $profilefield = $DB->get_record('user_info_field', ['shortname' => str_replace('profile_field_', '', $extrafield)]);
-                if ($profilefield->categoryid == $companyrec->profilecategoryid ||
-                    !$DB->get_record('local_iomad_companies', ['profilecategoryid' => $profilefield->categoryid])) {
-                    $extrafields[$extrafield]->title = $profilefield->name;
-                    $extrafields[$extrafield]->fieldid = $profilefield->id;
-                } else {
-                    unset($extrafields[$extrafield]);
-                }
-            } else {
-                $extrafields[$extrafield]->title = get_string($extrafield);
-            }
-        }
-    }
-
     // Set up the display table.
     $table = new user_table('local_report_course_completion_user_table');
     if ($courseid == 1) {
@@ -1070,26 +1047,8 @@ if (empty($courseid)) {
     }
 
     if (empty($USER->editing)) {
-        // Deal with optional report fields.
-        if (!empty($extrafields)) {
-            foreach ($extrafields as $extrafield) {
-                $headers[] = $extrafield->title;
-                $columns[] = $extrafield->name;
-                if (empty($extrafield->fieldid)) {
-                    $selectsql .= ", u." . $extrafield->name;
-                }
-            }
-            foreach ($extrafields as $extrafield) {
-                if (!empty($extrafield->fieldid)) {
-                    // Its a profile field.
-                    $selectsql .= ", P" . $extrafield->fieldid . ".data AS " . $extrafield->name;
-                    $fromsql .= " LEFT JOIN {user_info_data} P" . $extrafield->fieldid .
-                    " ON (u.id = P" . $extrafield->fieldid . ".userid AND P".$extrafield->fieldid . ".fieldid = :p" .
-                    $extrafield->fieldid . "fieldid )";
-                    $sqlparams["p".$extrafield->fieldid."fieldid"] = $extrafield->fieldid;
-                }
-            }
-        }
+        // Do we have any additional reporting fields?
+        $company->add_company_extrafields($headers, $columns, $selectsql, $fromsql, $sqlparams);
     }
 
     // Are we showing all courses?

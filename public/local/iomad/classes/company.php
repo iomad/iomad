@@ -4320,6 +4320,68 @@ class company {
         }
     }
 
+    /**
+     * Add any optional company profile field information to the passed items.
+     *
+     * @param array $headers
+     * @param array $columns
+     * @param string $selectsql
+     * @param string $fromsql
+     * @param array $sqlparams
+     * @return void
+     */
+    public function add_company_extrafields(array &$headers,
+                                            array &$columns,
+                                            string &$selectsql,
+                                            string &$fromsql,
+                                            array &$sqlparams) {
+        global $CFG, $DB;
+
+        // Set some defaults.
+        $extrafields = [];
+        if (!empty($CFG->iomad_report_fields)) {
+            foreach (explode(',', get_config('local_iomad', 'report_fields')) as $extrafield) {
+                $extrafields[$extrafield] = (object) [];
+                $extrafields[$extrafield]->name = $extrafield;
+                if (strpos($extrafield, 'profile_field') !== false) {
+
+                    // Its an optional profile field.
+                    $profilefield = $DB->get_record(
+                        'user_info_field',
+                        ['shortname' => str_replace('profile_field_', '', $extrafield)]
+                    );
+                    if ($profilefield->categoryid == $this->companyrecord->profileid ||
+                        !$DB->get_record('company', ['profileid' => $profilefield->categoryid])) {
+                        $extrafields[$extrafield]->title = $profilefield->name;
+                        $extrafields[$extrafield]->fieldid = $profilefield->id;
+                    } else {
+                        unset($extrafields[$extrafield]);
+                    }
+                } else {
+                    $extrafields[$extrafield]->title = get_string($extrafield);
+                }
+            }
+        }
+
+        // Process any extra fields.
+        foreach ($extrafields as $extrafield) {
+            $headers[] = $extrafield->title;
+            if (empty($extrafield->fieldid)) {
+
+                $selectsql .= ", u." . $extrafield->name . " AS u" . $extrafield->name;
+                $columns[] = 'u' . $extrafield->name;
+            } else {
+                // Its a profile field.
+                $selectsql .= ", P" . $extrafield->fieldid . ".data AS " . $extrafield->name;
+                $fromsql .= " LEFT JOIN {user_info_data} P" . $extrafield->fieldid .
+                            " ON (u.id = P" . $extrafield->fieldid . ".userid
+                              AND P" . $extrafield->fieldid . ".fieldid = :p" . $extrafield->fieldid . "fieldid )";
+                $sqlparams["p" . $extrafield->fieldid . "fieldid"] = $extrafield->fieldid;
+                $columns[] = $extrafield->name;
+            }
+        }
+    }
+
     // Competencies stuff.
 
     /**
