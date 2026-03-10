@@ -23,14 +23,14 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use tool_checklearningrecords\helper;
+
 define('NO_OUTPUT_BUFFERING', true);
 
 require(__DIR__.'/../../../config.php');
-require_once(__DIR__.'/lib.php');
 require_once($CFG->dirroot.'/course/lib.php');
 require_once($CFG->libdir.'/adminlib.php');
-require_once($CFG->dirroot.'/local/iomad_track/db/install.php');
-require_once($CFG->dirroot.'/admin/tool/checklearningrecords/lib.php');
+require_once("$CFG->libdir/formslib.php");
 
 admin_externalpage_setup('toolchecklearningrecords');
 
@@ -88,7 +88,7 @@ if (!$data = $form->get_data()) {
 $PAGE->requires->js_init_code("window.scrollTo(0, 5000000);");
 if (!empty($brokencompletions)) {
     echo $OUTPUT->box_start();
-    do_fixbrokencompletions($brokencompletions);
+    helper::fixbrokencompletions($brokencompletions);
     echo $OUTPUT->box_end();
 }
 
@@ -103,7 +103,7 @@ if (!empty($brokenlicenses)) {
                                              AND licenseallocated > 0
                                              AND licensename != 'HISTORIC')");
         echo $OUTPUT->box_start();
-        do_fixbrokenlicenses($brokenlicenses);
+        helper::fixbrokenlicenses($brokenlicenses);
         echo $OUTPUT->box_end();
 }
 
@@ -122,7 +122,7 @@ if (!empty($missingcompletions)) {
                                                 AND lit.timestarted > 0");
 
     echo $OUTPUT->box_start();
-    do_fixmissingcompletions($missingcompletions);
+    helper::fixmissingcompletions($missingcompletions);
     echo $OUTPUT->box_end();
 }
 
@@ -142,6 +142,8 @@ foreach ($expirycourses as $expirycourse) {
 }
 
 // Course caches are now rebuilt on the fly.
+
+echo $OUTPUT->box(get_string('completed'));
 
 echo $OUTPUT->continue_button(new moodle_url('/admin/index.php'));
 

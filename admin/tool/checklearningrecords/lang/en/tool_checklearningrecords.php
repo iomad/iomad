@@ -24,11 +24,15 @@
  */
 
 $string['brokencompletions'] = 'Number of records with broken completion information : {$a}';
+$string['brokendetail'] = 'IDs: {$a}';
 $string['brokenlicenses'] = 'Number of records with broken license information : {$a}';
+$string['brokensummary'] = 'Remaining = {$a} broken records.';
 $string['checklearningrecordstask'] = 'Check learning records adhoc task';
 $string['companyid'] = 'Company ID';
+$string['coursecompletedsummary'] = 'Fired course completed event for {$a} entries';
 $string['courseid'] = 'Course ID';
 $string['doit'] = 'Yes, do it!';
+$string['fixedsummary'] = 'Fixed {$a} records';
 $string['fromdate'] = 'Completion from date';
 $string['idnumber'] = 'From tracking id number';
 $string['missingcompletions'] = 'Number of records which are completed but not recorded : {$a}';
