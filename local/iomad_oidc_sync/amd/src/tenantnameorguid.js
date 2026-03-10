@@ -73,7 +73,7 @@ export const init = () => {
                         });
                     }
 
-                    //Replace the string in the admin approve link
+                    // Replace the string in the admin approve link
                     if (e.detail.tenantnameorguid != e.detail.oldname) {
                         var companyID = e.detail.companyid;
                         var approveLink = document.querySelector('[data-approvelink' +
