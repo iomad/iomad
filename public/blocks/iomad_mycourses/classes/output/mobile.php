@@ -42,8 +42,7 @@ class mobile {
      * @return array HTML, javascript and other data
      */
     public static function mobile_view_block($args) {
-        global $CFG, $PAGE, $OUTPUT;
-        require_once($CFG->dirroot . '/blocks/iomad_mycourses/locallib.php');
+        global $PAGE, $OUTPUT;
 
         $args = (object) $args;
         $page = isset($args->page) ? $args->page : 'inprogress';
