@@ -897,7 +897,7 @@ class company {
                         if ($user = $DB->get_record('user', ['id' => $educator->userid,
                                                              'deleted' => 0]) ) {
                             if ($DB->record_exists('course', ['id' => $course->id])) {
-                                if ($DB->record_exists('iomad_courses', ['courseid' => $course->id, 'shared' => 1])) {
+                                if (!$own) {
                                     // Not created by a company manager.
                                     company_user::enrol($user,
                                                         [$course->id],
