@@ -577,24 +577,14 @@ class company_license_users_form extends moodleform {
                 if (!empty($licenserecord['program'])) {
                     $userrecords = [];
                     foreach ($licensestounassign as $licenserecid) {
-
-                        // Get the user from the initial license ID passed.
-                        $userlic = $DB->get_record('local_iomad_company_license_users', ['id' => $licenserecid], '*', MUST_EXIST);
-                        [$insql, $sqlparams] = $DB->get_in_or_equal($licensestounassign,
-                                                                    SQL_PARAMS_NAMED,
-                                                                    'licuids');
                         $sqlparams['licenseid'] = $this->license->id;
-                        $userrecords = $userrecords + array_keys(
-                            $DB->get_records_sql(
-                                "SELECT id
-                                 FROM {local_iomad_company_license_users}
-                                 WHERE licenseid = :licenseid
-                                 AND userid IN (
-                                     SELECT userid
-                                     FROM {local_iomad_company_license_users}
-                                     WHERE id {$insql}
-                                 )",
-                                $sqlparams));
+                        $sqlparams['userid'] = $licenserecid;
+                        $userrecords = $userrecords +
+                                       array_keys($DB->get_records_sql("SELECT id
+                                                                        FROM {local_iomad_company_license_users}
+                                                                        WHERE licenseid = :licenseid
+                                                                        AND userid = :userid",
+                                                                        $sqlparams));
                     }
                     $licensestounassign = $userrecords;
                     if ($licenserecord['type'] == 1 || $licenserecord['type'] == 3) {
