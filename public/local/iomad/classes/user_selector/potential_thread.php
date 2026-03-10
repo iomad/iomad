@@ -126,7 +126,7 @@ class potential_thread extends company_base {
                  WHERE $wherecondition
                  AND u.suspended = 0
                  AND cu.companyid = :companyid
-                 AND cu.managertype = 0
+                 AND cu.educator = 0
                  $departmentsql
                  $userfilter
                  AND u.id NOT IN (
