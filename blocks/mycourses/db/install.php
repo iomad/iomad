@@ -29,18 +29,29 @@
  * @return bool
  */
 function xmldb_block_mycourses_install() {
+    global $DB;
 
     // Add some default blocks to the dashboard
     // yes, I know this isn't really what this is for!!
     $systemcontext = context_system::instance();
     $page = new moodle_page();
     $page->set_context( $systemcontext );
-    $page->set_pagetype( 'my-index' );
-    $page->blocks->add_region('content');
-    $defaultblocks = [
-        'content' => ['mycourses'],
-        ];
-    $page->blocks->add_blocks($defaultblocks);
+
+    if ($defaultmycoursespage = $DB->get_record(
+        'my_pages',
+        ['userid' => null, 'name' => '__courses', 'private' => 0])) {
+        $mycoursesubpagepattern = $defaultmycoursespage->id;
+    } else {
+        $mycoursesubpagepattern = null;
+    }
+
+    $page->blocks->add_blocks($page->blocks->filter_nonexistent_blocks([
+        'content' => [
+            'mycourses',
+        ]]),
+        'my-index',
+        $mycoursesubpagepattern
+    );
 
     return true;
 }
