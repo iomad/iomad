@@ -194,7 +194,9 @@ class company {
      */
     public function get_dashboard_url(): moodle_url|bool {
         global $CFG, $DB;
-        if ($url = $DB->get_record('local_iomad_company_pages', ['companyid' => $this->id, 'type' => 'dashboard'])) {
+
+        if (!empty($this->id) &&
+            $url = $DB->get_record('local_iomad_company_pages', ['companyid' => $this->id, 'type' => 'dashboard'])) {
             return new moodle_url($CFG->wwwroot . "/local/iomadcustompage/view.php", ['id' => $url->pageid, 'useasmy' => true]);
         }
         return false;
