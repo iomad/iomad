@@ -558,7 +558,9 @@ $sqlparams['companyid'] = $companyid;
 $sqlparams = $sqlparams + $searchinfo->searchparams;
 
 // Do we have any additional reporting fields?
-$company->add_company_extrafields($headers, $columns, $selectsql, $fromsql, $sqlparams);
+if (!$bycourse) {
+    $company->add_company_extrafields($headers, $columns, $selectsql, $fromsql, $sqlparams);
+}
 
 // Deal with initial sort.
 $ifirstsort = "";
