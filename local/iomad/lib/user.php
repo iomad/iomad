@@ -199,12 +199,17 @@ class company_user {
         }
 
         // Check if this hasn't already been called elsewhere.
-        if (!$DB->get_record('company_users',
+        // Use only the unique constraint fields (companyid, userid, departmentid) for the lookup.
+        if ($existing = $DB->get_record('company_users',
                              ['userid' => $user->id,
                               'companyid' => $company->id,
-                              'managertype' => $data->managertype,
                               'departmentid' => $data->departmentid])) {
-
+            // Update managertype if it has changed.
+            if ($existing->managertype != $data->managertype) {
+                $existing->managertype = $data->managertype;
+                $DB->update_record('company_users', $existing);
+            }
+        } else {
             // Create the user association.
             $DB->insert_record('company_users', array('userid' => $user->id,
                                                       'companyid' => $company->id,
