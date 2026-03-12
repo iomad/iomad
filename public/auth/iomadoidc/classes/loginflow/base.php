@@ -358,8 +358,8 @@ class base {
      * @param \moodle_url|null $selfurl The page this is accessed from. Used for some redirects.
      * @param  $userid
      */
-    public function disconnect($justremovetokens = false, $donotremovetokens = false, \moodle_url $redirect = null,
-                               \moodle_url $selfurl = null, $userid = null) {
+    public function disconnect($justremovetokens = false, $donotremovetokens = false, ?\moodle_url $redirect = null,
+                               ?\moodle_url $selfurl = null, $userid = null) {
         global $USER, $DB, $CFG;
         if ($redirect === null) {
             $redirect = new \moodle_url('/auth/iomadoidc/ucp.php');

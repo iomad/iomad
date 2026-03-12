@@ -1271,7 +1271,7 @@ class Configuration implements Utils\ClearableState
      *
      * @throws \Exception If no supported endpoint is found and no $default parameter is specified.
      */
-    public function getDefaultEndpoint(string $endpointType, array $bindings = null, $default = self::REQUIRED_OPTION)
+    public function getDefaultEndpoint(string $endpointType, ?array $bindings = null, $default = self::REQUIRED_OPTION)
     {
         $endpoints = $this->getEndpoints($endpointType);
 
