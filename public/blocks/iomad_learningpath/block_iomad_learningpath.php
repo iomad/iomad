@@ -50,7 +50,7 @@ class block_iomad_learningpath extends block_base {
      */
     public function applicable_formats() {
         return [
-            'all' => false,
+            'all' => true,
             'my' => true,
             'local-iomadcustompage' => true,
         ];

@@ -24,8 +24,26 @@
  */
 
 namespace block_iomad_learningpath;
+use block_iomad_learningpath\event\{
+    course_added,
+    course_removed,
+    group_created,
+    group_deleted,
+    group_updated,
+    learningpath_created,
+    learningpath_deleted,
+    learningpath_updated,
+    user_assigned,
+    user_unassigned
+};
+use context_course;
+use core\exception\coding_exception;
+use core\exception\moodle_exception;
+use local_iomad\{company, company_user, emailtemplate};
+use local_iomad\custom_context\context_company;
+use mod_trainingevent\event\user_removed;
+use moodle_url;
 
-use local_iomad\company;
 /**
  * IOMAD learningpaths main class
  *
@@ -106,7 +124,7 @@ class companypaths {
             if (!$create) {
                 throw new moodle_exception('nopath', 'block_iomad_learningpath');
             }
-            $path = new \stdClass;
+            $path = (object) [];
             $path->companyid = $this->companyid;
             $path->timecreated = time();
             $path->timeupdated = time();
@@ -133,7 +151,7 @@ class companypaths {
             $group = $DB->get_record('block_iomad_learningpath_groups', ['pathid' => $pathid, 'id' => $groupid], '*', MUST_EXIST);
             return $group;
         } else {
-            $group = new \stdClass;
+            $group = (object) [];
             $group->pathid = $pathid;
             $group->name = get_string('untitledgroup', 'block_iomad_learningpath');
             $group->sequence = 0;
@@ -168,13 +186,22 @@ class companypaths {
      * @param int $groupid
      */
     public function delete_group(int $pathid, int $groupid) {
-        global $DB;
+        global $DB, $USER;
 
         // Remove group courses from LP.
         $DB->delete_records('block_iomad_learningpath_courses', ['pathid' => $pathid, 'groupid' => $groupid]);
 
         // Remove group.
         $DB->delete_records('block_iomad_learningpath_groups', ['pathid' => $pathid, 'id' => $groupid]);
+
+        // Fire an event for this.
+        $event = group_deleted::create([
+            'context' => $this->context,
+            'objectid' => $groupid,
+            'userid' => $USER->id,
+            'other' => ['pathid' => $pathid],
+        ]);
+        $event->trigger();
     }
 
     /**
@@ -323,7 +350,7 @@ class companypaths {
         $PAGE->navbar->add(get_string('administrationsite'));
         $PAGE->navbar->add(
             get_string('managetitle', 'block_iomad_learningpath'),
-            new \moodle_url('/blocks/iomad_learningpath/manage.php'));
+            new moodle_url('/blocks/iomad_learningpath/manage.php'));
         if ($linktext) {
             $PAGE->navbar->add($linktext, $linkurl);
         }
@@ -339,11 +366,11 @@ class companypaths {
 
         $fs = get_file_storage();
 
-        $context = \context_course::instance($courseid);
+        $context = context_course::instance($courseid);
         $files = $fs->get_area_files($context->id, 'course', 'overviewfiles', 0);
         foreach ($files as $file) {
             if ($file->is_valid_image()) {
-                return \moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(),
+                return moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(),
                     null, $file->get_filepath(), $file->get_filename())->out();
             }
         }
@@ -380,9 +407,18 @@ class companypaths {
         }
 
         // Add images and groupid.
-        foreach ($courses as $course) {
-            $course->image = $this->get_course_image_url($course->courseid);
-            $course->groupid = $groupid;
+        foreach ($courses as $id => $course) {
+            $courses[$id]->image = $this->get_course_image_url($course->courseid);
+            $courses[$id]->groupid = $groupid;
+
+            // What kind of course is this?
+            if ($DB->record_exists('local_iomad_courses', ['courseid' => $id, 'licensed' => 1])) {
+                $courses[$id]->enroltype = get_string('pluginname', 'enrol_license');
+            } else if ($DB->record_exists('enrol', ['courseid' => $id, 'enrol' => 'self', 'status' => 0])) {
+                $courses[$id]->enroltype = get_string('pluginname', 'enrol_self');
+            } else {
+                $courses[$id]->enroltype = get_string('pluginname', 'enrol_manual');
+            }
         }
 
         return $courses;
@@ -419,7 +455,7 @@ class companypaths {
         global $DB;
 
         // Get currently selected courses.
-        $selectedcourses = $this->get_courselist($pathid, 0, true);
+        $selectedcourses = array_flip($this->get_courselist($pathid, 0, true));
 
         $topdepartment = company::get_company_parentnode($this->companyid);
         $depcourses = company::get_recursive_department_courses($topdepartment->id);
@@ -430,14 +466,14 @@ class companypaths {
 
             // Get full course object.
             if (!$course = $DB->get_record('course', ['id' => $depcourse->courseid])) {
-                throw new \coding_exception('No course record found for courseid = ' . $depcourse->courseid);
+                throw new coding_exception('No course record found for courseid = ' . $depcourse->courseid);
             }
 
             // Collect categories regardless of selection.
             $categories[$course->category] = $course->category;
 
             // Do not include courses already selected.
-            if (in_array($depcourse->courseid, $selectedcourses, true)) {
+            if (isset($selectedcourses[$depcourse->courseid])) {
                 continue;
             }
 
@@ -463,9 +499,18 @@ class companypaths {
                 continue;
             }
 
+            // What kind of course is this?
+            if ($DB->record_exists('local_iomad_courses', ['courseid' => $course->id, 'licensed' => 1])) {
+                $course->enroltype = get_string('pluginname', 'enrol_license');
+            } else if ($DB->record_exists('enrol', ['courseid' => $course->id, 'enrol' => 'self', 'status' => 0])) {
+                $course->enroltype = get_string('pluginname', 'enrol_self');
+            } else {
+                $course->enroltype = get_string('pluginname', 'enrol_manual');
+            }
             $course->image = $this->get_course_image_url($course->id);
             $courses[$course->id] = $course;
         }
+
         $this->categories = $categories;
 
         return $courses;
@@ -488,7 +533,7 @@ class companypaths {
         $cat0 = (object)['id' => 0, 'name' => get_string('all')];
         $cats = [0 => $cat0];
         foreach ($this->categories as $categoryid) {
-            $cat = new \stdClass;
+            $cat = (object) [];
             $coursecategory = $DB->get_record('course_categories', ['id' => $categoryid], '*', MUST_EXIST);
             $cat->id = $coursecategory->id;
             $cat->name = $coursecategory->name;
@@ -539,7 +584,7 @@ class companypaths {
      * @param int $groupid (0 = add to first group)
      */
     public function add_courses(int $pathid, array $courseids, int $groupid = 0) {
-        global $DB;
+        global $DB, $USER;
 
         // Make sure we only add courses in the prospective list.
         $allcourses = $this->get_prospective_courses($pathid);
@@ -553,7 +598,7 @@ class companypaths {
         } else {
             $groups = $DB->get_records('block_iomad_learningpath_groups', ['pathid' => $pathid]);
             if (!$group = reset($groups)) {
-                throw new \Exception('No groups for learning path id = ' . $pathid);
+                throw new moodle_exception('No groups for learning path id = ' . $pathid);
             }
         }
 
@@ -566,18 +611,30 @@ class companypaths {
             }
 
             // If course already in the list then just skip it.
-            if ($course = $DB->get_record('block_iomad_learningpath_courses', ['pathid' => $pathid, 'course' => $courseid])) {
+            if ($course = $DB->get_record('block_iomad_learningpath_courses', ['pathid' => $pathid, 'courseid' => $courseid])) {
                 continue;
             }
 
             // Add at the end.
             $count++;
-            $course = new \stdClass;
+            $course = (object) [];
             $course->pathid = $pathid;
             $course->courseid = $courseid;
             $course->sequence = $count;
             $course->groupid = $group->id;
             $DB->insert_record('block_iomad_learningpath_courses', $course);
+
+            // Fire an event for this.
+            $event = course_added::create([
+                'context' => $this->context,
+                'objectid' => $courseid,
+                'userid' => $USER->id,
+                'other' => [
+                    'pathid' => $pathid,
+                    'groupid' => $group->id,
+                ],
+            ]);
+            $event->trigger();
         }
     }
 
@@ -587,11 +644,24 @@ class companypaths {
      * @param array $courseids
      */
     public function remove_courses(int $pathid, array $courseids) {
-        global $DB;
+        global $DB, $USER;
 
         // Work through courses.
         foreach ($courseids as $courseid) {
+            $course = $DB->get_record('block_iomad_learningpath_courses', ['courseid' => $courseid, 'pathid' => $pathid]);
             $DB->delete_records('block_iomad_learningpath_courses', ['courseid' => $courseid, 'pathid' => $pathid]);
+
+            // Fire an event for this.
+            $event = course_removed::create([
+                'context' => $this->context,
+                'objectid' => $courseid,
+                'userid' => $USER->id,
+                'other' => [
+                    'pathid' => $pathid,
+                    'groupid' => $course->groupid,
+                ],
+            ]);
+            $event->trigger();
         }
 
         // Fix the sequence.
@@ -620,7 +690,7 @@ class companypaths {
      * @param int $pathid
      */
     public function deletepath(int $pathid) {
-        global $DB;
+        global $DB, $USER;
 
         // Delete the users.
         $users = $this->get_users($pathid, true);
@@ -640,6 +710,14 @@ class companypaths {
         }
         // Delete path itself.
         $DB->delete_records('block_iomad_learningpath', ['id' => $pathid]);
+
+        // Fire an event for this.
+        $event = learningpath_deleted::create([
+            'context' => $this->context,
+            'objectid' => $pathid,
+            'userid' => $USER->id,
+        ]);
+        $event->trigger();
     }
 
     /**
@@ -681,7 +759,7 @@ class companypaths {
      * @param int $pathid
      */
     public function copypath(int $pathid) {
-        global $DB;
+        global $DB, $USER;
 
         // Get original path.
         $path = $DB->get_record('block_iomad_learningpath', ['id' => $pathid], '*', MUST_EXIST);
@@ -691,7 +769,7 @@ class companypaths {
         while ($DB->get_record('block_iomad_learningpath', ['name' => $path->name . " Copy $count"])) {
             $count++;
             if ($count >= 9999) {
-                throw new \coding_exception('countlimit', 'Failed to find new name for path');
+                throw new coding_exception('countlimit', 'Failed to find new name for path');
             }
         }
         $newname = $path->name . " Copy $count";
@@ -706,7 +784,15 @@ class companypaths {
         $newpath->timeupdated = time();
         $newpathid = $DB->insert_record('block_iomad_learningpath', $newpath);
 
-        // Copy images.
+            // Fire an event for this.
+            $event = learningpath_created::create([
+                'context' => $this->context,
+                'objectid' => $newpathid,
+                'userid' => $USER->id,
+            ]);
+            $event->trigger();
+
+            // Copy images.
         $this->copy_image($this->context->id, 'block_iomad_learningpath', 'mainpicture', $pathid, 'picture', $newpathid);
         $this->copy_image($this->context->id, 'block_iomad_learningpath', 'thumbnail', $pathid, 'thumbnail', $newpathid);
 
@@ -715,6 +801,17 @@ class companypaths {
         foreach ($groups as $group) {
             $group->pathid = $newpathid;
             $group->newid = $DB->insert_record('block_iomad_learningpath_groups', $group);
+
+            // Fire an event for this.
+            $event = group_created::create([
+                'context' => $this->context,
+                'objectid' => $group->newid,
+                'userid' => $USER->id,
+                'other' => [
+                    'pathid' => $newpathid,
+                ],
+            ]);
+            $event->trigger();
         }
 
         // Copy courses.
@@ -723,6 +820,18 @@ class companypaths {
             $course->pathid = $newpathid;
             $course->groupid = $groups[$course->groupid]->newid;
             $DB->insert_record('block_iomad_learningpath_courses', $course);
+
+            // Fire an event for this.
+            $event = course_added::create([
+                'context' => $this->context,
+                'objectid' => $courseid,
+                'userid' => $USER->id,
+                'other' => [
+                    'pathid' => $newpathid,
+                    'groupid' => $course->groupid,
+                ],
+            ]);
+            $event->trigger();
         }
 
         // Copy students over.
@@ -730,6 +839,15 @@ class companypaths {
         foreach ($pathusers as $pathuser) {
             $pathuser->pathid = $newpathid;
             $DB->insert_record('block_iomad_learningpath_users', $pathuser);
+
+            // Fire an event for this.
+            $event = user_assigned::create([
+                'context' => $this->context,
+                'objectid' => $newpathid,
+                'userid' => $USER->id,
+                'relateduserid' => $pathuser->userid,
+            ]);
+            $event->trigger();
         }
     }
 
@@ -835,7 +953,7 @@ class companypaths {
      * @param array $userids
      */
     public function add_users(int $pathid, array $userids) {
-        global $DB;
+        global $DB, $USER;
 
         foreach ($userids as $userid) {
 
@@ -844,7 +962,7 @@ class companypaths {
                 'local_iomad_company_users',
                 ['companyid' => $this->companyid, 'userid' => $userid]
             )) {
-                throw new \coding_exception('invaliduserid', 'User is not a member of current company - id = ' . $userid);
+                throw new coding_exception('invaliduserid', 'User is not a member of current company - id = ' . $userid);
             }
 
             // Is the userid already in the path.
@@ -853,10 +971,19 @@ class companypaths {
             }
 
             // Add a new record.
-            $user = new \stdClass;
+            $user = (object) [];
             $user->pathid = $pathid;
             $user->userid = $userid;
             $DB->insert_record('block_iomad_learningpath_users', $user);
+
+            // Fire an event for this.
+            $event = user_assigned::create([
+                'context' => $this->context,
+                'objectid' => $pathid,
+                'userid' => $USER->id,
+                'relateduserid' => $userid,
+            ]);
+            $event->trigger();
         }
 
         return true;
@@ -868,7 +995,7 @@ class companypaths {
      * @param array $userids
      */
     public function delete_users(int $pathid, array $userids) {
-        global $DB;
+        global $DB, $USER;
 
         foreach ($userids as $userid) {
 
@@ -877,10 +1004,19 @@ class companypaths {
                 'local_iomad_company_users',
                 ['companyid' => $this->companyid, 'userid' => $userid]
             )) {
-                throw new \coding_exception('invaliduserid', 'User is not a member of current company - id = ' . $userid);
+                throw new coding_exception('invaliduserid', 'User is not a member of current company - id = ' . $userid);
             }
 
             $DB->delete_records('block_iomad_learningpath_users', ['pathid' => $pathid, 'userid' => $userid]);
+
+            // Fire an event for this.
+            $event = user_removed::create([
+                'context' => $this->context,
+                'objectid' => $pathid,
+                'userid' => $USER->id,
+                'relateduserid' => $userid,
+            ]);
+            $event->trigger();
         }
 
         return true;
@@ -900,7 +1036,7 @@ class companypaths {
         // If we are removing a license.
         if (($licenseid == 0 && !empty($path->licenseid)) || $path->licenseid != $licenseid) {
             // Remove the courses from the learning path.
-            if ($courses = $DB->get_records('block_iomad_learningpath_courses', ['pathid' => $pathid], 'courseid', 'course')) {
+            if ($courses = $DB->get_records('block_iomad_learningpath_courses', ['pathid' => $pathid], 'courseid', 'courseid')) {
                 self::remove_courses($pathid, array_keys($courses));
             }
         }
@@ -950,7 +1086,8 @@ class companypaths {
             return;
         }
 
-        $companypath = new companypaths($company->id, \context_system::instance());
+        $context = context_company::instance($company->id);
+        $companypath = new companypaths($company->id, $context);
 
         $companypath->deletepath($path->id);
         return true;
@@ -982,7 +1119,8 @@ class companypaths {
             return;
         }
 
-        $companypath = new companypaths($company->id, \context_system::instance());
+        $context = context_company::instance($company->id);
+        $companypath = new companypaths($company->id, $context);
 
         if (!empty($licenserecord->program)) {
             // This is a program of courses.
@@ -1043,7 +1181,8 @@ class companypaths {
             return;
         }
 
-        $companypath = new companypaths($company->id, \context_system::instance());
+        $context = context_company::instance($company->id);
+        $companypath = new companypaths($company->id, $context);
 
         // If so, add this user to the path.
         $companypath->add_users($path->id, [$userid]);
@@ -1079,10 +1218,142 @@ class companypaths {
             return;
         }
 
-        $companypath = new companypaths($company->id, \context_system::instance());
+        $context = context_company::instance($company->id);
+        $companypath = new companypaths($company->id, $context);
 
         // If so, remove this user from the path.
         $companypath->delete_users($path->id, [$userid]);
+
+        return true;
+    }
+
+    /**
+     * Triggered via user_assigned event.
+     *
+     * @param user_assigned $event
+     * @return bool true on success.
+     */
+    public static function user_assigned(user_assigned $event) {
+        global $DB;
+
+        $userid = $event->relateduserid;
+        $pathid = $event->objectid;
+        $companyid = $event->companyid;
+
+        // Learning path must exist.
+        $path = $DB->get_record('block_iomad_learningpath', ['id' => $pathid], '*', MUST_EXIST);
+
+        // User must exist.
+        $user = $DB->get_record('user', ['id' => $userid, 'deleted' => 0], '*', MUST_EXIST);
+
+        // But if they are not in the company - we do nothing.
+        if (!$DB->record_exists('local_iomad_company_users', ['companyid' => $companyid, 'userid' => $userid])) {
+            return;
+        }
+
+        // Get the courses for this learning path.
+        $context = context_company::instance($companyid);
+        $companypath = new self($companyid, $context);
+        $courseids = $companypath->get_courselist($path->id, 0, true);
+
+        // Process them.
+        foreach ($courseids as $courseid) {
+            if (!$iomadcourse = $DB->get_record('local_iomad_courses', ['courseid' => $courseid])) {
+                // Not an IOMAD course.
+                continue;
+            }
+
+            // We only want manually enrolled courses.
+            if ($iomadcourse->licensed == 0 &&
+                !$DB->record_exists('enrol', ['courseid' => $courseid, 'enrol' => 'self', 'status' => 0])) {
+                // Enrol the user to the course.
+                $course = $DB->get_record('course', ['id' => $courseid]);
+                company_user::enrol(
+                    $user,
+                    [$courseid],
+                    $companyid,
+                    0,
+                    0,
+                    $event->timecreated
+                );
+                emailtemplate::send(
+                    'user_added_to_course',
+                    [
+                        'course' => $course,
+                        'user' => $user,
+                        'due' => $event->timecreated,
+                    ]
+                );
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Triggered via course_added event.
+     *
+     * @param course_added $event
+     * @return bool true on success.
+     */
+    public static function course_added(course_added $event) {
+        global $DB;
+
+        $courseid = $event->objectid;
+        $pathid = $event->other['pathid'];
+        $companyid = $event->companyid;
+
+        // Learning path must exist.
+        $path = $DB->get_record('block_iomad_learningpath', ['id' => $pathid, 'companyid' => $companyid], '*', MUST_EXIST);
+
+        // Course must exist.
+        $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
+
+        if (!$iomadcourse = $DB->get_record('local_iomad_courses', ['courseid' => $courseid])) {
+            // Not an IOMAD course.
+            return true;
+        }
+
+        // We only want manually enrolled courses.
+        if ($iomadcourse->licensed == 0 &&
+            $DB->record_exists('enrol', ['courseid' => $courseid, 'enrol' => 'self', 'status' => 0])) {
+            return true;
+        }
+
+        // Get the users for this learning path.
+        $context = context_company::instance($companyid);
+        $companypath = new self($companyid, $context);
+        $userids = $companypath->get_users($path->id, true);
+
+        // Process them.
+        foreach ($userids as $userid) {
+
+            if (!$DB->record_exists('local_iomad_company_users', ['companyid' => $companyid, 'userid' => $userid])) {
+                // Not a company user.
+                continue;
+            }
+                // Enrol the user to the course.
+            if (!$user = $DB->get_record('user', ['id' => $userid, 'deleted' => 0])) {
+                continue;
+            }
+
+            company_user::enrol(
+                $user,
+                [$courseid],
+                $companyid,
+                0,
+                0,
+                $event->timecreated
+            );
+            emailtemplate::send(
+                'user_added_to_course',
+                [
+                    'course' => $course,
+                    'user' => $user,
+                    'due' => $event->timecreated,
+                ]
+            );
+        }
 
         return true;
     }
