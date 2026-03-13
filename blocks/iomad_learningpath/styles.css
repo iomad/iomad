@@ -18,7 +18,7 @@
 }
 
 .card-block .coursetitle, .card-block .learningpathtitle {
-    font-size: 1.5rem;
+    font-size: 1.171875rem;
 }
 
 .top-space {
@@ -77,4 +77,42 @@
 
 .nogroupcourses, #noprospective {
     padding: 0.5rem 1rem !important;
+}
+.lpgrouprow {
+    margin: 10px!important;
+}
+
+.lpprogresscol {
+    display: flex;
+    align-items: center;
+}
+
+.lpprogresscol .card-block {
+    display: block;
+    width: 100%;
+}
+
+.lpcard {
+    padding: 5px;
+}
+
+.path_courses_title {
+    display: flex;
+    width: 100%;
+}
+
+.path_courses_title h2 {
+    float: left;
+}
+
+.path_courses_title .btn {
+    float: right;
+}
+
+.path_courses_title div {
+    width: 50%;
+}
+
+.lpgroupcard {
+    margin-bottom: 5px;
 }

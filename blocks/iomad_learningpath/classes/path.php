@@ -25,6 +25,10 @@
 
 namespace block_iomad_learningpath;
 
+use context_course;
+use core_completion\progress;
+use moodle_url;
+
 /**
  * Class definition
  */
@@ -62,17 +66,21 @@ class path {
      * @return [array, int/null]
      */
     public function get_courselist($pathid, $groupid, $sequenced = false) {
-        global $DB;
+        global $DB, $USER;
 
         // Calculate overall progress for group.
         $cumulativeprogress = 0;
         $completioncoursecount = 0;
 
-        $sql = 'SELECT c.id courseid, c.shortname shortname, c.fullname fullname, c.summary summary, lpc.*
-            FROM {block_iomad_learningpath_courses} lpc JOIN {course} c ON lpc.courseid = c.id
+        $sql = "SELECT c.id AS courseid,
+                c.shortname,
+                c.fullname,
+                c.summary, lpc.*
+            FROM {block_iomad_learningpath_courses} lpc
+            JOIN {course} c ON lpc.courseid = c.id
             WHERE lpc.pathid = :pathid
             AND lpc.groupid = :groupid
-            ORDER BY lpc.sequence';
+            ORDER BY lpc.sequence";
         $courses = $DB->get_records_sql($sql, ['pathid' => $pathid, 'groupid' => $groupid]);
 
         // Handle sequencing if required.
@@ -80,10 +88,14 @@ class path {
 
         // Spot of processing...
         foreach ($courses as $course) {
-            $course->link = new \moodle_url('/course/view.php', ['id' => $course->courseid]);
+            $course->link = new moodle_url('/course/view.php', ['id' => $course->courseid]);
             $course->imageurl = $this->get_course_image_url($course->courseid);
             $fullcourse = $DB->get_record('course', ['id' => $course->courseid], '*', MUST_EXIST);
-            $progress = \core_completion\progress::get_course_progress_percentage($fullcourse);
+            $progress = progress::get_course_progress_percentage($fullcourse);
+            if (empty($progress) && is_enrolled(context_course::instance($course->courseid), $USER)) {
+                $progress = 0;
+            }
+mtrace("progress for course ID $course->courseid = $progress!<br>");
             $course->hasprogress = $progress !== null;
             $course->progresspercent = $course->hasprogress ? $progress : 0;
 
@@ -92,11 +104,17 @@ class path {
                 $course->available = true;
             }
             if ($sequenced && !$first) {
+mtrace("PREVIOUSCOURSE = <pre>" . print_r($previouscourse,true) . "</pre>");
                 if (!empty($previouscourse->hasprogress) && $previouscourse->progresspercent == 100) {
                     $course->available = true;
                 } else {
                     $course->available = false;
-                    $course->prerequisite = $previouscourse->fullname;
+                    $course->hasprogress = false;
+                    if (empty($previouscourse->prerequisite)) {
+                        $course->prerequisite = $previouscourse->fullname;
+                    } else {
+                        $course->prerequisite = $previouscourse->prerequisite;
+                    }
                 }
             }
 
@@ -109,6 +127,7 @@ class path {
 
             // Round course progress percent.
             $course->progresspercent = round($course->progresspercent);
+mtrace("COURSE = <pre>" . print_r($course,true) . "</pre>");
 
             // Stash the previous course in case we need it.
             if ($sequenced) {
@@ -139,12 +158,14 @@ class path {
         // Calculate overall progress for path.
         $cumulativeprogress = 0;
         $completiongroupcount = 0;
+        $totalcourses = 0;
 
         $groups = $DB->get_records('block_iomad_learningpath_groups', ['pathid' => $pathid]);
         foreach ($groups as $group) {
             list($courses, $progress) = $this->get_courselist($pathid, $group->id, $group->sequence);
             $group->progress = $progress !== null ? $progress : 0;
             $group->courses = array_values($courses);
+            $totalcourses += count($courses);
             if ($progress !== null) {
                 $cumulativeprogress += $progress;
                 $completiongroupcount++;
@@ -152,8 +173,8 @@ class path {
         }
 
         // Calcultate overall progress for path.
-        if ($completiongroupcount) {
-            $pathprogress = round($cumulativeprogress / $completiongroupcount);
+        if ($totalcourses) {
+            $pathprogress = round($cumulativeprogress / $totalcourses);
         } else {
             $pathprogress = null;
         }
@@ -238,11 +259,11 @@ class path {
 
         $fs = get_file_storage();
 
-        $context = \context_course::instance($courseid);
+        $context = context_course::instance($courseid);
         $files = $fs->get_area_files($context->id, 'course', 'overviewfiles', 0);
         foreach ($files as $file) {
             if ($file->is_valid_image()) {
-                return \moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(),
+                return moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(),
                     null, $file->get_filepath(), $file->get_filename());
             }
         }

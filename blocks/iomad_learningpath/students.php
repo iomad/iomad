@@ -24,12 +24,13 @@
 
 use block_iomad_company_admin\event\dashboard_page_viewed;
 use block_iomad_learningpath\companypaths;
-use block_iomad_learningpath\output\students_page;
+use block_iomad_learningpath\forms\learningpath_users_form;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once(dirname(__FILE__) . '/lib.php');
+require_once($CFG->libdir . '/formslib.php');
 
 // Security.
 require_login();
@@ -45,6 +46,7 @@ iomad::require_capability('block/iomad_learningpath:assign', $companycontext);
 
 // Parameters.
 $id = required_param('id', PARAM_INT);
+$departmentid = optional_param('deptid', 0, PARAM_INTEGER);
 
 // Page boilerplate stuff.
 $url = new moodle_url('/blocks/iomad_learningpath/students.php', ['id' => $id]);
@@ -54,7 +56,28 @@ $PAGE->set_url($url);
 $PAGE->set_pagelayout('base');
 $PAGE->set_title(get_string('managetitle', 'block_iomad_learningpath'));
 $PAGE->set_heading(get_string('managestudents', 'block_iomad_learningpath'));
-$output = $PAGE->get_renderer('block_iomad_learningpath');
+$output = $PAGE->get_renderer('block_iomad_company_admin');
+
+$buttons = html_writer::tag(
+    'a',
+    get_string('learningpathmanage', 'block_iomad_learningpath'),
+    [
+        'href' => $manageurl,
+        'role' => 'button',
+        'class' => 'btn btn-secondary',
+    ]
+);
+$PAGE->set_button($buttons);
+
+// Javascript for department select.
+$PAGE->requires->js_call_amd(
+    'block_iomad_company_admin/department_select',
+    'init',
+    [
+        'deptid',
+        1,
+        optional_param('deptid', 0, PARAM_INT),
+    ]);
 
 // Log this page view.
 dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
@@ -63,21 +86,33 @@ dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 $companypaths = new companypaths($companyid, $systemcontext);
 $path = $companypaths->get_path($id);
 
-// Javascript initialise.
-$PAGE->requires->js_call_amd('block_iomad_learningpath/students', 'init', [$companyid, $id]);
+// Get the associated department id.
+$parentlevel = company::get_company_parentnode($company->id);
+$companydepartment = $parentlevel->id;
 
-// Add the management button.
-$buttons = $OUTPUT->single_button($manageurl, get_string('managetitle', 'block_iomad_learningpath'), 'get');
-$PAGE->set_button($buttons);
+// Get the user's department.
+if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+    $userhierarchylevel = $parentlevel->id;
+} else {
+    $userlevel = $company->get_userlevel($USER);
+    $userhierarchylevel = key($userlevel);
+}
+if ($departmentid == 0) {
+    $departmentid = $userhierarchylevel;
+}
 
-// Get renderer for page (and pass data).
-$studentspage = new students_page($companycontext, $path);
+// Set up the form.
+$mform = new learningpath_users_form($url, $companyid, $departmentid, $id);
+if ($mform->get_data()) {
+    $mform->process();
+    $mform = new learningpath_users_form($url, $companyid, $departmentid, $id);
+}
 
 // Display the page.
 echo $OUTPUT->header();
 
-// Display the template.
-echo $output->render($studentspage);
+// Display the form.
+echo $mform->display();
 
 // Display the footer.
 echo $OUTPUT->footer();

@@ -24,6 +24,7 @@
 
 use block_iomad_company_admin\event\dashboard_page_viewed;
 use block_iomad_learningpath\companypaths;
+use block_iomad_learningpath\event\{group_created, group_updated};
 use block_iomad_learningpath\forms\editgroup_form;
 use block_iomad_learningpath\output\editgroup_page;
 use local_iomad\{company, iomad};
@@ -46,13 +47,13 @@ $company = new company($companyid);
 iomad::require_capability('block/iomad_learningpath:manage', $companycontext);
 
 // Parameters.
-$learningpath = required_param('learningpath', PARAM_INT);
+$pathid = required_param('pathid', PARAM_INT);
 $id = optional_param('id', 0, PARAM_INT);
 $delete = optional_param('delete', 0, PARAM_INT);
 
 // Page boilerplate stuff.
-$url = new moodle_url('/blocks/iomad_learningpath/editgroup.php', ['id' => $id, 'learningpath' => $learningpath]);
-$exiturl = new moodle_url('/blocks/iomad_learningpath/courselist.php', ['id' => $learningpath]);
+$url = new moodle_url('/blocks/iomad_learningpath/editgroup.php', ['id' => $id, 'pathid' => $pathid]);
+$exiturl = new moodle_url('/blocks/iomad_learningpath/courselist.php', ['id' => $pathid]);
 $PAGE->set_context($companycontext);
 $PAGE->set_url($url);
 $PAGE->set_pagelayout('base');
@@ -69,14 +70,14 @@ $paths = $companypaths->get_paths();
 $PAGE->navbar->add(get_string('grouptitle', 'block_iomad_learningpath'), $url);
 
 // Attempt to locate path.
-$path = $companypaths->get_path($learningpath);
+$path = $companypaths->get_path($pathid);
 
 // Get/create group.
-$group = $companypaths->get_group($learningpath, $id);
+$group = $companypaths->get_group($pathid, $id);
 
 // Delete?
 if ($delete) {
-    $companypaths->delete_group($learningpath, $delete);
+    $companypaths->delete_group($pathid, $delete);
     redirect($exiturl);
 }
 
@@ -93,8 +94,30 @@ if ($form->is_cancelled()) {
     $group->sequence = $data->sequence;
     if ($id == 0) {
         $id = $DB->insert_record('block_iomad_learningpath_groups', $group);
+
+        // Fire an event for this.
+        $event = group_created::create([
+            'context' => $companycontext,
+            'objectid' => $id,
+            'userid' => $USER->id,
+            'other' => [
+                'pathid' => $group->pathid,
+            ],
+        ]);
+        $event->trigger();
     } else {
         $DB->update_record('block_iomad_learningpath_groups', $group);
+
+        // Fire an event for this.
+        $event = group_updated::create([
+            'context' => $companycontext,
+            'objectid' => $group->id,
+            'userid' => $USER->id,
+            'other' => [
+                'pathid' => $group->pathid,
+            ],
+        ]);
+        $event->trigger();
     }
 
     redirect($exiturl);

@@ -24,6 +24,7 @@
 
 use block_iomad_company_admin\event\dashboard_page_viewed;
 use block_iomad_learningpath\companypaths;
+use block_iomad_learningpath\event\{learningpath_created, learningpath_updated};
 use block_iomad_learningpath\forms\editpath_form;
 use block_iomad_learningpath\output\editpath_page;
 use local_iomad\{company, iomad};
@@ -95,9 +96,26 @@ if ($form->is_cancelled()) {
         $path->timecreated = time();
         $path->active = 0;
         $id = $DB->insert_record('block_iomad_learningpath', $path);
+
+        // Fire an event for this.
+        $event = learningpath_created::create([
+            'context' => $companycontext,
+            'objectid' => $id,
+            'userid' => $USER->id,
+        ]);
+        $event->trigger();
     } else {
         $DB->update_record('block_iomad_learningpath', $path);
+
+        // Fire an event for this.
+        $event = learningpath_updated::create([
+            'context' => $companycontext,
+            'objectid' => $path->id,
+            'userid' => $USER->id,
+        ]);
+        $event->trigger();
     }
+
     // Check if a file has been uploaded.
     $fs = get_file_storage();
     $files = $fs->get_area_files(context_user::instance($USER->id)->id, 'user', 'draft', $data->picture, 'itemid', false);
