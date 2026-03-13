@@ -1249,7 +1249,7 @@ class companypaths {
 
         // We only want manually enrolled courses.
         if ($iomadcourse->licensed == 0 &&
-            !$DB->record_exists('enrol', ['courseid' => $courseid, 'enrol' => 'self', 'status' => 0])) {
+            $DB->record_exists('enrol', ['courseid' => $courseid, 'enrol' => 'self', 'status' => 0])) {
             return true;
         }
 
