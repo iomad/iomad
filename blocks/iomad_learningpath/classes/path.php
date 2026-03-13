@@ -68,11 +68,15 @@ class path {
         $cumulativeprogress = 0;
         $completioncoursecount = 0;
 
-        $sql = 'SELECT c.id courseid, c.shortname shortname, c.fullname fullname, c.summary summary, lpc.*
-            FROM {iomad_learningpathcourse} lpc JOIN {course} c ON lpc.course = c.id
+        $sql = "SELECT c.id AS courseid,
+                c.shortname,
+                c.fullname,
+                c.summary, lpc.*
+            FROM {iomad_learningpathcourse} lpc
+            JOIN {course} c ON lpc.course = c.id
             WHERE lpc.path = :pathid
             AND lpc.groupid = :groupid
-            ORDER BY lpc.sequence';
+            ORDER BY lpc.sequence";
         $courses = $DB->get_records_sql($sql, ['pathid' => $pathid, 'groupid' => $groupid]);
 
         // Handle sequencing if required.
@@ -96,7 +100,12 @@ class path {
                     $course->available = true;
                 } else {
                     $course->available = false;
-                    $course->prerequisite = $previouscourse->fullname;
+                    $course->hasprogress = false;
+                    if (empty($previouscourse->prerequisite)) {
+                        $course->prerequisite = $previouscourse->fullname;
+                    } else {
+                        $course->prerequisite = $previouscourse->prerequisite;
+                    }
                 }
             }
 
@@ -139,12 +148,14 @@ class path {
         // Calculate overall progress for path.
         $cumulativeprogress = 0;
         $completiongroupcount = 0;
+        $totalcourses = 0;
 
         $groups = $DB->get_records('iomad_learningpathgroup', ['learningpath' => $pathid]);
         foreach ($groups as $group) {
             list($courses, $progress) = $this->get_courselist($pathid, $group->id, $group->sequence);
             $group->progress = $progress !== null ? $progress : 0;
             $group->courses = array_values($courses);
+            $totalcourses += count($courses);
             if ($progress !== null) {
                 $cumulativeprogress += $progress;
                 $completiongroupcount++;
@@ -152,8 +163,8 @@ class path {
         }
 
         // Calcultate overall progress for path.
-        if ($completiongroupcount) {
-            $pathprogress = round($cumulativeprogress / $completiongroupcount);
+        if ($totalcourses) {
+            $pathprogress = round($cumulativeprogress / $totalcourses);
         } else {
             $pathprogress = null;
         }

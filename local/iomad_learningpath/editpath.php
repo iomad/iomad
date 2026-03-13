@@ -22,6 +22,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_learningpath\event\learningpath_created;
+use block_iomad_learningpath\event\learningpath_updated;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once(dirname(__FILE__) . '/lib.php');
 
@@ -86,9 +89,26 @@ if ($form->is_cancelled()) {
         $path->timecreated = time();
         $path->active = 0;
         $id = $DB->insert_record('iomad_learningpath', $path);
+
+        // Fire an event for this.
+        $event = learningpath_created::create([
+            'context' => $companycontext,
+            'objectid' => $id,
+            'userid' => $USER->id,
+        ]);
+        $event->trigger();
     } else {
         $DB->update_record('iomad_learningpath', $path);
+
+        // Fire an event for this.
+        $event = learningpath_updated::create([
+            'context' => $companycontext,
+            'objectid' => $path->id,
+            'userid' => $USER->id,
+        ]);
+        $event->trigger();
     }
+
     // Check if a file has been uploaded
     $fs = get_file_storage();
     $files = $fs->get_area_files(context_user::instance($USER->id)->id, 'user', 'draft', $data->picture, 'itemid', false);

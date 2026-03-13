@@ -55,4 +55,18 @@ $observers = array(
         'includefile' => '/local/iomad_learningpath/classes/iomad_learningpath_observer.php',
         'internal'    => false,
     ),
+
+    [
+        'eventname'   => '\block_iomad_learningpath\event\user_assigned',
+        'callback'    => '\local_iomad_learningpath\local_iomad_learningpath_observer::user_assigned',
+        'includefile' => '/local/iomad_learningpath/classes/iomad_learningpath_observer.php',
+        'internal'    => false,
+    ],
+
+    [
+        'eventname'   => '\block_iomad_learningpath\event\course_added',
+        'callback'    => '\local_iomad_learningpath\local_iomad_learningpath_observer::course_added',
+        'includefile' => '/local/iomad_learningpath/classes/iomad_learningpath_observer.php',
+        'internal'    => false,
+    ],
 );

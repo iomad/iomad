@@ -75,4 +75,26 @@ class local_iomad_learningpath_observer {
         \local_iomad_learningpath\companypaths::user_license_unassigned($event);
         return true;
     }
+
+    /**
+     * Triggered via local_iomad_learningpath::user_assigned event.
+     *
+     * @param \local_iomad_learningpath\event\user_assigned $event
+     * @return bool true on success.
+     */
+    public static function user_assigned($event) {
+        \local_iomad_learningpath\companypaths::user_assigned($event);
+        return true;
+    }
+
+    /**
+     * Triggered via local_iomad_learningpath::course_added event.
+     *
+     * @param \local_iomad_learningpath\event\course_added $event
+     * @return bool true on success.
+     */
+    public static function course_added($event) {
+        \local_iomad_learningpath\companypaths::course_added($event);
+        return true;
+    }
 }
