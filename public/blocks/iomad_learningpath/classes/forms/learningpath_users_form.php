@@ -273,7 +273,6 @@ class learningpath_users_form extends moodleform {
             if (!empty($userstounassign)) {
                 $companypaths->delete_users($data->pathid, array_keys($userstounassign));
 
-
                 $this->potentialusers->invalidate_selected_users();
                 $this->currentusers->invalidate_selected_users();
             }
