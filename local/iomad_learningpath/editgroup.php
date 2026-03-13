@@ -22,6 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_learningpath\event\{group_created, group_updated};
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once(dirname(__FILE__) . '/lib.php');
 
@@ -85,8 +87,30 @@ if ($form->is_cancelled()) {
     $group->sequence = $data->sequence;
     if ($id == 0) {
         $id = $DB->insert_record('iomad_learningpathgroup', $group);
+
+        // Fire an event for this.
+        $event = group_created::create([
+            'context' => $companycontext,
+            'objectid' => $id,
+            'userid' => $USER->id,
+            'other' => [
+                'learningpathid' => $group->learningpath,
+            ],
+        ]);
+        $event->trigger();
     } else {
         $DB->update_record('iomad_learningpathgroup', $group);
+
+        // Fire an event for this.
+        $event = group_updated::create([
+            'context' => $companycontext,
+            'objectid' => $group->id,
+            'userid' => $USER->id,
+            'other' => [
+                'learningpathid' => $group->learningpath,
+            ],
+        ]);
+        $event->trigger();
     }
 
     redirect($exiturl);

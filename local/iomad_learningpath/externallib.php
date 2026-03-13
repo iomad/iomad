@@ -116,6 +116,7 @@ class local_iomad_learningpath_external extends external_api {
                     'id' => new external_value(PARAM_INT, 'Course ID'),
                     'fullname' => new external_value(PARAM_TEXT, 'Course fullname'),
                     'shortname' => new external_value(PARAM_TEXT, 'Course shortname'),
+                    'enroltype' => new external_value(PARAM_TEXT, 'Enrolment type'),
                     'image' => new external_value(PARAM_URL, 'Course image'),
                 )
             )
@@ -163,6 +164,7 @@ class local_iomad_learningpath_external extends external_api {
                 'id' => $course->id,
                 'fullname' => $course->fullname,
                 'shortname' => $course->shortname,
+                'enroltype' => $course->enroltype,
                 'image' => $course->image,
             ];
         }
@@ -309,6 +311,7 @@ class local_iomad_learningpath_external extends external_api {
                     'groupid' => new external_value(PARAM_INT, 'Group ID'),
                     'fullname' => new external_value(PARAM_TEXT, 'Course fullname'),
                     'shortname' => new external_value(PARAM_TEXT, 'Course shortname'),
+                    'enroltype' => new external_value(PARAM_TEXT, 'Enrolment type'),
                     'image' => new external_value(PARAM_URL, 'Course image'),
                 )
             )
@@ -355,6 +358,7 @@ class local_iomad_learningpath_external extends external_api {
                 'groupid' => $params['groupid'],
                 'fullname' => $course->fullname,
                 'shortname' => $course->shortname,
+                'enroltype' => $course->enroltype,
                 'image' => $course->image,
             ];
         }

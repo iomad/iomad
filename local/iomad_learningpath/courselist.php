@@ -42,12 +42,23 @@ $id = required_param('id', PARAM_INT);
 
 // Page boilerplate stuff.
 $url = new moodle_url('/local/iomad_learningpath/courselist.php', ['id' => $id]);
+$manageurl = new moodle_url('/local/iomad_learningpath/manage.php');
 $PAGE->set_context($companycontext);
 $PAGE->set_url($url);
 $PAGE->set_pagelayout('base');
 $PAGE->set_title(get_string('managetitle', 'local_iomad_learningpath'));
-$PAGE->set_heading(get_string('managecourses', 'local_iomad_learningpath'));
 $output = $PAGE->get_renderer('local_iomad_learningpath');
+
+$buttons = html_writer::tag(
+    'a',
+    get_string('learningpathmanage', 'local_iomad_learningpath'),
+    [
+        'href' => $manageurl,
+        'role' => 'button',
+        'class' => 'btn btn-secondary',
+    ]
+);
+$PAGE->set_button($buttons);
 
 // Log this page view.
 block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
