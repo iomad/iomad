@@ -69,8 +69,8 @@ $PAGE->set_button($buttons);
 // Log this page view.
 dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
-// IOMAD stuff
-$companypaths = new block_iomad_learningpath\companypaths($companyid, $systemcontext);
+// IOMAD stuff.
+$companypaths = new companypaths($companyid, $systemcontext);
 $path = $companypaths->get_path($id);
 $courses = $companypaths->get_courselist($id);
 $categories = $companypaths->get_categories($id);

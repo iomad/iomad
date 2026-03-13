@@ -95,7 +95,7 @@ class path {
             if (empty($progress) && is_enrolled(context_course::instance($course->courseid), $USER)) {
                 $progress = 0;
             }
-mtrace("progress for course ID $course->courseid = $progress!<br>");
+
             $course->hasprogress = $progress !== null;
             $course->progresspercent = $course->hasprogress ? $progress : 0;
 
@@ -104,7 +104,6 @@ mtrace("progress for course ID $course->courseid = $progress!<br>");
                 $course->available = true;
             }
             if ($sequenced && !$first) {
-mtrace("PREVIOUSCOURSE = <pre>" . print_r($previouscourse,true) . "</pre>");
                 if (!empty($previouscourse->hasprogress) && $previouscourse->progresspercent == 100) {
                     $course->available = true;
                 } else {
@@ -127,7 +126,6 @@ mtrace("PREVIOUSCOURSE = <pre>" . print_r($previouscourse,true) . "</pre>");
 
             // Round course progress percent.
             $course->progresspercent = round($course->progresspercent);
-mtrace("COURSE = <pre>" . print_r($course,true) . "</pre>");
 
             // Stash the previous course in case we need it.
             if ($sequenced) {
