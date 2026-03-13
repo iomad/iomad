@@ -902,7 +902,7 @@ class company_edit_form extends company_moodleform {
 
         if (!preg_match('/^[A-Za-z0-9_]+$/', $data['shortname'])) {
             // Check allowed pattern (numbers, letters and underscore).
-            $errors['shortname'] = get_string('invalidshortnameerror', 'core_customfield');
+            $errors['shortname'] = get_string('invalidshortnameerror', 'block_iomad_company_admin');
         } else if ($foundcompanies = $DB->get_records('local_iomad_companies', ['shortname' => trim($data['shortname'])])) {
             if (!empty($this->companyid)) {
                 unset($foundcompanies[$this->companyid]);
