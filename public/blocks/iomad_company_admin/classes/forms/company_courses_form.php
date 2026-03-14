@@ -206,8 +206,8 @@ class company_courses_form extends moodleform {
                     if ($DB->get_record_sql("SELECT id FROM {local_iomad_courses}
                                              WHERE courseid=$addcourse->id
                                              AND shared <> 0")) {
-                        if ($companycourserecord = $DB->get_record('
-                        local_iomad_company_courses', [
+                        if ($companycourserecord = $DB->get_record(
+                        'local_iomad_company_courses', [
                             'companyid' => $this->selectedcompany,
                             'courseid' => $addcourse->id,
                         ])) {
