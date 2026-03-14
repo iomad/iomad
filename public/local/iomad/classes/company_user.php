@@ -547,6 +547,11 @@ class company_user {
                 $grouped = true;
             }
 
+            // Is there a manual enrolment method?
+            if (!$DB->record_exists('enrol', ['courseid' => $courseid, 'enrol' => 'manual'])) {
+                continue;
+            }
+
             if (!isset($manualcache[$courseid])) {
                 if ($instance = $DB->get_record('enrol', ['courseid' => $courseid, 'enrol' => 'manual'])) {
                     $manualcache[$courseid] = $instance;
