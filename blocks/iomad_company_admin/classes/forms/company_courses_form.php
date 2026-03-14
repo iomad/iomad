@@ -222,13 +222,13 @@ class company_courses_form extends moodleform {
                             if ($this->departmentid != $this->companydepartment ) {
                                 $company->add_course($addcourse, $this->departmentid);
                             } else {
-                                $company->add_course($addcourse, $this->companydepartment);
+                                $company->add_course($addcourse);
                             }
                         }
                     } else {
 
                         // Add it.
-                        $company->add_course($addcourse, $this->companydepartment);
+                        $company->add_course($addcourse);
                     }
                 }
 
