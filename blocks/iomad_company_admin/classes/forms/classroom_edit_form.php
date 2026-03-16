@@ -150,6 +150,10 @@ class classroom_edit_form extends dynamic_form {
             if (empty($data['capacity'])) {
                 $errors['capacity'] = get_string('required');
             }
+
+            if (!empty($data['capacity'] && $data['capacity'] < 1)) {
+                $errors['capacity'] = get_string('invalidentry', 'error');
+            }
         }
 
         return $errors;
