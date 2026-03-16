@@ -4532,7 +4532,6 @@ class company {
                              'SMTPDebug' => 'debugsmtp',
                              'SMTPSecure' => 'smtpsecure',
                              'AuthType' => 'smtpauthtype',
-                             'smtpoauthservice' => 'smtpoauthservice',
                              'Username' => 'smtpuser',
                              'Password' => 'smtppass',
                              'noreplyaddress' => 'noreplyaddress',
