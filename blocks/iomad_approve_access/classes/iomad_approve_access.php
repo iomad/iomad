@@ -60,6 +60,7 @@ class iomad_approve_access {
         }
 
         // If I can approve at a site level I have both.
+        $approvalsql = "";
         if (iomad::has_capability('block/iomad_approve_access:approve', context_system::instance())) {
             $approvalsql = "AND (tm_ok = 0 OR manager_ok = 0)";
         } else {
