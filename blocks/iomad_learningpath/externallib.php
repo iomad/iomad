@@ -125,7 +125,7 @@ class block_iomad_learningpath_external extends external_api {
                     'fullname' => new external_value(PARAM_TEXT, 'Course fullname'),
                     'shortname' => new external_value(PARAM_TEXT, 'Course shortname'),
                     'enroltype' => new external_value(PARAM_TEXT, 'Enrolment type'),
-                    'image' => new external_value(PARAM_URL, 'Course image'),
+                    'image' => new external_value(PARAM_RAW, 'Course image'),
                 ]
             )
         );
@@ -338,7 +338,7 @@ class block_iomad_learningpath_external extends external_api {
                     'fullname' => new external_value(PARAM_TEXT, 'Course fullname'),
                     'shortname' => new external_value(PARAM_TEXT, 'Course shortname'),
                     'enroltype' => new external_value(PARAM_TEXT, 'Enrolment type'),
-                    'image' => new external_value(PARAM_URL, 'Course image'),
+                    'image' => new external_value(PARAM_RAW, 'Course image'),
                 ]
             )
         );

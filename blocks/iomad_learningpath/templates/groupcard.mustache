@@ -14,10 +14,16 @@
             </div>
             <div class="col-md-6 px-3">
                 <div class="card-block">
+                    {{#zeroprogress}}
                         <div class="progress m-t-1">
-                            <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: {{ progress}}%;"
-                                aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100">{{ progress }}%</div>
+                            <div class="progress-bar progress-bar-striped bg-none" role="progressbar" style="width: 100%;"
+                                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
                         </div>
+                    {{/zeroprogress}}
+                    {{^zeroprogress}}
+                        <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: {{ progress}}%;"
+                            aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100">{{ progress }}%</div>
+                    {{/zeroprogress}}
                 </div>
             </div>
         </div>

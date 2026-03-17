@@ -37,6 +37,8 @@ use block_iomad_learningpath\event\{
     user_unassigned
 };
 use context_course;
+use core_course\external\course_summary_exporter;
+use core_course_list_element;
 use core\exception\coding_exception;
 use core\exception\moodle_exception;
 use local_iomad\{company, company_user, emailtemplate};
@@ -362,21 +364,15 @@ class companypaths {
      * @return mixed url or false if no image
      */
     public function get_course_image_url(int $courseid) {
-        global $OUTPUT;
+        global $DB, $OUTPUT;
 
-        $fs = get_file_storage();
-
-        $context = context_course::instance($courseid);
-        $files = $fs->get_area_files($context->id, 'course', 'overviewfiles', 0);
-        foreach ($files as $file) {
-            if ($file->is_valid_image()) {
-                return moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(),
-                    null, $file->get_filepath(), $file->get_filename())->out();
-            }
+        $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
+        $courseobj = new core_course_list_element($course);
+        $imageurl = course_summary_exporter::get_course_image($courseobj);
+        if (empty($imageurl)) {
+            $imageurl = $OUTPUT->get_generated_image_for_id($course->id);
         }
-
-        // No image defined, so...
-        return $OUTPUT->image_url('courseimage', 'block_iomad_learningpath')->out();
+        return $imageurl;
     }
 
     /**
