@@ -485,7 +485,7 @@ class user_edit_form extends moodleform {
                         $errors['username'] = get_string('invalidusername');
                 } else if ($DB->get_records_sql(
                     "SELECT cu.userid
-                     FROM {company_users} cu
+                     FROM {local_iomad_company_users} cu
                      JOIN {user} u ON (cu.userid = u.id)
                      WHERE cu.companyid = :companyid
                      AND u.username = :username",
