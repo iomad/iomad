@@ -248,7 +248,7 @@ class company_user {
             // Check if there is a managertype for this user already.
             if ($existing = $DB->get_records_sql(
                 "SELECT DISTINCT managertype
-                 FROM {company_user}
+                 FROM {local_iomad_company_users}
                  WHERE companyid = :companyid
                  AND userid = :userid",
                 ['companyid' => $company->id, 'userid' => $user->id])) {
