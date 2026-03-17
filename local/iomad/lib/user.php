@@ -237,9 +237,20 @@ class company_user {
             $departmentinfo = $DB->get_record('department', ['company' => $company->id, 'parent' => 0]);
             $data->departmentid = $departmentinfo->id;
         }
-        // Deal with unset variable.
+
+        // Were we not passed a managertype?
         if (empty($data->managertype)) {
-            $data->managertype = 0;
+            // Check if there is a managertype for this user already.
+            if ($existing = $DB->get_records_sql(
+                "SELECT DISTINCT managertype
+                 FROM {company_user}
+                 WHERE companyid = :companyid
+                 AND userid = :userid",
+                ['companyid' => $company->id, 'userid' => $user->id])) {
+                $data->managertype = array_key_first($existing);
+            } else {
+                $data->managertype = 0;
+            }
         }
 
         // Check if this hasn't already been called elsewhere.
@@ -248,10 +259,8 @@ class company_user {
             [
                 'userid' => $user->id,
                 'companyid' => $company->id,
-                'managertype' => $data->managertype,
                 'departmentid' => $data->departmentid,
-            ]
-        )) {
+            ])) {
 
             // Create the user association.
             $DB->insert_record('company_users', [
