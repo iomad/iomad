@@ -155,6 +155,11 @@ class context_company extends context {
     public static function instance($companyid, $strictness = MUST_EXIST) {
         global $DB;
 
+        // Is the context constant already set up?
+        if (!defined('CONTEXT_COMPANY')) {
+            define('CONTEXT_COMPANY', 13);
+        }
+
         if ($context = context::cache_get(CONTEXT_COMPANY, $companyid)) {
             return $context;
         }
@@ -195,6 +200,11 @@ class context_company extends context {
     protected static function create_level_instances() {
         global $DB;
 
+        // Is the context constant already set up?
+        if (!defined('CONTEXT_COMPANY')) {
+            define('CONTEXT_COMPANY', 13);
+        }
+
         if (!$DB->get_manager()->table_exists('local_iomad_companies')) {
             return;
         }
@@ -222,6 +232,11 @@ class context_company extends context {
     protected static function get_cleanup_sql() {
         global $DB;
 
+        // Is the context constant already set up?
+        if (!defined('CONTEXT_COMPANY')) {
+            define('CONTEXT_COMPANY', 13);
+        }
+
         if (!$DB->get_manager()->table_exists('local_iomad_companies')) {
             $sql = "
                     SELECT cx.*
@@ -248,6 +263,11 @@ class context_company extends context {
      */
     protected static function build_paths($force) {
         global $DB;
+
+        // Is the context constant already set up?
+        if (!defined('CONTEXT_COMPANY')) {
+            define('CONTEXT_COMPANY', 13);
+        }
 
         // First update normal companys.
         $path = $DB->sql_concat('?', 'id');
