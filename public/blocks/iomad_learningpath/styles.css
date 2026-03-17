@@ -116,3 +116,13 @@
 .lpgroupcard {
     margin-bottom: 5px;
 }
+
+.lpgroupcard .card-img {
+    height: 7rem;
+    background-position: center;
+    background-size: cover;
+}
+
+#iomad_learningpaths .bg-none {
+    background-color: #666 !important;
+}
