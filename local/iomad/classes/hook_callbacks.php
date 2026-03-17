@@ -50,8 +50,10 @@ class hook_callbacks {
     public static function after_config(after_config $hook): void {
         global $CFG;
 
-        // Set up the company context.
-        define('CONTEXT_COMPANY', 13);
+        // Set up the company context - if not already.
+        if (!defined('CONTEXT_COMPANY')) {
+            define('CONTEXT_COMPANY', 13);
+        }
 
         // Define our custom contexts.
         $customcontextclasses = [
