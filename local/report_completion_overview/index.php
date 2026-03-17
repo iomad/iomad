@@ -604,6 +604,7 @@ $coursedetailsql = "SELECT lit.*
                     FROM {local_iomad_track} lit
                     WHERE lit.userid = :userid
                     AND lit.courseid = :courseid
+                    AND lit.companyid = :companyid
                     AND lit.id = (
                       SELECT MAX(id)
                       FROM {local_iomad_track}
@@ -618,7 +619,13 @@ if (!$bycourse) {
             if (empty($allcompanycourses[$courseid])) {
                 continue;
             }
-            if ($comprecord = $DB->get_record_sql($coursedetailsql, ['userid' => $userid, 'courseid' => $courseid])) {
+            if ($comprecord = $DB->get_record_sql(
+                $coursedetailsql,
+                [
+                    'userid' => $userid,
+                    'courseid' => $courseid,
+                    'companyid' => $company->id,
+                ])) {
                 $comprecord->indate = false;
                 $comprecord->outdate = false;
                 $comprecord->lastcompleted = null;
@@ -627,10 +634,12 @@ if (!$bycourse) {
                 if ($indate = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
                                                     WHERE userid = :userid
                                                     AND courseid = :courseid
+                                                    AND companyid = :companyid
                                                     AND timeexpires > :time
                                                     ORDER BY id DESC",
                                                    ['userid' => $userid,
                                                    'courseid' => $courseid,
+                                                   'companyid' => $company->id,
                                                    'time' => time()], 0, 1)) {
                     $indaterec = reset($indate);
                     $comprecord->indate = $indaterec->timeexpires;
@@ -640,10 +649,12 @@ if (!$bycourse) {
                 } else if ($outdate = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
                                                             WHERE userid = :userid
                                                             AND courseid = :courseid
+                                                            AND companyid = :companyid
                                                             AND timecompleted > 0
                                                             ORDER BY id DESC",
                                                            ['userid' => $userid,
                                                             'courseid' => $courseid,
+                                                            'companyid' => $company->id,
                                                             'time' => time()], 0, 1)) {
                     $comprecord->outdate = true;
                     $outdaterec = reset($outdate);
@@ -674,7 +685,13 @@ if (!$bycourse) {
         }
         $courseusers = [];
         foreach ($userlist as $userid => $user) {
-            if ($comprecord = $DB->get_record_sql($coursedetailsql, ['userid' => $userid, 'courseid' => $courseid])) {
+            if ($comprecord = $DB->get_record_sql(
+                $coursedetailsql,
+                [
+                    'userid' => $userid,
+                    'courseid' => $courseid,
+                    'companyid' => $companyid,
+                ])) {
                 $comprecord->indate = false;
                 $comprecord->outdate = false;
                 $comprecord->lastcompleted = null;
@@ -683,10 +700,12 @@ if (!$bycourse) {
                 if ($indate = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
                                                     WHERE userid = :userid
                                                     AND courseid = :courseid
+                                                            AND companyid = :companyid
                                                     AND timecompleted > :time
                                                     ORDER BY id DESC",
                                                    ['userid' => $userid,
                                                    'courseid' => $courseid,
+                                                   'companyid' => $company->id,
                                                    'time' => time()], 0, 1)) {
                     $comprecord->indate = $indaterec->timeexpires;
                     $indaterec = reset($indate);
@@ -696,9 +715,11 @@ if (!$bycourse) {
                 } else if ($outdate = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
                                                             WHERE userid = :userid
                                                             AND courseid = :courseid
+                                                            AND companyid = :companyid
                                                             AND timecompleted > 0
                                                             ORDER BY id DESC",
                                                            ['userid' => $userid,
+                                                            'companyid' => $company->id,
                                                             'courseid' => $courseid], 0, 1)) {
                     $comprecord->outdate = true;
                     $outdaterec = reset($outdate);
