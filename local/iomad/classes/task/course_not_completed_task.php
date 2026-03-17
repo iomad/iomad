@@ -165,47 +165,57 @@ class course_not_completed_task extends scheduled_task {
                     continue;
                 }
 
-                // Otherwise set the notifyperiod.
-                if ($templateinfo->repeatperiod == 0) {
-                    $notifyperiod = "";
-                } else if ($templateinfo->repeatperiod == 99) {
-                    $notifyperiod = "";
-                } else {
-                    $notifytime = strtotime("- 1" . $periods[$templateinfo->repeatperiod], $runtime) - 86400;
-                    $notifyperiod = "AND sent < $notifytime";
-                }
-            } else {
-                // Use the default notify period.
-                $notifytime = $runtime - $compuser->notifyperiod * 86400;
-                $notifyperiod = "AND sent < $notifytime";
-            }
+                // Only check for previous emails if repeat is enabled and not never or always.
+                if (!empty($templateinfo->repeatperiod) &&
+                    $templateinfo->repeatperiod != 0 &&
+                    $templateinfo->repeatperiod != 99) {
+                    // For specific periods (1=daily, 2=weekly, 3=fortnightly, 4=monthly)
+                    // check if user has already received emails during this enrollment.
+                    $lastemail = $DB->get_record_sql(
+                        "SELECT MAX(sent) AS lastsent
+                         FROM {local_iomad_emails}
+                         WHERE userid = :userid
+                         AND courseid = :courseid
+                         AND templatename = :templatename
+                         AND modifiedtime > :timestarted",
+                        [
+                            'userid' => $compuser->userid,
+                            'courseid' => $compuser->courseid,
+                            'templatename' => 'completion_warn_user',
+                            'timestarted' => $compuser->timestarted,
+                        ]
+                    );
 
-            // Check if we have sent any emails and if they are within the period.
-            if ($DB->count_records('local_iomad_emails', ['userid' => $compuser->userid,
-                                             'courseid' => $compuser->courseid,
-                                             'templatename' => 'completion_warn_user']) > 0) {
-                if (!empty($notifyperiod)) {
-                    if (!$DB->get_records_sql("SELECT id FROM {local_iomad_emails}
-                                              WHERE userid = :userid
-                                              AND courseid = :courseid
-                                              AND templatename = :templatename
-                                              $notifyperiod
-                                              AND id IN (
-                                                 SELECT MAX(id) FROM {local_iomad_emails}
-                                                 WHERE userid = :userid2
-                                                 AND courseid = :courseid2
-                                                 AND templatename = :templatename2)",
-                                              ['userid' => $compuser->userid,
-                                               'courseid' => $compuser->courseid,
-                                               'templatename' => 'completion_warn_user',
-                                               'userid2' => $compuser->userid,
-                                               'courseid2' => $compuser->courseid,
-                                               'templatename2' => 'completion_warn_user'])) {
+                    // Calculate next allowed send time based on last email sent time.
+                    if ($lastemail && $lastemail->lastsent) {
+                        $nextallowedtime = strtotime("+ 1" . $periods[$templateinfo->repeatperiod], $lastemail->lastsent);
+
+                        // Compare dates only (ignore time component) since cron runs once per day
+                        // this prevents issues where email was sent at 0:00:30 but cron runs at 0:00:00.
+                        $nextalloweddate = strtotime('midnight', $nextallowedtime);
+                        $currentdate = strtotime('midnight', $runtime);
+
+                        // Check if enough time has passed since last email.
+                        if ($currentdate < $nextalloweddate) {
+                            continue;
+                        }
+                    }
+                } else if ($templateinfo->repeatperiod == 0) {
+                    // Template never repeats so check if it's already been sent.
+                    if ($DB->record_exists(
+                        'local_iomad_emails',
+                        [
+                            'userid' => $compuser->userid,
+                            'courseid' => $compuser->courseid,
+                            'templatename' => 'completion_warn_user',
+                        ])) {
+                        // Email already sent so skip it.
                         continue;
                     }
                 }
             }
 
+            // Passed all checks, send the email.
             mtrace("Sending completion warning email to $user->email");
             emailtemplate::send('completion_warn_user', ['course' => $course,
                                                          'user' => $user,
