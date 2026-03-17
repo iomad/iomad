@@ -42,6 +42,12 @@ class context_company extends context {
      */
     protected function __construct(stdClass $record) {
         parent::__construct($record);
+
+        // Is the context constant already set up?
+        if (!defined('CONTEXT_COMPANY')) {
+            define('CONTEXT_COMPANY', 13);
+        }
+
         if ($record->contextlevel != CONTEXT_COMPANY) {
             throw new coding_exception('Invalid $record->contextlevel in context_company constructor.');
         }
