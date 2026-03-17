@@ -483,6 +483,15 @@ class user_edit_form extends moodleform {
                     $errors['username'] = get_string('usernamelowercase');
                 } else if ($usernew->username !== core_user::clean_field($usernew->username, 'username')) {
                         $errors['username'] = get_string('invalidusername');
+                } else if ($DB->get_records_sql(
+                    "SELECT cu.userid
+                     FROM {company_users} cu
+                     JOIN {user} u ON (cu.userid = u.id)
+                     WHERE cu.companyid = :companyid
+                     AND u.username = :username",
+                    ['username' => $usernew->username,
+                     'companyid' => $this->company->id])) {
+                    $errors['username'] = get_string('usernameexists');
                 }
             }
         }
