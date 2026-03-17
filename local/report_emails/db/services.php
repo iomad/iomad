@@ -15,20 +15,28 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * IOMAD report emails
+ * External functions and service declaration for Outgoing Email Report
  *
- * @package   local_report_emails
- * @copyright 2021 Derick Turner
- * @author    Derick Turner
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * Documentation: {@link https://moodledev.io/docs/apis/subsystems/external/description}
+ *
+ * @package    local_report_emails
+ * @category   webservice
+ * @copyright  2026 E-Learn Design https://www.e-learndesign.co.uk
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '4.5.8 (Build: 20251208)'; // Human-friendly version name.
-$plugin->version  = 2026031745;   // The (date) version of this plugin.
-$plugin->requires = 2024100700;   // Requires this Moodle version.
-$plugin->component  = 'local_report_emails';
-$plugin->dependencies = ['local_iomad' => 2024090401];
-$plugin->supported = [405, 405];
-$plugin->maturity = MATURITY_STABLE;
+$functions = [
+
+    'local_report_emails_resend_email' => [
+        'classname' => local_report_emails\external\resend_email::class,
+        'description' => 'Resend email',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/report_emails:resend',
+    ],
+];
+
+$services = [
+];

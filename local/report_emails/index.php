@@ -104,6 +104,7 @@ if ($emailtoraw) {
     }
 }
 
+// Login and set up $PAGE.
 require_login();
 
 $systemcontext = context_system::instance();
@@ -113,6 +114,7 @@ $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
+// Can we even do anything?
 iomad::require_capability('local/report_emails:view', $companycontext);
 
 $fieldnames = [];
@@ -204,6 +206,7 @@ $PAGE->set_pagelayout('report');
 $PAGE->set_title($strcompletion);
 $PAGE->requires->css("/local/report_emails/styles.css");
 $PAGE->requires->jquery();
+$PAGE->requires->js_call_amd('local_report_emails/resend_emails', 'init');
 
 // Set the page heading.
 $PAGE->set_heading($strcompletion);
@@ -254,33 +257,7 @@ if ($departmentid == 0 ) {
 $foundobj = iomad::add_user_filter_params($params, $companyid);
 $idlist = $foundobj->idlist;
 $foundfields = $foundobj->foundfields;
-
 $baseurl = new moodle_url('/local/report_emails/index.php', $params);
-
-// Deal with resend check.
-if ($emailid && confirm_sesskey()) {
-
-    // Resend email, after confirmation.
-    $email = $DB->get_record('local_iomad_emails', ['id' => $emailid], '*', MUST_EXIST);
-    if ($confirm != md5($emailid)) {
-        echo $OUTPUT->header();
-        echo $OUTPUT->heading(get_string('resendemail', 'local_report_emails'));
-        $optionsyes = ['emailid' => $emailid,
-                            'confirm' => md5($emailid),
-                            'sesskey' => sesskey()];
-
-        echo $OUTPUT->confirm(get_string('resendemailfull', 'local_report_emails'),
-                              new moodle_url($CFG->wwwroot . '/local/report_emails/index.php',
-                                             $optionsyes),
-                              new moodle_url($CFG->wwwroot . '/local/report_emails/index.php'));
-        echo $OUTPUT->footer();
-        die;
-    } else {
-        $DB->set_field('local_iomad_emails', 'sent', null, ['id' => $emailid]);
-        redirect($baseurl);
-        die;
-    }
-}
 
 // Get the appropriate list of email templates.
 $templateslist = [0 => get_string('all')];
@@ -389,10 +366,24 @@ if (!$table->is_downloading()) {
             echo html_writer::end_tag('div');
 
             if (iomad::has_capability('local/report_emails:resend', $companycontext)) {
-                $params['allemails'] = 'allemails';
-                $resendlink = new moodle_url('/local/report_emails/index.php', $params);
+                $resendparams = $params;
+                $resendparams['allemails'] = 'allemails';
+                $resendparams['confirm'] = md5($allemails);
+                $resendparams['sesskey'] = sesskey();
+                $resendlink = new moodle_url('/local/report_emails/index.php', $resendparams);
                 echo html_writer::start_tag('div', ['class' => 'reporttablecontrolscontrol']);
-                echo $output->single_button($resendlink, get_string('resendall', 'local_report_emails'));
+                echo html_writer::tag(
+                    'a',
+                    get_string('resendall', 'local_report_emails'),
+                    [
+                        'class' => 'btn btn-secondary',
+                        'role' => 'button',
+                        'href' => '#',
+                        'data-action' => 'show-confirmresendallemails',
+                        'data-posturl' => $resendlink->out(false),
+                    ]
+                );
+                    //$output->single_button($resendlink, get_string('resendall', 'local_report_emails'));
                 echo html_writer::end_tag('div');
             }
             echo html_writer::end_tag('div');

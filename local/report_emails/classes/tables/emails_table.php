@@ -112,12 +112,15 @@ class emails_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_sent($row) {
-        global $CFG;
 
         if (empty($row->sent)) {
-            return get_string('never');
+            return html_writer::tag('p', get_string('never'), ['class' => 'lre_sent_date']);
         } else {
-            return userdate($row->sent, get_config('local_iomad', 'date_format') . " %I:%M%p");
+            return html_writer::tag(
+                'p',
+                userdate($row->sent, get_config('local_iomad', 'date_format') . " %I:%M%p"),
+                ['class' => 'lre_sent_date']
+            );
         }
     }
 
@@ -144,14 +147,21 @@ class emails_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_controls($row) {
-        global $CFG, $output, $companycontext;
+        global $companycontext;
 
         if (iomad::has_capability('local/report_emails:resend', $companycontext) && !empty($row->sent)) {
-            $resendlink = new moodle_url($CFG->wwwroot . '/local/report_emails/index.php',
-                                         ['emailid' => $row->emailid]);
-            return $output->single_button($resendlink, get_string('resend', 'local_report_emails'));
-        } else {
-            return;
+            return html_writer::tag(
+                'a',
+                get_string('resend', 'local_report_emails'),
+                [
+                    'class' => 'btn btn-secondary',
+                    'role' => 'button',
+                    'href' => '#',
+                    'data-action' => 'show-confirmresendemail',
+                    'data-companyid' => $row->companyid,
+                    'data-emailid' => $row->emailid,
+                ]
+            );
         }
     }
 
@@ -169,7 +179,7 @@ class emails_table extends table_sql {
      * Override print_nothing_to_display to ensure that column headers are always added.
      */
     public function print_nothing_to_display() {
-        global $CFG, $companycontext, $OUTPUT;
+        global $OUTPUT;
 
         $this->start_html();
         $this->print_headers();
