@@ -222,7 +222,7 @@ class path {
             $path->groups = array_values($groups);
             $path->progress = $pathprogress !== null ? $pathprogress : 0;
             $path->zeroprogress = false;
-            if ((empty($progress))) {
+            if ((empty($pathprogress))) {
                 $path->zeroprogress = true;
             }
         }
