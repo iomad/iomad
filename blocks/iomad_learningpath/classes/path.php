@@ -25,6 +25,9 @@
 
 namespace block_iomad_learningpath;
 
+use core_course\external\course_summary_exporter;
+use core_course_list_element;
+
 /**
  * Class definition
  */
@@ -92,6 +95,9 @@ class path {
             $progress = \core_completion\progress::get_course_progress_percentage($fullcourse);
             $course->hasprogress = $progress !== null;
             $course->progresspercent = $course->hasprogress ? $progress : 0;
+            if ($progress == 0) {
+                $course->zeroprogress = true;
+            }
             if ($progress == 100) {
                 $completedcourses++;
             }
@@ -167,6 +173,9 @@ class path {
                 $cumulativeprogress += $progress;
                 $completiongroupcount++;
             }
+            if (empty($progress)) {
+                $group->zeroprogress = true;
+            }
         }
 
         // Calcultate overall progress for path.
@@ -203,6 +212,9 @@ class path {
             list($groups, $pathprogress) = $this->get_groups($path->id);
             $path->groups = array_values($groups);
             $path->progress = $pathprogress !== null ? $pathprogress : 0;
+            if ((empty($progress))) {
+                $path->zeroprogress = true;
+            }
         }
 
         return $paths;
@@ -252,20 +264,14 @@ class path {
      * @return mixed url or false if no image
      */
     public function get_course_image_url($courseid) {
-        global $OUTPUT;
+        global $DB, $OUTPUT;
 
-        $fs = get_file_storage();
-
-        $context = \context_course::instance($courseid);
-        $files = $fs->get_area_files($context->id, 'course', 'overviewfiles', 0);
-        foreach ($files as $file) {
-            if ($file->is_valid_image()) {
-                return \moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(),
-                    null, $file->get_filepath(), $file->get_filename());
-            }
+        $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
+        $courseobj = new core_course_list_element($course);
+        $imageurl = course_summary_exporter::get_course_image($courseobj);
+        if (empty($imageurl)) {
+            $imageurl = $OUTPUT->get_generated_image_for_id($course->id);
         }
-
-        // No image defined, so...
-        return $OUTPUT->image_url('courseimage', 'block_iomad_learningpath')->out();
+        return $imageurl;
     }
 }
