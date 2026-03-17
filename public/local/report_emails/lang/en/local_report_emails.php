@@ -23,9 +23,11 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['allemailsresentsuccessfully'] = 'All emails were successfully requeued.';
 $string['controls'] = 'Controls';
 $string['created'] = 'Date created';
 $string['due'] = 'Date due';
+$string['emailresentsuccessfully'] = 'Selected email was successfully requeued.';
 $string['noemailsfound'] = 'No emails found';
 $string['pluginname'] = 'Outgoing Email Report';
 $string['privacy:metadata'] = 'The \'Local IOMAD email report\' only shows data stored in other locations.';

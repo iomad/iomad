@@ -24,6 +24,7 @@
 .iomadcoursesearchform,
 .iomaddatesearchform,
 .iomadusersearchform {
+    padding-top: 7px;
     margin-right: 10px;
     float: left;
 }
@@ -50,4 +51,10 @@
 .iomadusersearchform .mform .form-inline .form-control,
 .iomadusersearchform .mform .form-inline .custom-select {
     max-width:75%;
+}
+
+.reporttablecontrolscontrol {
+    padding-top: 7px;
+    padding-bottom: 17px;
+    padding-right: 5px;
 }
