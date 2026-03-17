@@ -95,6 +95,7 @@ class path {
             $progress = \core_completion\progress::get_course_progress_percentage($fullcourse);
             $course->hasprogress = $progress !== null;
             $course->progresspercent = $course->hasprogress ? $progress : 0;
+            $course->zeroprogress = false;
             if ($progress == 0) {
                 $course->zeroprogress = true;
             }
@@ -173,6 +174,7 @@ class path {
                 $cumulativeprogress += $progress;
                 $completiongroupcount++;
             }
+            $group->zeroprogress = false;
             if (empty($progress)) {
                 $group->zeroprogress = true;
             }
@@ -212,6 +214,7 @@ class path {
             list($groups, $pathprogress) = $this->get_groups($path->id);
             $path->groups = array_values($groups);
             $path->progress = $pathprogress !== null ? $pathprogress : 0;
+            $path->zeroprogress = false;
             if ((empty($progress))) {
                 $path->zeroprogress = true;
             }
