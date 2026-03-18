@@ -50,7 +50,7 @@ class savecertificatetask extends adhoc_task {
         $trackid = $data->trackid;
         return \local_iomad_track\observer::record_certificates($courseid, $userid, $trackid, false);
     }
-    
+
     /**
      * Queues the task.
      *

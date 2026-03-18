@@ -280,6 +280,10 @@ class observer {
                     $trackid = $trackrec->id;
                     $task = new \local_iomad_track\task\savecertificatetask();
                     $task->queue_task($userid, $courseid, $trackid);
+
+                    // Get the ID of the certificate save task as we need to make sure it's completed.
+                    $emailtask = new \local_iomad_track\task\sendcompletionemailtask();
+                    $emailtask->queue_task($userid, $courseid, $companyid, $trackid);
                 }
             } else {
                 // For some reason we don't already have a record.
@@ -352,6 +356,10 @@ class observer {
                 // are potentially part of this event listener set.
                 $task = new \local_iomad_track\task\savecertificatetask();
                 $task->queue_task($userid, $courseid, $trackid);
+
+                // Get the ID of the certificate save task as we need to make sure it's completed.
+                $emailtask = new \local_iomad_track\task\sendcompletionemailtask();
+                $emailtask->queue_task($userid, $courseid, $companyid, $trackid);
             }
         }
 
