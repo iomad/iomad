@@ -813,7 +813,7 @@ if (empty($courseid)) {
 
     // Set objects for the $coursetable class and output the table.
     $coursetable->set_sql($selectsql, $fromsql, $wheresql, $sqlparams);
-    $countsql = "SELECT COUNT(DISTINCT lit.id) FROM $fromsql WHERE $countwheresql";
+    $countsql = "SELECT COUNT(DISTINCT lit.course) FROM $fromsql WHERE $countwheresql";
     $coursetable->set_count_sql($countsql, $sqlparams);
     $coursetable->define_baseurl($baseurl);
     $coursetable->define_columns($coursecolumns);
