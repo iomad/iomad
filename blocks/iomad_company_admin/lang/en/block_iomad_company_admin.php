@@ -172,6 +172,7 @@ $string['companydepartmentsdeletewarning'] = 'I confirm that it is OK to delete 
 $string['companydetails'] = 'Company';
 $string['companydomains'] = 'List of company domains';
 $string['companydomains_help'] = 'This is the list of company email domains which will be used to auto assign users to this company through the local IOMAD signup plugin.';
+$string['companyenableshoptask'] = 'Enable company access to shop ad-hoc task';
 $string['companyfavicon'] = 'Company favicon';
 $string['companyfavicon_desc'] = 'The favicon for the <i>currently selected</i> company is displayed next to the page title in the browser tab. A Moodle favicon is displayed if a custom favicon is not provided for either the company or the site.';
 $string['companyfilter'] = 'Filter results';

@@ -91,6 +91,7 @@ $string['deletetemplatesetfull'] = 'Are you absolutely sure you want to delete t
 $string['edit_template'] = 'Edit email template';
 $string['editatemplate'] = 'Edit an override template';
 $string['edittemplateset'] = 'Edit template set';
+$string['enroleducatortask'] = 'Enrol educator users ad-hoc task';
 $string['iomad:email_add'] = 'Override Default Email Templates';
 $string['iomad:email_delete'] = 'Revert to default email templates';
 $string['iomad:email_edit'] = 'Edit email templates';
