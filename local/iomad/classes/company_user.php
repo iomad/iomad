@@ -1243,7 +1243,22 @@ class company_user {
         if (!empty($timecompleted)) {
             $progress = 100;
         } else {
-            $progress = progress::get_course_progress_percentage($course, $userid);
+            if ($DB->get_record_sql(
+                "SELECT ue.timestart
+                 FROM {user_enrolments} ue
+                 JOIN {enrol} e ON (ue.enrolid = e.id AND e.status = 0)
+                 WHERE e.courseid = :courseid
+                 AND ue.userid = :userid
+                 AND ue.timestart > :timeenrolled",
+                [
+                    'courseid' => $courseid,
+                    'userid' => $userid,
+                    'timeenrolled' => $timeenrolled,
+                    ])) {
+                $progress = null;
+            } else {
+                $progress = progress::get_course_progress_percentage($course, $userid);
+            }
         }
 
         // Generate the progress display.
@@ -1282,27 +1297,7 @@ class company_user {
                         return get_string('suspended');
                     }
                 } else {
-                    if (!$downloading) {
-                        return html_writer::tag(
-                            'div',
-                            html_writer::tag(
-                                'div',
-                                '0%',
-                                [
-                                    'class' => 'progress-bar',
-                                    'style' => 'width:0%;height:20px',
-                                ]
-                            ),
-                            [
-                                'class' => 'progress',
-                                'style' => 'height:20px;',
-                                'data-html' => 'true',
-                                'title' => $tooltip,
-                            ]
-                        );
-                    } else {
-                        return get_string('completion-alt-auto-y', 'completion', "0%");
-                    }
+                    return get_string('unfinished');
                 }
             }
         } else {

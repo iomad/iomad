@@ -82,7 +82,7 @@ if (!iomad::has_capability('local/report_users:redocertificates', $companycontex
     $USER->editing = false;
 }
 
-$userinfo = $DB->get_record('user', ['id' => $userid]);
+$userinfo = $DB->get_record('user', ['id' => $userid], '*', MUST_EXIST);
 
 $linktext = get_string('user_detail_title', 'local_report_users');
 
@@ -103,9 +103,24 @@ $PAGE->set_other_editing_capability('local/report_users:updateentries');
 $PAGE->requires->js_call_amd('local_report_users/handleall', 'init');
 
 // Set the page heading.
-$PAGE->set_heading(get_string('userdetails', 'local_report_users').
-          $userinfo->firstname." ".
-          $userinfo->lastname. " (".$userinfo->email.")");
+if (!$DB->record_exists(
+    'local_iomad_company_users',
+    [
+        'userid' => $userid,
+        'companyid' => $companyid,
+        'suspended' => 1,
+    ])) {
+    $userdisplay = format_string(
+        fullname($userinfo) .
+        ' (' . $userinfo->email . ')'
+        );
+} else {
+    $userdisplay = format_string(
+        fullname($userinfo) .
+        ' (' . $userinfo->email . ')' .
+        ' - ' . get_string('suspended'));
+}
+$PAGE->set_heading(get_string('userdetails', 'local_report_users', $userdisplay));
 $buttons = "";
 if (iomad::has_capability('local/report_completion:view', $companycontext)) {
     $buttoncaption = get_string('pluginname', 'local_report_completion');
@@ -420,12 +435,6 @@ if (!$table->is_downloading()) {
     $mainadmin = get_admin();
 
     echo $output->header();
-
-    if (!empty($userinfo->suspended)) {
-        echo " - Suspended</h2>";
-    } else {
-        echo "</h2>";
-    }
 
     echo html_writer::start_tag('div', ['class' => 'iomadclear']);
     if ((iomad::has_capability('block/iomad_company_admin:company_course_users', $companycontext) ||
