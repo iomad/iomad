@@ -60,4 +60,5 @@ $string['privacy:metadata:local_iomad_track_certs:filename'] = 'Certificate file
 $string['privacy:metadata:local_iomad_track_certs:id'] = 'Local IOMAD track certificate record ID';
 $string['privacy:metadata:local_iomad_track_certs:trackid'] = 'Certificate track ID';
 $string['savecertificatetask'] = 'Adhoc task to store a certificate for a user on course completion';
+$string['sendcompletionemailtask'] = 'Send course completion email ad-hoc task';
 $string['uploadcompletionresult'] = 'Upload completion file result';
