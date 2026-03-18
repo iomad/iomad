@@ -27,6 +27,7 @@ namespace local_iomad\task;
 
 use core\task\adhoc_task;
 use core\task\manager;
+use core_course_category;
 use local_iomad\{company_user, track};
 
 /**
