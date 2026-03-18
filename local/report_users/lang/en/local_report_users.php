@@ -65,5 +65,5 @@ $string['revokeconfirm'] = 'License will be removed from the user and will be re
 $string['revokelicense'] = 'Revoke license';
 $string['user_detail_title'] = 'User reports';
 $string['usercoursedetails'] = 'User details';
-$string['userdetails'] = 'Report information for ';
+$string['userdetails'] = 'Report information for {$a}';
 $string['viewfullcourse'] = 'View complete summary for course';
