@@ -30,7 +30,7 @@ use action_menu;
 use block_iomad_company_admin\output\{user_departments_editable, user_roles_editable};
 use core\output\notification;
 use html_writer;
-use local_iomad\{company, iomad};
+use local_iomad\{company, company_user, iomad};
 use moodle_url;
 use table_sql;
 
@@ -66,17 +66,26 @@ class editusers_table extends table_sql {
         // Deal with suspended users.
         if (!empty($row->suspended) ||
             !empty($row->companysuspended)) {
-            $name = format_string("$name (S)");
+            $return = html_writer::start_tag('span', ['class' => 'dimmed_text']);
+        } else  {
+            $return = "";
         }
 
         // Can we see a link?
         if (has_capability('block/iomad_company_admin:editusers', $companycontext) ||
             has_capability('block/iomad_company_admin:editallusers', $companycontext)) {
             $profileurl = new moodle_url('/user/profile.php', ['id' => $row->id]);
-            return html_writer::tag('a', $name, ['href' => $profileurl]);
+            $return .= html_writer::tag('a', $name, ['href' => $profileurl]);
         } else {
-            return $name;
+            $return .= $name;
         }
+
+        if (!empty($row->suspended) ||
+            !empty($row->companysuspended)) {
+            $return .= html_writer::end_tag('span');
+        }
+
+        return $return;
     }
 
     /**
@@ -93,33 +102,35 @@ class editusers_table extends table_sql {
                                                                              'userid' => $row->id],
                                                                              '',
                                                                              'departmentid'));
+            // Deal with suspended users.
+            if (!empty($row->suspended) ||
+                !empty($row->companysuspended)) {
+                $return = html_writer::start_tag('span', ['class' => 'dimmed_text']);
+            } else {
+                $return = "";
+            }
+
             if ($row->managertype == 1 || empty($USER->editing)) {
-                $count = count($userdepartments);
-                $current = 1;
-                $returnstr = "";
-                if ($count > 5) {
-                    $returnstr = "<details><summary>" . get_string('show') . "</summary>";
+
+                // Format the company departments.
+                $return .= company_user::get_department_name($row->id, $row->companyid, ',<br>', true);
+
+                if (!empty($row->suspended) ||
+                    !empty($row->companysuspended)) {
+                    $return .= html_writer::end_tag('span');
                 }
-
-                foreach ($userdepartments as $department) {
-                    $returnstr .= format_string($this->departmentsmenu[$department]);
-
-                    if ($current < $count) {
-                        $returnstr .= ",<br>";
-                    }
-                    $current++;
-                }
-
-                if ($count > 5) {
-                    $returnstr .= "</details>";
-                }
-
-                return $returnstr;
+                return $return;
 
             } else {
                 // If there are no departments available to the current user then return a empty string.
                 if (empty($userdepartments)) {
-                    return '';
+                    // Deal with suspended users.
+                    if (!empty($row->suspended) ||
+                        !empty($row->companysuspended)) {
+                        $return .= html_writer::end_tag('span');
+                    }
+
+                    return $return;
                 }
 
                 $editable = new user_departments_editable(
@@ -131,42 +142,34 @@ class editusers_table extends table_sql {
                     $this->assignabledepartments
                 );
 
-                return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
+                $return .= $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
+
+                // Deal with suspended users.
+                if (!empty($row->suspended) ||
+                    !empty($row->companysuspended)) {
+                    $return .= html_writer::end_tag('span');
+                }
+
+                return $return;
             }
         } else {
-            $userdepartments = $DB->get_records_sql(
-                "SELECT d.id, d.name
-                 FROM {local_iomad_company_departments} d
-                 JOIN {local_iomad_company_users} cu ON (
-                     d.companyid = cu.companyid
-                     AND d.id = cu.departmentid
-                 )
-                 WHERE cu.companyid = :companyid
-                 AND cu.userid = :userid
-                 ORDER BY d.name",
-                ['companyid' => $selectedcompanyid,
-                 'userid' => $row->id]);
-            $count = count($userdepartments);
-            $current = 1;
-            $returnstr = "";
-            if ($count > 5) {
-                $returnstr = "<details><summary>" . get_string('show') . "</summary>";
+            // Deal with suspended users.
+            if (!empty($row->suspended) ||
+                !empty($row->companysuspended)) {
+                $return = html_writer::start_tag('span', ['class' => 'dimmed_text']);
+            } else {
+                $return = "";
             }
 
-            foreach ($userdepartments as $department) {
-                $returnstr .= format_string($department->name);
+            // Format the company departments.
+            $return .= company_user::get_department_name($row->id, $selectedcompanyid, ',<br>', true);
 
-                if ($current < $count) {
-                    $returnstr .= ",<br>";
-                }
-                $current++;
+            if (!empty($row->suspended) ||
+                !empty($row->companysuspended)) {
+                $return .= html_writer::end_tag('span');
             }
 
-            if ($count > 5) {
-                $returnstr .= "</details>";
-            }
-
-            return $returnstr;
+            return $return;
         }
     }
 
@@ -176,14 +179,28 @@ class editusers_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_managertype($row) {
-        global $CFG, $DB, $USER, $selectedcompanyid, $company, $OUTPUT, $companycontext;
+        global $DB, $USER, $selectedcompanyid, $company, $OUTPUT, $companycontext;
 
-        $returnstr = "";
+        // Deal with suspended users.
+        if (!empty($row->suspended) ||
+            !empty($row->companysuspended)) {
+            $returnstr = html_writer::start_tag('span', ['class' => 'dimmed_text']);
+        } else {
+            $returnstr = "";
+        }
 
         if (empty($USER->editing) || $selectedcompanyid != $company->id) {
+
+            // Add the user type in too.
             $returnstr .= $this->usertypes[$row->managertype];
             if (!empty($row->educator) && empty(get_config('local_iomad', 'autoenrol_managers'))) {
                 $returnstr .= ",<br>" . $this->usertypes[3];
+            }
+
+            // Deal with suspended users.
+            if (!empty($row->suspended) ||
+                !empty($row->companysuspended)) {
+                $returnstr .= html_writer::end('span');
             }
 
             return $returnstr;
@@ -240,7 +257,15 @@ class editusers_table extends table_sql {
             }
             // If there are no departments for the current user then output their role as text.
             if (empty($userdepartments)) {
-                return $usertypeselect[$currentvalue];
+                $returnstr .= $usertypeselect[$currentvalue];
+
+                // Deal with suspended users.
+                if (!empty($row->suspended) ||
+                    !empty($row->companysuspended)) {
+                    $returnstr .= html_writer::end_tag('span');
+                }
+
+                return $returnstr;
             }
 
             $editable = new user_roles_editable(
@@ -251,56 +276,87 @@ class editusers_table extends table_sql {
                 $usertypeselect
             );
 
-            return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
+            $returnstr .=  $OUTPUT->render_from_template(
+                'core/inplace_editable',
+                $editable->export_for_template($OUTPUT)
+            );
+
+            // Deal with suspended users.
+            if (!empty($row->suspended) ||
+                !empty($row->companysuspended)) {
+                $returnstr .= html_writer::end_tag('span');
+            }
+
+            return $returnstr;
         }
     }
 
     /**
-     * Generate the display of the user's departments
+     * Generate the display of the user's email
      * @param object $user the table row being output.
      * @return string HTML content to go inside the td.
      */
     public function col_email($row) {
 
-        return $row->email;
-    }
-
-    /**
-    /**
-     * Generate the display of the user's departments
-     * @param object $user the table row being output.
-     * @return string HTML content to go inside the td.
-     */
-    public function col_lastaccess($row) {
-        global $CFG;
-
-        if (!empty($row->lastaccess)) {
-            return userdate($row->lastaccess, get_config('local_iomad', 'date_format'));
+        // Deal with suspended users.
+        if (!empty($row->suspended) ||
+            !empty($row->companysuspended)) {
+            return html_writer::tag('span', $row->email, ['class' => 'dimmed_text']);
         } else {
-            return get_string('never');
+            return $row->email;
         }
     }
 
     /**
-     * Generate the display of the user's departments
+     * Generate the display of the user's last access datetime
+     * @param object $user the table row being output.
+     * @return string HTML content to go inside the td.
+     */
+    public function col_lastaccess($row) {
+
+        // Set up the value.
+        if (!empty($row->lastaccess)) {
+            $return = userdate($row->lastaccess, get_config('local_iomad', 'date_format'));
+        } else {
+            $return = get_string('never');
+        }
+
+        // Deal with suspended users.
+        if (!empty($row->suspended) ||
+            !empty($row->companysuspended)) {
+            return html_writer::tag('span', $return, ['class' => 'dimmed_text']);
+        } else {
+            return $return;
+        }
+    }
+
+    /**
+     * Generate the display of the user's company name
      * @param object $user the table row being output.
      * @return string HTML content to go inside the td.
      */
     public function col_company($row) {
 
-        return format_string($row->companyname);
+        // Deal with suspended users.
+        if (!empty($row->suspended) ||
+            !empty($row->companysuspended)) {
+            return html_writer::tag('span', format_string($row->companyname), ['class' => 'dimmed_text']);
+        } else {
+            return format_string($row->companyname);
+        }
     }
 
     /**
-     * Generate the display of the ucourses has grade column.
+     * Generate the actions column
      * @param object $user the table row being output.
      * @return string HTML content to go inside the td.
      */
     public function col_actions($row) {
-        global $USER, $output, $params, $companycontext, $DB, $companyid;
+        global $USER, $output, $companycontext, $DB, $companyid;
 
         // User actions.
         $actions = [];
+        $ajaxurl = new moodle_url('#');
 
         if ($row->username == 'guest') {
             return; // Do not display dummy new user and guest here.
@@ -326,14 +382,19 @@ class editusers_table extends table_sql {
                         get_string('edit')
                     );
                     if (iomad::has_capability('block/iomad_company_admin:edituserpassword', $companycontext)) {
-                        $url = new moodle_url('/blocks/iomad_company_admin/editusers.php', [
-                            'password' => $row->id,
-                            'sesskey' => sesskey(),
-                        ]);
                         $actions['password'] = new action_menu_link_secondary(
-                            $url,
+                            $ajaxurl,
                             null,
-                            get_string('resetpassword', 'block_iomad_company_admin')
+                            get_string('resetpassword', 'block_iomad_company_admin'),
+                            [
+                                'data-action' => 'show-resetuserprompt',
+                                'data-username' => fullname(
+                                    $row,
+                                    has_capability('moodle/site:viewfullnames', $this->get_context())
+                                ),
+                                'data-userid' => $row->id,
+                                'data-companyid' => $companyid,
+                            ]
                         );
                     }
                 }
@@ -353,39 +414,46 @@ class editusers_table extends table_sql {
                         $canedit = false;
                     } else {
                         if (iomad::has_capability('block/iomad_company_admin:deleteuser', $companycontext)) {
-                            $url = new moodle_url('/blocks/iomad_company_admin/editusers.php', [
-                                'delete' => $row->id,
-                                'sesskey' => sesskey(),
-                            ]);
                             $actions['delete'] = new action_menu_link_secondary(
-                                $url,
+                                $ajaxurl,
                                 null,
-                                get_string('delete')
+                                get_string('delete'),
+                            [
+                                'data-action' => 'show-deleteuserprompt',
+                                'data-username' => fullname(
+                                    $row,
+                                    has_capability('moodle/site:viewfullnames', $this->get_context())
+                                ),
+                                'data-userid' => $row->id,
+                                'data-companyid' => $companyid,
+                            ]
+
                             );
                         }
                         if (iomad::has_capability('block/iomad_company_admin:suspenduser', $companycontext)) {
                             if (!empty($row->suspended) ||
                                 !empty($row->companysuspended)) {
-                                $url = new moodle_url('/blocks/iomad_company_admin/editusers.php', [
-                                    'unsuspend' => $row->id,
-                                    'sesskey' => sesskey(),
-                                ]);
-                                $actions['unsuspend'] = new action_menu_link_secondary(
-                                    $url,
-                                    null,
-                                    get_string('unsuspend', 'block_iomad_company_admin')
-                                );
+                                $actionstring = get_string('unsuspend', 'block_iomad_company_admin');
+                                $suspended = true;
                             } else {
-                                $url = new moodle_url('/blocks/iomad_company_admin/editusers.php', [
-                                    'suspend' => $row->id,
-                                    'sesskey' => sesskey(),
-                                ]);
-                                $actions['suspend'] = new action_menu_link_secondary(
-                                    $url,
-                                    null,
-                                    get_string('suspend', 'block_iomad_company_admin')
-                                );
+                                $actionstring = get_string('suspend', 'block_iomad_company_admin');
+                                $suspended = false;
                             }
+                            $actions['unsuspend'] = new action_menu_link_secondary(
+                                $ajaxurl,
+                                null,
+                                $actionstring,
+                            [
+                                'data-action' => 'show-suspenduserprompt',
+                                'data-username' => fullname(
+                                    $row,
+                                    has_capability('moodle/site:viewfullnames', $this->get_context())
+                                ),
+                                'data-userid' => $row->id,
+                                'data-suspended' => $suspended,
+                                'data-companyid' => $companyid,
+                            ]
+                            );
                         }
                     }
                 }
@@ -481,7 +549,7 @@ class editusers_table extends table_sql {
      *      as a key when storing table properties like sort order in the session.
      */
     public function __construct($uniqueid) {
-        global $DB, $companyid, $CFG, $companycontext;
+        global $DB, $companyid, $companycontext;
 
         $this->uniqueid = $uniqueid;
         $this->request  = [

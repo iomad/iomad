@@ -23,15 +23,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use block_iomad_company_admin\event\{
-    company_user_deleted,
-    company_user_suspended,
-    company_user_unsuspended,
-    dashboard_page_viewed
-};
+use block_iomad_company_admin\event\dashboard_page_viewed;
 use block_iomad_company_admin\tables\editusers_table;
-use core\output\notification;
-use local_iomad\{company, company_user, iomad};
+use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 use local_iomad\forms\user_search_form;
 
@@ -131,11 +125,13 @@ if ($PAGE->user_allowed_editing()) {
 }
 
 // Javascript for fancy select.
-// Parameter is name of proper select form element followed by 1=submit its form.
 $PAGE->requires->js_call_amd(
     'block_iomad_company_admin/department_select',
     'init',
     ['deptid', 1, optional_param('deptid', 0, PARAM_INT)]);
+
+// Add the modal controlers.
+$PAGE->requires->js_call_amd('block_iomad_company_admin/edit_users', 'init');
 
 // Set the page heading.
 $PAGE->set_heading($linktext);
@@ -280,192 +276,6 @@ $strenrolment = get_string('userenrolments', 'block_iomad_company_admin');
 $struserlicense = get_string('userlicenses', 'block_iomad_company_admin');
 $strshowall = get_string('showallcompanies', 'block_iomad_company_admin');
 $struserreport = get_string('report_users_title', 'local_report_users');
-
-// User confirmation.
-if ($confirmuser && confirm_sesskey()) {
-    // Check if the user we are confirming actually exists.
-    if (!$user = $DB->get_record('user', ['id' => $confirmuser])) {
-        throw new moodle_exception('nousers');
-    }
-    $auth = get_auth_plugin($user->auth);
-    $result = $auth->user_confirm($user->username, $user->secret);
-
-    if ($result == AUTH_CONFIRM_OK ||  $result == AUTH_CONFIRM_ALREADY) {
-        redirect($returnurl);
-    } else {
-        redirect($returnurl, get_string('usernotconfirmed', '', fullname($user, true)));
-    }
-
-} else if ($password && confirm_sesskey()) {
-    // Check we can reset a user's password - sanity checks.
-    if (!iomad::has_capability('block/iomad_company_admin:editusers', $companycontext)) {
-        throw new moodle_exception('nopermissions', 'error', '', 'reset a user');
-    }
-    if (!$user = $DB->get_record('user',  ['id' => $password])) {
-        throw new moodle_exception('nousers');
-    }
-    if (!company::check_canedit_user($companyid, $user->id)) {
-        throw new moodle_exception('invaliduserid');
-    }
-
-    // Display the confirmation page.
-    if ($confirm != md5($password)) {
-        $fullname = fullname($user, true);
-
-        echo $output->header();
-        echo $output->heading(get_string('resetpassword', 'block_iomad_company_admin'). " " . $fullname);
-        $optionsyes = ['password' => $password, 'confirm' => md5($password), 'sesskey' => sesskey()];
-        echo $output->confirm(get_string('resetpasswordcheckfull', 'block_iomad_company_admin', "'$fullname'"),
-                              new moodle_url('editusers.php', $optionsyes), 'editusers.php');
-        echo $output->footer();
-        die;
-    } else {
-        // Actually regenerate the user's password.
-        company_user::generate_temporary_password($user, true, true);
-    }
-} else if ($delete && confirm_sesskey()) {
-    // Check we can delete a user - sanity checks.
-    if (!iomad::has_capability('block/iomad_company_admin:editusers', $companycontext)) {
-        throw new moodle_exception('nopermissions', 'error', '', 'delete a user');
-    }
-    if (!$user = $DB->get_record('user',  ['id' => $delete])) {
-        throw new moodle_exception('nousers', 'error');
-    }
-    if (!company::check_canedit_user($companyid, $user->id)) {
-        throw new moodle_exception('invaliduserid');
-    }
-    if (is_siteadmin($user->id)) {
-        throw new moodle_exception('nopermissions', 'error', '', 'delete site admin user');
-    }
-
-    if ($confirm != md5($delete)) {
-        $fullname = fullname($user, true);
-        echo $output->header();
-        echo $output->heading(get_string('deleteuser', 'block_iomad_company_admin'). " " . $fullname);
-        $optionsyes = ['delete' => $delete, 'confirm' => md5($delete), 'sesskey' => sesskey()];
-        echo $output->confirm(get_string('deletecheckfull', 'block_iomad_company_admin', "'$fullname'"),
-                              new moodle_url('editusers.php', $optionsyes), 'editusers.php');
-        echo $output->footer();
-        die;
-    } else {
-        // Actually delete the user.
-        company_user::delete($user->id, $companyid);
-
-        // Create an event for this.
-        $eventother = [
-            'userid' => $user->id,
-            'companyname' => $company->get_name(),
-            'companyid' => $companyid,
-        ];
-        $event = company_user_deleted::create([
-            'context' => $companycontext,
-            'objectid' => $user->id,
-            'userid' => $USER->id,
-            'other' => $eventother,
-        ]);
-        $event->trigger();
-        $returnmessage = get_string('userdeletedok', 'block_iomad_company_admin');
-        redirect($returnurl, $returnmessage, null, notification::NOTIFY_SUCCESS);
-    }
-
-} else if ($suspend && confirm_sesskey()) {
-    // Suspend user sanity checks.
-    if (!iomad::has_capability('block/iomad_company_admin:editusers', $companycontext)) {
-        throw new moodle_exception('nopermissions', 'error', '', 'suspend a user');
-    }
-    if (!$user = $DB->get_record('user',  ['id' => $suspend])) {
-        throw new moodle_exception('nousers', 'error');
-    }
-    if (!company::check_canedit_user($companyid, $user->id)) {
-        throw new moodle_exception('invaliduserid');
-    }
-    if (is_siteadmin($user->id)) {
-        throw new moodle_exception('nopermissions', 'error', '', 'suspend admin user');
-    }
-
-    // Display the confirmation page.
-    if ($confirm != md5($suspend)) {
-        $fullname = fullname($user, true);
-        echo $output->header();
-        echo $output->heading(get_string('suspenduser', 'block_iomad_company_admin'). " " . $fullname);
-        $optionsyes = ['suspend' => $suspend, 'confirm' => md5($suspend), 'sesskey' => sesskey()];
-        echo $output->confirm(get_string('suspendcheckfull', 'block_iomad_company_admin', "'$fullname'"),
-                              new moodle_url('editusers.php', $optionsyes), 'editusers.php');
-        echo $output->footer();
-        die;
-    } else {
-        // Actually suspend the user.
-        company_user::suspend($user->id, $companyid);
-
-        // Create an event for this.
-        $eventother = [
-            'userid' => $user->id,
-            'companyname' => $company->get_name(),
-            'companyid' => $companyid,
-        ];
-        $event = company_user_suspended::create([
-            'context' => $companycontext,
-            'objectid' => $user->id,
-            'userid' => $USER->id,
-            'other' => $eventother,
-        ]);
-        $event->trigger();
-
-        $returnmessage = get_string('usersuspendedok', 'block_iomad_company_admin');
-        redirect($returnurl, $returnmessage, null, notification::NOTIFY_SUCCESS);
-    }
-
-} else if ($unsuspend && confirm_sesskey()) {
-    // Unsuspend sanity checks.
-    if (!$company->check_usercount(1)) {
-        $maxusers = $company->get('maxusers');
-        throw new moodle_exception('maxuserswarning', 'block_iomad_company_admin', $returnurl, $maxusers);
-    }
-    if (!iomad::has_capability('block/iomad_company_admin:editusers', $companycontext)) {
-        throw new moodle_exception('nopermissions', 'error', '', 'suspend a user');
-    }
-    if (!$user = $DB->get_record('user',  ['id' => $unsuspend])) {
-        throw new moodle_exception('nousers', 'error');
-    }
-    if (!company::check_canedit_user($companyid, $user->id)) {
-        throw new moodle_exception('invaliduserid');
-    }
-
-    if (is_siteadmin($user->id)) {
-        throw new moodle_exception('nopermissions', 'error', '', 'unsuspend admin user');
-    }
-
-    if ($confirm != md5($unsuspend)) {
-        $fullname = fullname($user, true);
-        echo $output->header();
-        echo $output->heading(get_string('unsuspenduser', 'block_iomad_company_admin'). " " . $fullname);
-        $optionsyes = ['unsuspend' => $unsuspend, 'confirm' => md5($unsuspend), 'sesskey' => sesskey()];
-        echo $output->confirm(get_string('unsuspendcheckfull', 'block_iomad_company_admin', "'$fullname'"),
-                              new moodle_url('editusers.php', $optionsyes), 'editusers.php');
-        echo $output->footer();
-        die;
-    } else {
-        // Actually unsuspend the user.
-        company_user::unsuspend($user->id, $companyid);
-
-        // Create an event for this.
-        $eventother = [
-            'userid' => $user->id,
-            'companyname' => $company->get_name(),
-            'companyid' => $companyid,
-        ];
-        $event = company_user_unsuspended::create([
-            'context' => $companycontext,
-            'objectid' => $user->id,
-            'userid' => $USER->id,
-            'other' => $eventother,
-        ]);
-        $event->trigger();
-
-        $returnmessage = get_string('userunsuspendedok', 'block_iomad_company_admin');
-        redirect($returnurl, $returnmessage, null, notification::NOTIFY_SUCCESS);
-    }
-}
 
 // Build the table.
 // Deal with the form searching.

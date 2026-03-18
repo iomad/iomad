@@ -287,4 +287,28 @@ $functions = [
         'ajax' => true,
         'capabilities' => 'block/iomad_company_admin:classrooms_delete',
     ],
+
+    'block_iomad_company_admin_suspend_user' => [
+        'classname' => block_iomad_company_admin\external\suspend_user::class,
+        'description' => 'Suspend or un suspend a user in a company',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'block/iomad_company_admin:editusers',
+    ],
+
+    'block_iomad_company_admin_delete_user' => [
+        'classname' => block_iomad_company_admin\external\delete_user::class,
+        'description' => 'Delete company user',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'block/iomad_company_admin:editusers',
+    ],
+
+    'block_iomad_company_admin_reset_user' => [
+        'classname' => block_iomad_company_admin\external\reset_user::class,
+        'description' => 'Reset company user password',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'block/iomad_company_admin:editusers',
+    ],
 ];
