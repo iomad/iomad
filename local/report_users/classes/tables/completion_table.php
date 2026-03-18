@@ -505,11 +505,26 @@ class completion_table extends table_sql {
         if (!empty($row->timecompleted)) {
             $progress = 100;
         } else {
-            $total = $DB->count_records('course_completion_criteria', ['course' => $row->courseid]);
-            if ($total != 0 && !empty($row->timeenrolled)) {
-                $progress = round($completed * 100 / $totalcount, 0);
-            } else {
+            if ($DB->get_record_sql(
+                "SELECT ue.timestart
+                 FROM {user_enrolments} ue
+                 JOIN {enrol} e ON (ue.enrolid = e.id AND e.status = 0)
+                 WHERE e.courseid = :courseid
+                 AND ue.userid = :userid
+                 AND ue.timestart > :timeenrolled",
+                [
+                    'courseid' => $row->courseid,
+                    'userid' => $row->userid,
+                    'timeenrolled' => $row->timeenrolled,
+                    ])) {
                 $progress = -1;
+            } else {
+                $total = $DB->count_records('course_completion_criteria', ['course' => $row->courseid]);
+                if ($total != 0 && !empty($row->timeenrolled)) {
+                    $progress = round($completed * 100 / $totalcount, 0);
+                } else {
+                    $progress = -1;
+                }
             }
         }
         if ($progress == -1) {
@@ -548,28 +563,7 @@ class completion_table extends table_sql {
                         return get_string('suspended');
                     }
                 } else {
-                    if (!$this->is_downloading()) {
-                        return html_writer::start_tag(
-                                'div',
-                                [
-                                    'class' => 'progress',
-                                    'style' => 'height:20px',
-                                    'data-html' => 'true',
-                                    'title' => $tooltip,
-                                ]
-                            ) .
-                            html_writer::tag(
-                                'div',
-                                '0%',
-                                [
-                                    'class' => 'progress-bar',
-                                    'style' => 'width:0%;height:20px',
-                                ]
-                            ) .
-                            html_writer::end_tag('div');
-                    } else {
-                        return get_string('completion-alt-auto-y', 'completion', "0%");
-                    }
+                    return get_string('unfinished');
                 }
             }
         } else {
