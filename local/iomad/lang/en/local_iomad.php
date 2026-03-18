@@ -302,6 +302,7 @@ $string['select_course'] = 'Select course';
 $string['select_email_var'] = 'Select email variable';
 $string['send_button'] = 'Send';
 $string['send_emails'] = 'Send emails';
+$string['sendcompletionemailtask'] = 'Send course completion email ad-hoc task';
 $string['setdefault'] = 'Set default';
 $string['setdefaulttemplatesetfull'] = 'Do you want to change the default company template set to {$a}?';
 $string['setupiomad'] = 'Start setting up IOMAD';

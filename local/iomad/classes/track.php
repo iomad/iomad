@@ -28,7 +28,7 @@ namespace local_iomad;
 use context_system;
 use context_user;
 use local_iomad\custom_context\context_company;
-use local_iomad\task\savecertificatetask;
+use local_iomad\task\{savecertificatetask, sendcompletionemailtask};
 use core\exception\moodle_exception;
 use ZipArchive;
 
@@ -347,6 +347,10 @@ class track {
                     $trackid = $trackrec->id;
                     $task = new savecertificatetask();
                     $task->queue_task($userid, $courseid, $trackid);
+
+                    // Set up the course completed email task to run after this.
+                    $emailtask = new sendcompletionemailtask();
+                    $emailtask->queue_task($userid, $courseid, $companyid, $trackid);
                 }
             } else {
                 // For some reason we don't already have a record.
@@ -438,6 +442,10 @@ class track {
                 // are potentially part of this event listener set.
                 $task = new savecertificatetask();
                 $task->queue_task($userid, $courseid, $trackid);
+
+                // Set up the course completed email task to run after this.
+                $emailtask = new sendcompletionemailtask();
+                $emailtask->queue_task($userid, $courseid, $companyid, $trackid);
             }
         }
 
@@ -629,7 +637,7 @@ class track {
                 return true;
             }
         }
-        
+
         // Get the enrolment information.
         if (!$enrolrec = $DB->get_record('user_enrolments', ['id' => $event->objectid])) {
             // Enrolment doesn't exist.
