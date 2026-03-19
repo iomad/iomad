@@ -23,7 +23,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use local_iomad\{company, iomad};
+use core_external\util as external_util;
+use local_iomad\iomad;
 use local_iomad\custom_context\context_company;
 
 /**
@@ -152,6 +153,50 @@ class block_iomad_html extends block_base {
         return $this->content;
     }
 
+    /**
+     * Return an object containing all the block content to be returned by external functions.
+     *
+     * @param [type] $output
+     * @return void
+     */
+    public function get_content_for_external($output) {
+        $bc = new stdClass;
+        $bc->title = null;
+        $bc->content = '';
+        $bc->contenformat = FORMAT_MOODLE;
+        $bc->footer = '';
+        $bc->files = [];
+
+        if (!$this->hide_header()) {
+            $bc->title = $this->title;
+        }
+
+        if (isset($this->config->text)) {
+            $filteropt = new stdClass;
+            if ($this->content_is_trusted()) {
+                // Fancy html allowed only on course, category and system blocks.
+                $filteropt->noclean = true;
+            }
+
+            $format = FORMAT_HTML;
+            // Check to see if the format has been properly set on the config.
+            if (isset($this->config->format)) {
+                $format = $this->config->format;
+            }
+            [$bc->content, $bc->contentformat] = \core_external\util::format_text(
+                $this->config->text,
+                $format,
+                $this->context,
+                'block_html',
+                'content',
+                null,
+                $filteropt
+            );
+            $bc->files = external_util::get_area_files($this->context->id, 'block_html', 'content', false, false);
+
+        }
+        return $bc;
+    }
 
     /**
      * Serialize and store config data
@@ -193,11 +238,11 @@ class block_iomad_html extends block_base {
     public function instance_copy($fromid) {
         $fromcontext = context_block::instance($fromid);
         $fs = get_file_storage();
-        // This extra check if file area is empty adds one query if it is not empty but saves several if it is.
-        if (!$fs->is_area_empty($fromcontext->id, 'block_iomad_html', 'content', 0, false)) {
-            $draftitemid = 0;
-            file_prepare_draft_area($draftitemid, $fromcontext->id, 'block_iomad_html', 'content', 0, ['subdirs' => true]);
-            file_save_draft_area_files($draftitemid, $this->context->id, 'block_iomad_html', 'content', 0, ['subdirs' => true]);
+        // Do not use draft files hacks outside of forms.
+        $files = $fs->get_area_files($fromcontext->id, 'block_iomad_html', 'content', 0, 'id ASC', false);
+        foreach ($files as $file) {
+            $filerecord = ['contextid' => $this->context->id];
+            $fs->create_file_from_storedfile($filerecord, $file);
         }
         return true;
     }
@@ -255,5 +300,24 @@ class block_iomad_html extends block_base {
         }
 
         return $attributes;
+    }
+
+    /**
+     * Return the plugin config settings for external functions.
+     *
+     * @return stdClass the configs for both the block instance and plugin
+     * @since Moodle 3.8
+     */
+    public function get_config_for_external() {
+        global $CFG;
+
+        // Return all settings for all users since it is safe (no private keys, etc..).
+        $instanceconfigs = !empty($this->config) ? $this->config : new stdClass();
+        $pluginconfigs = (object) ['allowcssclasses' => $CFG->block_iomad_html_allowcssclasses];
+
+        return (object) [
+            'instance' => $instanceconfigs,
+            'plugin' => $pluginconfigs,
+        ];
     }
 }
