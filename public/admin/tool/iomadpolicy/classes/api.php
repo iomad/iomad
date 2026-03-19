@@ -108,7 +108,7 @@ class api {
      * @param int $countacceptances return number of user acceptances for each version
      * @return array of stdClass - exported {@link tool_iomadpolicy\iomadpolicy_exporter} instances
      */
-    public static function list_policies($ids = null, $countacceptances = false, $companyid=0) {
+    public static function list_policies($ids = null, $countacceptances = false, $companyid = 0) {
         global $DB, $PAGE;
 
         $versionfields = iomadpolicy_version::get_sql_fields('v', 'v_');

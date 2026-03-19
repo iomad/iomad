@@ -84,8 +84,7 @@ if ($makecurrent) {
 }
 
 if ($inactivate) {
-    $policies = api::list_policies([$inactivate]);
-
+    $policies = api::list_policies([$inactivate], false, $companyid);
     if (empty($policies[0]->currentversionid)) {
         redirect(new moodle_url('/admin/tool/iomadpolicy/managedocs.php', ['companyonly' => $companyonly]));
     }
@@ -146,7 +145,7 @@ if ($moveup || $movedown) {
 }
 
 if (!$versionid && $iomadpolicyid) {
-    if (($policies = api::list_policies([$iomadpolicyid])) && !empty($policies[0]->currentversionid)) {
+    if (($policies = api::list_policies([$iomadpolicyid], false, $companyid)) && !empty($policies[0]->currentversionid)) {
         $iomadpolicy = $policies[0];
         $iomadpolicyversion = new iomadpolicy_version($iomadpolicy->currentversionid);
     } else {
@@ -155,7 +154,7 @@ if (!$versionid && $iomadpolicyid) {
 } else {
     $iomadpolicyversion = new iomadpolicy_version($versionid);
     if ($iomadpolicyversion->get('iomadpolicyid')) {
-        $iomadpolicy = api::list_policies([$iomadpolicyversion->get('iomadpolicyid')])[0];
+        $iomadpolicy = api::list_policies([$iomadpolicyversion->get('iomadpolicyid')], false, $companyid)[0];
     } else {
         $iomadpolicy = null;
     }
