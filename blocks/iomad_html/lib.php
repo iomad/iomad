@@ -53,13 +53,15 @@ function block_iomad_html_pluginfile($course, $birecordorcm, $context, $filearea
         $parentcontext = $context->get_parent_context();
         if ($parentcontext->contextlevel === CONTEXT_COURSECAT) {
             // Check if category is visible and user can view this category.
-            $category = $DB->get_record('course_categories', ['id' => $parentcontext->instanceid], '*', MUST_EXIST);
-            if (!$category->visible) {
-                require_capability('moodle/category:viewhiddencategories', $parentcontext);
+            if (!core_course_category::get($parentcontext->instanceid, IGNORE_MISSING)) {
+                send_file_not_found();
             }
-        } else if ($parentcontext->contextlevel === CONTEXT_USER && $parentcontext->instanceid != $USER->id) {
-            // The block is in the context of a user, it is only visible to the user who it belongs to.
-            send_file_not_found();
+        } else if ($parentcontext->contextlevel === CONTEXT_USER) {
+            $user = core_user::get_user($parentcontext->instanceid, '*', MUST_EXIST);
+            $extracaps = block_method_result('iomad_html', 'get_extra_capabilities');
+            if (!user_can_view_profile($user, null, $parentcontext) || !has_any_capability($extracaps, $context)) {
+                send_file_not_found();
+            }
         }
         // At this point there is no way to check SYSTEM context, so ignoring it.
     }
@@ -114,4 +116,28 @@ function block_iomad_html_global_db_replace($search, $replace) {
         }
     }
     $instances->close();
+}
+
+/**
+ * Given an array with a file path, it returns the itemid and the filepath for the defined filearea.
+ *
+ * @param  string $filearea The filearea.
+ * @param  array  $args The path (the part after the filearea and before the filename).
+ * @return array The itemid and the filepath inside the $args path, for the defined filearea.
+ */
+function block_iomad_html_get_path_from_pluginfile(string $filearea, array $args): array {
+    // This block never has an itemid (the number represents the revision but it's not stored in database).
+    array_shift($args);
+
+    // Get the filepath.
+    if (empty($args)) {
+        $filepath = '/';
+    } else {
+        $filepath = '/' . implode('/', $args) . '/';
+    }
+
+    return [
+        'itemid' => 0,
+        'filepath' => $filepath,
+    ];
 }
