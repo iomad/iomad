@@ -25,6 +25,7 @@
 
 namespace tool_iomadpolicy\output;
 
+use moodle_exception;
 use tool_iomadpolicy\api;
 use tool_iomadpolicy\iomadpolicy_version;
 
