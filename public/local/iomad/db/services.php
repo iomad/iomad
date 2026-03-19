@@ -36,6 +36,46 @@ $functions = [
         'type' => 'write',
         'ajax' => true,
     ],
+
+    'local_iomad_clear_user_course' => [
+        'classname' => local_iomad\external\clear_user_course::class,
+        'description' => 'Clear down a user from a course and remove the tracked report data',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/report_users:clearentries',
+    ],
+
+    'local_iomad_purge_user_course' => [
+        'classname' => local_iomad\external\purge_user_course::class,
+        'description' => 'Purge a users course tracked reporting data',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/report_users:deleteentriesfull',
+    ],
+
+    'local_iomad_regencert_user_course' => [
+        'classname' => local_iomad\external\regencert_user_course::class,
+        'description' => 'Regenerate a saved users course certificate',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/report_users:redocertificates',
+    ],
+
+    'local_iomad_reset_user_course' => [
+        'classname' => local_iomad\external\reset_user_course::class,
+        'description' => 'Reset a user in a course',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/report_users:clearentries',
+    ],
+
+    'local_iomad_licenserevoke_user_course' => [
+        'classname' => local_iomad\external\licenserevoke_user_course::class,
+        'description' => 'Revoke an allocated license to user for course',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/report_users:deleteentries',
+    ],
 ];
 
 $services = [

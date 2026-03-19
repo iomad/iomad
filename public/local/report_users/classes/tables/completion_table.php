@@ -27,6 +27,7 @@ namespace local_report_users\tables;
 
 use context_user;
 use core\output\notification;
+use core_user;
 use html_writer;
 use local_iomad\{company_user, iomad};
 use moodle_url;
@@ -206,138 +207,184 @@ class completion_table extends table_sql {
             return;
         }
 
-        // Get the buttons.
-        // Link for user delete.
-        $resetlink = new moodle_url(
-            '/local/report_users/userdisplay.php',
-            [
-                'userid' => $row->userid,
-                'delete' => $row->userid,
-                'courseid' => $row->courseid,
-                'rowid' => $row->id,
-                'action' => 'delete',
-            ]);
-        $clearlink = new moodle_url(
-            '/local/report_users/userdisplay.php',
-            [
-                'userid' => $row->userid,
-                'delete' => $row->userid,
-                'rowid' => $row->id,
-                'courseid' => $row->courseid,
-                'action' => 'clear',
-            ]);
-        $revokelink = new moodle_url(
-            '/local/report_users/userdisplay.php',
-            [
-                'userid' => $row->userid,
-                'delete' => $row->userid,
-                'rowid' => $row->id,
-                'courseid' => $row->courseid,
-                'action' => 'revoke',
-            ]);
-        $trackonlylink = new moodle_url(
-            '/local/report_users/userdisplay.php',
-            [
-                'userid' => $row->userid,
-                'delete' => $row->userid,
-                'rowid' => $row->id,
-                'courseid' => $row->courseid,
-                'action' => 'trackonly',
-            ]);
+        // Set some strings.
+        $coursename = format_string($row->coursename, true, 1);
+        $userfullname = fullname(
+            core_user::get_user($row->userid),
+            has_capability('moodle/site:viewfullnames', $this->get_context())
+        );
         $delaction = '';
 
+        // Conditionally add the action buttons.
         if (has_capability('local/report_users:deleteentries', $companycontext)) {
             // Its from the course_completions table.  Check the license type.
-            if (empty($row->coursecleared)) {
-                if (empty($USER->editing)) {
-                    if (!empty($row->licenseid) &&
-                        $DB->get_record('local_iomad_company_licenses',
-                                         ['id' => $row->licenseid,
-                                          'program' => 1])) {
-                        if (has_capability('local/report_users:clearentries', $companycontext)) {
+            if (empty($USER->editing)) {
+                if (empty($row->coursecleared)) {
+                    if (!empty($row->timeenrolled) &&
+                        has_capability('local/report_users:clearentries', $companycontext)) {
+                        $delaction .= html_writer::tag(
+                            'a',
+                            html_writer::tag(
+                                'i',
+                                '',
+                                [
+                                    'class' => 'icon fa fa-solid fa-clock-rotate-left fa-fw ',
+                                    'title' => get_string('resetcourse', 'local_iomad'),
+                                    'role' => 'img',
+                                    'aria-label' => get_string('resetcourse', 'local_iomad'),
+                                ]
+                            ),
+                            [
+                                'href' => '#',
+                                'data-action' => 'show-resetcourseuserprompt',
+                                'data-userid' => $row->userid,
+                                'data-courseid' => $row->courseid,
+                                'data-companyid' => $row->companyid,
+                                'data-trackid' => $row->id,
+                                'data-username' => $userfullname,
+                                'data-coursename' => $coursename,
+                            ]
+                        );
+                    }
+                    if (empty($row->licenseid) &&
+                        has_capability('local/report_users:deleteentries', $companycontext)) {
+                        $delaction .= html_writer::tag(
+                            'a',
+                            html_writer::tag(
+                                'i',
+                                '',
+                                [
+                                    'class' => 'icon fa fa-solid fa-trash fa-fw ',
+                                    'title' => get_string('clearcourse', 'local_iomad'),
+                                    'role' => 'img',
+                                    'aria-label' => get_string('clearcourse', 'local_iomad'),
+                                ]
+                            ),
+                            [
+                                'href' => '#',
+                                'class' => 'text-danger',
+                                'data-action' => 'show-clearcourseuserprompt',
+                                'data-userid' => $row->userid,
+                                'data-courseid' => $row->courseid,
+                                'data-companyid' => $row->companyid,
+                                'data-trackid' => $row->id,
+                                'data-username' => $userfullname,
+                                'data-coursename' => $coursename,
+                            ]
+                        );
+                    } else {
+                        $mylicense = $DB->get_record(
+                            'local_iomad_company_license_users',
+                            [
+                                'userid' => $row->userid,
+                                'courseid' => $row->courseid,
+                                'licenseid' => $row->licenseid,
+                                'issuedate' => $row->licenseallocated,
+                            ]
+                        );
+                        $licenserecord = $DB->get_record(
+                            'local_iomad_company_licenses',
+                            [
+                                'id' => $row->licenseid,
+                            ]
+                        );
+                        if (empty($mylicense->isusing) &&
+                            empty($licenserecord->program) &&
+                            has_capability('local/report_users:deleteentries', $companycontext)) {
                             $delaction .= html_writer::tag(
                                 'a',
-                                get_string('resetcourse', 'local_report_users'),
+                                html_writer::tag(
+                                    'i',
+                                    '',
+                                    [
+                                        'class' => 'icon fa fa-solid fa-file-circle-xmark fa-fw ',
+                                        'title' => get_string('revokelicense', 'local_iomad'),
+                                        'role' => 'img',
+                                        'aria-label' => get_string('revokelicense', 'local_iomad'),
+                                    ]
+                                ),
                                 [
-                                    'class' => 'btn btn-danger',
-                                    'href' => $clearlink,
+                                    'class' => 'text-warning',
+                                    'href' => '#',
+                                    'data-action' => 'show-revokelicenseuserprompt',
+                                    'data-userid' => $row->userid,
+                                    'data-courseid' => $row->courseid,
+                                    'data-companyid' => $row->companyid,
+                                    'data-trackid' => $row->id,
+                                    'data-licenseid' => $row->licenseid,
+                                    'data-username' => $userfullname,
+                                    'data-coursename' => $coursename,
+                                ]
+                            );
+                        } else if (empty($licenserecord->program) &&
+                                   has_capability('local/report_users:deleteentries', $companycontext)) {
+                            $delaction .= html_writer::tag(
+                                'a',
+                                html_writer::tag(
+                                    'i',
+                                    '',
+                                    [
+                                        'class' => 'icon fa fa-solid fa-trash fa-fw ',
+                                        'title' => get_string('clearcourse', 'local_iomad'),
+                                        'role' => 'img',
+                                        'aria-label' => get_string('clearcourse', 'local_iomad'),
+                                    ]
+                                ),
+                                [
+                                    'href' => '#',
+                                    'class' => 'text-danger',
+                                    'data-action' => 'show-clearcourseuserprompt',
+                                    'data-userid' => $row->userid,
+                                    'data-courseid' => $row->courseid,
+                                    'data-companyid' => $row->companyid,
+                                    'data-trackid' => $row->id,
+                                    'data-username' => $userfullname,
+                                    'data-coursename' => $coursename,
                                 ]
                             );
                         }
-                    } else {
-                        if ($DB->get_record(
-                            'local_iomad_company_license_users',
+                    }
+                } else {
+                    if (iomad::has_capability('local/report_users:deleteentriesfull', $companycontext)) {
+                        $delaction = html_writer::tag(
+                            'a',
+                            html_writer::tag(
+                                'i',
+                                '',
+                                [
+                                    'class' => 'icon fa fa-solid fa-trash fa-fw ',
+                                    'title' => get_string('purgerecord', 'local_iomad'),
+                                    'role' => 'img',
+                                    'aria-label' => get_string('purgerecord', 'local_iomad'),
+                                ]
+                            ),
                             [
-                                'userid' => $row->userid,
-                                'courseid' => $row->courseid,
-                                'licenseid' => $row->licenseid,
-                                'issuedate' => $row->licenseallocated,
-                                'isusing' => 1,
-                                ])) {
-                            if (has_capability('local/report_users:deleteentries', $companycontext)) {
-                                $delaction .= html_writer::tag(
-                                    'a',
-                                    get_string('resetcourse', 'local_report_users'),
-                                    [
-                                        'class' => 'btn btn-danger',
-                                        'href' => $resetlink,
-                                    ]
-                                );
-                            }
-                        } else if ($DB->get_record(
-                            'local_iomad_company_license_users',
-                            [
-                                'userid' => $row->userid,
-                                'courseid' => $row->courseid,
-                                'licenseid' => $row->licenseid,
-                                'issuedate' => $row->licenseallocated,
-                                'isusing' => 0,
-                                ])) {
-                            if (has_capability('local/report_users:deleteentries', $companycontext)) {
-                                $delaction .= html_writer::tag(
-                                    'a',
-                                    get_string('revokelicense', 'local_report_users'),
-                                    [
-                                        'class' => 'btn btn-danger',
-                                        'href' => $revokelink,
-                                    ]
-                                );
-                            }
-                        } else {
-                            if (has_capability('local/report_users:clearentries', $companycontext)) {
-                                $delaction .= html_writer::tag(
-                                    'a',
-                                    get_string('clearcourse', 'local_report_users'),
-                                    [
-                                        'class' => 'btn btn-danger',
-                                        'href' => $clearlink,
-                                    ]
-                                );
-                            }
-                        }
+                                'href' => '#',
+                                'class' => 'text-danger',
+                                'data-action' => 'show-purgecourseuserprompt',
+                                'data-userid' => $row->userid,
+                                'data-courseid' => $row->courseid,
+                                'data-companyid' => $row->companyid,
+                                'data-trackid' => $row->id,
+                                'data-username' => $userfullname,
+                                'data-coursename' => $coursename,
+                            ]
+                        );
                     }
                 }
             } else {
-                if (!empty($USER->editing) &&
-                    iomad::has_capability('local/report_users:deleteentriesfull', $companycontext)) {
-                    $checkboxhtml = html_writer::tag(
+                if (iomad::has_capability('local/report_users:deleteentriesfull', $companycontext)
+                    && !empty($row->coursecleared)) {
+                    $delaction = html_writer::tag(
                         'input',
                         '',
                         [
                             'type' => 'checkbox',
-                             'name' => 'purge_entries[]',
-                             'value' => $row->id,
-                             'class' => 'enableentries',
-                        ]) . "&nbsp";
-                    $delaction .= $checkboxhtml .
-                                  html_writer::tag(
-                                'a',
-                                get_string('purgerecord', 'local_report_users'),
-                                [
-                                    'class' => 'btn btn-danger',
-                                    'href' => $trackonlylink,
-                                ]
-                            );
+                            'name' => 'purge_entries[]',
+                            'value' => $row->id,
+                            'class' => 'enableentries',
+                        ]
+                    );
                 }
             }
         }
@@ -357,11 +404,17 @@ class completion_table extends table_sql {
             return;
         }
 
+        // Set some strings.
+        $coursename = format_string($row->coursename, true, 1);
+        $userfullname = fullname(
+            core_user::get_user($row->userid),
+            has_capability('moodle/site:viewfullnames', $this->get_context())
+        );
+
         if (!empty($row->timecompleted) &&
             $DB->get_record('modules', ['name' => 'iomadcertificate'])) {
             if ($traccertrecs = $DB->get_records('local_iomad_track_certs', ['trackid' => $row->certsource])) {
-                if (empty($USER->editing) ||
-                    !iomad::has_capability('local/report_users:redocertificates', $companycontext)) {
+                if (empty($USER->editing)) {
                     $usercontext = context_user::instance($row->userid);
                     $returntext = "";
                     foreach ($traccertrecs as $traccertrec) {
@@ -373,22 +426,51 @@ class completion_table extends table_sql {
                             '/local_iomad_track/issue/' . $traccertrec->trackid .
                             '/' . $traccertrec->filename);
                         $returntext .= html_writer::start_tag(
-                                        'a',
-                                        [
-                                            'href' => $certurl,
-                                            'title' => format_string($traccertrec->filename),
-                                        ]) .
-                                       html_writer::tag(
-                                        'img',
-                                        '',
-                                        [
-                                            'src' => $output->image_url('f/pdf'),
-                                            'alt' => format_string($traccertrec->filename),
-                                            'width' => 36,
-                                        ]) . "&nbsp";
+                            'a',
+                            [
+                                'href' => $certurl,
+                                'title' => format_string($traccertrec->filename),
+                            ]) .
+                            html_writer::tag(
+                                'img',
+                                '',
+                                [
+                                    'src' => $output->image_url('f/pdf'),
+                                    'alt' => format_string($traccertrec->filename),
+                                    'width' => 36,
+                                ]
+                            ) . "&nbsp";
+                    }
+
+                    // Can we regenerate them?
+                    if (iomad::has_capability('local/report_users:redocertificates', $companycontext)) {
+                        $returntext .= html_writer::tag(
+                            'a',
+                            html_writer::tag(
+                                'i',
+                                '',
+                                [
+                                    'class' => 'icon fa fa-solid fa-clock-rotate-left fa-fw ',
+                                    'title' => get_string('redocert', 'local_iomad'),
+                                    'role' => 'img',
+                                    'aria-label' => get_string('redocert', 'local_iomad'),
+                                ]
+                            ),
+                            [
+                                'href' => '#',
+                                'data-action' => 'show-regencertuserprompt',
+                                'data-userid' => $row->userid,
+                                'data-courseid' => $row->courseid,
+                                'data-companyid' => $row->companyid,
+                                'data-trackid' => $row->id,
+                                'data-licenseid' => $row->licenseid,
+                                'data-username' => $userfullname,
+                                'data-coursename' => $coursename,
+                            ]
+                        );
                     }
                     return $returntext;
-                } else {
+                } else if (iomad::has_capability('local/report_users:redocertificates', $companycontext)) {
                     $certurl = new moodle_url(
                         $CFG->wwwroot . '/local/report_users/userdisplay.php',
                         ['sesskey' => sesskey(),
@@ -405,21 +487,9 @@ class completion_table extends table_sql {
                             'value' => $row->id,
                             'class' => 'enablecertificates',
                         ]);
-                    $checkboxhtml .= "&nbsp";
-                    $checkboxhtml .= html_writer::tag(
-                        'a',
-                        get_string('redocert', 'local_report_users'),
-                        [
-                            'class' => 'btn btn-secondary',
-                            'href' => $certurl,
-                        ]);
                     return $checkboxhtml;
                 }
-            } else {
-                return;
             }
-        } else {
-            return;
         }
     }
 

@@ -73,3 +73,7 @@
 .iomadusersearchform .mform .form-inline .custom-select {
     max-width:75%;
 }
+
+#page-local-report_users-userdisplay .enablecertificates {
+    margin-right: 5px;
+}
