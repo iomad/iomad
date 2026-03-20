@@ -101,10 +101,10 @@ if (empty($templatesetid)) {
 }
 
 if (empty($templaterecord->subject)) {
-    $templaterecord->subject = get_string($templatename . '_subject', 'local_email', $lang);
+    $templaterecord->subject = get_string_manager()->get_string($templatename . '_subject', 'local_email', null, $lang);
 }
 if (empty($templaterecord->body)) {
-    $templaterecord->body = get_string($templatename . '_body', 'local_email', $lang);
+    $templaterecord->body = get_string_manager()->get_string($templatename . '_body', 'local_email', null, $lang);
 }
 
 // Correct the navbar.
