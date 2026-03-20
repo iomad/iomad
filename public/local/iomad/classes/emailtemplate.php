@@ -25,12 +25,13 @@
 
 namespace local_iomad;
 
-use core\task\manager;
-use local_iomad\task\importlangpack;
 use core\exception\moodle_exception;
 use core\lang_string;
+use core\task\manager;
 use core_user;
 use context_system;
+use local_iomad\task\importlangpack;
+
 
 /**
  * Local IOMAD emailtemplate class
@@ -101,6 +102,8 @@ class emailtemplate {
      */
     public function __construct(string $templatename, array $options = []) {
         global $USER, $SESSION, $COURSE, $DB, $CFG;
+
+        require_once($CFG->dirroot . '/user/profile/lib.php');
 
         $user = array_key_exists('user', $options) ? $options['user'] : null;
         $course = array_key_exists('course', $options) ? $options['course'] : null;
