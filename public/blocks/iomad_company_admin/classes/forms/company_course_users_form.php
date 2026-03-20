@@ -25,9 +25,11 @@
 
 namespace block_iomad_company_admin\forms;
 
+use core\notification;
 use html_writer;
 use local_iomad\user_selector\{current_course, potential_course};
 use local_iomad\{company, company_user, emailtemplate, iomad};
+use local_iomad\task\{enroluserstask, unenroluserstask};
 use moodleform;
 
 /**
@@ -304,6 +306,7 @@ class company_course_users_form extends moodleform {
         $this->create_user_selectors();
         $data = $this->get_data();
 
+        // Handle enrolments.
         $addall = false;
         $add = false;
         if (optional_param('addall', false, PARAM_BOOL) && confirm_sesskey()) {
@@ -326,42 +329,71 @@ class company_course_users_form extends moodleform {
             $courses = array_values($this->selectedcourses);
         }
 
+        // Process incoming enrolments.
         if ($add || $addall) {
-            // Process incoming enrolments.
             if (!empty($userstoassign)) {
-                foreach ($userstoassign as $adduser) {
-                    $allow = true;
 
-                    // Check the userid is valid.
-                    if (!company::check_valid_user($this->selectedcompany, $adduser->id, $this->departmentid)) {
-                        throw new moodle_exception('invaliduserdepartment', 'block_iomad_company_management');
+                // Set the due timestamp.
+                $duedate = 0;
+                $due = optional_param_array('due', [], PARAM_INT);
+                if (!empty($due)) {
+                    $duedate = strtotime($due['year'] . '-' .
+                        $due['month'] . '-' .
+                        $due['day'] . ' ' .
+                        $due['hour'] . ':' .
+                        $due['minute']);
+                }
+
+                // Are we handling a lot of users/courses?
+                if ($addall || count($userstoassign) + count($courses) > 100) {
+                    // Quick sanity check and set up.
+                    $userids = [];
+                    foreach ($userstoassign as $adduser) {
+                        if (!company::check_valid_user($this->selectedcompany, $adduser->id, $this->departmentid)) {
+                            throw new moodle_exception('invaliduser', 'block_iomad_company_management');
+                        }
+                        $userids[] = $adduser->id;
                     }
 
-                    if ($allow) {
-                        $due = optional_param_array('due', [], PARAM_INT);
-                        if (!empty($due)) {
-                            $duedate = strtotime($due['year'] . '-' .
-                                                 $due['month'] . '-' .
-                                                 $due['day'] . ' ' .
-                                                 $due['hour'] . ':' .
-                                                 $due['minute']);
-                        } else {
-                            $duedate = 0;
+                    // Create an adhoc task to enrol the users on each course.
+                    foreach ($courses as $courseid) {
+                        // Want to keep potential numbers down in the task too.
+                        foreach (array_chunk($userids, 100) as $taskuserids) {
+                            $enroltask = new enroluserstask();
+                            $enroltask->queue_task($taskuserids, $courseid, $this->selectedcompany, $duedate);
+                        }
+                    }
+                    notification::success(get_string('bulkenroluserssuccess', 'local_iomad'));
+                } else {
+                    // Not too many - process them individually.
+                    foreach ($userstoassign as $adduser) {
+
+                        // Check the userid is valid.
+                        if (!company::check_valid_user($this->selectedcompany, $adduser->id, $this->departmentid)) {
+                            throw new moodle_exception('invaliduser', 'block_iomad_company_management');
                         }
 
                         // Enrol the user on the courses.
                         foreach ($courses as $courseid) {
                             $course = $DB->get_record('course', ['id' => $courseid]);
-                            company_user::enrol($adduser,
-                                                [$courseid],
-                                                $this->selectedcompany,
-                                                0,
-                                                0,
-                                                $duedate);
-                            emailtemplate::send('user_added_to_course',
-                                                 ['course' => $course,
-                                                       'user' => $adduser,
-                                                       'due' => $duedate]);
+                            company_user::enrol(
+                                $adduser,
+                                [$courseid],
+                                $this->selectedcompany,
+                                0,
+                                0,
+                                $duedate
+                            );
+
+                            // Send an email.
+                            emailtemplate::send(
+                                'user_added_to_course',
+                                [
+                                    'course' => $course,
+                                    'user' => $adduser,
+                                    'due' => $duedate,
+                                ]
+                            );
                         }
                     }
                 }
@@ -370,6 +402,8 @@ class company_course_users_form extends moodleform {
                 $this->currentusers->invalidate_selected_users();
             }
         }
+
+        // Handle unenrolments.
         $removeall = false;;
         $remove = false;
         $userstounassign = [];
@@ -385,23 +419,53 @@ class company_course_users_form extends moodleform {
             $userstounassign = $this->currentusers->get_selected_users();
             $remove = true;
         }
+
         // Process incoming unallocations.
         if ($remove || $removeall) {
             if (!empty($userstounassign)) {
 
-                foreach ($userstounassign as $removeuser) {
-                    if ($removeuser->id != $removeuser->userid) {
-                        $removeuser->id = $removeuser->userid;
-                    }
-                    // Check the userid is valid.
-                    if (!company::check_valid_user($this->selectedcompany, $removeuser->userid, $this->departmentid)) {
-                        throw new moodle_exception('invaliduserdepartment', 'block_iomad_company_management');
+                // Are we handling a lot of users/courses?
+                if ($removeall || count($userstounassign) + count($courses) > 100) {
+                    // Quick sanity check.
+                    $userids = [];
+                    foreach ($userstounassign as $removeuser) {
+                        if ($removeuser->id != $removeuser->userid) {
+                            $removeuser->id = $removeuser->userid;
+                        }
+                        if (!company::check_valid_user($this->selectedcompany, $removeuser->id, $this->departmentid)) {
+                            throw new moodle_exception('invaliduser', 'block_iomad_company_management');
+                        }
+                        $userids[] = $removeuser->id;
                     }
 
-                    // Unenrol the user on the courses.
+                    // Create an adhoc task to unenrol the users from each course.
                     foreach ($courses as $courseid) {
-                        company_user::unenrol($removeuser, [$courseid],
-                                                                 $this->selectedcompany);
+                        // Want to keep potential numbers down in the task too.
+                        foreach (array_chunk($userids, 100) as $taskuserids) {
+                            $unenroltask = new unenroluserstask();
+                            $unenroltask->queue_task($taskuserids, $courseid, $this->selectedcompany);
+                        }
+                    }
+                    notification::success(get_string('bulkuserunenrolsuccess', 'local_iomad'));
+                } else {
+                    // Not too many - process them individually.
+                    foreach ($userstounassign as $removeuser) {
+                        if ($removeuser->id != $removeuser->userid) {
+                            $removeuser->id = $removeuser->userid;
+                        }
+                        // Check the userid is valid.
+                        if (!company::check_valid_user($this->selectedcompany, $removeuser->id, $this->departmentid)) {
+                            throw new moodle_exception('invaliduser', 'block_iomad_company_management');
+                        }
+
+                        // Unenrol the user from the courses.
+                        foreach ($courses as $courseid) {
+                            company_user::unenrol(
+                                $removeuser,
+                                [$courseid],
+                                $this->selectedcompany
+                            );
+                        }
                     }
                 }
 
