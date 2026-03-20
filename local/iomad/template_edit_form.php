@@ -114,10 +114,10 @@ if (empty($templatesetid)) {
 }
 
 if (empty($templaterecord->subject)) {
-    $templaterecord->subject = get_string($templatename . '_subject', 'local_iomad', $lang);
+    $templaterecord->subject = get_string_manager()->get_string($templatename . '_subject', 'local_iomad', null, $lang);
 }
 if (empty($templaterecord->body)) {
-    $templaterecord->body = get_string($templatename . '_body', 'local_iomad', $lang);
+    $templaterecord->body = get_string_manager()->get_string($templatename . '_body', 'local_iomad', null, $lang);
 }
 
 // Correct the navbar.
