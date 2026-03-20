@@ -27,6 +27,9 @@
  * Strings for component 'local_iomad', language 'en'
  */
 
+
+$string['bulkenroluserssuccess'] = 'Due to the numbers of selected users, an adhoc task has been created to handle this request. This may take some time to complete. Until then, requested user enrolments may not be displayed.';
+$string['bulkuserunenrolsuccess'] = 'Due to the numbers of selected users, an adhoc task has been created to handle this request. This may take some time to complete. Until then, requested user unenrolments may not be displayed.';
 $string['cachedef_allcompanycategories'] = 'Cache to hold categories which any company has access to.';
 $string['cachedef_companycategories'] = 'Cache to hold categories which are assigned to a company.';
 $string['cachedef_companycoursecategories'] = 'Cache to hold categories which a company has access to.';
@@ -41,6 +44,7 @@ $string['coursesearchfields'] = 'Course search';
 $string['crontask'] = 'IOMAD Cron';
 $string['datesearchfields'] = 'Date search';
 $string['deletecompany'] = 'Delete company adhoc task';
+$string['enroluserstask'] = 'Bulk enrol users adhoc task';
 $string['emailfilter'] = 'Email address contains';
 $string['enforce_username_match'] = 'Require username to match across tenants';
 $string['enforce_username_match_help'] = 'When this option is selected, existing users in other tenants can only match on username (instead of using firstname,lastname and email address) to avoid being created as a new/separate user.';
@@ -72,5 +76,6 @@ $string['resetroles'] = 'Reset roles adhoc task';
 $string['setupiomad'] = 'Start setting up IOMAD';
 $string['show_suspended_companies'] = 'Show suspended companies?';
 $string['show_suspended_users'] = 'Show suspended users?';
+$string['unenroluserstask'] = 'Bulk unenrol users adhoc task';
 $string['userfilter'] = 'Filter results';
 $string['usersearchfields'] = 'User search';
