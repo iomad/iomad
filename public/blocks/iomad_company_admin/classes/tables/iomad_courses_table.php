@@ -278,7 +278,8 @@ class iomad_courses_table extends table_sql {
                                 '2' => get_string('closed', 'block_iomad_company_admin')];
 
         if (!empty($USER->editing) &&
-        iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext)) {
+        iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext) &&
+        !$DB->record_exists('company_created_courses', ['courseid' => $row->courseid])) {
 
             $editable = new courses_shared_editable($company,
                                                     $companycontext,
