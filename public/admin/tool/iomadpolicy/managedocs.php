@@ -52,13 +52,13 @@ if ($companyonly && !empty($companyid)) {
     $PAGE->set_heading(get_string('pluginname', 'tool_iomadpolicy'));
     $PAGE->set_title(get_string('pluginname', 'tool_iomadpolicy'));
 
-    //iomad::require_capability('block/iomad_company_admin:configiomadoidc', $companycontext);
+    iomad::require_capability('block/iomad_company_admin:configiomadoidc', $companycontext);
     $PAGE->set_pagelayout('base');
     $returnurl = new moodle_url('/blocks/iomad_company_admin/company_advanced_settings.php');
 } else {
     admin_externalpage_setup('tool_iomadpolicy_managedocs', '', ['archived' => $archived]);
     require_admin();
-    $returnurl = $url;
+    $returnurl = $PAGE->url;
 }
 
 $output = $PAGE->get_renderer('tool_iomadpolicy');
