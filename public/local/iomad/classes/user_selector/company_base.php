@@ -121,7 +121,9 @@ abstract class company_base extends \user_selector_base {
         }
         $this->profilefieldid = $profileid;
         $this->company = new company($this->companyid);
-        $this->subdepartments = company::get_all_subdepartments($this->departmentid);
+        $this->subdepartments = !empty($options['subdepartments']) ?
+            $options['subdepartments'] :
+            company::get_all_subdepartments($this->departmentid);
 
         parent::__construct($name, $options);
     }
