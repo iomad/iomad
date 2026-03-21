@@ -1435,7 +1435,7 @@ class microlearning {
              AND mt.active = 1
              AND mtu.timecompleted IS NULL
              AND mtu.reminder1_delivered = 0
-             AND mtu.reminder1_date IS NOT NULL
+             AND mtu.reminder1_date > 0
              AND (
                  mtu.reminder1_date < mtu.due_date
                  OR mtu.due_date = 0
@@ -1488,7 +1488,7 @@ class microlearning {
              AND mt.active = 1
              AND mtu.timecompleted IS NULL
              AND mtu.reminder2_delivered = 0
-             AND mtu.reminder2_date IS NOT NULL
+             AND mtu.reminder2_date > 0
              AND (
                  mtu.reminder2_date < mtu.due_date
                  OR mtu.due_date = 0
