@@ -506,7 +506,7 @@ function auth_iomadsaml2_admin_nav($title, $url) {
             new moodle_url('/admin/settings.php?section=manageauths'));
 
     $PAGE->navbar->add(get_string('pluginname', 'auth_iomadsaml2'),
-            new moodle_url('/admin/settings.php', array('section' => 'authsettingsaml2')));
+            new moodle_url('/admin/settings.php', array('section' => 'authsettingiomadsaml2')));
 
     $PAGE->navbar->add($title, new moodle_url($url));
 
