@@ -73,7 +73,7 @@ class course_not_started_task extends scheduled_task {
                                                        WHERE courseid = :courseid
                                                        AND notstartedstop = 0
                                                        AND (
-                                                           (timestarted = 0
+                                                           (NOT timestarted > 0
                                                            AND timeenrolled < :time1
                                                            AND licenseallocated IS NULL)
                                                          ||

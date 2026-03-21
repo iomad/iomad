@@ -301,6 +301,17 @@ if (!empty($data)) {
                 }
             }
         }
+        if (!empty($data->timestarted)) {
+            foreach ($data->timestarted as $key => $value) {
+                $testtime = strtotime("0:00", $data->origtimestarted[$key]);
+                $senttime = strtotime($value['year'] . "-" . $value['month'] . "-" . $value['day']);
+
+                if ($testtime != $senttime && confirm_sesskey()) {
+                    $DB->set_field('local_iomad_track', 'timestarted', $senttime, ['id' => $key]);
+                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $key]);
+                }
+            }
+        }
         if (!empty($data->timecompleted)) {
             foreach ($data->timecompleted as $key => $value) {
                 if ($trackrec = $DB->get_record('local_iomad_tracks', ['id' => $key])) {
@@ -478,6 +489,7 @@ $wheresql = " lit.userid = :userid $companysql
 $headers = [get_string('course', 'local_report_completion'),
             get_string('status'),
             get_string('licensedateallocated', 'block_iomad_company_admin'),
+            get_string('dateenrolled', 'local_report_completion'),
             get_string('datestarted', 'local_report_completion'),
             get_string('datecompleted', 'local_report_completion')];
 
@@ -485,6 +497,7 @@ $columns = ['coursename',
             'status',
             'licenseallocated',
             'timeenrolled',
+            'timestarted',
             'timecompleted'];
 
 // Do we show the time expires column?

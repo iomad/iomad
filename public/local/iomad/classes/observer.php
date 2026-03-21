@@ -410,4 +410,16 @@ class observer {
         emailtemplate::langpack_removed($event);
         return true;
     }
+
+    /**
+     * Triggered via course_viewed event.
+     *
+     * @param \core\event\course_viewed $event
+     * @return bool true on success.
+     */
+    public static function course_viewed($event) {
+        track::course_viewed($event);
+        return true;
+    }
+
 }

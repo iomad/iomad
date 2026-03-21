@@ -218,4 +218,10 @@ $observers = [
      'callback' => 'local_iomad\observer::langpack_imported',
      'internal' => false,
     ],
+
+    [
+        'eventname' => core\event\course_viewed::class,
+        'callback' => 'local_iomad\observer::course_viewed',
+        'internal' => false,
+    ],
 ];
