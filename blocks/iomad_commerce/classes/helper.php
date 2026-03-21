@@ -86,7 +86,7 @@ class helper {
             }
         }
         if ($blockprice->allow_license_blocks) {
-            if ($blockprices = $DB->get_records_sql("SELECT * FROM {course_shopblockprice}
+            if ($blockprices = $DB->get_records_sql("SELECT * FROM {block_iomad_commerce_product_blockprices}
                                                     WHERE itemid = :itemid
                                                     AND price_bracket_start <= 2",
                                                     ['itemid' => $blockprice->id])) {
@@ -118,7 +118,7 @@ class helper {
         global $DB;
 
         $record = $DB->get_records_sql("SELECT *
-                                        FROM {course_shopblockprice}
+                                        FROM {block_iomad_commerce_product_blockprices}
                                         WHERE itemid = :itemid
                                         AND price_bracket_start <= :nlicenses
                                         ORDER BY price_bracket_start DESC",

@@ -168,15 +168,21 @@ $sql = "FROM {block_iomad_commerce_products} css
         LEFT JOIN {block_iomad_commerce_product_learningpaths} cssp ON (css.id = cssp.itemid)
         LEFT JOIN {block_iomad_learningpath} ilp ON (cssp.pathid = ilp.id)
         $tagjoin
-        LEFT JOIN {course_shopblockprice} sbp ON (css.id = sbp.itemid
-                                              AND sbp.id = (SELECT id FROM {course_shopblockprice}
-                                              WHERE itemid = css.id ORDER BY price LIMIT 1 ))
+        LEFT JOIN {block_iomad_commerce_product_blockprices} sbp ON (
+            css.id = sbp.itemid
+            AND sbp.id = (
+                SELECT id FROM {block_iomad_commerce_product_blockprices}
+                WHERE itemid = css.id
+                ORDER BY price
+                LIMIT 1
+            )
+        )
         WHERE css.enabled = 1
         AND css.companyid = :companyid
         AND (
             css.allow_single_purchase = 1 OR css.id = sbp.itemid
             AND sbp.id = (
-                SELECT id FROM {course_shopblockprice}
+                SELECT id FROM {block_iomad_commerce_product_blockprices}
                 WHERE itemid = css.id ORDER BY price LIMIT 1 ))
         AND (
             ilp.id IS NULL
