@@ -27,6 +27,7 @@ use local_iomad\iomad;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->dirroot . '/blocks/iomad_company_admin/lib.php');
+require_once($CFG->libdir . '/formslib.php');
 
 block_iomad_commerce\helper::require_commerce_enabled();
 
