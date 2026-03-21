@@ -41,6 +41,7 @@ $string['inprogress'] = 'In progress';
 $string['newentry_successful'] = 'New course record created successfully';
 $string['nocerttodownload'] = 'Certificate not achieved';
 $string['nofurtherdetail'] = 'No further details to show';
+$string['notenrolled'] = 'No enrolled';
 $string['notstarted'] = 'Not started';
 $string['pluginname'] = 'Users Report';
 $string['privacy:metadata'] = 'The \'Local IOMAD user completion report\' only shows data stored in other locations.';

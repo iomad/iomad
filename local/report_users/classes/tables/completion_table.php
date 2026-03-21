@@ -102,12 +102,30 @@ class completion_table extends table_sql {
         if ($this->is_downloading() || empty($USER->editing)) {
             if (!empty($row->timeenrolled)) {
                 return userdate($row->timeenrolled, get_config('local_iomad', 'date_format'));
-            } else {
-                return;
             }
         } else {
             $element = $output->render_datetime_element('timeenrolled['.$row->id.']',
                                                         'timeenrolled_' . $row->id,
+                                                        $row->timeenrolled);
+            return $element;
+        }
+    }
+
+    /**
+     * Generate the display of the user's time started timestamp
+     * @param object $user the table row being output.
+     * @return string HTML content to go inside the td.
+     */
+    public function col_timestarted($row) {
+        global $CFG, $USER, $output;
+
+        if ($this->is_downloading() || empty($USER->editing)) {
+            if (!empty($row->timestarted)) {
+                return userdate($row->timestarted, get_config('local_iomad', 'date_format'));
+            }
+        } else {
+            $element = $output->render_datetime_element('timestarted['.$row->id.']',
+                                                        'timestarted' . $row->id,
                                                         $row->timeenrolled);
             return $element;
         }
@@ -504,6 +522,7 @@ class completion_table extends table_sql {
             $row->userid,
             $row->courseid,
             $row->timeenrolled,
+            $row->timestarted,
             $row->timecompleted,
             $row->modifiedtime,
             $row->licenseid,

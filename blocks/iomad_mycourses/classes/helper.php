@@ -93,7 +93,7 @@ class helper {
              WHERE lit.userid = :userid
              AND lit.companyid = :companyid
              AND lit.timecompleted IS NULL
-             AND lit.timestarted > 0
+             AND lit.timeenrolled > 0
              $mandatorysql",
             ['userid' => $USER->id,
              'companyid' => $companyid]);
@@ -164,7 +164,7 @@ class helper {
                                                WHERE userid = :userid
                                                AND companyid = :companyid
                                                AND timecompleted IS NULL
-                                               AND timestarted > 0",
+                                               AND timeenrolled > 0",
                                               ['userid' => $USER->id,
                                                'companyid' => $companyid]);
         if (!empty($myusedcourses)) {
@@ -443,7 +443,7 @@ class helper {
     /**
      * Sort a list of courses provided by an array
      */
-    private static function courses_sort($courselist, $sorton = 'timestarted', $direction = "ASC") {
+    private static function courses_sort($courselist, $sorton = 'timeenrolled', $direction = "ASC") {
 
         // Default array.
         $namedcourses = [];

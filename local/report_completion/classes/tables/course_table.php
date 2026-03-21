@@ -1687,7 +1687,7 @@ class course_table extends table_sql {
              )
              WHERE lit.courseid = :courseid
              AND $litcompanysql
-             AND lit.timeenrolled IS NULL
+             AND lit.timestarted IS NULL
              $userfilter
              $datesql
              $expiredsql
@@ -1897,7 +1897,7 @@ class course_table extends table_sql {
              $departmentsql",
             $sqlparams);
 
-        // Count the non started users.
+        // Count the unused license users.
         $notstarted = $DB->count_records_sql(
             "SELECT COUNT(lit.id)
              FROM {local_iomad_tracks} lit
@@ -2161,7 +2161,7 @@ class course_table extends table_sql {
              )
              WHERE lit.courseid = :courseid
              AND $litcompanysql
-             AND lit.timeenrolled IS NULL
+             AND lit.timestarted IS NULL
              $userfilter
              $datesql
              $expiredsql

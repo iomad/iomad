@@ -742,7 +742,6 @@ class track {
                               'coursename' => $courserec->fullname,
                               'companyid' => $companyid,
                               'timeenrolled' => $timeenrolled,
-                              'timestarted' => $timeenrolled,
                               'modifiedtime' => $modifiedtime];
                     $DB->insert_record('local_iomad_tracks', $entry);
                 }
@@ -1126,6 +1125,55 @@ class track {
                 '',
                 'ZipArchive error code: ' . $zipresult
             );
+        }
+    }
+
+    /**
+     * Event observer for core\event\course_viewed
+     *
+     * @param \core\event\course_viewed $event
+     */
+    public static function course_viewed($event): void {
+        global $DB;
+
+        $userid = $event->userid;
+        $courseid = $event->courseid;
+        $timestarted = $event->timecreated;
+        $modifiedtime = $event->timecreated;
+
+        // Is there anything we care about.
+        if (!$trackentries = $DB->get_records(
+            'local_iomad_tracks',
+            [
+                'userid' => $userid,
+                'courseid' => $courseid,
+                'coursecleared' => 0,
+                'timestarted' => null,
+            ])) {
+
+            return;
+        }
+
+        // Process them.
+        foreach ($trackentries as $trackentry) {
+            // Sanity check.
+            if ($DB->record_exists_select(
+                'local_iomad_tracks',
+                "userid = :userid
+                 AND courseid = :courseid
+                 AND timeenrolled > :timeenrolled",
+                [
+                    'courseid' => $courseid,
+                    'userid' => $userid,
+                    'timeenrolled' => $trackentry->timeenrolled,
+                ])) {
+                $DB->set_field('local_iomad_tracks', 'coursecleared', 1, ['id' => $trackentry->id]);
+                continue;
+            }
+
+            // Record the start time.
+            $DB->set_field('local_iomad_tracks', 'timestarted', $timestarted, ['id' => $trackentry->id]);
+            $DB->set_field('local_iomad_tracks', 'modifiedtime', $modifiedtime, ['id' => $trackentry->id]);
         }
     }
 }

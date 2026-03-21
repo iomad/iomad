@@ -1164,6 +1164,7 @@ class company_user {
     public static function get_course_progress(int $userid,
                                                int $courseid,
                                                ?int $timeenrolled,
+                                               ?int $timestarted,
                                                ?int $timecompleted,
                                                int $modifiedtime,
                                                int $licenseid,
@@ -1256,6 +1257,8 @@ class company_user {
         // Get the progress.
         if (!empty($timecompleted)) {
             $progress = 100;
+        } elseif (empty($timestarted)) {
+            $progress = null;
         } else {
             if ($DB->get_record_sql(
                 "SELECT ue.timestart
@@ -1278,6 +1281,8 @@ class company_user {
         // Generate the progress display.
         if (is_null($progress)) {
             if (empty($timeenrolled)) {
+                return get_string('notenrolled', 'local_report_users');
+            } else if (empty($timestarted)) {
                 return get_string('notstarted', 'local_report_users');
             } else {
                 if (!empty($licenseid)) {
