@@ -36,7 +36,7 @@ auth_iomadsaml2_admin_nav($heading, $here);
 $mform = new \auth_iomadsaml2\form\regenerate();
 
 if ($mform->is_cancelled()) {
-    redirect("$CFG->wwwroot/admin/settings.php?section=authsettingsaml2");
+    redirect("$CFG->wwwroot/admin/settings.php?section=authsettingiomadsaml2");
 }
 
 $path = $iomadsaml2auth->certcrt;
