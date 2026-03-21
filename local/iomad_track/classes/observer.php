@@ -622,7 +622,6 @@ class observer {
                                  'coursename' => $courserec->fullname,
                                  'companyid' => $companyid,
                                  'timeenrolled' => $timeenrolled,
-                                 'timestarted' => $timeenrolled,
                                  'modifiedtime' => $modifiedtime];
                     $DB->insert_record('local_iomad_track', $entry);
                 }
@@ -650,6 +649,7 @@ class observer {
         // Check if there is already an entry for this.
         if ($entries = $DB->get_records('local_iomad_track', array('userid' => $userid,
                                                                  'courseid' => $courseid,
+                                                                 'coursecleared' => 0,
                                                                  'timecompleted' => null))) {
             if ($enrolrec = $DB->get_record_sql("SELECT ue.* FROM {user_enrolments} ue
                                                      JOIN {enrol} e ON (ue.enrolid = e.id)
@@ -798,5 +798,54 @@ class observer {
         }
 
         return true;
+    }
+
+    /**
+     * Event observer for core\event\course_viewed
+     *
+     * @param \core\event\course_viewed $event
+     */
+    public static function course_viewed(\core\event\course_viewed $event): void {
+        global $DB;
+
+        $userid = $event->userid;
+        $courseid = $event->courseid;
+        $timestarted = $event->timecreated;
+        $modifiedtime = $event->timecreated;
+
+        // Is there anything we care about.
+        if (!$trackentries = $DB->get_records(
+            'local_iomad_track',
+            [
+                'userid' => $userid,
+                'courseid' => $courseid,
+                'coursecleared' => 0,
+                'timestarted' => null,
+            ])) {
+
+            return;
+        }
+
+        // Process them.
+        foreach ($trackentries as $trackentry) {
+            // Sanity check.
+            if ($DB->record_exists_select(
+                'local_iomad_track',
+                "userid = :userid
+                 AND courseid = :courseid
+                 AND timeenrolled > :timeenrolled",
+                [
+                    'courseid' => $courseid,
+                    'userid' => $userid,
+                    'timeenrolled' => $trackentry->timeenrolled,
+                ])) {
+                $DB->set_field('local_iomad_track', 'coursecleared', 1, ['id' => $trackentry->id]);
+                continue;
+            }
+
+            // Record the start time.
+            $DB->set_field('local_iomad_track', 'timestarted', $timestarted, ['id' => $trackentry->id]);
+            $DB->set_field('local_iomad_track', 'modifiedtime', $modifiedtime, ['id' => $trackentry->id]);
+        }
     }
 }

@@ -102,12 +102,30 @@ class completion_table extends table_sql {
         if ($this->is_downloading() || empty($USER->editing)) {
             if (!empty($row->timeenrolled)) {
                 return userdate($row->timeenrolled, $CFG->iomad_date_format);
-            } else {
-                return;
             }
         } else {
             $element = $output->render_datetime_element('timeenrolled['.$row->id.']',
                                                         'timeenrolled_' . $row->id,
+                                                        $row->timeenrolled);
+            return $element;
+        }
+    }
+
+    /**
+     * Generate the display of the user's time started timestamp
+     * @param object $user the table row being output.
+     * @return string HTML content to go inside the td.
+     */
+    public function col_timestarted($row) {
+        global $CFG, $USER, $output;
+
+        if ($this->is_downloading() || empty($USER->editing)) {
+            if (!empty($row->timestarted)) {
+                return userdate($row->timestarted, $CFG->iomad_date_format);
+            }
+        } else {
+            $element = $output->render_datetime_element('timestarted['.$row->id.']',
+                                                        'timestarted' . $row->id,
                                                         $row->timeenrolled);
             return $element;
         }
@@ -504,7 +522,9 @@ class completion_table extends table_sql {
 
         if (!empty($row->timecompleted)) {
             $progress = 100;
-        } else {
+        } else if (empty($row->timestarted)) {
+            $progress = -1;
+        } else{
             if ($DB->get_record_sql(
                 "SELECT ue.timestart
                  FROM {user_enrolments} ue
@@ -529,6 +549,8 @@ class completion_table extends table_sql {
         }
         if ($progress == -1) {
             if (empty($row->timeenrolled)) {
+                return get_string('notenrolled', 'local_report_users');
+            } else if (empty($row->timestarted)) {
                 return get_string('notstarted', 'local_report_users');
             } else {
                 if (!empty($row->licenseid)) {

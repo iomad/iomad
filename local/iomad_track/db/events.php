@@ -94,4 +94,9 @@ $observers = array(
         'callback'    => '\local_iomad_track\observer::user_graded',
         'internal'    => false,
     ),
+    [
+        'eventname' => core\event\course_viewed::class,
+        'callback' => 'local_iomad_track\observer::course_viewed',
+        'internal' => false,
+    ],
 );

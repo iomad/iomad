@@ -190,14 +190,35 @@ class user_table extends table_sql {
         if ($this->is_downloading() || empty($USER->editing)) {
             if (!empty($row->timeenrolled)) {
                 return userdate($row->timeenrolled, $CFG->iomad_date_format);
-            } else {
-                return;
             }
         } else {
             $element = $output->render_datetime_element(
                 'timeenrolled[' . $row->id . ']',
                 'timeenrolled_' . $row->id,
                 $row->timeenrolled
+            );
+            return $element;
+        }
+    }
+
+
+    /**
+     * Generate the user's course timestarted timestamp
+     * @param object $user the table row being output.
+     * @return string HTML content to go inside the td.
+     */
+    public function col_timestarted($row) {
+        global $CFG, $USER, $output;
+
+        if ($this->is_downloading() || empty($USER->editing)) {
+            if (!empty($row->timestarted)) {
+                return userdate($row->timestarted, $CFG->iomad_date_format);
+            }
+        } else {
+            $element = $output->render_datetime_element(
+                'timestarted[' . $row->id . ']',
+                'timestarted' . $row->id,
+                $row->timestarted
             );
             return $element;
         }
@@ -607,6 +628,8 @@ class user_table extends table_sql {
 
         if (!empty($row->timecompleted)) {
             $progress = 100;
+        } elseif (empty($row->timestarted)) {
+            $progress = -1;
         } else {
             if ($DB->get_record_sql(
                 "SELECT ue.timestart
@@ -632,18 +655,35 @@ class user_table extends table_sql {
         }
         if ($progress == -1) {
             if (empty($row->timeenrolled)) {
+                return get_string('notenrolled', 'local_report_users');
+            } else if (empty($row->timestarted)) {
                 return get_string('notstarted', 'local_report_users');
             } else {
                 if (!empty($row->licenseid)) {
                     if ($DB->get_record('companylicense_users',
                                         ['licenseid' => $row->licenseid,
-                                              'userid' => $row->userid,
-                                              'licensecourseid' => $row->courseid,
-                                              'issuedate' => $row->licenseallocated])) {
+                                         'userid' => $row->userid,
+                                         'licensecourseid' => $row->courseid,
+                                         'issuedate' => $row->licenseallocated])) {
                         if (!$this->is_downloading()) {
-                            return '<div class="progress" style="height:20px" data-html="true" title="'.nl2br($tooltip).'">
-                                    <div class="progress-bar" style="width:0%;height:20px">0%</div>
-                                    </div>';
+                            return html_writer::start_tag(
+                                'div',
+                                [
+                                    'class' => 'progress',
+                                    'style' => 'height:20px',
+                                    'data-html' => 'true',
+                                    'title' => $tooltip,
+                                ]
+                            ) .
+                            html_writer::tag(
+                                'div',
+                                '0%',
+                                [
+                                    'class' => 'progress-bar',
+                                    'style' => 'width:0%;height:20px',
+                                ]
+                            ) .
+                            html_writer::end_tag('div');
                         } else {
                             return get_string('completion-alt-auto-y', 'completion', "0%");
                         }
@@ -666,9 +706,24 @@ class user_table extends table_sql {
             }
 
             if (!$this->is_downloading()) {
-                return '<div class="progress" style="height:20px" data-html="true" title="'.$tooltip.'">
-                        <div class="progress-bar" style="width:' . $progress . '%;height:20px">' . $progress . '%</div>
-                        </div>';
+                return html_writer::start_tag(
+                                'div',
+                                [
+                                    'class' => 'progress',
+                                    'style' => 'height:20px',
+                                    'data-html' => 'true',
+                                    'title' => $tooltip,
+                                ]
+                            ) .
+                            html_writer::tag(
+                                'div',
+                                $progress . '%',
+                                [
+                                    'class' => 'progress-bar',
+                                    'style' => 'width:' . $progress . '%;height:20px',
+                                ]
+                            ) .
+                            html_writer::end_tag('div');
             } else {
                 return get_string('completion-alt-auto-y', 'completion', "$progress%");
             }
