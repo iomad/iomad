@@ -45,7 +45,7 @@ if (!empty($companyid)) {
 
 $form = new \auth_iomadsaml2\form\lockcertificate();
 
-$settingspage = new moodle_url('/admin/settings.php?section=authsettingsaml2');
+$settingspage = new moodle_url('/admin/settings.php?section=authsettingiomadsaml2');
 
 if ($data = $form->get_data()) {
 

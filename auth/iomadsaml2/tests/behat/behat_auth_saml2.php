@@ -107,7 +107,7 @@ class behat_auth_iomadsaml2 extends behat_base {
      * @Then /^I go to the iomadsaml2 settings page (?:again) +\# auth_iomadsaml2$/
      */
     public function i_go_to_the_samlsettings_page_auth_saml() {
-        $this->getSession()->visit($this->locate_path('/admin/settings.php?section=authsettingsaml2'));
+        $this->getSession()->visit($this->locate_path('/admin/settings.php?section=authsettingiomadsaml2'));
     }
 
     /**
