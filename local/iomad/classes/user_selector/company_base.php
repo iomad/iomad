@@ -119,6 +119,10 @@ abstract class company_base extends \user_selector_base {
         } else {
             $profileid = optional_param($name . '_profilefieldid', 0, PARAM_INT);
         }
+        if (empty($options['accesscontext']) &&
+            !empty($options['context'])) {
+            $options['accesscontext'] = $options['context'];
+        }
         $this->profilefieldid = $profileid;
         $this->company = new company($this->companyid);
         $this->subdepartments = company::get_all_subdepartments($this->departmentid);
