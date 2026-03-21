@@ -759,15 +759,11 @@ class microlearning {
         // Do we have a schedule type?
         if (!empty($scheduletype)) {
             if ($scheduletype == 1) {
-                // We want midnight last night.
-                $starttime = strtotime("today midnight") +
-                             $threadinfo->message_preset +
-                             $threadinfo->message_time;
+                // We want midnight from this morning.
+                $starttime = strtotime('today midnight');
             } else {
-                // We want the next scheduled time.
-                $starttime = self::get_next_scheduled($threadid) +
-                             $threadinfo->message_preset +
-                             $threadinfo->message_time;
+                // We want midnight for the morning of the day of the next scheduled time.
+                $starttime = strtotime('midnight', self::get_next_scheduled($threadid));
             }
         }
 
