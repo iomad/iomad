@@ -60,7 +60,7 @@ class company_user {
      * @return integer
      */
     public static function create(object $data, int $companyid = 0): int {
-        global $DB, $CFG, $USER;
+        global $DB, $CFG, $SESSION, $USER;
 
         if (!empty($companyid)) {
             $company = new company($companyid);
@@ -73,6 +73,14 @@ class company_user {
         } else {
             $company = company::by_shortname($data->company);
         }
+
+        // Events work off of the SESSION->selectedcompanyid, and it may not be set
+        // e.g. when called through an automated script, so we force it here.
+        $currenteditingcompany = null;
+        if (isset($SESSION->currenteditingcompany)) {
+            $currenteditingcompany = $SESSION->currenteditingcompany;
+        }
+        $SESSION->currenteditingcompany = $companyid;
 
         // Deal with empty due field.
         if (empty($data->due)) {
@@ -283,6 +291,12 @@ class company_user {
         // Deal with auto enrolments.
         if (get_config('local_iomad', 'signup_autoenrol')) {
             $company->autoenrol($user, $data->due);
+        }
+
+        // Reset SESSION back to what it was before.
+        unset($SESSION->currenteditingcompany);
+        if ($currenteditingcompany !== null) {
+            $SESSION->currenteditingcompany = $currenteditingcompany;
         }
 
         return $user->id;
