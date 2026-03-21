@@ -54,7 +54,6 @@ abstract class company_user_selector_base extends user_selector_base {
                 ));
 
     public function __construct($name, $options) {
-        global $DB;
 
         $this->companyid  = $options['companyid'];
         if (isset ( $options['courseid']) ) {
@@ -80,6 +79,13 @@ abstract class company_user_selector_base extends user_selector_base {
         } else {
             $profileid = optional_param($name . '_profilefieldid', 0, PARAM_INT);
         }
+
+        // User selector base uses accesscontext for some permissions.
+        if (empty($options['accesscontext']) &&
+            !empty($options['context'])) {
+            $options['accesscontext'] = $options['context'];
+        }
+
         $this->profilefieldid = $profileid;
         $this->company = new company($this->companyid);
 
