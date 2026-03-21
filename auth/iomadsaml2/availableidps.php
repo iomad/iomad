@@ -49,7 +49,7 @@ $action = new moodle_url('/auth/iomadsaml2/availableidps.php');
 $mform = new \auth_iomadsaml2\form\availableidps($action, $data);
 
 if ($mform->is_cancelled()) {
-    redirect("$CFG->wwwroot/admin/settings.php?section=authsettingsaml2");
+    redirect("$CFG->wwwroot/admin/settings.php?section=authsettingiomadsaml2");
 }
 
 if ($fromform = $mform->get_data()) {
