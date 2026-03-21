@@ -76,12 +76,6 @@ class helper {
                              cca.mandatory
              FROM {local_iomad_tracks} lit
              LEFT JOIN {course} c ON (c.id = lit.courseid)
-             LEFT JOIN {user_enrolments} ue ON (ue.userid = lit.userid)
-             LEFT JOIN {enrol} e ON (
-                 e.id = ue.enrolid
-                 AND e.courseid = c.id
-                 AND e.courseid = lit.courseid
-             )
              LEFT JOIN {local_iomad_courses} ic ON (
                  c.id = ic.courseid
                  AND lit.courseid = ic.courseid
@@ -100,7 +94,10 @@ class helper {
 
         // We need to de-duplicate this list.
         foreach ($myinprogress as $rec) {
-            $myrecs[$rec->courseid] = $rec;
+            // Sanity check - courseid needs to be set.
+            if (!empty($rec->courseid)) {
+                $myrecs[$rec->courseid] = $rec;
+            }
         }
 
         // And then switch it back to the local_iomad_track id.
@@ -347,8 +344,8 @@ class helper {
         }
 
         // Put them into alpahbetical order.
-        $mymandatorycourses = self::courses_sort($mymandatorycourses, 'coursefullname', $dir);
-        $myavailablecourses = self::courses_sort($myavailablecourses, 'coursefullname', $dir);
+        $mymandatorycourses = self::courses_sort($mymandatorycourses, $sort, $dir);
+        $myavailablecourses = self::courses_sort($myavailablecourses, $sort, $dir);
 
         // Return the list of courses.
         return $mymandatorycourses + $myavailablecourses;
