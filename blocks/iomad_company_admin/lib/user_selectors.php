@@ -824,7 +824,7 @@ class potential_department_user_selector extends company_user_selector_base {
                     return [];
                 }
             } else {
-                if ($users = $DB->get_records('company_users', array('companyid' => $this->companyid,
+                if ($users = $DB->get_records('company_users', array('departmentid' => $this->departmentid,
                                                                      'educator' => 1,
                                                                      'suspended' => 0), null, 'userid')) {
                     // Only return the keys (user ids).

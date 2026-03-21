@@ -363,18 +363,17 @@ class company_managers_form extends moodleform {
                             'companyid' => $this->selectedcompany,
                             'departmentid' => $departmentid,
                             ]);
-                    if (!$CFG->iomad_autoenrol_managers && $roletype != 3) {
-                        // We have to be mindful of educator types here.
-                        $userrec = $DB->get_record(
-                            'company_users',
-                            [
-                                'userid' => $removeuser->id,
-                                'companyid' => $this->selectedcompany,
-                                'departmentid' => $departmentid,
-                                ]);
-                        $educator = $userrec->educator;
-                    } else {
-                        $educator = false;
+                    // We have to be mindful of educator types here.
+                    $educator = false;
+                    $usermanagertype = 0;
+                    if (!$CFG->iomad_autoenrol_managers) {
+                        if ($roletype != 3) {
+                            $educator = $userrec->educator;
+                            $usermanagertype = 0;
+                        } else {
+                            $educator = false;
+                            $usermanagertype = $userrec->managertype;
+                        }
                     }
 
                     // Do the bulk of the work.
@@ -382,7 +381,7 @@ class company_managers_form extends moodleform {
                         $removeuser->id,
                         $this->selectedcompany,
                         $departmentid,
-                        0,
+                        $usermanagertype,
                         $educator);
 
                     // Remove the current record.
@@ -402,7 +401,7 @@ class company_managers_form extends moodleform {
                             $removeuser->id,
                             $this->selectedcompany,
                             $companydepartment->id,
-                            0,
+                            $usermanagertype,
                             $educator);
                     }
                 }
