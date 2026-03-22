@@ -222,8 +222,12 @@ class provider implements
 
         $context = $userlist->get_context();
 
-        if ($context instanceof context_user) {
-            $DB->delete_records('microlearning_thread_user', ['userid' => $context->id]);
+        if (!$context instanceof context_user) {
+            return;
         }
+
+        $userids = $userlist->get_userids();
+        list($usersql, $params) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+        $DB->delete_records_select('microlearning_thread_user', "userid {$usersql}", $params);
     }
 }

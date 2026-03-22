@@ -223,10 +223,21 @@ class provider implements
 
         $context = $userlist->get_context();
 
-        if ($context instanceof context_user) {
-            $DB->delete_records('company_users', ['userid' => $context->id]);
-            $DB->execute("UPDATE {companylicense_users} SET userid = -1 WHERE userid = :userid",
-                          ['userid' => $userid]);
+        if (!$context instanceof context_user) {
+            return;
         }
+
+        $userids = $userlist->get_userids();
+        list($usersql, $params) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+        $select = "userid {$usersql}";
+
+        $DB->delete_records_select('company_users', $select, $params);
+        $DB->set_field_select(
+            'companylicense_users',
+            'userid',
+            '-1',
+            "userid {$usersql}",
+            $params
+        );
     }
 }
