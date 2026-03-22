@@ -277,7 +277,7 @@ class provider implements
         $DB->set_field('local_iomad_company_license_users', 'userid', '-1', ['userid' => $context->instanceid]);
 
         // Get the track records.
-        $trackrecs = $DB->get_records('local_iomad_track', ['userid' => $context->instanceid]);
+        $trackrecs = $DB->get_records('local_iomad_tracks', ['userid' => $context->instanceid]);
         foreach ($trackrecs as $trackrec) {
             // Get the certs.
             if ($certs = $DB->get_records('local_iomad_track_certs', ['trackid' => $trackrec->id])) {
@@ -351,7 +351,7 @@ class provider implements
         $DB->set_field('local_iomad_company_license_users', 'userid', '-1', ['userid' => $userid]);
 
         // Get the track records.
-        $trackrecs = $DB->get_records('local_iomad_track', ['userid' => $userid]);
+        $trackrecs = $DB->get_records('local_iomad_tracks', ['userid' => $userid]);
         foreach ($trackrecs as $trackrec) {
             // Get the certs.
             if ($certs = $DB->get_records('local_iomad_track_certs', ['trackid' => $trackrec->id])) {
@@ -362,7 +362,7 @@ class provider implements
                     if ($file = $DB->get_record(
                         'files',
                         [
-                            'component' => 'local_iomad_track',
+                            'component' => 'local_iomad',
                             'itemid' => $cert->trackid,
                             'filename' => $cert->filename,
                         ])) {
@@ -458,7 +458,7 @@ class provider implements
      * @param approved_userlist $userlist The approved context and user information to delete information for.
      */
     public static function delete_data_for_users(approved_userlist $userlist) {
-        global $DB;
+        global $CFG, $DB;
 
         $context = $userlist->get_context();
 
@@ -470,7 +470,6 @@ class provider implements
         list($usersql, $params) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
         $select = "userid {$usersql}";
 
-        $DB->delete_records_select('local_report_user_license_allocations', $select, $params);
         $DB->delete_records_select('local_iomad_company_users', "userid {$usersql}", $params);
         $DB->set_field_select(
             'local_iomad_company_license_users',
@@ -481,7 +480,7 @@ class provider implements
         );
 
         // Get the track records.
-        $trackrecs = $DB->get_records_select('local_iomad_track', "users {$usersql}", $params);
+        $trackrecs = $DB->get_records_select('local_iomad_tracks', "users {$usersql}", $params);
         foreach ($trackrecs as $trackrec) {
             $usercontext = context_user::instance($trackrec->userid);
             // Get the certs.
@@ -493,7 +492,7 @@ class provider implements
                     if ($file = $DB->get_record(
                         'files',
                         [
-                            'component' => 'local_iomad_track',
+                            'component' => 'local_iomad',
                             'itemid' => $cert->trackid,
                             'filename' => $cert->filename,
                         ])) {
