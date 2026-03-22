@@ -65,7 +65,7 @@ $PAGE->set_title($linktext);
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Set the page heading.
-$PAGE->set_heading(get_string('myhome') . " - $linktext");
+$PAGE->set_heading($linktext);
 $PAGE->navbar->add($linktext, $departmentlist);
 
 // Log this page view.

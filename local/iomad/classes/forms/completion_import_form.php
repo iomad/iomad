@@ -25,9 +25,11 @@
 
 namespace local_iomad\forms;
 
-use moodleform;
-use csv_import_reader;
 use core_text;
+use csv_import_reader;
+use html_writer;
+use moodleform;
+use moodle_url;
 
 /**
  * Completion import management form
@@ -45,12 +47,14 @@ class completion_import_form extends moodleform {
      * @return void
      */
     public function definition() {
+        global $CFG;
 
         // Set up the form.
         $mform =& $this->_form;
 
-        // Add the header.
-        $mform->addElement( 'header', 'general', get_string('completionimportfromfile', 'local_iomad'));
+        $url = new moodle_url($CFG->wwwroot . '/local/iomad/includes/example-completionupload.csv');
+        $link = html_writer::link($url, 'example-completionupload.csv');
+        $mform->addElement('static', 'examplecsv', get_string('examplecsv', 'tool_uploaduser'), $link);
 
         // Add the file picker.
         $mform->addElement('filepicker', 'importfile', get_string('file'), null, ['accepted_types' => 'csv']);

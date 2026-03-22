@@ -76,6 +76,7 @@ $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_title($linktext);
 $PAGE->set_pagelayout('base');
+$PAGE->set_heading(get_string('companyimportfromfile', 'block_iomad_company_admin'));
 
 // Log this page view.
 dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();

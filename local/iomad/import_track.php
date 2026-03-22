@@ -71,6 +71,7 @@ $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
+$PAGE->set_heading(get_string('completionimportfromfile', 'local_iomad'));
 
 // Log this page view.
 block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();

@@ -25,7 +25,9 @@
 
 namespace block_iomad_company_admin\forms;
 
+use html_writer;
 use moodleform;
+use moodle_url;
 
 /**
  * IOMAD Dashboard import departments from file form class
@@ -43,12 +45,14 @@ class company_department_import_form extends moodleform {
      * @return void
      */
     public function definition() {
+        global $CFG;
 
         // Set up the form.
         $mform =& $this->_form;
 
-        // Header for main bit.
-        $mform->addElement( 'header', 'general', get_string('departmentimport', 'block_iomad_company_admin'));
+        $url = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/includes/example-departmentupload.json');
+        $link = html_writer::link($url, 'example-departmentupload.json');
+        $mform->addElement('static', 'examplecsv', get_string('examplecsv', 'tool_uploaduser'), $link);
 
         // Add the file picker.
         $mform->addElement('filepicker', 'importfile', get_string('file'), null, ['accepted_types' => 'json']);
