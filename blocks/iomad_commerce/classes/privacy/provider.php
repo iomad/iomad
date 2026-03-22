@@ -141,7 +141,12 @@ class provider implements
         if (empty($context)) {
             return;
         }
-        $DB->delete_records('invoice');
+
+        if (!$context instanceof context_user) {
+            return;
+        }
+
+        $DB->delete_records('invoice', ['userid' => $context->instanceid]);
     }
 
     /**

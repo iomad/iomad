@@ -36,6 +36,7 @@ use \core_privacy\local\request\approved_userlist;
 use \core_privacy\local\request\writer;
 use \context_system;
 use \context_user;
+use core_user;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -146,7 +147,27 @@ class provider implements
         if (empty($context)) {
             return;
         }
-        $DB->delete_records('email');
+
+        if (!$context instanceof context_user) {
+            return;
+        }
+
+        // Get the user from the context.
+        $user = core_user::get_user($context->instanceid);
+
+        // Get any received, sent or cc'd emails.
+        $emailsql = "SELECT * FROM {email}
+                     WHERE userid = :userid
+                     OR senderid = :senderid
+                     OR " . $DB->sql_like('headers', ':email');
+        $params = ['userid' => $user->id,
+                   'senderid' => $user->id,
+                   'email' => '%' . $user->email . '%'];
+        if ($emails = $DB->get_records_sql($emailsql, $params)) {
+            foreach ($emails as $email){
+                $DB->delete_records('email', ['id' => $email->id]);
+            }
+        }
     }
 
     /**
@@ -166,11 +187,13 @@ class provider implements
                      WHERE userid = :userid
                      OR senderid = :senderid
                      OR " . $DB->sql_like('headers', ':email');
-        $params = array('userid' => $user->id,
-                        'senderid' => $user->id,
-                        'email' => $user->email);
+        $params = ['userid' => $user->id,
+                   'senderid' => $user->id,
+                   'email' => '%' . $user->email . '%'];
         if ($emails = $DB->get_records_sql($emailsql, $params)) {
-            $DB->delete_records('email', array('id' => $email->id));
+            foreach ($emails as $email){
+                $DB->delete_records('email', ['id' => $email->id]);
+            }
         }
     }
 
