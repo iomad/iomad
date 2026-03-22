@@ -27,6 +27,8 @@ namespace block_iomad_company_admin\forms;
 
 use core_text;
 use csv_import_reader;
+use html_writer;
+use moodle_url;
 
 /**
  * IOMAD Dashboard upload user form1 class
@@ -44,9 +46,14 @@ class company_uploaduser_form1 extends company_moodleform {
      * @return void
      */
     public function definition() {
+        global $CFG;
 
         // Set up the form.
         $mform =& $this->_form;
+
+        $url = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/includes/example-userupload.csv');
+        $link = html_writer::link($url, 'example-userupload.csv');
+        $mform->addElement('static', 'examplecsv', get_string('examplecsv', 'tool_uploaduser'), $link);
 
         $mform->addElement('filepicker', 'userfile', get_string('file'), null, ['accepted_types' => ['.csv']]);
         $mform->addRule('userfile', null, 'required');

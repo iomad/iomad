@@ -25,9 +25,11 @@
 
 namespace block_iomad_microlearning\forms;
 
-use moodleform;
-use csv_import_reader;
 use core_text;
+use csv_import_reader;
+use html_writer;
+use moodleform;
+use moodle_url;
 
 /**
  * IOMAD microlearning block group import form class
@@ -45,12 +47,14 @@ class user_group_import_form extends moodleform {
      * @return void
      */
     public function definition() {
+        global $CFG;
 
         // Set up the form.
         $mform =& $this->_form;
 
-        // Display the header.
-        $mform->addElement( 'header', 'general', get_string('importgroupsfromfile', 'block_iomad_microlearning'));
+        $url = new moodle_url($CFG->wwwroot . '/blocks/iomad_microlearning/includes/example-groupupload.csv');
+        $link = html_writer::link($url, 'example-groupupload.csv');
+        $mform->addElement('static', 'examplecsv', get_string('examplecsv', 'tool_uploaduser'), $link);
 
         // Add a file picker.
         $mform->addElement('filepicker', 'importfile', get_string('file'), null, ['accepted_types' => 'csv']);

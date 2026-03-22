@@ -1,0 +1,24 @@
+{"name":"My Company",
+ "shortname":"mycompany",
+ "children":[{"name":"Glasgow",
+             "shortname":"glasgow",
+             "children":[{"name":"Sales",
+                          "shortname":"gsales"},
+                         {"name":"IT",
+                          "shortname":"git"},
+                         {"name":"HR",
+                          "shortname":"ghr"}
+             ]},
+             {"name":"Edinburgh",
+              "shortname":"AB",
+              "children":[{"name":"Sales",
+                           "shortname":"esales"},
+                          {"name":"Marketing",
+                           "shortname":"emarketing"}
+              ]},
+             {"name":"Aberdeen",
+              "shortname":"aberdeen",
+              "children":[{"name":"Training",
+                           "shortname":"atraining"}
+              ]}
+]}

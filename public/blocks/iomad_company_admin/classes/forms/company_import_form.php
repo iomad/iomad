@@ -25,9 +25,11 @@
 
 namespace block_iomad_company_admin\forms;
 
-use moodleform;
-use csv_import_reader;
 use core_text;
+use csv_import_reader;
+use html_writer;
+use moodleform;
+use moodle_url;
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -47,12 +49,14 @@ class company_import_form extends moodleform {
      * @return void
      */
     public function definition() {
+        global $CFG;
 
         // Set up the form.
         $mform =& $this->_form;
 
-        // Add a header.
-        $mform->addElement( 'header', 'general', get_string('companyimportfromfile', 'block_iomad_company_admin'));
+        $url = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/includes/example-companyupload.csv');
+        $link = html_writer::link($url, 'example-companyupload.csv');
+        $mform->addElement('static', 'examplecsv', get_string('examplecsv', 'tool_uploaduser'), $link);
 
         // Add a file picker.
         $mform->addElement('filepicker', 'importfile', get_string('file'), null, ['accepted_types' => 'csv']);
