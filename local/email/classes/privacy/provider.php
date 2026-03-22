@@ -234,8 +234,29 @@ class provider implements
 
         $context = $userlist->get_context();
 
-        if ($context instanceof context_user) {
-            $DB->delete_records('email', array('userid' => $context->id));
+        if (!$context instanceof context_user) {
+            return;
+        }
+
+        $userids = $userlist->get_userids();
+
+        foreach ($userids as $userid) {
+            // Get the user from the context.
+            $user = core_user::get_user($userid);
+
+            // Get any received, sent or cc'd emails.
+            $emailsql = "SELECT * FROM {email}
+                        WHERE userid = :userid
+                        OR senderid = :senderid
+                        OR " . $DB->sql_like('headers', ':email');
+            $params = ['userid' => $user->id,
+                       'senderid' => $user->id,
+                       'email' => '%' . $user->email . '%'];
+            if ($emails = $DB->get_records_sql($emailsql, $params)) {
+                foreach ($emails as $email){
+                    $DB->delete_records('email', ['id' => $email->id]);
+                }
+            }
         }
     }
 }
