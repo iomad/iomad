@@ -143,13 +143,17 @@ class provider implements
      * @param \context $context the context to delete in.
      */
     public static function delete_data_for_all_users_in_context(context $context) {
-        global $DB, $CFG;
+        global $DB;
 
         if (empty($context)) {
             return;
         }
 
-        $DB->delete_records('local_report_user_logins');
+        if (!$context instanceof context_user) {
+            return;
+        }
+
+        $DB->delete_records('local_report_user_logins', ['userid' => $context->instanceid]);
     }
 
     /**

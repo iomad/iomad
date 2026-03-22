@@ -36,6 +36,7 @@ use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\writer;
 use context_system;
 use context_user;
+use core_user;
 
 /**
  * Privacy Subsystem implementation for local_iomad.
@@ -83,6 +84,52 @@ class provider implements
                 'groupid' => 'privacy:metadata:companylicense_users:groupid',
             ],
             'privacy:metadata:local_iomad_company_license_users'
+        );
+
+        $collection->add_database_table(
+            'local_iomad_tracks',
+            [
+                'id' => 'privacy:metadata:local_iomad_track:id',
+                'courseid' => 'privacy:metadata:local_iomad_track:courseid',
+                'coursename' => 'privacy:metadata:local_iomad_track:coursename',
+                'userid' => 'privacy:metadata:local_iomad_track:userid',
+                'timecompleted' => 'privacy:metadata:local_iomad_track:timecompleted',
+                'timeenrolled' => 'privacy:metadata:local_iomad_track:timeenrolled',
+                'timestarted' => 'privacy:metadata:local_iomad_track:timestarted',
+                'finalscore' => 'privacy:metadata:local_iomad_track:finalscore',
+                'companyid' => 'privacy:metadata:local_iomad_track:companyid',
+                'licenseid' => 'privacy:metadata:local_iomad_track:licenseid',
+                'licensename' => 'privacy:metadata:local_iomad_track:licensename',
+                'licenseallocated' => 'privacy:metadata:local_iomad_track:licenseallocated',
+            ],
+            'privacy:metadata:local_iomad_tracks'
+        );
+
+        $collection->add_database_table(
+            'local_iomad_track_certs',
+            [
+                'id' => 'privacy:metadata:local_iomad_track_certs:id',
+                'trackid' => 'privacy:metadata:local_iomad_track_certs:trackid',
+                'filename' => 'privacy:metadata:local_iomad_track_certs:filename',
+            ],
+            'privacy:metadata:local_iomad_track_certs'
+        );
+
+        $collection->add_database_table(
+            'local_iomad_emails',
+            [
+                'id' => 'privacy:metadata:local_email:id',
+                'templatename' => 'privacy:metadata:local_email:templatename',
+                'sent' => 'privacy:metadata:local_email:sent',
+                'subject' => 'privacy:metadata:local_email:subject',
+                'body' => 'privacy:metadata:local_email:body',
+                'courseid' => 'privacy:metadata:local_email:courseid',
+                'userid' => 'privacy:metadata:local_email:userid',
+                'invoiceid' => 'privacy:metadata:local_email:invoiceid',
+                'classroomid' => 'privacy:metadata:local_email:senderid',
+                'headers' => 'privacy:metadata:local_email:headers',
+            ],
+            'privacy:metadata:local_iomad_emails'
         );
 
         return $collection;
@@ -147,6 +194,67 @@ class provider implements
             $licensesout->licenses = $licenses;
             writer::with_context($context)->export_data([get_string('licenseusers', 'block_iomad_company_admin')], $licensesout);
         }
+
+        // Get the tracking table entreies
+        if ($tracks = $DB->get_records('local_iomad_tracks', ['userid' => $user->id])) {
+            $trackout = (object) [];
+            $trackout->tracks = [];
+            $trackout->certs = [];
+            foreach ($tracks as $track) {
+                if (!empty($track->timeenrolled)) {
+                    $track->timeenrolled = transform::datetime($track->timeenrolled);
+                }
+                if (!empty($track->timestarted)) {
+                    $track->timestarted = transform::datetime($track->timestarted);
+                }
+                if (!empty($track->timecompleted)) {
+                    $track->timecompleted = transform::datetime($track->timecompleted);
+                }
+                if (!empty($track->timeexpires)) {
+                    $track->timeexpires = transform::datetime($track->timeexpires);
+                }
+                if (!empty($track->licenseallocated)) {
+                    $track->licenseallocated = transform::datetime($track->licenseallocated);
+                }
+                if (!empty($track->modifiedtime)) {
+                    $track->modifiedtime = transform::datetime($track->modifiedtime);
+                }
+                $trackout->tracks[$track->id] = $track;
+                if ($certinfos = $DB->get_records('local_iomad_track_certs', ['trackid' => $track->id])) {
+                    foreach ($certinfos as $certinfo) {
+                        // Export the track info
+                        $trackout->certs[$cert->id] = $certinfo;
+                        //writer::with_context($context)->export_data([], $certinfo);
+                    }
+                }
+            }
+            writer::with_context($context)->export_data([get_string('coursecompletions', 'moodle')], $trackout);
+        }
+
+        // Get the emails information.
+        $emailsql = "SELECT * FROM {local_iomad_emails}
+                     WHERE userid = :userid
+                     OR senderid = :senderid
+                     OR " . $DB->sql_like('headers', ':email');
+        $params = ['userid' => $user->id,
+                   'senderid' => $user->id,
+                   'email' => $user->email];
+        if ($emails = $DB->get_records_sql($emailsql, $params)) {
+            $emailsout = (object) [];
+            foreach ($emails as $id => $email) {
+                if (!empty($email->modifiedtime)) {
+                    $emails[$id]->modifiedtime = transform::datetime($email->modifiedtime);
+                }
+                if (!empty($email->sent)) {
+                    $emails[$id]->sent = transform::datetime($email->sent);
+                }
+                if (!empty($email->due)) {
+                    $emails[$id]->due = transform::datetime($email->due);
+                }
+            }
+            $emailsout->emails = $emails;
+            writer::with_context($context)->export_data([get_string('email', 'local_email')], $emailsout);
+        }
     }
 
     /**
@@ -155,13 +263,74 @@ class provider implements
      * @param \context $context the context to delete in.
      */
     public static function delete_data_for_all_users_in_context(\context $context) {
-        global $DB;
+        global $CFG, $DB;
 
         if (empty($context)) {
             return;
         }
-        $DB->delete_records('local_iomad_company_users');
-        $DB->delete_records('local_iomad_company_license_users');
+
+        if (!$context instanceof context_user) {
+            return;
+        }
+
+        $DB->delete_records('local_iomad_company_users', ['userid' => $context->instanceid]);
+        $DB->set_field('local_iomad_company_license_users', 'userid', '-1', ['userid' => $context->instanceid]);
+
+        // Get the track records.
+        $trackrecs = $DB->get_records('local_iomad_track', ['userid' => $context->instanceid]);
+        foreach ($trackrecs as $trackrec) {
+            // Get the certs.
+            if ($certs = $DB->get_records('local_iomad_track_certs', ['trackid' => $trackrec->id])) {
+                // Delete the files.
+                require_once($CFG->libdir . '/filelib.php');
+                foreach ($certs as $cert) {
+                    continue;
+                    if ($file = $DB->get_record(
+                        'files',
+                        [
+                            'component' => 'local_iomad_track',
+                            'itemid' => $cert->trackid,
+                            'filename' => $cert->filename,
+                        ])) {
+                        $filedir1 = substr($file->contenthash,0,2);
+                        $filedir2 = substr($file->contenthash,2,2);
+                        $filepath = $CFG->dataroot . '/filedir/' .
+                                    $filedir1 . '/' . $filedir2 .
+                                    '/' . $file->contenthash;
+                        fulldelete($filepath);
+                    }
+                }
+                $DB->delete_records('local_iomad_track_certs', ['id' => $cert->id]);
+                $DB->delete_records(
+                    'files',
+                    [
+                        'component' => 'local_iomad',
+                        'area' => 'certificate_issue',
+                        'contextid' => $context->instanceid,
+                    ]
+                );
+            }
+
+            // Delete the track record.
+            $DB->delete_records('local_iomad_tracks', ['id' => $trackrec->id]);
+        }
+
+        // Get the user from the context.
+        $user = core_user::get_user($context->instanceid);
+
+        // Get any received, sent or cc'd emails.
+        $emailsql = "SELECT * FROM {local_iomad_emails}
+                     WHERE userid = :userid
+                     OR senderid = :senderid
+                     OR " . $DB->sql_like('headers', ':email');
+        $params = ['userid' => $user->id,
+                   'senderid' => $user->id,
+                   'email' => '%' . $user->email . '%'];
+        if ($emails = $DB->get_records_sql($emailsql, $params)) {
+            foreach ($emails as $email){
+                $DB->delete_records('local_iomad_emails', ['id' => $email->id]);
+            }
+        }
     }
 
     /**
@@ -170,16 +339,72 @@ class provider implements
      * @param approved_contextlist $contextlist a list of contexts approved for deletion.
      */
     public static function delete_data_for_user(approved_contextlist $contextlist) {
-        global $DB;
+        global $CFG, $DB;
 
         if (empty($contextlist->count())) {
             return;
         }
 
         $userid = $contextlist->get_user()->id;
+        $usercontext = context_user::instance($user->id);
         $DB->delete_records('local_iomad_company_users', ['userid' => $userid]);
-        $DB->execute("UPDATE {local_iomad_company_license_users} SET userid = -1 WHERE userid = :userid",
-                      ['userid' => $userid]);
+        $DB->set_field('local_iomad_company_license_users', 'userid', '-1', ['userid' => $userid]);
+
+        // Get the track records.
+        $trackrecs = $DB->get_records('local_iomad_track', ['userid' => $userid]);
+        foreach ($trackrecs as $trackrec) {
+            // Get the certs.
+            if ($certs = $DB->get_records('local_iomad_track_certs', ['trackid' => $trackrec->id])) {
+                // Delete the files.
+                require_once($CFG->libdir . '/filelib.php');
+                foreach ($certs as $cert) {
+                    continue;
+                    if ($file = $DB->get_record(
+                        'files',
+                        [
+                            'component' => 'local_iomad_track',
+                            'itemid' => $cert->trackid,
+                            'filename' => $cert->filename,
+                        ])) {
+                        $filedir1 = substr($file->contenthash,0,2);
+                        $filedir2 = substr($file->contenthash,2,2);
+                        $filepath = $CFG->dataroot . '/filedir/' .
+                                    $filedir1 . '/' . $filedir2 .
+                                    '/' . $file->contenthash;
+                        fulldelete($filepath);
+                    }
+                }
+                $DB->delete_records('local_iomad_track_certs', ['id' => $cert->id]);
+                $DB->delete_records(
+                    'files',
+                    [
+                        'component' => 'local_iomad',
+                        'area' => 'certificate_issue',
+                        'contextid' => $usercontext->id,
+                    ]
+                );
+            }
+
+            // Delete the track record.
+            $DB->delete_records('local_iomad_tracks', ['id' => $trackrec->id]);
+        }
+
+        // Get the user from the context.
+        $user = core_user::get_user($userid);
+
+        // Get any received, sent or cc'd emails.
+        $emailsql = "SELECT * FROM {local_iomad_emails}
+                     WHERE userid = :userid
+                     OR senderid = :senderid
+                     OR " . $DB->sql_like('headers', ':email');
+        $params = ['userid' => $user->id,
+                   'senderid' => $user->id,
+                   'email' => '%' . $user->email . '%'];
+        if ($emails = $DB->get_records_sql($emailsql, $params)) {
+            foreach ($emails as $email){
+                $DB->delete_records('local_iomad_emails', ['id' => $email->id]);
+            }
+        }
     }
 
     /**
@@ -207,6 +432,24 @@ class provider implements
                  WHERE ctx.id = :contextid";
 
         $userlist->add_from_sql('userid', $sql, $params);
+
+        $sql = "SELECT lit.userid as userid
+                  FROM {local_iomad_tracks} lit
+                  JOIN {context} ctx
+                       ON ctx.instanceid = lit.userid
+                       AND ctx.contextlevel = :contextuser
+                 WHERE ctx.id = :contextid";
+
+        $userlist->add_from_sql('userid', $sql, $params);
+
+        $sql = "SELECT e.userid as userid
+                  FROM {local_iomad_emails} e
+                  JOIN {context} ctx
+                       ON ctx.instanceid = e.userid
+                       AND ctx.contextlevel = :contextuser
+                 WHERE ctx.id = :contextid";
+
+        $userlist->add_from_sql('userid', $sql, $params);
     }
 
     /**
@@ -219,10 +462,82 @@ class provider implements
 
         $context = $userlist->get_context();
 
-        if ($context instanceof context_user) {
-            $DB->delete_records('local_iomad_company_users', ['userid' => $context->id]);
-            $DB->execute("UPDATE {local_iomad_company_license_users} SET userid = -1 WHERE userid = :userid",
-                          ['userid' => $userid]);
+        if (!$context instanceof context_user) {
+            return;
+        }
+
+        $userids = $userlist->get_userids();
+        list($usersql, $params) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+        $select = "userid {$usersql}";
+
+        $DB->delete_records_select('local_report_user_license_allocations', $select, $params);
+        $DB->delete_records_select('local_iomad_company_users', "userid {$usersql}", $params);
+        $DB->set_field_select(
+            'local_iomad_company_license_users',
+            'userid',
+            '-1',
+            "userid {$usersql}",
+            $params
+        );
+
+        // Get the track records.
+        $trackrecs = $DB->get_records_select('local_iomad_track', "users {$usersql}", $params);
+        foreach ($trackrecs as $trackrec) {
+            $usercontext = context_user::instance($trackrec->userid);
+            // Get the certs.
+            if ($certs = $DB->get_records('local_iomad_track_certs', ['trackid' => $trackrec->id])) {
+                // Delete the files.
+                require_once($CFG->libdir . '/filelib.php');
+                foreach ($certs as $cert) {
+                    continue;
+                    if ($file = $DB->get_record(
+                        'files',
+                        [
+                            'component' => 'local_iomad_track',
+                            'itemid' => $cert->trackid,
+                            'filename' => $cert->filename,
+                        ])) {
+                        $filedir1 = substr($file->contenthash,0,2);
+                        $filedir2 = substr($file->contenthash,2,2);
+                        $filepath = $CFG->dataroot . '/filedir/' .
+                                    $filedir1 . '/' . $filedir2 .
+                                    '/' . $file->contenthash;
+                        fulldelete($filepath);
+                    }
+                }
+                $DB->delete_records('local_iomad_track_certs', ['id' => $cert->id]);
+                $DB->delete_records(
+                    'files',
+                    [
+                        'component' => 'local_iomad',
+                        'area' => 'certificate_issue',
+                        'contextid' => $usercontext->id,
+                    ]
+                );
+            }
+
+            // Delete the track record.
+            $DB->delete_records('local_iomad_tracks', ['id' => $trackrec->id]);
+        }
+
+        // Deal with emails.
+        foreach ($userids as $userid) {
+            // Get the user from the context.
+            $user = core_user::get_user($userid);
+
+            // Get any received, sent or cc'd emails.
+            $emailsql = "SELECT * FROM {local_iomad_emails}
+                        WHERE userid = :userid
+                        OR senderid = :senderid
+                        OR " . $DB->sql_like('headers', ':email');
+            $params = ['userid' => $user->id,
+                    'senderid' => $user->id,
+                    'email' => '%' . $user->email . '%'];
+            if ($emails = $DB->get_records_sql($emailsql, $params)) {
+                foreach ($emails as $email){
+                    $DB->delete_records('local_iomad_emails', ['id' => $email->id]);
+                }
+            }
         }
     }
 }

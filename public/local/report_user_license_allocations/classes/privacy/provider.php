@@ -141,7 +141,11 @@ class provider implements
             return;
         }
 
-        $DB->delete_records('local_report_user_license_allocations');
+        if (!$context instanceof context_user) {
+            return;
+        }
+
+        $DB->delete_records('local_report_user_license_allocations', ['userid' => $context->instanceid]);
     }
 
     /**
@@ -197,8 +201,14 @@ class provider implements
 
         $context = $userlist->get_context();
 
-        if ($context instanceof context_user) {
-            $DB->delete_records('local_report_user_license_allocations', ['userid' => $context->id]);
+        if (!$context instanceof context_user) {
+            return;
         }
+
+        $userids = $userlist->get_userids();
+        list($usersql, $params) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+        $select = "userid {$usersql}";
+
+        $DB->delete_records_select('local_report_user_license_allocations', $select, $params);
     }
 }
