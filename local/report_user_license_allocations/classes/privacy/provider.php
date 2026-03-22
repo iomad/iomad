@@ -141,7 +141,11 @@ class provider implements
             return;
         }
 
-        $DB->delete_records('local_report_user_lic_allocs');
+        if (!$context instanceof context_user) {
+            return;
+        }
+
+        $DB->delete_records('local_report_user_lic_allocs', ['userid' => $context->instanceid]);
     }
 
     /**

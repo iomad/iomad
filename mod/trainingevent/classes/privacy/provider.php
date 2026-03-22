@@ -196,8 +196,12 @@ class provider implements
         if (empty($context)) {
             return;
         }
-        $instanceid = $DB->get_field('course_modules', 'instance', ['id' => $context->instanceid], MUST_EXIST);
-        $DB->delete_records('trainingevent_users', ['trainingeventid' => $instanceid]);
+
+        if (!$context instanceof context_user) {
+            return;
+        }
+
+        $DB->delete_records('trainingevent_users', ['userid' => $context->instanceid]);
     }
 
     /**

@@ -160,8 +160,13 @@ class provider implements
         if (empty($context)) {
             return;
         }
-        $DB->delete_records('company_users');
-        $DB->delete_records('companylicense_users');
+
+        if (!$context instanceof context_user) {
+            return;
+        }
+
+        $DB->delete_records('company_users', ['userid' => $context->instanceid]);
+        $DB->set_field('companylicense_users', 'userid', '-1', ['userid' => $context->instanceid]);
     }
 
     /**
@@ -178,8 +183,7 @@ class provider implements
 
         $userid = $contextlist->get_user()->id;
         $DB->delete_records('company_users', ['userid' => $userid]);
-        $DB->execute("UPDATE {companylicense_users} SET userid = -1 WHERE userid = :userid",
-                      ['userid' => $userid]);
+        $DB->set_field('companylicense_users', 'userid', '-1', ['userid' => $userid]);
     }
 
     /**

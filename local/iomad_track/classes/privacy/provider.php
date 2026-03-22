@@ -169,23 +169,32 @@ class provider implements
             return;
         }
 
-        $DB->delete_records('local_iomad_track');
+        if (!$context instanceof context_user) {
+            return;
+        }
 
-        // Get the certs.
-        if ($certs = $DB->get_records('local_iomad_track_certs')) {
-            // Delete the files.
-            require_once($CFG->libdir . '/filelib.php');
-            foreach ($certs as $cert) {
-                if ($file = $DB->get_record('files', array('component' => 'local_iomad_track', 'itemid' => $cert->trackid, 'filename' => $cert->filename))) {
-                    $filedir1 = substr($file->contenthash,0,2);
-                    $filedir2 = substr($file->contenthash,2,2);
-                    $filepath = $CFG->dataroot . '/filedir/' . $filedir1 . '/' . $filedir2 . '/' . $file->contenthash;
-                    fulldelete($filepath);
+        // Get the track records.
+        $trackrecs = $DB->get_records('local_iomad_track', ['userid' => $context->instanceid]);
+        foreach ($trackrecs as $trackrec) {
+            // Get the certs.
+            if ($certs = $DB->get_records('local_iomad_track_certs', ['trackid' => $trackrec->id])) {
+                // Delete the files.
+                require_once($CFG->libdir . '/filelib.php');
+                foreach ($certs as $cert) {
+                    continue;
+                    if ($file = $DB->get_record('files', array('component' => 'local_iomad_track', 'itemid' => $cert->trackid, 'filename' => $cert->filename))) {
+                        $filedir1 = substr($file->contenthash,0,2);
+                        $filedir2 = substr($file->contenthash,2,2);
+                        $filepath = $CFG->dataroot . '/filedir/' . $filedir1 . '/' . $filedir2 . '/' . $file->contenthash;
+                        fulldelete($filepath);
+                    }
                 }
+                $DB->delete_records('local_iomad_track_certs', ['id' => $cert->id]);
+                $DB->delete_records('files', ['component' => 'local_iomad_track', 'contextid' => $context->instanceid]);
             }
 
-            $DB->delete_records('local_iomad_track_certs');
-            $DB->delete_records('files', array('component' => 'local_iomad_track'));
+            // Delete the track record.
+            $DB->delete_records('local_iomad_track', ['id' => $trackrec->id]);
         }
     }
 
@@ -196,7 +205,7 @@ class provider implements
      */
     public static function delete_data_for_user(approved_contextlist $contextlist) {
         global $DB;
-
+        
         if (empty($contextlist->count())) {
             return;
         }

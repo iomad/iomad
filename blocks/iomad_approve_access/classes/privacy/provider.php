@@ -135,7 +135,12 @@ class provider implements
         if (empty($context)) {
             return;
         }
-        $DB->delete_records('block_iomad_approve_access');
+
+        if (!$context instanceof context_user) {
+            return;
+        }
+
+        $DB->delete_records('block_iomad_approve_access', ['userid' => $context->instanceid]);
     }
 
     /**
