@@ -1543,13 +1543,6 @@ class company_user {
                     }
                 }
 
-                // Remove grades.
-                if ($items = $DB->get_records('grade_items', ['courseid' => $courseid])) {
-                    foreach ($items as $item) {
-                        $DB->delete_records('grade_grades', ['userid' => $userid, 'itemid' => $item->id]);
-                    }
-                }
-
                 // Remove quiz entries.
                 if ($quizzes = $DB->get_records('quiz', ['course' => $courseid])) {
                     // We have quiz(zes) so clear them down.
@@ -1583,6 +1576,80 @@ class company_user {
                         $DB->delete_records('lesson_grades', ['lessonid' => $lesson->id, 'userid' => $userid]);
                         $DB->delete_records('lesson_branch', ['lessonid' => $lesson->id, 'userid' => $userid]);
                         $DB->delete_records('lesson_timer', ['lessonid' => $lesson->id, 'userid' => $userid]);
+                    }
+                }
+
+                // Remove choices.
+                if ($choices = $DB->get_records('choice', ['course' => $courseid])){
+                    foreach ($choices as $choice) {
+                        $DB->delete_records('choice_answers', ['choiceid' => $choice->id, 'userid' => $userid]);
+                    }
+                }
+
+                // Remove traininevent registrations.
+                if ($trainigevents = $DB->get_records('trainingevent', ['course' => $courseid])){
+                    foreach ($trainigevents as $trainigevent) {
+                        $DB->delete_records(
+                            'trainingevent_user',
+                            ['trainigeventid' => $trainigevent->id, 'userid' => $userid]
+                        );
+                    }
+                }
+
+                // Remove LTI information.
+                if (enrol_is_enabled('lti')) {
+                    $coursecontext = context_course::instance($courseid);
+                    if ($ltitools = $DB->get_record('enrol_lti_tools', ['contextid' => $contextcourse->id])) {
+                        foreach ($ltitools as $ltitool) {
+                            $DB->set_value(
+                                'enrol_lti_users',
+                                'lastgrade',
+                                0,
+                                ['userid' => $userid, 'toolid' => $ltitool->id]
+                            );
+                        }
+                    }
+                }
+
+                // Optional course plugins.
+                if ($DB->record_exists('modules', ['name' => 'questionnaire'])) {
+                    if ($questionnaires = $DB->get_records('questionnaire', ['course' => $courseid])) {
+                        $responsetables = [
+                            'questionnaire_resp_multiple',
+                            'questionnaire_resp_single',
+                            'questionnaire_response_bool',
+                            'questionnaire_response_date',
+                            'questionnaire_response_other',
+                            'questionnaire_response_rank',
+                            'questionnaire_response_text',
+                        ];
+                        foreach ($questionnaires as $questionnaire) {
+                            if ($responses = $DB->get_record(
+                                'questionnaire_resonse',
+                                ['questionnaireid' => $questionnaire->id, ['userid' => $userid]])) {
+                                foreach ($responses as $response) {
+                                    foreach ($responsetables as $table) {
+                                        $DB->delete_records($table, ['response_id' => $response->id]);
+                                    }
+                                    $DB->delete_record('questionnaire_resonse', ['id' => $response->id]);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if ($DB->record_exists('modules', ['name' => 'hvp'])) {
+                    if ($hvps = $DB->get_records('hvp', ['course' => $courseid])) {
+                        foreach ($hvps as $hvp) {
+                            $DB->delete_records('hvp_content_user_data', ['hvp_id' => $hvp->id, 'userid' => $userid]);
+                        }
+                    }
+                }
+
+                // Remove grades.
+                if ($items = $DB->get_records('grade_items', ['courseid' => $courseid])) {
+                    foreach ($items as $item) {
+                        $DB->delete_records('grade_grades', ['userid' => $userid, 'itemid' => $item->id]);
                     }
                 }
             }
