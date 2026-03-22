@@ -141,7 +141,12 @@ class provider implements
         if (empty($context)) {
             return;
         }
-        $DB->delete_records('block_iomad_commerce_invoices');
+
+        if (!$context instanceof context_user) {
+            return;
+        }
+
+        $DB->delete_records('block_iomad_commerce_invoices', ['userid' => $context->instanceid]);
     }
 
     /**
@@ -197,8 +202,12 @@ class provider implements
 
         $context = $userlist->get_context();
 
-        if ($context instanceof context_user) {
-            $DB->delete_records('block_iomad_commerce_invoices', ['userid' => $context->id]);
+        if (!$context instanceof context_user) {
+            return;
         }
+
+        $userids = $userlist->get_userids();
+        list($usersql, $params) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+        $DB->delete_records_select('block_iomad_commerce_invoices', "userid {$usersql}", $params);
     }
 }

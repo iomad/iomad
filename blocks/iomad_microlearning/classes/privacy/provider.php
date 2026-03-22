@@ -25,6 +25,7 @@
 
 namespace block_iomad_microlearning\privacy;
 
+use context_block;
 use core_privacy\local\request\deletion_criteria;
 use core_privacy\local\request\helper;
 use core_privacy\local\metadata\collection;
@@ -161,7 +162,12 @@ class provider implements
         if (empty($context)) {
             return;
         }
-        $DB->delete_records('block_iomad_microlearning_thread_users');
+
+        if (!$context instanceof context_user) {
+            return;
+        }
+
+        $DB->delete_records('block_iomad_microlearning_thread_users', ['userid' => $context->instanceid]);
     }
 
     /**
@@ -217,8 +223,12 @@ class provider implements
 
         $context = $userlist->get_context();
 
-        if ($context instanceof context_user) {
-            $DB->delete_records('block_iomad_microlearning_thread_users', ['userid' => $context->id]);
+        if (!$context instanceof context_user) {
+            return;
         }
+
+        $userids = $userlist->get_userids();
+        list($usersql, $params) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+        $DB->delete_records_select('block_iomad_microlearning_thread_users', "userid {$usersql}", $params);
     }
 }
