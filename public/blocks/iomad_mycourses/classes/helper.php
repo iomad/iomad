@@ -28,6 +28,7 @@ namespace block_iomad_mycourses;
 use context_course;
 use context_system;
 use context_user;
+use core_course\external\course_summary_exporter;
 use local_iomad\iomad;
 use moodle_url;
 
@@ -45,6 +46,11 @@ class helper {
      */
     public static function get_my_inprogress($sort = 'coursefullname', $dir = 'ASC', $mandatoryonly = false) {
         global $DB, $USER;
+
+        // Is this enabled?
+        if (empty($CGF->iomad_use_mandatory_courses)) {
+            return [];
+        }
 
         // Get my company id.
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
@@ -349,6 +355,112 @@ class helper {
 
         // Return the list of courses.
         return $mymandatorycourses + $myavailablecourses;
+    }
+
+    /**
+     * Function to get list of courses the user is in the middle of.
+     */
+    public static function get_my_mandatory($sort = 'coursefullname', $dir = 'ASC') {
+        global $CFG, $DB, $OUTPUT, $USER;
+
+        // Get my company id.
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+
+        // Get the expiry warning duration.
+        $warningduration = iomad::get_config('local_report_completion_overview', 'warningduration');
+        $now = time();
+
+        // Get the list of company mandatory courses.
+        $mandatorycourses = $DB->get_records_sql(
+            "SELECT c.*
+             FROM {local_iomad_company_course_options} cco
+             JOIN {course} c ON (cco.courseid = c.id)
+             WHERE cco.companyid = :companyid
+             AND cco.mandatory = 1",
+            ['companyid' => $companyid]
+        );
+
+        // Set up the mandatory status information.
+        foreach ($mandatorycourses as $mandatorycourse) {
+            // Set some defaults.
+            $status = "notenrolled";
+            $timeenrolled = get_string('never');
+            $timestarted = get_string('never');
+            $timecompleted = get_string('never');
+            $timeexpires = '';
+            if ($latestrecord = $DB->get_record_sql(
+                "SELECT a.*
+                 FROM {local_iomad_tracks} a
+                 WHERE a.userid = :userid
+                 AND a.courseid = :courseid
+                 AND a.companyid = :companyid
+                 AND a.id = (
+                     SELECT MAX(b.id)
+                     FROM {local_iomad_tracks} b
+                     WHERE b.userid = a.userid
+                     AND b.courseid = a.courseid
+                     AND b.companyid = b.companyid
+                 )",
+                ['userid' => $USER->id,
+                 'courseid' => $mandatorycourse->id,
+                 'companyid' => $companyid])) {
+
+                // They have a record at least.
+                if ($latestrecord->timeenrolled > 0) {
+                    $status = 'notcompleted';
+                    $timeenrolled = userdate($latestrecord->timeenrolled, $CFG->iomad_date_format);
+                }
+                if ($latestrecord->timestarted > 0) {
+                    $timestarted = userdate($latestrecord->timestarted, $CFG->iomad_date_format);
+                }
+                if ($latestrecord->timecompleted > 0) {
+                    $status = 'indate';
+                    $timecompleted = userdate($latestrecord->timecompleted, $CFG->iomad_date_format);
+                }
+                if (!empty($latestrecord->timeexpires) &&
+                    $latestrecord->timeexpires > $now) {
+                    $status = 'indate';
+                    $timeexpires = userdate($latestrecord->timeexpires, $CFG->iomad_date_format);
+                }
+                if (!empty($latestrecord->timeexpires) &&
+                    $latestrecord->timeexpires < $now + $warningduration) {
+                    $status = 'expiring';
+                    $timeexpires = userdate($latestrecord->timeexpires, $CFG->iomad_date_format);
+                }
+                if (!empty($latestrecord->timeexpires) &&
+                    $latestrecord->timeexpires < $now) {
+                    $status = 'expired';
+                    $timeexpires = userdate($latestrecord->timeexpires, $CFG->iomad_date_format);
+                }
+            }
+
+            // Add the rest of the metadata.
+            $courseurl = new moodle_url(
+                $CFG->wwwroot . '/course/view.php',
+                ['id' => $mandatorycourse->id]
+            );
+            $mandatorycourse->coursefullname = format_string($mandatorycourse->fullname);
+            $mandatorycourse->courseurl = $courseurl->out(false);
+            $mandatorycourse->timeenrolled = $timeenrolled;
+            $mandatorycourse->timestarted = $timestarted;
+            $mandatorycourse->timecompleted = $timecompleted;
+            $mandatorycourse->timeexpires = $timeexpires;
+            $mandatorycourse->status = $status;
+            $imageurl = course_summary_exporter::get_course_image($mandatorycourse);
+            if (empty($imageurl)) {
+                $imageurl = $OUTPUT->get_generated_image_for_id($mandatorycourse->id);
+            }
+            $mandatorycourse->imageurl = $imageurl;
+
+            // Add it back to the original array.
+            $mandatorycourses[$mandatorycourse->id] = $mandatorycourse;
+        }
+
+        // Sort the courses.
+        $mandatorycourses = self::courses_sort($mandatorycourses, $sort, $dir);
+
+        // Return the list of courses.
+        return $mandatorycourses;
     }
 
     /**

@@ -74,10 +74,12 @@ class main implements renderable, templatable {
         $myinprogress = helper::get_my_inprogress($sort, $dir, $mandatoryonly);
         $myavailable = helper::get_my_available($sort, $dir, $mandatoryonly);
         $myarchive = helper::get_my_archive($sort, $dir, $mandatoryonly);
+        $mymandatory = helper::get_my_mandatory($sort, $dir);
 
         $availableview = new available_view($myavailable);
         $inprogressview = new inprogress_view($myinprogress);
         $completedview = new completed_view($myarchive);
+        $mandatoryview = new mandatory_view($mymandatory);
 
         // Are we showing the download certificates button?
         $downloadcerts = false;
@@ -115,10 +117,13 @@ class main implements renderable, templatable {
         $viewingavailable = false;
         $viewinginprogress = false;
         $viewingcompleted = false;
+        $viewingmandatory = false;
         if ($this->tab == 'available') {
             $viewingavailable = true;
         } else if ($this->tab == 'completed') {
             $viewingcompleted = true;
+        } else if ($this->tab == 'mandatory') {
+            $viewingmandatory = true;
         } else {
             $viewinginprogress = true;
         }
@@ -175,9 +180,11 @@ class main implements renderable, templatable {
             'availableview' => $availableview->export_for_template($output),
             'inprogressview' => $inprogressview->export_for_template($output),
             'completedview' => $completedview->export_for_template($output),
+            'mandatoryview' => $mandatoryview->export_for_template($output),
             'viewingavailable' => $viewingavailable,
             'viewinginprogress' => $viewinginprogress,
             'viewingcompleted' => $viewingcompleted,
+            'viewingmandatory' => $viewingmandatory,
             'sortnameurl' => $sortnameurl->out(false),
             'sortdateurl' => $sortdateurl->out(false),
             'sortascurl' => $sortascurl->out(false),
@@ -191,6 +198,7 @@ class main implements renderable, templatable {
             'mandatoryonly' => $mandatoryonly,
             'viewlist' => $viewlist,
             'viewcard' => $viewcard,
+            'usemandatory' => get_config('local_iomad', 'use_mandatory_courses'),
         ];
     }
 }
