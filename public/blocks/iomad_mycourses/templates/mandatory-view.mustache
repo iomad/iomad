@@ -36,10 +36,10 @@
                         <ul class="list-group" id="{{uniqid}}">
                             <li class="list-group-item course-listitem border-left-0 border-right-0 border-top-0 px-2 rounded-0" data-region="course-content" data-course-id="5">
                                 <div class="row" style="width: 100%;">
-                                    <div class="col-md-2 d-flex align-items-center mb-sm-3 mb-md-0" style="min-width: 50%;">
+                                    <div class="col-md-2 d-flex align-items-center mb-sm-3 mb-md-0" style="min-width: 49%; max-width: 49%;">
                                         <b>{{#str}} course {{/str}}</b>
                                     </div>
-                                    <div class="col-md-2 d-flex align-items-center mb-sm-3 mb-md-0" style="min-width: 50%;">
+                                    <div class="col-md-2 d-flex align-items-center mb-sm-3 mb-md-0" style="min-width: 49%; max-width: 49%;">
                                         <b>{{#str}} status {{/str}}</b>
                                         </div>
                                     </div>
@@ -47,8 +47,8 @@
                             </li>
                             {{#mandatoryview.courses}}
                                 <li class="list-group-item course-listitem border-left-0 border-right-0 border-top-0 px-2 rounded-0" data-region="course-content" data-course-id="5">
-                                    <div class="row">
-                                        <div class="col-md-2 d-flex align-items-center mb-sm-3 mb-md-0">
+                                    <div class="row" style="width: 100%;">
+                                        <div class="col-md-2 d-flex align-items-center mb-sm-3 mb-md-0" style="min-width: 49%; max-width: 49%;">
                                         {{^visible}}
                                             <div class="dimmed_text">
                                         {{/visible}}
@@ -65,7 +65,7 @@
                                                 </div>
                                             {{/visible}}
                                         </div>
-                                        <div class="col-md-9 d-flex flex-column">
+                                        <div class="col-md-9 d-flex flex-column" style="min-width: 49%; max-width: 49%;">
                                             <div class="completion_overview_icon"
                                                  title=
 "{{#str}} timeenrolled, local_report_completion {{/str}} {{timeenrolled}}
@@ -77,6 +77,7 @@
 "
                                             >
                                                 <span class="dot {{status}}"></span>
+                                                &nbsp; {{statusstring}}
                                             </div>
                                         </div>
                                     </div>

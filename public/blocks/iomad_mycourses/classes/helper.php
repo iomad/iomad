@@ -388,6 +388,7 @@ class helper {
             $timestarted = get_string('never');
             $timecompleted = get_string('never');
             $timeexpires = '';
+            $statusstring = get_string('notenrolledstatus', 'block_mycourses');
             if ($latestrecord = $DB->get_record_sql(
                 "SELECT a.*
                  FROM {local_iomad_tracks} a
@@ -409,28 +410,34 @@ class helper {
                 if ($latestrecord->timeenrolled > 0) {
                     $status = 'notcompleted';
                     $timeenrolled = userdate($latestrecord->timeenrolled, $CFG->iomad_date_format);
+                    $statusstring = get_string('notstartedstatus', 'block_mycourses');
                 }
                 if ($latestrecord->timestarted > 0) {
                     $timestarted = userdate($latestrecord->timestarted, $CFG->iomad_date_format);
+                    $statusstring = get_string('notcompletedstatus', 'block_mycourses');
                 }
                 if ($latestrecord->timecompleted > 0) {
                     $status = 'indate';
                     $timecompleted = userdate($latestrecord->timecompleted, $CFG->iomad_date_format);
+                    $statusstring = get_string('completedstatus', 'block_mycourses', $timecompleted);
                 }
                 if (!empty($latestrecord->timeexpires) &&
                     $latestrecord->timeexpires > $now) {
                     $status = 'indate';
                     $timeexpires = userdate($latestrecord->timeexpires, $CFG->iomad_date_format);
+                    $statusstring = get_string('completedstatus', 'block_mycourses', $timecompleted);
                 }
                 if (!empty($latestrecord->timeexpires) &&
                     $latestrecord->timeexpires < $now + $warningduration) {
                     $status = 'expiring';
                     $timeexpires = userdate($latestrecord->timeexpires, $CFG->iomad_date_format);
+                    $statusstring = get_string('expiringstatus', 'block_mycourses', $timeexpires);
                 }
                 if (!empty($latestrecord->timeexpires) &&
                     $latestrecord->timeexpires < $now) {
                     $status = 'expired';
                     $timeexpires = userdate($latestrecord->timeexpires, $CFG->iomad_date_format);
+                    $statusstring = get_string('expiredstatus', 'block_mycourses', $timeexpires);
                 }
             }
 
@@ -446,6 +453,7 @@ class helper {
             $mandatorycourse->timecompleted = $timecompleted;
             $mandatorycourse->timeexpires = $timeexpires;
             $mandatorycourse->status = $status;
+            $mandatorycourse->statusstring = $statusstring;
             $imageurl = course_summary_exporter::get_course_image($mandatorycourse);
             if (empty($imageurl)) {
                 $imageurl = $OUTPUT->get_generated_image_for_id($mandatorycourse->id);
