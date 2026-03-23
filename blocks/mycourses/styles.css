@@ -100,7 +100,6 @@ html.yui3-js-enabled body#page-my-index.format-site.path-my.gecko.dir-ltr.lang-e
 .block-mycourses .completion_overview_icon {
     display: flex;
     align-items: center;
-    justify-content: center;
     height: 100%;
 }
 .block-mycourses .dot {
