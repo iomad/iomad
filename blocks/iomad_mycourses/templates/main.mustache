@@ -136,6 +136,17 @@
                 {{#str}} completedheader, block_iomad_mycourses {{/str}}
             </a>
         </li>
+        {{#usemandatory}}
+            <li class="nav-item">
+                <a class="nav-link {{#viewingmandatory}}active{{/viewingmandatory}}"
+                          href="#mycourses_mandatory_view"
+                        role="tab"
+                        data-toggle="tab"
+                        aria-selected="{{#viewingmandatory}}true{{/viewingmandatory}}{{^viewingmandatory}}false{{/viewingmandatory}}">
+                    {{#str}} mandatoryheader, block_iomad_mycourses {{/str}}
+                </a>
+            </li>
+        {{/usemandatory}}
     </ul>
     <div class="tab-content content-centred">
         <div role="tabpanel" class="tab-pane {{#viewingavailable}}active{{/viewingavailable}}" id="iomad_mycourses_available_view">
@@ -162,6 +173,11 @@
                 {{> block_iomad_mycourses/completed-card-view }}
             {{/viewcard}}
         </div>
+        {{#usemandatory}}
+            <div role="tabpanel" class="tab-pane {{#viewingmandatory}}active{{/viewingmandatory}}" id="mycourses_mandatory_view">
+                {{> block_iomad_mycourses/mandatory-view }}
+            </div>
+        {{/usemandatory}}
     </div>
 </div>
 {{#js}}

@@ -1,5 +1,5 @@
 /**
- * @package   block_iomad_mycourses
+ * @package   block-iomad-mycourses
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -17,29 +17,29 @@ html.yui3-js-enabled body#page-my-index.format-site.path-my.gecko.dir-ltr.lang-e
     width: 7rem!important;
 }
 
-.block_iomad_mycourses .mycourselisting .courseimage {
+.block-iomad-mycourses .mycourselisting .courseimage {
     width: 10%;
     float:left;
     padding-right: 10px;
 }
 
-.block_iomad_mycourses .mycourselisting .mycoursedetails {
+.block-iomad-mycourses .mycourselisting .mycoursedetails {
     float: right;
     width: 90%;
 }
 
-.block_iomad_mycourses .imgresponsive {
+.block-iomad-mycourses .imgresponsive {
     max-width: 100%;
     height: auto;
     width: auto;
 }
 
-.block_iomad_mycourses hr, .block_iomad_mycourses .mycourselisting, .block_iomad_mycourses .tab-content .tab-content{
+.block-iomad-mycourses hr, .block-iomad-mycourses .mycourselisting, .block-iomad-mycourses .tab-content .tab-content{
     padding-bottom: 5px;
     padding-top: 5px;
 }
 
-.block_iomad_mycourses .tab-content {
+.block-iomad-mycourses .tab-content {
     overflow: visible;
     display: inline-block;
     width: 100%;
@@ -50,20 +50,20 @@ html.yui3-js-enabled body#page-my-index.format-site.path-my.gecko.dir-ltr.lang-e
     padding-top: 10px;
 }
 
-.block_iomad_mycourses .finalresults {
+.block-iomad-mycourses .finalresults {
     font-weight: bold;
     padding-top: 10px;
 }
 
-.block_iomad_mycourses .empty-placeholder-image-lg {
+.block-iomad-mycourses .empty-placeholder-image-lg {
     width: 100px;
     height: 100px;
 }
 
-.block_iomad_mycourses .ml-auto.mt-auto.w-50.p-t-1 {
+.block-iomad-mycourses .ml-auto.mt-auto.w-50.p-t-1 {
     float: left;
 }
-.block_iomad_mycourses .certificatediv {
+.block-iomad-mycourses .certificatediv {
     clear: both;
 }
 
@@ -79,19 +79,54 @@ html.yui3-js-enabled body#page-my-index.format-site.path-my.gecko.dir-ltr.lang-e
 .block-iomad-mycourses .nav-tabs {
     padding-top: 15px;
 }
-.block_iomad_mycourses .card-img {
+.block-iomad-mycourses .card-img {
     height: 7rem;
     background-position: center;
     background-size: cover;
 }
-.block_iomad_mycourses .list-image {
+.block-iomad-mycourses .list-image {
     height: 5rem;
     width: 20rem;
     background-position: center;
     background-size: cover;
 }
 
-.block_iomad_mycourses .certificatediv img {
+.block-iomad-mycourses .certificatediv img {
     height: 36px;
     width: 36px;
+}
+
+/** Mandatory tab styling **/
+.block-iomad-mycourses .completion_overview_icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+.block-iomad-mycourses .dot {
+  height: 25px;
+  width: 25px;
+  background-color: #bbb;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.block-iomad-mycourses .notenrolled {
+  background-color: #bbb;
+}
+
+.block-iomad-mycourses .notcompleted {
+  background-color: darkblue;
+}
+
+.block-iomad-mycourses .expired {
+  background-color: darkred;
+}
+
+.block-iomad-mycourses .indate {
+  background-color: darkgreen;
+}
+
+.block-iomad-mycourses .expiring {
+  background-color: darkorange;
 }

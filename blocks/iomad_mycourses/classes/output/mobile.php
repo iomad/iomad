@@ -42,7 +42,7 @@ class mobile {
      * @return array HTML, javascript and other data
      */
     public static function mobile_view_block($args) {
-        global $PAGE, $OUTPUT;
+        global $CFG, $PAGE, $OUTPUT;
 
         $args = (object) $args;
         $page = isset($args->page) ? $args->page : 'inprogress';
@@ -57,6 +57,12 @@ class mobile {
         $pages[] = ['value' => 'completed',
             'label' => get_string('completedheader', 'block_iomad_mycourses'),
             'selected' => (($page == 'completed') ? '1' : '0')];
+        if (get_config('local_iomad', 'use_mandatory_courses')) {
+        $pages[] = ['value' => 'mandatory',
+            'label' => get_string('mandatoryheader', 'block_iomad_mycourses'),
+            'selected' => (($page == 'mandatory') ? '1' : '0')];
+
+        }
         $data['pages'] = $pages;
 
         $renderer = $PAGE->get_renderer('block_iomad_mycourses');
@@ -64,6 +70,7 @@ class mobile {
         $myinprogress = helper::get_my_inprogress($sort, $dir);
         $myavailable = helper::get_my_available($sort, $dir);
         $myarchive = helper::get_my_archive($sort, $dir);
+        $mymandatory = helper::get_my_mandatory($sort, $dir);
 
         switch ($page) {
             case 'available':
@@ -79,6 +86,13 @@ class mobile {
                 $data['pagecontent'] = $completedview->export_for_template($renderer);
                 $data['nocourses'] = get_string('nocompleted', 'block_iomad_mycourses');
                 $data['selectlabel'] = get_string('completedheader', 'block_iomad_mycourses');
+                break;
+
+            case 'mandatory':
+                $mandatoryview = new mandatory_view($mymandatory);
+                $data['pagecontent'] = $mandatoryview->export_for_template($renderer);
+                $data['nocourses'] = get_string('nomandatory', 'block_iomad_mycourses');
+                $data['selectlabel'] = get_string('mandatoryheader', 'block_iomad_mycourses');
                 break;
 
             case 'inprogress':
