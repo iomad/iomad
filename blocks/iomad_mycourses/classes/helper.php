@@ -388,7 +388,7 @@ class helper {
             $timestarted = get_string('never');
             $timecompleted = get_string('never');
             $timeexpires = '';
-            $statusstring = get_string('notenrolledstatus', 'block_mycourses');
+            $statusstring = get_string('notenrolledstatus', 'block_iomad_mycourses');
             if ($latestrecord = $DB->get_record_sql(
                 "SELECT a.*
                  FROM {local_iomad_tracks} a
@@ -410,34 +410,34 @@ class helper {
                 if ($latestrecord->timeenrolled > 0) {
                     $status = 'notcompleted';
                     $timeenrolled = userdate($latestrecord->timeenrolled, $CFG->iomad_date_format);
-                    $statusstring = get_string('notstartedstatus', 'block_mycourses');
+                    $statusstring = get_string('notstartedstatus', 'block_iomad_mycourses');
                 }
                 if ($latestrecord->timestarted > 0) {
                     $timestarted = userdate($latestrecord->timestarted, $CFG->iomad_date_format);
-                    $statusstring = get_string('notcompletedstatus', 'block_mycourses');
+                    $statusstring = get_string('notcompletedstatus', 'block_iomad_mycourses');
                 }
                 if ($latestrecord->timecompleted > 0) {
                     $status = 'indate';
                     $timecompleted = userdate($latestrecord->timecompleted, $CFG->iomad_date_format);
-                    $statusstring = get_string('completedstatus', 'block_mycourses', $timecompleted);
+                    $statusstring = get_string('completedstatus', 'block_iomad_mycourses', $timecompleted);
                 }
                 if (!empty($latestrecord->timeexpires) &&
                     $latestrecord->timeexpires > $now) {
                     $status = 'indate';
                     $timeexpires = userdate($latestrecord->timeexpires, $CFG->iomad_date_format);
-                    $statusstring = get_string('completedstatus', 'block_mycourses', $timecompleted);
+                    $statusstring = get_string('completedstatus', 'block_iomad_mycourses', $timecompleted);
                 }
                 if (!empty($latestrecord->timeexpires) &&
                     $latestrecord->timeexpires < $now + $warningduration) {
                     $status = 'expiring';
                     $timeexpires = userdate($latestrecord->timeexpires, $CFG->iomad_date_format);
-                    $statusstring = get_string('expiringstatus', 'block_mycourses', $timeexpires);
+                    $statusstring = get_string('expiringstatus', 'block_iomad_mycourses', $timeexpires);
                 }
                 if (!empty($latestrecord->timeexpires) &&
                     $latestrecord->timeexpires < $now) {
                     $status = 'expired';
                     $timeexpires = userdate($latestrecord->timeexpires, $CFG->iomad_date_format);
-                    $statusstring = get_string('expiredstatus', 'block_mycourses', $timeexpires);
+                    $statusstring = get_string('expiredstatus', 'block_iomad_mycourses', $timeexpires);
                 }
             }
 
