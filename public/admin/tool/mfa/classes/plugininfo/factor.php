@@ -108,7 +108,6 @@ class factor extends \core\plugininfo\base {
      */
     public static function get_factor(string $name): object|bool {
         $factors = \core_plugin_manager::instance()->get_plugins_of_type('factor');
-
         foreach ($factors as $factor) {
             if ($name == $factor->name) {
                 $classname = '\\factor_'.$factor->name.'\\factor';
@@ -141,6 +140,16 @@ class factor extends \core\plugininfo\base {
 
     #[\Override]
     public static function enable_plugin(string $pluginname, int $enabled): bool {
+        global $CFG;
+
+        // IOMAD
+        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        if (!empty($companyid)) {
+            $postfix = "_$companyid";
+        } else {
+            $postfix = "";
+        }
         $enabledfactors = array_map(fn($f) => $f->name, self::get_enabled_factors());
         $currentlyenabled = in_array($pluginname, $enabledfactors);
 
@@ -154,7 +163,7 @@ class factor extends \core\plugininfo\base {
         }
 
         // Execute the configuration and action based on the determined action.
-        \tool_mfa\manager::set_factor_config(['enabled' => $enabled], 'factor_' . $pluginname);
+        \tool_mfa\manager::set_factor_config(['enabled' . $postfix => $enabled], 'factor_' . $pluginname);
         \tool_mfa\manager::do_factor_action($pluginname, $action);
 
         \core\session\manager::gc(); // Remove stale sessions.
