@@ -766,7 +766,7 @@ if (empty($courseid)) {
                   $showsuspended AS showsuspended,
                   lit.companyid AS companyid,
                   ic.licensed AS islicensed";
-    $fromsql = "{local_iomad_track} lit JOIN {iomad_courses} ic ON (lit.courseid = ic.courseid) $mandatorysql";
+    $fromsql = "{local_iomad_track} lit LEFT JOIN {iomad_courses} ic ON (lit.courseid = ic.courseid) $mandatorysql";
     $sqlparams = ['companyid' => $companyid] + $searchparams;
 
     $wheresql = "lit.companyid = :companyid $coursesearchsql GROUP BY lit.courseid, lit.coursename, lit.companyid, ic.licensed";
@@ -1022,7 +1022,7 @@ if (empty($courseid)) {
                 JOIN {local_iomad_track} lit ON (u.id = lit.userid)
                 JOIN {company_users} cu ON (u.id = cu.userid AND lit.userid = cu.userid AND lit.companyid = cu.companyid)
                 JOIN {department} d ON (cu.departmentid = d.id)
-                JOIN {iomad_courses} ic ON (lit.courseid = ic.courseid)";
+                LEFT JOIN {iomad_courses} ic ON (lit.courseid = ic.courseid)";
     $wheresql = $searchinfo->sqlsearch .
                 " AND u.deleted = 0 $suspendedsql $educatorsql $departmentsql $companysql $datesql $coursesql $validsql";
     $sqlparams = $sqlparams + $searchinfo->searchparams;
