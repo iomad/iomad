@@ -236,10 +236,15 @@ if (empty($iid)) {
                                             $formdata->encoding,
                                             $formdata->delimiter_name,
                                             'validate_user_upload_columns');
-        if (!$columns = $cir->get_columns()) {
-            throw new moodle_exception('cannotreadtmpfile', 'error', $returnurl);
+        // Check we got something.
+        if ($readcount === false) {
+            throw new \moodle_exception('csvfileerror', 'tool_uploadcourse', $linkurl, $cir->get_error());
+        } else if ($readcount == 0) {
+            throw new \moodle_exception('csvemptyfile', 'error', $linkurl, $cir->get_error());
         }
 
+        // Clear down the raw file content as we no longer need it.
+        $columns = $cir->get_columns();
         unset($content);
 
         // Keep track of new users.
@@ -277,12 +282,6 @@ if (empty($iid)) {
         if (!$company->check_usercount($newusercount)) {
             $maxusers = $company->get('maxusers');
             throw new moodle_exception('maxuserswarningplural', 'block_iomad_company_admin', $returnurl, $maxusers);
-        }
-
-        if ($readcount === false) {
-            throw new moodle_exception('csvloaderror', '', $returnurl);
-        } else if ($readcount == 0) {
-            throw new moodle_exception('csvemptyfile', 'error', $returnurl);
         }
     } else {
         $PAGE->set_heading($linktext);

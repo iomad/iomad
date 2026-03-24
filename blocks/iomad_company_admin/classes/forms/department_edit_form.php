@@ -75,7 +75,7 @@ class department_edit_form extends company_moodleform {
         $this->output = $output;
         if (!empty($departmentid)) {
             $this->department = $DB->get_record('local_iomad_company_departments', ['id' => $departmentid]);
-            $this->parentid = $this->department->parent;
+            $this->parentid = $this->department->parentid;
         } else {
             $this->parentid = 0;
         }

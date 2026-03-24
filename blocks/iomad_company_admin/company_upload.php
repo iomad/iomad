@@ -129,11 +129,14 @@ if (empty($iid)) {
                                             'validate_uploadcompany_columns');
 
         // Check we got something.
-        if (!$columns = $cir->get_columns()) {
-            throw new moodle_exception('cannotreadtmpfile', 'error', $linkurl);
+        if ($readcount === false) {
+            throw new \moodle_exception('csvfileerror', 'tool_uploadcourse', $linkurl, $cir->get_error());
+        } else if ($readcount == 0) {
+            throw new \moodle_exception('csvemptyfile', 'error', $linkurl, $cir->get_error());
         }
 
         // Clear down the raw file content as we no longer need it.
+        $columns = $cir->get_columns();
         unset($content);
 
         // Display the page.

@@ -89,7 +89,7 @@ if ($importform->is_cancelled()) {
     if ($jsondecode->name != $parentlevel->name ||
         $jsondecode->shortname != $parentlevel->shortname) {
         // Doesn't match.  Set an error.
-        $error = get_string('invaliddepartmentjson', 'block_iomad_company_admin');
+        $error = get_string('invaliddepartmentjson', 'block_iomad_company_admin', $parentlevel);
     } else {
         // Import the departments.
         company::import_departments($companyid, $parentlevel, $jsondecode, true);
