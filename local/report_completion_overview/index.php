@@ -102,7 +102,7 @@ if ($dir == 'ASC') {
 if ($sort == "name") {
     $sort = 'd.' . $sort;
 } else if ($sort == "fullname") {
-    $sort = 'c.' . $sort;
+    $sort = 'lit.coursename';
 } else {
     $sort = 'u.' . $sort;
 }
@@ -238,7 +238,7 @@ if (!empty($allcompanycourses)) {
     [$insql, $inparams] = $DB->get_in_or_equal(array_keys($allcompanycourses),
                                                SQL_PARAMS_NAMED,
                                                'iccids');
-    $courselistsql = " AND ic.courseid {$insql}";
+    $courselistsql = " AND lit.courseid {$insql}";
     $coursesearchparams = $coursesearchparams + $inparams;
 }
 if ($showexpiryonly) {
@@ -247,7 +247,7 @@ if ($showexpiryonly) {
 
 // Course name search.
 if (!empty($coursesearch)) {
-    $courselistsql .= " AND " . $DB->sql_like('c.fullname', ':coursename', false, false);
+    $courselistsql .= " AND " . $DB->sql_like('lit.coursename', ':coursename', false, false);
     $coursesearchparams['coursename'] = "%" . $coursesearch . "%";
 }
 
@@ -285,7 +285,7 @@ if (!empty($usedfields)) {
     [$insql, $inparams] = $DB->get_in_or_equal(array_keys($fieldcourseids),
                                                SQL_PARAMS_NAMED,
                                                'cfcids');
-    $courselistsql .= " AND c.id {$insql}";
+    $courselistsql .= " AND lit.courseid {$insql}";
     $coursesearchparams = $coursesearchparams + $inparams;
 }
 
@@ -293,7 +293,7 @@ if (!empty($usedfields)) {
 $enrolledonlysql = "";
 if (!empty($showenrolledonly)) {
     $enrolledonlysql =
-    "AND c.id IN (
+    "AND lit.courseid IN (
          SELECT lit.courseid
          FROM {local_iomad_track} lit
          JOIN {company_users} cu ON (
@@ -305,7 +305,7 @@ if (!empty($showenrolledonly)) {
              AND lit.companyid = d.company
              AND cu.departmentid = d.id
          )
-         WHERE 1 = 1
+         WHERE cu.educator = 0
          $departmentsql
      )";
 }
@@ -314,19 +314,21 @@ if (!empty($showenrolledonly)) {
 $mandatorysql = "";
 if (!empty($mandatoryonly)) {
     $mandatorysql = "JOIN {company_course_options} cca ON (
-                         cca.courseid = ic.courseid
-                         AND cca.courseid = c.id
+                         cca.courseid = lit.courseid
                          AND cca.mandatory = 1)";
 }
 
 // Get all courses if we haven't been passed any.
+$coursesearchparams['companyid'] = $companyid;
 if (empty($courses)) {
-    $courses = $DB->get_records_sql("SELECT ic.courseid, c.fullname FROM {iomad_courses} ic
-                                     JOIN {course} c ON (ic.courseid = c.id)
+    $courses = $DB->get_records_sql("SELECT DISTINCT lit.courseid, lit.coursename AS fullname
+                                     FROM {local_iomad_track} lit
+                                     LEFT JOIN {iomad_courses} ic ON (lit.courseid = ic.courseid)
                                      $mandatorysql
-                                     WHERE 1=1 $courselistsql
+                                     WHERE lit.companyid = :companyid
+                                     $courselistsql
                                      $enrolledonlysql
-                                     ORDER BY c.fullname", $coursesearchparams);
+                                     ORDER BY lit.coursename", $coursesearchparams);
 }
 
 // Start defining expire courses.
@@ -428,11 +430,11 @@ $sorturl = $baseurl;
 $sorturl->remove_params(['page']);
 // Set the sort for the headers.
 if (!$bycourse) {
-    $sortparams['sort'] = 'firstname';
+    $sortparams['sort'] = 'u.firstname';
 } else {
-    $sortparams['sort'] = 'fullname';
+    $sortparams['sort'] = 'lit.coursename';
 }
-if ($sort == 'c.fullnamename') {
+if ($sort == 'lit.coursename') {
     $sortparams['dir'] = $reversedir;
 } else {
     $sortparams['dir'] = $dir;
@@ -528,7 +530,7 @@ if (!$bycourse) {
         if (!$download) {
             $headers[] = html_writer::tag(
                 'a',
-                $allcompanycourses[$courseid],
+                format_string($allcompanycourses[$courseid]),
                 [
                     'href' => new moodle_url(
                         $CFG->wwwroot . '/local/report_completion/index.php',
@@ -663,7 +665,7 @@ if (!$bycourse) {
                 }
                 $usercourses[$courseid] = $comprecord;
             } else {
-                $usercourses[$courseid] = (object) ['coursename' => $allcompanycourses[$courseid],
+                $usercourses[$courseid] = (object) ['coursename' => format_string($allcompanycourses[$courseid]),
                                                     'courseid' => $courseid,
                                                     'timestarted' => null,
                                                     'timeenrolled' => null,
@@ -700,7 +702,7 @@ if (!$bycourse) {
                 if ($indate = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
                                                     WHERE userid = :userid
                                                     AND courseid = :courseid
-                                                            AND companyid = :companyid
+                                                    AND companyid = :companyid
                                                     AND timecompleted > :time
                                                     ORDER BY id DESC",
                                                    ['userid' => $userid,
@@ -728,7 +730,7 @@ if (!$bycourse) {
                 }
                 $coursesusers[$userid] = $comprecord;
             } else {
-                $coursesusers[$userid] = (object) ['coursename' => $allcompanycourses[$courseid],
+                $coursesusers[$userid] = (object) ['coursename' => format_string($allcompanycourses[$courseid]),
                                                     'courseid' => $courseid,
                                                     'timestarted' => null,
                                                     'timeenrolled' => null,
