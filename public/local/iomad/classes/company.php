@@ -59,7 +59,7 @@ use core\event\{
     user_enrolment_created,
     user_deleted,
 };
-use core\output\notification;
+use core\notification;
 use course_enrolment_manager;
 use iomad_commerce;
 use local_iomad\custom_context\context_company;
@@ -2201,7 +2201,14 @@ class company {
             $newdepartment->shortname = $importtree->shortname;
             $newdepartment->companyid = $companyid;
             $newdepartment->parentid = $currentdepartment->id;
-            $newdepartment->id = $DB->insert_record('local_iomad_company_departments', $newdepartment);
+
+            // Sanity checking.
+            if (!preg_match('/^[A-Za-z0-9_]+$/', trim($newdepartment->shortname))) {
+                notification::warning(get_string('departmentnotimported', 'block_iomad_company_admin', $newdepartment));
+                return;
+            } else {
+                $newdepartment->id = $DB->insert_record('local_iomad_company_departments', $newdepartment);
+            }
         } else {
             // Already created so pass it.
             $newdepartment = $currentdepartment;

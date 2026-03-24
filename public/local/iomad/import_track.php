@@ -158,10 +158,15 @@ if (!empty($fileimport)) {
                                                 $importdata->delimiter_name,
                                                 'validate_uploadcompletion_columns');
 
-            if (!$columns = $cir->get_columns()) {
-                throw new moodle_exception('cannotreadtmpfile', 'error', $returnurl);
+            // Check we got something.
+            if ($readcount === false) {
+                throw new \moodle_exception('csvfileerror', 'tool_uploadcourse', $linkurl, $cir->get_error());
+            } else if ($readcount == 0) {
+                throw new \moodle_exception('csvemptyfile', 'error', $linkurl, $cir->get_error());
             }
 
+            // Clear down the raw file content as we no longer need it.
+            $columns = $cir->get_columns();
             unset($content);
 
             echo $OUTPUT->header();
