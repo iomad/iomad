@@ -204,7 +204,7 @@ border-radius: 10px;
 
 #page-blocks-iomad_company_admin-uploaduser #fitem_id_userdepartment, #page-blocks-iomad_company_admin-uploaduser #id_category_1 > div > div.dep_tree {
     display: none;
-} 
+}
 .iomadlink_container {
   background-color: #F7F7F7;
   border: 1px solid #DDD;
@@ -279,7 +279,7 @@ border-radius: 10px;
  #page-blocks-iomad_company_admin-iomad_courses_form .reporttablecontrolscontrol div.col-md-9.form-inline.felement {
      display: contents
  }
- 
+
   #page-blocks-iomad_company_admin-iomad_courses_form .reporttablecontrolscontrol  div.col-md-3 {
       display: none
   }
@@ -358,7 +358,7 @@ border-radius: 10px;
     border: solid white;
     border-width: 0 3px 3px 0;
   }
-  
+
 .tree_dept_name {
     display: inline-block;
     width: 100%;
@@ -449,4 +449,13 @@ border-radius: 10px;
 div.mb-3.fitem.dangerbutton .btn-primary {
     background-color: #ca3120;
     border-color: #ca3120;
+}
+
+#page-blocks-iomad_company_admin-index #region-main .col-md-12 {
+    max-width: 50%;
+}
+
+#page-blocks-iomad_company_admin-index #region-main .col-md-12 .singlebutton,
+.block_iomad_company_admin .col-md-12 .singlebutton {
+    float: right;
 }
