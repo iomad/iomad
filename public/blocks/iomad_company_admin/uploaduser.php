@@ -469,7 +469,7 @@ if (!empty($cancelled)) {
             }
 
             // Get username, first/last name now - we need them in templates!!
-            if ($optype == UU_UPDATE) {
+            if ($optype == UU_UPDATE || !empty($user->deleted)) {
                 // When updating only username is required.
                 if (!isset($user->username)) {
                     $upt->track('status', get_string('missingfield', 'error', 'username'), 'error');
