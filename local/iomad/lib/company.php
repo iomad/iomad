@@ -2302,7 +2302,14 @@ class company {
             $newdepartment->shortname = $importtree->shortname;
             $newdepartment->company = $companyid;
             $newdepartment->parent = $currentdepartment->id;
-            $newdepartment->id = $DB->insert_record('department', $newdepartment);
+
+            // Sanity checking.
+            if (!preg_match('/^[A-Za-z0-9_]+$/', trim($newdepartment->shortname))) {
+                notification::warning(get_string('departmentnotimported', 'block_iomad_company_admin', $newdepartment));
+                return;
+            } else {
+                $newdepartment->id = $DB->insert_record('department', $newdepartment);
+            }
         } else {
             // Already created so pass it.
             $newdepartment = $currentdepartment;
