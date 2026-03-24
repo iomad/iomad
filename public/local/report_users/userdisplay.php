@@ -476,14 +476,8 @@ if ($validonly) {
 // Only show entries tied to my current company.
 $companysql = " AND lit.companyid = :mycompanyid";
 $sqlparams['mycompanyid'] = $companyid;
-
-$companycourses = $company->get_menu_courses(true);
-if (empty($companycourses)) {
-    $companycourses = [0];
-}
-[$courseinsql, $courseparams] = $DB->get_in_or_equal(array_keys($companycourses), SQL_PARAMS_NAMED, 'compcourse');
 $wheresql = " lit.userid = :userid $companysql
-              AND lit.courseid $courseinsql $validsql";
+              AND lit.courseid $validsql";
 
 // Set up the headers for the form.
 $headers = [get_string('course', 'local_report_completion'),
@@ -590,7 +584,7 @@ if (!$table->is_downloading()) {
     }
 }
 
-$table->set_sql($selectsql, $fromsql, $wheresql, $sqlparams + $courseparams);
+$table->set_sql($selectsql, $fromsql, $wheresql, $sqlparams);
 $table->define_baseurl($baseurl);
 $table->define_columns($columns);
 $table->define_headers($headers);

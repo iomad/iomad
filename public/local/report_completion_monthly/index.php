@@ -258,12 +258,15 @@ $allcompanycourses = $company->get_menu_courses(true, false, false, false, false
 $courselistsql = "";
 $coursesearchparams = [];
 if (!empty($allcompanycourses)) {
-    $courselistsql = " AND ic.courseid IN (" . implode(',', array_keys($allcompanycourses)) . ")";
+    [$insql, $coursesearchparams] = $DB->get_in_or_equal(array_keys($allcompanycourses),
+                                                         SQL_PARAMS_NAMED,
+                                                         'ccids');
+    $courselistsql = " AND lit.courseid {$insql}";
 }
 
 // Course name search.
 if (!empty($coursesearch)) {
-    $courselistsql .= " AND " . $DB->sql_like('c.fullname', ':coursename', false, false);
+    $courselistsql .= " AND " . $DB->sql_like('lit.coursename', ':coursename', false, false);
     $coursesearchparams['coursename'] = "%" . $coursesearch . "%";
 }
 
@@ -298,13 +301,21 @@ if (!empty($usedfields)) {
     if (empty($fieldcourseids)) {
         $fieldcourseids[0] = "We didn't find any courses";
     }
-    $courselistsql .= " AND c.id IN (" . join(',', array_keys($fieldcourseids)) . ")";
+    [$insql, $inparams] = $DB->get_in_or_equal(array_keys($fieldcourseids),
+                                               SQL_PARAMS_NAMED,
+                                               'fcids');
+    $courselistsql .= " AND lit.courseid {$insql}";
+    $coursesearchparams = $coursesearchparams + $inparams;
 }
-
-$courselist = $DB->get_records_sql("SELECT ic.courseid, c.fullname FROM {local_iomad_courses} ic
-                                    JOIN {course} c ON (ic.courseid = c.id)
-                                    WHERE 1=1 $courselistsql
-                                    ORDER BY c.fullname", $coursesearchparams);
+$coursesearchparams['companyid'] = $companyid;
+$courselist = $DB->get_records_sql("SELECT DISTINCT lit.courseid, lit.coursename
+                                    FROM {local_iomad_tracks} lit
+                                    LEFT JOIN {course} c ON (lit.courseid = c.id)
+                                    WHERE
+                                    lit.companyid = :companyid
+                                    $courselistsql
+                                    ORDER BY lit.coursename",
+                                   $coursesearchparams);
 
 
 // Set up the filter forms.
@@ -349,24 +360,33 @@ $returnurl = $CFG->wwwroot."/local/report_completion_monthly/index.php";
 $currentdepartment = company::get_departmentbyid($departmentid);
 $showdepartments = company::get_subdepartments_list($currentdepartment);
 $showdepartments[$departmentid] = $departmentid;
-$departmentsql = " AND cu.departmentid IN (" . implode(',', array_keys($showdepartments)) . ")";
+[$insql, $sqlparams] = $DB->get_in_or_equal(array_keys($showdepartments),
+                                            SQL_PARAMS_NAMED,
+                                            'deptids');
+$departmentsql = " AND cu.departmentid {$insql}";
 
 // All companies?
+$companysql = "";
 if ($parentslist = $company->get_parent_companies_recursive()) {
+    [$insql, $inparams] = $DB->get_in_or_equal(array_keys($parentslist),
+                                               SQL_PARAMS_NAMED,
+                                               'pcids');
     $companysql = " AND u.id NOT IN (
                     SELECT userid FROM {local_iomad_company_users}
                     WHERE managertype = 1
-                    AND companyid IN (" . implode(',', array_keys($parentslist)) ."))";
-} else {
-    $companysql = "";
+                    AND companyid {$insql})";
+    $sqlparams = $sqlparams + $inparams;
 }
 
 // Filter courses dependant on the input to the course name search.
 $courseids = array_map(fn($i)=> $i->courseid, $courselist);
+[$insql, $inparams] = $DB->get_in_or_equal(array_keys($courseids),
+                                           SQL_PARAMS_NAMED,
+                                           'litcids');
+$coursesql = " AND lit.courseid {$insql}";
+$sqlparams = $sqlparams + $inparams;
 if ($courseid != 1) {
-    $coursesql = " AND lit.courseid = :courseid AND lit.courseid IN (" . join(',', array_keys($courseids)) . ") ";
-} else {
-    $coursesql = " AND lit.courseid IN (" . join(',', array_keys($courseids)) . ") ";
+    $coursesql = " AND lit.courseid = :courseid " . $coursesql;
 }
 
 // Deal with completion times.
@@ -384,14 +404,22 @@ if (!empty($compto)) {
 $selectsql = "DISTINCT lit.id,lit.timecompleted";
 $fromsql = "{user} u
             JOIN {local_iomad_tracks} lit ON (u.id = lit.userid)
-            JOIN {local_iomad_company_users} cu ON (u.id = cu.userid AND lit.userid = cu.userid AND lit.companyid = cu.companyid)";
-$wheresql = $searchinfo->sqlsearch . " AND cu.companyid = :companyid
+            JOIN {local_iomad_company_users} cu ON (
+                u.id = cu.userid
+                AND lit.userid = cu.userid
+                AND lit.companyid = cu.companyid
+            )";
+$wheresql = $searchinfo->sqlsearch .
+          " AND cu.companyid = :companyid
             AND lit.timecompleted IS NOT NULL
+            AND cu.educator = 0
             $departmentsql
             $companysql
             $coursesql
             $timesql";
-$sqlparams = ['companyid' => $companyid, 'courseid' => $courseid] + $searchinfo->searchparams;
+$sqlparams['companyid'] = $companyid;
+$sqlparams['courseid'] = $courseid;
+$sqlparams = $sqlparams + $searchinfo->searchparams;
 
 // Get the full list of completions.
 $results = $DB->get_records_sql("SELECT $selectsql FROM $fromsql WHERE $wheresql", $sqlparams);
