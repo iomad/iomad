@@ -178,10 +178,8 @@ class completion_table extends table_sql {
     public function col_finalscore($row) {
         global $CFG, $DB, $USER;
 
-        if ($DB->get_record_sql("SELECT * FROM {local_iomad_courses}
-                                 WHERE courseid = :courseid
-                                 AND hasgrade = 1",
-                                ['courseid' => $row->courseid])) {
+        if (!$DB->record_exists('local_iomad_courses', ['courseid' => $row->courseid]) ||
+            $DB->record_exists('local_iomad_courses', ['courseid' => $row->courseid, 'hasgrade' => 1])) {
             if ($this->is_downloading() || empty($USER->editing)) {
                 if (!empty($row->finalscore) && !empty($row->timeenrolled)) {
                     return round($row->finalscore, get_config('local_iomad', 'report_grade_places'))."%";
