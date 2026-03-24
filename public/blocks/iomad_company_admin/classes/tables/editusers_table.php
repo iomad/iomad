@@ -67,7 +67,7 @@ class editusers_table extends table_sql {
         if (!empty($row->suspended) ||
             !empty($row->companysuspended)) {
             $return = html_writer::start_tag('span', ['class' => 'dimmed_text']);
-        } else  {
+        } else {
             $return = "";
         }
 
@@ -276,7 +276,7 @@ class editusers_table extends table_sql {
                 $usertypeselect
             );
 
-            $returnstr .=  $OUTPUT->render_from_template(
+            $returnstr .= $OUTPUT->render_from_template(
                 'core/inplace_editable',
                 $editable->export_for_template($OUTPUT)
             );
@@ -418,16 +418,15 @@ class editusers_table extends table_sql {
                                 $ajaxurl,
                                 null,
                                 get_string('delete'),
-                            [
-                                'data-action' => 'show-deleteuserprompt',
-                                'data-username' => fullname(
-                                    $row,
-                                    has_capability('moodle/site:viewfullnames', $this->get_context())
-                                ),
-                                'data-userid' => $row->id,
-                                'data-companyid' => $companyid,
-                            ]
-
+                                [
+                                    'data-action' => 'show-deleteuserprompt',
+                                    'data-username' => fullname(
+                                        $row,
+                                        has_capability('moodle/site:viewfullnames', $this->get_context())
+                                    ),
+                                    'data-userid' => $row->id,
+                                    'data-companyid' => $companyid,
+                                ]
                             );
                         }
                         if (iomad::has_capability('block/iomad_company_admin:suspenduser', $companycontext)) {
@@ -443,16 +442,16 @@ class editusers_table extends table_sql {
                                 $ajaxurl,
                                 null,
                                 $actionstring,
-                            [
-                                'data-action' => 'show-suspenduserprompt',
-                                'data-username' => fullname(
-                                    $row,
-                                    has_capability('moodle/site:viewfullnames', $this->get_context())
-                                ),
-                                'data-userid' => $row->id,
-                                'data-suspended' => $suspended,
-                                'data-companyid' => $companyid,
-                            ]
+                                [
+                                    'data-action' => 'show-suspenduserprompt',
+                                    'data-username' => fullname(
+                                        $row,
+                                        has_capability('moodle/site:viewfullnames', $this->get_context())
+                                    ),
+                                    'data-userid' => $row->id,
+                                    'data-suspended' => $suspended,
+                                    'data-companyid' => $companyid,
+                                ]
                             );
                         }
                     }
