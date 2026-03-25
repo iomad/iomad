@@ -210,7 +210,20 @@ foreach ($templates as $template) {
     $sharedselect = new single_select($sharedurl, 'shared', $sharedselectbutton, $iomaddetails->shared);
     $sharedselect->label = '';
     $sharedselect->formid = 'sharedselect'.$template->id;
-    $sharedselectoutput = html_writer::tag('div', $OUTPUT->render($sharedselect), ['id' => 'shared_selector'.$template->id]);
+    if (!empty($USER->editing)) {
+        $sharedselectoutput = html_writer::tag(
+            'div',
+            $OUTPUT->render($sharedselect),
+            ['id' => 'shared_selector' . $template->id]
+        );
+    } else {
+        $sharedselectoutput = html_writer::tag(
+            'div',
+            $sharedselectbutton[$iomaddetails->shared],
+            ['id' => 'shared_selector' . $template->id]
+        );
+    }
+
     if ($tablecompany = $DB->get_records_sql("SELECT c.shortname
                                               FROM {local_iomad_companies} c
                                               JOIN {local_iomad_company_comp_templates} cct ON (c.id = cct.companyid)
