@@ -212,7 +212,19 @@ foreach ($frameworks as $framework) {
     $sharedselect = new single_select($sharedurl, 'shared', $sharedselectbutton, $iomaddetails->shared);
     $sharedselect->label = '';
     $sharedselect->formid = 'sharedselect'.$framework->id;
-    $sharedselectoutput = html_writer::tag('div', $OUTPUT->render($sharedselect), ['id' => 'shared_selector'.$framework->id]);
+    if (!empty($USER->editing)) {
+        $sharedselectoutput = html_writer::tag(
+            'div',
+            $OUTPUT->render($sharedselect),
+            ['id' => 'shared_selector' . $framework->id]
+        );
+    } else {
+        $sharedselectoutput = html_writer::tag(
+            'div',
+            $sharedselectbutton[$iomaddetails->shared],
+            ['id' => 'shared_selector' . $framework->id]
+        );
+    }
     $companyname = "";
     if ($tablecompany = $DB->get_records_sql(
         "SELECT c.shortname
