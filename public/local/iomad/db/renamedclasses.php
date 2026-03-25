@@ -59,4 +59,7 @@ $renamedclasses = [
     'potential_user_course_selector' => 'local_iomad\user_selector\potential_course',
     'potential_user_license_course_selector' => 'local_iomad\user_selector\potential_license',
     'template_selector_base' => 'local_iomad\template_selector\base',
+    'EmailTemplate' => 'local_iomad\emailtemplate',
+    'EmailVars' => 'local_iomad\emailvars',
+    'local_email' => 'local_iomad\email',
 ];
