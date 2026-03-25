@@ -104,7 +104,8 @@ class main implements renderable, templatable {
         // Are mandatory courses enabled?
         $mandatoryselecturl = "";
         $mandatoryselectuse = false;
-        if ($CFG->iomad_use_mandatory_courses) {
+        if ($CFG->iomad_use_mandatory_courses &&
+            $DB->get_records('company_course_options', ['companyid' => $companyid, 'mandatory' => 1])) {
             $mandatoryselecturl = new moodle_url($PAGE->url->out(false), ['sort' => $sort,
                                                                           'dir' => $dir,
                                                                           'tab' => $this->tab,
@@ -122,7 +123,7 @@ class main implements renderable, templatable {
             $viewingavailable = true;
         } else if ($this->tab == 'completed') {
             $viewingcompleted = true;
-        } else if ($this->tab == 'mandatory') {
+        } else if ($this->tab == 'mandatory' && $mandatoryselectuse) {
             $viewingmandatory = true;
         } else {
             $viewinginprogress = true;
@@ -198,7 +199,7 @@ class main implements renderable, templatable {
             'mandatoryonly' => $mandatoryonly,
             'viewlist' => $viewlist,
             'viewcard' => $viewcard,
-            'usemandatory' => $CFG->iomad_use_mandatory_courses,
+            'usemandatory' => $mandatoryselectuse,
         ];
     }
 }
