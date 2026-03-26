@@ -45,36 +45,42 @@ if ($ADMIN->fulltree) {
                                             get_string('commerce_externalshop_url', 'block_iomad_commerce'),
                                             '',
                                             PARAM_TEXT));
+    $settings->hide_if('commerce_externalshop_url', 'commerce_enable_external', 'notchecked');
 
     $settings->add(new admin_setting_configtext('commerce_externalshop_url' . $postfix,
                                             get_string('commerce_externalshop_url_company', 'block_iomad_commerce'),
                                             get_string('commerce_externalshop_url_company', 'block_iomad_commerce'),
                                             '',
                                             PARAM_TEXT));
+    $settings->hide_if('commerce_externalshop_url' . $postfix, 'commerce_enable_external', 'notchecked');
 
     $settings->add(new admin_setting_configtext('commerce_externalshop_link_timeout',
                                             get_string('commerce_externalshop_link_timeout', 'block_iomad_commerce'),
                                             get_string('commerce_externalshop_link_timeout', 'block_iomad_commerce'),
                                             30,
                                             PARAM_INT));
+    $settings->hide_if('commerce_externalshop_link_timeout', 'commerce_enable_external', 'notchecked');
 
     $settings->add(new admin_setting_configtext('commerce_admin_firstname',
                                             get_string('commerce_admin_firstname', 'block_iomad_commerce'),
                                             get_string('commerce_admin_firstname_help', 'block_iomad_commerce'),
                                             '',
                                             PARAM_TEXT));
+    $settings->hide_if('commerce_admin_firstname', 'commerce_enable_external', 'checked');
 
     $settings->add(new admin_setting_configtext('commerce_admin_lastname',
                                             get_string('commerce_admin_lastname', 'block_iomad_commerce'),
                                             get_string('commerce_admin_lastname_help', 'block_iomad_commerce'),
                                             '',
                                             PARAM_TEXT));
+    $settings->hide_if('commerce_admin_lastname', 'commerce_enable_external', 'checked');
 
     $settings->add(new admin_setting_configtext('commerce_admin_email',
                                             get_string('commerce_admin_email', 'block_iomad_commerce'),
                                             get_string('commerce_admin_email_help', 'block_iomad_commerce'),
                                             '',
                                             PARAM_EMAIL));
+    $settings->hide_if('commerce_admin_email', 'commerce_enable_external', 'checked');
 
     $paypalcurrencies = enrol_get_plugin('paypal')->get_currencies();
     $settings->add(new admin_setting_configselect('commerce_admin_currency',
@@ -82,23 +88,27 @@ if ($ADMIN->fulltree) {
                                                   '',
                                                   'GBP',
                                                   $paypalcurrencies));
+    $settings->hide_if('commerce_admin_currency', 'commerce_enable_external', 'checked');
 
     $settings->add(new admin_setting_configcheckbox('commerce_admin_enableall',
                                                     get_string('opentoallcompanies', 'block_iomad_commerce'),
                                                     get_string('opentoallcompanies_help', 'block_iomad_commerce'),
                                                     1));
+    $settings->hide_if('commerce_admin_enableall', 'commerce_enable_external', 'checked');
 
     $settings->add(new admin_setting_configtext('commerce_admin_default_license_access_length',
                                             get_string('commerce_default_license_access_length', 'block_iomad_commerce'),
                                             get_string('commerce_default_license_access_length_help', 'block_iomad_commerce'),
                                             30,
                                             PARAM_INT));
+    $settings->hide_if('commerce_admin_default_license_access_length', 'commerce_enable_external', 'checked');
 
     $settings->add(new admin_setting_configtext('commerce_admin_default_license_shelf_life',
                                             get_string('commerce_admin_default_license_shelf_life', 'block_iomad_commerce'),
                                             get_string('commerce_admin_default_license_shelf_life_help', 'block_iomad_commerce'),
                                             365,
                                             PARAM_INT));
+    $settings->hide_if('commerce_admin_default_license_shelf_life', 'commerce_enable_external', 'checked');
 
     $accounts = core_payment\helper::get_payment_accounts_menu(context_system::instance());
     if ($accounts) {
@@ -111,4 +121,5 @@ if ($ADMIN->fulltree) {
                                                   '',
                                                   '',
                                                   $accounts));
+    $settings->hide_if('commerce_admin_paymentaccount', 'commerce_enable_external', 'checked');
 }
