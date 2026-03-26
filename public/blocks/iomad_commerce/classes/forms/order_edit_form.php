@@ -26,8 +26,14 @@
 
 namespace block_iomad_commerce\forms;
 
-use moodleform;
 use block_iomad_commerce\helper;
+use context;
+use core\exception\moodle_exception;
+use core\notification;
+use core_form\dynamic_form;
+use local_iomad\custom_context\context_company;
+use local_iomad\iomad;
+use moodle_url;
 
 /**
  * Block IOMAD eCommerce order edit form
@@ -37,28 +43,7 @@ use block_iomad_commerce\helper;
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class order_edit_form extends moodleform {
-
-    /** @var invoiceid invoice ID int */
-    protected $invoiceid = 0;
-
-    /** @var showaccount do we show the payment account - bool */
-    protected $showaccount = false;
-
-    /**
-     * Constructor function
-     *
-     * @param moodle_url] $actionurl
-     * @param int $invoiceid
-     * @param boolean $showaccount
-     */
-    public function __construct($actionurl, $invoiceid, $showaccount = false) {
-
-        $this->invoiceid = $invoiceid;
-        $this->showaccount = $showaccount;
-
-        parent::__construct($actionurl);
-    }
+class order_edit_form extends dynamic_form {
 
     /**
      * Form definition
@@ -67,12 +52,20 @@ class order_edit_form extends moodleform {
      */
     public function definition() {
 
+        // Set some defaults.
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $orderid = $this->optional_param('orderid', 0, PARAM_INT);
+        $companycontext = context_company::instance($companyid);
+
+        // Set up the form.
         $mform =& $this->_form;
 
         $strrequired = get_string('required');
 
-        $mform->addElement('hidden', 'id', $this->invoiceid);
+        $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
+        $mform->addElement('hidden', 'companyid');
+        $mform->setType('companyid', PARAM_INT);
 
         $mform->addElement('header', 'header', get_string('order', 'block_iomad_commerce'));
 
@@ -111,16 +104,102 @@ class order_edit_form extends moodleform {
         $mform->addElement('header', 'header', get_string('basket', 'block_iomad_commerce'));
 
         $mform->addElement('html', '<p>' . get_string('process_help', 'block_iomad_commerce') . '</p>');
-        $mform->addElement('html', helper::get_invoice_html($this->invoiceid, 0, 0, 0));
+        $mform->addElement('html', helper::get_invoice_html($orderid, 0, 0, 0));
 
         $mform->addElement('header', 'header', get_string('paymentprocessing', 'block_iomad_commerce'));
 
         $mform->addElement('static', 'checkout_method', get_string('paymentprovider', 'block_iomad_commerce'));
 
-        if ($this->showaccount) {
+        if (iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
             $mform->addElement('static', 'pp_account', get_string('paymentaccount', 'payment'));
         }
+    }
 
-        $this->add_action_buttons(false, get_string('back'));
+    /**
+     * Process the form submission, used if form was submitted via AJAX.
+     *
+     * @return array
+     */
+    public function process_dynamic_submission(): array {
+
+        // Return stuff to the JS.
+        return [
+            'result' => true,
+            'returnmessage' => '',
+        ];
+    }
+
+    /**
+     * Load in existing data as form defaults (not applicable).
+     *
+     * @return void
+     */
+    public function set_data_for_dynamic_submission(): void {
+        global $DB;
+
+        // Set some defaults.
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $orderid = $this->optional_param('orderid', 0, PARAM_INT);
+        $companycontext = context_company::instance($companyid);
+
+        // Check we can do these things.
+        iomad::require_capability('block/iomad_commerce:admin_view', $companycontext);
+
+        // Check the record exists.
+        $data = $DB->get_record(
+            'block_iomad_commerce_invoices',
+            ['id' => $orderid, 'companyid' => $companyid],
+            '*',
+            MUST_EXIST
+        );
+
+        // Send it.
+        $this->set_data($data);
+    }
+
+    /**
+     * Check if current user has access to this form, otherwise throw exception.
+     *
+     * @return void
+     * @throws moodle_exception
+     */
+    protected function check_access_for_dynamic_submission(): void {
+        global $CFG;
+
+        $context = $this->get_context_for_dynamic_submission();
+        if (!iomad::has_capability('block/iomad_commerce:admin_view', $context)) {
+            $returnurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/orderlist.php');
+            throw new moodle_exception(
+                'nopermissions',
+                '',
+                $returnurl->out(),
+                get_string(
+                    'block/iomad_commerce:admin_view',
+                    'iomad_commerce'
+                )
+            );
+        }
+    }
+
+    /**
+     * Return form context
+     *
+     * @return context
+     */
+    protected function get_context_for_dynamic_submission(): context {
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $companycontext = context_company::instance($companyid);
+
+        return $companycontext;
+    }
+
+    /**
+     * Returns url to set in $PAGE->set_url() when form is being rendered or submitted via AJAX.
+     *
+     * @return moodle_url
+     */
+    protected function get_page_url_for_dynamic_submission(): moodle_url {
+
+        return new moodle_url('/blocks/iomad_commerce/orderlist.php');
     }
 }

@@ -37,6 +37,9 @@ function block_iomad_commerce_inplace_editable($itemtype, $itemid, $newvalue) {
     if ($itemtype === 'course_shoptag') {
         return block_iomad_commerce\output\course_shoptag_editable::update($itemid, $newvalue);
     }
+    if ($itemtype === 'product_name') {
+        return block_iomad_commerce\output\product_name_editable::update($itemid, $newvalue);
+    }
     if ($itemtype === 'tag_name') {
         return block_iomad_commerce\output\tag_name_editable::update($itemid, $newvalue);
     }

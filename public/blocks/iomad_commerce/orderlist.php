@@ -28,6 +28,7 @@ use local_iomad\custom_context\context_company;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once(dirname(__FILE__) . '/../iomad_company_admin/lib.php');
+require_once($CFG->libdir.'/tablelib.php');
 
 block_iomad_commerce\helper::require_commerce_enabled();
 
@@ -61,6 +62,9 @@ $PAGE->set_title($linktext);
 // Set the page heading.
 $PAGE->set_heading($linktext);
 
+// Add the modal handlers.
+$PAGE->requires->js_call_amd('block_iomad_commerce/order_edit', 'init');
+
 // Log this page view.
 block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
@@ -82,6 +86,7 @@ $selectsql = "i.id,
               i.date,
               p.gateway,
               p.accountid,
+              i.companyid,
               (SELECT SUM(price * quantity * license_allocation)
                FROM {block_iomad_commerce_invoice_items} ii
                WHERE ii.invoiceid = i.id) AS value,
@@ -108,7 +113,7 @@ $headers = [get_string('reference', 'block_iomad_commerce'),
             get_string('value', 'block_iomad_commerce'),
             get_string('status'),
             get_string('unprocesseditems', 'block_iomad_commerce'),
-            get_string('edit')];
+            null];
 $columns = ['reference',
             'date',
             'fullname',

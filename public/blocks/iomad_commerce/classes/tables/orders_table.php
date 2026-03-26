@@ -30,11 +30,6 @@ use moodle_url;
 use local_iomad\iomad;
 use html_writer;
 
-// Ensure that it is loaded in Moodle else die.
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir.'/tablelib.php');
-
 /**
  * IOMAD eCommerce orders table class
  *
@@ -141,21 +136,54 @@ class orders_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_actions($row) {
-        global $CFG, $companycontext;
+        global $companycontext;
 
-        $stredit = get_string('edit');
-        $editbutton = "";
+        $buttons = "";
         if (iomad::has_capability('block/iomad_commerce:admin_view', $companycontext)) {
-            $editorderurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/edit_order_form.php',
-                                           ["id" => $row->id]);
-            $editbutton = html_writer::start_tag('a', ['href' => $editorderurl]);
-            $editbutton .= html_writer::tag('i', '', ['class' => 'icon fa fa-cog fa-fw ',
-                                                      'title' => $stredit,
-                                                      'role' => 'img',
-                                                      'aria-label' => $stredit]);
-            $editbutton .= html_writer::end_tag('a');
+            $buttons .= html_writer::start_tag(
+                'a',
+                [
+                    'href' => '#',
+                    'data-action' => 'show-ordereditform',
+                    'data-companyid' => $row->companyid,
+                    'data-orderid' => $row->id,
+                ]
+            );
+            $buttons .= html_writer::tag(
+                'i',
+                '',
+                [
+                    'class' => 'icon fa fa-magnifying-glass-plus fa-fw ',
+                    'title' => get_string('viewinvoice', 'block_iomad_commerce'),
+                    'role' => 'img',
+                    'aria-label' => get_string('viewinvoice', 'block_iomad_commerce'),
+                ]
+            );
+            $buttons .= html_writer::end_tag('a');
         }
 
-        return $editbutton;
+        return $buttons;
+    }
+
+    /**
+     * Override print_nothing_to_display to ensure that column headers are always added.
+     */
+    public function print_nothing_to_display() {
+        global $OUTPUT;
+
+        $this->start_html();
+        $this->print_headers();
+        echo html_writer::end_tag('table');
+        echo html_writer::end_tag('div');
+        $this->wrap_html_finish();
+
+        $notificationmsg = get_string('noinvoices', 'block_iomad_commerce');
+        $notificationtype = notification::NOTIFY_INFO;
+
+        $notification = (new notification($notificationmsg, $notificationtype, false))
+            ->set_extra_classes(['mt-3']);
+        echo $OUTPUT->render($notification);
+
+        echo $this->get_dynamic_table_html_end();
     }
 }

@@ -25,12 +25,15 @@
 
 namespace block_iomad_commerce;
 
+use block_iomad_commerce\event\product_created;
+use block_iomad_commerce\event\product_updated;
 use moodle_url;
 use html_writer;
 use html_table;
 use local_iomad\{company, company_user, iomad};
 use context_system;
 use core\notification;
+use Exception;
 use local_iomad\custom_context\context_company;
 
 /**
@@ -86,7 +89,7 @@ class helper {
             }
         }
         if ($blockprice->allow_license_blocks) {
-            if ($blockprices = $DB->get_records_sql("SELECT * FROM {block_iomad_commerce_product_blockprices}
+            if ($blockprices = $DB->get_records_sql("SELECT * FROM {course_shopblockprice}
                                                     WHERE itemid = :itemid
                                                     AND price_bracket_start <= 2",
                                                     ['itemid' => $blockprice->id])) {
@@ -118,7 +121,7 @@ class helper {
         global $DB;
 
         $record = $DB->get_records_sql("SELECT *
-                                        FROM {block_iomad_commerce_product_blockprices}
+                                        FROM {course_shopblockprice}
                                         WHERE itemid = :itemid
                                         AND price_bracket_start <= :nlicenses
                                         ORDER BY price_bracket_start DESC",
@@ -742,17 +745,27 @@ class helper {
      * @param integer $itemid
      * @return void
      */
-    public static function get_course_tags($itemid) {
+    public static function get_course_tags($itemid, $companyid) {
         global $DB;
+
+        // Did we get a companyid?
+        if (empty($companyid)) {
+            $companyid = iomad::get_my_companyid(context_system::instance(), true);
+        }
+
         // Get all records for the shop item id.
-        if ($shoptags = $DB->get_records_sql("SELECT st.tag as tag FROM {block_iomad_commerce_product_shoptags} cst
-                                              INNER JOIN {block_iomad_commerce_shoptags} st ON cst.shoptagid = st.id
-                                              WHERE cst.itemid = :itemid
-                                              AND st.companyid = :companyid
-                                              ORDER BY st.tag",
-                                             ['itemid' => $itemid,
-                                              'companyid' => iomad::get_my_companyid(context_system::instance(),
-                                              true)])) {
+        if ($shoptags = $DB->get_records_sql(
+            "SELECT st.tag as tag
+               FROM {block_iomad_commerce_product_shoptags} cst
+               JOIN {block_iomad_commerce_shoptags} st
+                 ON cst.shoptagid = st.id
+              WHERE cst.itemid = :itemid
+                AND st.companyid = :companyid
+           ORDER BY st.tag",
+            [
+                'itemid' => $itemid,
+                'companyid' => $companyid,
+            ])) {
             // Return the shop tags as a list.
             return implode(', ', array_map(fn($r) => $r->tag, $shoptags));
         }
@@ -888,6 +901,186 @@ class helper {
 
                 return false;
             }
+        }
+    }
+
+    /**
+     * Populate an ecommerce product with the rest of it's data.
+     *
+     * @param object $product
+     * @return void
+     */
+    public static function populate_product(&$product) {
+        global $CFG, $DB;
+
+        if (empty($product->id)) {
+            // We are adding a new product.
+            $product->itemcourses = [];
+            $product->block_start = [];
+            $product->itempaths = [];
+            $product->default = $product->companyid;
+            if (!empty($CFG->commerce_admin_currency)) {
+                $product->currency = $CFG->commerce_admin_currency;
+            } else {
+                $product->currency = 'GBP';
+            }
+        } else {
+            // Deal with courses.
+            $courses = $DB->get_records(
+                'block_iomad_commerce_product_courses',
+                ['itemid' => $product->id],
+                '',
+                'courseid'
+            );
+            $product->itemcourses = array_keys($courses);
+
+            // Get the learning paths that are already assigned to the shop item.
+            $paths = $DB->get_records(
+                'block_iomad_commerce_product_learningpaths',
+                ['itemid' => $product->id],
+                '',
+                'pathid'
+            );
+
+            // Create the array to store the learning paths.
+            $product->itempaths = array_keys($paths);
+
+            // Get the tags that are being used by the current shop item.
+            $product->tags = self::get_course_tags($product->id, $product->companyid);
+
+            // Get any price bandings.
+            $product->block_start = [];
+            $pricebands = $DB->get_records(
+                'block_iomad_commerce_product_blockprices',
+                ['itemid' => $product->id],
+                'price_bracket_start'
+            );
+            foreach ($pricebands as $priceband) {
+                $product->item_block_start[] = $priceband->price_bracket_start;
+                $product->item_block_price[] = $priceband->price;
+            }
+            $product->short_summary_editor = ['text' => $product->short_description];
+            $product->summary_editor = ['text' => $product->long_description];
+            $product->default = $product->companyid;
+            $product->currency = $product->single_purchase_currency;
+        }
+    }
+
+    /**
+     * Update or create a new product
+     *
+     * @param object $product
+     * @return bool
+     */
+    public static function update_product($product) {
+        global $DB;
+
+        // Set the context.
+        $companycontext = context_company::instance($product->mycompanyid);
+
+        try {
+            $transaction = $DB->start_delegated_transaction();
+
+            // Create or update the product.
+            if (empty($product->id)) {
+                $product->single_purchase_currency = $product->currency;
+                $product->id = $DB->insert_record('block_iomad_commerce_products', $product);
+                $event = product_created::create([
+                    'context' => $companycontext,
+                    'userid' => $product->userid,
+                    'objectid' => $product->id,
+                ]);
+            } else {
+                $product->single_purchase_currency = $product->currency;
+                $DB->update_record('block_iomad_commerce_products', $product);
+                $event = product_updated::create([
+                    'context' => $companycontext,
+                    'userid' => $product->userid,
+                    'objectid' => $product->id,
+                ]);
+            }
+
+            // Deal with the License price blocks.
+            $DB->delete_records(
+                'block_iomad_commerce_product_blockprices',
+                ['itemid' => $product->id]
+            );
+
+            // Add the new ones in.
+            foreach ($product->item_block_start as $blockid => $itemblock) {
+                if (!empty($itemblock)) {
+                    $priceblock = (object) [];
+                    $priceblock->itemid = $product->id;
+                    $priceblock->currency = $product->currency;
+                    $priceblock->price_bracket_start = $itemblock;
+                    $priceblock->price = $product->item_block_price[$blockid];
+                    $priceblock->validlength = $product->single_purchase_validlength;
+                    $priceblock->shelflife = $product->single_purchase_shelflife;
+
+                    $DB->insert_record('block_iomad_commerce_product_blockprices', $priceblock, false, false);
+                }
+            }
+
+            // Delete associated courses.
+            $DB->delete_records('block_iomad_commerce_product_courses', ['itemid' => $product->id]);
+
+            // Add any new ones in.
+            foreach ($product->itemcourses as $itemcourse) {
+                $DB->insert_record(
+                    'block_iomad_commerce_product_courses',
+                    ['itemid' => $product->id, 'courseid' => $itemcourse]
+                );
+            }
+
+            // Delete associated learning paths.
+            $DB->delete_records('block_iomad_commerce_product_learningpaths', ['itemid' => $product->id]);
+
+            // Add any new ones in.
+            foreach ($product->itempaths as $itempath) {
+                $DB->insert_record(
+                    'block_iomad_commerce_product_learningpaths',
+                    ['itemid' => $product->id, 'pathid' => $itempath]
+                );
+            }
+
+            // Delete course_shoptag records.
+            $DB->delete_records('block_iomad_commerce_product_shoptags', ['itemid' => $product->id]);
+
+            // Add any new ones in.
+            $tags = preg_split('/\s*,\s*/', $product->tags);
+            $newcourseshoptagrecord = (object)[];
+            $newcourseshoptagrecord->itemid = $product->id;
+            foreach ($tags as $tag) {
+                // Check if the tag exists for the company and if it doesn't then
+                // create a new record for the tag for the current company.
+                if ($tag == '') {
+                    $st = $DB->get_record('block_iomad_commerce_shoptags', ['tag' => $tag]);
+                } else if (!$st = $DB->get_record(
+                    'block_iomad_commerce_shoptags',
+                    ['tag' => $tag, 'companyid' => $product->companyid])) {
+                    $st = (object)[];
+                    $st->tag = $tag;
+                    $st->companyid = $product->companyid;
+                    $st->id = $DB->insert_record('block_iomad_commerce_shoptags', $st, true);
+                }
+
+                if (isset($st)) {
+                    // Create a new record in course_shoptag for the tag being used for the shop item.
+                    $newcourseshoptagrecord->shoptagid = $st->id;
+                    $DB->insert_record('block_iomad_commerce_product_shoptags', $newcourseshoptagrecord);
+                }
+            }
+
+            // Everything OK then...
+            $transaction->allow_commit();
+
+            // Fire the event.
+            $event->trigger();
+
+            return true;
+        } catch (Exception $e) {
+            $transaction->rollback($e);
+            return false;
         }
     }
 }
