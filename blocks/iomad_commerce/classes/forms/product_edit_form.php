@@ -25,9 +25,14 @@
 
 namespace block_iomad_commerce\forms;
 
-use moodleform;
 use block_iomad_commerce\helper;
+use context;
+use core\notification;
+use core_form\dynamic_form;
 use lang_string;
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+use moodle_url;
 
 /**
  * Block IOMAD eCommerce
@@ -37,70 +42,7 @@ use lang_string;
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class product_edit_form extends moodleform {
-
-    /** @var isadding check if adding a product bool */
-    protected $isadding;
-
-    /** @var shopsettingsid shop setting ID int */
-    protected $shopsettingsid = 0;
-
-    /** @var courses list of courses array */
-    protected $courses = [];
-
-    /** @var currencies list of currencies array */
-    protected $currencies = [];
-
-    /** @var paths list of paths array */
-    protected $paths = [];
-
-    /** @var priceblocks list of price blocks array */
-    protected $priceblocks = null;
-
-    /** @var editoroptions array */
-    protected $editoroptions = [];
-
-    /**
-     * Constructor function
-     *
-     * @param moodle_url $actionurl
-     * @param bool $isadding
-     * @param int $shopsettingsid
-     * @param array $courses
-     * @param array $priceblocks
-     * @param array $editoroptions
-     * @param array $paths
-     */
-    public function __construct($actionurl,
-                                $isadding,
-                                $shopsettingsid,
-                                $courses = [],
-                                $priceblocks = null,
-                                $editoroptions = [],
-                                $paths = []) {
-
-        $this->isadding = $isadding;
-        $this->shopsettingsid = $shopsettingsid;
-        $this->courses = $courses;
-        $this->priceblocks = $priceblocks;
-        $this->editoroptions = $editoroptions;
-        $this->paths = $paths;
-
-        // Get the supported currencies.
-        $codes = \core_payment\helper::get_supported_currencies();
-
-        $currencies = [];
-        foreach ($codes as $c) {
-            $currencies[$c] = new lang_string($c, 'core_currencies');
-        }
-
-        uasort($currencies, function($a, $b) {
-            return strcmp($a, $b);
-        });
-        $this->currencies = $currencies;
-
-        parent::__construct($actionurl);
-    }
+class product_edit_form extends dynamic_form {
 
     /**
      * Form definition
@@ -110,12 +52,57 @@ class product_edit_form extends moodleform {
     public function definition() {
         global $CFG, $DB;
 
+        // Set some defaults.
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $mycompanyid = $this->optional_param('mycompanyid', 0, PARAM_INT);
+        $productid = $this->optional_param('productid', 0, PARAM_INT);
+        $editoroptions = [
+            'maxfiles' => EDITOR_UNLIMITED_FILES,
+            'maxbytes' => $CFG->maxbytes,
+            'trusttext' => false,
+            'noclean' => true,
+        ];
+
+        // Get the supported currencies.
+        $codes = \core_payment\helper::get_supported_currencies();
+        $currencies = [];
+        foreach ($codes as $c) {
+            $currencies[$c] = new lang_string($c, 'core_currencies');
+        }
+        uasort($currencies, function($a, $b) {
+            return strcmp($a, $b);
+        });
+
+        // Get the available information.
+        if ($companyid == 0) {
+            $courses = $DB->get_records_sql_menu(
+                 "SELECT c.id, c.fullname
+                    FROM {course} c
+                    JOIN {local_iomad_courses} ic ON (c.id = ic.courseid)
+                ORDER BY c.fullname");
+            $paths = [];
+        } else {
+            $company = new company($mycompanyid);
+            $courses = $company->get_menu_courses(true, false);
+            $paths = $DB->get_records_sql_menu(
+                "SELECT ilp.id, ilp.name
+                   FROM {block_iomad_learningpath} ilp
+                  WHERE ilp.companyid = :companyid
+                    AND ilp.active = 1
+                    AND ilp.id IN (
+                        SELECT pathid
+                          FROM {block_iomad_learningpath_courses} ilpc
+                         WHERE ilp.id = ilpc.pathid)",
+                ['companyid' => $companyid]);
+        }
+
+        // Set up the form.
         $mform =& $this->_form;
 
-        $mform->addElement('hidden', 'shopsettingsid', $this->shopsettingsid);
-        $mform->setType('shopsettingsid', PARAM_INT);
         $mform->addElement('hidden', 'companyid');
         $mform->setType('companyid', PARAM_INT);
+        $mform->addElement('hidden', 'mycompanyid');
+        $mform->setType('mycompanyid', PARAM_INT);
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
         $mform->addElement('hidden', 'default');
@@ -127,30 +114,30 @@ class product_edit_form extends moodleform {
         // so that when the currentcourses or potentialcourses get changed in the process function, the
         // changes get displayed, rather than the lists as they are before processing.
 
-        if (!empty($this->courses)) {
+        if (!empty($courses)) {
             $mform->addElement('text', 'name', get_string('name'));
             $mform->setType('name', PARAM_NOTAGS);
 
             $mform->addElement('selectyesno', 'enabled', get_string('course_shop_enabled', 'block_iomad_commerce'));
             $mform->addHelpButton('enabled', 'course_shop_enabled', 'block_iomad_commerce');
 
-            $mform->addElement('autocomplete', 'itemcourses', get_string('courses'), $this->courses, ['multiple' => true]);
+            $mform->addElement('autocomplete', 'itemcourses', get_string('courses'), $courses, ['multiple' => true]);
 
             // Create an element for learning paths.
             $mform->addElement('autocomplete',
                                'itempaths',
                                get_string('learning_paths', 'block_iomad_commerce'),
-                               $this->paths,
+                               $paths,
                                ['multiple' => true]);
 
             $mform->addElement('editor', 'short_summary_editor', get_string('course_short_summary', 'block_iomad_commerce'),
-                                          null, $this->editoroptions);
+                                          null, $editoroptions);
             $mform->setType('short_summary_editor', PARAM_RAW);
             $mform->addRule('short_summary_editor', get_string('missingshortsummary', 'block_iomad_commerce'),
                                                     'required', null, 'client');
 
             $mform->addElement('editor', 'summary_editor', get_string('course_long_description', 'block_iomad_commerce'),
-                                          null, $this->editoroptions);
+                                          null, $editoroptions);
             $mform->setType('summary_editor', PARAM_RAW);
 
             // Set the license details.
@@ -199,7 +186,7 @@ class product_edit_form extends moodleform {
             $mform->addHelpButton('clearonexpire', 'clearonexpire', 'block_iomad_company_admin');
             $mform->disabledIf('clearonexpire', 'cutoffdate[enabled]');
 
-            $mform->addElement('select', 'currency', get_string('currency'), $this->currencies);
+            $mform->addElement('select', 'currency', get_string('currency'), $currencies);
 
             $mform->addElement('header', 'header', get_string('single_purchase', 'block_iomad_commerce'));
 
@@ -227,7 +214,7 @@ class product_edit_form extends moodleform {
             ];
 
             // Set the default number to be repeated.
-            if ($repeatno = $DB->count_records('block_iomad_commerce_product_blockprices', ['itemid' => $this->shopsettingsid])) {
+            if ($repeatno = $DB->count_records('block_iomad_commerce_product_blockprices', ['itemid' => $productid])) {
                 $repeatno++;
             } else {
                 $repeatno = 1;
@@ -280,14 +267,6 @@ class product_edit_form extends moodleform {
 
             /******** end tags **********/
 
-            $submitlabel = null; // Default.
-            if ($this->isadding) {
-                $submitlabel = get_string('add_course_to_shop', 'block_iomad_commerce');
-                $mform->addElement('hidden', 'createnew', 1);
-                $mform->setType('createnew', PARAM_INT);
-            }
-
-            $this->add_action_buttons(true, $submitlabel);
         } else {
             $mform->addElement('html', get_string('nocoursesnotontheshop', 'block_iomad_commerce'));
         }
@@ -357,5 +336,147 @@ class product_edit_form extends moodleform {
         }
 
         return $errors;
+    }
+
+    /**
+     * Process the form submission, used if form was submitted via AJAX.
+     *
+     * @return array
+     */
+    public function process_dynamic_submission(): array {
+        global $USER;
+
+        // Get the info from the form.
+        $product = $this->get_data();
+        $product->userid = $USER->id;
+
+        // Process it.
+        $dorefresh = false;
+        if (helper::update_product($product)) {
+            if (empty($product->id)) {
+                if (!empty($product->companyid)) {
+                    $returnmessage = get_string('itemaddedsuccessfully', 'block_iomad_commerce');
+                } else {
+                    $returnmessage = get_string('templatecreatedok', 'block_iomad_commerce');
+                }
+                $dorefresh = true;
+            } else {
+                if (!empty($product->companyid)) {
+                    $returnmessage = get_string('productupdatedok', 'block_iomad_commerce');
+                } else {
+                    $returnmessage = get_string('templateupdatedok', 'block_iomad_commerce');
+                }
+            }
+            $result = true;
+            notification::success($returnmessage);
+        } else {
+            if (empty($product->id)) {
+                if (!empty($product->companyid)) {
+                    $returnmessage = get_string('productcreatefailed', 'block_iomad_commerce');
+                } else {
+                    $returnmessage = get_string('templatecreatefailed', 'block_iomad_commerce');
+                }
+            } else {
+                if (!empty($product->companyid)) {
+                    $returnmessage = get_string('productupdatefailed', 'block_iomad_commerce');
+                } else {
+                    $returnmessage = get_string('templateupdatefailed', 'block_iomad_commerce');
+                }
+            }
+            $result = false;
+            notification::error($returnmessage);
+        }
+
+        // Return stuff to the JS.
+        return [
+            'result' => $result,
+            'returnmessage' => $returnmessage,
+            'dorefresh' => $dorefresh,
+        ];
+    }
+
+    /**
+     * Load in existing data as form defaults (not applicable).
+     *
+     * @return void
+     */
+    public function set_data_for_dynamic_submission(): void {
+        global $DB;
+
+        // Set some defaults.
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $mycompanyid = $this->optional_param('mycompanyid', 0, PARAM_INT);
+        $productid = $this->optional_param('productid', 0, PARAM_INT);
+        $companycontext = context_company::instance($mycompanyid);
+
+        // Check we can do these things.
+        if ($companyid == 0) {
+            iomad::require_capability('block/iomad_commerce:manage_default', $companycontext);
+        } else if ($productid == 0) {
+            iomad::require_capability('block/iomad_commerce:add_course', $companycontext);
+        } else {
+            iomad::require_capability('block/iomad_commerce:edit_course', $companycontext);
+        }
+
+        // Do we have an existing record?
+        if (!$product = $DB->get_record('block_iomad_commerce_products', ['id' => $productid])) {
+            $product = (object) [
+                'id' => $productid,
+                'companyid' => $companyid,
+            ];
+        }
+
+        // Get the rest of the information.
+        helper::populate_product($product);
+        $product->mycompanyid = $mycompanyid;
+
+        // Send it.
+        $this->set_data($product);
+    }
+
+    /**
+     * Check if current user has access to this form, otherwise throw exception.
+     *
+     * @return void
+     * @throws moodle_exception
+     */
+    protected function check_access_for_dynamic_submission(): void {
+        global $CFG;
+
+        $context = $this->get_context_for_dynamic_submission();
+        if (!iomad::has_capability('block/iomad_company_admin:classrooms_edit', $context)) {
+            $returnurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/classroom_list.php');
+            throw new moodle_exception(
+                'nopermissions',
+                '',
+                $returnurl->out(),
+                get_string(
+                    'block/iomad_company_admin:classrooms_edit',
+                    'block_iomad_company_admin'
+                )
+            );
+        }
+    }
+
+    /**
+     * Return form context
+     *
+     * @return context
+     */
+    protected function get_context_for_dynamic_submission(): context {
+        $companyid = $this->optional_param('mycompanyid', 0, PARAM_INT);
+        $companycontext = context_company::instance($companyid);
+
+        return $companycontext;
+    }
+
+    /**
+     * Returns url to set in $PAGE->set_url() when form is being rendered or submitted via AJAX.
+     *
+     * @return moodle_url
+     */
+    protected function get_page_url_for_dynamic_submission(): moodle_url {
+
+        return new moodle_url('/blocks/iomad_company_admin/classroom_list.php');
     }
 }

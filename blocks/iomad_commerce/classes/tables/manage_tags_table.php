@@ -27,7 +27,6 @@ namespace block_iomad_commerce\tables;
 
 // Add required dependancies.
 use table_sql;
-use moodle_url;
 use local_iomad\iomad;
 use context_system;
 use block_iomad_commerce\output\tag_name_editable;
@@ -178,19 +177,75 @@ class manage_tags_table extends table_sql {
      * @return string HTML content to go inside the td
      */
     public function col_actions($row) {
-        global $CFG, $USER;
+        global $companyid, $DB, $USER;
 
         // Create the delete button.
         $deletebutton = '';
 
         // If editing is turned on display the delete hyperlink.
         if (!empty($USER->editing)) {
-            $deleteurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/manage_tags.php',
-                                        ['delete' => $row->id,
-                                        'sesskey' => sesskey()]);
-            $deletebutton = html_writer::tag('a', get_string('delete'), ['href' => $deleteurl]);
+
+            // Is this tag used anywhere?
+            $usedstring = '';
+            if ($shopitems = $DB->get_records_sql(
+                "SELECT id, name
+                   FROM {block_iomad_commerce_products}
+                  WHERE companyid = :companyid
+                    AND id IN (
+                       SELECT itemid
+                         FROM {block_iomad_commerce_product_shoptags}
+                        WHERE shoptagid = :shoptagid)
+               ORDER BY name ASC",
+                ['shoptagid' => $row->id,
+                 'companyid' => $companyid])) {
+                $usedstring = implode(', ', array_map(fn($r) => $r->name, $shopitems));
+            }
+
+            $deletebutton = html_writer::tag(
+                'a',
+                html_writer::tag(
+                    'i',
+                    '',
+                    [
+                        'class' => 'icon fa fa-trash fa-fw ',
+                        'title' => get_string('delete'),
+                        'role' => 'img',
+                        'aria-label' => get_string('delete'),
+                    ]
+                ),
+                [
+                    'href' => '#',
+                    'data-action' => 'show-deletetagconfirm',
+                    'data-companyid' => $row->companyid,
+                    'data-usedstring' => $usedstring,
+                    'data-tagid' => $row->id,
+                    'data-tagname' => format_string($row->tag),
+                ]
+            );
         }
 
         return $deletebutton;
+    }
+
+    /**
+     * Override print_nothing_to_display to ensure that column headers are always added.
+     */
+    public function print_nothing_to_display() {
+        global $OUTPUT;
+
+        $this->start_html();
+        $this->print_headers();
+        echo html_writer::end_tag('table');
+        echo html_writer::end_tag('div');
+        $this->wrap_html_finish();
+
+        $notificationmsg = get_string('notagsexist', 'block_iomad_commerce');
+        $notificationtype = notification::NOTIFY_INFO;
+
+        $notification = (new notification($notificationmsg, $notificationtype, false))
+            ->set_extra_classes(['mt-3']);
+        echo $OUTPUT->render($notification);
+
+        echo $this->get_dynamic_table_html_end();
     }
 }
