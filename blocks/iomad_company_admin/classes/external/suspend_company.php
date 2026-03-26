@@ -54,7 +54,7 @@ class suspend_company extends external_api {
      * @param mixed $currentvalue
      */
     public static function execute($companyid, $currentvalue) {
-        global $USER;
+        global $DB, $USER;
 
         // Parameter validation.
         [
