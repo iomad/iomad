@@ -72,9 +72,9 @@ class importmoodlecompletioninformation extends adhoc_task {
                                              array('userid' => $userid,
                                                    'courseid' => $courseid))) {
                 // User isn't enrolled. Not sure why we got this.
-                return true;
+                continue;
             }
-    
+
             // Is this a duplicate event?
             if (!empty($enrolrec->timecreated) &&
                  $DB->get_record_sql("SELECT id FROM {local_iomad_track}
@@ -83,11 +83,11 @@ class importmoodlecompletioninformation extends adhoc_task {
                                      AND timeenrolled = :timeenrolled
                                      AND timecompleted IS NOT NULL",
                                      array('userid' => $userid, 'courseid' => $courseid, 'timeenrolled' => $enrolrec->timecreated))) {
-    
+
                 // It is so we don't record it.
-                return true;
+                continue;
             }
-    
+
             // Get the final grade for the course.
             if ($graderec = $DB->get_record_sql("SELECT gg.* FROM {grade_grades} gg
                                              JOIN {grade_items} gi ON (gg.itemid = gi.id
@@ -99,24 +99,24 @@ class importmoodlecompletioninformation extends adhoc_task {
             } else {
                 $finalscore = 0;
             }
-    
+
             // Is the record broken?
             $broken = false;
             if (empty($comprec->timeenrolled)) {
                 $broken = true;
                 $comprec->timeenrolled = $enrolrec->timecreated;
             }
-    
+
             if (empty($comprec->timestarted)) {
                 $broken = true;
                 $comprec->timestarted = $enrolrec->timecreated;
             }
-    
+
             if ($broken) {
                 // Update the completion record.
                 $DB->update_record('course_completions', $comprec);
             }
-    
+
             if (!$currententries = $DB->get_records('local_iomad_track', array('courseid' => $courseid, 'userid' => $userid, 'timecompleted' => null))) {
                 // For some reason we don't already have a record.
                 // Get all of the user's companies
