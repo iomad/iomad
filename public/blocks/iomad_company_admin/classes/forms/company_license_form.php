@@ -25,7 +25,15 @@
 
 namespace block_iomad_company_admin\forms;
 
+use block_iomad_company_admin\event\company_license_created;
+use block_iomad_company_admin\event\company_license_updated;
+use context;
+use core\exception\moodle_exception;
+use core\notification;
+use core\output\html_writer;
+use core_form\dynamic_form;
 use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
 use moodle_url;
 
 /**
@@ -36,106 +44,7 @@ use moodle_url;
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class company_license_form extends company_moodleform {
-
-    /** @var object context */
-    protected $context = null;
-
-    /** @var object context */
-    protected $selectedcompany = 0;
-
-    /** @var object context */
-    protected $subhierarchieslist = null;
-
-    /** @var object context */
-    protected $departmentid = 0;
-
-    /** @var object context */
-    protected $companydepartment = 0;
-
-    /** @var object context */
-    protected $parentid = 0;
-
-    /** @var object context */
-    protected $licenseid;
-
-    /** @var object context */
-    protected $selectedcourses;
-
-    /** @var object context */
-    protected $parentlicense;
-
-    /** @var object context */
-    protected $license;
-
-    /** @var object context */
-    protected $courses;
-
-    /**
-     * Constructor function
-     *
-     * @param moodle_url $actionurl
-     * @param object $companycontext
-     * @param int $companyid
-     * @param int $departmentid
-     * @param int $licenseid
-     * @param int $parentid
-     * @param array $courses
-     */
-    public function __construct($actionurl,
-                                $companycontext,
-                                $companyid,
-                                $departmentid = 0,
-                                $licenseid = 0,
-                                $parentid = 0,
-                                $courses=[]) {
-        global $DB, $USER;
-        $this->selectedcompany = $companyid;
-        $this->context = $companycontext;
-        $this->departmentid = $departmentid;
-        $this->licenseid = $licenseid;
-        $this->parentid = $parentid;
-        $this->selectedcourses = $courses;
-        if (!empty($this->parentid)) {
-            $this->parentlicense = $DB->get_record('local_iomad_company_licenses', ['id' => $parentid]);
-        } else {
-            $this->parentlicense = (object) [];
-        }
-        if (!$this->license = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid])) {
-            $this->license = (object) [];
-        }
-
-        $company = new company($this->selectedcompany);
-        $parentlevel = company::get_company_parentnode($company->id);
-        $this->companydepartment = $parentlevel->id;
-        if (empty($parentid)) {
-            $this->courses = $company->get_menu_courses(true, false, false, false, true);
-        } else {
-            $this->courses = $DB->get_records_sql_menu("SELECT c.id, c.fullname
-                                                        FROM {course} c
-                                                        JOIN {local_iomad_company_license_courses} lic
-                                                        on (c.id = lic.courseid)
-                                                        WHERE lic.licenseid = :licenseid",
-                                                       ['licenseid' => $parentid]);
-        }
-
-        if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext)) {
-            $userhierarchylevel = $parentlevel->id;
-        } else {
-            $userlevel = $company->get_userlevel($USER);
-            $userhierarchylevel = key($userlevel);
-        }
-
-        $this->subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
-        $this->subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
-        if ($this->departmentid == 0) {
-            $departmentid = $userhierarchylevel;
-        } else {
-            $departmentid = $this->departmentid;
-        }
-
-        parent::__construct($actionurl);
-    }
+class company_license_form extends dynamic_form {
 
     /**
      * Default form definition
@@ -143,67 +52,81 @@ class company_license_form extends company_moodleform {
      * @return void
      */
     public function definition() {
-        $this->_form->addElement('hidden', 'companyid', $this->selectedcompany);
-        $this->_form->addElement('hidden', 'departmentid', $this->departmentid);
-        $this->_form->addElement('hidden', 'licenseid', $this->licenseid);
-        $this->_form->addElement('hidden', 'parentid', $this->parentid);
-        $this->_form->setType('companyid', PARAM_INT);
-        $this->_form->setType('departmentid', PARAM_INT);
-        $this->_form->setType('licenseid', PARAM_INT);
-        $this->_form->setType('parentid', PARAM_INT);
-    }
+        global $DB;
 
-    /**
-     * Form definition after data is set
-     *
-     * @return void
-     */
-    public function definition_after_data() {
-        global $DB, $CFG;
+        // Set some defaults.
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $licenseid = $this->optional_param('licenseid', 0, PARAM_INT);
+        $parentid = $this->optional_param('parentid', 0, PARAM_INT);
+        $company = new company($companyid);
+
+        // Get the license record.
+        if (!empty($licenseid)) {
+            $license = $DB->get_record(
+                'local_iomad_company_licenses',
+                ['id' => $licenseid],
+                '*',
+                MUST_EXIST
+            );
+            $parentid = $license->parentid;
+        }
+
+        // Get the potential courses.
+        if (empty($parentid)) {
+            $courses = $company->get_menu_courses(true, false, false, false, true);
+        } else {
+            $courses = $DB->get_records_sql_menu(
+                "SELECT c.id, c.fullname
+                   FROM {course} c
+                   JOIN {local_iomad_company_license_courses} lic
+                     ON (c.id = lic.courseid)
+                  WHERE lic.licenseid = :licenseid",
+                ['licenseid' => $parentid]);
+        }
 
         // Set up the form.
         $mform =& $this->_form;
 
-        // Adding the elements in the definition_after_data function rather than in the definition function
-        // so that when the currentcourses or potentialcourses get changed in the process function, the
-        // changes get displayed, rather than the lists as they are before processing.
+        // Add the hidden elements.
+        $mform->addElement('hidden', 'companyid');
+        $mform->addElement('hidden', 'licenseid');
+        $mform->addElement('hidden', 'parentid');
+        $mform->setType('companyid', PARAM_INT);
+        $mform->setType('licenseid', PARAM_INT);
+        $mform->setType('parentid', PARAM_INT);
 
-        $company = new company($this->selectedcompany);
-        if (empty($this->parentid)) {
+        if (empty($parentid)) {
             $mform->addElement('hidden', 'designatedcompany', 0);
             $mform->setType('designatedcompany', PARAM_INT);
         } else {
-            $licenseinfo = $DB->get_record('local_iomad_company_licenses', ['id' => $this->parentid]);
+            $parentlicense = $DB->get_record('local_iomad_company_licenses', ['id' => $parentid]);
 
             // If this is a program, sort out the displayed used and allocated.
-            if (!empty($licenseinfo->program)) {
-                $used = $licenseinfo->used / count($this->courses);
-                $free = ($licenseinfo->allocation - $licenseinfo->used) / count($this->courses);
+            if (!empty($parentlicense->program)) {
+                $used = $parentlicense->used / count($courses);
+                $free = ($parentlicense->allocation - $parentlicense->used) / count($courses);
             } else {
-                $used = $licenseinfo->used;
-                $free = $licenseinfo->allocation - $licenseinfo->used;
+                $used = $parentlicense->used;
+                $free = $parentlicense->allocation - $parentlicense->used;
             }
 
-            $company = new company($licenseinfo->companyid);
+            $company = new company($parentlicense->companyid);
             $companylist = $company->get_child_companies_select(false);
             $mform->addElement(
                 'static',
                 'parentlicensename',
-                format_string(
-                    get_string('parentlicensename', 'block_iomad_company_admin') . ': ' .
-                    $licenseinfo->name));
+                get_string('parentlicensename', 'block_iomad_company_admin'),
+                format_string($parentlicense->name));
             $mform->addElement(
                 'static',
                 'parentlicenseused',
-                format_string(
-                    get_string('parentlicenseused', 'block_iomad_company_admin') . ': ' .
-                    $used));
+                get_string('parentlicenseused', 'block_iomad_company_admin'),
+                $used);
             $mform->addElement(
                 'static',
                 'parentlicenseavailable',
-                format_string(
-                    get_string('parentlicenseavailable', 'block_iomad_company_admin') . ': ' .
-                    $free));
+                get_string('parentlicenseavailable', 'block_iomad_company_admin'),
+                $free);
 
             // Add in the selector for the company the license will be for.
             $designatedcompanyselect = $mform->addElement(
@@ -211,8 +134,8 @@ class company_license_form extends company_moodleform {
                 'designatedcompany',
                 get_string('designatedcompany', 'block_iomad_company_admin'),
                 $companylist);
-            if (!empty($this->license->companyid)) {
-                $designatedcompanyselect->setSelected($this->license->companyid);
+            if (!empty($license->companyid)) {
+                $designatedcompanyselect->setSelected($license->companyid);
             }
         }
 
@@ -222,7 +145,13 @@ class company_license_form extends company_moodleform {
             get_string('licensename', 'block_iomad_company_admin'),
             'maxlength="254" size="50"');
         $mform->addHelpButton('name', 'licensename', 'block_iomad_company_admin');
-        $mform->addRule('name', get_string('missinglicensename', 'block_iomad_company_admin'), 'required', null, 'client');
+        $mform->addRule(
+            'name',
+            get_string('missinglicensename', 'block_iomad_company_admin'),
+            'required',
+            null,
+            'client'
+        );
         $mform->setType('name', PARAM_ALPHANUMEXT);
 
         $mform->addElement('text',  'reference', get_string('licensereference', 'block_iomad_company_admin'),
@@ -230,17 +159,18 @@ class company_license_form extends company_moodleform {
         $mform->addHelpButton('reference', 'licensereference', 'block_iomad_company_admin');
         $mform->setType('reference', PARAM_ALPHANUMEXT);
 
-        if (empty($this->parentid)) {
+        if (empty($parentid)) {
+            $licensetypes = [
+                0 => get_string('standard', 'block_iomad_company_admin'),
+                1 => get_string('reusable', 'block_iomad_company_admin'),
+                2 => get_string('educator', 'block_iomad_company_admin'),
+                3 => get_string('educatorreusable', 'block_iomad_company_admin'),
+                4 => get_string('blanket', 'block_iomad_company_admin'),
+            ];
             if (get_config('local_iomad', 'autoenrol_managers')) {
-                $licensetypes = [0 => get_string('standard', 'block_iomad_company_admin'),
-                                 1 => get_string('reusable', 'block_iomad_company_admin'),
-                                 4 => get_string('blanket', 'block_iomad_company_admin')];
-            } else {
-                $licensetypes = [0 => get_string('standard', 'block_iomad_company_admin'),
-                                 1 => get_string('reusable', 'block_iomad_company_admin'),
-                                 2 => get_string('educator', 'block_iomad_company_admin'),
-                                 3 => get_string('educatorreusable', 'block_iomad_company_admin'),
-                                 4 => get_string('blanket', 'block_iomad_company_admin')];
+                // Strip out educator licenses.
+                unset($licensetypes[2]);
+                unset($licensetypes[3]);
             }
 
             $mform->addElement('select', 'type', get_string('licensetype', 'block_iomad_company_admin'), $licensetypes);
@@ -285,55 +215,52 @@ class company_license_form extends company_moodleform {
             $mform->addHelpButton('validlength', 'licenseduration', 'block_iomad_company_admin');
             $mform->setType('validlength', PARAM_INTEGER);
         } else {
-            $mform->addElement('hidden', 'type', $this->parentlicense->type);
+            $mform->addElement('hidden', 'type', $parentlicense->type);
             $mform->setType('type', PARAM_INT);
-            $mform->addElement('hidden', 'startdate', $licenseinfo->startdate);
+            $mform->addElement('hidden', 'startdate', $parentlicense->startdate);
+            $mform->setType('startdate', PARAM_INT);
+            $mform->addElement('hidden', 'expirydate', $parentlicense->expirydate);
             $mform->setType('expirydate', PARAM_INT);
-            $mform->addElement('hidden', 'expirydate', $licenseinfo->expirydate);
-            $mform->setType('expirydate', PARAM_INT);
-            $mform->addElement('hidden', 'validlength', $licenseinfo->validlength);
+            $mform->addElement('hidden', 'validlength', $parentlicense->validlength);
             $mform->setType('validlength', PARAM_INTEGER);
-            $mform->addElement('hidden', 'program', $this->parentlicense->program);
+            $mform->addElement('hidden', 'program', $parentlicense->program);
             $mform->setType('program', PARAM_INTEGER);
-            $mform->addElement('hidden', 'parentid', $this->parentlicense->id);
+            $mform->addElement('hidden', 'parentid', $parentlicense->id);
             $mform->setType('parentid', PARAM_INTEGER);
         }
 
-        $mform->addElement('text', 'allocation', get_string('licenseallocation', 'block_iomad_company_admin'),
-                           'maxlength="254" size="50"');
+        $mform->addElement(
+            'text',
+            'allocation',
+            get_string('licenseallocation', 'block_iomad_company_admin'),
+            'maxlength="254" size="50"');
         $mform->addHelpButton('allocation', 'licenseallocation', 'block_iomad_company_admin');
-        $mform->addRule('allocation', get_string('missinglicenseallocation', 'block_iomad_company_admin'),
-                        'required', null, 'client');
+        $mform->addRule(
+            'allocation',
+            get_string('missinglicenseallocation', 'block_iomad_company_admin'),
+            'required',
+            null,
+            'client');
         $mform->setType('allocation', PARAM_MULTILANG);
 
         $mform->addElement('hidden', 'courseselector', 0);
-        $mform->setType('expirydate', PARAM_INT);
+        $mform->setType('courseselector', PARAM_INT);
 
-        if (!empty($this->parentlicense->program)) {
-            $mform->addElement('html', "<div style='display:none'>");
+        if (!empty($parentlicense->program)) {
+            $mform->addElement('html', html_writer::start_div(['style' => 'display:none']));
         }
         $autooptions = ['multiple' => true];
         $mform->addElement(
             'autocomplete',
             'licensecourses',
-            get_string('selectlicensecourse', 'block_iomad_company_admin'),
-            $this->courses, $autooptions);
+            get_string('courses'),
+            $courses, $autooptions);
         $mform->addRule('licensecourses', get_string('missinglicensecourses', 'block_iomad_company_admin'),
                         'required', null, 'client');
 
         // If we are not a child of a program license then show all of the courses.
-        if (!empty($this->parentlicense->program)) {
-            $mform->addElement('html', "</div>");
-        }
-
-        if ( $this->courses ) {
-            if (empty($this->licenseid)) {
-                $this->add_action_buttons(true, get_string('createlicense', 'block_iomad_company_admin'));
-            } else {
-                $this->add_action_buttons(true, get_string('updatelicense', 'block_iomad_company_admin'));
-            }
-        } else {
-            $mform->addElement('html', get_string('nocourses', 'block_iomad_company_admin'));
+        if (!empty($parentlicense->program)) {
+            $mform->addElement('html', html_writer::end_div());
         }
     }
 
@@ -345,22 +272,25 @@ class company_license_form extends company_moodleform {
      * @return array
      */
     public function validation($data, $files) {
-        global $CFG, $DB;
+        global $DB;
 
         $errors = [];
 
-        $name = optional_param('name', '', PARAM_ALPHANUMEXT);
-
+        // Check the name is valid.
+        $name = clean_param(trim($data['name']), PARAM_ALPHANUMEXT);
         if (empty($name)) {
             $errors['name'] = get_string('invalidlicensename', 'block_iomad_company_admin');
         }
 
+        // Check that the amount of free licenses slots is more than the amount being allocated.
         if (!empty($data['licenseid'])) {
-            // Check that the amount of free licenses slots is more than the amount being allocated.
             $currentlicense = $DB->get_record('local_iomad_company_licenses', ['id' => $data['licenseid']]);
             if (!empty($currentlicense->program)) {
                 // Used count comes from the number of currently allocated courses.  Not those being passed.
-                $coursecount = $DB->count_records('local_iomad_company_license_courses', ['licenseid' => $currentlicense->id]);
+                $coursecount = $DB->count_records(
+                    'local_iomad_company_license_courses',
+                    ['licenseid' => $currentlicense->id]
+                );
                 $used = $currentlicense->used / $coursecount;
             } else {
                 $used = $currentlicense->used;
@@ -370,18 +300,19 @@ class company_license_form extends company_moodleform {
             }
         }
 
+        // Check the dates are sensible.
         if ($data['startdate'] > $data['expirydate']) {
             $errors['startdate'] = get_string('invalidstartdate', 'block_iomad_company_admin');
         }
 
+        // Check that the amount of free parent licenses slots is more than the amount being allocated.
         if (!empty($data['parentid'])) {
-            // Check that the amount of free licenses slots is more than the amount being allocated.
             $parentlicense = $DB->get_record('local_iomad_company_licenses', ['id' => $data['parentid']]);
 
             // Check if this is a new license or we are updating it.
             if (!empty($data['licenseid'])) {
-                $currlicenseinfo = $DB->get_record('local_iomad_company_licenses', ['id' => $data['licenseid']]);
-                $weighting = $currlicenseinfo->allocation;
+                $currparentlicense = $DB->get_record('local_iomad_company_licenses', ['id' => $data['licenseid']]);
+                $weighting = $currparentlicense->allocation;
             } else {
                 $weighting = 0;
             }
@@ -415,6 +346,7 @@ class company_license_form extends company_moodleform {
             $errors['licensecourses'] = get_string('select_license_courses', 'block_iomad_company_admin');
         }
 
+        // Non blanket or reusable licenses need to have a duration set.
         if (($data['type'] == 1 || $data['type'] == 3) &&
             empty($data['validlength']) &&
             empty($data['cutoffdate'])) {
@@ -430,7 +362,7 @@ class company_license_form extends company_moodleform {
             }
         }
 
-        // Did we get passed any courses?
+        // Did we get passed an allocation?
         if ($data['allocation'] < 1 ) {
             $errors['allocation'] = get_string('invalidnumber', 'block_iomad_company_admin');
         }
@@ -440,10 +372,319 @@ class company_license_form extends company_moodleform {
             $errors['expirydate'] = get_string('errorinvaliddate', 'calendar');
         }
 
-        if (get_config('local_iomad', 'autoenrol_managers') && $data['type'] > 1 && $data['type'] < 4) {
+        // Check the type hasn't been forced somewhere when it's not available.
+        if (get_config('local_iomad', 'autoenrol_managers') &&
+            $data['type'] > 1 &&
+            $data['type'] < 4) {
             $errors['type'] = get_string('invalid');
         }
 
         return $errors;
+    }
+
+    /**
+     * Process the form submission, used if form was submitted via AJAX.
+     *
+     * @return array
+     */
+    public function process_dynamic_submission(): array {
+        global $DB, $USER;
+
+        // Get the info from the form.
+        $data = $this->get_data();
+        $returnmessage = "";
+
+        // Deal with default data.
+        $companycontext = context_company::instance($data->companyid);
+        $licenseid = $data->licenseid;
+
+        // Set some defaults.
+        if (empty($data->instant)) {
+            $data->instant = 0;
+        }
+        $new = false;
+        $licensedata = [];
+
+        // Sanitise the data.
+        $licensedata['name'] = trim($data->name);
+        $licensedata['reference'] = trim($data->reference);
+        if (empty($data->program)) {
+            $licensedata['program'] = 0;
+            $licensedata['allocation'] = $data->allocation;
+        } else {
+            $licensedata['program'] = $data->program;
+            $licensedata['allocation'] = $data->allocation * count($data->licensecourses);
+        }
+        $licensedata['humanallocation'] = $data->allocation;
+        $licensedata['instant'] = $data->instant;
+        $licensedata['expirydate'] = $data->expirydate;
+        $licensedata['startdate'] = $data->startdate;
+
+        if (empty($data->languages)) {
+            $data->languages = [];
+        }
+
+        if (empty($data->parentid)) {
+            $licensedata['companyid'] = $data->companyid;
+        } else {
+            $licensedata['companyid'] = $data->designatedcompany;
+            $licensedata['parentid'] = $data->parentid;
+        }
+        $licensedata['validlength'] = $data->validlength;
+        $licensedata['type'] = $data->type;
+
+        if (empty($data->cutoffdate)) {
+            $licensedata['cutoffdate'] = 0;
+        } else {
+            $licensedata['cutoffdate'] = $data->cutoffdate;
+        }
+
+        if (empty($data->clearonexpire)) {
+            $licensedata['clearonexpire'] = 0;
+        } else {
+            $licensedata['clearonexpire'] = $data->clearonexpire;
+        }
+
+        // Update/create the license.
+        if (!empty($licenseid) &&
+            $currlicensedata = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid])) {
+            // Already in the table update it.
+            $new = false;
+            $licensedata['id'] = $currlicensedata->id;
+            $licensedata['used'] = $currlicensedata->used;
+            $DB->update_record('local_iomad_company_licenses', $licensedata);
+        } else {
+            // New license being created.
+            $new = true;
+            $licensedata['used'] = 0;
+            $licenseid = $DB->insert_record('local_iomad_company_licenses', $licensedata);
+        }
+
+        // Deal with course allocations if there are any.
+        // Capture them for checking.
+        $oldcourses = $DB->get_records('local_iomad_company_license_courses', ['licenseid' => $licenseid], null, 'courseid');
+
+        // Clear down all of them initially.
+        $DB->delete_records('local_iomad_company_license_courses', ['licenseid' => $licenseid]);
+        if (!empty($data->licensecourses)) {
+            // Add the course license allocations.
+            foreach ($data->licensecourses as $selectedcourse) {
+                $DB->insert_record(
+                    'local_iomad_company_license_courses',
+                    ['licenseid' => $licenseid, 'courseid' => $selectedcourse]
+                );
+            }
+        }
+
+        // Create an event to deal with an parent license allocations.
+        $eventother = ['licenseid' => $licenseid,
+                       'parentid' => $data->parentid];
+
+        if ($new) {
+            $event = company_license_created::create([
+                'context' => $companycontext,
+                'userid' => $USER->id,
+                'objectid' => $licenseid,
+                'other' => $eventother,
+            ]);
+            $returnmessage = get_string('licensecreatedok', 'block_iomad_company_admin');
+        } else {
+            $eventother['oldcourses'] = json_encode($oldcourses);
+            if ($currlicensedata->program != $data->program) {
+                $eventother['programchange'] = true;
+            }
+            if ($currlicensedata->startdate != $data->startdate) {
+                $eventother['oldstartdate'] = $currlicensedata->startdate;
+            }
+            if ($currlicensedata->type != $data->type) {
+                $eventother['educatorchange'] = true;
+            }
+            $event = company_license_updated::create([
+                'context' => $companycontext,
+                'userid' => $USER->id,
+                'objectid' => $licenseid,
+                'other' => $eventother,
+            ]);
+            $returnmessage = get_string('licenseupdatedok', 'block_iomad_company_admin');
+        }
+
+        // Fire the event and redirect.
+        $event->trigger();
+        notification::success($returnmessage);
+
+        // Return stuff to the JS.
+        return [
+            'result' => true,
+            'returnmessage' => '',
+        ];
+    }
+
+    /**
+     * Load in existing data as form defaults (not applicable).
+     *
+     * @return void
+     */
+    public function set_data_for_dynamic_submission(): void {
+        global $DB;
+
+        // Set some defaults.
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $licenseid = $this->optional_param('licenseid', 0, PARAM_INT);
+        $parentid = $this->optional_param('parentid', 0, PARAM_INT);
+        $companycontext = context_company::instance($companyid);
+        $company = new company($companyid);
+
+        // Do we have an existing record?
+        if (empty($licenseid)) {
+            $data = (object) [
+                'expirydate' => strtotime('+ 1 year'),
+                'cutoffdate' => strtotime('+ 1 year'),
+                ];
+
+            // Are we splitting a current license?
+            if (!empty($parentid)) {
+                // Get the courses from that.
+                if ($currentcourses = $DB->get_records(
+                    'local_iomad_company_license_courses',
+                    ['licenseid' => $parentid],
+                    null,
+                    'courseid')) {
+                    $data->licensecourses = array_keys($currentcourses);
+                }
+            }
+        } else {
+            // Get the license record and populate everything we need for the form.
+            $data = $DB->get_record(
+                'local_iomad_company_licenses',
+                ['id' => $licenseid],
+                '*',
+                MUST_EXIST
+            );
+            $parentid = $data->parentid;
+
+            // Get any allocated courses.
+            $currentcourses = $DB->get_records(
+                'local_iomad_company_license_courses',
+                ['licenseid' => $licenseid],
+                null,
+                'courseid'
+            );
+            $data->licensecourses = array_keys($currentcourses);
+
+            // Deal with the amount for program courses.
+            if (!empty($data->program)) {
+                $data->allocation = $data->allocation / count($currentcourses);
+            }
+        }
+
+        // Can we even do this?
+        if (empty($parentid)) {
+            if (!empty($licenseid) && $company->is_child_license($licenseid)) {
+                iomad::require_capability('block/iomad_company_admin:edit_my_licenses', $companycontext);
+            } else {
+                iomad::require_capability('block/iomad_company_admin:edit_licenses', $companycontext);
+            }
+        } else {
+            iomad::require_capability('block/iomad_company_admin:edit_my_licenses', $companycontext);
+        }
+
+        // Send it.
+        $data->companyid = $companyid;
+        $data->licenseid = $licenseid;
+        $data->parentid = $parentid;
+        $this->set_data($data);
+    }
+
+    /**
+     * Check if current user has access to this form, otherwise throw exception.
+     *
+     * @return void
+     * @throws moodle_exception
+     */
+    protected function check_access_for_dynamic_submission(): void {
+        global $CFG, $DB;
+
+        // Set some defaults.
+        $licenseid = $this->optional_param('licenseid', 0, PARAM_INT);
+        $parentid = $this->optional_param('parentid', 0, PARAM_INT);
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $companycontext = $this->get_context_for_dynamic_submission();
+        $returnurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/company_license_list.php');
+        $company = new company($companyid);
+
+        // Is there a current license?
+        if (!empty($licenseid)) {
+            $license = $DB->get_record(
+                'local_iomad_company_licenses',
+                ['id' => $licenseid],
+                '*',
+                MUST_EXIST
+            );
+            $parentid = $license->parentid;
+        }
+
+        // Check the capabilities.
+        if (empty($parentid)) {
+            if (!empty($licenseid) && $company->is_child_license($licenseid)) {
+                if (!iomad::has_capability('block/iomad_company_admin:edit_my_licenses', $companycontext)) {
+                    throw new moodle_exception(
+                        'nopermissions',
+                        '',
+                        $returnurl->out(),
+                        get_string(
+                            'block/iomad_company_admin:edit_my_licenses',
+                            'block_iomad_company_admin'
+                        )
+                    );
+
+                }
+            } else {
+                if (!iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext)) {
+                    throw new moodle_exception(
+                        'nopermissions',
+                        '',
+                        $returnurl->out(),
+                        get_string(
+                            'block/iomad_company_admin:edit_licenses',
+                            'block_iomad_company_admin'
+                        )
+                    );
+                }
+            }
+        } else {
+            if (iomad::require_capability('block/iomad_company_admin:edit_my_licenses', $companycontext)) {
+                throw new moodle_exception(
+                    'nopermissions',
+                    '',
+                    $returnurl->out(),
+                    get_string(
+                        'block/iomad_company_admin:edit_my_licenses',
+                        'block_iomad_company_admin'
+                    )
+                );
+            }
+        }
+    }
+
+    /**
+     * Return form context
+     *
+     * @return context
+     */
+    protected function get_context_for_dynamic_submission(): context {
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $companycontext = context_company::instance($companyid);
+
+        return $companycontext;
+    }
+
+    /**
+     * Returns url to set in $PAGE->set_url() when form is being rendered or submitted via AJAX.
+     *
+     * @return moodle_url
+     */
+    protected function get_page_url_for_dynamic_submission(): moodle_url {
+
+        return new moodle_url('/blocks/iomad_company_admin/company_license_list.php');
     }
 }

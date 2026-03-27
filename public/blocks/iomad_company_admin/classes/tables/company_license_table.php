@@ -221,20 +221,32 @@ class company_license_table extends table_sql {
                 iomad::has_capability('block/iomad_company_admin:split_my_licenses', $companycontext)) &&
             $row->used < $row->allocation &&
             $gotchildren) {
-            $spliturl = new moodle_url('company_license_edit_form.php', ["parentid" => $row->id]);
             $splitbutton = html_writer::tag(
                 'a',
-                $strsplit,
+                html_writer::tag(
+                    'i',
+                    '',
+                    [
+                        'class' => 'icon fa fa-object-ungroup fa-fw',
+                        'title' => $strsplit,
+                        'role' => 'img',
+                        'aria-label' => $strsplit,
+                    ]
+                ),
                 [
-                    'class' => 'btn btn-primary',
-                    'href' => $spliturl,
+                    'href' => '#',
+                    'data-action' => 'show-licensesplitform',
+                    'data-licenseid' => 0,
+                    'data-parentid' => $row->id,
+                    'data-companyid' => $row->companyid,
                 ]
             );
         }
 
         // Set up the delete and edit buttons.
         if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext) ||
-            (iomad::has_capability('block/iomad_company_admin:edit_my_licenses', $companycontext) && !empty($row->parentid))) {
+            (iomad::has_capability('block/iomad_company_admin:edit_my_licenses', $companycontext) &&
+            !empty($row->parentid))) {
             // Is this above the user's company allocation?
             if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext) ||
                 $DB->get_record_sql(
@@ -249,29 +261,45 @@ class company_license_table extends table_sql {
                     ]
                 )) {
 
-                $deleteurl = new moodle_url('company_license_list.php', [
-                    'delete' => $row->id,
-                    'sesskey' => sesskey(),
-                ]);
-                $editurl = new moodle_url('company_license_edit_form.php', [
-                    'licenseid' => $row->id,
-                    'departmentid' => $departmentid,
-                ]);
-
                 $deletebutton = html_writer::tag(
                     'a',
-                    $strdelete,
+                    html_writer::tag(
+                        'i',
+                        '',
+                        [
+                            'class' => 'icon fa fa-trash fa-fw',
+                            'title' => $strdelete,
+                            'role' => 'img',
+                            'aria-label' => $strdelete,
+                        ]
+                    ),
                     [
-                        'class' => 'btn btn-primary',
-                        'href' => $deleteurl,
+                        'href' => '#',
+                        'data-action' => 'show-deletelicenseconfirm',
+                        'data-licenseid' => $row->id,
+                        'data-companyid' => $row->companyid,
+                        'data-inuse' => $row->used,
+                        'data-licensename' => format_string($row->name),
                     ]
                 );
+
                 $editbutton = html_writer::tag(
                     'a',
-                    $stredit,
+                    html_writer::tag(
+                        'i',
+                        '',
+                        [
+                            'class' => 'icon fa fa-cog fa-fw',
+                            'title' => $stredit,
+                            'role' => 'img',
+                            'aria-label' => $stredit,
+                        ]
+                    ),
                     [
-                        'class' => 'btn btn-primary',
-                        'href' => $editurl,
+                        'href' => '#',
+                        'data-action' => 'show-licenseeditform',
+                        'data-licenseid' => $row->id,
+                        'data-companyid' => $row->companyid,
                     ]
                 );
             }
@@ -281,13 +309,21 @@ class company_license_table extends table_sql {
         if (iomad::has_capability('block/iomad_company_admin:allocate_licenses', $companycontext)) {
             $allocateurl = new moodle_url('company_license_users_form.php', ['licenseid' => $row->id]);
             $allocatebutton = html_writer::tag(
-                'a',
-                $strallocate,
-                [
-                    'class' => 'btn btn-primary',
-                    'href' => $allocateurl,
-                ]
-            );
+                    'a',
+                    html_writer::tag(
+                        'i',
+                        '',
+                        [
+                            'class' => 'icon fa fa-user-plus fa-fw',
+                            'title' => $strallocate,
+                            'role' => 'img',
+                            'aria-label' => $strallocate,
+                        ]
+                    ),
+                    [
+                        'href' => $allocateurl,
+                    ]
+                );
         }
 
         $actionsoutput = $editbutton . ' ' . $splitbutton . ' ' . $deletebutton . ' ' . $allocatebutton;

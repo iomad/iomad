@@ -71,6 +71,41 @@ $linktext = get_string('company_license_list_title', 'block_iomad_company_admin'
 // Set the page heading.
 $PAGE->set_title($linktext);
 $PAGE->set_heading($linktext);
+$PAGE->requires->js_call_amd('block_iomad_company_admin/license_edit', 'init');
+
+// Show the controls.
+if ($showexpired) {
+    $showexpiredstring = get_string('hideexpiredlicenses', 'block_iomad_company_admin');
+} else {
+    $showexpiredstring = get_string('showexpiredlicenses', 'block_iomad_company_admin');
+}
+$buttons = html_writer::tag(
+    'a',
+    $showexpiredstring,
+    [
+        'class' => 'btn btn-secondary',
+        'role' => 'button',
+        'href' => new moodle_url(
+            'company_license_list.php',
+            ['showexpired' => !$showexpired]
+        ),
+    ]
+);
+if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext)) {
+    $buttons .= '&nbsp;' . html_writer::tag(
+        'a',
+        get_string('licenseaddnew', 'block_iomad_company_admin'),
+        [
+            'class' => 'btn btn-secondary',
+            'role' => 'button',
+            'data-action' => 'show-licenseeditform',
+            'data-companyid' => $companyid,
+            'data-licenseid' => 0,
+            'href' => '#',
+        ]
+    );
+}
+$PAGE->set_button($buttons);
 
 // Log this page view.
 dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
@@ -85,60 +120,6 @@ if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycon
 } else {
     $userlevels = $company->get_userlevel($USER);
     $departmentid = key($userlevels);
-}
-
-// Process any delete requests.
-if ($delete && confirm_sesskey()) {
-
-    // Deal with child license permissions.
-    if ($company->is_child_license($delete)) {
-        iomad::require_capability('block/iomad_company_admin:edit_my_licenses', $companycontext);
-    } else {
-        iomad::require_capability('block/iomad_company_admin:edit_licenses', $companycontext);
-    }
-
-    // Sanity checking.
-    $license = $DB->get_record('local_iomad_company_licenses', ['id' => $delete], '*', MUST_EXIST);
-
-    // Show the confirmation page.
-    if ($confirm != md5($delete)) {
-        echo $OUTPUT->header();
-        $name = $license->name;
-
-        if ($license->used > 0) {
-            notice(get_string('licenseinuse', 'block_iomad_company_admin'), $linkurl);
-        } else {
-            echo $OUTPUT->heading(get_string('deletelicense', 'block_iomad_company_admin'), 2, 'headingblock header');
-            $optionsyes = ['delete' => $delete, 'confirm' => md5($delete), 'sesskey' => sesskey()];
-
-            echo $OUTPUT->confirm(
-                get_string('companydeletelicensecheckfull', 'block_iomad_company_admin', "'$name'"),
-                new moodle_url('company_license_list.php', $optionsyes),
-                'company_license_list.php');
-            echo $OUTPUT->footer();
-            die;
-        }
-    } else if (data_submitted()) {
-        // Actually delete license.
-        if (!$DB->delete_records('local_iomad_company_licenses', ['id' => $delete])) {
-            throw new moodle_exception('error while deleting license');
-        }
-
-        // Create an event to deal with an parent license allocations.
-        $eventother = ['licenseid' => $license->id,
-                            'parentid' => $license->parentid];
-
-        $event = company_license_deleted::create([
-            'context' => $companycontext,
-            'userid' => $USER->id,
-            'objectid' => $license->parentid,
-            'other' => $eventother,
-        ]);
-        $event->trigger();
-
-        redirect($returnurl, get_string('licensedeletedok', 'block_iomad_company_admin'), null, notification::NOTIFY_SUCCESS);
-        die;
-    }
 }
 
 // Check we can actually do anything on this page.
@@ -239,21 +220,6 @@ $table->no_sorting('actions');
 
 // Display the page.
 echo $OUTPUT->header();
-
-// Show the controls.
-echo html_writer::start_tag('div', ['class' => 'buttons']);
-if ($showexpired) {
-    $showexpiredstring = get_string('hideexpiredlicenses', 'block_iomad_company_admin');
-} else {
-    $showexpiredstring = get_string('showexpiredlicenses', 'block_iomad_company_admin');
-}
-echo $OUTPUT->single_button(new moodle_url('company_license_list.php', ['showexpired' => !$showexpired]),
-                                            $showexpiredstring);
-if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext)) {
-    echo $OUTPUT->single_button(new moodle_url('company_license_edit_form.php'),
-                                                get_string('licenseaddnew', 'block_iomad_company_admin'), 'get');
-}
-echo html_writer::end_tag('div');
 
 // Display the list of licenses.
 $table->out(get_config('local_iomad', 'max_list_licenses'), true);
