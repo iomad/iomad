@@ -231,7 +231,8 @@ if (iomad::has_capability('block/iomad_company_admin:competencymanagement_view',
     $panes[5] = ['category' => 'CompetencyAdmin', 'items' => [], 'selected' => $selected];
     $selected = false;
 }
-if (iomad::has_capability('block/iomad_commerce:admin_view', $companycontext)) {
+if (iomad::has_capability('block/iomad_commerce:admin_view', $companycontext) &&
+    !$CFG->commerce_enable_external) {
     $tabs[] = [
         'category' => 'ECommerceAdmin',
         'icon' => 'fa-truck',

@@ -279,7 +279,8 @@ class block_iomad_company_admin extends block_base {
             $panes[5] = ['category' => 'CompetencyAdmin', 'items' => [], 'selected' => $selected];
             $selected = false;
         }
-        if ($viewcommercetab) {
+        if ($viewcommercetab &&
+            !$CFG->commerce_enable_external) {
             $tabs[] = [
                 'category' => 'ECommerceAdmin',
                 'icon' => 'fa-truck',
