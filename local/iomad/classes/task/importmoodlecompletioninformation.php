@@ -81,7 +81,7 @@ class importmoodlecompletioninformation extends adhoc_task {
                                                  ['userid' => $userid,
                                                   'courseid' => $courseid])) {
                 // User isn't enrolled. Not sure why we got this.
-                return true;
+                continue;
             }
 
             // Is this a duplicate event?
@@ -96,7 +96,7 @@ class importmoodlecompletioninformation extends adhoc_task {
                                       'timeenrolled' => $enrolrec->timecreated])) {
 
                 // It is so we don't record it.
-                return true;
+                continue;
             }
 
             // Get the final grade for the course.
