@@ -443,18 +443,49 @@ class product_edit_form extends dynamic_form {
     protected function check_access_for_dynamic_submission(): void {
         global $CFG;
 
+        // Set some defaults.
+        $companyid = $this->optional_param('companyid', 0, PARAM_INT);
+        $productid = $this->optional_param('productid', 0, PARAM_INT);
+        $returnurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/courselist.php');
         $context = $this->get_context_for_dynamic_submission();
-        if (!iomad::has_capability('block/iomad_company_admin:classrooms_edit', $context)) {
-            $returnurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/classroom_list.php');
-            throw new moodle_exception(
-                'nopermissions',
-                '',
-                $returnurl->out(),
-                get_string(
-                    'block/iomad_company_admin:classrooms_edit',
-                    'block_iomad_company_admin'
-                )
-            );
+
+        // Check we can do these things.
+        if ($companyid == 0) {
+            if (!iomad::has_capability('block/iomad_commerce:manage_default', $context)) {
+                throw new moodle_exception(
+                    'nopermissions',
+                    '',
+                    $returnurl->out(),
+                    get_string(
+                        'block/iomad_commerce:manage_default',
+                        'block_iomad_commerce'
+                    )
+                );
+            }
+        } else if ($productid == 0) {
+            if (!iomad::has_capability('block/iomad_commerce:add_course', $context)) {
+                throw new moodle_exception(
+                    'nopermissions',
+                    '',
+                    $returnurl->out(),
+                    get_string(
+                        'block/iomad_commerce:add_course',
+                        'block_iomad_commerce'
+                    )
+                );
+            }
+        } else {
+            if (!iomad::has_capability('block/iomad_commerce:edit_course', $context)) {
+                throw new moodle_exception(
+                    'nopermissions',
+                    '',
+                    $returnurl->out(),
+                    get_string(
+                        'block/iomad_commerce:edit_course',
+                        'block_iomad_commerce'
+                    )
+                );
+            }
         }
     }
 
@@ -477,6 +508,6 @@ class product_edit_form extends dynamic_form {
      */
     protected function get_page_url_for_dynamic_submission(): moodle_url {
 
-        return new moodle_url('/blocks/iomad_company_admin/classroom_list.php');
+        return new moodle_url('/blocks/iomad_commerce/courselist.php');
     }
 }
