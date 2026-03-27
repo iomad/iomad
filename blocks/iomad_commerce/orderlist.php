@@ -23,6 +23,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_company_admin\event\dashboard_page_viewed;
+use core_user\fields;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
@@ -38,18 +40,19 @@ $page = optional_param('page', 0, PARAM_INT);
 $perpage = optional_param('perpage', 30, PARAM_INT);
 $download = optional_param('download', 0, PARAM_CLEAN);
 
+// Login and set up $PAGE.
 require_login();
 
-$systemcontext = context_system::instance();
 
 // Set the companyid.
+$systemcontext = context_system::instance();
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
-// Correct the navbar.
 // Set the name for the page.
 $linktext = get_string('orders', 'block_iomad_commerce');
+
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_commerce/orderlist.php');
 
@@ -66,8 +69,9 @@ $PAGE->set_heading($linktext);
 $PAGE->requires->js_call_amd('block_iomad_commerce/order_edit', 'init');
 
 // Log this page view.
-block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
+// Set the default URLs.
 $baseurl = new moodle_url('/blocks/iomad_commerce/orderlist.php',
                           ['sort' => $sort,
                            'dir' => $dir,
@@ -77,7 +81,11 @@ $returnurl = $baseurl;
 // Check we can actually do anything on this page.
 iomad::require_capability('block/iomad_commerce:admin_view', $companycontext);
 
-$userfields = \core_user\fields::for_name()->with_identity($systemcontext)->excluding('id', 'deleted', 'firstname', 'lastname');
+// Set up the table.
+$table = new block_iomad_commerce\tables\orders_table('block_iomad_commerce_orders_table');
+
+// Set up the table SQL.
+$userfields = fields::for_name()->with_identity($systemcontext)->excluding('id', 'deleted', 'firstname', 'lastname');
 $usersql = $userfields->get_sql('u');
 $selectsql = "i.id,
               i.reference,
@@ -124,8 +132,7 @@ $columns = ['reference',
             'unprocesseditems',
             'actions'];
 
-// Actually create and display the table.
-$table = new block_iomad_commerce\tables\orders_table('block_iomad_commerce_orders_table');
+// Finish setting up the table.
 $table->set_sql($selectsql, $fromsql, $wheresql, $sqlparams);
 $table->define_baseurl($baseurl);
 $table->define_columns($columns);
@@ -139,12 +146,15 @@ $table->is_downloading($download,
                                      format_string(userdate(time(), get_config('local_iomad', 'date_format'))),
                        'companyinvoices');
 
+// Display the header.
 if (!$table->is_downloading()) {
     echo $OUTPUT->header();
 }
 
+// Display the table.
 $table->out(get_config('local_iomad', 'max_list_users'), true);
 
+// Display the footer.
 if (!$table->is_downloading()) {
     echo $OUTPUT->footer();
 }
