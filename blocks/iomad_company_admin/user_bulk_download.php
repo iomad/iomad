@@ -23,6 +23,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core\user;
+
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
 require_once(__DIR__ . '/lib.php');
@@ -94,9 +96,9 @@ if ($format) {
     // Get company category.
     if ($category = $DB->get_record_sql(
         "SELECT uic.id, uic.name
-         FROM {user_info_category} uic
-         JOIN {company} c ON (uic.id = c.profileid)
-         WHERE c.id = :companyid",
+           FROM {user_info_category} uic
+           JOIN {company} c ON (uic.id = c.profileid)
+          WHERE c.id = :companyid",
         ['companyid' => $companyid])) {
         if ($extrafields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
             foreach ($extrafields as $n => $v) {
@@ -107,10 +109,10 @@ if ($format) {
     // Get non company categories.
     if ($categories = $DB->get_records_sql(
         "SELECT id, name
-         FROM {user_info_category}
-         WHERE id NOT IN (
-             SELECT profileid FROM {company}
-         )")) {
+           FROM {user_info_category}
+          WHERE id NOT IN (
+              SELECT profileid FROM {company}
+          )")) {
         foreach ($categories as $category) {
             if ($extrafields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
                 foreach ($extrafields as $n => $v) {
@@ -126,26 +128,24 @@ if ($format) {
     $departmentusers = array();
     $userlevels = $company->get_userlevel($USER);
     foreach ($userlevels as $userlevelid => $userlevel) {
-        $departmentusers = company::get_recursive_department_users($userlevelid);
+        $departmentusers = $departmentusers + company::get_recursive_department_users($userlevelid);
     }
     if (count($departmentusers) > 0) {
         [$insql, $inparams] = $DB->get_in_or_equal(array_keys($departmentusers),
                                                    SQL_PARAMS_NAMED,
                                                    'duids');
-        $sqlsearch = " AND u.id {$insql} ";
+        $sqlsearch = " AND userid {$insql} ";
         $params = $params + $inparams;
     } else {
         $sqlsearch = "AND 1 = 0";
     }
 
-
-
-    $userids = $DB->get_records_sql_menu("SELECT DISTINCT userid, userid as id
-        FROM
-            {company_users} u
-        WHERE
-            companyid = :companyid
-            " . $sqlsearch, $params);
+    $userids = $DB->get_records_sql(
+        "SELECT DISTINCT userid AS id
+                    FROM {company_users}
+                   WHERE companyid = :companyid
+                         $sqlsearch",
+        $params);
 
     switch ($format) {
         case 'csv' : user_download_csv($userids, $fields, ! $companyid);
@@ -182,7 +182,7 @@ echo $OUTPUT->footer();
  * @return void
  */
 function user_download_ods($userids, $fields, $includecompanyfield) {
-    global $CFG, $SESSION, $DB;
+    global $CFG;
 
     require_once("$CFG->libdir/odslib.class.php");
     require_once($CFG->dirroot.'/user/profile/lib.php');
@@ -205,15 +205,15 @@ function user_download_ods($userids, $fields, $includecompanyfield) {
     $worksheet[0]->write(0, $col, 'temppassword');
 
     $row = 1;
-    foreach ($userids as $userid) {
+    foreach (array_keys($userids) as $userid) {
         // Stop the script from timing out on large numbers of users.
         set_time_limit(30);
-        if (!$user = $DB->get_record('user', ['id' => $userid])) {
+        if (!$user = user::get_user($userid)) {
             continue;
         }
         $col = 0;
         profile_load_data($user);
-        foreach ($fields as $field => $unused) {
+        foreach (array_keys($fields) as $field) {
             // Stop the script from timing out on large numbers of users.
             set_time_limit(30);
             if ($includecompanyfield || $field != "profile_field_company") {
@@ -244,7 +244,7 @@ function user_download_ods($userids, $fields, $includecompanyfield) {
  * @return void
  */
 function user_download_xls($userids, $fields, $includecompanyfield) {
-    global $CFG, $SESSION, $DB;
+    global $CFG;
 
     require_once("$CFG->libdir/excellib.class.php");
     require_once($CFG->dirroot.'/user/profile/lib.php');
@@ -267,15 +267,15 @@ function user_download_xls($userids, $fields, $includecompanyfield) {
     $worksheet[0]->write(0, $col, 'temppassword');
 
     $row = 1;
-    foreach ($userids as $userid) {
+    foreach (array_keys($userids) as $userid) {
         // Stop the script from timing out on large numbers of users.
         set_time_limit(30);
-        if (!$user = $DB->get_record('user', ['id' => $userid])) {
+        if (!$user = user::get_user($userid)) {
             continue;
         }
         $col = 0;
         profile_load_data($user);
-        foreach ($fields as $field => $unused) {
+        foreach (array_keys($fields) as $field) {
             // Stop the script from timing out on large numbers of users.
             set_time_limit(30);
             if ($includecompanyfield || $field != "profile_field_company") {
@@ -301,7 +301,7 @@ function user_download_xls($userids, $fields, $includecompanyfield) {
  * CSV Download processor
  */
 function user_download_csv($userids, $fields, $includecompanyfield) {
-    global $CFG, $SESSION, $DB;
+    global $CFG;
 
     require_once($CFG->dirroot.'/user/profile/lib.php');
 
@@ -325,15 +325,15 @@ function user_download_csv($userids, $fields, $includecompanyfield) {
     $row[] = "temppassword";
     echo implode($delimiter, $row)."\n";
 
-    foreach ($userids as $userid) {
+    foreach (array_keys($userids) as $userid) {
         // Stop the script from timing out on large numbers of users.
         set_time_limit(30);
         $row = [];
-        if (!$user = $DB->get_record('user', ['id' => $userid])) {
+        if (!$user = user::get_user($userid)) {
             continue;
         }
         profile_load_data($user);
-        foreach ($fields as $field => $unused) {
+        foreach (array_keys($fields) as $field) {
             // Stop the script from timing out on large numbers of users.
             set_time_limit(30);
             if ($includecompanyfield || $field != "profile_field_company") {
