@@ -46,11 +46,11 @@ $page         = optional_param('page', 0, PARAM_INT);
 $perpage      = optional_param('perpage', get_config('local_iomad', 'max_list_courses'), PARAM_INT);        // How many per page.
 $default      = optional_param('default', 0, PARAM_BOOL);
 
+// Login and set up $PAGE.
 require_login();
 
-$systemcontext = context_system::instance();
-
 // Set the companyid.
+$systemcontext = context_system::instance();
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
@@ -58,7 +58,6 @@ $company = new company($companyid);
 // Can we even do anything?
 iomad::require_capability('block/iomad_commerce:admin_view', $companycontext);
 
-// Correct the navbar .
 // Set the name for the page.
 if (!$default) {
     $linktext = get_string('course_list_title', 'block_iomad_commerce');
@@ -139,6 +138,7 @@ $PAGE->set_button($buttons);
 // Log this page view.
 dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
+// Set up the default URLs.
 $baseurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/courselist.php',
                           ['sort' => $sort,
                            'dir' => $dir,
