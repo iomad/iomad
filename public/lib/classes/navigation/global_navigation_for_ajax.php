@@ -16,6 +16,7 @@
 
 namespace core\navigation;
 
+use context_system;
 use core\context\module as context_module;
 use core\context\course as context_course;
 use core\context_helper;
