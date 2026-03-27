@@ -311,4 +311,12 @@ $functions = [
         'ajax' => true,
         'capabilities' => 'block/iomad_company_admin:editusers',
     ],
+
+    'block_iomad_company_admin_delete_license' => [
+        'classname' => block_iomad_company_admin\external\delete_license::class,
+        'description' => 'Delete license',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'block/iomad_company_admin:edit_licenses,block/iomad_company_admin:edit_my_licenses',
+    ],
 ];
