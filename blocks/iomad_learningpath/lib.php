@@ -38,24 +38,44 @@ define('LOCAL_IOMAD_LEARNINGPATH_COURSEBOTH', 'both');
  * @return bool false if file not found, does not return if found - just send the file
  */
 function block_iomad_learningpath_pluginfile($course,
-                                           $cm,
-                                           context $context,
-                                           $filearea,
-                                           $args,
-                                           $forcedownload) {
-    require_login();
-    $itemid = (int)array_shift($args);
+                                             $cm,
+                                             context $context,
+                                             $filearea,
+                                             $args,
+                                             $forcedownload,
+                                             array $options=[]) {
+    global $CFG;
 
-    $relativepath = implode('/', $args);
-
-    $fullpath = "/{$context->id}/block_iomad_learningpath/$filearea/$itemid/$relativepath";
-
-    $fs = get_file_storage();
-    if (!$file = $fs->get_file_by_hash(sha1($fullpath)) || $file->is_directory()) {
-        return false;
+    if ($context->contextlevel != CONTEXT_SYSTEM) {
+        send_file_not_found();
     }
-    // Download MUST be forced - security!
-    send_stored_file($file, 0, 0, true);// Check if we want to retrieve the stamps.
+
+    if ($filearea === 'thumbnail' ||
+        $filearea === 'mainpicture' ||
+        $filearea === 'picture') {
+        if ($CFG->forcelogin) {
+            // No login necessary - unless login forced everywhere.
+            require_login();
+        }
+
+        $fs = get_file_storage();
+
+        // Get some info on the file.
+        $filename = array_pop($args);
+        $filepath = '/';
+        $itemid = (int)array_shift($args);
+        if (!$file = $fs->get_file($context->id, 'block_iomad_learningpath', $filearea, $itemid, $filepath, $filename)) {
+            send_file_not_found();
+        }
+        if ($file->is_directory()) {
+            send_file_not_found();
+        }
+
+        \core\session\manager::write_close(); // Unlock session during file serving.
+        send_stored_file($file, null, 0, true, $options);
+    } else {
+        send_file_not_found();
+    }
 }
 
 /**

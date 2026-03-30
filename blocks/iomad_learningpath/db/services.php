@@ -135,4 +135,12 @@ $functions = [
         'ajax' => true,
     ],
 
+
+    'block_iomad_learningpath_delete_group' => [
+        'classname' => block_iomad_learningpath\external\delete_group::class,
+        'description' => 'Delete learning path group',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'block/iomad_learningpath:manage',
+    ],
 ];

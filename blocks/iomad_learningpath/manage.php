@@ -51,7 +51,24 @@ $PAGE->set_pagelayout('base');
 $PAGE->set_title(get_string('managetitle', 'block_iomad_learningpath'));
 $PAGE->set_heading(get_string('learningpathmanage', 'block_iomad_learningpath'));
 $PAGE->requires->js_call_amd('block_iomad_learningpath/manage', 'init');
+$PAGE->requires->js_call_amd('block_iomad_learningpath/path_edit', 'init');
 $output = $PAGE->get_renderer('block_iomad_learningpath');
+
+// Add the add new path button.
+$buttons = html_writer::tag(
+    'a',
+    get_string('addpath', 'block_iomad_learningpath'),
+    [
+        'href' => '#',
+        'role' => 'button',
+        'class' => 'btn btn-secondary',
+        'data-action' => 'show-editpathform',
+        'data-companyid' => $companyid,
+        'data-pathid' => 0,
+    ]
+);
+$PAGE->set_button($buttons);
+
 
 // Log this page view.
 dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
