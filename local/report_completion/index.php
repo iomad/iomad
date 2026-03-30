@@ -690,9 +690,11 @@ if (empty($courseid)) {
         $courseheaders[] = get_string('usersummary', 'local_report_completion');
         $coursecolumns[] = 'usersummary';
     } else {
+        $courseheaders[] = get_string('enrolled', 'local_report_completion');
         $courseheaders[] = get_string('notstartedusers', 'local_report_completion');
         $courseheaders[] = get_string('inprogressusers', 'local_report_completion');
         $courseheaders[] = get_string('completedusers', 'local_report_completion');
+        $coursecolumns[] = 'userenrolled';
         $coursecolumns[] = 'usernotstarted';
         $coursecolumns[] = 'userinprogress';
         $coursecolumns[] = 'usercompleted';
@@ -729,6 +731,7 @@ if (empty($courseid)) {
         $coursetable->no_sorting('usersummary');
     } else {
         $coursetable->no_sorting('usernotstarted');
+        $coursetable->no_sorting('userenrolled');
         $coursetable->no_sorting('userinprogress');
         $coursetable->no_sorting('usercompleted');
         if ($params['showpercentage'] == 1) {
