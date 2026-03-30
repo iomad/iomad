@@ -74,7 +74,7 @@ class learningpath_updated extends base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new moodle_url('/local/iomad_learningpath/manage.php');
+        return new moodle_url('/blocks/iomad_learningpath/manage.php');
     }
 
     /**

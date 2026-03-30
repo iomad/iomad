@@ -74,7 +74,7 @@ class user_unassigned extends base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new moodle_url('/local/iomad_learningpath/students.php');
+        return new moodle_url('/blocks/iomad_learningpath/students.php');
     }
 
     /**

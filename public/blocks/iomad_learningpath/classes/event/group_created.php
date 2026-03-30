@@ -75,7 +75,7 @@ class group_created extends base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new moodle_url('/local/iomad_learningpath/courselist.php');
+        return new moodle_url('/blocks/iomad_learningpath/courselist.php');
     }
 
     /**

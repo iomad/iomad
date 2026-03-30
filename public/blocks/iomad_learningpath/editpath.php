@@ -65,7 +65,7 @@ dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 $companypaths = new companypaths($companyid, $systemcontext);
 $paths = $companypaths->get_paths();
 $company = new company($companyid);
-$PAGE->set_heading(get_string('pathcompany', 'local_iomad_learningpath', $company->get_name()));
+$PAGE->set_heading(get_string('pathcompany', 'block_iomad_learningpath', $company->get_name()));
 
 // Attempt to locate path.
 $path = $companypaths->get_path($id);
