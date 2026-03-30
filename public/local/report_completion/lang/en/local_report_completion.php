@@ -52,6 +52,7 @@ $string['datestarted'] = 'Date started';
 $string['department'] = 'Department';
 $string['downloadcsv'] = 'Download as CSV file';
 $string['email'] = 'Email address';
+$string['enrolled'] = 'Enrolled';
 $string['error'] = 'Error finding custom profile field for company';
 $string['finalscore'] = 'Final score';
 $string['firstname'] = 'Firstname';
