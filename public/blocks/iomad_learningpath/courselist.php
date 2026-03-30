@@ -89,6 +89,7 @@ $PAGE->set_button($buttons);
 
 // Javascript initialise.
 $PAGE->requires->js_call_amd('block_iomad_learningpath/courselist', 'init', [$companyid, $id]);
+$PAGE->requires->js_call_amd('block_iomad_learningpath/section_edit', 'init');
 
 // Log this page view.
 dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();

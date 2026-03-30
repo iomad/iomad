@@ -57,9 +57,12 @@
                             <i class="fa fa-list fa-lg"></i>
                         </a>
                         &nbsp;<a
-                            href="{{{ linkedit }}}"
+                            href="#"
                             data-toggle="tooltip"
-                            title="{{# str }}editpath, block_iomad_learningpath{{/ str }}">
+                            title="{{# str }}editpath, block_iomad_learningpath{{/ str }}"
+                            data-action="show-editpathform"
+                            data-pathid="{{ id }}"
+                            data-companyid="{{ companyid }}">
                             <i class="fa fa-cog fa-lg"></i>
                         </a>
                     {{/canedit}}
@@ -94,8 +97,3 @@
         {{/ paths }}
     </div>
 {{/ ispaths }}
-{{#canedit}}
-    <div class="row top-space">
-        <a href="{{{ linknew }}}" class="btn btn-success"><i class="fa fa-plus"></i> {{# str }}addpath, block_iomad_learningpath{{/ str }}</a>
-    </div>
-{{/canedit}}

@@ -114,6 +114,8 @@ class manage_page implements renderable, templatable {
      * @return object
      */
     public function export_for_template(renderer_base $output) {
+        global $companyid;
+
         $this->munge_paths($output);
         $data = (object) [];
         $data->paths = array_values($this->paths);
@@ -121,6 +123,7 @@ class manage_page implements renderable, templatable {
         $data->linknew = new moodle_url('/blocks/iomad_learningpath/editpath.php');
         $data->canedit = iomad::has_capability('block/iomad_learningpath:manage', $this->context);
         $data->canassign = iomad::has_capability('block/iomad_learningpath:assign', $this->context);
+        $data->companyid = $companyid;
 
         return $data;
     }

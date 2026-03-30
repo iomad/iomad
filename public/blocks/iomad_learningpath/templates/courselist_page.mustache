@@ -11,7 +11,13 @@
 
 <div class="row">
     <div class="col-sm-6">
-        <a href="editgroup.php?pathid={{ path.id }}">
+                <a
+                    href="#"
+                    data-action="show-groupeditform"
+                    data-companyid={{ path.companyid }}
+                    data-pathid={{ path.id }}
+                    data-groupid=0
+                >
             <i class="fa fa-plus fa-2x text-muted"></i>
             <span class="h5 text-muted">{{# str }}addgroup, block_iomad_learningpath{{/ str }}</span>
         </a>
