@@ -439,7 +439,7 @@ class oidc_sync {
         } else {
             $graphurl = 'https://graph.microsoft.com/v1.0/groups/' .
                         $syncgroupid .
-                        '/members?$expand=manager&' .
+                        '/members?' .
                         $select .
                         '$top=500';
         }
