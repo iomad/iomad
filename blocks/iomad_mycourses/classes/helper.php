@@ -47,11 +47,6 @@ class helper {
     public static function get_my_inprogress($sort = 'coursefullname', $dir = 'ASC', $mandatoryonly = false) {
         global $DB, $USER;
 
-        // Is this enabled?
-        if (empty($CGF->iomad_use_mandatory_courses)) {
-            return [];
-        }
-
         // Get my company id.
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
 
@@ -362,6 +357,11 @@ class helper {
      */
     public static function get_my_mandatory($sort = 'coursefullname', $dir = 'ASC') {
         global $CFG, $DB, $OUTPUT, $USER;
+
+        // Is this enabled?
+        if (empty($CFG->iomad_use_mandatory_courses)) {
+            return [];
+        }
 
         // Get my company id.
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
