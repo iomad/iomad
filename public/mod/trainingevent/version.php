@@ -25,10 +25,10 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->release  = '5.0.3 (Build: 20251006)';    // Human-friendly version name.
-$plugin->version  = 2026022850;  // The current module version (Date: YYYYMMDDXX).
-$plugin->requires = 2025041400;   // Requires this Moodle version.
+$plugin->release  = '5.1.3 (Build: 20251006)';    // Human-friendly version name.
+$plugin->version  = 2026022851;  // The current module version (Date: YYYYMMDDXX).
+$plugin->requires = 2025100600;   // Requires this Moodle version.
 $plugin->component  = 'mod_trainingevent';
-$plugin->dependencies = ['local_iomad' => 2025041400];
-$plugin->supported = [500, 500];
+$plugin->dependencies = ['local_iomad' => 2026010100];
+$plugin->supported = [501, 501];
 $plugin->maturity = MATURITY_STABLE;

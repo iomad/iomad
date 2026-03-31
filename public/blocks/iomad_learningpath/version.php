@@ -25,10 +25,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '5.0.2 (Build: 20250811)';    // Human-friendly version name.
-$plugin->version  = 2026033145;   // The (date) version of this plugin.
-$plugin->requires = 2025041400;   // Requires this Moodle version.
+$plugin->release  = '5.1.3 (Build: 20250811)';    // Human-friendly version name.
+$plugin->version  = 2026033151;   // The (date) version of this plugin.
+$plugin->requires = 2025100600;   // Requires this Moodle version.
 $plugin->component  = 'block_iomad_learningpath';
-$plugin->dependencies = ['local_iomad' => 2025041400];
-$plugin->supported = [500, 500];
+$plugin->dependencies = ['local_iomad' => 2026010100];
+$plugin->supported = [501, 501];
 $plugin->maturity = MATURITY_STABLE;

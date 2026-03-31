@@ -25,10 +25,10 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->release  = '5.0.2 (Build: 20250811)';    // Human-friendly version name.
-$plugin->version  = 2026022850;   // The (date) version of this plugin.
-$plugin->requires = 2025041400;   // Requires this Moodle version.
+$plugin->release  = '5.1.3 (Build: 20250811)';    // Human-friendly version name.
+$plugin->version  = 2026022851;   // The (date) version of this plugin.
+$plugin->requires = 2025100600;   // Requires this Moodle version.
 $plugin->component  = 'local_report_user_license_allocations';
-$plugin->dependencies = ['local_iomad' => 2025041400];
-$plugin->supported = [500, 500];
+$plugin->dependencies = ['local_iomad' => 2026010100];
+$plugin->supported = [501, 501];
 $plugin->maturity = MATURITY_STABLE;

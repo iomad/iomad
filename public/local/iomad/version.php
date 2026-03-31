@@ -22,10 +22,10 @@
  * @push date 2025/11/28
  */
 
-$plugin->release  = '5.0.4 (Build: 20251208)';    // Human-friendly version name
+$plugin->release  = '5.1.3 (Build: 20251208)';    // Human-friendly version name
 $plugin->component  = 'local_iomad';
-$plugin->requires = 2025041400;   // Requires this Moodle version.
-$plugin->version  = 2026032145;   // The (date) version of this plugin.
+$plugin->requires = 2025100600;   // Requires this Moodle version.
+$plugin->version  = 2026032151;   // The (date) version of this plugin.
 $plugin->dependencies = [
         'tool_checklearningrecords' => 2025041400,
         'tool_iomadmerge' => 2025041400,
@@ -65,5 +65,5 @@ $plugin->dependencies = [
         'theme_iomad' => 2025041400,
         'theme_iomadboost' => 2025041400,
         'theme_iomadbootstrap' => 2025041400];
-$plugin->supported = [500, 500];
+$plugin->supported = [501, 501];
 $plugin->maturity = MATURITY_STABLE;
