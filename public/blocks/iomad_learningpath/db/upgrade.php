@@ -364,5 +364,20 @@ function xmldb_block_iomad_learningpath_upgrade($oldversion) {
         upgrade_block_savepoint(true, 2026022700, 'iomad_learningpath');
     }
 
+    if ($oldversion < 2026033100) {
+
+        // Define field dependent to be added to block_iomad_learningpath_groups.
+        $table = new xmldb_table('block_iomad_learningpath_groups');
+        $field = new xmldb_field('dependent', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'sequence');
+
+        // Conditionally launch add field dependent.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Iomad_learningpath savepoint reached.
+        upgrade_block_savepoint(true, 2026033100, 'iomad_learningpath');
+    }
+
     return true;
 }

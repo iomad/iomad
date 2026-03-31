@@ -14,16 +14,35 @@
             </div>
             <div class="col-md-6 px-3">
                 <div class="card-block">
-                    {{#zeroprogress}}
-                        <div class="progress m-t-1">
-                            <div class="progress-bar progress-bar-striped bg-none" role="progressbar" style="width: 100%;"
-                                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
-                        </div>
-                    {{/zeroprogress}}
-                    {{^zeroprogress}}
-                        <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: {{ progress}}%;"
-                            aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100">{{ progress }}%</div>
-                    {{/zeroprogress}}
+                    {{# blocked}}
+                        <p class="card-text p-t-1 alert alert-warning">
+                            {{# str }}coursedepends, block_iomad_learningpath, {{ prerequisite }}{{/ str }}
+                        </p>
+                    {{/ blocked}}
+                    {{^ blocked}}
+                        {{#zeroprogress}}
+                            <div class="progress m-t-1">
+                                    <div
+                                        class="progress-bar progress-bar-striped bg-none"
+                                        role="progressbar" style="width: 100%;"
+                                        aria-valuenow="0"
+                                        aria-valuemin="0"
+                                        aria-valuemax="100">
+                                        0%
+                                    </div>
+                            </div>
+                        {{/zeroprogress}}
+                        {{^zeroprogress}}
+                            <div
+                                class="progress-bar progress-bar-striped bg-success"
+                                role="progressbar" style="width: {{ progress}}%;"
+                                aria-valuenow="{{ progress }}"
+                                aria-valuemin="0"
+                                aria-valuemax="100">
+                                {{ progress }}%
+                            </div>
+                        {{/zeroprogress}}
+                    {{/ blocked}}
                 </div>
             </div>
         </div>
