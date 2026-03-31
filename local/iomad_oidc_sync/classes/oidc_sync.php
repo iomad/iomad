@@ -443,6 +443,10 @@ class oidc_sync {
                         '$top=500';
         }
 
+        if ($CFG->debug > DEBUG_NONE) {
+            mtrace("We are using the Graph URL $graphurl");
+        }
+
         // Setup the HTTP headers.
         $headers = [
             "Authorization: Bearer $accesstoken",
