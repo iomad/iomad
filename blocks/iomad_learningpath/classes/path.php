@@ -67,7 +67,7 @@ class path {
      * @param int $pathid
      * @return [array, int/null]
      */
-    public function get_courselist($pathid, $groupid, $sequenced = false) {
+    public function get_courselist($pathid, $groupid, $sequenced = false, $blocked = '') {
         global $DB, $USER;
 
         // Calculate overall progress for group.
@@ -128,6 +128,15 @@ class path {
                 }
             }
 
+            // Force availability for blocked.
+            if (!empty($blocked)) {
+                $course->available = false;
+                $course->hasprogress = false;
+                if ($first) {
+                    $course->prerequisite = $blocked;
+                }
+            }
+
             // Count progress for any courses that actually have some.
             // Ones that don't will be ignored.
             if ($course->hasprogress) {
@@ -141,6 +150,9 @@ class path {
             // Stash the previous course in case we need it.
             if ($sequenced) {
                 $previouscourse = clone($course);
+                if ($first) {
+                    unset($previouscourse->prerequisite);
+                }
                 $first = false;
             }
         }
@@ -170,9 +182,26 @@ class path {
         $totalcourses = 0;
         $completedcourses = 0;
 
+        // Handle dependencies if required.
+        $blocked = '';
+
+        // Process all of the groups.
         $groups = $DB->get_records('block_iomad_learningpath_groups', ['pathid' => $pathid]);
         foreach ($groups as $group) {
-            [$courses, $progress, $completedcount] = $this->get_courselist($pathid, $group->id, $group->sequence);
+            // Are we blocked from any of the courses?
+            if ($group->dependent && !empty($previous) && $previous->progress != 100) {
+                $group->blocked = true;
+                $group->prerequisite = $previous->name;
+                $blocked = $group->prerequisite;
+            }
+
+            // Get the group course details.
+            [$courses, $progress, $completedcount] = $this->get_courselist(
+                $pathid,
+                $group->id,
+                $group->sequence,
+                $blocked
+            );
             $group->progress = $progress !== null ? $progress : 0;
             $group->courses = array_values($courses);
             $totalcourses += count($courses);
@@ -185,6 +214,13 @@ class path {
             if (empty($progress)) {
                 $group->zeroprogress = true;
             }
+
+            // Stash the previous group just in case.
+            if (empty($blocked)) {
+                $previous = clone($group);
+            }
+
+            $groups[$group->id] = $group;
         }
 
         // Calcultate overall progress for path.

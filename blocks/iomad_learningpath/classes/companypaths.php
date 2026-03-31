@@ -157,6 +157,7 @@ class companypaths {
             $group->pathid = $pathid;
             $group->name = get_string('untitledgroup', 'block_iomad_learningpath');
             $group->sequence = 0;
+            $group->dependent = 0;
 
             return $group;
         }

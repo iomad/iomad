@@ -71,6 +71,9 @@ class editgroup_form extends dynamic_form {
         $mform->addHelpButton('name', 'groupname', 'block_iomad_learningpath');
         $mform->addRule('name', get_string('required'), 'required');
         $mform->addElement('selectyesno', 'sequence', get_string('sequential', 'block_iomad_learningpath'));
+        $mform->addElement('selectyesno', 'dependent', get_string('dependent', 'block_iomad_learningpath'));
+        $mform->addHelpButton('sequence', 'sequence', 'block_iomad_learningpath');
+        $mform->addHelpButton('dependent', 'dependent', 'block_iomad_learningpath');
     }
 
     /**
@@ -93,6 +96,7 @@ class editgroup_form extends dynamic_form {
         // Do the work.
         $group->name = $data->name;
         $group->sequence = $data->sequence;
+        $group->dependent = $data->dependent;
         if ($data->id == 0) {
             $data->id = $DB->insert_record('block_iomad_learningpath_groups', $group);
 
