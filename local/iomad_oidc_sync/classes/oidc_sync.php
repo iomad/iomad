@@ -419,6 +419,7 @@ class oidc_sync {
      *
      **/
     private static function get_users($accesstoken, $syncgroupid = "", $graphproperties = "") {
+        global $CFG;
 
         $userlist = [];
         // Are we getting non standard user fields?
