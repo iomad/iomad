@@ -198,7 +198,7 @@ function trainingevent_get_coursemodule_info($coursemodule) {
                 $template->name = $classroom->name;
             }
         }
-        $dateformat = "get_config('local_iomad', 'date_format') %I:%M%p";
+        $dateformat = get_config('local_iomad', 'date_format') . " %I:%M%p";
 
         // Define objects to be passed to the mustache file.
         $template->startdatetime = userdate($trainingevent->startdatetime, $dateformat);
