@@ -62,3 +62,17 @@ function local_iomad_pre_course_delete($course) {
 
     return true;
 }
+
+/**
+ * Hook called by user_process_profile_callbacks function
+ *
+ * @param object $user
+ * @param object $course
+ * @param object $usercontext
+ * @return void
+ */
+function local_iomad_control_view_profile($user, $course, $usercontext) {
+    if (company::check_can_manage($user->id)) {
+        return core_user::VIEWPROFILE_FORCE_ALLOW;
+    }
+}
