@@ -106,3 +106,17 @@ function local_iomad_pluginfile($course, $birecordorcm, $context, $filearea, $ar
     core\session\manager::write_close();
     send_stored_file($file, null, 0, $forcedownload, $options);
 }
+
+ /**
+ * Hook called by user_process_profile_callbacks function
+ *
+ * @param object $user
+ * @param object $course
+ * @param object $usercontext
+ * @return void
+ */
+function local_iomad_control_view_profile($user, $course, $usercontext) {
+    if (company::check_can_manage($user->id)) {
+        return core_user::VIEWPROFILE_FORCE_ALLOW;
+    }
+}
