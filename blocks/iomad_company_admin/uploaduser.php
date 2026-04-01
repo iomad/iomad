@@ -1248,14 +1248,14 @@ if (!empty($cancelled)) {
             }
 
             // Enrol user into courses that were selected on the form.
-            if (!empty($formdata->selectedcourses)) {
+            if (!empty($formdata->currentcourses)) {
                 // Add the user to the courses selected in the upload form.
                 $courseids = [];
-                foreach ($formdata->selectedcourses as $selectedcourse) {
-                    if (is_object($selectedcourse)) {
-                        $selectedcourse = $selectedcourse->id;
+                foreach ($formdata->currentcourses as $currentcourse) {
+                    if (is_object($currentcourse)) {
+                        $currentcourse = $currentcourse->id;
                     }
-                    $courseids[] = $selectedcourse;
+                    $courseids[] = $currentcourse;
                 }
                 company_user::enrol($user, $courseids, $companyid);
                 foreach ($courseids as $courseid) {
