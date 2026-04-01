@@ -16,6 +16,8 @@
 
 namespace mod_bigbluebuttonbn\local;
 
+use context_system;
+use local_iomad\iomad;
 use mod_bigbluebuttonbn\instance;
 use mod_bigbluebuttonbn\local\proxy\bigbluebutton_proxy;
 use mod_bigbluebuttonbn\recording;
@@ -150,13 +152,21 @@ class config {
      */
     public static function get(string $setting): string {
         global $CFG;
+
+        // IOMAD.
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        if ($companyid > 0) {
+            $defsetting = $setting;
+            $setting .= "_$companyid";
+        }
+
         if (isset($CFG->bigbluebuttonbn[$setting])) {
             return (string) $CFG->bigbluebuttonbn[$setting];
         }
         if (isset($CFG->{'bigbluebuttonbn_' . $setting})) {
             return (string) $CFG->{'bigbluebuttonbn_' . $setting};
         }
-        return (string) self::defaultvalue($setting);
+        return (string) self::defaultvalue($defsetting);
     }
 
     /**

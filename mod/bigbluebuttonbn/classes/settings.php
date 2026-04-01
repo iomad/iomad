@@ -28,8 +28,10 @@ use admin_setting_configtextarea;
 use admin_setting_heading;
 use admin_settingpage;
 use cache_helper;
+use context_system;
 use core_plugin_manager;
 use lang_string;
+use local_iomad\iomad;
 use mod_bigbluebuttonbn\local\config;
 use mod_bigbluebuttonbn\local\helpers\roles;
 use mod_bigbluebuttonbn\local\plugins\admin_page_manage_extensions;
@@ -63,6 +65,9 @@ class settings {
     /** @var string The section name prefix */
     private $sectionnameprefix = "mod_bigbluebuttonbn";
 
+    /** @var string IOMAD tenant postfix */
+    private $postfix = '';
+
     /**
      * Constructor for the bigbluebuttonbn settings.
      *
@@ -87,6 +92,14 @@ class settings {
 
         $mainsettings = $this->add_general_settings();
         $admin->add($this->parent, $mainsettings);
+
+        // IOMAD.
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        $this->postfix = "";
+        if ($companyid > 0) {
+            $this->postfix = "_$companyid";
+        }
+
     }
 
     /**
@@ -134,6 +147,8 @@ class settings {
      */
     protected function add_conditional_element(string $name, admin_setting $item, admin_settingpage $settings): void {
         global $CFG;
+        // IOMAD.
+        $name .= $this->postfix;
         if (isset($CFG->bigbluebuttonbn) && isset($CFG->bigbluebuttonbn[$name])) {
             if ($item->config_read($item->name)) {
                 // A value has been set, we can safely omit the setting and it won't interfere with installation
@@ -153,6 +168,14 @@ class settings {
      */
     protected function add_general_settings(): admin_settingpage {
         global $CFG, $OUTPUT;
+
+        // IOMAD.
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        $postfix = "";
+        if ($companyid > 0) {
+            $postfix = "_$companyid";
+        }
+
         $settingsgeneral = new admin_settingpage(
             $this->section,
             get_string('config_general', 'bigbluebuttonbn'),
@@ -175,9 +198,8 @@ class settings {
                     $OUTPUT->notification(get_string('credentials_warning', 'mod_bigbluebuttonbn'), 'error')
                 ));
             }
-
             $item = new admin_setting_configtext(
-                'bigbluebuttonbn_server_url',
+                'bigbluebuttonbn_server_url' . $postfix,
                 get_string('config_server_url', 'bigbluebuttonbn'),
                 get_string('config_server_url_description', 'bigbluebuttonbn'),
                 '',
@@ -196,7 +218,7 @@ class settings {
                 $settingsgeneral
             );
             $item = new admin_setting_configpasswordunmask(
-                'bigbluebuttonbn_shared_secret',
+                'bigbluebuttonbn_shared_secret' . $postfix,
                 get_string('config_shared_secret', 'bigbluebuttonbn'),
                 get_string('config_shared_secret_description', 'bigbluebuttonbn'),
                 ''
@@ -208,7 +230,7 @@ class settings {
             );
 
             $item = new admin_setting_configselect(
-                'bigbluebuttonbn_checksum_algorithm',
+                'bigbluebuttonbn_checksum_algorithm' . $postfix,
                 get_string('config_checksum_algorithm', 'bigbluebuttonbn'),
                 get_string('config_checksum_algorithm_description', 'bigbluebuttonbn'),
                 config::DEFAULT_CHECKSUM_ALGORITHM,
@@ -221,7 +243,7 @@ class settings {
             );
 
             $item = new admin_setting_configtext(
-                'bigbluebuttonbn_poll_interval',
+                'bigbluebuttonbn_poll_interval' . $postfix,
                 get_string('config_poll_interval', 'bigbluebuttonbn'),
                 get_string('config_poll_interval_description', 'bigbluebuttonbn'),
                 bigbluebutton_proxy::DEFAULT_POLL_INTERVAL,
@@ -250,13 +272,13 @@ class settings {
 
         if ($this->admin->fulltree) {
             $item = new admin_setting_heading(
-                'bigbluebuttonbn_config_default_messages',
+                'bigbluebuttonbn_config_default_messages' . $this->postfix,
                 '',
                 get_string('config_default_messages_description', 'bigbluebuttonbn')
             );
             $defaultmessagessetting->add($item);
             $item = new admin_setting_configtextarea(
-                'bigbluebuttonbn_welcome_default',
+                'bigbluebuttonbn_welcome_default' . $this->postfix,
                 get_string('config_welcome_default', 'bigbluebuttonbn'),
                 get_string('config_welcome_default_description', 'bigbluebuttonbn'),
                 '',
@@ -268,7 +290,7 @@ class settings {
                 $defaultmessagessetting
             );
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_welcome_editable',
+                'bigbluebuttonbn_welcome_editable' . $this->postfix,
                 get_string('config_welcome_editable', 'bigbluebuttonbn'),
                 get_string('config_welcome_editable_description', 'bigbluebuttonbn'),
                 1,
@@ -297,13 +319,13 @@ class settings {
 
         if ($this->admin->fulltree) {
             $item = new admin_setting_heading(
-                'bigbluebuttonbn_config_recording',
+                'bigbluebuttonbn_config_recording' . $this->postfix,
                 '',
                 get_string('config_recording_description', 'bigbluebuttonbn')
             );
             $recordingsetting->add($item);
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_recording_default',
+                'bigbluebuttonbn_recording_default' . $this->postfix,
                 get_string('config_recording_default', 'bigbluebuttonbn'),
                 get_string('config_recording_default_description', 'bigbluebuttonbn'),
                 1
@@ -314,7 +336,7 @@ class settings {
                 $recordingsetting
             );
             $item = new admin_setting_configtext(
-                'bigbluebuttonbn_recording_refresh_period',
+                'bigbluebuttonbn_recording_refresh_period' . $this->postfix,
                 get_string('config_recording_refresh_period', 'bigbluebuttonbn'),
                 get_string('config_recording_refresh_period_description', 'bigbluebuttonbn'),
                 recording::RECORDING_REFRESH_DEFAULT_PERIOD,
@@ -326,7 +348,7 @@ class settings {
                 $recordingsetting
             );
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_recording_editable',
+                'bigbluebuttonbn_recording_editable' . $this->postfix,
                 get_string('config_recording_editable', 'bigbluebuttonbn'),
                 get_string('config_recording_editable_description', 'bigbluebuttonbn'),
                 1
@@ -339,7 +361,7 @@ class settings {
 
             // Add recording start to load and allow/hide stop/pause.
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_recording_all_from_start_default',
+                'bigbluebuttonbn_recording_all_from_start_default' . $this->postfix,
                 get_string('config_recording_all_from_start_default', 'bigbluebuttonbn'),
                 get_string('config_recording_all_from_start_default_description', 'bigbluebuttonbn'),
                 0
@@ -350,7 +372,7 @@ class settings {
                 $recordingsetting
             );
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_recording_all_from_start_editable',
+                'bigbluebuttonbn_recording_all_from_start_editable' . $this->postfix,
                 get_string('config_recording_all_from_start_editable', 'bigbluebuttonbn'),
                 get_string('config_recording_all_from_start_editable_description', 'bigbluebuttonbn'),
                 0
@@ -361,7 +383,7 @@ class settings {
                 $recordingsetting
             );
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_recording_hide_button_default',
+                'bigbluebuttonbn_recording_hide_button_default' . $this->postfix,
                 get_string('config_recording_hide_button_default', 'bigbluebuttonbn'),
                 get_string('config_recording_hide_button_default_description', 'bigbluebuttonbn'),
                 0
@@ -372,7 +394,7 @@ class settings {
                 $recordingsetting
             );
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_recording_hide_button_editable',
+                'bigbluebuttonbn_recording_hide_button_editable' . $this->postfix,
                 get_string('config_recording_hide_button_editable', 'bigbluebuttonbn'),
                 get_string('config_recording_hide_button_editable_description', 'bigbluebuttonbn'),
                 0
@@ -391,7 +413,7 @@ class settings {
                 'video' => get_string('view_recording_format_video', 'mod_bigbluebuttonbn'),
             ];
             $item = new admin_setting_configmultiselect(
-                'bigbluebuttonbn_recording_safe_formats',
+                'bigbluebuttonbn_recording_safe_formats' . $this->postfix,
                 get_string('config_recording_safe_formats', 'mod_bigbluebuttonbn'),
                 get_string('config_recording_safe_formats_description', 'mod_bigbluebuttonbn'),
                 ['video', 'presentation'],
@@ -426,7 +448,7 @@ class settings {
             );
             $importrecordingsettings->add($item);
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_importrecordings_enabled',
+                'bigbluebuttonbn_importrecordings_enabled' . $this->postfix,
                 get_string('config_importrecordings_enabled', 'bigbluebuttonbn'),
                 get_string('config_importrecordings_enabled_description', 'bigbluebuttonbn'),
                 0
@@ -437,7 +459,7 @@ class settings {
                 $importrecordingsettings
             );
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_importrecordings_from_deleted_enabled',
+                'bigbluebuttonbn_importrecordings_from_deleted_enabled' . $this->postfix,
                 get_string('config_importrecordings_from_deleted_enabled', 'bigbluebuttonbn'),
                 get_string('config_importrecordings_from_deleted_enabled_description', 'bigbluebuttonbn'),
                 0
@@ -471,7 +493,7 @@ class settings {
             );
             $showrecordingsettings->add($item);
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_recordings_deleted_default',
+                'bigbluebuttonbn_recordings_deleted_default' . $this->postfix,
                 get_string('config_recordings_deleted_default', 'bigbluebuttonbn'),
                 get_string('config_recordings_deleted_default_description', 'bigbluebuttonbn'),
                 1
@@ -482,7 +504,7 @@ class settings {
                 $showrecordingsettings
             );
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_recordings_deleted_editable',
+                'bigbluebuttonbn_recordings_deleted_editable' . $this->postfix,
                 get_string('config_recordings_deleted_editable', 'bigbluebuttonbn'),
                 get_string('config_recordings_deleted_editable_description', 'bigbluebuttonbn'),
                 0
@@ -493,7 +515,7 @@ class settings {
                 $showrecordingsettings
             );
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_recordings_imported_default',
+                'bigbluebuttonbn_recordings_imported_default' . $this->postfix,
                 get_string('config_recordings_imported_default', 'bigbluebuttonbn'),
                 get_string('config_recordings_imported_default_description', 'bigbluebuttonbn'),
                 0
@@ -504,7 +526,7 @@ class settings {
                 $showrecordingsettings
             );
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_recordings_imported_editable',
+                'bigbluebuttonbn_recordings_imported_editable' . $this->postfix,
                 get_string('config_recordings_imported_editable', 'bigbluebuttonbn'),
                 get_string('config_recordings_imported_editable_description', 'bigbluebuttonbn'),
                 1
@@ -515,7 +537,7 @@ class settings {
                 $showrecordingsettings
             );
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_recordings_preview_default',
+                'bigbluebuttonbn_recordings_preview_default' . $this->postfix,
                 get_string('config_recordings_preview_default', 'bigbluebuttonbn'),
                 get_string('config_recordings_preview_default_description', 'bigbluebuttonbn'),
                 1
@@ -526,7 +548,7 @@ class settings {
                 $showrecordingsettings
             );
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_recordings_preview_editable',
+                'bigbluebuttonbn_recordings_preview_editable' . $this->postfix,
                 get_string('config_recordings_preview_editable', 'bigbluebuttonbn'),
                 get_string('config_recordings_preview_editable_description', 'bigbluebuttonbn'),
                 0
@@ -537,7 +559,7 @@ class settings {
                 $showrecordingsettings
             );
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_recordings_asc_sort',
+                'bigbluebuttonbn_recordings_asc_sort' . $this->postfix,
                 get_string('config_recordings_asc_sort', 'bigbluebuttonbn'),
                 get_string('config_recordings_asc_sort_description', 'bigbluebuttonbn'),
                 0
@@ -548,7 +570,7 @@ class settings {
                 $showrecordingsettings
             );
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_recording_protect_editable',
+                'bigbluebuttonbn_recording_protect_editable' . $this->postfix,
                 get_string('config_recording_protect_editable', 'bigbluebuttonbn'),
                 get_string('config_recording_protect_editable_description', 'bigbluebuttonbn'),
                 1
@@ -582,7 +604,7 @@ class settings {
             );
             $waitmoderatorsettings->add($item);
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_waitformoderator_default',
+                'bigbluebuttonbn_waitformoderator_default' . $this->postfix,
                 get_string('config_waitformoderator_default', 'bigbluebuttonbn'),
                 get_string('config_waitformoderator_default_description', 'bigbluebuttonbn'),
                 0
@@ -593,7 +615,7 @@ class settings {
                 $waitmoderatorsettings
             );
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_waitformoderator_editable',
+                'bigbluebuttonbn_waitformoderator_editable' . $this->postfix,
                 get_string('config_waitformoderator_editable', 'bigbluebuttonbn'),
                 get_string('config_waitformoderator_editable_description', 'bigbluebuttonbn'),
                 1
@@ -604,7 +626,7 @@ class settings {
                 $waitmoderatorsettings
             );
             $item = new admin_setting_configtext(
-                'bigbluebuttonbn_waitformoderator_ping_interval',
+                'bigbluebuttonbn_waitformoderator_ping_interval' . $this->postfix,
                 get_string('config_waitformoderator_ping_interval', 'bigbluebuttonbn'),
                 get_string('config_waitformoderator_ping_interval_description', 'bigbluebuttonbn'),
                 10,
@@ -616,7 +638,7 @@ class settings {
                 $waitmoderatorsettings
             );
             $item = new admin_setting_configtext(
-                'bigbluebuttonbn_waitformoderator_cache_ttl',
+                'bigbluebuttonbn_waitformoderator_cache_ttl' . $this->postfix,
                 get_string('config_waitformoderator_cache_ttl', 'bigbluebuttonbn'),
                 get_string('config_waitformoderator_cache_ttl_description', 'bigbluebuttonbn'),
                 60,
@@ -651,7 +673,7 @@ class settings {
             );
             $voicebridgesettings->add($item);
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_voicebridge_editable',
+                'bigbluebuttonbn_voicebridge_editable' . $this->postfix,
                 get_string('config_voicebridge_editable', 'bigbluebuttonbn'),
                 get_string('config_voicebridge_editable_description', 'bigbluebuttonbn'),
                 0
@@ -687,7 +709,7 @@ class settings {
             $preuploadsettings->add($item);
 
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_preuploadpresentation_editable',
+                'bigbluebuttonbn_preuploadpresentation_editable' . $this->postfix,
                 get_string('config_preuploadpresentation_editable', 'bigbluebuttonbn'),
                 get_string('config_preuploadpresentation_editable_description', 'bigbluebuttonbn'),
                 0
@@ -706,7 +728,7 @@ class settings {
             $filemanageroptions['mainfile'] = true;
 
             $filemanager = new admin_setting_configstoredfile(
-                'mod_bigbluebuttonbn/presentationdefault',
+                'mod_bigbluebuttonbn/presentationdefault' . $this->postfix,
                 get_string('config_presentation_default', 'bigbluebuttonbn'),
                 get_string('config_presentation_default_description', 'bigbluebuttonbn'),
                 'presentationdefault',
@@ -716,7 +738,7 @@ class settings {
 
             $preuploadsettings->add($filemanager);
             $item = new admin_setting_configcheckbox(
-                'mod_bigbluebuttonbn/showpresentation_default',
+                'mod_bigbluebuttonbn/showpresentation_default' . $this->postfix,
                 get_string('config_showpresentation_default', 'bigbluebuttonbn'),
                 get_string('config_showpresentation_default_description', 'bigbluebuttonbn'),
                 1
@@ -727,7 +749,7 @@ class settings {
                 $preuploadsettings
             );
             $item = new admin_setting_configcheckbox(
-                'mod_bigbluebuttonbn/showpresentation_editable',
+                'mod_bigbluebuttonbn/showpresentation_editable' . $this->postfix,
                 get_string('config_showpresentation_editable', 'bigbluebuttonbn'),
                 get_string('config_showpresentation_editable_description', 'bigbluebuttonbn'),
                 0
@@ -761,7 +783,7 @@ class settings {
             );
             $userlimitsettings->add($item);
             $item = new admin_setting_configtext(
-                'bigbluebuttonbn_userlimit_default',
+                'bigbluebuttonbn_userlimit_default' . $this->postfix,
                 get_string('config_userlimit_default', 'bigbluebuttonbn'),
                 get_string('config_userlimit_default_description', 'bigbluebuttonbn'),
                 0,
@@ -773,7 +795,7 @@ class settings {
                 $userlimitsettings
             );
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_userlimit_editable',
+                'bigbluebuttonbn_userlimit_editable' . $this->postfix,
                 get_string('config_userlimit_editable', 'bigbluebuttonbn'),
                 get_string('config_userlimit_editable_description', 'bigbluebuttonbn'),
                 0
@@ -813,7 +835,7 @@ class settings {
                 '0' => get_string('mod_form_field_participant_list_type_owner', 'bigbluebuttonbn')
             ];
             $item = new admin_setting_configmultiselect(
-                'bigbluebuttonbn_participant_moderator_default',
+                'bigbluebuttonbn_participant_moderator_default' . $this->postfix,
                 get_string('config_participant_moderator_default', 'bigbluebuttonbn'),
                 get_string('config_participant_moderator_default_description', 'bigbluebuttonbn'),
                 array_keys($owner),
@@ -848,7 +870,7 @@ class settings {
             );
             $muteonstartsetting->add($item);
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_muteonstart_default',
+                'bigbluebuttonbn_muteonstart_default' . $this->postfix,
                 get_string('config_muteonstart_default', 'bigbluebuttonbn'),
                 get_string('config_muteonstart_default_description', 'bigbluebuttonbn'),
                 0
@@ -859,7 +881,7 @@ class settings {
                 $muteonstartsetting
             );
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_muteonstart_editable',
+                'bigbluebuttonbn_muteonstart_editable' . $this->postfix,
                 get_string('config_muteonstart_editable', 'bigbluebuttonbn'),
                 get_string('config_muteonstart_editable_description', 'bigbluebuttonbn'),
                 0
@@ -906,7 +928,7 @@ class settings {
         if ((boolean) setting_validator::$validatorname()) {
             // Configuration for BigBlueButton.
             $item = new admin_setting_configcheckbox(
-                    'bigbluebuttonbn_' . $settingname . '_default',
+                    'bigbluebuttonbn_' . $settingname . '_default' . $this->postfix,
                     get_string('config_' . $settingname . '_default', 'bigbluebuttonbn'),
                     get_string('config_' . $settingname . '_default_description', 'bigbluebuttonbn'),
                     config::defaultvalue($settingname . '_default')
@@ -917,7 +939,7 @@ class settings {
                     $lockingsetting
             );
             $item = new admin_setting_configcheckbox(
-                    'bigbluebuttonbn_' . $settingname . '_editable',
+                    'bigbluebuttonbn_' . $settingname . '_editable' . $this->postfix,
                     get_string('config_' . $settingname . '_editable', 'bigbluebuttonbn'),
                     get_string('config_' . $settingname . '_editable_description', 'bigbluebuttonbn'),
                     config::defaultvalue($settingname . '_editable')
@@ -951,7 +973,7 @@ class settings {
             $extendedcapabilitiessetting->add($item);
             // UI for 'notify users when recording ready' feature.
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_recordingready_enabled',
+                'bigbluebuttonbn_recordingready_enabled' . $this->postfix,
                 get_string('config_recordingready_enabled', 'bigbluebuttonbn'),
                 get_string('config_recordingready_enabled_description', 'bigbluebuttonbn'),
                 0
@@ -962,7 +984,7 @@ class settings {
                 $extendedcapabilitiessetting
             );
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_profile_picture_enabled',
+                'bigbluebuttonbn_profile_picture_enabled' . $this->postfix,
                 get_string('config_profile_picture_enabled', 'bigbluebuttonbn'),
                 get_string('config_profile_picture_enabled_description', 'bigbluebuttonbn'),
                 false
@@ -998,7 +1020,7 @@ class settings {
             $experimentalfeaturessetting->add($item);
             // UI for 'register meeting events' feature.
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_meetingevents_enabled',
+                'bigbluebuttonbn_meetingevents_enabled' . $this->postfix,
                 get_string('config_meetingevents_enabled', 'bigbluebuttonbn'),
                 get_string('config_meetingevents_enabled_description', 'bigbluebuttonbn'),
                 0
@@ -1010,7 +1032,7 @@ class settings {
             );
             // UI for 'register meeting events' feature.
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_guestaccess_enabled',
+                'bigbluebuttonbn_guestaccess_enabled' . $this->postfix,
                 get_string('config_guestaccess_enabled', 'bigbluebuttonbn'),
                 get_string('config_guestaccess_enabled_description', 'bigbluebuttonbn'),
                 0
