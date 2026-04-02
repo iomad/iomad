@@ -64,21 +64,14 @@ class main implements renderable, templatable {
 
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
 
-        // Work out our URL.
-        $baseurl = clone $PAGE->url;
-        if ($companyid > 0) {
-            $company = new company($companyid);
-            // We need to check if it's the default dashboard page or custom one.
-            if ($PAGE->url->out(false) == $CFG->wwwroot . "/my/index.php") {
-                $baseurl = $company->get_dashboard_url();
-            }
-        }
-
         // Get the sorting params.
         $tab = get_user_preferences('block_iomad_mycourses_user_last_tab', 'inprogress');
         $sort = get_user_preferences('block_iomad_mycourses_user_sort_preference', 'coursefullname');
         $dir = get_user_preferences('block_iomad_mycourses_user_sortdir_preference', 'ASC');
-        $view = get_user_preferences('block_iomad_mycourses_user_view_preference', $CFG->mycourses_defaultview);
+        $view = get_user_preferences(
+            'block_iomad_mycourses_user_view_preference',
+            get_config('local_iomad', 'use_mandatory_courses')
+        );
         $mandatoryonly = get_user_preferences('block_iomad_mycourses_user_mandatory_preference', false);
         if (!get_config('local_iomad', 'use_mandatory_courses')) {
             $mandatoryonly = false;
@@ -162,7 +155,7 @@ class main implements renderable, templatable {
             'viewinginprogress' => $viewinginprogress,
             'viewingcompleted' => $viewingcompleted,
             'viewingmandatory' => $viewingmandatory,
-            'baseurl' => $baseurl->out(false),
+            'baseurl' => $PAGE->url->out(false),
             'downloadcertslink' => $downloadcertslink,
             'downloadcerts' => $downloadcerts,
             'mandatoryselectuse' => $mandatoryselectuse,
