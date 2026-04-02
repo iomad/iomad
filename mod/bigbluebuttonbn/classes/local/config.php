@@ -156,8 +156,13 @@ class config {
         // IOMAD.
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
         if ($companyid > 0) {
-            $defsetting = $setting;
-            $setting .= "_$companyid";
+            $companysetting = $setting . "_$companyid";
+            if (isset($CFG->bigbluebuttonbn[$companysetting])) {
+                return (string) $CFG->bigbluebuttonbn[$companysetting];
+            }
+            if (isset($CFG->{'bigbluebuttonbn_' . $companysetting})) {
+                return (string) $CFG->{'bigbluebuttonbn_' . $companysetting};
+            }
         }
 
         if (isset($CFG->bigbluebuttonbn[$setting])) {
@@ -166,7 +171,7 @@ class config {
         if (isset($CFG->{'bigbluebuttonbn_' . $setting})) {
             return (string) $CFG->{'bigbluebuttonbn_' . $setting};
         }
-        return (string) self::defaultvalue($defsetting);
+        return (string) self::defaultvalue($setting);
     }
 
     /**
