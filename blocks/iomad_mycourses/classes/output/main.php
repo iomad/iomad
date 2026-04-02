@@ -24,6 +24,7 @@
 
 namespace block_iomad_mycourses\output;
 
+use company;
 use context_system;
 use block_iomad_mycourses\helper;
 use moodle_url;
@@ -63,12 +64,25 @@ class main implements renderable, templatable {
 
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
 
+        // Work out our URL.
+        $baseurl = clone $PAGE->url;
+        if ($companyid > 0) {
+            $company = new company($companyid);
+            // We need to check if it's the default dashboard page or custom one.
+            if ($PAGE->url->out(false) == $CFG->wwwroot . "/my/index.php") {
+                $baseurl = $company->get_dashboard_url();
+            }
+        }
+
         // Get the sorting params.
-        $sort = optional_param('sort', 'coursefullname', PARAM_CLEAN);
-        $dir = optional_param('dir', 'ASC', PARAM_CLEAN);
-        $tab = optional_param('tab', 'inprogress#iomad_mycourses_inprogress_view', PARAM_CLEAN);
-        $view = optional_param('view', get_config('block_iomad_mycourses', 'defaultview'), PARAM_CLEAN);
-        $mandatoryonly = optional_param('mandatoryonly', false, PARAM_BOOL);
+        $tab = get_user_preferences('block_iomad_mycourses_user_last_tab', 'inprogress');
+        $sort = get_user_preferences('block_iomad_mycourses_user_sort_preference', 'coursefullname');
+        $dir = get_user_preferences('block_iomad_mycourses_user_sortdir_preference', 'ASC');
+        $view = get_user_preferences('block_iomad_mycourses_user_view_preference', $CFG->mycourses_defaultview);
+        $mandatoryonly = get_user_preferences('block_iomad_mycourses_user_mandatory_preference', false);
+        if (!get_config('local_iomad', 'use_mandatory_courses')) {
+            $mandatoryonly = false;
+        }
 
         // Get the completion info.
         $myinprogress = helper::get_my_inprogress($sort, $dir, $mandatoryonly);
@@ -102,14 +116,9 @@ class main implements renderable, templatable {
         }
 
         // Are mandatory courses enabled?
-        $mandatoryselecturl = "";
         $mandatoryselectuse = false;
-        if (get_config('local_iomad', 'use_mandatory_courses')) {
-            $mandatoryselecturl = new moodle_url($PAGE->url->out(false), ['sort' => $sort,
-                                                                          'dir' => $dir,
-                                                                          'tab' => $this->tab,
-                                                                          'view' => $view,
-                                                                          'mandatoryonly' => !$mandatoryonly]);
+        if (get_config('local_iomad', 'use_mandatory_courses') &&
+            $DB->get_records('company_course_options', ['companyid' => $companyid, 'mandatory' => 1])) {
             $mandatoryselectuse = true;
         }
 
@@ -118,11 +127,11 @@ class main implements renderable, templatable {
         $viewinginprogress = false;
         $viewingcompleted = false;
         $viewingmandatory = false;
-        if ($this->tab == 'available') {
+        if ($tab == 'available') {
             $viewingavailable = true;
-        } else if ($this->tab == 'completed') {
+        } else if ($tab == 'completed') {
             $viewingcompleted = true;
-        } else if ($this->tab == 'mandatory') {
+        } else if ($tab == 'mandatory' && $mandatoryselectuse) {
             $viewingmandatory = true;
         } else {
             $viewinginprogress = true;
@@ -130,38 +139,6 @@ class main implements renderable, templatable {
 
         // Set the default for no courses.
         $nocoursesurl = $output->image_url('courses', 'block_iomad_mycourses')->out();
-
-        // Set up the sort URL links.
-        $sortnameurl = new moodle_url($PAGE->url->out(false), ['sort' => 'coursefullname',
-                                                               'dir' => $dir,
-                                                               'tab' => $this->tab,
-                                                               'mandatoryonly' => $mandatoryonly,
-                                                               'view' => $view]);
-        $sortdateurl = new moodle_url($PAGE->url->out(false), ['sort' => 'timestarted',
-                                                               'dir' => $dir,
-                                                               'tab' => $this->tab,
-                                                               'mandatoryonly' => $mandatoryonly,
-                                                               'view' => $view]);
-        $sortascurl = new moodle_url($PAGE->url->out(false), ['sort' => $sort,
-                                                              'dir' => 'ASC',
-                                                              'tab' => $this->tab,
-                                                              'mandatoryonly' => $mandatoryonly,
-                                                              'view' => $view]);
-        $sortdescurl = new moodle_url($PAGE->url->out(false), ['sort' => $sort,
-                                                               'dir' => 'DESC',
-                                                               'tab' => $this->tab,
-                                                               'mandatoryonly' => $mandatoryonly,
-                                                               'view' => $view]);
-        $listviewurl = new moodle_url($PAGE->url->out(false), ['sort' => $sort,
-                                                               'dir' => $dir,
-                                                               'tab' => $this->tab,
-                                                               'mandatoryonly' => $mandatoryonly,
-                                                               'view' => 'list']);
-        $cardviewurl = new moodle_url($PAGE->url->out(false), ['sort' => $sort,
-                                                               'dir' => $dir,
-                                                               'tab' => $this->tab,
-                                                               'mandatoryonly' => $mandatoryonly,
-                                                               'view' => 'card']);
 
         // Set the type of view being used.
         $viewlist = false;
@@ -185,17 +162,12 @@ class main implements renderable, templatable {
             'viewinginprogress' => $viewinginprogress,
             'viewingcompleted' => $viewingcompleted,
             'viewingmandatory' => $viewingmandatory,
-            'sortnameurl' => $sortnameurl->out(false),
-            'sortdateurl' => $sortdateurl->out(false),
-            'sortascurl' => $sortascurl->out(false),
-            'sortdescurl' => $sortdescurl->out(false),
-            'listviewurl' => $listviewurl->out(false),
-            'cardviewurl' => $cardviewurl->out(false),
+            'baseurl' => $baseurl->out(false),
             'downloadcertslink' => $downloadcertslink,
             'downloadcerts' => $downloadcerts,
-            'mandatoryselecturl' => $mandatoryselecturl,
             'mandatoryselectuse' => $mandatoryselectuse,
             'mandatoryonly' => $mandatoryonly,
+            'mandatoryvalue' => !$mandatoryonly,
             'viewlist' => $viewlist,
             'viewcard' => $viewcard,
             'usemandatory' => get_config('local_iomad', 'use_mandatory_courses'),
