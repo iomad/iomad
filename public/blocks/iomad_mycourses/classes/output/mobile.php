@@ -58,10 +58,11 @@ class mobile {
             'label' => get_string('completedheader', 'block_iomad_mycourses'),
             'selected' => (($page == 'completed') ? '1' : '0')];
         if (get_config('local_iomad', 'use_mandatory_courses')) {
-        $pages[] = ['value' => 'mandatory',
-            'label' => get_string('mandatoryheader', 'block_iomad_mycourses'),
-            'selected' => (($page == 'mandatory') ? '1' : '0')];
-
+            $pages[] = [
+                'value' => 'mandatory',
+                'label' => get_string('mandatoryheader', 'block_iomad_mycourses'),
+                'selected' => (($page == 'mandatory') ? '1' : '0'),
+            ];
         }
         $data['pages'] = $pages;
 
