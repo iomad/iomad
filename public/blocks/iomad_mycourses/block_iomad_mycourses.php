@@ -65,7 +65,7 @@ class block_iomad_mycourses extends block_base {
         }
 
         // Check if the tab to select wasn't passed in the URL, if so see if the user has any preference.
-        if (!$tab = optional_param('iomad_mycoursestab', null, PARAM_ALPHA)) {
+        if (!$tab = get_user_preferences('block_iomad_mycourses_user_last_tab')) {
             $tab = 'inprogress';
         }
 

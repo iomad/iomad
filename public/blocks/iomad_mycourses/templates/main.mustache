@@ -40,8 +40,20 @@
     </a>
 
     <div class="dropdown-menu" aria-labelledby="iomad_mycoursesdropdownMenuLink">
-      <a class="dropdown-item" href="{{sortnameurl}}">{{#str}} name {{/str}}</a>
-      <a class="dropdown-item" href="{{sortdateurl}}">{{#str}} date {{/str}}</a>
+        <a class="dropdown-item"
+            data-action="changeselect"
+            data-name="sort_preference"
+            data-value="coursefullname"
+            href="{{baseurl}}">
+            {{#str}} name {{/str}}
+        </a>
+        <a class="dropdown-item"
+        data-action="changeselect"
+        data-name="sort_preference"
+        data-value="timeenrolled"
+        href="{{baseurl}}">
+        {{#str}} date {{/str}}
+    </a>
     </div>
   </div>
   <div class="dropdown show" style='padding-right: 5px'>
@@ -56,8 +68,20 @@
     </a>
 
     <div class="dropdown-menu" aria-labelledby="iomad_mycoursesdropdownMenuLinkorder">
-      <a class="dropdown-item" href="{{sortascurl}}">{{#str}} asc {{/str}}</a>
-      <a class="dropdown-item" href="{{sortdescurl}}">{{#str}} desc {{/str}}</a>
+        <a class="dropdown-item"
+            data-action="changeselect"
+            data-name="sortdir_preference"
+            data-value="ASC"
+            href="{{baseurl}}">
+            {{#str}} asc {{/str}}
+        </a>
+        <a class="dropdown-item"
+            data-action="changeselect"
+            data-name="sortdir_preference"
+            data-value="DESC"
+            href="{{baseurl}}">
+            {{#str}} desc {{/str}}
+        </a>
     </div>
   </div>
   <div class="dropdown show">
@@ -77,8 +101,20 @@
     </a>
 
     <div class="dropdown-menu" aria-labelledby="iomad_mycoursesdropdownMenuLinktype">
-      <a class="dropdown-item" href="{{listviewurl}}">{{#str}} list, block_myoverview {{/str}}</a>
-      <a class="dropdown-item" href="{{cardviewurl}}">{{#str}} card, block_myoverview {{/str}}</a>
+        <a class="dropdown-item"
+            data-action="changeselect"
+            data-name="view_preference"
+            data-value="list"
+            href="{{baseurl}}">
+            {{#str}} list, block_myoverview {{/str}}
+        </a>
+        <a class="dropdown-item"
+            data-action="changeselect"
+            data-name="view_preference"
+            data-value="card"
+            href="{{baseurl}}">
+            {{#str}} card, block_myoverview {{/str}}
+        </a>
     </div>
   </div>
 </div>
@@ -88,7 +124,10 @@
         id="flagmandatorylink"
         class="btn btn-outline-secondary float-right"
         role="button"
-        href="{{{mandatoryselecturl}}}">
+        data-action="changeselect"
+        data-name="mandatory_preference"
+        data-value={{mandatoryvalue}}
+        href="{{{baseurl}}}">
         {{#mandatoryonly}}
             {{#str}}allcourses, block_iomad_company_admin{{/str}}
         {{/mandatoryonly}}
@@ -107,14 +146,14 @@
         {{#str}}downloadcertificates, block_iomad_company_admin{{/str}}
     </a>
 {{/downloadcerts}}
-<div class="block-iomad-mycourses" data-region="iomad_mycourses">
+<div id="block-iomad-mycourses-view-{{uniqid}}" class="block-iomad-mycourses" data-region="iomad_mycourses">
     <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item">
             <a class="nav-link {{#viewingavailable}}active{{/viewingavailable}}"
                       href="#iomad_mycourses_available_view"
                       role="tab"
-                      data-toggle="tab"
                       data-bs-toggle="tab"
+                      data-tabname="available"
                       aria-selected="{{#viewingavailable}}true{{/viewingavailable}}{{^viewingavailable}}false{{/viewingavailable}}">
                 {{#str}} availableheader, block_iomad_mycourses {{/str}}
             </a>
@@ -123,8 +162,8 @@
             <a class="nav-link {{#viewinginprogress}}active{{/viewinginprogress}}"
                       href="#iomad_mycourses_inprogress_view"
                       role="tab"
-                      data-toggle="tab"
                       data-bs-toggle="tab"
+                      data-tabname="inprogress"
                       aria-selected="{{#viewinginprogress}}true{{/viewinginprogress}}{{^viewinginprogress}}false{{/viewinginprogress}}">
                 {{#str}} inprogressheader, block_iomad_mycourses {{/str}}
             </a>
@@ -133,8 +172,8 @@
             <a class="nav-link {{#viewingcompleted}}active{{/viewingcompleted}}"
                       href="#iomad_mycourses_completed_view"
                       role="tab"
-                      data-toggle="tab"
                       data-bs-toggle="tab"
+                      data-tabname="completed"
                       aria-selected="{{#viewingcompleted}}true{{/viewingcompleted}}{{^viewingcompleted}}false{{/viewingcompleted}}">
                 {{#str}} completedheader, block_iomad_mycourses {{/str}}
             </a>
@@ -144,8 +183,8 @@
                 <a class="nav-link {{#viewingmandatory}}active{{/viewingmandatory}}"
                           href="#mycourses_mandatory_view"
                         role="tab"
-                        data-toggle="tab"
                         data-bs-toggle="tab"
+                      data-tabname="mandatory"
                         aria-selected="{{#viewingmandatory}}true{{/viewingmandatory}}{{^viewingmandatory}}false{{/viewingmandatory}}">
                     {{#str}} mandatoryheader, block_iomad_mycourses {{/str}}
                 </a>
@@ -186,7 +225,7 @@
 </div>
 {{#js}}
 require(['jquery', 'block_iomad_mycourses/tab_preferences'], function($, TabPreferences) {
-    var root = $('#block-iomad-mycourses-view-choices-{{uniqid}}');
+    var root = $('#block-iomad-mycourses-view-{{uniqid}}');
     TabPreferences.registerEventListeners(root);
 });
 {{/js}}

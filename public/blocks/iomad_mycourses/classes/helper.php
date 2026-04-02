@@ -568,7 +568,11 @@ class helper {
         // Process the passed list of courses.
         foreach ($courselist as $id => $course) {
             // We add the field we are sorting on to the array key.
-            $namedcourses[$course->$sorton . $id] = $courselist[$id];
+            if (!empty($course->$sorton)) {
+                $namedcourses[$course->$sorton . $id] = $courselist[$id];
+            } else {
+                $namedcourses[$id] = $courselist[$id];
+            }
         }
 
         // Do the sort.
