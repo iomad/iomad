@@ -70,7 +70,7 @@ class main implements renderable, templatable {
         $dir = get_user_preferences('block_iomad_mycourses_user_sortdir_preference', 'ASC');
         $view = get_user_preferences(
             'block_iomad_mycourses_user_view_preference',
-            get_config('local_iomad', 'use_mandatory_courses')
+            get_config('block_iomad_mycourses', 'defaultview')
         );
         $mandatoryonly = get_user_preferences('block_iomad_mycourses_user_mandatory_preference', false);
         if (!get_config('local_iomad', 'use_mandatory_courses')) {
