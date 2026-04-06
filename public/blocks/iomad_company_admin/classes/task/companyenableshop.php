@@ -22,11 +22,12 @@
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 namespace block_iomad_company_admin\task;
 
+use block_iomad_commerce\helper as iomad_commerce;
 use core\task\{adhoc_task, manager};
 use local_iomad\company;
-use iomad_commerce;
 
 /**
  * IOMAD Dashboard adhoc task to enable ecommerce for a tenant
@@ -52,8 +53,6 @@ class companyenableshop extends adhoc_task {
      */
     public function execute() {
         global $DB, $CFG;
-
-        require_once($CFG->dirroot . '/blocks/iomad_commerce/locallib.php');
 
         $data = $this->get_custom_data();
         $company = new company($data->companyid);

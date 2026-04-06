@@ -35,6 +35,7 @@ use context_system;
 use core\notification;
 use Exception;
 use local_iomad\custom_context\context_company;
+use SoapClient;
 
 /**
  * Block IOMAD eCommerce helper class
@@ -1082,5 +1083,196 @@ class helper {
             $transaction->rollback($e);
             return false;
         }
+    }
+
+    /**
+     * Update remote company handler
+     *
+     * @param object $company
+     * @param object $oldcompany
+     * @return void
+     */
+    public static function update_company($company, $oldcompany) {
+
+        $call = 'updateCompany';
+        $payload = [
+            'origname' => $oldcompany->name,
+            'newname' => $company->name,
+        ];
+
+        return self::docall($call, $payload, $company->id);
+    }
+
+    /**
+     * Update remote user handler
+     *
+     * @param object $user
+     * @param id $companyid
+     * @return void
+     */
+    public static function update_user($user, $companyid) {
+
+        // Check if this has been disabled to stop looping.
+        $blocked = get_user_preferences('block_iomad_commerce_dont_sync', false, $user);
+        if ($blocked) {
+            set_user_preferences(['block_iomad_commerce_dont_sync' => false], $user);
+            return;
+        }
+
+        // Otherwise - we do the thing.
+        $call = 'updateUser';
+        if (empty($user->company)) {
+            $user->company = 'Registered';
+        }
+        if (empty($user->manager)) {
+            $user->manager = 0;
+        }
+        $payload = [
+            'userid' => $user->id,
+            'username' => $user->username,
+            'firstname' => $user->firstname,
+            'lastname' => $user->lastname,
+            'email' => $user->email,
+            'company' => $user->company,
+            'password' => $user->password,
+            'address' => $user->address,
+            'city' => $user->city,
+            'country' => $user->country,
+            'manager' => $user->manager,
+        ];
+
+        if (!empty($user->extragroup->name) && !empty($user->extragroup->action)) {
+            $payload['extragroup'] = $user->extragroup->name;
+            $payload['extragroupaction'] = $user->extragroup->action;
+        } else {
+            $payload['extragroup'] = null;
+            $payload['extragroupaction'] = null;
+        }
+
+        return self::docall($call, $payload, $companyid);
+    }
+
+    /**
+     * Assign user to company remote handler
+     *
+     * @param object $user
+     * @param string $companyname
+     * @param integer $companyid
+     * @return void
+     */
+    public static function assign_user($user, $companyname="", $companyid=0) {
+
+        $call = 'updateUser';
+        if (empty($user->manager)) {
+            $user->manager = 'no';
+        }
+        if (empty($companyname) && !empty($user->company)) {
+            $companyname = $user->company;
+        }
+        if (empty($companyname)) {
+            $companyname = 'Registered';
+        }
+        $payload = [
+            'userid' => $user->id,
+            'username' => $user->username,
+            'firstname' => $user->firstname,
+            'lastname' => $user->lastname,
+            'email' => $user->email,
+            'company' => $companyname,
+            'password' => $user->password,
+            'address' => $user->address,
+            'city' => $user->city,
+            'country' => $user->country,
+            'manager' => $user->manager,
+        ];
+
+        if (!empty($user->extragroup->name) && !empty($user->extragroup->action)) {
+            $payload['extragroup'] = $user->extragroup->name;
+            $payload['extragroupaction'] = $user->extragroup->action;
+        }
+
+        return self::docall($call, $payload, $companyid);
+    }
+
+    /**
+     * Delete user handler for remote
+     *
+     * @param string $username
+     * @param integer $companyid
+     * @return void
+     */
+    public static function delete_user($username, $companyid) {
+
+        $call = 'deleteUser';
+        $payload = ['username' => $username];
+
+        return self::docall($call, $payload, $companyid);
+    }
+
+    /**
+     * Verify passed remote token.
+     *
+     * @param string $username
+     * @param integer $companyid
+     * @return void
+     */
+    public static function verifytoken($username, $token, $companyid) {
+
+        // Construct the request.
+        $call = 'verifyToken';
+        $payload = [
+            'username' => $username,
+            'token' => $token,
+        ];
+
+        return self::docall($call, $payload, $companyid);
+    }
+
+    /**
+     * Make the remote webservice call
+     *
+     * @param string $call
+     * @param array $payload
+     * @param int $companyid
+     * @return void
+     */
+    private static function docall($call, $payload, $companyid) {
+        global $CFG;
+
+        $opts = [
+            'http' => [
+                'user_agent' => 'PHPSoapClient',
+            ],
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true,
+            ],
+        ];
+        $soapcontext = stream_context_create($opts);
+
+        $checkname = "commerce_externalshop_url_$companyid";
+        if (!empty($CFG->$checkname)) {
+            $mainurl = $CFG->$checkname;
+        } else {
+            $mainurl = $CFG->commerce_externalshop_url;
+        }
+        $wsdlurl = $mainurl . '/wp-content/plugins/wpiomadsoap/wsdl/wpiomadsoap.wsdl';
+        $soapserverurl = $mainurl . '/?api=soap&version=v1&wsdl';
+
+        $client = new SoapClient($wsdlurl, [
+            'stream_context' => $soapcontext,
+            'cache_wsdl' => WSDL_CACHE_NONE,
+            'trace' => 1,
+        ]);
+
+        try {
+            $client->__setLocation($soapserverurl);
+            $response = $client->__soapCall($call, $payload);
+            return $response;
+        } catch (SoapFault $e) {
+            return $e->getMessage();
+        }
+        return $response;
     }
 }
