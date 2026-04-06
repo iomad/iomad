@@ -25,6 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use block_iomad_commerce\helper as iomad_commerce;
 use block_iomad_company_admin\event\{
     company_created,
     company_deleted,
@@ -2170,7 +2171,6 @@ class company {
 
         if ($CFG->commerce_enable_external && !empty($CFG->commerce_externalshop_url)) {
             // Fire off the payload to the external site.
-            require_once($CFG->dirroot . '/blocks/iomad_commerce/locallib.php');
             $user = $DB->get_record('user', ['id' => $userid]);
             iomad_commerce::delete_user($user->username, $this->id);
         }
@@ -4737,7 +4737,6 @@ class company {
                 return true;
             }
 
-            require_once($CFG->dirroot . '/blocks/iomad_commerce/locallib.php');
             iomad_commerce::update_company($company, $company);
         }
 
@@ -4831,7 +4830,6 @@ class company {
 
         if ($CFG->commerce_enable_external && !empty($CFG->commerce_externalshop_url)) {
             // Fire off the payload to the external site.
-            require_once($CFG->dirroot . '/blocks/iomad_commerce/locallib.php');
             iomad_commerce::update_company($company, $oldcompany);
         }
 
@@ -4964,7 +4962,6 @@ class company {
             }
 
             // Fire off the payload to the external site.
-            require_once($CFG->dirroot . '/blocks/iomad_commerce/locallib.php');
             iomad_commerce::update_user($user, $company->id);
         }
 
@@ -5009,7 +5006,6 @@ class company {
                 }
 
                 // Fire off the payload to the external site.
-                require_once($CFG->dirroot . '/blocks/iomad_commerce/locallib.php');
                 iomad_commerce::update_user($user, $company->id);
             }
         }
@@ -5275,7 +5271,6 @@ class company {
                 return true;
             }
             // Fire off the payload to the external site.
-            require_once($CFG->dirroot . '/blocks/iomad_commerce/locallib.php');
             iomad_commerce::assign_user($user, $companyrec->name, $companyrec->id);
         }
 
