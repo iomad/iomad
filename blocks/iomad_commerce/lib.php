@@ -44,3 +44,22 @@ function block_iomad_commerce_inplace_editable($itemtype, $itemid, $newvalue) {
         return block_iomad_commerce\output\tag_name_editable::update($itemid, $newvalue);
     }
 }
+
+/**
+ * Callback for available user preferences.
+ *
+ * @return array
+ */
+function block_iomad_commerce_user_preferences(): array {
+    $preferences['block_iomad_commerce_dont_sync'] = [
+        'null' => NULL_NOT_ALLOWED,
+        'default' => false,
+        'type' => PARAM_BOOL,
+        'choices' => [
+            false,
+            true,
+        ],
+    ];
+
+    return $preferences;
+}
