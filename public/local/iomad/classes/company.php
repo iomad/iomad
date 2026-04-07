@@ -67,6 +67,14 @@ use local_iomad\task\enroleducatortask;
 use local_iomadcustompage\event\iomadcustompage_deleted;
 use moodle_url;
 
+use core\context\coursecat as context_coursecat;
+use stdClass;
+
+use Exception;
+use core\exception\coding_exception;
+
+use function PHPUnit\Framework\isEmpty;
+
 /**
  * Local IOMAD company class
  *
@@ -109,14 +117,337 @@ class company {
     }
 
     /**
-     * Get selected fields
-     * @param mixed fields string or array
-     * @return mixed string or object (if array)
+     * Create company (or update it if it already exists)
+     *
+     * @param stdClass $data
+     * @return \local_iomad\company
      */
-    public function get($fields): string|object {
+    public static function create_company(stdClass $data): company {
+        global $DB, $USER;
+        $systemcontext = context_system::instance();
+
+        // Required fields
+        if (empty($data->name) || empty($data->shortname) || empty($data->city) || empty($data->country)) {
+            throw new Exception('Company must have a \'name\', \'shortname\', \'city\', and \'country\'.');
+        }
+
+        // Removing whitespace from strings
+        $data->name = trim($data->name);
+        $data->shortname = trim($data->shortname);
+        $data->city = trim($data->city);
+
+        $data->code = isset($data->code) ? trim($data->code) : null;
+        $data->region = isset($data->region) ? trim($data->region) : null;
+        $data->custom1 = isset($data->custom1) ? trim($data->custom1) : null;
+        $data->custom2 = isset($data->custom2) ? trim($data->custom2) : null;
+        $data->custom3 = isset($data->custom3) ? trim($data->custom3) : null;
+
+        // Further string-cleaning
+        $data->name = clean_param($data->name, PARAM_NOTAGS);  // must be varchar(50), never null
+
+        $data->shortname = clean_param($data->shortname, PARAM_NOTAGS);  // must be varchar(25)
+        if (!preg_match('/^[A-Za-z0-9_]+$/', $data->shortname)) {
+            throw new Exception('Company \'shortname\' can only contain alphanumeric characters (both uppercase and lowercase) and underscores (_).');
+        }
+
+        // Set up a profiles field category for this company.
+        $catdata = (object) [];
+        $catdata->sortorder = $DB->count_records('user_info_category') + 1;
+        $catdata->name = $data->shortname;
+        $data->profilecategoryid = $DB->insert_record('user_info_category', $catdata);
+
+        // If the company already exists, update it
+        if (!empty($data->id) && $DB->record_exists('local_iomad_companies', ['id' => $data->id])) {
+            $oldcompany = $DB->get_record('local_iomad_companies', ['id' => $data->id]);
+            $companyid = $DB->update_record('local_iomad_companies', $data);
+
+            $eventother = ['companyid' => $companyid,
+                                'oldcompany' => json_encode($oldcompany)];
+        } else {
+            $companyid = $DB->insert_record('local_iomad_companies', $data);
+            $data->id = $companyid;
+
+            $eventother = ['companyid' => $companyid];
+        }
+        //$data = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
+        $company = new company($companyid);
+        $companycontext = context_company::instance($companyid);
+
+        if (isset($oldcompany)) {
+            // Has the company name changed?
+            if ($topdepartment = company::get_company_parentnode($companyid)) {
+                if ($topdepartment->name != $data->name) {
+                    $topdepartment->name = $data->name;
+                    $topdepartment->shortname = $data->shortname;
+                    $DB->update_record('local_iomad_company_departments', $topdepartment);
+                }
+            }
+
+            // Check if we have a new expiration date.
+            if (!empty($data->validto) && !empty($oldcompany->isterminated) && $data->validto > $oldcompany->validto) {
+                $data->isterminated = 0;
+            }
+
+            // Update theme if changed
+            $oldtheme = $oldcompany->theme ?? '';
+            if ($oldtheme != $data->theme) {
+                $company->update_theme($data->theme);
+            }
+
+            // Has the company parentid changed?
+            if (!empty($oldcompany->parentid)) {
+                $oldcompanyparentid = $oldcompany->parentid;
+
+                if ($oldcompanyparentid != $data->parentid) {
+                    // Is there currently a company parent set?
+                    if (!empty($oldcompanyparentid)) {
+                        // Clear the old ones.
+                        $company->unassign_parent_managers($oldcompanyparentid);
+                    }
+
+                    // Update the company record.
+                    $DB->update_record('local_iomad_companies', $data);
+
+                    if (!empty($data->parentid)) {
+                        // Assign the new ones.
+                        $company->assign_parent_managers($data->parentid);
+                    }
+                }
+            }
+
+            // Update record
+            $DB->update_record('local_iomad_companies', $data);
+        } else {
+            // Set up default department.
+            company::initialise_departments($companyid);
+
+            // Set up course category for company.
+            $coursecat = new stdClass();
+            $coursecat->name = $data->name;
+            $coursecat->sortorder = 999;
+            $coursecat->id = $DB->insert_record('course_categories', $coursecat);
+            $coursecat->context = context_coursecat::instance($coursecat->id);
+            $categorycontext = $coursecat->context;
+            $categorycontext->mark_dirty();
+            $DB->update_record('course_categories', $coursecat);
+            fix_course_sortorder();
+            $companydetails = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
+            $companydetails->coursecategoryid = $coursecat->id;
+            $DB->update_record('local_iomad_companies', $companydetails);
+
+            // Deal with any parent company assignments.
+            if (!empty($companydetails->parentid)) {
+                $company = new company($companydetails->id);
+                $company->assign_parent_managers($companydetails->parentid);
+            }
+        }
+
+        // Fire an event for company creation/saving
+        $event = company_created::create([
+            'context' => $systemcontext,
+            'userid' => $USER->id,
+            'objectid' => $companyid,
+            'other' => $eventother,
+        ]);
+        $event->trigger();
+
+        // Deal with any assigned templates.
+        if (empty($data->templates)) {
+            $data->templates = [];
+        }
+        $company->assign_role_templates($data->templates, true);
+
+        // Deal with role templates.
+        if (!empty($data->roletemplate)) {
+            if ($data->roletemplate != 'i') {
+                $data->previousroletemplateid = $data->roletemplate;
+            } else {
+                $data->previousroletemplateid = -1;
+            }
+
+            // We need to do something with the roles.
+            if ($data->roletemplate == 'i') {
+                if (!empty($data->parentid)) {
+                    // Apply the same roles as per the parent company.
+                    $company->apply_role_templates();
+                }
+            } else {
+                $company->apply_role_templates($data->roletemplate);
+            }
+        }
+
+        // Deal with email templates.
+        if (!empty($data->emailtemplate)) {
+            $data->previousemailtemplateid = $data->emailtemplate;
+
+            if (iomad::has_capability('local/iomad:email_edit', $companycontext)) {
+                // We need to do something with the email templates.
+                $company->apply_email_templates($data->emailtemplate);
+            }
+        }
+
+        // Deal with an dashboard stuff.
+        $DB->delete_records('local_iomad_company_pages', ['companyid' => $companyid, 'type' => 'dashboard']);
+        if (!empty($data->dashboard)) {
+            $DB->insert_record(
+                'local_iomad_company_pages',
+                ['companyid' => $companyid, 'pageid' => $data->dashboard, 'type' => 'dashboard']
+            );
+        }
+
+        // Deal with logo config settings.
+        $fs = get_file_storage();
+        if (!empty($data->companylogo)) {
+            file_save_draft_area_files($data->companylogo,
+                                       $systemcontext->id,
+                                       'core_admin',
+                                       'logo' . $data->id,
+                                       0,
+                                       ['maxfiles' => 1]);
+
+            // Set the plugin config so it can actually be picked up.
+            if ($files = $fs->get_area_files($systemcontext->id, 'core_admin', 'logo'. $data->id)) {
+                foreach ($files as $file) {
+                    if ($file->get_filename() != '.') {
+                        break;
+                    }
+                }
+                set_config('logo' . $data->id, $file->get_filepath() . $file->get_filename(), 'core_admin');
+            } else {
+                set_config('logo' . $data->id, '', 'core_admin');
+            }
+        }
+
+        // Deal with logos.
+        if (!empty($data->companylogocompact)) {
+            file_save_draft_area_files($data->companylogocompact,
+                                       $systemcontext->id,
+                                       'core_admin',
+                                       'logocompact' . $data->id,
+                                       0,
+                                       ['maxfiles' => 1]);
+
+            // Set the plugin config so it can actually be picked up.
+            if ($files = $fs->get_area_files($systemcontext->id, 'core_admin', 'logocompact'. $data->id)) {
+                foreach ($files as $file) {
+                    if ($file->get_filename() != '.') {
+                        break;
+                    }
+                }
+                set_config('logocompact' . $data->id, $file->get_filepath() . $file->get_filename(), 'core_admin');
+            } else {
+                set_config('logocompact' . $data->id, '', 'core_admin');
+            }
+        }
+
+        // Deal with favicons.
+        if (!empty($data->companyfavicon)) {
+            file_save_draft_area_files($data->companyfavicon,
+                                       $systemcontext->id,
+                                       'core_admin',
+                                       'favicon' . $data->id,
+                                       0,
+                                       ['maxfiles' => 1]);
+
+            // Set the plugin config so it can actually be picked up.
+            if ($files = $fs->get_area_files($systemcontext->id, 'core_admin', 'favicon'. $data->id)) {
+                foreach ($files as $file) {
+                    if ($file->get_filename() != '.') {
+                        break;
+                    }
+                }
+                set_config('favicon' . $data->id, $file->get_filepath() . $file->get_filename(), 'core_admin');
+            } else {
+                set_config('favicon' . $data->id, '', 'core_admin');
+            }
+        }
+
+        // Deal with certificates.
+        if (!empty($data->uselogo) && !empty($data->usesignature) && !empty($data->useborder) && !empty($data->usewatermark) && !empty($data->showgrade)) {
+            $certificateinforec = (array) $DB->get_record('local_iomad_company_certificates', ['companyid' => $companyid]);
+            if (!empty($certificateinforec['id'])) {
+                $certificateinforec['uselogo'] = $data->uselogo;
+                $certificateinforec['usesignature'] = $data->usesignature;
+                $certificateinforec['useborder'] = $data->useborder;
+                $certificateinforec['usewatermark'] = $data->usewatermark;
+                $certificateinforec['showgrade'] = $data->showgrade;
+                $DB->update_record('local_iomad_company_certificates', $certificateinforec);
+            } else {
+                $certificateinforec = [
+                    'companyid' => $companyid,
+                    'uselogo' => $data->uselogo,
+                    'usesignature' => $data->usesignature,
+                    'useborder' => $data->useborder,
+                    'usewatermark' => $data->usewatermark,
+                    'showgrade' => $data->showgrade,
+                ];
+                $DB->insert_record('local_iomad_company_certificates', $certificateinforec);
+            }
+        }
+
+        if (!empty($data->companycertificateseal)) {
+            file_save_draft_area_files($data->companycertificateseal,
+                                       $systemcontext->id,
+                                       'local_iomad',
+                                       'companycertificateseal',
+                                       $data->id,
+                                       ['subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1]);
+        }
+        if (!empty($data->companycertificatesignature)) {
+            file_save_draft_area_files($data->companycertificatesignature,
+                                       $systemcontext->id,
+                                       'local_iomad',
+                                       'companycertificatesignature',
+                                       $data->id,
+                                       ['subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1]);
+        }
+        if (!empty($data->companycertificateborder)) {
+            file_save_draft_area_files($data->companycertificateborder,
+                                       $systemcontext->id,
+                                       'local_iomad',
+                                       'companycertificateborder',
+                                       $data->id,
+                                       ['subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1]);
+        }
+        if (!empty($data->companycertificatewatermark)) {
+            file_save_draft_area_files($data->companycertificatewatermark,
+                                       $systemcontext->id,
+                                       'local_iomad',
+                                       'companycertificatewatermark',
+                                       $data->id,
+                                       ['subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1]);
+        }
+
+        // Delete any recorded domains for this company.
+        $DB->delete_records('local_iomad_company_domains', ['companyid' => $companyid]);
+
+        // Add any new ones back in.
+        if (!empty($data->companydomains)) {
+            $domainsarray = preg_split('/[\r\n]+/', $data->companydomains, -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($domainsarray as $domain) {
+                if (!empty($domain)) {
+                    $DB->insert_record('local_iomad_company_domains', ['companyid' => $companyid, 'domain' => $domain]);
+                }
+            }
+        }
+
+        // Final update
+        $DB->update_record('local_iomad_companies', $data);
+
+        return $company;
+    }
+
+    /**
+     * Get selected fields
+     * @param mixed fields string or array, only_if_exists boolean
+     * @return mixed nullable string or object (if array)
+     */
+    public function get($fields, $only_if_exists = false): string|object|null {
         if (is_string($fields)) {
             if (isset($this->companyrecord->$fields)) {
                 return $this->companyrecord->$fields;
+            } elseif ($only_if_exists) {
+                return null;
             } else {
                 throw new Exception("Field not found in company record - " . $fields);
             }
@@ -125,12 +456,68 @@ class company {
             foreach ($fields as $field) {
                 if (property_exists($this->companyrecord, $field)) {
                     $result->$field = $this->companyrecord->$field;
+                } elseif ($only_if_exists) {
+                    $result->$field = null;
                 } else {
                     throw new Exception("Field not found in company record - " . $field);
                 }
             }
             return $result;
         }
+    }
+
+    /**
+     * Get all available fields
+     */
+    public function get_all() {
+        return $this->get(['id',
+                           'name',
+                           'shortname',
+                           'code',
+                           'address',
+                           'city',
+                           'region',
+                           'postcode',
+                           'country',
+                           'maildisplay',
+                           'mailformat',
+                           'maildigest',
+                           'autosubscribe',
+                           'trackforums',
+                           'htmleditor',
+                           'screenreader',
+                           'timezone',
+                           'lang',
+                           'bgcolor_header',
+                           'bgcolor_content',
+                           'theme',
+                           'coursecategoryid',
+                           'profilecategoryid',
+                           'suspended',
+                           'customcss',
+                           'maincolor',
+                           'headingcolor',
+                           'linkcolor',
+                           'emailprofileid',
+                           'supervisorprofileid',
+                           'managernotify',
+                           'parentid',
+                           'ecommerce',
+                           'custommenuitems',
+                           'managerdigestday',
+                           'previousroletemplateid',
+                           'previousemailtemplateid',
+                           'hostname',
+                           'maxusers',
+                           'validto',
+                           'suspendafter',
+                           'isterminated',
+                           'custom1',
+                           'custom2',
+                           'custom3',
+                           'paymentaccountid',
+                           'departmentprofileid'],
+                            only_if_exists: true);
     }
 
     /**

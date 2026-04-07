@@ -431,350 +431,37 @@ if ($mform->is_cancelled()) {
         $data->validto = null;
     }
 
-    // Add a new company.
-    if ($isadding) {
-        if (!empty($data->submitbutton)) {
-            // Set up a profiles field category for this company.
-            $catdata = (object) [];
-            $catdata->sortorder = $DB->count_records('user_info_category') + 1;
-            $catdata->name = $data->shortname;
-            $data->profilecategoryid = $DB->insert_record('user_info_category', $catdata);
-
-            // Deal with leading/trailing spaces.
-            $data->name = trim($data->name);
-            $data->shortname = trim($data->shortname);
-            $data->code = trim($data->code);
-            $data->city = trim($data->city);
-            $data->region = trim($data->region);
-            $data->custom1 = trim($data->custom1);
-            $data->custom2 = trim($data->custom2);
-            $data->custom3 = trim($data->custom3);
-
-            // We hit create.
-            $companyid = $DB->insert_record('local_iomad_companies', $data);
-            $company = new company($companyid);
-
-            $eventother = ['companyid' => $companyid];
-
-            $event = company_created::create([
-                'context' => $systemcontext,
-                'userid' => $USER->id,
-                'objectid' => $companyid,
-                'other' => $eventother,
+    if ($isadding && empty($data->submitbutton)) {
+        // Stash the current form information to use when it reloads.
+        $redirectmessage = "";
+        $SESSION->createcompanyform = $data;
+        $SESSION->createcompanyform->timecreated = time();
+        $companylist = new moodle_url(
+            '/blocks/iomad_company_admin/company_edit_form.php',
+            [
+                'createnew' => true,
+                'parentid' => $data->parentid,
             ]);
-            $event->trigger();
-
-            // Set up default department.
-            company::initialise_departments($companyid);
-            $data->id = $companyid;
-
-            // Set up course category for company.
-            $coursecat = (object) [];
-            $coursecat->name = $data->name;
-            $coursecat->sortorder = 999;
-            $coursecat->id = $DB->insert_record('course_categories', $coursecat);
-            $coursecat->context = context_coursecat::instance($coursecat->id);
-            $categorycontext = $coursecat->context;
-            $categorycontext->mark_dirty();
-            $DB->update_record('course_categories', $coursecat);
-            fix_course_sortorder();
-            $companydetails = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
-            $companydetails->coursecategoryid = $coursecat->id;
-            $DB->update_record('local_iomad_companies', $companydetails);
-            $redirectmessage = get_string('companycreatedok', 'block_iomad_company_admin');
-
-            // Deal with any parent company assignments.
-            if (!empty($companydetails->parentid)) {
-                $company = new company($companydetails->id);
-                $company->assign_parent_managers($companydetails->parentid);
-            }
-
-            // Deal with any assigned templates.
-            if (!empty($data->templates)) {
-                $company->assign_role_templates($data->templates);
-            }
-
-            // Deal with certificate info.
-            $certificateinforec = [
-                'companyid' => $companyid,
-                'uselogo' => $data->uselogo,
-                'usesignature' => $data->usesignature,
-                'useborder' => $data->useborder,
-                'usewatermark' => $data->usewatermark,
-                'showgrade' => $data->showgrade,
-            ];
-            $DB->insert_record('local_iomad_company_certificates', $certificateinforec);
-        } else {
-            // Stash the current form information to use when it reloads.
-            $redirectmessage = "";
-            $SESSION->createcompanyform = $data;
-            $SESSION->createcompanyform->timecreated = time();
-            $companylist = new moodle_url(
-                '/blocks/iomad_company_admin/company_edit_form.php',
-                [
-                    'createnew' => true,
-                    'parentid' => $data->parentid,
-                ]);
-            $createcompany = false;
-        }
-    } else {
-        // Updating an existing company.
-        $data->id = $companyid;
-
-        // Set some defaults.
-        if (!empty($data->usedefaultpaymentaccount)) {
-            $data->paymentaccountid = '';
-        }
-        $company = new company($companyid);
-        $oldcompany = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
-        $oldtheme = $company->get_theme();
-        $themechanged = $oldtheme != $data->theme;
-
-        // Check if we have a new expiration date.
-        if (!empty($data->validto)) {
-            if (!empty($oldcompany->isterminated) && $data->validto > $oldcompany->validto) {
-                $data->isterminated = 0;
-            }
-        }
-
-        // Was the theme changed?
-        if ($themechanged) {
-            $company->update_theme($data->theme);
-        }
-
-        // Has the company name changed?
-        if ($topdepartment = $company->get_company_parentnode($companyid)) {
-            if ($topdepartment->name != $data->name) {
-                $topdepartment->name = $data->name;
-                $topdepartment->shortname = $data->shortname;
-                $DB->update_record('local_iomad_company_departments', $topdepartment);
-            }
-        }
-
-        // Set the default response.
-        $redirectmessage = get_string('companysavedok', 'block_iomad_company_admin');
-
-        // Has the company parentid changed?
-        $companyparent = $company->get_parentid();
-        if ($companyparent != $data->parentid) {
-            // Is there currently a company parent set?
-            if (!empty($companyparent)) {
-                // Clear the old ones.
-                $company->unassign_parent_managers($companyparent);
-            }
-
-            // Update the company record.
-            $DB->update_record('local_iomad_companies', $data);
-
-            if (!empty($data->parentid)) {
-                // Assign the new ones.
-                $company->assign_parent_managers($data->parentid);
-            }
-        }
-
-        // Did we apply a role template?
-        if (!empty($data->roletemplate)) {
-            if ($data->roletemplate != 'i') {
-                $data->previousroletemplateid = $data->roletemplate;
-            } else {
-                $data->previousroletemplateid = -1;
-            }
-        }
-
-        // Did we apply an email template?
-        if (!empty($data->emailtemplate)) {
-            $data->previousemailtemplateid = $data->emailtemplate;
-        }
-
-        $DB->update_record('local_iomad_companies', $data);
-        // Fire an event for this.
-        $eventother = ['companyid' => $companyid,
-                            'oldcompany' => json_encode($oldcompany)];
-
-        $event = company_updated::create([
-            'context' => $companycontext,
-            'userid' => $USER->id,
-            'objectid' => $companyid,
-            'other' => $eventother,
-        ]);
-        $event->trigger();
-
-        // Deal with certificate info.
-        $certificateinforec = (array) $DB->get_record('local_iomad_company_certificates', ['companyid' => $companyid]);
-        if (!empty($certificateinforec['id'])) {
-            $certificateinforec['uselogo'] = $data->uselogo;
-            $certificateinforec['usesignature'] = $data->usesignature;
-            $certificateinforec['useborder'] = $data->useborder;
-            $certificateinforec['usewatermark'] = $data->usewatermark;
-            $certificateinforec['showgrade'] = $data->showgrade;
-            $DB->update_record('local_iomad_company_certificates', $certificateinforec);
-        } else {
-            $certificateinforec = [
-                'companyid' => $companyid,
-                'uselogo' => $data->uselogo,
-                'usesignature' => $data->usesignature,
-                'useborder' => $data->useborder,
-                'usewatermark' => $data->usewatermark,
-                'showgrade' => $data->showgrade,
-            ];
-            $DB->insert_record('local_iomad_company_certificates', $certificateinforec);
-        }
-
-        // Deal with an dashboard stuff.
-        $DB->delete_records('local_iomad_company_pages', ['companyid' => $companyid, 'type' => 'dashboard']);
-        if (!empty($data->dashboard)) {
-            $DB->insert_record(
-                'local_iomad_company_pages',
-                ['companyid' => $companyid, 'pageid' => $data->dashboard, 'type' => 'dashboard']
-            );
-        }
-
-        // Is the current user in the company?
-        if (company_user::is_company_user()) {
-            company_user::reload_company();
-        }
     }
+    else {
+        if ($isadding && !empty($data->submitbutton)) {
+            // Create company.
+            company::create_company($data);
 
-    // Only do the rest of the company create stuffs if we are not re-directing back to the form on parentid change.
-    if ($createcompany) {
-        $company = new company($data->id);
-
-        // Deal with role templates.
-        if (!empty($data->roletemplate)) {
-            // We need to do something with the roles.
-            if ($data->roletemplate == 'i') {
-                if (!empty($data->parentid)) {
-                    // Apply the same roles as per the parent company.
-                    $company->apply_role_templates();
-                }
-            } else {
-                $company->apply_role_templates($data->roletemplate);
-            }
+            // Redirect message.
+            $redirectmessage = get_string('companycreatedok', 'block_iomad_company_admin');
         }
+        else {
+            // Updating an existing company.
+            $data->id = $companyid;
+            company::create_company($data);
 
-        // Deal with email templates.
-        if (!empty($data->emailtemplate) && iomad::has_capability('local/iomad:email_edit', $companycontext)) {
-            // We need to do something with the email templates.
-            $company->apply_email_templates($data->emailtemplate);
-        }
+            // Redirect message.
+            $redirectmessage = get_string('companysavedok', 'block_iomad_company_admin');
 
-        // Deal with any assigned templates.
-        if (empty($data->templates)) {
-            $data->templates = [];
-        }
-        $company->assign_role_templates($data->templates, true);
-
-        // Deal with logo config settings.
-        $fs = get_file_storage();
-        if (!empty($data->companylogo)) {
-            file_save_draft_area_files($data->companylogo,
-                                       $systemcontext->id,
-                                       'core_admin',
-                                       'logo' . $data->id,
-                                       0,
-                                       ['maxfiles' => 1]);
-
-            // Set the plugin config so it can actually be picked up.
-            if ($files = $fs->get_area_files($systemcontext->id, 'core_admin', 'logo'. $data->id)) {
-                foreach ($files as $file) {
-                    if ($file->get_filename() != '.') {
-                        break;
-                    }
-                }
-                set_config('logo' . $data->id, $file->get_filepath() . $file->get_filename(), 'core_admin');
-            } else {
-                set_config('logo' . $data->id, '', 'core_admin');
-            }
-        }
-
-        // Deal with logos.
-        if (!empty($data->companylogocompact)) {
-            file_save_draft_area_files($data->companylogocompact,
-                                       $systemcontext->id,
-                                       'core_admin',
-                                       'logocompact' . $data->id,
-                                       0,
-                                       ['maxfiles' => 1]);
-
-            // Set the plugin config so it can actually be picked up.
-            if ($files = $fs->get_area_files($systemcontext->id, 'core_admin', 'logocompact'. $data->id)) {
-                foreach ($files as $file) {
-                    if ($file->get_filename() != '.') {
-                        break;
-                    }
-                }
-                set_config('logocompact' . $data->id, $file->get_filepath() . $file->get_filename(), 'core_admin');
-            } else {
-                set_config('logocompact' . $data->id, '', 'core_admin');
-            }
-        }
-
-        // Deal with favicons.
-        if (!empty($data->companyfavicon)) {
-            file_save_draft_area_files($data->companyfavicon,
-                                       $systemcontext->id,
-                                       'core_admin',
-                                       'favicon' . $data->id,
-                                       0,
-                                       ['maxfiles' => 1]);
-
-            // Set the plugin config so it can actually be picked up.
-            if ($files = $fs->get_area_files($systemcontext->id, 'core_admin', 'favicon'. $data->id)) {
-                foreach ($files as $file) {
-                    if ($file->get_filename() != '.') {
-                        break;
-                    }
-                }
-                set_config('favicon' . $data->id, $file->get_filepath() . $file->get_filename(), 'core_admin');
-            } else {
-                set_config('favicon' . $data->id, '', 'core_admin');
-            }
-        }
-
-        // Deal with certificates.
-        if (!empty($data->companycertificateseal)) {
-            file_save_draft_area_files($data->companycertificateseal,
-                                       $systemcontext->id,
-                                       'local_iomad',
-                                       'companycertificateseal',
-                                       $data->id,
-                                       ['subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1]);
-        }
-        if (!empty($data->companycertificatesignature)) {
-            file_save_draft_area_files($data->companycertificatesignature,
-                                       $systemcontext->id,
-                                       'local_iomad',
-                                       'companycertificatesignature',
-                                       $data->id,
-                                       ['subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1]);
-        }
-        if (!empty($data->companycertificateborder)) {
-            file_save_draft_area_files($data->companycertificateborder,
-                                       $systemcontext->id,
-                                       'local_iomad',
-                                       'companycertificateborder',
-                                       $data->id,
-                                       ['subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1]);
-        }
-        if (!empty($data->companycertificatewatermark)) {
-            file_save_draft_area_files($data->companycertificatewatermark,
-                                       $systemcontext->id,
-                                       'local_iomad',
-                                       'companycertificatewatermark',
-                                       $data->id,
-                                       ['subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1]);
-        }
-
-        // Delete any recorded domains for this company.
-        $DB->delete_records('local_iomad_company_domains', ['companyid' => $companyid]);
-
-        // Add any new ones back in.
-        if (!empty($data->companydomains)) {
-            $domainsarray = preg_split('/[\r\n]+/', $data->companydomains, -1, PREG_SPLIT_NO_EMPTY);
-            foreach ($domainsarray as $domain) {
-                if (!empty($domain)) {
-                    $DB->insert_record('local_iomad_company_domains', ['companyid' => $companyid, 'domain' => $domain]);
-                }
+            // Is the current user in the company?
+            if (company_user::is_company_user()) {
+                company_user::reload_company();
             }
         }
     }

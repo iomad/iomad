@@ -37,7 +37,7 @@ class AssignSubmissionDuplicatedDataMerger implements DuplicatedDataMerger {
 
     private $findassignsubmissionbyid;
 
-    public function __construct(assign_submission_query $findbyquery = null) {
+    public function __construct(?assign_submission_query $findbyquery = null) {
         $this->findassignsubmissionbyid = $findbyquery ?? new db_assign_submission();
     }
 
