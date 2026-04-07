@@ -22,7 +22,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use block_iomad_company_admin\event\{company_created, company_updated, dashboard_page_viewed};
+use block_iomad_company_admin\event\dashboard_page_viewed;
 use block_iomad_company_admin\forms\company_edit_form;
 use core\output\notification;
 

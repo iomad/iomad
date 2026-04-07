@@ -47,6 +47,7 @@ use cache;
 use cache_helper;
 use context_course;
 use context_system;
+use core\context\coursecat as context_coursecat;
 use core\event\{
     competency_framework_created,
     competency_framework_deleted,
@@ -60,18 +61,15 @@ use core\event\{
     user_enrolment_created,
     user_deleted,
 };
+use core\exception\coding_exception;
+use core\exception\moodle_exception;
 use core\notification;
 use course_enrolment_manager;
 use local_iomad\custom_context\context_company;
 use local_iomad\task\enroleducatortask;
 use local_iomadcustompage\event\iomadcustompage_deleted;
 use moodle_url;
-
-use core\context\coursecat as context_coursecat;
 use stdClass;
-
-use Exception;
-use core\exception\coding_exception;
 
 use function PHPUnit\Framework\isEmpty;
 
@@ -128,7 +126,7 @@ class company {
 
         // Required fields.
         if (empty($data->name) || empty($data->shortname) || empty($data->city) || empty($data->country)) {
-            throw new Exception(get_string('errorcompanydefaults', 'local_iomad'));
+            throw new moodle_exception(get_string('errorcompanydefaults', 'local_iomad'));
         }
 
         // Removing whitespace from strings.

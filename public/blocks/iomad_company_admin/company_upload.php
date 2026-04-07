@@ -23,7 +23,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use block_iomad_company_admin\event\{company_created, dashboard_page_viewed};
+use block_iomad_company_admin\event\dashboard_page_viewed;
 use block_iomad_company_admin\forms\company_import_form;
 use local_iomad\{company, company_user, iomad};
 use local_iomad\custom_context\context_company;
@@ -82,27 +82,29 @@ $PAGE->set_heading(get_string('companyimportfromfile', 'block_iomad_company_admi
 dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Array of all valid fields for CSV validation.
-$stdfields = ['name',
-              'shortname',
-              'code',
-              'address',
-              'city',
-              'region',
-              'postcode',
-              'country',
-              'parent',
-              'theme',
-              'hostname',
-              'maxusers',
-              'validto',
-              'suspendafter',
-              'custom1',
-              'custom2',
-              'custom3',
-              'customcss',
-              'maincolor',
-              'headingcolor',
-              'linkcolor'];
+$stdfields = [
+    'name',
+    'shortname',
+    'code',
+    'address',
+    'city',
+    'region',
+    'postcode',
+    'country',
+    'parent',
+    'theme',
+    'hostname',
+    'maxusers',
+    'validto',
+    'suspendafter',
+    'custom1',
+    'custom2',
+    'custom3',
+    'customcss',
+    'maincolor',
+    'headingcolor',
+    'linkcolor',
+];
 
 // Process the uploaded file.
 if (empty($iid)) {
@@ -429,7 +431,6 @@ if (empty($iid)) {
             // Track company created OK.
             $upt->track('id', $newcompany->id);
             $upt->track('status', get_string('ok'));
-
         }
 
         $upt->flush();
@@ -481,30 +482,32 @@ class upload_progress_tracker {
     public $_row;
 
     /** @var list of possible column names */
-    public $columns = ['status',
-                       'line',
-                       'id',
-                       'name',
-                       'shortname',
-                       'code',
-                       'address',
-                       'city',
-                       'region',
-                       'postcode',
-                       'country',
-                       'parent',
-                       'theme',
-                       'hostname',
-                       'maxusers',
-                       'validto',
-                       'suspendafter',
-                       'custom1',
-                       'custom2',
-                       'custom3',
-                       'customcss',
-                       'maincolor',
-                       'headingcolor',
-                       'linkcolor'];
+    public $columns = [
+        'status',
+        'line',
+        'id',
+        'name',
+        'shortname',
+        'code',
+        'address',
+        'city',
+        'region',
+        'postcode',
+        'country',
+        'parent',
+        'theme',
+        'hostname',
+        'maxusers',
+        'validto',
+        'suspendafter',
+        'custom1',
+        'custom2',
+        'custom3',
+        'customcss',
+        'maincolor',
+        'headingcolor',
+        'linkcolor',
+    ];
 
     /**
      * Class initialisation
