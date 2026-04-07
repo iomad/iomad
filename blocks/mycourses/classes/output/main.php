@@ -69,8 +69,9 @@ class main implements renderable, templatable {
         if ($companyid > 0) {
             $company = new company($companyid);
             // We need to check if it's the default dashboard page or custom one.
-            if ($PAGE->url->out(false) == $CFG->wwwroot . "/my/index.php") {
-                $baseurl = $company->get_dashboard_url();
+            if ($PAGE->url->out(false) == $CFG->wwwroot . "/my/index.php" &&
+                $companyurl = $company->get_dashboard_url()) {
+                $baseurl = $companyurl;
             }
         }
 
