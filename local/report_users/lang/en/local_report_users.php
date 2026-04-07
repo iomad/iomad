@@ -32,6 +32,7 @@ $string['clearcourse'] = 'Clear course';
 $string['clearreallocateconfirm'] = 'User will be unenroled from the course and all their course information will be deleted. This does not remove the record from the reports. If using licenses, and where appropriate, a new license will be allocated to the user. This can NOT be undone.</br>Are you sure you want to do this?';
 $string['completed'] = 'Completed';
 $string['coursedetails'] = 'Full course report';
+$string['createentry'] = 'Create a new report entry for \'{$a}\'.';
 $string['datecompleted'] = 'Date completed';
 $string['datestarted'] = 'Course allocated/started';
 $string['delete_successful'] = 'User has been removed from the course successfully';

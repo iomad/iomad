@@ -102,6 +102,7 @@ $PAGE->set_other_editing_capability('local/report_users:deleteentriesfull');
 $PAGE->set_other_editing_capability('local/report_users:updateentries');
 $PAGE->requires->js_call_amd('local_iomad/handleall', 'init');
 $PAGE->requires->js_call_amd('local_iomad/user_reports', 'init');
+$PAGE->requires->js_call_amd('local_report_users/newresponse', 'init');
 
 // Set the page heading.
 if (!$DB->record_exists(
@@ -420,10 +421,21 @@ if (!$table->is_downloading()) {
     // Conditionally add the "add new entry" button.
     if (!empty($USER->editing)) {
         echo html_writer::start_tag('div', ['class' => 'reporttablecontrolscontrol']);
-        $url = new moodle_url($CFG->wwwroot . '/local/report_users/newentry.php',
-                              ['userid' => $userid,
-                               'returnurl' => $baseurl->out()]);
-        echo $output->single_button($url, get_string('addnewentry', 'blog'));
+        echo html_writer::start_tag('div', ['class' => 'singlebutton']);
+        echo html_writer::tag(
+            'a',
+            get_string('addnewentry', 'blog'),
+            [
+                'href' => '#',
+                'role' => 'button',
+                'class' => 'btn btn-secondary',
+                'data-userid' => $userid,
+                'data-companyid' => $companyid,
+                'data-username' => fullname($userinfo),
+                'data-action' => 'show-newentryform',
+            ]
+        );
+        echo html_writer::end_tag('div');
         echo html_writer::end_tag('div');
     }
     echo html_writer::end_tag('div');
