@@ -34,7 +34,7 @@ define(['jquery', 'core/ajax', 'core/custom_interaction_events',
      */
     var registerEventListeners = function(root) {
         CustomEvents.define(root, [CustomEvents.events.activate]);
-        root.on(CustomEvents.events.activate, "[data-toggle='tab']", function(e) {
+        root.on(CustomEvents.events.activate, "[data-bs-toggle='tab']", function(e) {
             var tabname = $(e.currentTarget).data('tabname');
             // Bootstrap does not change the URL when using BS tabs, so need to do this here.
             // Also check to make sure the browser supports the history API.
