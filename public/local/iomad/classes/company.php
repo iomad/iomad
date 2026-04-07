@@ -150,24 +150,34 @@ class company {
             throw new Exception(get_string('errorbadcompanyshortname', 'local_iomad'));
         }
 
-        // Set up a profiles field category for this company.
-        $catdata = (object) [];
-        $catdata->sortorder = $DB->count_records('user_info_category') + 1;
-        $catdata->name = $data->shortname;
-        $data->profilecategoryid = $DB->insert_record('user_info_category', $catdata);
-
         // If the company already exists, update it.
         if (!empty($data->id) && $DB->record_exists('local_iomad_companies', ['id' => $data->id])) {
             $oldcompany = $DB->get_record('local_iomad_companies', ['id' => $data->id]);
             $companyid = $DB->update_record('local_iomad_companies', $data);
 
+            // Fire the event for updating company.
             $eventother = ['companyid' => $companyid,
                                 'oldcompany' => json_encode($oldcompany)];
+            $event = company_updated::create([
+                'context' => $systemcontext,
+                'userid' => $USER->id,
+                'objectid' => $companyid,
+                'other' => $eventother,
+            ]);
+            $event->trigger();
         } else {
             $companyid = $DB->insert_record('local_iomad_companies', $data);
             $data->id = $companyid;
 
+            // Fire the event for company creation.
             $eventother = ['companyid' => $companyid];
+            $event = company_created::create([
+                'context' => $systemcontext,
+                'userid' => $USER->id,
+                'objectid' => $companyid,
+                'other' => $eventother,
+            ]);
+            $event->trigger();
         }
         $company = new company($companyid);
         $companycontext = context_company::instance($companyid);
@@ -217,6 +227,12 @@ class company {
             // Update record.
             $DB->update_record('local_iomad_companies', $data);
         } else {
+            // Set up a profiles field category for this company.
+            $catdata = (object) [];
+            $catdata->sortorder = $DB->count_records('user_info_category') + 1;
+            $catdata->name = $data->shortname;
+            $data->profilecategoryid = $DB->insert_record('user_info_category', $catdata);
+
             // Set up default department.
             self::initialise_departments($companyid);
 
@@ -240,15 +256,6 @@ class company {
                 $company->assign_parent_managers($companydetails->parentid);
             }
         }
-
-        // Fire an event for company creation/saving.
-        $event = company_created::create([
-            'context' => $systemcontext,
-            'userid' => $USER->id,
-            'objectid' => $companyid,
-            'other' => $eventother,
-        ]);
-        $event->trigger();
 
         // Deal with any assigned templates.
         if (empty($data->templates)) {
