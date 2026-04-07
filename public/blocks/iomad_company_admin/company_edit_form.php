@@ -442,16 +442,14 @@ if ($mform->is_cancelled()) {
                 'createnew' => true,
                 'parentid' => $data->parentid,
             ]);
-    }
-    else {
+    } else {
         if ($isadding && !empty($data->submitbutton)) {
             // Create company.
             company::create_company($data);
 
             // Redirect message.
             $redirectmessage = get_string('companycreatedok', 'block_iomad_company_admin');
-        }
-        else {
+        } else {
             // Updating an existing company.
             $data->id = $companyid;
             company::create_company($data);

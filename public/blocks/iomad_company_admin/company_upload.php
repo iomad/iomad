@@ -428,7 +428,7 @@ if (empty($iid)) {
             $companyrec = $newcompany->get_all();
             $newcompanyid = $companyrec->id;
 
-            // Track company created OK
+            // Track company created OK.
             $upt->track('id', $newcompanyid);
             $upt->track('status', get_string('ok'));
 

@@ -126,12 +126,12 @@ class company {
         global $DB, $USER;
         $systemcontext = context_system::instance();
 
-        // Required fields
+        // Required fields.
         if (empty($data->name) || empty($data->shortname) || empty($data->city) || empty($data->country)) {
-            throw new Exception('Company must have a \'name\', \'shortname\', \'city\', and \'country\'.');
+            throw new Exception(get_string('errorcompanydefaults', 'local_iomad'));
         }
 
-        // Removing whitespace from strings
+        // Removing whitespace from strings.
         $data->name = trim($data->name);
         $data->shortname = trim($data->shortname);
         $data->city = trim($data->city);
@@ -142,12 +142,12 @@ class company {
         $data->custom2 = isset($data->custom2) ? trim($data->custom2) : null;
         $data->custom3 = isset($data->custom3) ? trim($data->custom3) : null;
 
-        // Further string-cleaning
-        $data->name = clean_param($data->name, PARAM_NOTAGS);  // must be varchar(50), never null
+        // Further string-cleaning.
+        $data->name = clean_param($data->name, PARAM_NOTAGS);  // Must be varchar(50), never null.
 
-        $data->shortname = clean_param($data->shortname, PARAM_NOTAGS);  // must be varchar(25)
+        $data->shortname = clean_param($data->shortname, PARAM_NOTAGS);  // Must be varchar(25).
         if (!preg_match('/^[A-Za-z0-9_]+$/', $data->shortname)) {
-            throw new Exception('Company \'shortname\' can only contain alphanumeric characters (both uppercase and lowercase) and underscores (_).');
+            throw new Exception(get_string('errorbadcompanyshortname', 'local_iomad'));
         }
 
         // Set up a profiles field category for this company.
@@ -156,7 +156,7 @@ class company {
         $catdata->name = $data->shortname;
         $data->profilecategoryid = $DB->insert_record('user_info_category', $catdata);
 
-        // If the company already exists, update it
+        // If the company already exists, update it.
         if (!empty($data->id) && $DB->record_exists('local_iomad_companies', ['id' => $data->id])) {
             $oldcompany = $DB->get_record('local_iomad_companies', ['id' => $data->id]);
             $companyid = $DB->update_record('local_iomad_companies', $data);
@@ -169,13 +169,12 @@ class company {
 
             $eventother = ['companyid' => $companyid];
         }
-        //$data = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
         $company = new company($companyid);
         $companycontext = context_company::instance($companyid);
 
         if (isset($oldcompany)) {
             // Has the company name changed?
-            if ($topdepartment = company::get_company_parentnode($companyid)) {
+            if ($topdepartment = self::get_company_parentnode($companyid)) {
                 if ($topdepartment->name != $data->name) {
                     $topdepartment->name = $data->name;
                     $topdepartment->shortname = $data->shortname;
@@ -188,7 +187,7 @@ class company {
                 $data->isterminated = 0;
             }
 
-            // Update theme if changed
+            // Update theme if changed.
             $oldtheme = $oldcompany->theme ?? '';
             if ($oldtheme != $data->theme) {
                 $company->update_theme($data->theme);
@@ -215,14 +214,14 @@ class company {
                 }
             }
 
-            // Update record
+            // Update record.
             $DB->update_record('local_iomad_companies', $data);
         } else {
             // Set up default department.
-            company::initialise_departments($companyid);
+            self::initialise_departments($companyid);
 
             // Set up course category for company.
-            $coursecat = new stdClass();
+            $coursecat = (object) [];
             $coursecat->name = $data->name;
             $coursecat->sortorder = 999;
             $coursecat->id = $DB->insert_record('course_categories', $coursecat);
@@ -242,7 +241,7 @@ class company {
             }
         }
 
-        // Fire an event for company creation/saving
+        // Fire an event for company creation/saving.
         $event = company_created::create([
             'context' => $systemcontext,
             'userid' => $USER->id,
@@ -363,7 +362,8 @@ class company {
         }
 
         // Deal with certificates.
-        if (!empty($data->uselogo) && !empty($data->usesignature) && !empty($data->useborder) && !empty($data->usewatermark) && !empty($data->showgrade)) {
+        if (!empty($data->uselogo) && !empty($data->usesignature) && !empty($data->useborder)
+                                        && !empty($data->usewatermark) && !empty($data->showgrade)) {
             $certificateinforec = (array) $DB->get_record('local_iomad_company_certificates', ['companyid' => $companyid]);
             if (!empty($certificateinforec['id'])) {
                 $certificateinforec['uselogo'] = $data->uselogo;
@@ -431,7 +431,7 @@ class company {
             }
         }
 
-        // Final update
+        // Final update.
         $DB->update_record('local_iomad_companies', $data);
 
         return $company;
@@ -439,14 +439,14 @@ class company {
 
     /**
      * Get selected fields
-     * @param mixed fields string or array, only_if_exists boolean
+     * @param mixed fields string or array, onlyifexists boolean
      * @return mixed nullable string or object (if array)
      */
-    public function get($fields, $only_if_exists = false): string|object|null {
+    public function get($fields, $onlyifexists = false): string|object|null {
         if (is_string($fields)) {
             if (isset($this->companyrecord->$fields)) {
                 return $this->companyrecord->$fields;
-            } elseif ($only_if_exists) {
+            } else if ($onlyifexists) {
                 return null;
             } else {
                 throw new Exception("Field not found in company record - " . $fields);
@@ -456,7 +456,7 @@ class company {
             foreach ($fields as $field) {
                 if (property_exists($this->companyrecord, $field)) {
                     $result->$field = $this->companyrecord->$field;
-                } elseif ($only_if_exists) {
+                } else if ($onlyifexists) {
                     $result->$field = null;
                 } else {
                     throw new Exception("Field not found in company record - " . $field);
