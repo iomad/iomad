@@ -70,8 +70,6 @@ use local_iomadcustompage\event\iomadcustompage_deleted;
 use moodle_url;
 use stdClass;
 
-use function PHPUnit\Framework\isEmpty;
-
 /**
  * Local IOMAD company class
  *
@@ -168,7 +166,8 @@ class company {
         // If the company already exists, update it.
         if (!empty($data->id) && $DB->record_exists('local_iomad_companies', ['id' => $data->id])) {
             $oldcompany = $DB->get_record('local_iomad_companies', ['id' => $data->id]);
-            $companyid = $DB->update_record('local_iomad_companies', $data);
+            $DB->update_record('local_iomad_companies', $data);
+            $companyid = $data->id;
 
             // Fire the event for updating company.
             $eventother = ['companyid' => $companyid,
@@ -215,7 +214,7 @@ class company {
 
             // Update theme if changed.
             $oldtheme = $oldcompany->theme ?? '';
-            if ($oldtheme != $data->theme) {
+            if (!empty($data->theme) && $oldtheme != $data->theme) {
                 $company->update_theme($data->theme);
             }
 
@@ -540,7 +539,7 @@ class company {
                            'custom3',
                            'paymentaccountid',
                            'departmentprofileid'],
-                            only_if_exists: true);
+                            onlyifexists: true);
     }
 
     /**
