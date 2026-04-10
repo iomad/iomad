@@ -16,6 +16,7 @@
 
 declare(strict_types=1);
 
+use core\exception\moodle_exception;
 use local_iomad\company;
 
 /**
@@ -29,6 +30,8 @@ use local_iomad\company;
 class local_iomad_generator extends component_generator_base {
     /** @var int number of companies created since last reset */
     protected $companycounter = 0;
+    /** @var int number of departments created since last reset */
+    protected $departmentcounter = 0;
 
     /** @var array list of company names */
     public $companynames = [
@@ -46,6 +49,10 @@ class local_iomad_generator extends component_generator_base {
         'Sarajevo', 'Banja Luka', 'Tuzla', 'Zenica', 'Ilidža',
         'Montréal', 'Toronto', 'Calgary', 'Ottawa', 'Vancouver',
         '上海市', '北京', '深圳市', '广州', '成都市',
+        'Berlin', 'Hamburg', 'München', 'Köln', 'Weißenfels',
+        'Guayaquil', 'Quito', 'Cuenca', 'Santo Domingo', 'Durán',
+        'Helsinki', 'Alajärvi', 'Espoo', 'Tampere', 'Vantaa',
+        'Libreville', 'Mandji', 'Masuku', 'Owendo', 'Oyem',
         'Bath', 'Belfast', 'Birmingham', 'Cardiff', 'Glasgow',
         // '', '', '', '', '',
     ];
@@ -57,6 +64,7 @@ class local_iomad_generator extends component_generator_base {
      */
     public function reset() {
         $this->companycounter = 0;
+        $this->departmentcounter = 0;
     }
 
     /** @var array list of country codes */
@@ -65,10 +73,10 @@ class local_iomad_generator extends component_generator_base {
         'BA', // 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BL', 'BM', 'BN', 'BO', 'BQ', 'BR', 'BS', 'BT', 'BV', 'BW', 'BY', 'BZ',
         'CA', // 'CC', 'CD', 'CF', 'CG', 'CH', 'CI', 'CK', 'CL', 'CM',
         'CN', // 'CO', 'CR', 'CU', 'CV', 'CW', 'CX', 'CY', 'CZ',
-        // 'DE', 'DJ', 'DK', 'DM', 'DO', 'DZ',
-        // 'EC', 'EE', 'EG', 'EH', 'ER', 'ES', 'ET',
-        // 'FI', 'FJ', 'FK', 'FM', 'FO', 'FR',
-        // 'GA',
+        'DE', // 'DJ', 'DK', 'DM', 'DO', 'DZ',
+        'EC', // 'EE', 'EG', 'EH', 'ER', 'ES', 'ET',
+        'FI', // 'FJ', 'FK', 'FM', 'FO', 'FR',
+        'GA',
         'GB',
         // 'GD', 'GE', 'GF', 'GG', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR', 'GS', 'GT', 'GU', 'GW', 'GY',
         // 'HK', 'HM', 'HN', 'HR', 'HT', 'HU',
@@ -128,6 +136,42 @@ class local_iomad_generator extends component_generator_base {
         $company = company::create_company($record);
 
         return $company;
+    }
+
+    /**
+     * Create a test department
+     * @param stdClass $record
+     * @return stdClass department record
+     */
+    public function create_department($record = []): bool|int {
+        $record = (object) $record;
+
+        $this->departmentcounter++;
+        $i = $this->departmentcounter;
+
+        // Required fields: companyid, fullname, shortname.
+        if (!isset($companyid)) {
+            // If no company ID is specified, create a company for the department.
+            $company = self::create_company();
+            $record->companyid = $company->id;
+        }
+        if (!isset($record->fullname)) {
+            $record->fullname = 'Test Department ' . $i;
+        }
+        if (!isset($record->shortname)) {
+            $record->shortname = 'testdep_' . $i;
+        }
+
+        // Optional fields: parentid.
+
+        // Create the department.
+        $departmentid = company::create_department(null,
+                                                $record->companyid,
+                                                $record->fullname,
+                                                $record->shortname,
+                                                returnid: true);
+
+        return $departmentid;
     }
 
 }
