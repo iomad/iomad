@@ -3486,7 +3486,8 @@ class company {
         if ($targetdepartment == 0) {
             // Moving users to the parent node of the current department.
             $parentnode = self::get_department_parentnode($departmentid);
-            $targetdepartment = $parentnode->id;
+            $targetdepartment = !is_bool($parentnode) ? $parentnode->id : 0;
+
         }
         foreach ($userlist as $user) {
             // Move the users.

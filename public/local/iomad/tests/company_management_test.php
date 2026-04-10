@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace local_iomad\company;
+namespace local_iomad\tests;
 
 use advanced_testcase;
 use local_iomad\company;
@@ -125,25 +125,17 @@ final class company_management_test extends advanced_testcase {
     }
 
     /*
-    * Test to assign users to company departments
-    */
-    public function test_assign_users_to_company(): void {
-
-        $this->resetAfterTest();
-
-        // ...
-        $this->markTestIncomplete();
-    }
-
-    /*
     * Test to edit departments
     */
     public function test_edit_department(): void {
 
         $this->resetAfterTest();
+        $this->markTestIncomplete();
+
+        // Create department.
+        $departmentid = $generator->create_department();
 
         // ...
-        $this->markTestIncomplete();
     }
 
     /*
@@ -162,7 +154,7 @@ final class company_management_test extends advanced_testcase {
         $this->assertTrue($DB->record_exists('local_iomad_company_departments', ['id' => $departmentid]));
 
         // Delete the department.
-        company::delete_department($departmentid);
+        company::delete_department_recursive($departmentid);
 
         // Assert that the department doesn't exists.
         $this->assertFalse($DB->record_exists('local_iomad_company_departments', ['id' => $departmentid]));
@@ -172,10 +164,20 @@ final class company_management_test extends advanced_testcase {
     * Test to create a department and add users
     */
     public function test_assign_users_to_department(): void {
+        global $DB;
 
         $this->resetAfterTest();
-
-        // ...
         $this->markTestIncomplete();
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
+
+        // Create department.
+        $departmentid = $generator->create_department();
+
+        // Create IOMAD user.
+        // ...
+        $userid = 1;
+
+        // Assign IOMAD user to department.
+        company::assign_user_to_department($departmentid, $userid);
     }
 }

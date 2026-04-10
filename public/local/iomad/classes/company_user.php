@@ -40,6 +40,7 @@ use moodle_url;
 defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__.'/../../../enrol/locallib.php');
+require_once($CFG->dirroot.'/user/lib.php');
 
 /**
  * Local IOMAD company user class definition
