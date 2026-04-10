@@ -16,8 +16,7 @@
 
 declare(strict_types=1);
 
-use core\exception\moodle_exception;
-use local_iomad\company;
+use local_iomad\{company, company_user,};
 
 /**
  * Local IOMAD company creation test
@@ -30,17 +29,19 @@ use local_iomad\company;
 class local_iomad_generator extends component_generator_base {
     /** @var int number of companies created since last reset */
     protected $companycounter = 0;
+    /** @var int number of iomad users created since last reset */
+    protected $usercounter = 0;
     /** @var int number of departments created since last reset */
     protected $departmentcounter = 0;
 
     /** @var array list of company names */
     public $companynames = [
-        'Test Company A', 'NewTest Corp.',
+        'Test Company', 'NewTest Corp.', 'Company 4 Testing',
     ];
 
     /** @var array list of common first names */
     public $companyshortnames = [
-        'test_A', 'NewTest_Corp',
+        'test_comp', 'NewTest_Corp', 'c4t'
     ];
 
     /** @var array list of major cities */
@@ -54,6 +55,23 @@ class local_iomad_generator extends component_generator_base {
         'Helsinki', 'Alajärvi', 'Espoo', 'Tampere', 'Vantaa',
         'Libreville', 'Mandji', 'Masuku', 'Owendo', 'Oyem',
         'Bath', 'Belfast', 'Birmingham', 'Cardiff', 'Glasgow',
+        '香港', '維多利亞市', '九龍', '荃灣', '沙田新市鎮',
+        'Jakarta', 'Surabaya', 'Bandung', 'Medan', 'Palembang',
+        'Grouville', 'Saint Brélade', 'Saint Clément', 'Saint Helier', 'Saint John',
+        'Nairobi', 'Mombasa', 'Nakuru', 'Ruiru', 'Eldoret',
+        'ວຽງຈັນ', 'ໄກສອນ ພົມວິຫານ', 'ປາກເຊ', 'ຫລວງພະບາງ', 'ເມືອງຊຳເໜືອ',
+        'الدار البيضاء', 'فاس', 'طنجة', 'مراكش', 'سلا',
+        'Windhoek', 'Walvis Bay', 'Swakopmund', 'Henties Bay', 'Omaruru',
+        'مَسْقَط', 'أدم', 'السِّيْب', 'هيماء', 'نِزْوَى',
+        'Ciudad de Panamá', 'San Miguelito', 'La Chorrera', 'Colón', 'Penonomé',
+        'الدوحة', 'الوكرة', 'الشحانية', 'مسيعيد', 'نعيجة',
+        'L\'Étang-Salé', 'Petite-Île', 'Bras-Panon', 'Sainte-Suzanne', 'La Plaine-des-Palmistes',
+        'الرياض', 'جِدَّة', 'الدمام', 'مَكَّة', 'ٱلْمَدِيْنَة',
+        'South Caicos Lighthouse', 'Cockburn Town', 'Five Cays', 'Wheeland', 'Kew',
+        'Київ', 'Харків', 'Одеса', 'Дніпро', 'Донецьк',
+        'Mata Utu', 'Vaitupu', 'Mala\'efo\'ou', 'Leava', 'Ono',
+        'صنعاء', 'تعز', 'الحديدة', 'عدن', 'إب',
+        'Johannesburg-iGoli', 'Kaapstad-eKapa', 'Durban-eThekwini', 'Germiston-kwaDukathole', 'Gqeberha-iBhayi',
         // '', '', '', '', '',
     ];
 
@@ -64,6 +82,7 @@ class local_iomad_generator extends component_generator_base {
      */
     public function reset() {
         $this->companycounter = 0;
+        $this->usercounter = 0;
         $this->departmentcounter = 0;
     }
 
@@ -77,26 +96,24 @@ class local_iomad_generator extends component_generator_base {
         'EC', // 'EE', 'EG', 'EH', 'ER', 'ES', 'ET',
         'FI', // 'FJ', 'FK', 'FM', 'FO', 'FR',
         'GA',
-        'GB',
-        // 'GD', 'GE', 'GF', 'GG', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR', 'GS', 'GT', 'GU', 'GW', 'GY',
-        // 'HK', 'HM', 'HN', 'HR', 'HT', 'HU',
-        // 'ID', 'IE', 'IL', 'IM', 'IN', 'IO', 'IQ', 'IR', 'IS', 'IT',
-        // 'JE', 'JM', 'JO', 'JP',
-        // 'KE', 'KG', 'KH', 'KI', 'KM', 'KN', 'KP', 'KR', 'KW', 'KY', 'KZ',
-        // 'LA', 'LB', 'LC', 'LI', 'LK', 'LR', 'LS', 'LT', 'LU', 'LV', 'LY',
-        // 'MA', 'MC', 'MD', 'ME', 'MF', 'MG', 'MH', 'MK', 'ML', 'MM', 'MN', 'MO', 'MP', 'MQ', 'MR', 'MS', 'MT', 'MU', 'MV', 'MW', 'MX', 'MY', 'MZ',
-        // 'NA', 'NC', 'NE', 'NF', 'NG', 'NI', 'NL', 'NO', 'NP', 'NR', 'NU', 'NZ',
-        // 'OM',
-        // 'PA', 'PE', 'PF', 'PG', 'PH', 'PK', 'PL', 'PM', 'PN', 'PR', 'PS', 'PT', 'PW', 'PY',
-        // 'QA',
-        // 'RE', 'RO', 'RS', 'RU', 'RW',
-        // 'SA', 'SB', 'SC', 'SD', 'SE', 'SG', 'SH', 'SI', 'SJ', 'SK', 'SL', 'SM', 'SN', 'SO', 'SR', 'SS', 'ST', 'SV', 'SX', 'SY', 'SZ',
-        // 'TC', 'TD', 'TF', 'TG', 'TH', 'TJ', 'TK', 'TL', 'TM', 'TN', 'TO', 'TR', 'TT', 'TV', 'TW', 'TZ',
-        // 'UA', 'UG', 'UM', 'US', 'UY',
-        // 'UZ', 'VA', 'VC', 'VE', 'VG', 'VI', 'VN', 'VU',
-        // 'WF', 'WS',
-        // 'YE', 'YT',
-        // 'ZA', 'ZM', 'ZW',
+        'GB', // 'GD', 'GE', 'GF', 'GG', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR', 'GS', 'GT', 'GU', 'GW', 'GY',
+        'HK', // 'HM', 'HN', 'HR', 'HT', 'HU',
+        'ID', // 'IE', 'IL', 'IM', 'IN', 'IO', 'IQ', 'IR', 'IS', 'IT',
+        'JE', // 'JM', 'JO', 'JP',
+        'KE', // 'KG', 'KH', 'KI', 'KM', 'KN', 'KP', 'KR', 'KW', 'KY', 'KZ',
+        'LA', // 'LB', 'LC', 'LI', 'LK', 'LR', 'LS', 'LT', 'LU', 'LV', 'LY',
+        'MA', // 'MC', 'MD', 'ME', 'MF', 'MG', 'MH', 'MK', 'ML', 'MM', 'MN', 'MO', 'MP', 'MQ', 'MR', 'MS', 'MT', 'MU', 'MV', 'MW', 'MX', 'MY', 'MZ',
+        'NA', // 'NC', 'NE', 'NF', 'NG', 'NI', 'NL', 'NO', 'NP', 'NR', 'NU', 'NZ',
+        'OM',
+        'PA', // 'PE', 'PF', 'PG', 'PH', 'PK', 'PL', 'PM', 'PN', 'PR', 'PS', 'PT', 'PW', 'PY',
+        'QA',
+        'RE', // 'RO', 'RS', 'RU', 'RW',
+        'SA', // 'SB', 'SC', 'SD', 'SE', 'SG', 'SH', 'SI', 'SJ', 'SK', 'SL', 'SM', 'SN', 'SO', 'SR', 'SS', 'ST', 'SV', 'SX', 'SY', 'SZ',
+        'TC', // 'TD', 'TF', 'TG', 'TH', 'TJ', 'TK', 'TL', 'TM', 'TN', 'TO', 'TR', 'TT', 'TV', 'TW', 'TZ',
+        'UA', // 'UG', 'UM', 'US', 'UY', 'UZ', 'VA', 'VC', 'VE', 'VG', 'VI', 'VN', 'VU',
+        'WF', // 'WS',
+        'YE', // 'YT',
+        'ZA', // 'ZM', 'ZW',
     ];
 
     /**
@@ -111,16 +128,6 @@ class local_iomad_generator extends component_generator_base {
         $i = $this->companycounter;
 
         // Required fields: name, shortname, city, country.
-        if (!isset($record->name) && !isset($record->shortname)) {
-            $name = rand(0, count($this->companynames) - 1);
-            $record->name = $this->companynames[$name];
-            $record->shortname = $this->companyshortnames[$name];
-        } else if (!isset($record->name)) {
-            $record->name = 'Test Company ' . $i;
-        } else if (!isset($record->shortname)) {
-            $record->shortname = 'testcorp_' . $i;
-        }
-
         if (!isset($record->city)) {
             $city = rand(0, count($this->companycities) - 1);
             $record->city = $this->companycities[$city];
@@ -130,12 +137,69 @@ class local_iomad_generator extends component_generator_base {
             $record->country = $this->companycountries[floor(array_search($record->city, $this->companycities) / 5)];
         }
 
+        if (!isset($record->name) && !isset($record->shortname)) {
+            $name = rand(0, count($this->companynames) - 1);
+            $record->name = $record->city . ' ' . $this->companynames[$name];
+            $record->shortname = $this->companyshortnames[$name] . '_' . $i;
+        } else if (!isset($record->name)) {
+            $record->name = $record->city . ' Test Company ' . $i;
+        } else if (!isset($record->shortname)) {
+            $record->shortname = 'testcorp_' . $i;
+        }
+
         // Optional fields.
 
         // Create the company.
         $company = company::create_company($record);
 
         return $company;
+    }
+
+    /**
+     * Create a test user via IOMAD
+     * @param stdClass $record
+     * @return stdClass department record
+     */
+    public function create_iomad_user($record = [], ?int $companyid = null): int {
+        $record = (object) $record;
+
+        $this->usercounter++;
+        $i = $this->usercounter;
+
+        // Required fields: companyid, username, firstname, lastname, email.
+        if (empty($companyid)) {
+            // Create companies.
+            $company = self::create_company();
+            $companyid = $company->id;
+        }
+
+        if (!isset($record->username)) {
+            $record->username = 'testuser' . $i;
+        }
+        if (!isset($record->firstname)) {
+            $record->firstname = 'Test';
+        }
+        if (!isset($record->lastname)) {
+            $record->lastname = 'User' . $i;
+        }
+        if (!isset($record->email)) {
+            $record->email = 'testuser@gmailland.com' . $i;
+        }
+
+        // Really depends on the setting of $record->auth: sendnewpasswordemails, preference_auth_forcepasswordchange
+        if (!isset($record->sendnewpasswordemails)) {
+            $record->sendnewpasswordemails = false;
+        }
+        if (!isset($record->preference_auth_forcepasswordchange)) {
+            $record->preference_auth_forcepasswordchange = false;
+        }
+
+        // Optional fields: ???.
+
+        // Create the user.
+        $userid = company_user::create($record, $companyid);
+
+        return $userid;
     }
 
     /**
