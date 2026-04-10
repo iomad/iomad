@@ -37,7 +37,7 @@ final class company_management_test extends advanced_testcase {
 
         $this->resetAfterTest();
 
-        // Get generator (From .../local/iomad/tests/generator/lib.php)
+        // Get generator (from .../local/iomad/tests/generator/lib.php).
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
         // Create company.
@@ -53,9 +53,9 @@ final class company_management_test extends advanced_testcase {
     public function test_create_company_shortname_validation(): void {
 
         $this->resetAfterTest();
-
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
+        // We expect this test to throw an error.
         $this->expectExceptionMessageMatches('(Company \'shortname\' can only contain alphanumeric characters \(both uppercase and lowercase\) and underscores \(_\).)');
 
         // Create company.
@@ -71,6 +71,7 @@ final class company_management_test extends advanced_testcase {
 
         $this->resetAfterTest();
 
+        // We expect this test to throw an error.
         $this->expectExceptionMessageMatches("(error/Missing the following parameters for Company creation: shortname, and country.+)");
 
         // Create company.
@@ -87,7 +88,6 @@ final class company_management_test extends advanced_testcase {
         global $DB;
 
         $this->resetAfterTest();
-
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
         // Create company.
@@ -104,6 +104,7 @@ final class company_management_test extends advanced_testcase {
         company::create_company($updatedrecord);
         $rename = $DB->get_record('local_iomad_companies', ['id' => $updatedrecord->id])->name;
 
+        // Assert that the company has been successfully renamed.
         $this->assertTrue($name != $rename);
     }
 
@@ -111,6 +112,22 @@ final class company_management_test extends advanced_testcase {
     * Test to create departments
     */
     public function test_create_department(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
+
+        // Create department.
+        $departmentid = $generator->create_department();
+
+        // Assert that the department exists.
+        $this->assertTrue($DB->record_exists('local_iomad_company_departments', ['id' => $departmentid]));
+    }
+
+    /*
+    * Test to assign users to company departments
+    */
+    public function test_assign_users_to_company(): void {
 
         $this->resetAfterTest();
 
@@ -133,11 +150,22 @@ final class company_management_test extends advanced_testcase {
     * Test to create and delete departments
     */
     public function test_delete_department(): void {
+        global $DB;
 
         $this->resetAfterTest();
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
-        // ...
-        $this->markTestIncomplete();
+        // Create department.
+        $departmentid = $generator->create_department();
+
+        // Assert that the department exists.
+        $this->assertTrue($DB->record_exists('local_iomad_company_departments', ['id' => $departmentid]));
+
+        // Delete the department.
+        company::delete_department($departmentid);
+
+        // Assert that the department doesn't exists.
+        $this->assertFalse($DB->record_exists('local_iomad_company_departments', ['id' => $departmentid]));
     }
 
     /*

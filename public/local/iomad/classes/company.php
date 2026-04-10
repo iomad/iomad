@@ -163,6 +163,12 @@ class company {
             throw new moodle_exception(get_string('errorbadcompanyshortname', 'local_iomad'));
         }
 
+        $data->country = clean_param($data->country, PARAM_NOTAGS);
+        $data->country = strtoupper($data->country);
+        if (!preg_match('/^[A-Z][A-Z]$/', $data->country)) {
+            throw new moodle_exception(get_string('errorbadcompanycountry', 'local_iomad'));
+        }
+
         // If the company already exists, update it.
         if (!empty($data->id) && $DB->record_exists('local_iomad_companies', ['id' => $data->id])) {
             $oldcompany = $DB->get_record('local_iomad_companies', ['id' => $data->id]);
@@ -2714,7 +2720,6 @@ class company {
         global $DB;
 
         if (!$toplevel) {
-            // Creating a new department.
             $newdepartment = (object) [];
             $newdepartment->name = $importtree->name;
             $newdepartment->shortname = $importtree->shortname;
@@ -2725,13 +2730,19 @@ class company {
             if (!preg_match('/^[A-Za-z0-9_]+$/', trim($newdepartment->shortname))) {
                 notification::warning(get_string('departmentnotimported', 'block_iomad_company_admin', $newdepartment));
                 return;
-            } else {
-                $newdepartment->id = $DB->insert_record('local_iomad_company_departments', $newdepartment);
             }
+
+            // Creating a new department.
+            self::create_department(null,
+                                $newdepartment->companyid,
+                                $newdepartment->name,
+                                $newdepartment->shortname,
+                                $newdepartment->parentid);
         } else {
             // Already created so pass it.
             $newdepartment = $currentdepartment;
         }
+
         // Are there any children?
         if (empty($importtree->children)) {
             return;
@@ -3410,11 +3421,12 @@ class company {
      * @param integer $parentid
      * @return bool
      */
-    public static function create_department(int $departmentid,
+    public static function create_department(?int $departmentid,
                                              int $companyid,
                                              string $fullname,
                                              string $shortname,
-                                             int $parentid=0): bool {
+                                             int $parentid=0,
+                                             bool $returnid=false): bool|int {
         global $DB;
         $newdepartment = [];
         if (!empty($departmentid)) {
@@ -3436,12 +3448,14 @@ class company {
             }
         } else {
             // Adding a new department.
-            if (!$DB->insert_record('local_iomad_company_departments', $newdepartment)) {
+            try {
+                $newdepartment['id'] = $DB->insert_record('local_iomad_company_departments', $newdepartment);
+            } catch (\Exception $e) {
                 throw new moodle_exception(get_string('cantinsertdepartmentdb', 'block_iomad_company_admin'));
             }
         }
 
-        return true;
+        return !$returnid ? true : $newdepartment['id'];
     }
 
     /**

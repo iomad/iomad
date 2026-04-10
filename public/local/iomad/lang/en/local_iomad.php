@@ -132,6 +132,7 @@ $string['enable_manager'] = 'Enable for managers';
 $string['enable_supervisor'] = 'Enable for supervisors';
 $string['enforce_username_match'] = 'Require username to match across tenants';
 $string['enforce_username_match_help'] = 'When this option is selected, existing users in other tenants can only match on username (instead of using firstname,lastname and email address) to avoid being created as a new/separate user.';
+$string['errorbadcompanycountry'] = 'Company \'country\' must be a valid ISO Standard Country code (ISO 3166-1 alpha-2).';
 $string['errorbadcompanyshortname'] = 'Company \'shortname\' can only contain alphanumeric characters (both uppercase and lowercase) and underscores (_).';
 $string['errorcompanydefaults'] = 'Missing the following parameters for Company creation: {$a}.';
 $string['erroropeningzip'] = 'Error creating ZIP file: {$a}';
