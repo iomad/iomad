@@ -252,7 +252,7 @@ class iomad_company_admin {
         $mform = new company_iomadsaml2_mappings_form($PAGE->url);
 
         // Set the form data.
-        $formdata = get_config('auth_iomadoidc');
+        $formdata = get_config('auth_iomadsaml2');
         $formdata->action = 'iomadsamlmappings';
         $mform->set_data($formdata);
 
