@@ -20,80 +20,62 @@ use advanced_testcase;
 use local_iomad\company;
 
 /**
- * Local IOMAD user tests
+ * Local IOMAD course tests
  *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-final class user_management_test extends advanced_testcase {
+final class course_management_test extends advanced_testcase {
 
     /*
-    * Test to create user
+    * TODO: Test to create course
     */
-    public function test_create_user(): void {
+    public function test_edit_department(): void {
+
+        $this->resetAfterTest();
+        $this->markTestIncomplete();
+
+        // Create IOMAD course.
+        // ...
+    }
+
+    /*
+    * TODO: Test to enrol/unenrol users onto a course
+    */
+    public function test_enrol_users_onto_course(): void {
         global $DB;
 
         $this->resetAfterTest();
+        $this->markTestIncomplete();
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
-        // Create user.
-        $userid = $generator->create_iomad_user();
+        // Create company.
+        $departmentid = $generator->create_department();
+        $department = $DB->record_exists('local_iomad_company_departments', ['id' => $departmentid]);
 
-        // Assert that the user record exists.
-        $this->assertTrue($DB->record_exists('local_iomad_company_users', ['userid' => $userid]));
-    }
-
-    /*
-    * TODO: Test to edit user
-    */
-    public function test_edit_user(): void {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->markTestIncomplete();
-
-        // ...
-    }
-
-    /*
-    * TODO: Test to delete user
-    */
-    public function test_delete_user(): void {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->markTestIncomplete();
-
-        // ...
-    }
-
-    /*
-    * TODO: Test to create users and assign roles
-    */
-    public function test_assign_user_company_roles(): void {
-
-        $this->resetAfterTest();
-        $this->markTestIncomplete();
+        // Create IOMAD course.
+        //$courseid = $generator->create_course();
 
         // Create IOMAD user.
-        $userid = $generator->create_iomad_user();
+        $userid = $generator->create_iomad_user(companyid: $department['companyid']);
 
-        // ...
+        // Enrol IOMAD user onto course.
+        //company::???;
+
+        // Assert that user is enrolled on course
     }
 
     /*
-    * TODO: Test to add users to department and assign roles
+    * TODO: Test to create teaching location
     */
-    public function test_assign_user_department_rolls(): void {
+    public function test_create_teaching_locatio(): void {
 
         $this->resetAfterTest();
         $this->markTestIncomplete();
 
-        // Create IOMAD user.
-        $userid = $generator->create_iomad_user();
-
+        // Create IOMAD course.
         // ...
     }
 }
