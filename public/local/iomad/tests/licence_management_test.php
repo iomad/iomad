@@ -20,35 +20,19 @@ use advanced_testcase;
 use local_iomad\company;
 
 /**
- * Local IOMAD user tests
+ * Local IOMAD licence tests
  *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-final class user_management_test extends advanced_testcase {
+final class licence_management_test extends advanced_testcase {
 
     /*
-    * Test to create user
+    * TODO: Test to create licence
     */
-    public function test_create_user(): void {
-        global $DB;
-
-        $this->resetAfterTest();
-        $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
-
-        // Create user.
-        $userid = $generator->create_iomad_user();
-
-        // Assert that the user record exists.
-        $this->assertTrue($DB->record_exists('local_iomad_company_users', ['userid' => $userid]));
-    }
-
-    /*
-    * TODO: Test to edit user
-    */
-    public function test_edit_user(): void {
+    public function test_create_licence(): void {
         global $DB;
 
         $this->resetAfterTest();
@@ -58,9 +42,9 @@ final class user_management_test extends advanced_testcase {
     }
 
     /*
-    * TODO: Test to delete user
+    * TODO: Test to edit licence
     */
-    public function test_delete_user(): void {
+    public function test_edit_licence(): void {
         global $DB;
 
         $this->resetAfterTest();
@@ -70,23 +54,9 @@ final class user_management_test extends advanced_testcase {
     }
 
     /*
-    * TODO: Test to create users and assign roles
+    * TODO: Test to create users and allocate licences
     */
-    public function test_assign_user_company_roles(): void {
-
-        $this->resetAfterTest();
-        $this->markTestIncomplete();
-
-        // Create IOMAD user.
-        $userid = $generator->create_iomad_user();
-
-        // ...
-    }
-
-    /*
-    * TODO: Test to add users to department and assign roles
-    */
-    public function test_assign_user_department_rolls(): void {
+    public function test_allocate_licence_to_user(): void {
 
         $this->resetAfterTest();
         $this->markTestIncomplete();
