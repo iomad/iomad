@@ -28,7 +28,7 @@ namespace mod_trainingevent\tables;
 use context_module;
 use context_system;
 use core\output\notification;
-use local_iomad\iomad;
+use local_iomad\{company_user, iomad};
 use moodle_url;
 use html_writer;
 use single_select;
