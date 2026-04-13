@@ -111,7 +111,7 @@ class main implements renderable, templatable {
         // Are mandatory courses enabled?
         $mandatoryselectuse = false;
         if (get_config('local_iomad', 'use_mandatory_courses') &&
-            $DB->get_records('company_course_options', ['companyid' => $companyid, 'mandatory' => 1])) {
+            $DB->get_records('local_iomad_company_course_options', ['companyid' => $companyid, 'mandatory' => 1])) {
             $mandatoryselectuse = true;
         }
 
