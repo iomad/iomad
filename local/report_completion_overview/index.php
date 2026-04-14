@@ -611,7 +611,8 @@ $coursedetailsql = "SELECT lit.*
                       SELECT MAX(id)
                       FROM {local_iomad_track}
                       WHERE userid = lit.userid
-                      AND courseid = lit.courseid)";
+                      AND courseid = lit.courseid
+                      AND companyid = lit.companyid)";
 
 // Showing by user.
 if (!$bycourse) {
