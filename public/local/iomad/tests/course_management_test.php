@@ -70,7 +70,7 @@ final class course_management_test extends advanced_testcase {
     /*
     * TODO: Test to create teaching location
     */
-    public function test_create_teaching_locatio(): void {
+    public function test_create_teaching_location(): void {
 
         $this->resetAfterTest();
         $this->markTestIncomplete();

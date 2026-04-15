@@ -38,7 +38,7 @@ final class user_management_test extends advanced_testcase {
         $this->resetAfterTest();
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
-        // Create user.
+        // Create IOMAD user.
         $userid = $generator->create_iomad_user();
 
         // Assert that the user record exists.
@@ -53,6 +53,10 @@ final class user_management_test extends advanced_testcase {
 
         $this->resetAfterTest();
         $this->markTestIncomplete();
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
+
+        // Create IOMAD user.
+        $userid = $generator->create_iomad_user();
 
         // ...
     }
@@ -65,6 +69,10 @@ final class user_management_test extends advanced_testcase {
 
         $this->resetAfterTest();
         $this->markTestIncomplete();
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
+
+        // Create IOMAD user.
+        $userid = $generator->create_iomad_user();
 
         // ...
     }
