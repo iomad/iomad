@@ -38,6 +38,8 @@ final class licence_management_test extends advanced_testcase {
         $this->resetAfterTest();
         $this->markTestIncomplete();
 
+        // Create licence
+
         // ...
     }
 
@@ -50,6 +52,8 @@ final class licence_management_test extends advanced_testcase {
         $this->resetAfterTest();
         $this->markTestIncomplete();
 
+        // Create licence
+
         // ...
     }
 
@@ -61,8 +65,7 @@ final class licence_management_test extends advanced_testcase {
         $this->resetAfterTest();
         $this->markTestIncomplete();
 
-        // Create IOMAD user.
-        $userid = $generator->create_iomad_user();
+        // Create licence
 
         // ...
     }

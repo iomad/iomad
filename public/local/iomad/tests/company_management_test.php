@@ -112,9 +112,9 @@ final class company_management_test extends advanced_testcase {
     * TODO: Test to delete company
     */
     public function test_delete_company(): void {
+        global $DB;
 
         $this->resetAfterTest();
-        $this->markTestIncomplete();
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
         // Create company.
@@ -124,12 +124,10 @@ final class company_management_test extends advanced_testcase {
         $this->assertTrue($DB->record_exists('local_iomad_companies', ['id' => $company->id]));
 
         // Delete the company.
-        // ???
+        company::delete_company($company->id);
 
         // Assert that the company doesn't exist.
         $this->assertFalse($DB->record_exists('local_iomad_companies', ['id' => $company->id]));
-
-        // ...
     }
 
     /*
@@ -149,17 +147,26 @@ final class company_management_test extends advanced_testcase {
     }
 
     /*
-    * TODO: Test to edit departments
+    * Test to edit departments
     */
     public function test_edit_department(): void {
+        global $DB;
 
         $this->resetAfterTest();
-        $this->markTestIncomplete();
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
         // Create department.
         $departmentid = $generator->create_department();
 
-        // ...
+        // Assert that the department exists.
+        $this->assertTrue($DB->record_exists('local_iomad_company_departments', ['id' => $departmentid]));
+
+        // Change name
+        $record = (object) [];
+        $record->id = $departmentid;
+        $record->name = 'New Name';
+        $generator->create_department($record);
+        $this->assertTrue($record->name == $DB->get_record('local_iomad_company_departments', ['id' => $departmentid])->name);
     }
 
     /*
@@ -213,22 +220,35 @@ final class company_management_test extends advanced_testcase {
     }
 
     /*
-    * TODO: Test to assign users to a department
+    * Test to assign users to a department
     */
     public function test_assign_users_to_department(): void {
         global $DB;
 
         $this->resetAfterTest();
-        $this->markTestIncomplete();
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
+        // Create company.
+        $newcompany = $generator->create_company();
+
         // Create department.
-        $departmentid = $generator->create_department();
+        $record = (object) [];
+        $record->companyid = $newcompany->id;
+        $departmentid = $generator->create_department($record);
 
         // Create IOMAD user.
         $userid = $generator->create_iomad_user();
 
+        // Assign user to company.
+        $newcompany->assign_user_to_company($userid);
+
         // Assign IOMAD user to department.
         company::assign_user_to_department($departmentid, $userid);
+
+        // Assert that user is in department.
+        $this->assertTrue($DB->record_exists('local_iomad_company_users',
+                                                ['userid' => $userid,
+                                                 'companyid' => $newcompany->id,
+                                                 'departmentid' => $departmentid]));
     }
 }

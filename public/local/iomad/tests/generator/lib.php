@@ -208,30 +208,48 @@ class local_iomad_generator extends component_generator_base {
      * @return stdClass department record
      */
     public function create_department($record = []): bool|int {
+        global $DB;
+
         $record = (object) $record;
 
         $this->departmentcounter++;
         $i = $this->departmentcounter;
 
         // Required fields: companyid, fullname, shortname.
-        if (!isset($companyid)) {
-            // If no company ID is specified, create a company for the department.
-            $company = self::create_company();
-            $record->companyid = $company->id;
-        }
-        if (!isset($record->fullname)) {
-            $record->fullname = 'Test Department ' . $i;
-        }
-        if (!isset($record->shortname)) {
-            $record->shortname = 'testdep_' . $i;
+        if (empty($record->id)) {
+            if (!isset($record->companyid)) {
+                // If no company ID is specified, create a company for the department.
+                $company = self::create_company();
+                $record->companyid = $company->id;
+            }
+            if (!isset($record->name)) {
+                $record->name = 'Test Department ' . $i;
+            }
+            if (!isset($record->shortname)) {
+                $record->shortname = 'testdep_' . $i;
+            }
+        } else {
+            $department = $DB->get_record('local_iomad_company_departments', ['id' => $record->id]);
+
+            if (!isset($record->companyid)) {
+                $record->companyid = (int) $department->companyid;
+            }
+            if (!isset($record->name)) {
+                $record->name = (string) $department->name;
+            }
+            if (!isset($record->shortname)) {
+                $record->shortname = (string) $department->shortname;
+            }
         }
 
         // Optional fields: parentid.
 
+        //
+
         // Create the department.
-        $departmentid = company::create_department(null,
+        $departmentid = company::create_department($record->id ?? null,
                                                 $record->companyid,
-                                                $record->fullname,
+                                                $record->name,
                                                 $record->shortname,
                                                 returnid: true);
 
