@@ -104,6 +104,12 @@ class course_delete_form extends dynamic_form {
             throw new moodle_exception('invalidcourse');
         }
 
+        // Sanity check.
+        if (empty($data->destroy)) {
+            $data->destroy = false;
+        }
+
+        // Do the delete.
         if (company::delete_course($data->companyid, $data->courseid, $data->destroy, false)) {
                 $result = true;
                 $returnmessage = get_string("deletecourse_successful", 'block_iomad_company_admin');
