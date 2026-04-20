@@ -83,6 +83,21 @@ function xmldb_bigbluebuttonbn_upgrade($oldversion = 0) {
     // Automatically generated Moodle v5.0.0 release upgrade line.
     // Put any upgrade step following this.
 
+    if ($oldversion < 2025041401) {
+        // Define field recordings_deleted to be added to bigbluebuttonbn.
+        // Sites upgraded from external Bigbluebuttonbn plugin to core may be missing this field.
+        $table = new xmldb_table('bigbluebuttonbn');
+        $field = new xmldb_field('recordings_deleted', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'recordings_html');
+
+        // Conditionally launch add field recordings_deleted.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Bigbluebuttonbn savepoint reached.
+        upgrade_mod_savepoint(true, 2025041401, 'bigbluebuttonbn');
+    }
+
     return true;
 }
 

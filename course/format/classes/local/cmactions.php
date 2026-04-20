@@ -76,9 +76,10 @@ class cmactions extends baseactions {
         $paramcleaning = empty($CFG->formatstringstriptags) ? PARAM_CLEANHTML : PARAM_TEXT;
         $name = clean_param($name, $paramcleaning);
 
-        if (empty($name)) {
+        if ($name === '') {
             return false;
         }
+
         if (\core_text::strlen($name) > 255) {
             throw new \moodle_exception('maximumchars', 'moodle', '', 255);
         }
@@ -100,10 +101,8 @@ class cmactions extends baseactions {
                 'timemodified' => time(),
             ]
         );
-        $cm->name = $name;
-        $fields = new \stdClass();
-        $fields->name = $name;
 
+        $cm->name = $name;
         \core\event\course_module_updated::create_from_cm($cm)->trigger();
 
         course_modinfo::purge_course_module_cache($cm->course, $cm->id);

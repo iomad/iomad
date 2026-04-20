@@ -49,11 +49,13 @@ class require_login {
     }
 
     /**
-     * Get the course attribute name.
+     * Get the attribute name used for the course.
      *
-     * @return string
+     * A null value is returned if the course attribute name is not set.
+     *
+     * @return null|string
      */
-    public function get_course_attribute_name(): string {
+    public function get_course_attribute_name(): ?string {
         return $this->courseattributename;
     }
 

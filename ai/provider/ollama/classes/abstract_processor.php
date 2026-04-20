@@ -152,7 +152,7 @@ abstract class abstract_processor extends process_base {
             $responsearr['errormessage'] = $response->getReasonPhrase();
         } else {
             $bodyobj = json_decode($response->getBody()->getContents());
-            $responsearr['errormessage'] = $bodyobj->error->message;
+            $responsearr['errormessage'] = $bodyobj->error;
         }
 
         return $responsearr;

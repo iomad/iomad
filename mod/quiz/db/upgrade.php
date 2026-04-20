@@ -135,6 +135,23 @@ function xmldb_quiz_upgrade($oldversion) {
 
     // Automatically generated Moodle v5.0.0 release upgrade line.
     // Put any upgrade step following this.
+    if ($oldversion < 2025041401) {
+        // Queue tasks to process stuck quiz attempts (state = 'submitted').
+        $attemptids = $DB->get_fieldset_select(
+            'quiz_attempts',
+            'id',
+            'state = ?',
+            [\mod_quiz\quiz_attempt::SUBMITTED],
+        );
+
+        foreach ($attemptids as $attemptid) {
+            $task = \mod_quiz\task\grade_submission::instance($attemptid);
+            \core\task\manager::queue_adhoc_task($task, true);
+        }
+
+        // Quiz savepoint reached.
+        upgrade_mod_savepoint(true, 2025041401, 'quiz');
+    }
 
     return true;
 }

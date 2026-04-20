@@ -39,23 +39,23 @@ Feature: Activity navigation in a single activity course
   Scenario: Jump to a hidden activity as a teacher
     Given I log in as "teacher1"
     When I am on "Course 1" course homepage
-    Then "Jump to..." "field" should exist
+    Then "Jump to activity" "field" should exist
     # The current activity (Forum 1) will not be listed.
-    And the "Jump to..." select box should not contain "Forum 1"
+    And the "Jump to activity" select box should not contain "Forum 1"
     # Check drop down menu contents.
-    And the "Jump to..." select box should contain "Assignment 1 (hidden)"
-    And the "Jump to..." select box should contain "Lesson 1 (hidden)"
+    And the "Jump to activity" select box should contain "Assignment 1 (hidden)"
+    And the "Jump to activity" select box should contain "Lesson 1 (hidden)"
     # Jump to a hidden activity somewhere in the middle.
-    When I select "Assignment 1 (hidden)" from the "Jump to..." singleselect
+    When I select "Assignment 1 (hidden)" from the "Jump to activity" singleselect
     Then I should see "Assignment 1"
     And I should see "Forum 1" in the "#prev-activity-link" "css_element"
     And I should see "Lesson 1 (hidden)" in the "#next-activity-link" "css_element"
     # Jump to the first activity.
-    And I select "Forum 1" from the "Jump to..." singleselect
+    And I select "Forum 1" from the "Jump to activity" singleselect
     And I should see "Assignment 1 (hidden)" in the "#next-activity-link" "css_element"
     But "#prev-activity-link" "css_element" should not exist
     # Jump to the last activity.
-    And I select "Lesson 1 (hidden)" from the "Jump to..." singleselect
+    And I select "Lesson 1 (hidden)" from the "Jump to activity" singleselect
     And I should see "Assignment 1 (hidden)" in the "#prev-activity-link" "css_element"
     But "#next-activity-link" "css_element" should not exist
 
@@ -65,7 +65,7 @@ Feature: Activity navigation in a single activity course
     # The first activity won't have the previous activity link.
     Then "#prev-activity-link" "css_element" should not exist
     And "#next-activity-link" "css_element" should not exist
-    And "Jump to..." "field" should not exist
+    And "Jump to activity" "field" should not exist
 
   Scenario: The activity navigation asks for login to guest user
     Given I log in as "guest"

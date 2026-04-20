@@ -198,4 +198,14 @@ $functions = array(
         'type' => 'write',
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
     ),
+    'mod_forum_mark_posts_read' => [
+        'classname' => 'mod_forum_external',
+        'methodname' => 'mark_posts_read',
+        'classpath' => 'mod/forum/externallib.php',
+        'description' => 'Mark forum posts as read.',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'mod/forum:viewdiscussion',
+        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    ],
 );

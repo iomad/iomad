@@ -38,7 +38,7 @@ Feature: Display and choose from the available activities in course
   Scenario: The teacher can choose to add an activity from the activity summary in the activity chooser
     Given I open the activity chooser
     When I click on "Information about the Assignment activity" "button" in the "Add an activity or resource" "dialogue"
-    When I click on "Add a new Assignment" "link" in the "help" "core_course > Activity chooser screen"
+    And I click on "Add a new Assignment" "link" in the ".modal-footer" "css_element"
     Then I should see "New Assignment"
 
   Scenario: Show summary
@@ -58,8 +58,8 @@ Feature: Display and choose from the available activities in course
     Given I open the activity chooser
     When I click on "Information about the Assignment activity" "button" in the "modules" "core_course > Activity chooser screen"
     And I should see "The assignment activity module enables a teacher to communicate tasks, collect work and provide grades and feedback." in the "help" "core_course > Activity chooser screen"
-    And I should see "Back" in the "help" "core_course > Activity chooser screen"
-    When I click on "Back" "button" in the "help" "core_course > Activity chooser screen"
+    And I should see "Back" in the ".modal-footer" "css_element"
+    When I click on "Back" "button" in the ".modal-footer" "css_element"
     Then "modules" "core_course > Activity chooser screen" should be visible
     And "help" "core_course > Activity chooser screen" should not be visible
     And "Back" "button" should not exist in the "modules" "core_course > Activity chooser screen"
@@ -69,7 +69,7 @@ Feature: Display and choose from the available activities in course
     And I click on "Add content" "button" in the "13 January - 19 January" "section"
     And I click on "Activity or resource" "button" in the "13 January - 19 January" "section"
     And I click on "Information about the Assignment activity" "button" in the "Add an activity or resource" "dialogue"
-    And I click on "Back" "button" in the "help" "core_course > Activity chooser screen"
+    And I click on "Back" "button" in the ".modal-footer" "css_element"
     And "modules" "core_course > Activity chooser screen" should be visible
     And "help" "core_course > Activity chooser screen" should not be visible
     And "Back" "button" should not exist in the "modules" "core_course > Activity chooser screen"
