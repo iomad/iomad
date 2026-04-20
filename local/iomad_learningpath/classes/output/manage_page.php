@@ -27,6 +27,7 @@ namespace local_iomad_learningpath\output;
 
 defined('MOODLE_INTERNAL') || die();
 
+use context_system;
 use renderable;
 use renderer_base;
 use templatable;
@@ -50,10 +51,11 @@ class manage_page implements renderable, templatable {
      * @param renderer_base $output
      */
     protected function munge_paths(renderer_base $output) {
+        $contextsystem = context_system::instance();
         $fs = get_file_storage();
         foreach ($this->paths as $path) {
             $thumb = false;
-            $files = $fs->get_area_files($this->context->id, 'local_iomad_learningpath', 'thumbnail', $path->id);
+            $files = $fs->get_area_files($contextsystem->id, 'local_iomad_learningpath', 'thumbnail', $path->id);
             $extensions = [
                 'gif',
                 'jpe',

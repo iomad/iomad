@@ -55,7 +55,7 @@ $companypaths = new local_iomad_learningpath\companypaths($companyid, $systemcon
 $paths = $companypaths->get_paths();
 
 // Get renderer for page (and pass data).
-$manage_page = new local_iomad_learningpath\output\manage_page($systemcontext, $paths);
+$manage_page = new local_iomad_learningpath\output\manage_page($companycontext, $paths);
 
 echo $OUTPUT->header();
 
