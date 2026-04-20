@@ -75,6 +75,9 @@ final class copy_helper {
         if (!empty($formdata->companyid)) {
             $processed->companyid = $formdata->companyid;
         }
+        if (!empty($formdata->owncourse)) {
+            $processed->owncourse = $formdata->owncourse;
+        }
 
         return $processed;
     }
@@ -106,9 +109,12 @@ final class copy_helper {
 
         // IOMAD
         $copyids['companyid'] = 0;
-
+        $copyids['owncourse'] = false;
         if (!empty($copydata->companyid)) {
             $copyids['companyid'] = $copydata->companyid;
+        }
+        if (!empty($copydata->owncourse)) {
+            $copyids['owncourse'] = $copydata->owncourse;
         }
 
         $bc->set_status(\backup::STATUS_AWAITING);

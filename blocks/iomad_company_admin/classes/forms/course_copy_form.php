@@ -60,6 +60,7 @@ class course_copy_form extends moodleform {
 
         $mform = $this->_form;
         $course = $this->_customdata['course'];
+        $anycourse = $this->_customdata['anycourse'];
         $companycontext = \core\context\company::instance($company->id);
         $courseconfig = get_config('moodlecourse');
 
@@ -162,7 +163,21 @@ class course_copy_form extends moodleform {
             $mform->setConstant('idnumber', '');
         }
 
-        $buttonarray = array();
+        // Optional company owned course?
+        if ($anycourse) {
+            $mform->addElement(
+                'checkbox',
+                'owncourse',
+                get_string('assigncontrol', 'block_iomad_company_admin'),
+                get_string('assigncontrolfull', 'block_iomad_company_admin'),
+                );
+        } else {
+            $mform->addElement('hidden', 'owncourse');
+            $mform->setType('owncourse', PARAM_BOOL);
+
+        }
+
+        $buttonarray = [];
         $buttonarray[] = $mform->createElement('submit', 'submitreturn', get_string('copyreturn', 'backup'));
         $buttonarray[] = $mform->createElement('cancel');
         $mform->addGroup($buttonarray, 'buttonar', '', ' ', false);
