@@ -14,24 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Data persistent class
- *
- * @package   core_customfield
- * @copyright 2018 Toni Barbera <toni@moodle.com>
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace core_customfield;
 
 use core\persistent;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
- * Class data
+ * Data persistent class
  *
- * @package core_customfield
+ * @package   core_customfield
  * @copyright 2018 Toni Barbera <toni@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -121,4 +111,47 @@ class data extends persistent {
         );
     }
 
+    /**
+     * For integer data field, persistent won't allow empty string, swap for null
+     *
+     * Ensure we constrain maximum value to that supported by database
+     *
+     * @param string|null $value
+     * @return self
+     */
+    protected function set_intvalue(?string $value): self {
+        if ((string) $value === '') {
+            $value = null;
+        } else {
+            $value = min((int) $value, SQL_INT_MAX);
+        }
+        return $this->raw_set('intvalue', $value);
+    }
+
+    /**
+     * For decimal data field, persistent won't allow empty string, swap for null
+     *
+     * Ensure we constrain maximum value to that supported by database
+     *
+     * @param string|null $value
+     * @return self
+     */
+    protected function set_decvalue(?string $value): self {
+        if ((string) $value === '') {
+            $value = null;
+        } else {
+            $value = min((float) $value, SQL_INT_MAX + .9999);
+        }
+        return $this->raw_set('decvalue', $value);
+    }
+
+    /**
+     * Ensure value field observes non-nullability
+     *
+     * @param string|null $value
+     * @return self
+     */
+    protected function set_value(?string $value): self {
+        return $this->raw_set('value', (string) $value);
+    }
 }

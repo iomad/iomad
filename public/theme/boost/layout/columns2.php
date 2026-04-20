@@ -42,7 +42,13 @@ if ($PAGE->has_secondary_navigation()) {
     $secondarynavigation = $moremenu->export_for_template($OUTPUT);
     $overflowdata = $PAGE->secondarynav->get_overflow_menu_data();
     if (!is_null($overflowdata)) {
-        $overflow = $overflowdata->export_for_template($OUTPUT);
+        $selectmenu = new \core\output\select_menu(
+            'tertiarynavigation',
+            $overflowdata->urls,
+            $overflowdata->selected,
+        );
+        $selectmenu->set_label($overflowdata->label, $overflowdata->labelattributes);
+        $overflow = $selectmenu->export_for_template($OUTPUT);
     }
 }
 

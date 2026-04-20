@@ -76,8 +76,8 @@ class api {
     /**
      * Create one of the standard issuers.
      *
-     * @param string $type One of google, facebook, microsoft, MoodleNet, nextcloud or imsobv2p1
-     * @param string|false $baseurl Baseurl (only required for nextcloud, imsobv2p1 and moodlenet)
+     * @param string $type One of google, facebook, microsoft, nextcloud or imsobv2p1
+     * @param string|false $baseurl Baseurl (only required for nextcloud and imsobv2p1)
      * @return \core\oauth2\issuer
      */
     public static function create_standard_issuer($type, $baseurl = false) {
@@ -91,10 +91,6 @@ class api {
             case 'nextcloud':
                 if (!$baseurl) {
                     throw new moodle_exception('Nextcloud service type requires the baseurl parameter.');
-                }
-            case 'moodlenet':
-                if (!$baseurl) {
-                    throw new moodle_exception('MoodleNet service type requires the baseurl parameter.');
                 }
             case 'google':
             case 'facebook':
@@ -121,7 +117,7 @@ class api {
      */
     public static function get_all_issuers(bool $includeloginonly = false) {
         if ($includeloginonly) {
-            return issuer::get_records([], 'sortorder');
+            return array_values(issuer::get_records([], 'sortorder'));
         } else {
             return array_values(issuer::get_records_select('showonloginpage<>?', [issuer::LOGINONLY], 'sortorder'));
         }
@@ -275,7 +271,8 @@ class api {
      * @return \core\oauth2\endpoint[]
      */
     public static function get_endpoints(issuer $issuer) {
-        return endpoint::get_records(['issuerid' => $issuer->get('id')]);
+        $endpoints = endpoint::get_records(['issuerid' => $issuer->get('id')]);
+        return array_values($endpoints);
     }
 
     /**
@@ -285,7 +282,8 @@ class api {
      * @return \core\oauth2\user_field_mapping[]
      */
     public static function get_user_field_mappings(issuer $issuer) {
-        return user_field_mapping::get_records(['issuerid' => $issuer->get('id')]);
+        $mappings = user_field_mapping::get_records(['issuerid' => $issuer->get('id')]);
+        return array_values($mappings);
     }
 
     /**

@@ -75,20 +75,6 @@ class core_text {
     }
 
     /**
-     * @deprecated since Moodle 4.0. See MDL-53544.
-     */
-    #[\core\attribute\deprecated(
-        'core_text::reset_caches',
-        since: '4.0',
-        reason:'Typo3 has been removed and caches aren\'t used anymore.',
-        mdl: 'MDL-53544',
-        final: true,
-    )]
-    public static function reset_caches(): void {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-
-    /**
      * Standardise charset name
      *
      * Please note it does not mean the returned charset is actually supported.
@@ -459,6 +445,35 @@ class core_text {
         }
 
         return $translationtable;
+    }
+
+    /**
+     * Returns transliteration table for conversion of named
+     * html entities to numeric html entities.
+     * @return array
+     */
+    protected static function get_named_entities_table(): array {
+        static $translationtable = null;
+
+        if (!isset($translationtable)) {
+            $translationtable = [];
+            // NOTE: do not use ENT_HTML5 here because it adds way too many items.
+            $entities = get_html_translation_table(HTML_ENTITIES, ENT_COMPAT | ENT_HTML401, 'UTF-8');
+            foreach ($entities as $char => $entity) {
+                $translationtable[$entity] = '&#' . IntlChar::ord($char) . ';';
+            }
+        }
+
+        return $translationtable;
+    }
+
+    /**
+     * Converts all named html entities &quot; to numeric entities &#nnnn;
+     * @param string $str input string
+     * @return string
+     */
+    public static function entities_named_to_numeric(string $str): string {
+        return strtr($str, self::get_named_entities_table());
     }
 
     /**

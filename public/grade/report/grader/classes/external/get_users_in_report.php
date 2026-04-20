@@ -17,6 +17,7 @@
 namespace gradereport_grader\external;
 
 use context_course;
+use core_user;
 use core_user_external;
 use core_external\external_api;
 use core_external\external_function_parameters;
@@ -95,6 +96,7 @@ class get_users_in_report extends external_api {
             $userforselector = new \stdClass();
             $userforselector->id = $user->id;
             $userforselector->fullname = fullname($user);
+            $userforselector->initials = core_user::get_initials($user);
             foreach (\core_user\fields::get_name_fields() as $field) {
                 $userforselector->$field = $user->$field ?? null;
             }

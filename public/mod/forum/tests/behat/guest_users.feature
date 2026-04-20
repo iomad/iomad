@@ -7,6 +7,7 @@ Feature: Guest and not logged users could see the option to add new post or repl
   Background:
     Given the following config values are set as admin:
       | enrol_guest | Yes |
+      | guestloginbutton | 1 |
     And the following "users" exist:
       | username | firstname | lastname | email                |
       | teacher  | Teacher   | 1        | teacher@example.com |
@@ -28,7 +29,7 @@ Feature: Guest and not logged users could see the option to add new post or repl
       | teacher | forum | Forum discussion 1 | How awesome is this forum discussion? |
     And I log out
     And I am on "Course 1" course homepage
-    When I press "Access as a guest"
+    When I press "Log in as guest"
     And I am on the "Forum" "forum activity" page
     Then I should not see "Add discussion topic"
     And I should see "Forum discussion 1"
@@ -47,7 +48,7 @@ Feature: Guest and not logged users could see the option to add new post or repl
       | forum    | Forum (single discussion) | C1     | forum    | single |
     And I log out
     And I am on "Course 1" course homepage
-    When I press "Access as a guest"
+    When I press "Log in as guest"
     And I am on the "Forum (single discussion)" "forum activity" page
     Then I should not see "Add discussion topic"
     And I should see "Forum (single discussion)"
@@ -62,7 +63,7 @@ Feature: Guest and not logged users could see the option to add new post or repl
       | teacher | forum | Forum discussion 1 | How awesome is this forum discussion? |
     And I log out
     And I am on "Course 1" course homepage
-    When I press "Access as a guest"
+    When I press "Log in as guest"
     And I am on the "Forum" "forum activity" page
     Then I should not see "Add discussion topic"
     And I should see "Forum discussion 1"
@@ -79,7 +80,7 @@ Feature: Guest and not logged users could see the option to add new post or repl
       | teacher | forum | Forum discussion 1 | How awesome is this forum discussion? |
     And I log out
     And I am on "Course 1" course homepage
-    When I press "Access as a guest"
+    When I press "Log in as guest"
     And I am on the "Forum" "forum activity" page
     Then I should see "Add discussion topic"
     And I click on "Add discussion topic" "link"
@@ -107,7 +108,7 @@ Feature: Guest and not logged users could see the option to add new post or repl
       | forum    | Forum (single discussion) | C1     | forum    | single |
     And I log out
     And I am on "Course 1" course homepage
-    When I press "Access as a guest"
+    When I press "Log in as guest"
     And I am on the "Forum (single discussion)" "forum activity" page
     And I should see "Forum (single discussion)"
     Then I should see "Reply"
@@ -130,7 +131,7 @@ Feature: Guest and not logged users could see the option to add new post or repl
       | teacher | forum | Forum discussion 1 | How awesome is this forum discussion? |
     And I log out
     And I am on "Course 1" course homepage
-    When I press "Access as a guest"
+    When I press "Log in as guest"
     And I am on the "Forum" "forum activity" page
     Then I should see "Add discussion topic"
     And I click on "Add discussion topic" "link"

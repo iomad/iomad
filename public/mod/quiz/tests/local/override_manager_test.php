@@ -955,14 +955,14 @@ final class override_manager_test extends \advanced_testcase {
         $this->assertCount(1, calendar_get_events(0, 999, [$user->id], false, false));
 
         // Check that the cache was made.
-        $overridecache = new override_cache($quizobj->get_quizid());
-        $this->assertNotEmpty($overridecache->get_cached_user_override($user->id));
+        $this->assertNotEmpty(quiz_overrides_cache_manager::get_overrides($quizobj->get_quizid(), $user->id));
 
         // Capture events.
         $sink = $this->redirectEvents();
 
         $override = (object) [
             'id' => $id,
+            'quiz' => $quizobj->get_quizid(),
             'userid' => $user->id,
         ];
 
@@ -973,7 +973,7 @@ final class override_manager_test extends \advanced_testcase {
         $this->assertCount(0, calendar_get_events(0, 999, [$user->id], false, false));
 
         // Check that the cache was cleared.
-        $this->assertEmpty($overridecache->get_cached_user_override($user->id));
+        $this->assertEmpty(quiz_overrides_cache_manager::get_overrides($quizobj->get_quizid(), $user->id));
 
         // Check the event was logged.
         if ($checkeventslogged) {

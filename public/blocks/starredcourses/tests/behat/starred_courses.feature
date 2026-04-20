@@ -5,7 +5,9 @@ Feature: Starred courses
   I must be able to add them to the Starred courses block
 
   Background:
-    Given the following "users" exist:
+    Given the following config values are set as admin:
+      | enablemycourses | 1 |
+    And the following "users" exist:
       | username | firstname | lastname | email |
       | student1 | Student | 1 | student1@example.com |
     And the following "courses" exist:

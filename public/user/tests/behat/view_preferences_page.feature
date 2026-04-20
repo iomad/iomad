@@ -5,7 +5,9 @@ Feature: Access to preferences page
   I need global permissions to view the page.
 
   Background:
-    Given the following "users" exist:
+    Given the following config values are set as admin:
+      | enablemyhome | 1 |
+    And the following "users" exist:
       | username | firstname | lastname | email |
       | student1 | Student | 1 | student1@example.com |
       | student2 | Student | 2 | student2@example.com |
@@ -76,3 +78,9 @@ Feature: Access to preferences page
     And I am on site homepage
     When I follow "Student 1"
     Then I should see "Preferences" in the "region-main" "region"
+
+  @accessibility @javascript
+  Scenario: Check the user preferences page against accessibility standards
+    Given I log in as "admin"
+    When I follow "Preferences" in the user menu
+    Then the page should meet accessibility standards with "best-practice" extra tests

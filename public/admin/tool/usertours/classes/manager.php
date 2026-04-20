@@ -272,14 +272,6 @@ class manager {
                 'img'   => 'i/tour-import',
                 'title' => get_string('importtour', 'tool_usertours'),
             ],
-            (object) [
-                'link'  => new \moodle_url('https://moodle.net/search', ['q' => 'user tours']),
-                'linkproperties' => [
-                        'target' => '_blank',
-                    ],
-                'img'   => 'i/tour-shared',
-                'title' => get_string('sharedtourslink', 'tool_usertours'),
-            ],
         ];
 
         echo \html_writer::start_tag('div', [

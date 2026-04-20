@@ -149,6 +149,7 @@ final class meeting_test extends \advanced_testcase {
         $this->assertNotNull($meetinginfo);
         $this->assertEquals($activity->id, $meetinginfo->bigbluebuttonbnid);
         $this->assertTrue($meetinginfo->statusrunning);
+        $this->assertFalse($meetinginfo->usermustwaittojoin);
         $this->assertStringContainsString("in progress", $meetinginfo->statusmessage);
         $this->assertEquals($groupid, $meetinginfo->groupid);
         $meeting->end_meeting();
@@ -255,6 +256,9 @@ final class meeting_test extends \advanced_testcase {
         // The moderator has not joined.
         $this->setUser($student);
         $meeting->update_cache();
+        $meetinginfo = $meeting->get_meeting_info();
+        $this->assertNotNull($meetinginfo);
+        $this->assertTrue($meetinginfo->usermustwaittojoin);
         $this->expectException(\mod_bigbluebuttonbn\local\exceptions\meeting_join_exception::class);
         meeting::join_meeting($instance);
     }
@@ -289,6 +293,9 @@ final class meeting_test extends \advanced_testcase {
 
         $this->setUser($moderator);
         $meeting->update_cache();
+        $meetinginfo = $meeting->get_meeting_info();
+        $this->assertNotNull($meetinginfo);
+        $this->assertFalse($meetinginfo->usermustwaittojoin);
         $joinurl = $meeting->join(logger::ORIGIN_BASE);
         $this->assertIsString($joinurl);
         $this->join_meeting($joinurl);
@@ -297,6 +304,10 @@ final class meeting_test extends \advanced_testcase {
 
         // The student can now join the meeting as a moderator is present.
         $this->setUser($student);
+        $meeting->update_cache();
+        $meetinginfo = $meeting->get_meeting_info();
+        $this->assertNotNull($meetinginfo);
+        $this->assertTrue($meetinginfo->usermustwaittojoin);
         $joinurl = $meeting->join(logger::ORIGIN_BASE);
         $this->assertIsString($joinurl);
     }
@@ -478,5 +489,62 @@ final class meeting_test extends \advanced_testcase {
         }
         $meeting = new meeting($instance);
         return [$meeting, $useringroup, $usernotingroup, $groupid, $activity];
+    }
+
+    /**
+     * Test process_meeting_events.
+     *
+     * @covers ::meeting_events
+     */
+    public function test_process_meeting_events(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        [$bbactivitycontext, $bbactivitycm, $bbactivity] = $this->create_instance(
+            $this->get_course(),
+            ['type' => instance::TYPE_ALL]
+        );
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_bigbluebuttonbn');
+        $user = $this->getDataGenerator()->create_and_enrol($this->get_course());
+        $instance = instance::get_from_instanceid($bbactivity->id);
+
+        // Prepare meeting event data with guest user and Moodle user.
+        $data = json_decode(json_encode([
+            'meeting_id' => $instance->get_meeting_id(),
+            'internal_meeting_id' => sha1($instance->get_meeting_id()),
+            'data' => [
+                'attendees' => [
+                    [
+                        'ext_user_id' => 'w_abcdefg',
+                        'engagement' => [
+                            'chats' => 1,
+                            'talks' => 1,
+                        ],
+                    ],
+                    [
+                        'ext_user_id' => (string) $user->id,
+                        'engagement' => [
+                            'chats' => 2,
+                            'talks' => 3,
+                        ],
+                    ],
+                ],
+            ],
+        ]));
+
+        // Process the meeting events.
+        $result = meeting::meeting_events($instance, $data);
+
+        $logs = $DB->get_records('bigbluebuttonbn_logs', [
+            'bigbluebuttonbnid' => $bbactivity->id,
+            'log' => 'Summary',
+        ]);
+        $this->assertCount(1, $logs);
+
+        $log = reset($logs);
+        $this->assertEquals($user->id, $log->userid);
+        $meta = json_decode($log->meta);
+        $this->assertEquals(2, $meta->data->engagement->chats);
+        $this->assertEquals(3, $meta->data->engagement->talks);
     }
 }

@@ -89,7 +89,7 @@ Options:
 -h, --help         Print out this help
 
 Example from Moodle root directory:
-\$ php admin/tool/behat/cli/run.php --tags=\"@javascript\"
+\$ php public/admin/tool/behat/cli/run.php --tags=\"@javascript\"
 
 More info in https://moodledev.io/general/development/tools/behat/running
 ";
@@ -223,7 +223,12 @@ if (empty($parallelrun)) {
     $runtestscommand .= ' ' . $extraoptstr;
     $cmds['singlerun'] = $runtestscommand;
 
-    echo "Running single behat site:" . PHP_EOL;
+    echo "Running single behat site: with " . $runtestscommand . PHP_EOL;
+    // The inner PHP process is not marked as having an interactive terminal even if it's passed
+    // through from this one which does, so we need to pass it through as an environment variable.
+    if (function_exists('posix_isatty') && posix_isatty(STDOUT)) {
+        putenv('MOODLE_BEHAT_RUNNING_IN_TTY=1');
+    }
     passthru("php $runtestscommand", $status);
     $exitcodes['singlerun'] = $status;
     chdir($cwd);

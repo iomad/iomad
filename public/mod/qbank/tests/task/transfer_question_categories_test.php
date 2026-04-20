@@ -21,6 +21,8 @@ use context_course;
 use context_coursecat;
 use context_module;
 use context_system;
+use core\context\module;
+use core\context\system;
 use core\exception\moodle_exception;
 use core\task\manager;
 use core_question\local\bank\random_question_loader;
@@ -164,6 +166,9 @@ final class transfer_question_categories_test extends \advanced_testcase {
         quiz_add_quiz_question($question1->id, $quiz, 1);
         quiz_add_quiz_question($question2->id, $quiz, 1);
 
+        \core_tag_tag::add_item_tag('core_question', 'question', $question1->id, $sitecontext, 'tag1');
+        \core_tag_tag::add_item_tag('core_question', 'question', $question1->id, $sitecontext, 'tag2');
+
         // Create a course with a quiz containing a random question from the system context.
         $randomcourse = self::getDataGenerator()->create_course(['shortname' => 'Random']);
         $randomquiz = $quizgenerator->create_instance(
@@ -228,6 +233,9 @@ final class transfer_question_categories_test extends \advanced_testcase {
         quiz_add_quiz_question($question4->id, $quiz, 1);
         quiz_add_quiz_question($question5->id, $quiz, 1);
 
+        \core_tag_tag::add_item_tag('core_question', 'question', $question4->id, $this->coursecontext, 'tag1');
+        \core_tag_tag::add_item_tag('core_question', 'question', $question4->id, $this->coursecontext, 'tag3');
+
         // Include a stale question, which should not be migrated with the others.
         $question6 = $questiongenerator->create_question('shortanswer', null, ['category' => $coursechildcat1->id]);
         $DB->set_field(
@@ -236,6 +244,8 @@ final class transfer_question_categories_test extends \advanced_testcase {
             question_version_status::QUESTION_STATUS_HIDDEN,
             ['questionid' => $question6->id],
         );
+
+        \core_tag_tag::add_item_tag('core_question', 'question', $question6->id, $this->coursecontext, 'staletag');
 
         // Create some nested categories with no questions in use.
         $course = self::getDataGenerator()->create_course();
@@ -793,6 +803,68 @@ final class transfer_question_categories_test extends \advanced_testcase {
     }
 
     /**
+     * Categories with missing contexts that would violate unique keys if moved to the same context as-is are correctly modified.
+     */
+    public function test_fix_wrong_parents_conflicting_indexes(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setup_pre_install_data();
+
+        // Create a second course.
+        $course2 = self::getDataGenerator()->create_course();
+        $course2context = context_course::instance($course2->id);
+
+        // Create a parent category, and 2 child categories in a non-existant context.
+        $course2parentcat = $this->create_question_category('Course2 parent cat', $course2context->id);
+        $wrongchild1 = $this->create_question_category('Wrong context 1', $this->coursecontext->id + 1000, $course2parentcat->id);
+        $wrongchild2 = $this->create_question_category('Wrong context 2', $this->coursecontext->id + 1000, $course2parentcat->id);
+
+        // Set the stamp of one child and the idnumber of another child to match that of the parent context.
+        // Moving either of these children to the correct context would cause a conflict.
+        $tamperedstamp = make_unique_id_code();
+        $wrongchild1->stamp = $tamperedstamp;
+        $course2parentcat->stamp = $tamperedstamp;
+
+        $tamperedidnumber = random_string();
+        $wrongchild2->idnumber = $tamperedidnumber;
+        $course2parentcat->idnumber = $tamperedidnumber;
+        $DB->update_record('question_categories', $course2parentcat);
+        $DB->update_record('question_categories', $wrongchild1);
+        $DB->update_record('question_categories', $wrongchild2);
+
+        // Before we clean up, check that the expected categories are picked up.
+        $task = new transfer_question_categories();
+        $this->assertEquals(
+            [
+                $wrongchild1->id => $wrongchild1->contextid,
+                $wrongchild2->id => $wrongchild2->contextid,
+            ],
+            $task->get_categories_in_a_different_context_to_their_parent(),
+        );
+
+        // Call the cleanup method.
+        $task->fix_wrong_parents();
+
+        // Now we expect no mismatches.
+        $this->assertEmpty($task->get_categories_in_a_different_context_to_their_parent());
+
+        // Assert that the child categories have been moved to the parent context.
+        $this->assert_category_is_in_context_with_parent($course2context, $course2parentcat, $wrongchild1->id);
+        $this->assert_category_is_in_context_with_parent($course2context, $course2parentcat, $wrongchild2->id);
+
+        // Categories with the same stamp should now be different.
+        $this->assertNotEquals(
+            $DB->get_field('question_categories', 'stamp', ['id' => $course2parentcat->id]),
+            $DB->get_field('question_categories', 'stamp', ['id' => $wrongchild1->id]),
+        );
+        // Categories with same idnumber should now be different.
+        $this->assertNotEquals(
+            $DB->get_field('question_categories', 'idnumber', ['id' => $course2parentcat->id]),
+            $DB->get_field('question_categories', 'idnumber', ['id' => $wrongchild2->id]),
+        );
+    }
+
+    /**
      * Assert that the category with id $categoryid is in context $expectedcontext, with the given parent.
      *
      * @param context $expectedcontext the expected context for the category with id $categoryid.
@@ -827,6 +899,10 @@ final class transfer_question_categories_test extends \advanced_testcase {
         global $DB;
         $this->resetAfterTest();
         $this->setup_pre_install_data();
+
+        // We should still ahve all the tags in the course context.
+        $coursetags = \core_tag_tag::get_tags_by_area_in_contexts('core_question', 'question', [$this->coursecontext]);
+        $this->assertCount(3, $coursetags);
 
         $task = new \mod_qbank\task\transfer_question_categories();
         $task->execute();
@@ -890,6 +966,24 @@ final class transfer_question_categories_test extends \advanced_testcase {
             '/',
             '3.png'
         ));
+
+        // Assert tags are still in their original contexts.
+        $sitecourse = get_course(SITEID);
+        $sitemodinfo = get_fast_modinfo($sitecourse);
+        $siteqbanks = $sitemodinfo->get_instances_of('qbank');
+        $siteqbank = reset($siteqbanks);
+        $siteqbankcontext = module::instance($siteqbank->id);
+        $testcourse = get_course($this->coursecontext->instanceid);
+        $testmodinfo = get_fast_modinfo($testcourse);
+        $testqbanks = $testmodinfo->get_instances_of('qbank');
+        $testqbank = reset($testqbanks);
+        $testqbankcontext = module::instance($testqbank->id);
+        $sitetags = \core_tag_tag::get_tags_by_area_in_contexts('core_question', 'question', [context_system::instance()]);
+        $this->assertCount(2, $sitetags);
+        $coursetags = \core_tag_tag::get_tags_by_area_in_contexts('core_question', 'question', [$this->coursecontext]);
+        $this->assertCount(2, $coursetags); // The stale tag was removed with the stale question when the categories were moved.
+        $this->assertEmpty(\core_tag_tag::get_tags_by_area_in_contexts('core_question', 'question', [$siteqbankcontext]));
+        $this->assertEmpty(\core_tag_tag::get_tags_by_area_in_contexts('core_question', 'question', [$testqbankcontext]));
 
         $this->assertFalse(question_bank_helper::has_bank_migration_task_completed_successfully());
 
@@ -960,7 +1054,75 @@ final class transfer_question_categories_test extends \advanced_testcase {
             '3.png'
         ));
 
+        // Assert tags have been moved still to their new contexts.
+        $sitetags = \core_tag_tag::get_tags_by_area_in_contexts('core_question', 'question', [$siteqbankcontext]);
+        $this->assertCount(2, $sitetags);
+        $coursetags = \core_tag_tag::get_tags_by_area_in_contexts('core_question', 'question', [$testqbankcontext]);
+        $this->assertCount(2, $coursetags);
+        $this->assertEmpty(\core_tag_tag::get_tags_by_area_in_contexts('core_question', 'question', [system::instance()]));
+        $this->assertEmpty(\core_tag_tag::get_tags_by_area_in_contexts('core_question', 'question', [$this->coursecontext]));
+
         $this->assertTrue(question_bank_helper::has_bank_migration_task_completed_successfully());
+    }
+
+    public function test_transfer_questions_with_duplicate_tags(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        // Create a second course.
+        $course = self::getDataGenerator()->create_course();
+        $course2context = context_course::instance($course->id);
+
+        // Create a parent category, and 2 child categories in a non-existant context.
+        $coursecat = $this->create_question_category('Course2 parent cat', $course2context->id);
+
+        $questiongenerator = self::getDataGenerator()->get_plugin_generator('core_question');
+        $question1 = $questiongenerator->create_question(
+            'shortanswer',
+            null,
+            ['category' => $coursecat->id, 'status' => question_version_status::QUESTION_STATUS_READY]
+        );
+        $tag = self::getDataGenerator()->create_tag(['name' => 'testtag']);
+
+        // Insert two instances of the same tag on the same question, with different contexts.
+        $taginstance1 = (object) [
+            'tagid' => $tag->id,
+            'component' => 'core_question',
+            'itemid' => $question1->id,
+            'itemtype' => 'question',
+            'contextid' => $course2context->id,
+            'ordering' => 1,
+            'timecreated' => time(),
+            'timemodified' => time(),
+            'tiuserid' => 2,
+        ];
+
+        $taginstance1->id = $DB->insert_record('tag_instance', $taginstance1);
+
+        $taginstance2 = (object) [
+            'tagid' => $tag->id,
+            'component' => 'core_question',
+            'itemid' => $question1->id,
+            'itemtype' => 'question',
+            'contextid' => system::instance()->id,
+            'ordering' => 2,
+            'timecreated' => time(),
+            'timemodified' => time(),
+            'tiuserid' => 2,
+        ];
+
+        $taginstance2->id = $DB->insert_record('tag_instance', $taginstance2);
+
+        $task = new \mod_qbank\task\transfer_question_categories();
+        $task->execute();
+        // Run transfer_questions task.
+        $this->expectOutputRegex('~Moving files and tags for 1 questions~');
+        $this->run_all_adhoc_tasks();
+
+        $newcontextid = $DB->get_field('question_categories', 'contextid', ['id' => $coursecat->id]);
+
+        $this->assertTrue($DB->record_exists('tag_instance', ['id' => $taginstance1->id, 'contextid' => $newcontextid]));
+        $this->assertFalse($DB->record_exists('tag_instance', ['id' => $taginstance2->id]));
     }
 
     public function test_qbank_install_resilience(): void {

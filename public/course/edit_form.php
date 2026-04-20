@@ -29,9 +29,8 @@ class course_edit_form extends moodleform {
         $category      = $this->_customdata['category'];
         $editoroptions = $this->_customdata['editoroptions'];
         $returnto = $this->_customdata['returnto'];
-        $returnurl = $this->_customdata['returnurl'];
+        $returnurl = new moodle_url($this->_customdata['returnurl']);
 
-        $systemcontext   = context_system::instance();
         $categorycontext = context_coursecat::instance($category->id);
 
         if (!empty($course->id)) {
@@ -56,7 +55,7 @@ class course_edit_form extends moodleform {
 
         $mform->addElement('hidden', 'returnurl', null);
         $mform->setType('returnurl', PARAM_LOCALURL);
-        $mform->setConstant('returnurl', $returnurl);
+        $mform->setConstant('returnurl', $returnurl->out_as_local_url());
 
         $mform->addElement('text', 'fullname', get_string('fullnamecourse'),
             ['maxlength' => \core_course\constants::FULLNAME_MAXIMUM_LENGTH, 'size' => 50]);
@@ -217,8 +216,6 @@ class course_edit_form extends moodleform {
         }
 
         if (!empty($course->id) and !has_capability('moodle/course:changesummary', $coursecontext)) {
-            // Remove the description header it does not contain anything any more.
-            $mform->removeElement('descriptionhdr');
             $mform->hardFreeze($summaryfields);
         }
 
@@ -440,13 +437,14 @@ class course_edit_form extends moodleform {
         // When two elements we need a group.
         $buttonarray = array();
         $classarray = array('class' => 'form-submit');
-        if ($returnto !== 0) {
+        if (!empty($returnto)) {
             $buttonarray[] = &$mform->createElement('submit', 'saveandreturn', get_string('savechangesandreturn'), $classarray);
         }
         $buttonarray[] = &$mform->createElement('submit', 'saveanddisplay', get_string('savechangesanddisplay'), $classarray);
         $buttonarray[] = &$mform->createElement('cancel');
         $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
         $mform->closeHeaderBefore('buttonar');
+        $mform->set_sticky_footer('buttonar');
 
         $mform->addElement('hidden', 'id', null);
         $mform->setType('id', PARAM_INT);

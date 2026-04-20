@@ -23,7 +23,7 @@ Feature: Add and use group custom fields
     When I log in as "admin"
     And I navigate to "Courses > Groups > Group custom fields" in site administration
     Then I should see "Category for group1"
-    And I click on "Add a new custom field" "link"
+    And I click on "Add field" "link"
     And I click on "Short text" "link"
     And I set the following fields to these values:
       | Name       | Test field |
@@ -50,7 +50,7 @@ Feature: Add and use group custom fields
     When I log in as "admin"
     And I navigate to "Courses > Groups > Grouping custom fields" in site administration
     Then I should see "Category for grouping1"
-    And I click on "Add a new custom field" "link"
+    And I click on "Add field" "link"
     And I click on "Short text" "link"
     And I set the following fields to these values:
       | Name       | Test field |

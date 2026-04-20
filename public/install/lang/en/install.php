@@ -36,7 +36,7 @@ $string['chooselanguagesub'] = 'Please choose a language for the installation. T
 $string['clialreadyconfigured'] = 'The configuration file config.php already exists. Please use admin/cli/install_database.php to install Moodle for this site.';
 $string['clialreadyinstalled'] = 'The configuration file config.php already exists. Please use admin/cli/install_database.php to upgrade Moodle for this site.';
 $string['cliinstallheader'] = 'Moodle {$a} command line installation program';
-$string['clitablesexist'] = 'Database tables already present; CLI installation cannot continue.';
+$string['clitablesexist'] = 'Database tables already present; Command Line Interface (CLI) installation cannot continue.';
 $string['databasehost'] = 'Database host';
 $string['databasename'] = 'Database name';
 $string['databasetypehead'] = 'Choose database driver';
@@ -71,6 +71,8 @@ $string['pathsunsecuredataroot'] = 'Dataroot location is not secure';
 $string['pathswrongadmindir'] = 'Admin directory does not exist';
 $string['phpextension'] = '{$a} PHP extension';
 $string['phpversion'] = 'PHP version';
+$string['webserverconfigproblemdescription'] = 'Your web server is not configured to prevent access to files outside the /public directory. For details of how to configure your web server correctly, see the documentation <a href="https://docs.moodle.org/en/Upgrading#Code_directories_restructure">Upgrading - Code directories restructure</a>. Once reconfigured, <a href="{$a}">revisit the web root</a>.';
+$string['webservernotconfigured'] = 'Web server not configured';
 $string['welcomep10'] = '{$a->installername} ({$a->installerversion})';
 $string['welcomep20'] = 'You are seeing this page because you have successfully installed and
     launched the <strong>{$a->packname} {$a->packversion}</strong> package in your computer. Congratulations!';

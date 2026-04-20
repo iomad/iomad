@@ -6,8 +6,9 @@ Feature: Teachers can edit course custom fields
 
   Background:
     Given the following "custom field categories" exist:
-      | name              | component   | area   | itemid |
-      | Category for test | core_course | course | 0      |
+      | name              | component        | area   | itemid |
+      | Category for test | core_course      | course | 0      |
+      | Shared category   | core_customfield | shared | 0      |
     And the following "custom fields" exist:
       | name    | category          | type     | shortname | description | configdata            |
       | Field 1 | Category for test | text     | f1        | d1          |                       |
@@ -15,6 +16,7 @@ Feature: Teachers can edit course custom fields
       | Field 3 | Category for test | checkbox | f3        | d3          |                       |
       | Field 4 | Category for test | date     | f4        | d4          |                       |
       | Field 5 | Category for test | select   | f5        | d5          | {"options":"a\nb\nc"} |
+      | Field 6 | Shared category   | text     | shf1      | shd1        |                       |
     And the following "users" exist:
       | username | firstname | lastname | email                |
       | teacher1 | Teacher   | 1        | teacher1@example.com |
@@ -77,7 +79,7 @@ Feature: Teachers can edit course custom fields
   Scenario: Use images in the custom field description
     When I log in as "admin"
     And I navigate to "Courses > Default settings > Course custom fields" in site administration
-    And I click on "Edit" "link" in the "Field 1" "table_row"
+    And I choose the "Edit" item in the "Actions" action menu of the "Field 1" "table_row"
     And I click on "Image" "button" in the "Description" "form_row"
     And I click on "Browse repositories" "button"
     And I click on "Private files" "link" in the ".fp-repo-area" "css_element"
@@ -92,13 +94,12 @@ Feature: Teachers can edit course custom fields
     And I navigate to "Settings" in current page administration
     And I expand all fieldsets
     Then the image at "//div[contains(@class, 'fitem')][contains(., 'Field 1')]/following-sibling::div[1]//img[contains(@src, 'pluginfile.php') and contains(@src, '/core_customfield/description/') and @alt='Example']" "xpath_element" should be identical to "lib/tests/fixtures/gd-logo.png"
-    And I log out
 
   @javascript
   Scenario: Custom field short name must be present and unique
     When I log in as "admin"
     And I navigate to "Courses > Default settings > Course custom fields" in site administration
-    And I click on "Add a new custom field" "link"
+    And I click on "Add field" "link"
     And I click on "Short text" "link"
     And I set the following fields to these values:
       | Name       | Test field |
@@ -108,6 +109,10 @@ Feature: Teachers can edit course custom fields
     And I click on "Save changes" "button" in the "Adding a new Short text" "dialogue"
     Then I should see "The short name can only contain alphanumeric lowercase characters and underscores (_)." in the "Short name" "form_row"
     And I set the field "Short name" to "f1"
+    And I click on "Save changes" "button" in the "Adding a new Short text" "dialogue"
+    Then I should see "Short name already exists" in the "Short name" "form_row"
+    # Let's try to use a shortname that exists in the Shared custom field.
+    And I set the field "Short name" to "shf1"
     And I click on "Save changes" "button" in the "Adding a new Short text" "dialogue"
     Then I should see "Short name already exists" in the "Short name" "form_row"
     And I click on "Cancel" "button" in the "Adding a new Short text" "dialogue"

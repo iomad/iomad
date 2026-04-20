@@ -312,4 +312,4 @@ Feature: Viewing acceptances reports and accepting on behalf of other users
     And I press "Next"
     And I set the field "I agree to the This site policy" to "1"
     When I press "Next"
-    Then I should see "2-step verification"
+    Then I should see "We need to verify your identity"

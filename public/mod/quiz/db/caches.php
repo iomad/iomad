@@ -27,12 +27,10 @@ declare(strict_types=1);
 defined('MOODLE_INTERNAL') || die();
 
 $definitions = [
-    'overrides' => [
-        'mode' => cache_store::MODE_APPLICATION,
+    // Overrides cache keyed by quizid_userid returning all applicable overrides.
+    'quiz_overrides' => [
+        'mode' => core_cache\store::MODE_APPLICATION,
         'simplekeys' => true,
-        'datasource' => '\mod_quiz\cache\overrides',
-        'invalidationevents' => [
-            \mod_quiz\local\override_cache::INVALIDATION_USERDATARESET,
-        ],
+        'datasource' => \mod_quiz\cache\quiz_overrides_cache::class,
     ],
 ];

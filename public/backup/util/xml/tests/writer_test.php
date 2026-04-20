@@ -26,7 +26,6 @@
 namespace core_backup;
 
 use memory_xml_output;
-use phpunit_util;
 use xml_contenttransformer;
 use xml_output;
 use xml_writer;
@@ -282,6 +281,24 @@ final class writer_test extends \basic_testcase {
         $result = $xo->get_allcontents();
         $this->assertEquals($result, '<tagname attrname="attrvalue" /><tagname2 attrname="attrvalue">testsomecontent</tagname2>');
 
+        // Test nullcontent reset.
+        $xo = new memory_xml_output();
+        $xw = new mock_xml_writer($xo);
+        $xw->set_prologue('');
+        $xw->start();
+        $xw->full_tag('tagname', null);
+        $xw->begin_tag('tagname2');
+        $xw->full_tag('tagname3', 'somecontent');
+        $xw->end_tag('tagname2');
+        $xw->stop();
+        $result = $xo->get_allcontents();
+        $expected = <<<XML
+        <tagname /><tagname2>
+          <tagname3>somecontent</tagname3>
+        </tagname2>
+        XML;
+        $this->assertEquals($expected, $result);
+
         // Build a complex XML file and test results against stored file in fixtures
         $xo = new memory_xml_output();
         $xw = new mock_xml_writer($xo);
@@ -315,7 +332,7 @@ final class writer_test extends \basic_testcase {
         $fcontents = file_get_contents($CFG->dirroot . '/backup/util/xml/tests/fixtures/test1.xml');
 
         // Normalise carriage return characters.
-        $fcontents = phpunit_util::normalise_line_endings($fcontents);
+        $fcontents = \core\test\phpunit\phpunit_util::normalise_line_endings($fcontents);
         $this->assertEquals(trim($result), trim($fcontents));
     }
 }

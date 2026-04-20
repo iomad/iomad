@@ -30,15 +30,20 @@ use moodle_url;
 class actionmenu implements templatable, renderable {
 
     /** @var int The course module ID. */
-    private $cmid;
+    private int $cmid;
+
+    /** @var bool Are we using marking workflow? */
+    private bool $markingworkflow;
 
     /**
      * Constructor for this object.
      *
      * @param int $cmid The course module ID.
+     * @param bool $markingworkflow Are we using marking workflow?
      */
-    public function __construct(int $cmid) {
+    public function __construct(int $cmid, bool $markingworkflow) {
         $this->cmid = $cmid;
+        $this->markingworkflow = $markingworkflow;
     }
 
     /**
@@ -51,6 +56,11 @@ class actionmenu implements templatable, renderable {
         $return = [];
 
         if (has_capability('mod/assign:grade', \context_module::instance($this->cmid))) {
+            // If we are using multiple markers, then we'll have marker columns which need links to the marker page.
+            if ($this->markingworkflow) {
+                $gradelink = new moodle_url('/mod/assign/view.php', ['id' => $this->cmid, 'action' => 'marker']);
+                $return['marklink'] = $gradelink->out(false);
+            }
             $gradelink = new moodle_url('/mod/assign/view.php', ['id' => $this->cmid, 'action' => 'grader']);
             $return['gradelink'] = $gradelink->out(false);
         }

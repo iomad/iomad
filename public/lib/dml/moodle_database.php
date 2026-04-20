@@ -454,7 +454,6 @@ abstract class moodle_database {
                     defined('BEHAT_SITE_RUNNING')) {
 
                     // Set list of tables that are updated.
-                    require_once(__DIR__.'/../testing/classes/util.php');
                     testing_util::set_table_modified_by_sql($sql);
                 }
         }
@@ -2917,6 +2916,18 @@ abstract class moodle_database {
      */
     public function perf_get_reads_replica(): int {
         return 0;
+    }
+
+    /**
+     * Mark one or more tables as requiring reads from the primary (writer) connection.
+     *
+     * This is useful in a read replica setup, where code wants to avoid subtle race
+     * conditions by ensuring reads are routed to the writer before an imminent write.
+     *
+     * @param string ...$tables Unprefixed table names (e.g., 'user', 'task_adhoc').
+     */
+    public function mark_tables_for_primary(string ...$tables): void {
+        // No-op by default. Drivers supporting read replicas override this.
     }
 
     /**

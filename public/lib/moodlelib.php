@@ -501,12 +501,6 @@ define('MOD_PURPOSE_CONTENT', 'content');
 define('MOD_PURPOSE_INTERACTIVECONTENT', 'interactivecontent');
 /** Module purpose other */
 define('MOD_PURPOSE_OTHER', 'other');
-/**
- * Module purpose interface
- * @deprecated since Moodle 4.4
- * @todo MDL-80701 Remove in Moodle 4.8
-*/
-define('MOD_PURPOSE_INTERFACE', 'interface');
 
 /** True if module can be quickly created without filling a previous form. */
 define('FEATURE_QUICKCREATE', 'quickcreate');
@@ -1266,7 +1260,7 @@ function purge_caches($options = []) {
  * Purge all non-MUC caches not otherwise purged in purge_caches.
  *
  * IMPORTANT - If you are adding anything here to do with the cache directory you should also have a look at
- * {@link phpunit_util::reset_dataroot()}
+ * {@link \core\test\phpunit\phpunit_util::reset_dataroot()}
  */
 function purge_other_caches() {
     global $DB, $CFG;
@@ -2652,7 +2646,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
     }
 
     // Check visibility of activity to current user; includes visible flag, conditional availability, etc.
-    if ($cm && !$cm->uservisible) {
+    if ($cm && !$cm->uservisible && !$cm->is_visible_on_course_page()) {
         if ($preventredirect) {
             throw new require_login_exception('Activity is hidden');
         }
@@ -2663,24 +2657,38 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
         redirect(course_get_url($course), $message, null, \core\output\notification::NOTIFY_ERROR);
     }
 
-    // Set the global $COURSE.
-    if ($cm) {
-        $PAGE->set_cm($cm, $course);
-        $PAGE->set_pagelayout('incourse');
-    } else if (!empty($courseorid)) {
-        $PAGE->set_course($course);
-    }
-
-    foreach ($afterlogins as $plugintype => $plugins) {
-        foreach ($plugins as $pluginfunction) {
-            $pluginfunction($courseorid, $autologinguest, $cm, $setwantsurltome, $preventredirect);
+    if ($cm && !$cm->uservisible) {
+        if ($cm->is_visible_on_course_page()) {
+            if ($preventredirect) {
+                throw new require_login_exception('Activity is restricted');
+            }
+            $url = \core\router\util::get_path_for_callable(
+                [\core_course\route\controller\restricted_module::class, 'restricted_module_page'],
+                ['cm' => $cm->id],
+            );
+            redirect($url, '', null);
         }
-    }
+    } else {
+        // Set the global $COURSE.
+        if ($cm) {
+            $PAGE->set_cm($cm, $course);
+            $PAGE->set_pagelayout('incourse');
+        } else if (!empty($courseorid)) {
+            $PAGE->set_course($course);
+        }
 
-    // Finally access granted, update lastaccess times.
-    // Do not update access time for webservice or ajax requests.
-    if (!WS_SERVER && !AJAX_SCRIPT) {
-        user_accesstime_log($course->id);
+        foreach ($afterlogins as $plugintype => $plugins) {
+            foreach ($plugins as $pluginfunction) {
+                $pluginfunction($courseorid, $autologinguest, $cm, $setwantsurltome, $preventredirect);
+            }
+        }
+
+        // Finally access granted, update lastaccess times.
+        // Do not update access time for webservice or ajax requests.
+        if (!WS_SERVER && !AJAX_SCRIPT) {
+            user_accesstime_log($course->id);
+        }
+
     }
 }
 
@@ -4879,7 +4887,7 @@ function remove_course_contents($courseid, $showfeedback = true, ?array $options
 
             if ($instances) {
                 foreach ($instances as $cm) {
-                    // Warning! there is very similar code in course_delete_module.
+                    // Warning! there is very similar code in cmactions::delete.
                     // If you are changing this code, you probably need to change that too.
                     if (function_exists($moddelete)) {
                         // This purges all module data in related tables, extra user prefs, settings, etc.
@@ -5110,10 +5118,12 @@ function shift_course_mod_dates($modname, $fields, $timeshift, $courseid, $modid
  * This function will empty a course of user data.
  * It will retain the activities and the structure of the course.
  *
- * @param object $data an object containing all the settings including courseid (without magic quotes)
+ * @param object $data an object containing all the settings including courseid (without magic quotes).
+ * @param \core_course\exception\reset_timeout|null $timeout An optional timeout. This will be thrown if the time limit is exceeded.
+ * @param \core\progress\base|null $progress Progress component, used for tracking process when called asynchronously.
  * @return array status array of array component, item, error
  */
-function reset_course_userdata($data) {
+function reset_course_userdata($data, ?\core_course\exception\reset_timeout $timeout = null, ?core\progress\base $progress = null) {
     global $CFG, $DB;
     require_once($CFG->libdir.'/gradelib.php');
     require_once($CFG->libdir.'/completionlib.php');
@@ -5143,11 +5153,37 @@ function reset_course_userdata($data) {
     // Result array: component, item, error.
     $status = array();
 
+    $progress ??= new core\progress\none();
+    $progressitems = [
+        'startdate' => !empty($data->reset_start_date) && $data->timeshift,
+        'enddate' => !empty($data->reset_end_date) || ($data->timeshift > 0 && $data->reset_end_date_old),
+        'events' => !empty($data->reset_events),
+        'notes' => !empty($data->reset_notes),
+        'blogs' => !empty($data->delete_blog_associations),
+        'completion' => !empty($data->reset_completion),
+        'competencies' => !empty($data->reset_competency_ratings),
+        'roleoverrides' => !empty($data->reset_roles_overrides),
+        'roles' => !empty($data->reset_roles_local),
+        'users' => !empty($data->unenrol_users),
+        'groupmembers' => !empty($data->reset_groups_members),
+        'groups' => !empty($data->reset_groups_remove),
+        'groupingmembers' => !empty($data->reset_groupings_members),
+        'groupings' => !empty($data->reset_groupings_remove),
+        'mods' => true,
+        'gradebookitems' => !empty($data->reset_gradebook_items),
+        'gradebookgrades' => !empty($data->reset_gradebook_grades),
+        'comments' => !empty($data->reset_comments),
+    ];
+    $progressitems = array_filter($progressitems);
+    $progress->start_progress(get_string('resetcourse'), count($progressitems));
+
     // Start the resetting.
     $componentstr = get_string('general');
 
     // Move the course start time.
     if (!empty($data->reset_start_date) and $data->timeshift) {
+        $itemstr = get_string('date');
+        $progress->start_progress($itemstr);
         // Change course start data.
         $DB->set_field('course', 'startdate', $data->reset_start_date, array('id' => $data->courseid));
         // Update all course and group events - do not move activity events.
@@ -5182,67 +5218,102 @@ function reset_course_userdata($data) {
             \completion_criteria_date::update_date($data->courseid, $data->timeshift);
         }
 
-        $status[] = ['component' => $componentstr, 'item' => get_string('date'), 'error' => false];
+        $status[] = ['component' => $componentstr, 'item' => $itemstr, 'error' => false];
+        $progress->end_progress();
+        // If the timeout has been defined and it's been exceeded, throw the exception.
+        \core_course\exception\reset_timeout::throw_if_expired($timeout);
     }
 
     if (!empty($data->reset_end_date)) {
         // If the user set a end date value respect it.
         $DB->set_field('course', 'enddate', $data->reset_end_date, array('id' => $data->courseid));
+        $progress->increment_progress();
+        \core_course\exception\reset_timeout::throw_if_expired($timeout);
     } else if ($data->timeshift > 0 && $data->reset_end_date_old) {
         // If there is a time shift apply it to the end date as well.
         $enddate = $data->reset_end_date_old + $data->timeshift;
         $DB->set_field('course', 'enddate', $enddate, array('id' => $data->courseid));
+        $progress->increment_progress();
+        \core_course\exception\reset_timeout::throw_if_expired($timeout);
     }
 
     if (!empty($data->reset_events)) {
+        $itemstr = get_string('deleteevents', 'calendar');
+        $progress->start_progress($itemstr);
         $DB->delete_records('event', array('courseid' => $data->courseid));
-        $status[] = array('component' => $componentstr, 'item' => get_string('deleteevents', 'calendar'), 'error' => false);
+        $status[] = ['component' => $componentstr, 'item' => $itemstr, 'error' => false];
+        $progress->end_progress();
+        \core_course\exception\reset_timeout::throw_if_expired($timeout);
     }
 
     if (!empty($data->reset_notes)) {
         require_once($CFG->dirroot.'/notes/lib.php');
+        $itemstr = get_string('deletenotes', 'notes');
+        $progress->start_progress($itemstr);
         note_delete_all($data->courseid);
-        $status[] = array('component' => $componentstr, 'item' => get_string('deletenotes', 'notes'), 'error' => false);
+        $status[] = ['component' => $componentstr, 'item' => $itemstr, 'error' => false];
+        $progress->end_progress();
+        \core_course\exception\reset_timeout::throw_if_expired($timeout);
     }
 
     if (!empty($data->delete_blog_associations)) {
         require_once($CFG->dirroot.'/blog/lib.php');
+        $itemstr = get_string('deleteblogassociations', 'blog');
+        $progress->start_progress($itemstr);
         blog_remove_associations_for_course($data->courseid);
-        $status[] = array('component' => $componentstr, 'item' => get_string('deleteblogassociations', 'blog'), 'error' => false);
+        $status[] = ['component' => $componentstr, 'item' => $itemstr, 'error' => false];
+        $progress->end_progress();
+        \core_course\exception\reset_timeout::throw_if_expired($timeout);
     }
 
     if (!empty($data->reset_completion)) {
         // Delete course and activity completion information.
+        $itemstr = get_string('deletecompletiondata', 'completion');
+        $progress->start_progress($itemstr);
         $course = $DB->get_record('course', array('id' => $data->courseid));
         $cc = new completion_info($course);
         $cc->delete_all_completion_data();
-        $status[] = array('component' => $componentstr,
-                'item' => get_string('deletecompletiondata', 'completion'), 'error' => false);
+        $status[] = ['component' => $componentstr, 'item' => $itemstr, 'error' => false];
+        $progress->end_progress();
+        \core_course\exception\reset_timeout::throw_if_expired($timeout);
     }
 
     if (!empty($data->reset_competency_ratings)) {
+        $itemstr = get_string('deletecompetencyratings', 'core_competency');
+        $progress->start_progress($itemstr);
         \core_competency\api::hook_course_reset_competency_ratings($data->courseid);
-        $status[] = array('component' => $componentstr,
-            'item' => get_string('deletecompetencyratings', 'core_competency'), 'error' => false);
+        $status[] = ['component' => $componentstr, 'item' => $itemstr, 'error' => false];
+        $progress->end_progress();
+        \core_course\exception\reset_timeout::throw_if_expired($timeout);
     }
 
     $componentstr = get_string('roles');
 
     if (!empty($data->reset_roles_overrides)) {
+        $itemstr = get_string('deletecourseoverrides', 'role');
         $children = $context->get_child_contexts();
+        $progress->start_progress($itemstr, count($children));
         foreach ($children as $child) {
             $child->delete_capabilities();
+            $progress->increment_progress();
         }
         $context->delete_capabilities();
-        $status[] = array('component' => $componentstr, 'item' => get_string('deletecourseoverrides', 'role'), 'error' => false);
+        $status[] = ['component' => $componentstr, 'item' => $itemstr, 'error' => false];
+        $progress->end_progress();
+        \core_course\exception\reset_timeout::throw_if_expired($timeout);
     }
 
     if (!empty($data->reset_roles_local)) {
+        $itemstr = get_string('deletelocalroles', 'role');
         $children = $context->get_child_contexts();
+        $progress->start_progress($itemstr, count($children));
         foreach ($children as $child) {
             role_unassign_all(array('contextid' => $child->id));
+            $progress->increment_progress();
         }
-        $status[] = array('component' => $componentstr, 'item' => get_string('deletelocalroles', 'role'), 'error' => false);
+        $status[] = ['component' => $componentstr, 'item' => $itemstr, 'error' => false];
+        $progress->end_progress();
+        \core_course\exception\reset_timeout::throw_if_expired($timeout);
     }
 
     // First unenrol users - this cleans some of related user data too, such as forum subscriptions, tracking, etc.
@@ -5258,7 +5329,9 @@ function reset_course_userdata($data) {
         }
 
         $usersroles = enrol_get_course_users_roles($data->courseid);
+        $progress->start_progress(get_string('unenrol', 'enrol'), count($data->unenrol_users));
         foreach ($data->unenrol_users as $withroleid) {
+            $progress->start_progress(get_string('unenrolroleusers', 'enrol'));
             if ($withroleid) {
                 $sql = "SELECT ue.*
                           FROM {user_enrolments} ue
@@ -5299,47 +5372,70 @@ function reset_course_userdata($data) {
                     $plugin->unenrol_user($instance, $ue->userid);
                 }
                 $data->unenrolled[$ue->userid] = $ue->userid;
+                $progress->progress();
+                \core_course\exception\reset_timeout::throw_if_expired($timeout);
             }
             $rs->close();
+            $progress->end_progress();
+            \core_course\exception\reset_timeout::throw_if_expired($timeout);
         }
+        $progress->end_progress();
+        \core_course\exception\reset_timeout::throw_if_expired($timeout);
     }
     if (!empty($data->unenrolled)) {
-        $status[] = array(
+        $status[] = [
             'component' => $componentstr,
             'item' => get_string('unenrol', 'enrol').' ('.count($data->unenrolled).')',
             'error' => false
-        );
+        ];
     }
 
     $componentstr = get_string('groups');
 
     // Remove all group members.
     if (!empty($data->reset_groups_members)) {
+        $itemstr = get_string('removegroupsmembers', 'group');
+        $progress->start_progress($itemstr);
         groups_delete_group_members($data->courseid);
-        $status[] = array('component' => $componentstr, 'item' => get_string('removegroupsmembers', 'group'), 'error' => false);
+        $status[] = ['component' => $componentstr, 'item' => $itemstr, 'error' => false];
+        $progress->end_progress();
+        \core_course\exception\reset_timeout::throw_if_expired($timeout);
     }
 
     // Remove all groups.
     if (!empty($data->reset_groups_remove)) {
+        $itemstr = get_string('deleteallgroups', 'group');
+        $progress->start_progress($itemstr);
         groups_delete_groups($data->courseid, false);
-        $status[] = array('component' => $componentstr, 'item' => get_string('deleteallgroups', 'group'), 'error' => false);
+        $status[] = ['component' => $componentstr, 'item' => get_string('deleteallgroups', 'group'), 'error' => false];
+        $progress->end_progress();
+        \core_course\exception\reset_timeout::throw_if_expired($timeout);
     }
 
     // Remove all grouping members.
     if (!empty($data->reset_groupings_members)) {
+        $itemstr = get_string('removegroupingsmembers', 'group');
+        $progress->start_progress($itemstr);
         groups_delete_groupings_groups($data->courseid, false);
-        $status[] = array('component' => $componentstr, 'item' => get_string('removegroupingsmembers', 'group'), 'error' => false);
+        $status[] = ['component' => $componentstr, 'item' => $itemstr, 'error' => false];
+        $progress->end_progress();
+        \core_course\exception\reset_timeout::throw_if_expired($timeout);
     }
 
     // Remove all groupings.
     if (!empty($data->reset_groupings_remove)) {
+        $itemstr = get_string('deleteallgroupings', 'group');
+        $progress->start_progress($itemstr);
         groups_delete_groupings($data->courseid, false);
-        $status[] = array('component' => $componentstr, 'item' => get_string('deleteallgroupings', 'group'), 'error' => false);
+        $status[] = ['component' => $componentstr, 'item' => $itemstr, 'error' => false];
+        $progress->end_progress();
+        \core_course\exception\reset_timeout::throw_if_expired($timeout);
     }
 
     // Look in every instance of every module for data to delete.
     $unsupportedmods = array();
     if ($allmods = $DB->get_records('modules') ) {
+        $progress->start_progress(get_string('activities'), count($allmods));
         foreach ($allmods as $mod) {
             $modname = $mod->name;
             $modfile = $CFG->dirroot.'/mod/'. $modname.'/lib.php';
@@ -5364,11 +5460,15 @@ function reset_course_userdata($data) {
             }
             // Update calendar events for all modules.
             course_module_bulk_update_calendar_events($modname, $data->courseid);
+            $progress->increment_progress();
+            \core_course\exception\reset_timeout::throw_if_expired($timeout);
         }
         // Purge the course cache after resetting course start date. MDL-76936
         if ($data->timeshift) {
             course_modinfo::purge_course_cache($data->courseid);
         }
+        $progress->end_progress();
+        \core_course\exception\reset_timeout::throw_if_expired($timeout);
     }
 
     // Mention unsupported mods.
@@ -5385,22 +5485,33 @@ function reset_course_userdata($data) {
     $componentstr = get_string('gradebook', 'grades');
     // Reset gradebook,.
     if (!empty($data->reset_gradebook_items)) {
+        $itemstr = get_string('removeallcourseitems', 'grades');
+        $progress->start_progress($itemstr);
         remove_course_grades($data->courseid, false);
         grade_grab_course_grades($data->courseid);
         grade_regrade_final_grades($data->courseid, async: true);
-        $status[] = array('component' => $componentstr, 'item' => get_string('removeallcourseitems', 'grades'), 'error' => false);
+        $status[] = ['component' => $componentstr, 'item' => $itemstr, 'error' => false];
+        $progress->end_progress();
+        \core_course\exception\reset_timeout::throw_if_expired($timeout);
 
     } else if (!empty($data->reset_gradebook_grades)) {
+        $itemstr = get_string('removeallcoursegrades', 'grades');
+        $progress->start_progress($itemstr);
         grade_course_reset($data->courseid);
-        $status[] = array('component' => $componentstr, 'item' => get_string('removeallcoursegrades', 'grades'), 'error' => false);
+        $status[] = ['component' => $componentstr, 'item' => $itemstr, 'error' => false];
+        $progress->end_progress();
+        \core_course\exception\reset_timeout::throw_if_expired($timeout);
     }
     // Reset comments.
     if (!empty($data->reset_comments)) {
         \core_comment\manager::reset_course_page_comments($context);
+        $progress->increment_progress();
+        \core_course\exception\reset_timeout::throw_if_expired($timeout);
     }
 
     $event = \core\event\course_reset_ended::create($eventparams);
     $event->trigger();
+    $progress->end_progress();
 
     return $status;
 }
@@ -5456,6 +5567,7 @@ function get_mailer($action='get') {
                 $mailer->Body             = "";
                 $mailer->AltBody          = "";
                 $mailer->ConfirmReadingTo = "";
+                $mailer->MessageID        = "";
 
                 $mailer->clearAllRecipients();
                 $mailer->clearReplyTos();
@@ -5926,7 +6038,12 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
                 $attachment = $CFG->dataroot . '/' . $attachment;
             }
 
-            $mail->addAttachment($attachment, $attachname, 'base64', $mimetype);
+            if ($mimetype == 'text/calendar') {
+                $icalcontent = file_get_contents($attachment);
+                $mail->Ical = $icalcontent;
+            } else {
+                $mail->addAttachment($attachment, $attachname, 'base64', $mimetype);
+            }
         }
     }
 
@@ -7869,14 +7986,23 @@ function moodle_setlocale($locale='') {
 /**
  * Count words in a string.
  *
- * Words are defined as things between whitespace.
+ * Words are defined as things between whitespace. Developments have tried to ensure that this
+ * method gives the same results as Libre Office, MS Word, etc. However, word-counting rules are
+ * subtle, and not identical between languages, so there may be differences in non-English languages.
  *
  * @category string
  * @param string $string The text to be searched for words. May be HTML.
- * @param int|null $format
+ * @param int|null $format a FORMAT_... constant. In the API this is optional,
+ *      but really, it is required to get accurate results, so should be passed.
  * @return int The count of words in the specified string
  */
 function count_words($string, $format = null) {
+    // If format is plain, remove < characters that are attached to non-HTML words.
+    if ($format === null || $format == FORMAT_PLAIN) {
+        // Remove < that is attached to a word but doesn't form a valid HTML tag.
+        // This matches < followed by word characters that don't have a closing >.
+        $string = preg_replace('/(\w|^|\s)<(?![^<>]*>)(?=\w)/u', '$1', $string);
+    }
     // Before stripping tags, add a space after the close tag of anything that is not obviously inline.
     // Also, br is a special case because it definitely delimits a word, but has no close tag.
     $string = preg_replace('~
@@ -9933,21 +10059,39 @@ function mnet_get_idp_jump_url($user) {
 function get_home_page() {
     global $CFG;
 
-    if (isloggedin() && !empty($CFG->defaulthomepage)) {
-        // If dashboard is disabled, home will be set to default page.
+    $homeenabled = !empty($CFG->enablemyhome);
+
+    if (isloggedin() && isset($CFG->defaulthomepage) && $CFG->defaulthomepage !== '') {
+        // If dashboard, mycourses or home is disabled, home will be set to default page.
         $defaultpage = get_default_home_page();
-        if ($CFG->defaulthomepage == HOMEPAGE_MY && (!isguestuser() || !empty($CFG->allowguestmymoodle))) {
+        if ($CFG->defaulthomepage == HOMEPAGE_SITE) {
+            if ($homeenabled) {
+                return HOMEPAGE_SITE;
+            } else {
+                return $defaultpage;
+            }
+        } else if ($CFG->defaulthomepage == HOMEPAGE_MY && (!isguestuser() || !empty($CFG->allowguestmymoodle))) {
             if (!empty($CFG->enabledashboard)) {
                 return HOMEPAGE_MY;
             } else {
                 return $defaultpage;
             }
         } else if ($CFG->defaulthomepage == HOMEPAGE_MYCOURSES && !isguestuser()) {
-            return HOMEPAGE_MYCOURSES;
+            if (!empty($CFG->enablemycourses)) {
+                return HOMEPAGE_MYCOURSES;
+            } else {
+                return $defaultpage;
+            }
         } else if ($CFG->defaulthomepage == HOMEPAGE_USER && !isguestuser()) {
             $userhomepage = get_user_preferences('user_home_page_preference', $defaultpage);
+            if (!$homeenabled && $userhomepage == HOMEPAGE_SITE) {
+                $userhomepage = $defaultpage;
+            }
             if (empty($CFG->enabledashboard) && $userhomepage == HOMEPAGE_MY) {
                 // If the user was using the dashboard but it's disabled, return the default home page.
+                $userhomepage = $defaultpage;
+            } else if (empty($CFG->enablemycourses) && $userhomepage == HOMEPAGE_MYCOURSES) {
+                // If the user was using my courses but it's disabled, return the default home page.
                 $userhomepage = $defaultpage;
             } else if (get_default_home_page_url()) {
                 return HOMEPAGE_URL;
@@ -9957,19 +10101,37 @@ function get_home_page() {
             return HOMEPAGE_URL;
         }
     }
+    if (!$homeenabled && isloggedin()) {
+        return get_default_home_page();
+    }
     return HOMEPAGE_SITE;
 }
 
 /**
  * Returns the default home page to display if current one is not defined or can't be applied.
- * The default behaviour is to return Dashboard if it's enabled or My courses page if it isn't.
+ * The default behaviour is to return Dashboard if enabled, then My Courses, then Site Home,
+ * or User Preference page if all three are disabled.
  *
  * @return int The default home page.
  */
 function get_default_home_page(): int {
     global $CFG;
 
-    return (!isset($CFG->enabledashboard) || $CFG->enabledashboard) ? HOMEPAGE_MY : HOMEPAGE_MYCOURSES;
+    // Priority: Dashboard → My Courses → Site Home → User Preference page.
+    if (!isset($CFG->enabledashboard) || $CFG->enabledashboard) {
+        return HOMEPAGE_MY;
+    }
+
+    if (!isset($CFG->enablemycourses) || $CFG->enablemycourses) {
+        return HOMEPAGE_MYCOURSES;
+    }
+
+    if (!isset($CFG->enablemyhome) || $CFG->enablemyhome) {
+        return HOMEPAGE_SITE;
+    }
+
+    // All three disabled - redirect to User Preference page.
+    return HOMEPAGE_USER;
 }
 
 /**

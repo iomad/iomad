@@ -25,6 +25,7 @@
 namespace mod_quiz\output;
 
 use core_question\local\bank\question_version_status;
+use mod_quiz\question\bank\qbank_helper;
 use \mod_quiz\structure;
 use \html_writer;
 use qbank_previewquestion\question_preview_options;
@@ -101,8 +102,11 @@ class edit_renderer extends \plugin_renderer_base {
 
             if ($structure->is_last_section($section)) {
                 $output .= \html_writer::start_div('last-add-menu');
-                $output .= html_writer::tag('span', $this->add_menu_actions($structure, 0,
-                        $pageurl, $contexts, $pagevars), ['class' => 'add-menu-outer']);
+                $output .= html_writer::tag(
+                    'span',
+                    $this->add_menu_actions($structure, 0, $pageurl, $contexts, $pagevars),
+                    ['class' => 'add-menu-outer pe-3']
+                );
                 $output .= \html_writer::end_div();
             }
 
@@ -121,6 +125,7 @@ class edit_renderer extends \plugin_renderer_base {
                 $thiscontext->id,
                 $quizobj->get_cm()->id,
                 $quizobj->get_cm()->id,
+                $quizobj->get_courseid(),
             ]);
 
             $this->page->requires->js_call_amd('mod_quiz/modal_add_random_question', 'init', [
@@ -130,6 +135,7 @@ class edit_renderer extends \plugin_renderer_base {
                 $pageurl->out_as_local_url(true),
                 $pageurl->param('cmid'),
                 \core\plugininfo\qbank::is_plugin_enabled(\qbank_managecategories\helper::PLUGINNAME),
+                $quizobj->get_courseid(),
             ]);
 
             // Include the question chooser.
@@ -588,9 +594,11 @@ class edit_renderer extends \plugin_renderer_base {
 
         if ($structure->is_first_slot_on_page($slot)) {
             // Add the add-menu at the page level.
-            $addmenu = html_writer::tag('span', $this->add_menu_actions($structure,
-                    $pagenumber, $pageurl, $contexts, $pagevars),
-                    ['class' => 'add-menu-outer']);
+            $addmenu = html_writer::tag(
+                'span',
+                $this->add_menu_actions($structure, $pagenumber, $pageurl, $contexts, $pagevars),
+                ['class' => 'add-menu-outer pe-2']
+            );
 
             $addquestionform = $this->add_question_form($structure,
                     $pagenumber, $pageurl, $pagevars);
@@ -802,7 +810,7 @@ class edit_renderer extends \plugin_renderer_base {
         ];
 
         $data['versionoptions'] = [];
-        if ($structure->get_slot_by_number($slot)->qtype !== 'random') {
+        if (!$structure->get_slot_by_number($slot)->random) {
             $data['versionselection'] = true;
             $data['versionoption'] = $structure->get_version_choices_for_slot($slot);
         }
@@ -846,7 +854,7 @@ class edit_renderer extends \plugin_renderer_base {
      */
     public function get_question_name_for_slot(structure $structure, int $slot, \moodle_url $pageurl): string {
         // Display the link to the question (or do nothing if question has no url).
-        if ($structure->get_question_type_for_slot($slot) === 'random') {
+        if ($structure->get_slot_by_number($slot)->random) {
             $questionname = $this->random_question($structure, $slot, $pageurl);
         } else {
             $questionname = $this->question_name($structure, $slot, $pageurl);
@@ -868,7 +876,7 @@ class edit_renderer extends \plugin_renderer_base {
         $qtype = $structure->get_question_type_for_slot($slot);
         $slotinfo = $structure->get_slot_by_number($slot);
         $questionicons = '';
-        if ($qtype !== 'random' && question_bank::is_qtype_usable($qtype)) {
+        if (!$slotinfo->random && question_bank::is_qtype_usable($qtype)) {
             $questionicons .= $this->question_preview_icon($structure->get_quiz(),
                     $structure->get_question_in_slot($slot),
                     null, null, $slotinfo->requestedversion ?: question_preview_options::ALWAYS_LATEST);
@@ -889,9 +897,15 @@ class edit_renderer extends \plugin_renderer_base {
      * @return string The markup for the move action.
      */
     public function question_move_icon(structure $structure, $slot) {
-        return html_writer::link(new \moodle_url('#'),
-            $this->pix_icon('i/dragdrop', get_string('move'), 'moodle', ['class' => 'iconsmall', 'title' => '']),
-            ['class' => 'editing_move', 'data-action' => 'move']
+        $slotnumber = $structure->get_displayed_number_for_slot($slot);
+        return html_writer::link(
+            new \moodle_url('#'),
+            $this->pix_icon('i/dragdrop', '', 'moodle', ['class' => 'iconsmall']),
+            [
+                'class' => 'editing_move',
+                'data-action' => 'move',
+                'aria-label' => get_string('movequestionnumber', 'quiz', $slotnumber),
+            ]
         );
     }
 
@@ -983,13 +997,14 @@ class edit_renderer extends \plugin_renderer_base {
         $url = new \moodle_url('repaginate.php', ['quizid' => $structure->get_quizid(),
                 'slot' => $slot, 'repag' => $insertpagebreak ? 2 : 1, 'sesskey' => sesskey()]);
 
+        $slotname = $structure->get_displayed_number_for_slot($slot);
         if ($insertpagebreak) {
-            $title = get_string('addpagebreak', 'quiz');
-            $image = $this->image_icon('e/insert_page_break', $title);
+            $title = get_string('addpagebreakafter', 'quiz', $slotname);
+            $image = $this->image_icon('e/insert_page_break', '');
             $action = 'addpagebreak';
         } else {
-            $title = get_string('removepagebreak', 'quiz');
-            $image = $this->image_icon('e/remove_page_break', $title);
+            $title = get_string('removepagebreakafter', 'quiz', $slotname);
+            $image = $this->image_icon('e/remove_page_break', '');
             $action = 'removepagebreak';
         }
 
@@ -998,9 +1013,22 @@ class edit_renderer extends \plugin_renderer_base {
         if (!$structure->can_be_edited()) {
             $disabled = 'disabled';
         }
-        return html_writer::span($this->action_link($url, $image, null, ['title' => $title,
-                    'class' => 'page_split_join cm-edit-action', 'disabled' => $disabled, 'data-action' => $action]),
-                'page_split_join_wrapper');
+        return html_writer::span(
+            $this->action_link(
+                $url,
+                $image,
+                null,
+                [
+                    'title' => $title,
+                    'aria-label' => $title,
+                    'class' => 'page_split_join cm-edit-action btn btn-sm icon-no-margin',
+                    'disabled' => $disabled,
+                    'data-action' => $action,
+                    'role' => 'button',
+                ]
+            ),
+            'page_split_join_wrapper'
+        );
     }
 
     /**
@@ -1018,13 +1046,11 @@ class edit_renderer extends \plugin_renderer_base {
         ];
         if ($structure->is_question_dependent_on_previous_slot($slot)) {
             $title = get_string('questiondependencyremove', 'quiz', $a);
-            $image = $this->pix_icon('t/locked', get_string('questiondependsonprevious', 'quiz'),
-                    'moodle', ['title' => '']);
+            $image = $this->pix_icon('t/locked', '');
             $action = 'removedependency';
         } else {
             $title = get_string('questiondependencyadd', 'quiz', $a);
-            $image = $this->pix_icon('t/unlocked', get_string('questiondependencyfree', 'quiz'),
-                    'moodle', ['title' => '']);
+            $image = $this->pix_icon('t/unlocked', '');
             $action = 'adddependency';
         }
 
@@ -1037,9 +1063,22 @@ class edit_renderer extends \plugin_renderer_base {
         if (!$structure->can_question_depend_on_previous_slot($slot)) {
             $extraclass = ' question_dependency_cannot_depend';
         }
-        return html_writer::span($this->action_link('#', $image, null, ['title' => $title,
-                'class' => 'cm-edit-action', 'disabled' => $disabled, 'data-action' => $action]),
-                'question_dependency_wrapper' . $extraclass);
+        return html_writer::span(
+            $this->action_link(
+                '#',
+                $image,
+                null,
+                [
+                    'title' => $title,
+                    'aria-label' => $title,
+                    'class' => 'cm-edit-action btn btn-link btn-sm icon-no-margin',
+                    'disabled' => $disabled,
+                    'data-action' => $action,
+                    'role' => 'button',
+                ]
+            ),
+            'question_dependency_wrapper' . $extraclass
+        );
     }
 
     /**
@@ -1128,9 +1167,8 @@ class edit_renderer extends \plugin_renderer_base {
         }
 
         $configuretitle = get_string('configurerandomquestion', 'quiz');
-        $qtype = question_bank::get_qtype($question->qtype, false);
-        $namestr = $qtype->local_name();
-        $icon = $this->pix_icon('icon', $namestr, $qtype->plugin_name(), ['class' => 'icon activityicon']);
+        $namestr = get_string('randomquestion', 'quiz');
+        $icon = $this->pix_icon('random', $namestr, 'mod_quiz', ['class' => 'icon activityicon']);
 
         $editicon = $this->pix_icon('t/edit', $configuretitle, 'moodle', ['title' => '']);
         $qbankurlparams = [
@@ -1303,7 +1341,7 @@ class edit_renderer extends \plugin_renderer_base {
         ], 'moodle');
 
         $this->page->requires->strings_for_js([
-                'addpagebreak',
+                'addpagebreakafter',
                 'cannotremoveallsectionslots',
                 'cannotremoveslots',
                 'confirmremovesectionheading',
@@ -1314,7 +1352,7 @@ class edit_renderer extends \plugin_renderer_base {
                 'sectionheadingedit',
                 'sectionheadingremove',
                 'sectionnoname',
-                'removepagebreak',
+                'removepagebreakafter',
                 'questiondependencyadd',
                 'questiondependencyfree',
                 'questiondependencyremove',

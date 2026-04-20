@@ -29,12 +29,6 @@ use core_customfield\output\field_data;
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class question_handler extends \core_customfield\handler {
-
-    /**
-     * @var question_handler
-     */
-    static protected $singleton;
-
     /**
      * @var \context
      */
@@ -46,32 +40,6 @@ class question_handler extends \core_customfield\handler {
     const VISIBLETOTEACHERS = 1;
     /** @var int Field is not displayed in the question display and question preview */
     const NOTVISIBLE = 0;
-
-    /**
-     * Creates the custom field handler and returns a singleton.
-     * Itemid is always zero as the custom fields are the same
-     * for every question across the system.
-     *
-     * @param int $itemid Always zero.
-     * @return \qbank_customfields\customfield\question_handler
-     */
-    public static function create(int $itemid = 0): \core_customfield\handler {
-        if (static::$singleton === null) {
-            self::$singleton = new static(0);
-        }
-        return self::$singleton;
-    }
-
-    /**
-     * Run reset code after unit tests to reset the singleton usage.
-     */
-    public static function reset_caches(): void {
-        if (!PHPUNIT_TEST) {
-            throw new \coding_exception('This feature is only intended for use in unit tests');
-        }
-
-        static::$singleton = null;
-    }
 
     /**
      * The current user can configure custom fields on this component.

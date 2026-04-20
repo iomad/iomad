@@ -27,6 +27,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use core_question\local\bank\question_version_status;
+use core_question\versions;
+
 /**
  * delete old directories and conditionally create backup_temp_ids table
  */
@@ -5226,6 +5229,18 @@ class restore_create_categories_and_questions extends restore_structure_step {
             // we have loaded qcatids there for all parsed questions.
             $data->category = $this->get_mappingid('question_category', $questionmapping->parentitemid);
             $this->process_question_legacy_data($data);
+            if ($data->qtype === 'random') {
+                // Random questions do not exist anymore. Store the data in a temporary record so it can be converted to a set
+                // reference by the activity that uses it.
+                restore_dbops::set_backup_ids_record(
+                    $this->get_restoreid(),
+                    'qtype_random_data',
+                    $data->id,
+                    $questionmapping->id,
+                    info: $data,
+                );
+                return;
+            }
         }
 
         // In the past, there were some very sloppy values of penalty. Fix them.
@@ -5290,6 +5305,11 @@ class restore_create_categories_and_questions extends restore_structure_step {
             }
 
             // Now store the question.
+            if ($data->qtype === 'random') {
+                throw new \core\exception\coding_exception(
+                    'You cannot restore a question with qtype "random". It must be converted to a set reference instead.',
+                );
+            }
             $newitemid = $DB->insert_record('question', $data);
             $this->set_mapping('question', $oldid, $newitemid);
             // Also annotate them as question_created, we need
@@ -5301,9 +5321,55 @@ class restore_create_categories_and_questions extends restore_structure_step {
             $oldqvid = $this->latestversion->id;
             $this->latestversion->questionbankentryid = $this->latestqbe->newid;
             $this->latestversion->questionid = $newitemid;
+            // In case the backed up version was deleted and a new one created in its place, increase the version numbers of
+            // conflicting versions to make room for this one.
+            $transaction = $DB->start_delegated_transaction();
+            if (
+                $DB->record_exists(
+                    'question_versions',
+                    [
+                        'questionbankentryid' => $this->latestversion->questionbankentryid,
+                        'version' => $this->latestversion->version,
+                    ],
+                )
+            ) {
+                // We'll update each higher version and any references one-at-a-time, starting with the highest, to avoid
+                // creating a duplicate questionbankentryid-version combination in question_versions.
+                $moveversions = $DB->get_records_select(
+                    'question_versions',
+                    'questionbankentryid = :questionbankentryid AND version >= :oldversion',
+                    [
+                        'questionbankentryid' => $this->latestversion->questionbankentryid,
+                        'oldversion' => $this->latestversion->version,
+                    ],
+                    'version DESC',
+                );
+                foreach ($moveversions as $moveversion) {
+                    $DB->set_field(
+                        'question_versions',
+                        'version',
+                        $moveversion->version + 1,
+                        [
+                            'questionbankentryid' => $moveversion->questionbankentryid,
+                            'version' => $moveversion->version,
+                        ]
+                    );
+                    $DB->set_field(
+                        'question_references',
+                        'version',
+                        $moveversion->version + 1,
+                        [
+                            'questionbankentryid' => $moveversion->questionbankentryid,
+                            'version' => $moveversion->version,
+                        ]
+                    );
+                }
+                // Ensure the nextversion value has been initialised, and increment it to account for the additional version.
+                versions::get_next_version($this->latestversion->questionbankentryid);
+            }
             $newqvid = $DB->insert_record('question_versions', $this->latestversion);
             $this->set_mapping('question_versions', $oldqvid, $newqvid);
-
+            $transaction->allow_commit();
         } else {
             // By performing this set_mapping() we make get_old/new_parentid() to work for all the
             // children elements of the 'question' one (so qtype plugins will know the question they belong to).
@@ -5311,6 +5377,18 @@ class restore_create_categories_and_questions extends restore_structure_step {
 
             // Also create the question_bank_entry and version mappings, if required.
             $newquestionversion = $DB->get_record('question_versions', ['questionid' => $questionmapping->newitemid]);
+            // Restore the version to ready state if it has been hidden.
+            if (
+                $newquestionversion->status == question_version_status::QUESTION_STATUS_HIDDEN
+                && $this->latestversion->status == question_version_status::QUESTION_STATUS_READY
+            ) {
+                $DB->set_field(
+                    'question_versions',
+                    'status',
+                    question_version_status::QUESTION_STATUS_READY,
+                    ['questionid' => $questionmapping->newitemid],
+                );
+            }
             $this->set_mapping('question_versions', $this->latestversion->id, $newquestionversion->id);
             if (empty($this->latestqbe->newid)) {
                 $this->latestqbe->oldid = $this->latestqbe->id;
@@ -5402,12 +5480,18 @@ class restore_create_categories_and_questions extends restore_structure_step {
             }
             $tagcontextid = $this->cachedcategory->contextid;
             // Add the tag to the question.
-            core_tag_tag::add_item_tag('core_question',
+            $taginstanceid = core_tag_tag::add_item_tag(
+                'core_question',
                 'question',
                 $newquestion,
                 context::instance_by_id($tagcontextid),
-                $tagname
+                $tagname,
             );
+            $tagid = $DB->get_field('tag_instance', 'tagid', ['id' => $taginstanceid]);
+            if ($tagid != $data->id) {
+                // The tag didn't exist already, map the new ID.
+                $this->set_mapping('tag', $data->id, $tagid);
+            }
         }
     }
 
@@ -5485,7 +5569,11 @@ class restore_move_module_questions_categories extends restore_execution_step {
                 // but if that context still exists on the site and the user has access then point question references
                 // to the originals.
                 $originalcontext = context::instance_by_id($contextid, IGNORE_MISSING);
-                if ($originalcontext && has_capability('mod/qbank:view', $originalcontext)) {
+                if (
+                    $this->task->is_samesite()
+                    && $originalcontext
+                    && has_capability('mod/qbank:view', $originalcontext)
+                ) {
                     $originalquestions = get_questions_category(question_get_top_category($contextid), false);
                     $targetcoursecontext = context_course::instance($this->get_courseid());
                     foreach ($originalquestions as $originalquestion) {
@@ -5553,7 +5641,7 @@ class restore_move_module_questions_categories extends restore_execution_step {
                 // From 3.5 onwards, all question categories should be a child of a special category called the "top" category.
                 $info = backup_controller_dbops::decode_backup_temp_info($modulecat->info);
                 if ($after35 && empty($info->parent)) {
-                    $oldtopid = $modulecat->newitemid;
+                    $oldtopid = $modulecat->itemid;
                     $modulecat->newitemid = $top->id;
                 } else {
                     $cat = new stdClass();
@@ -5608,13 +5696,19 @@ class restore_move_module_questions_categories extends restore_execution_step {
                 // We need to check all the question_set_references belonging to this context_module.
                 $references = $DB->get_records('question_set_references', ['usingcontextid' => $newcontext->newitemid]);
                 foreach ($references as $reference) {
-                    $filtercondition = json_decode($reference->filtercondition);
-                    if (!empty($filtercondition->questioncategoryid) &&
-                            in_array($filtercondition->questioncategoryid, $categoryids)) {
-                        // This is one of ours, update the questionscontextid.
-                        $DB->set_field('question_set_references',
-                            'questionscontextid', $newcontext->newitemid,
-                            ['id' => $reference->id]);
+                    $filtercondition = json_decode($reference->filtercondition, true);
+                    if (!array_key_exists('filter', $filtercondition)) {
+                        $filtercondition = \core_question\question_reference_manager::convert_legacy_set_reference_filter_condition(
+                            $filtercondition,
+                        );
+                    }
+                    $questioncategoryid = $filtercondition['filter']['category']['values'][0];
+                    if (in_array($questioncategoryid, $categoryids)) {
+                        // This is one of ours, update the questionscontextid and filtercondition fields.
+                        $reference->questionscontextid = $newcontext->newitemid;
+                        $filtercondition['cat'] = "{$questioncategoryid},{$newcontext->newitemid}";
+                        $reference->filtercondition = json_encode($filtercondition);
+                        $DB->update_record('question_set_references', $reference);
                     }
                 }
             }
@@ -5629,20 +5723,20 @@ class restore_move_module_questions_categories extends restore_execution_step {
                 );
             }
         }
-        // Remove any remaining course-level question categories from the restored course.
+        // Remove any remaining course-level question categories and their questions from the restored course.
         $coursecatsql = "
-            SELECT qc.id AS categoryid
+            SELECT qc.id AS id, qc.contextid AS contextid
               FROM {question_categories} qc
               JOIN {context} c ON c.id = qc.contextid
              WHERE c.contextlevel = :courselevel AND c.instanceid = :courseid
         ";
-        $DB->delete_records_subquery(
-            'question_categories',
-            'id',
-            'categoryid',
+        $categories = $DB->get_records_sql(
             $coursecatsql,
-            ['courselevel' => context_course::LEVEL, 'courseid' => $this->task->get_courseid()]
+            ['courselevel' => context_course::LEVEL, 'courseid' => $this->task->get_courseid()],
         );
+        foreach ($categories as $category) {
+            question_category_delete_safe($category);
+        }
     }
 }
 
@@ -6421,49 +6515,46 @@ trait restore_question_set_reference_data_trait {
     public function process_question_set_reference($data) {
         global $DB;
         $data = (object) $data;
-        $owncontext = $data->usingcontextid == $data->questionscontextid;
         $data->usingcontextid = $this->get_mappingid('context', $data->usingcontextid);
         $data->itemid = $this->get_new_parentid('quiz_question_instance');
-        $filtercondition = json_decode($data->filtercondition, true);
 
-        if (!isset($filtercondition['filter'])) {
-            // Pre-4.3, convert the old filtercondition format to the new format.
-            $filtercondition = \core_question\question_reference_manager::convert_legacy_set_reference_filter_condition(
-                    $filtercondition);
-        }
-
-        // Map category id used for category filter condition and corresponding context id.
-        $oldcategoryid = $filtercondition['filter']['category']['values'][0];
-        // Decide if we're going to refer back to the original category, or to the new category.
-        // Are we restoring to a different site?
-        // Has the original context or category been deleted?
-        // Did the old category belong to the same context as the original set reference?
-        // Are we allowed to use its questions?
-        $questionscontext = context::instance_by_id($data->questionscontextid, IGNORE_MISSING);
-        if (
-            !$this->get_task()->is_samesite()
-            || !$questionscontext
-            || !$DB->record_exists('question_categories', ['id' => $oldcategoryid])
-            || $owncontext
-            || !has_capability('moodle/question:useall', $questionscontext)
-        ) {
-            $newcategoryid = $this->get_mappingid('question_category', $oldcategoryid);
-            $filtercondition['filter']['category']['values'][0] = $newcategoryid;
-        }
+        $originalbankinbackup = (bool) restore_dbops::get_backup_ids_record(
+            $this->get_restoreid(),
+            'questionbank',
+            $data->questionscontextid,
+        );
 
         if ($context = $this->get_mappingid('context', $data->questionscontextid)) {
             $data->questionscontextid = $context;
         } else {
-            $this->log('question_set_reference with old id ' . $data->id .
-                ' referenced question context ' . $data->questionscontextid .
-                ' which was not included in the backup. Therefore, this has been ' .
-                ' restored with the old questionscontextid.', backup::LOG_WARNING);
+            $this->log(
+                "question_set_reference with old id {$data->id} referenced question context "
+                . "{$data->questionscontextid} which was not included in the backup. Therefore, this has been "
+                . "restored with the old questionscontextid.",
+                backup::LOG_WARNING,
+            );
         }
 
-        $filtercondition['cat'] = implode(',', [
-            $filtercondition['filter']['category']['values'][0],
-            $data->questionscontextid,
-        ]);
+        $filtercondition = json_decode($data->filtercondition, true);
+
+        if (!isset($filtercondition['filter'])) {
+            // Pre-4.3, convert the old filtercondition format to the new format.
+            // Don't map tags to new IDs, the plugin will do that below.
+            $filtercondition = \core_question\question_reference_manager::convert_legacy_set_reference_filter_condition(
+                $filtercondition,
+                false,
+            );
+        }
+
+        $qbankfeatureclasses = \core\component::get_plugin_list_with_class('qbank', 'plugin_feature');
+
+        foreach ($qbankfeatureclasses as $qbankfeatureclass) {
+            $qbankfeature = new $qbankfeatureclass();
+            $filters = $qbankfeature->get_question_filters();
+            foreach ($filters as $filter) {
+                $filtercondition = $filter->restore_filtercondition($filtercondition, $data, $this, $originalbankinbackup);
+            }
+        }
 
         $data->filtercondition = json_encode($filtercondition);
 

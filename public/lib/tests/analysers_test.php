@@ -16,6 +16,7 @@
 
 namespace core;
 
+use core\context\coursecat;
 use test_target_course_level_shortname;
 use test_target_shortname;
 
@@ -32,6 +33,8 @@ require_once(__DIR__ . '/../../lib/enrollib.php');
  * @category  test
  * @copyright 2017 David Monllaó {@link http://www.davidmonllao.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ *
+ * @covers    \core\analytics\analyser\courses
  */
 final class analysers_test extends \advanced_testcase {
 
@@ -82,12 +85,31 @@ final class analysers_test extends \advanced_testcase {
     }
 
     /**
+     * Test analyser iterator status with invalid course data.
+     */
+    public function test_no_courses_analyser(): void {
+        $this->resetAfterTest(true);
+
+        $target = new test_target_shortname();
+        $analyser = new \core\analytics\analyser\courses(1, $target, [], [], []);
+
+        $category = $this->getDataGenerator()->create_category();
+        $categorycontext = coursecat::instance($category->id);
+
+        // No courses.
+        $this->assertCount(0, $analyser->get_analysables_iterator(null, [$categorycontext]));
+        $this->assertCount(1, $analyser->get_logs());
+        $this->assertEquals(get_string('nocourses', 'analytics'), $analyser->get_logs()[0]);
+    }
+
+    /**
      * test_site_courses_analyser
      *
      * @return void
      */
     public function test_site_courses_analyser(): void {
         $this->resetAfterTest(true);
+        $this->setAdminUser();
 
         $course1 = $this->getDataGenerator()->create_course();
         $course2 = $this->getDataGenerator()->create_course();

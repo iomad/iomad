@@ -26,23 +26,27 @@
     * none
 
     Context variables required for this template:
-    * overridesnav - must alwasy be present.
-    * addoverridebutton - should only be present if the user has permission to add a new override.
+    * navigation - must always be present.
 
     Example context (json):
     {
-        "id": "url_select_test",
-        "action": "https://example.com/post",
-        "formid": "url_select_form",
-        "sesskey": "sesskey",
-        "navmenu": {
-            "options": [{
+        "navigation": {
+            "name": "tertiarynavigation",
+            "value": "/mod/quiz/edit.php?cmid=123",
+            "baseid": "select-menu56789",
+            "selectedoption": "Complex grading",
+            "options": [
+                {
                     "name": "Questions",
-                    "value": "/mod/quiz/edit.php?cmid=123"
+                    "value": "/mod/quiz/edit.php?cmid=123",
+                    "id": "select-menu-option1",
+                    "selected": false
                 },
                 {
                     "name": "Complex grading",
-                    "value": "/mod/quiz/editgrading.php?cmid=123"
+                    "value": "/mod/quiz/editgrading.php?cmid=123",
+                    "id": "select-menu-option2",
+                    "selected": true
                 }
             ]
         }
@@ -50,10 +54,10 @@
 }}
 <div class="tertiary-navigation">
     <div class="d-flex">
-        {{#navmenu}}
+        {{#navigation}}
             <div class="navitem">
-                {{>core/url_select}}
+                {{>core/tertiary_navigation_selector}}
             </div>
-        {{/navmenu}}
+        {{/navigation}}
     </div>
 </div>

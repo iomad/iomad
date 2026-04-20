@@ -97,7 +97,7 @@ class action_bar extends \core_grades\output\action_bar {
                 $data['groupselector'] = $groupselector->export_for_template($output);
             }
 
-            $resetlink = new moodle_url('/grade/report/user/index.php', ['id' => $courseid, 'group' => 0]);
+            $resetlink = new moodle_url('/grade/report/user/index.php', ['id' => $courseid, 'group' => 0, 'reset' => 1]);
             $baseurl = new moodle_url('/grade/report/user/index.php', ['id' => $courseid]);
             $PAGE->requires->js_call_amd('gradereport_user/user', 'init', [$baseurl->out(false)]);
 
@@ -127,7 +127,7 @@ class action_bar extends \core_grades\output\action_bar {
 
                 $selectoractiveurl = $this->userview === GRADE_REPORT_USER_VIEW_USER ? $viewasotheruser : $viewasmyself;
 
-                $viewasselect = new \core\output\select_menu('viewas', $selectoroptions, $selectoractiveurl->out(false));
+                $viewasselect = new \core\output\select_menu('viewas', $selectoroptions, $selectoractiveurl->out(false), true);
                 $viewasselect->set_label(get_string('viewas', 'core_grades'));
 
                 $data['viewasselector'] = $viewasselect->export_for_template($output);

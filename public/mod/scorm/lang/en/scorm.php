@@ -27,7 +27,7 @@ $string['aicchacptimeout'] = 'AICC HACP timeout';
 $string['aicchacptimeout_desc'] = 'Length of time in minutes that an external AICC HACP session can remain open';
 $string['aicchacpkeepsessiondata'] = 'AICC HACP session data';
 $string['aicchacpkeepsessiondata_desc'] = 'Length of time in days to keep the external AICC HACP session data (a high setting will fill up the table with old data but may be useful when debugging)';
-$string['aiccuserid'] = 'AICC pass numeric user id';
+$string['aiccuserid'] = 'AICC pass numeric user ID';
 $string['aiccuserid_desc'] = 'The AICC standard for usernames is very restrictive compared with Moodle, and allows for alphanumeric characters, dash and underscore only. Periods, spaces and the @ symbol are not permitted. If enabled, user ID numbers are passed to the AICC package instead of usernames.';
 $string['activation'] = 'Activation';
 $string['activityloading'] = 'You will be automatically redirected to the activity in';
@@ -41,7 +41,7 @@ $string['allowapidebug'] = 'Activate API debug and tracing (set the capture mask
 $string['allowedattemptsstudent'] = 'Allowed attempts per student';
 $string['allowtypeexternal'] = 'Enable external package type';
 $string['allowtypeexternalaicc'] = 'Enable direct AICC URL';
-$string['allowtypeexternalaicc_desc'] = 'If enabled this allows a direct url to a simple AICC package';
+$string['allowtypeexternalaicc_desc'] = 'If enabled this allows a direct URL to an AICC package.';
 $string['allowtypelocalsync'] = 'Enable downloaded package type';
 $string['allowtypeaicchacp'] = 'Enable external AICC HACP';
 $string['allowtypeaicchacp_desc'] = 'If enabled this allows AICC HACP external communication without requiring user login for post requests from the external AICC package';
@@ -73,6 +73,7 @@ $string['badarchive'] = 'You must provide a valid zip file';
 $string['browse'] = 'Preview';
 $string['browsed'] = 'Browsed';
 $string['browsemode'] = 'Preview mode';
+$string['browsemodewithname'] = 'Preview mode: {$a}';
 $string['browserepository'] = 'Browse repository';
 $string['cachedef_elements'] = 'Element cache';
 $string['calculatedweight'] = 'Calculated weight';
@@ -262,6 +263,7 @@ $string['lastattempt'] = 'Last completed attempt';
 $string['lastattemptlock'] = 'Lock after final attempt';
 $string['lastattemptlock_help'] = 'If enabled, a student is prevented from launching the SCORM player after using up all their allocated attempts.';
 $string['lastattemptlockdesc'] = 'If enabled, a student is prevented from launching the SCORM player after using up all their allocated attempts.';
+$string['leavepage'] = 'Leave page';
 $string['location'] = 'Show the location bar';
 $string['max'] = 'Max score';
 $string['maximumattempts'] = 'Number of attempts';
@@ -276,15 +278,16 @@ $string['missingparam'] = 'A required parameter is missing or wrong';
 $string['missing_tag'] = 'Missing tag {$a->tag}';
 $string['mode'] = 'Mode';
 $string['modulename'] = 'SCORM package';
-$string['modulename_help'] = 'A SCORM package is a collection of files which are packaged according to an agreed standard for learning objects. The SCORM activity module enables SCORM or AICC packages to be uploaded as a zip file and added to a course.
+$string['modulename_help'] = '###### Key features
+* Add SCORM content packages as zip files
+* Track student progress, completion, and grades
 
-Content is usually displayed over several pages, with navigation between the pages. There are various options for displaying content in a pop-up window, with a table of contents, with navigation buttons etc. SCORM activities generally include questions, with grades being recorded in the gradebook.
-
-SCORM activities may be used
-
-* For presenting multimedia content and animations
-* As an assessment tool';
+###### Ways to use it
+* Import a commercial e-learning SCORM module and track student performance
+* Provide an interactive tutorial and track whether students complete it
+* Deliver a simulation packaged in SCORM format';
 $string['modulename_link'] = 'mod/scorm/view';
+$string['modulename_summary'] = 'Upload and display existing Sharable Content Object Reference Model (SCORM) content. SCORM is commonly used with third-party courseware.';
 $string['modulenameplural'] = 'SCORM packages';
 $string['nav'] = 'Show Navigation';
 $string['nav_help'] = 'This setting specifies whether to show or hide the navigation buttons and their position.
@@ -297,8 +300,8 @@ There are 3 options:
 $string['navdesc'] = 'This setting specifies whether to show or hide navigation buttons and their position.';
 $string['navpositionleft'] = 'Position of navigation buttons from left in pixels.';
 $string['navpositiontop'] = 'Position of navigation buttons from top in pixels.';
-$string['networkdropped'] = 'The SCORM player has determined that your Internet connection is unreliable or has been interrupted. If you continue in this SCORM activity, your progress may not be saved.<br />
-You should exit the activity now, and return when you have a dependable Internet connection.';
+$string['networkdropped'] = 'It looks like you have an unstable internet connection or your session has timed out. Your progress may not be saved. Please exit and relaunch this activity.';
+$string['networkdroppedmobile'] = 'It looks like you have an unstable internet connection or your session has timed out. Your progress may not be saved. Please exit and relaunch this activity. You may wish to return to this activity in the mobile app for a more stable connection.';
 $string['newattempt'] = 'Start a new attempt';
 $string['next'] = 'Continue';
 $string['noactivity'] = 'Nothing to report';
@@ -329,7 +332,7 @@ $string['othersettings'] = 'Additional settings';
 $string['page-mod-scorm-x'] = 'Any SCORM module page';
 $string['pagesize'] = 'Page size';
 $string['package'] = 'Package file';
-$string['package_help'] = 'The package file is a zip (or pif) file containing SCORM/AICC course definition files.';
+$string['package_help'] = 'The package file is a ZIP file containing SCORM or AICC course definition files.';
 $string['packagedir'] = 'Filesystem error: Can\'t create package directory';
 $string['packagefile'] = 'No package file specified';
 $string['packagehdr'] = 'Package';
@@ -392,12 +395,10 @@ $string['scorm:deleteownresponses'] = 'Delete own attempts';
 $string['scorm:savetrack'] = 'Save tracks';
 $string['scorm:skipview'] = 'Skip overview';
 $string['scormtype'] = 'Type';
-$string['scormtype_help'] = 'This setting determines how the package is included in the course. There are up to 4 options:
-
-* Uploaded package - Enables a SCORM package to be chosen via the file picker
-* External SCORM manifest - Enables an imsmanifest.xml URL to be specified. Note: If the URL has a different domain name than your site, then "Downloaded package" is a better option, since otherwise grades are not saved.
-* Downloaded package - Enables a package URL to be specified. The package will be unzipped and saved locally, and updated when the external SCORM package is updated.
-* External AICC URL - this URL is the launch URL for a single AICC Activity.  A psuedo package will be constructed around this.';
+$string['scormtype_help'] = '* Uploaded package - Upload a SCORM file directly from your computer.
+* External SCORM manifest - Link to a remote imsmanifest.xml. (Use \'Downloaded package\' for cross-domain URLs to prevent grade-saving issues.)
+* Downloaded package - Link to a remote ZIP file. The system stores a local copy and updates it automatically when the source file changes.
+* External AICC URL - Link to the launch URL for a single AICC activity.';
 $string['scorm:viewreport'] = 'View reports';
 $string['scorm:viewscores'] = 'View scores';
 $string['scrollbars'] = 'Allow the window to be scrolled';
@@ -424,6 +425,7 @@ $string['syntax'] = 'Syntax error';
 $string['tag_error'] = 'Unknown tag ({$a->tag}) with this content: {$a->value}';
 $string['time'] = 'Time';
 $string['title'] = 'Title';
+$string['toggletableofcontents'] = 'Toggle table of contents';
 $string['toolbar'] = 'Show the toolbar';
 $string['too_many_attributes'] = 'Tag {$a->tag} has too many attributes';
 $string['too_many_children'] = 'Tag {$a->tag} has too many children';
@@ -436,6 +438,7 @@ $string['typeexternal'] = 'External SCORM manifest';
 $string['typelocal'] = 'Uploaded package';
 $string['typelocalsync'] = 'Downloaded package';
 $string['undercontent'] = 'Under content';
+$string['unstablenetwork'] = 'Unstable network';
 $string['unziperror'] = 'An error occurs during package unzip';
 $string['updatefreq'] = 'Auto-update frequency';
 $string['updatefreq_error'] = 'Auto-update frequency can only be set when the package file is hosted externally';

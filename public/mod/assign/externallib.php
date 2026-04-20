@@ -358,6 +358,9 @@ class mod_assign_external extends \mod_assign\external\external_api {
                      'm.maxattempts, ' .
                      'm.markingworkflow, ' .
                      'm.markingallocation, ' .
+                     'm.markercount, ' .
+                     'm.multimarkmethod, ' .
+                     'm.multimarkrounding, ' .
                      'm.markinganonymous, ' .
                      'm.requiresubmissionstatement, '.
                      'm.preventsubmissionnotingroup, '.
@@ -438,6 +441,9 @@ class mod_assign_external extends \mod_assign\external\external_api {
                         'maxattempts' => $module->maxattempts,
                         'markingworkflow' => $module->markingworkflow,
                         'markingallocation' => $module->markingallocation,
+                        'markercount' => $module->markercount,
+                        'multimarkmethod' => $module->multimarkmethod,
+                        'multimarkrounding' => $module->multimarkrounding,
                         'markinganonymous' => $module->markinganonymous,
                         'requiresubmissionstatement' => $module->requiresubmissionstatement,
                         'preventsubmissionnotingroup' => $module->preventsubmissionnotingroup,
@@ -558,6 +564,9 @@ class mod_assign_external extends \mod_assign\external\external_api {
                 'maxattempts' => new external_value(PARAM_INT, 'maximum number of attempts allowed'),
                 'markingworkflow' => new external_value(PARAM_INT, 'enable marking workflow'),
                 'markingallocation' => new external_value(PARAM_INT, 'enable marking allocation'),
+                'markercount' => new external_value(PARAM_INT, 'number of markers'),
+                'multimarkmethod' => new external_value(PARAM_TEXT, 'method to use when combining marks to a final grade'),
+                'multimarkrounding' => new external_value(PARAM_INT, 'rounding direction to use when handling decimal marks'),
                 'markinganonymous' => new external_value(PARAM_INT, 'enable marking anonymous'),
                 'requiresubmissionstatement' => new external_value(PARAM_INT, 'student must accept submission statement'),
                 'preventsubmissionnotingroup' => new external_value(PARAM_INT, 'Prevent submission not in group', VALUE_OPTIONAL),
@@ -1127,7 +1136,7 @@ class mod_assign_external extends \mod_assign\external\external_api {
             list($inorequalsql, $placeholders) = $DB->get_in_or_equal($requestedassignmentids, SQL_PARAMS_NAMED);
 
             $sql = "SELECT auf.id,auf.assignment,auf.userid,auf.locked,auf.mailed,".
-                   "auf.extensionduedate,auf.workflowstate,auf.allocatedmarker ".
+                   "auf.extensionduedate,auf.workflowstate " .
                    "FROM {assign_user_flags} auf ".
                    "WHERE auf.assignment ".$inorequalsql.
                    " ORDER BY auf.assignment, auf.id";
@@ -1143,7 +1152,6 @@ class mod_assign_external extends \mod_assign\external\external_api {
                 $userflag['mailed'] = $rd->mailed;
                 $userflag['extensionduedate'] = $rd->extensionduedate;
                 $userflag['workflowstate'] = $rd->workflowstate;
-                $userflag['allocatedmarker'] = $rd->allocatedmarker;
 
                 if (is_null($currentassignmentid) || ($rd->assignment != $currentassignmentid )) {
                     if (!is_null($assignment)) {
@@ -1197,7 +1205,6 @@ class mod_assign_external extends \mod_assign\external\external_api {
                             'mailed'           => new external_value(PARAM_INT, 'mailed'),
                             'extensionduedate' => new external_value(PARAM_INT, 'extension due date'),
                             'workflowstate'    => new external_value(PARAM_ALPHA, 'marking workflow state', VALUE_OPTIONAL),
-                            'allocatedmarker'  => new external_value(PARAM_INT, 'allocated marker')
                         )
                     )
                 )
@@ -1545,7 +1552,8 @@ class mod_assign_external extends \mod_assign\external\external_api {
             array(
                 'assignmentid' => new external_value(PARAM_INT, 'The assignment id to operate on'),
                 'userid' => new external_value(PARAM_INT, 'The user id the submission belongs to'),
-                'jsonformdata' => new external_value(PARAM_RAW, 'The data from the grading form, encoded as a json array')
+                'jsonformdata' => new external_value(PARAM_RAW, 'The data from the grading form, encoded as a json array'),
+                'marker' => new external_value(PARAM_BOOL, 'Flag, false if grading, true if marking', VALUE_DEFAULT, false),
             )
         );
     }
@@ -1556,12 +1564,12 @@ class mod_assign_external extends \mod_assign\external\external_api {
      * @param int $assignmentid The id of the assignment
      * @param int $userid The id of the user the submission belongs to.
      * @param string $jsonformdata The data from the form, encoded as a json array.
+     * @param bool $marker Are we marking instead of grading?
      * @return array of warnings to indicate any errors.
      * @since Moodle 3.1
      */
-    public static function submit_grading_form($assignmentid, $userid, $jsonformdata) {
+    public static function submit_grading_form($assignmentid, $userid, $jsonformdata, $marker = false) {
         global $CFG, $USER;
-
         require_once($CFG->dirroot . '/mod/assign/locallib.php');
         require_once($CFG->dirroot . '/mod/assign/gradeform.php');
 
@@ -1569,7 +1577,8 @@ class mod_assign_external extends \mod_assign\external\external_api {
                                             array(
                                                 'assignmentid' => $assignmentid,
                                                 'userid' => $userid,
-                                                'jsonformdata' => $jsonformdata
+                                                'marker' => $marker,
+                                                'jsonformdata' => $jsonformdata,
                                             ));
 
         list($assignment, $course, $cm, $context) = self::validate_assign($params['assignmentid']);
@@ -1585,7 +1594,8 @@ class mod_assign_external extends \mod_assign\external\external_api {
             'userid' => $params['userid'],
             'attemptnumber' => $data['attemptnumber'],
             'rownum' => 0,
-            'gradingpanel' => true
+            'gradingpanel' => true,
+            'marker' => $marker,
         );
 
         if (WS_SERVER) {
@@ -1600,7 +1610,6 @@ class mod_assign_external extends \mod_assign\external\external_api {
         // Data is injected into the form by the last param for the constructor.
         $mform = new mod_assign_grade_form(null, $formparams, 'post', '', null, true, $data);
         $validateddata = $mform->get_data();
-
         if ($validateddata) {
             $assignment->save_grade($params['userid'], $validateddata);
         } else {
@@ -2637,8 +2646,13 @@ class mod_assign_external extends \mod_assign\external\external_api {
                 'onlyids' => new external_value(PARAM_BOOL, 'Do not return all user fields', VALUE_DEFAULT, false),
                 'includeenrolments' => new external_value(PARAM_BOOL, 'Do return courses where the user is enrolled',
                                                           VALUE_DEFAULT, true),
-                'tablesort' => new external_value(PARAM_BOOL, 'Apply current user table sorting preferences.',
-                                                          VALUE_DEFAULT, false)
+                'tablesort' => new external_value(
+                    PARAM_BOOL,
+                    'Apply current user table sorting preferences.',
+                    VALUE_DEFAULT,
+                    false
+                ),
+                'marking' => new external_value(PARAM_BOOL, 'Are we marking instead of grading?', VALUE_DEFAULT, false),
             )
         );
     }
@@ -2654,12 +2668,22 @@ class mod_assign_external extends \mod_assign\external\external_api {
      * @param bool $onlyids Only return user ids.
      * @param bool $includeenrolments Return courses where the user is enrolled.
      * @param bool $tablesort Apply current user table sorting params from the grading table.
+     * @param bool $marking Are we marking instead of grading?
      * @return array of warnings and status result
      * @since Moodle 3.1
      * @throws moodle_exception
      */
-    public static function list_participants($assignid, $groupid, $filter, $skip,
-            $limit, $onlyids, $includeenrolments, $tablesort) {
+    public static function list_participants(
+        $assignid,
+        $groupid,
+        $filter,
+        $skip,
+        $limit,
+        $onlyids,
+        $includeenrolments,
+        $tablesort,
+        $marking
+    ) {
         global $DB, $CFG;
         require_once($CFG->dirroot . "/mod/assign/locallib.php");
         require_once($CFG->dirroot . "/user/lib.php");
@@ -2674,7 +2698,8 @@ class mod_assign_external extends \mod_assign\external\external_api {
                                                 'limit' => $limit,
                                                 'onlyids' => $onlyids,
                                                 'includeenrolments' => $includeenrolments,
-                                                'tablesort' => $tablesort
+                                                'tablesort' => $tablesort,
+                                                'marking' => $marking,
                                             ));
         $warnings = array();
 
@@ -2682,6 +2707,7 @@ class mod_assign_external extends \mod_assign\external\external_api {
 
         require_capability('mod/assign:view', $context);
 
+        $assign->set_is_marking($marking);
         $assign->require_view_grades();
 
         $participants = array();
@@ -2729,8 +2755,14 @@ class mod_assign_external extends \mod_assign\external\external_api {
                 // Now we do the expensive lookup of user details because we completed the filtering.
                 if (!$assign->is_blind_marking() && !$params['onlyids']) {
                     $userdetails = user_get_user_details($record, $course, $userfields);
+                    if ($userdetails === null) {
+                        // If user details are not available (e.g. access prevented), fall back to minimal data.
+                        $userdetails = ['id' => $record->id];
+                    } else {
+                        $userdetails['initials'] = core_user::get_initials($record);
+                    }
                 } else {
-                    $userdetails = array('id' => $record->id);
+                    $userdetails = ['id' => $record->id];
                 }
                 $userdetails['fullname'] = $fullname;
                 $userdetails['submitted'] = $record->submitted;
@@ -2769,7 +2801,7 @@ class mod_assign_external extends \mod_assign\external\external_api {
         $userdesc = core_user_external::user_description();
         // List unneeded properties.
         $unneededproperties = [
-            'auth', 'confirmed', 'lang', 'calendartype', 'theme', 'timezone', 'mailformat'
+            'auth', 'confirmed', 'lang', 'calendartype', 'theme', 'timezone', 'mailformat',
         ];
         // Remove unneeded properties for consistency with the previous version.
         foreach ($unneededproperties as $prop) {
@@ -2913,6 +2945,7 @@ class mod_assign_external extends \mod_assign\external\external_api {
         // hasn't asked for user details to be embedded.
         if (!$assign->is_blind_marking() && $embeduser) {
             if ($userdetails = user_get_user_details($participant, $course)) {
+                $userdetails['initials'] = core_user::get_initials($participant);
                 $return['user'] = $userdetails;
             }
         }

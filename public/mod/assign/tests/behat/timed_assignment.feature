@@ -34,16 +34,18 @@ Feature: In a timed assignment, students should confirm before starting the time
   @javascript
   Scenario: Access a timed assignment from the Dashboard
     Given I am logged in as student1
-    When I click on "Timed assignment 1" "link" in the "Calendar" "block"
-    And I click on "Add submission" "link" in the ".modal-footer" "css_element"
+    When I click on today in the mini-calendar block to view the detail
+    And I should see "Timed assignment 1"
+    And I click on "Add submission" "link" in the "//div[contains(concat(' ', normalize-space(@class), ' '), ' card ')][contains(., 'Timed assignment 1')]" "xpath_element"
     Then "Begin assignment" "link" should exist
     And I reload the page
     And "Begin assignment" "link" should exist
     And "#mod_assign_timelimit_block" "css_element" should not exist
     # Repeat the steps to confirm timer doesn't start automatically.
     And I follow "Dashboard"
-    And I click on "Timed assignment 1" "link" in the "Calendar" "block"
-    And I click on "Add submission" "link" in the ".modal-footer" "css_element"
+    And I click on today in the mini-calendar block to view the detail
+    And I should see "Timed assignment 1"
+    And I click on "Add submission" "link" in the "//div[contains(concat(' ', normalize-space(@class), ' '), ' card ')][contains(., 'Timed assignment 1')]" "xpath_element"
     And "Begin assignment" "link" should exist
     And "#mod_assign_timelimit_block" "css_element" should not exist
     # Now start the timer.
@@ -61,16 +63,18 @@ Feature: In a timed assignment, students should confirm before starting the time
       | student1 | CG1   |
       | student2 | CG1   |
     And I am logged in as student1
-    When I click on "Group assignment 2" "link" in the "Calendar" "block"
-    And I click on "Add submission" "link" in the ".modal-footer" "css_element"
+    When I click on today in the mini-calendar block to view the detail
+    And I should see "Group assignment 2"
+    And I click on "Add submission" "link" in the "//div[contains(concat(' ', normalize-space(@class), ' '), ' card ')][contains(., 'Group assignment 2')]" "xpath_element"
     Then "Begin assignment" "link" should exist
     And I reload the page
     And "Begin assignment" "link" should exist
     And "#mod_assign_timelimit_block" "css_element" should not exist
     # Repeat the steps to confirm timer doesn't start automatically.
     And I follow "Dashboard"
-    And I click on "Group assignment 2" "link" in the "Calendar" "block"
-    And I click on "Add submission" "link" in the ".modal-footer" "css_element"
+    And I click on today in the mini-calendar block to view the detail
+    And I should see "Group assignment 2"
+    And I click on "Add submission" "link" in the "//div[contains(concat(' ', normalize-space(@class), ' '), ' card ')][contains(., 'Group assignment 2')]" "xpath_element"
     And "Begin assignment" "link" should exist
     And "#mod_assign_timelimit_block" "css_element" should not exist
     # Now start the timer.

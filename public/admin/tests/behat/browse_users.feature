@@ -67,13 +67,21 @@ Feature: An administrator can browse user accounts
     And I press "Update profile"
     Then I should see "User OneOne"
 
-  @javascript
+  @javascript @accessibility
   Scenario: Suspend and activate user account
     Given I navigate to "Users > Accounts > Browse list of users" in site administration
     And I press "Suspend user account" action in the "User One" report row
-    And I should see "Suspended" in the "User One" "table_row"
+    And I should see "Suspended account" in the "User One" "table_row"
+    And the "region-main" "region" should meet accessibility standards with "best-practice" extra tests
+    And I follow "User One"
+    And "Suspended account" "heading" should exist
+    And the page should meet accessibility standards with "best-practice" extra tests
+    And I navigate to "Users > Accounts > Browse list of users" in site administration
     And I press "Activate user account" action in the "User One" report row
-    Then I should not see "Suspended" in the "User One" "table_row"
+    Then I should not see "Suspended account" in the "User One" "table_row"
+    And I follow "User One"
+    And "Suspended account" "heading" should not exist
+    And the page should meet accessibility standards with "best-practice" extra tests
 
   @javascript
   Scenario: Delete a user account
@@ -90,6 +98,7 @@ Feature: An administrator can browse user accounts
       | username | firstname | lastname | email             | confirmed |
       | user3    | User      | Three    | three@example.com | 0         |
     And I navigate to "Users > Accounts > Browse list of users" in site administration
+    And I change window size to "large"
     Then I should see "Confirmation pending" in the "User Three" "table_row"
     And I press "Resend confirmation email" action in the "User Three" report row
     And I should see "Confirmation email sent successfully"

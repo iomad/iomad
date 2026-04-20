@@ -184,11 +184,13 @@ const getThirdPartyLibsList = relativeTo => {
     const fs = require('fs');
     const path = require('path');
 
-    return fetchComponentData().pathList
+    const pathList = fetchComponentData().pathList
         .map(componentPath => path.relative(relativeTo, componentPath) + '/thirdpartylibs.xml')
         .map(componentPath => componentPath.replace(/\\/g, '/'))
-        .filter(path => fs.existsSync(path))
-        .sort();
+        .filter(path => fs.existsSync(path));
+
+    pathList.push('lib/thirdpartylibs.xml');
+    return pathList.sort();
 };
 
 /**
@@ -386,6 +388,23 @@ const getThirdPartyLibsUpgradable = async() => {
 };
 
 /**
+ * Get the list of paths to build react sources.
+ *
+ * @param {string} relativeTo
+ * @returns {string[]}
+ */
+const getReactTsSrcGlobList = (relativeTo = '') => {
+    const globList = [];
+    fetchComponentData().pathList.forEach(componentPath => {
+        const relativeComponentPath = componentPath.replace(relativeTo, '');
+        globList.push(`${relativeComponentPath}/js/esm/src/**/*.ts`);
+        globList.push(`${relativeComponentPath}/js/esm/src/**/*.tsx`);
+    });
+
+    return globList.map(componentPath => componentPath.replace(/\\/g, '/'));
+};
+
+/**
  * Get the list of thirdparty libraries.
  *
  * @returns {Array}
@@ -432,4 +451,5 @@ module.exports = {
     getThirdPartyLibsList,
     getThirdPartyPaths,
     getThirdPartyLibsUpgradable,
+    getReactTsSrcGlobList,
 };

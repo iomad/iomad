@@ -5,7 +5,9 @@ Feature: Change password
   I need to test all the way to change my password
 
   Background:
-    Given the following "users" exist:
+    Given the following config values are set as admin:
+      | enablemyhome | 1 |
+    And the following "users" exist:
       | username | firstname | lastname | email |
       | testuser | Test | User | moodle@example.com |
 
@@ -22,7 +24,7 @@ Feature: Change password
     And I click on "Continue" "button"
     And I should see "Preferences" in the "region-main" "region"
     And I log out
-    And I follow "Log in"
+    And I am on homepage
     And I set the field "Username" to "testuser"
     And I set the field "Password" to "NewPassword1*"
     And I press "Log in"
@@ -49,7 +51,7 @@ Feature: Change password
     And the following "course enrolments" exist:
       | user | course | role |
       | testuser | c1 | student |
-    When I follow "Log in"
+    When I am on homepage
     And I set the field "Username" to "testuser"
     And I set the field "Password" to "testuser"
     And I press "Log in"

@@ -1,18 +1,20 @@
-@customfield @customfield_number @javascript
+@core_customfield @customfield_number @javascript
 Feature: Managers can manage course custom fields number
   In order to have additional data on the course
   As a manager
   I need to create, edit, remove and display number custom fields
 
   Background:
-    Given the following "custom field categories" exist:
+    Given the following config values are set as admin:
+      | enablemyhome | 1 |
+    And the following "custom field categories" exist:
       | name              | component   | area   | itemid |
       | Category for test | core_course | course | 0      |
     And I log in as "admin"
     And I navigate to "Courses > Default settings > Course custom fields" in site administration
 
   Scenario: Create a custom course number field
-    When I click on "Add a new custom field" "link"
+    When I click on "Add field" "link"
     And I click on "Number" "link"
     When I set the following fields to these values:
       | Name               | Number field |
@@ -29,33 +31,31 @@ Feature: Managers can manage course custom fields number
     And I log out
 
   Scenario: Edit a custom course number field
-    When I click on "Add a new custom field" "link"
+    When I click on "Add field" "link"
     And I click on "Number" "link"
     And I set the following fields to these values:
       | Name       | Number field |
       | Short name | numberfield  |
     And I click on "Save changes" "button" in the "Adding a new Number" "dialogue"
     Then I should see "Number field"
-    And I click on "Edit" "link" in the "Number field" "table_row"
+    And I choose the "Edit" item in the "Actions" action menu of the "Number field" "table_row"
     And I set the following fields to these values:
       | Name | Edited number field |
     And I click on "Save changes" "button" in the "Updating Number field" "dialogue"
     Then I should see "Edited number field"
-    And I log out
 
   Scenario: Delete a custom course number field
-    When I click on "Add a new custom field" "link"
+    When I click on "Add field" "link"
     And I click on "Number" "link"
     And I set the following fields to these values:
       | Name       | Number field |
       | Short name | numberfield  |
     And I click on "Save changes" "button" in the "Adding a new Number" "dialogue"
-    And I click on "Delete" "link" in the "Number field" "table_row"
+    And I choose the "Delete" item in the "Actions" action menu of the "Number field" "table_row"
     And I click on "Yes" "button" in the "Confirm" "dialogue"
     And I wait until the page is ready
     And I wait until "Number field" "text" does not exist
     Then I should not see "Number field"
-    And I log out
 
   Scenario Outline: A number field must shown correctly on course listing
     Given the following "users" exist:
@@ -68,7 +68,7 @@ Feature: Managers can manage course custom fields number
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
     And I navigate to "Courses > Default settings > Course custom fields" in site administration
-    And I click on "Add a new custom field" "link"
+    And I click on "Add field" "link"
     And I click on "Number" "link"
     When I set the following fields to these values:
       | Name               | Test number |
@@ -93,7 +93,7 @@ Feature: Managers can manage course custom fields number
       | {value}   | Free        | 0          | Free          |
 
   Scenario: Automatically populated field should hide some field form elements
-    Given I click on "Add a new custom field" "link"
+    Given I click on "Add field" "link"
     And I click on "Number" "link"
     And I should see "Default value"
     And I should see "Minimum value"
@@ -144,7 +144,7 @@ Feature: Managers can manage course custom fields number
       | forum    | Forum3       | Test description | C1       | forum3     | 1       | 1       |
       | forum    | Forum4       | Test description | C1       | forum4     | 1       | 1       |
       | quiz     | QuizC2       | Test description | C2       | quizC2     | 1       | 1       |
-    Given I click on "Add a new custom field" "link"
+    Given I click on "Add field" "link"
     And I click on "Number" "link"
     When I set the following fields to these values:
       | Name       | Number field                        |
@@ -186,7 +186,7 @@ Feature: Managers can manage course custom fields number
 
     And I log in as "admin"
     And I navigate to "Courses > Default settings > Course custom fields" in site administration
-    And I click on "Edit" "link" in the "Number field" "table_row"
+    And I choose the "Edit" item in the "Actions" action menu of the "Number field" "table_row"
     And I set the following fields to these values:
       | Display when zero   |      |
     And I click on "Save changes" "button" in the "Updating Number field" "dialogue"

@@ -1,4 +1,4 @@
-@customfield @customfield_date @javascript
+@core_customfield @customfield_date @javascript
 Feature: Managers can manage course custom fields date
   In order to have additional data on the course
   As a manager
@@ -12,7 +12,7 @@ Feature: Managers can manage course custom fields date
     And I navigate to "Courses > Default settings > Course custom fields" in site administration
 
   Scenario: Create a custom course date field
-    When I click on "Add a new custom field" "link"
+    When I click on "Add field" "link"
     And I click on "Date and time" "link"
     And I set the following fields to these values:
       | Name       | Test field |
@@ -22,30 +22,28 @@ Feature: Managers can manage course custom fields date
     And I log out
 
   Scenario: Edit a custom course date field
-    When I click on "Add a new custom field" "link"
+    When I click on "Add field" "link"
     And I click on "Date and time" "link"
     And I set the following fields to these values:
       | Name       | Test field |
       | Short name | testfield  |
     And I click on "Save changes" "button" in the "Adding a new Date and time" "dialogue"
-    And I click on "[data-role='editfield']" "css_element"
+    And I choose the "Edit" item in the "Actions" action menu of the "Test field" "table_row"
     And I set the following fields to these values:
       | Name | Edited field |
     And I click on "Save changes" "button" in the "Updating Test field" "dialogue"
     Then I should see "Edited field"
-    And I log out
 
   Scenario: Delete a custom course date field
-    When I click on "Add a new custom field" "link"
+    When I click on "Add field" "link"
     And I click on "Date and time" "link"
     And I set the following fields to these values:
       | Name       | Test field |
       | Short name | testfield  |
     And I click on "Save changes" "button" in the "Adding a new Date and time" "dialogue"
-    And I click on "[data-role='deletefield']" "css_element"
+    And I choose the "Delete" item in the "Actions" action menu of the "Test field" "table_row"
     And I click on "Yes" "button" in the "Confirm" "dialogue"
     Then I should not see "Test field"
-    And I log out
 
   Scenario: A date field makerd to include time must show those fields on course form
     Given the following "users" exist:
@@ -57,7 +55,7 @@ Feature: Managers can manage course custom fields date
     And the following "course enrolments" exist:
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
-    When I click on "Add a new custom field" "link"
+    When I click on "Add field" "link"
     And I click on "Date and time" "link"
     And I set the following fields to these values:
       | Name         | Test field |
@@ -84,7 +82,7 @@ Feature: Managers can manage course custom fields date
     And the following "course enrolments" exist:
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
-    When I click on "Add a new custom field" "link"
+    When I click on "Add field" "link"
     And I click on "Date and time" "link"
     And I set the following fields to these values:
       | Name         | Test field |

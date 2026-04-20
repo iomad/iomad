@@ -233,6 +233,7 @@ class meeting {
             'cmid' => $instance->get_cm_id(),
             'ismoderator' => $instance->is_moderator(),
             'joinurl' => $instance->get_join_url()->out(),
+            'usermustwaittojoin' => $instance->user_must_wait_to_join(),
             'userlimit' => $instance->get_user_limit(),
             'presentations' => [],
         ];
@@ -522,6 +523,10 @@ class meeting {
         $recordid = $jsonobj->{'internal_meeting_id'};
         $attendees = $jsonobj->{'data'}->{'attendees'};
         foreach ($attendees as $attendee) {
+            // Skip processing guest users with non-numeric userids.
+            if (!is_numeric($attendee->{'ext_user_id'})) {
+                continue;
+            }
             $userid = $attendee->{'ext_user_id'};
             $overrides['meetingid'] = $meetingid;
             $overrides['userid'] = $userid;

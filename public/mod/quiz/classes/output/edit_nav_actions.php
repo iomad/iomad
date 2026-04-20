@@ -20,7 +20,7 @@ use moodle_url;
 use renderable;
 use renderer_base;
 use templatable;
-use url_select;
+use core\output\select_menu;
 
 /**
  * Represents the tertiary navigation around the quiz edit pages.
@@ -64,15 +64,18 @@ class edit_nav_actions implements renderable, templatable {
             $gradeitemsetupurl->out(false) => get_string('gradeitemsetup', 'quiz'),
         ];
 
-        $overridesnav = new url_select(
+        $overridesnav = new select_menu(
+            'quizsetupnavigation',
             $menu,
             $this->whichpage === self::SUMMARY ? $questionsurl->out(false) : $gradeitemsetupurl->out(false),
-            null
         );
-        $overridesnav->set_label(get_string('quizsetupnavigation', 'quiz'), ['class' => 'visually-hidden']);
+        $overridesnav->set_label(
+            get_string('quizsetupnavigation', 'quiz'),
+            ['class' => 'visually-hidden']
+        );
 
         return [
-            'navmenu' => $overridesnav->export_for_template($output),
+            'navigation' => $overridesnav->export_for_template($output),
         ];
     }
 }

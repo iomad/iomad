@@ -163,6 +163,16 @@ class setting_validator {
     }
 
     /**
+     * Validate if settings extended section will be shown.
+     *
+     * @return bool
+     */
+    public static function section_session_access_shown() {
+        global $CFG;
+        return (!isset($CFG->bigbluebuttonbn['guestaccess_enabled']));
+    }
+
+    /**
      * Validate if muteonstart section will be shown.
      *
      * @return bool

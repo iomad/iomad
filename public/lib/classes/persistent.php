@@ -95,7 +95,7 @@ abstract class persistent {
      * Data setter.
      *
      * This is the main setter for all the properties. Developers can implement their own setters (set_propertyname)
-     * and they will be called by this function. Custom setters should call internal_set() to finally set the value.
+     * and they will be called by this function. Custom setters should call {@see raw_set} to finally set the value.
      * Internally this is not used {@link self::to_record()} or
      * {@link self::from_record()} because the data is not expected to be validated or changed when reading/writing
      * raw records from the DB.
@@ -842,11 +842,11 @@ abstract class persistent {
         }
 
         $records = $DB->get_records(static::TABLE, $filters, $orderby, '*', $skip, $limit);
-        $instances = array();
 
-        foreach ($records as $record) {
-            $newrecord = new static(0, $record);
-            array_push($instances, $newrecord);
+        // We return class instances.
+        $instances = [];
+        foreach ($records as $key => $record) {
+            $instances[$key] = new static(0, $record);
         }
         return $instances;
     }
@@ -883,11 +883,10 @@ abstract class persistent {
         $records = $DB->get_records_select(static::TABLE, $select, $params, $sort, $fields, $limitfrom, $limitnum);
 
         // We return class instances.
-        $instances = array();
+        $instances = [];
         foreach ($records as $key => $record) {
             $instances[$key] = new static(0, $record);
         }
-
         return $instances;
 
     }

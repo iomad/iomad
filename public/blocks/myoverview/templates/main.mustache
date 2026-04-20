@@ -23,7 +23,17 @@
     {}
 }}
 
-<div id="block-myoverview-{{uniqid}}" class="block-myoverview block-cards" data-region="myoverview" role="navigation">
+<div id="block-myoverview-{{uniqid}}" class="block-myoverview block-cards" data-region="myoverview">
+    {{#hascourseactions}}
+    <div class="d-flex flex-wrap gap-2 my-2">
+        {{#courseactionurls}}
+        <form action="{{url}}" method="post">
+            <button type="submit" class="{{class}}">{{label}}</button>
+        </form>
+        {{/courseactionurls}}
+    </div>
+    <hr class="border-bottom">
+    {{/hascourseactions}}
     <div role="search" data-region="filter" class="d-flex align-items-center my-2" aria-label="{{#str}} aria:controls, block_myoverview {{/str}}">
         <div class="d-flex flex-wrap gap-1 align-items-center w-100">
             {{> block_myoverview/nav-grouping-selector }}

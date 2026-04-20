@@ -26,204 +26,488 @@
     * none
 
     Context variables required for this template:
-    * registered - Whether the site is registered
-    * appsportalurl - Apps portal url
+    * subscription - Object with the current subscription information (plan, name, description, isfree, ispremium,
+        features[] (including optional progresslabelid for usage bars), optional expiretime, etc.
+    * appsportalurl - URL of the Moodle Apps portal used in links.
+    * appsportalupgradeurl - URL in the Apps portal to upgrade or manage the subscription.
+    * messageoldcache - Optional string describing how old the cached subscription data is.
+    * messagelivedata - Optional string indicating that live data is being shown.
+    * messageunregisteredsite - Optional array of notification objects for unregistered sites.
+    * messagefullaccess - Optional array of notification objects when the subscription has full access.
+    * messagedeprecation - Optional array of notification objects for deprecated plans.
+    * messagemissingcredentials - Optional array of notification objects when required credentials are missing.
+    * messageserror, messagessuccess, messageswarning, messagesinfo, messageshtml - Optional collections of generic
+        notifications rendered at the top of the page.
+    * notifications - Optional object with push notification statistics (currentactivedevices, monthly[] items, etc.).
+    * messagesnotificationsseemore - Optional string with a link to more detailed statistics.
+    * messagesnonotifications - Optional array of notification objects when there are no statistics available.
+    * tocompareplan - Optional object describing the plan used to compare against the current subscription.
+    * messagenosubscriptioninfo - Optional array of notification objects used when no subscription information
+        could be retrieved.
 
     Example context (json):
-    {
-        "registered" : true,
-        "appsportalurl": "https://apps.moodle.com",
-        "subscription": {
-            "name": "Pro",
-            "description": "This subscription has a Moodle Product Premium plan free of charge",
-            "timecreated": 1587548810,
-            "expiretime": 1618963200,
-            "features": [
-                {
-                    "name": "multimediapushnotifications",
-                    "enabled": true,
-                    "description": "Multimedia push notifications",
-                    "humanstatus": "Enabled",
-                    "message": {
-                        "type" : "warning",
-                        "message" : "Temporary disabled for a promotion"
-                    }
-                },
-                {
-                    "name": "pushnotificationsdevices",
-                    "enabled": false,
-                    "limit": 50,
-                    "showbar": 1,
-                    "description": "Active user devices for notifications",
-                    "status": 55,
-                    "humanstatus": "55/50",
-                    "barclass": "bg-danger"
-                },
-                {
-                    "name": "custommenuitems",
-                    "enabled": false,
-                    "limit": 4,
-                    "showbar": 1,
-                    "description": "Custom menu items",
-                    "status": 2,
-                    "humanstatus": "2/4"
-                }
-            ]
-        },
-        "messageswarning": [
+{
+    "registered": true,
+    "subscription": {
+        "plan": "free",
+        "name": "Free",
+        "description": "Free subscription",
+        "informationurl": "http:\/\/192.168.1.134:8080\/local\/apps\/index.php",
+        "features": [
             {
-                "message" : "You have surpassed your monthly active user devices limit, some messages are beign ignored. We recommend you to upgrade to a paid plan."
+                "name": "qrautomaticlogin",
+                "description": "QR Login",
+                "enabled": false,
+                "humanstatus": "Not included"
+            },
+            {
+                "name": "pushnotificationsdevices",
+                "progresslabelid": "tool-mobile-feature-1-pushnotificationsdevices-label",
+                "description": "Active devices for push notifications",
+                "descriptionwithlimit": "50 active devices for push notifications",
+                "enabled": true,
+                "limit": 50,
+                "limitstr": "50",
+                "status": 0,
+                "showstatus": 1,
+                "humanstatus": "0 \/ 50",
+                "showbar": 1,
+                "percentage": 0,
+                "barclass": "bg-success"
+            },
+            {
+                "name": "coursesdownload",
+                "description": "Offline access to content",
+                "descriptionwithlimit": "Offline access to content (2 courses \/ device)",
+                "enabled": true,
+                "limit": 2,
+                "limitstr": "2 courses \/ device",
+                "humanstatus": "?\/2"
             }
         ],
-        "notifications": {
-            "totalsentnotifications" : 7600,
-            "totaldevices" : 60,
-            "currentactivedevices" : 55,
-            "ignorednotificationswarning": {
-                "message" : "You have surpassed your monthly active user devices limit, some messages are beign ignored. We recommend you to upgrade to a paid plan."
-            },
-            "monthly" : [
-                {
-                    "year": 2020,
-                    "month": 4,
-                    "sentnotifications": 4500,
-                    "newdevices": 20,
-                    "activedevices": 55,
-                    "ignorednotifications": 40,
-                    "limitreachedtime": 1586548810
-                },
-                {
-                    "year": 2020,
-                    "month": 3,
-                    "sentnotifications": 4500,
-                    "newdevices":10,
-                    "activedevices": 45,
-                    "ignorednotifications": 0,
-                    "limitreachedtime": 0
-                }
-            ]
+        "price": "* \u20ac",
+        "isfree": true,
+        "ispremium": false,
+        "currentusage": []
+    },
+    "statistics": [],
+    "appsportalurl": "https:\/\/apps.moodle.com",
+    "appsportalupgradeurl": "https:\/\/apps.moodle.com",
+    "messagemissingcredentials": [
+        {
+            "message": "Airnotifier credentials are missing, configure them in order to get notification statistics.",
+            "extraclasses": "mt-4"
         }
+    ],
+    "messagesinfo": [
+        {
+            "message": "This site is not registered in the App Plans Portal, create an account to manage your subscription."
+        }
+    ],
+    "notifications": {
+        "totalsentnotifications": null,
+        "totaldevices": null,
+        "monthly": [
+            {
+                "year": 2026,
+                "month": 2,
+                "sentnotifications": 0,
+                "ignorednotifications": 0,
+                "newdevices": 0,
+                "activedevices": 0,
+                "limitreachedtime": null,
+                "monthstr": "February"
+            }
+        ],
+        "currentactivedevices": 0
+    },
+    "messagesnotificationsseemore": [
+        {
+            "message": "Note: Moodle app usage statistics are not calculated in real time. To access more detailed statistics, including data from previous months, please log in to the <a href=\"https:\/\/apps.moodle.com\" target=\"_blank\">Moodle Apps Portal<\/a>.",
+            "extraclasses": "mt-4 mb-0"
+        }
+    ],
+    "tocompareplan": {
+        "plan": "premium",
+        "name": "Premium",
+        "description": "Premium subscription",
+        "informationurl": "http:\/\/192.168.1.134:8080\/local\/apps\/index.php",
+        "features": [
+            {
+                "name": "qrautomaticlogin",
+                "description": "QR Login",
+                "enabled": true,
+                "humanstatus": "Included",
+                "subscribedhumanstatus": "Not included",
+                "subscribedenabled": "fa-times",
+                "subscribeddecoration": "text-danger"
+            },
+            {
+                "name": "pushnotificationsdevices",
+                "description": "Active devices for push notifications",
+                "descriptionwithlimit": "Unlimited push notifications devices",
+                "enabled": true,
+                "limit": "unlimited",
+                "limitstr": "Unlimited",
+                "humanstatus": "Included",
+                "subscribedlimitstr": "50",
+                "subscribedenabled": true,
+                "subscribeddecoration": "text-primary"
+            },
+            {
+                "name": "coursesdownload",
+                "description": "Offline access to content",
+                "descriptionwithlimit": "Unlimited course downloads",
+                "enabled": true,
+                "limit": "unlimited",
+                "limitstr": "Unlimited",
+                "humanstatus": "Included",
+                "subscribedlimitstr": "2 courses \/ device",
+                "subscribedenabled": true,
+                "subscribeddecoration": "text-primary"
+            }
+        ],
+        "price": "* \u20ac"
     }
+}
 }}
 
-{{#messageserror}}
-    {{> core/notification_error}}
-{{/messageserror}}
-{{#messagessuccess}}
-    {{> core/notification_success}}
-{{/messagessuccess}}
-{{#messageswarning}}
-    {{> core/notification_warning}}
-{{/messageswarning}}
-{{#messagesinfo}}
-    {{> core/notification_info}}
-{{/messagesinfo}}
-
-<div id="subscription-overview" class="box">
-
-    <h2>{{# str }} mobileappsubscription, tool_mobile {{/ str }}</h2>
-
+<div id="subscription-overview" class="box container-xl">
+    {{#messageserror}}
+        {{> core/notification_error}}
+    {{/messageserror}}
+    {{#messagessuccess}}
+        {{> core/notification_success}}
+    {{/messagessuccess}}
+    {{#messageswarning}}
+        {{> core/notification_warning}}
+    {{/messageswarning}}
+    {{#messagesinfo}}
+        {{> core/notification_info}}
+    {{/messagesinfo}}
     {{#messageshtml}}
     {{{message}}}
     {{/messageshtml}}
 
+    <h2>{{#str}} plandetails, tool_mobile {{/str}}</h2>
+
     {{#subscription}}
-    <dl class="list-narrow">
-        <dt>{{# str }} name {{/ str }}</dt><dd>{{name}}</dd>
-        <dt>{{# str }} description {{/ str }}</dt><dd>{{description}}</dd>
-        <dt>{{# str }} subscriptioncreated, tool_mobile {{/ str }}</dt><dd>{{#userdate}} {{timecreated}}, {{#str}} strftimedate {{/str}} {{/userdate}}</dd>
-        {{#expiretime}}
-        <dt>{{# str }} subscriptionexpiration, tool_mobile {{/ str }}</dt><dd>{{#userdate}} {{expiretime}}, {{#str}} strftimedate {{/str}} {{/userdate}}</dd>
-        {{/expiretime}}
-    </dl>
+    {{#isfree}}
+    <div class="d-flex align-items-center gap-3 mt-3 mb-3">
+        <h3 class="fw-bold ml-2">{{name}}</h3>
+        <span class="ml-2 badge fw-normal bg-secondary fs-6 text-dark">{{#str}} limitedfeatures, tool_mobile {{/str}}</span>
+    </div>
+    {{#messageoldcache}}
+        <span class="ml-2 text-muted">{{{messageoldcache}}} {{{messagelivedata}}}</span>
+    {{/messageoldcache}}
+    {{#messageunregisteredsite}}
+    {{> tool_mobile/subscribe_alert}}
+    {{/messageunregisteredsite}}
+    {{/isfree}}
+    {{^isfree}}
+    <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
+        <div>
+            <h3 class="fw-bold ml-2"
+                {{#messageoldcache}}
+                    title="{{messageoldcache}}"
+                {{/messageoldcache}}
+            >
+                {{name}}
+            </h3>
+            {{#expiretime}}
+            <div class="ml-2 text-muted">
+                {{planexpiresontext}}
+                {{#messageoldcache}}
+                    {{{messagelivedata}}}
+                {{/messageoldcache}}
 
-    {{^registered}}
-    {{# str }} subscriptionregister, tool_mobile, {{ appsportalurl }} {{/ str }}
-    {{/registered}}
+            </div>
+            {{/expiretime}}
+        </div>
+        <div>
+            <a href="{{ appsportalurl }}" class="btn btn-secondary">{{#str}} manage, tool_mobile {{/str}}</a>
+        </div>
+    </div>
+    {{/isfree}}
 
-    <h3>{{# str }} subscriptionfeatures, tool_mobile {{/ str }}</h3>
+    <hr>
+    {{#messagefullaccess}}
+        {{> core/notification_info}}
+    {{/messagefullaccess}}
 
-    {{#features}}
-    <dl>
-    {{^limit}}
-        <dt>{{{description}}}</dt><dd>{{{humanstatus}}}</dd>
-    {{/limit}}
-    {{#limit}}
-        <dt>{{{description}}}</dt><dd>
-        {{#showbar}}
-            <div class="progress">
-                <div class="progress-bar progress-bar-animated {{barclass}}" role="progressbar" style="width: 100%" aria-valuenow="{{status}}" aria-valuemin="0" aria-valuemax="{{limit}}">{{humanstatus}}
+    {{#messagedeprecation}}
+        {{> core/notification_warning}}
+    {{/messagedeprecation}}
+
+    <div class="row g-4 align-items-stretch">
+        <div class="col-12 col-md-6 d-flex mb-4 mb-md-0">
+            <div class="card flex-fill">
+                <div class="card-body p-4">
+                    <h4 class="h4 fw-bold card-title">{{#str}} currentusage, tool_mobile {{/str}}</h4>
+                    {{^ispremium}}
+                    <p class="text-muted">{{#str}} upgradeforunlimit, tool_mobile, {{tocompareplan.name}} {{/str}}</p>
+                    {{/ispremium}}
+                    {{#features}}
+                        {{#limit}}
+                            {{#ispremium}}
+                                {{#showstatus}}
+                    <div class="d-flex justify-content-between text-muted mt-3">
+                        <span>{{description}}</span>
+                        <span class="text-muted">{{status}}</span>
+                    </div>
+                                {{/showstatus}}
+                            {{/ispremium}}
+                            {{^ispremium}}
+                    <div class="d-flex justify-content-between text-muted mt-3">
+                        <span{{#progresslabelid}} id="{{progresslabelid}}"{{/progresslabelid}}>{{description}}</span>
+                                {{#showbar}}
+                        <span class="text-muted">{{humanstatus}}</span>
+                                {{/showbar}}
+                                {{^showbar}}
+                        <span class="text-muted">{{limitstr}}</span>
+                                {{/showbar}}
+                    </div>
+                                {{#showbar}}
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1">
+                                <div class="progress-bar progress-bar-animated {{barclass}}" role="progressbar" style="width: {{percentage}}%" aria-valuenow="{{status}}" aria-valuemin="0" aria-valuemax="{{limit}}"{{#progresslabelid}} aria-labelledby="{{progresslabelid}}"{{/progresslabelid}}></div>
+                            </div>
+                            <span class="small fw-semibold">{{percentage}}%</span>
+                        </div>
+                                {{/showbar}}
+                                {{^showbar}}
+                        <span class="text-muted small">{{#str}} devicelimitnotrack, tool_mobile {{/str }}</span>
+                                {{/showbar}}
+                            {{/ispremium}}
+                        {{/limit}}
+                    {{/features}}
                 </div>
             </div>
-        {{/showbar}}
-        {{^showbar}}
-            {{humanstatus}}
-        {{/showbar}}
-        </dd>
-    {{/limit}}
-    {{#message}}
-        <span class="badge badge-{{type}}">{{message}}</span>
-    {{/message}}
-    </dl>
-    {{/features}}
+        </div>
+        {{#tocompareplan}}
+        <div class="col-12 col-md-6 d-flex">
+            <div class="card bg-primary bg-opacity-25 border-0 flex-fill d-flex">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h4 class="h4 fw-bold card-title">{{#str}} planfeatures, tool_mobile, {{tocompareplan.name}} {{/str}}</h4>
+                        <div class="text-end">
+                            <div class="fw-bold fs-4">{{price}}</div>
+                            <small>{{#str}} billedannually, tool_mobile {{/str}}</small>
+                        </div>
+                    </div>
+                    <ul class="list-unstyled flex-grow-1">
+                    {{#features}}
+                        {{#limit}}
+                            {{#enabled}}
+                        <li class="mt-3"><i class="icon fa fa-infinity fa-fw" role="img" aria-label="{{#str}} unlimited {{/str}}"></i>{{{descriptionwithlimit}}}</li>
+                            {{/enabled}}
+                        {{/limit}}
+                    {{/features}}
+                    {{#features}}
+                        {{^limit}}
+                            {{#enabled}}
+                        <li class="mt-3"><i class="icon fa fa-check fa-fw " role="img" aria-label="{{#str}} yes {{/str}}"></i>{{{description}}}</li>
+                            {{/enabled}}
+                        {{/limit}}
+                    {{/features}}
+                    </ul>
 
-    {{#registered}}
-    {{# str }} subscriptionsseemore, tool_mobile, {{ appsportalurl }} {{/ str }}
-    {{/registered}}
+                    <a href="{{ appsportalupgradeurl }}" class="btn btn-primary w-100 mt-auto">
+                        {{#str}} upgradetosubscription, tool_mobile, {{tocompareplan.name}} {{/str}} – {{price}} / {{#str}} year {{/str}}
+                    </a>
+                </div>
+            </div>
+        </div>
+        {{/tocompareplan}}
+        {{^tocompareplan}}
+        <div class="col-12 col-md-6 d-flex">
+            <div class="h-100 d-flex flex-column">
+                <div class="card h-100 flex-grow-1">
+                <div class="card-body p-4 p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h4 class="h4 fw-bold card-title">{{#str}} planfeatures, tool_mobile, {{name}} {{/str}}</h4>
+                    </div>
+                    <ul class="list-unstyled row row-cols-1 row-cols-md-2 g-2 flex-grow-1">
+                    {{#features}}
+                        {{#limit}}
+                            {{#enabled}}
+                        <li class="mt-3 col"><i class="icon fa fa-infinity fa-fw" role="img" aria-label="{{#str}} unlimited {{/str}}"></i>{{{descriptionwithlimit}}}</li>
+                            {{/enabled}}
+                        {{/limit}}
+                    {{/features}}
+                    {{#features}}
+                        {{^limit}}
+                            {{#enabled}}
+                        <li class="mt-3 col"><i class="icon fa fa-check fa-fw " role="img" aria-label="{{#str}} yes {{/str}}"></i>{{{description}}}</li>
+                            {{/enabled}}
+                        {{/limit}}
+                    {{/features}}
+                    </ul>
+                </div>
+                </div>
+            </div>
+        </div>
+        {{/tocompareplan}}
+    </div>
 
+    {{#tocompareplan}}
+    <div class="card mt-4 feature-comparison-card">
+        <div class="card-body p-4 d-flex flex-column">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <h4 class="h4 fw-bold mb-0">{{#str}} featurecomparison, tool_mobile {{/str}}</h4>
+            </div>
+
+            <!-- Table header -->
+            <div class="row fw-semibold fw-bold border-bottom pb-2">
+                <div class="col-6">
+                    {{#str}} feature, tool_mobile {{/str}}
+                </div>
+                <div class="col-3 text-center">
+                    {{subscription.name}}
+                </div>
+                <div class="col-3 text-center">
+                    {{tocompareplan.name}}
+                </div>
+            </div>
+            <div class="feature-comparison-rows">
+            {{#features}}
+                {{#limit}}
+            <!-- Feature rows -->
+            <div class="row align-items-center py-2 border-bottom">
+                <div class="col-6">
+                    {{description}}
+                </div>
+                <div class="col-3 text-center text-muted">
+                    {{subscribedlimitstr}}
+                </div>
+                <div class="col-3 text-center">
+                    <i class="icon fa fa-infinity fa-fw text-primary" aria-hidden="true"></i>{{{limitstr}}}
+                </div>
+            </div>
+                {{/limit}}
+            {{/features}}
+            {{#features}}
+                {{^limit}}
+            <div class="row align-items-center py-2 border-bottom feature-comparison-row">
+                <div class="col-6">
+                    {{description}}
+                </div>
+                <div class="col-3 text-center text-muted">
+                    <i class="icon fa {{{subscribedenabled}}} fa-fw {{{subscribeddecoration}}}" role="img" aria-label="{{{subscribedhumanstatus}}}"></i>
+                </div>
+                <div class="col-3 text-center">
+                        {{#enabled}}
+                    <i class="icon fa fa-check fa-fw text-primary" role="img" aria-label="{{{humanstatus}}}"></i>
+                        {{/enabled}}
+                        {{^enabled}}
+                    <i class="icon fa fa-times fa-fw text-danger" role="img" aria-label="{{{humanstatus}}}"></i>
+                        {{/enabled}}
+                </div>
+            </div>
+            {{/limit}}
+            {{/features}}
+            </div>
+
+            <div class="text-center">
+                <button type="button" class="btn btn-link p-0 feature-comparison-toggle d-inline-flex align-items-center">
+                    <span class="feature-comparison-toggle-text">{{#str}} showmore {{/str}}</span>
+                    <i class="icon fa fa-chevron-down fa-fw feature-comparison-toggle-icon" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {{/tocompareplan}}
+
+    <div class="card mt-4">
+        <div class="card-body p-4 d-flex flex-column">
+            <div id="notifications-overview" class="box">
+                <h4 class="h4 fw-bold card-title">{{#str}} notifications, tool_mobile {{/str}}</h4>
+                {{#messagemissingcredentials}}
+                    {{> core/notification_warning}}
+                {{/messagemissingcredentials}}
+                {{^messagemissingcredentials}}
+                    {{#notifications}}
+                    {{#ignorednotificationswarning}}
+                        {{> tool_mobile/subscribe_alert}}
+                    {{/ignorednotificationswarning}}
+                <dl>
+                    <dt>{{#str}} notificationscurrentactivedevices, tool_mobile {{/str}}</dt><dd>{{currentactivedevices}}</dd>
+                </dl>
+                <div class="overflow-scroll">
+                    <table id="notificationstable" class="table generaltable">
+                        <thead>
+                            <tr>
+                                <th class="text-center" scope="col">{{#str}}year, form{{/str}}</th>
+                                <th class="text-center" scope="col">{{#str}}month{{/str}}</th>
+                                <th class="text-center" scope="col">{{#str}}notificationssentnotifications, tool_mobile{{/str}}</th>
+                                <th class="text-center" scope="col">{{#str}}notificationsactivedevices, tool_mobile{{/str}}</th>
+                                <th class="text-center" scope="col">{{#str}}notificationsnewdevices, tool_mobile{{/str}}</th>
+                                <th class="text-center" scope="col">{{#str}}notificationsignorednotifications, tool_mobile{{/str}}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#notifications.monthly}}
+                            <tr>
+                                <td class="text-center">{{year}}</td>
+                                <td class="text-center">{{monthstr}}</td>
+                                <td class="text-center">{{sentnotifications}}</td>
+                                <td class="text-center">{{activedevices}}</td>
+                                <td class="text-center">{{newdevices}}</td>
+                                <td class="text-center">{{ignorednotifications}}</td>
+                            </tr>
+                            {{/notifications.monthly}}
+                        </tbody>
+                    </table>
+                </div>
+                {{/notifications}}
+                {{^notifications}}
+                {{#messagesnonotifications}}
+                    {{> core/notification_warning}}
+                {{/messagesnonotifications}}
+                {{/notifications}}
+            {{/messagemissingcredentials}}
+
+            </div>
+        </div>
+        {{#messagesnotificationsseemore}}
+        <div class="card-footer text-muted small">
+        {{{messagesnotificationsseemore}}}
+        </div>
+        {{/messagesnotificationsseemore}}
+    </div>
+    {{/subscription}}
+    {{^subscription}}
+    <div class="g-4 align-items-stretch">
+        <div class="mt-5">
+            <div class="card flex-fill">
+                <div class="card-body p-4">
+                    <h3 class="h3 fw-bold card-title">{{#str}} nosubscouldntretrieve, tool_mobile {{/str}}</h3>
+                    <p class="mt-4">{{#str}} nosubsoerror, tool_mobile{{/str}}</p>
+                    <div class="mt-3">
+                        <a href="" class="btn btn-primary">
+                            {{#pix}} i/reload, core {{/pix}}
+                            {{#str}} nosubstryagain, tool_mobile {{/str}}
+                        </a>
+                    </div>
+                    <div class="mt-4">
+                        <a href="{{appsportalurl}}" target="_blank" rel="noopener" class="">
+                            <span class="text-decoration-underline">{{#str}} nosubsviewplan, tool_mobile {{/str}}</span>
+                            {{#pix}} i/externallink, core {{/pix}}
+                        </a>
+                    </div>
+                    {{#messagenosubscriptioninfo}}
+                        {{> tool_mobile/notification_info}}
+                    {{/messagenosubscriptioninfo}}
+                </div>
+            </div>
+        </div>
+    </div>
     {{/subscription}}
 </div>
 
-<div id="notifications-overview" class="box">
-    <h3>{{# str }} notifications, tool_mobile {{/ str }}</h3>
-
-    {{^registered}}
-    {{# str }} subscriptionregister, tool_mobile, {{ appsportalurl }} {{/ str }}
-    {{/registered}}
-
-    {{#notifications}}
-
-    {{#ignorednotificationswarning}}
-        {{> core/notification_error}}
-    {{/ignorednotificationswarning}}
-
-    <dl>
-        <dt>{{# str }} notificationscurrentactivedevices, tool_mobile {{/ str }}</dt><dd>{{currentactivedevices}}</dd>
-    </dl>
-
-    <table id="notificationstable" class="table generaltable">
-        <thead>
-            <tr>
-                <th class="text-center" scope="col">{{#str}}year, form{{/str}}</th>
-                <th class="text-center" scope="col">{{#str}}month{{/str}}</th>
-                <th class="text-center" scope="col">{{#str}}notificationssentnotifications, tool_mobile{{/str}}</th>
-                <th class="text-center" scope="col">{{#str}}notificationsactivedevices, tool_mobile{{/str}}</th>
-                <th class="text-center" scope="col">{{#str}}notificationsnewdevices, tool_mobile{{/str}}</th>
-                <th class="text-center" scope="col">{{#str}}notificationsignorednotifications, tool_mobile{{/str}}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{#notifications.monthly}}
-            <tr>
-                <td class="text-center">{{year}}</td>
-                <td class="text-center">{{month}}</td>
-                <td class="text-center">{{sentnotifications}}</td>
-                <td class="text-center">{{activedevices}}</td>
-                <td class="text-center">{{newdevices}}</td>
-                <td class="text-center">{{ignorednotifications}}</td>
-            </tr>
-           {{/notifications.monthly}}
-        </tbody>
-    </table>
-
-    {{#registered}}
-    {{# str }} notificationsseemore, tool_mobile, {{ appsportalurl }} {{/ str }}
-    {{/registered}}
-
-    {{/notifications}}
-
-    {{^notifications}}
-    {{# str }} notificationsmissingwarning, tool_mobile {{/ str }}
-    {{/notifications}}
-
-</div>
+{{#js}}
+require(['tool_mobile/featurecomparison'], function(featurecomparison) {
+    featurecomparison.init();
+});
+{{/js}}

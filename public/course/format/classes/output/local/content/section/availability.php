@@ -127,7 +127,7 @@ class availability implements named_templatable, renderable {
      * activities.
      *
      * @param \renderer_base $output typically, the renderer that's calling this function
-     * @return stdclass data context for a mustache template
+     * @return array data context for a mustache template
      */
     protected function get_info(\renderer_base $output): array {
         global $CFG, $USER;
@@ -197,6 +197,10 @@ class availability implements named_templatable, renderable {
             }
         }
 
+        if ($this->format->get_show_restrictions_expanded()) {
+            $data->showrestrictionsexpanded = true;
+        }
+
         return $data;
     }
 
@@ -248,13 +252,5 @@ class availability implements named_templatable, renderable {
         }
 
         return (object) $data;
-    }
-
-    /**
-     * @deprecated since Moodle 4.3 MDL-78204. Please use {@see self::get_availability_data} instead.
-     */
-    #[\core\attribute\deprecated('get_availability_data()', since: '4.3', mdl: 'MDL-78489', final: true)]
-    protected function availability_info() {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
     }
 }

@@ -104,6 +104,7 @@ class provider implements
                 'timeopen'              => 'privacy:metadata:quiz_overrides:timeopen',
                 'timeclose'             => 'privacy:metadata:quiz_overrides:timeclose',
                 'timelimit'             => 'privacy:metadata:quiz_overrides:timelimit',
+                'reason'                => 'privacy:metadata:quiz_overrides:reason',
             ], 'privacy:metadata:quiz_overrides');
 
         // These define the structure of the quiz.
@@ -255,6 +256,8 @@ class provider implements
                     qo.timeopen AS override_timeopen,
                     qo.timeclose AS override_timeclose,
                     qo.timelimit AS override_timelimit,
+                    qo.reason AS override_reason,
+                    qo.reasonformat AS override_reasonformat,
                     c.id AS contextid,
                     cm.id AS cmid
                   FROM {context} c
@@ -304,6 +307,10 @@ class provider implements
                 }
                 if (!empty($quizdata->override_timelimit)) {
                     $quizdata->override->timelimit = $quiz->override_timelimit;
+                }
+                if (!empty($quiz->override_reason)) {
+                    $format = $quiz->override_reasonformat ?? FORMAT_MOODLE;
+                    $quizdata->override->reason = format_text($quiz->override_reason, $format, ['context' => $context]);
                 }
             }
 

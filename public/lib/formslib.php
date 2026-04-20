@@ -107,9 +107,10 @@ function form_init_date_js() {
             'september'         => date_format_string(strtotime("September 1"), '%B', $defaulttimezone),
             'october'           => date_format_string(strtotime("October 1"), '%B', $defaulttimezone),
             'november'          => date_format_string(strtotime("November 1"), '%B', $defaulttimezone),
-            'december'          => date_format_string(strtotime("December 1"), '%B', $defaulttimezone)
+            'december'          => date_format_string(strtotime("December 1"), '%B', $defaulttimezone),
         ));
         $PAGE->requires->yui_module($module, $function, $config);
+        $PAGE->requires->string_for_js('strftimemonthyear', 'langconfig');
     }
 }
 
@@ -229,16 +230,6 @@ abstract class moodleform {
 
         // we have to know all input types before processing submission ;-)
         $this->_process_submission($method);
-    }
-
-    /**
-     * Old syntax of class constructor. Deprecated in PHP7.
-     *
-     * @deprecated since Moodle 3.1
-     */
-    public function moodleform($action=null, $customdata=null, $method='post', $target='', $attributes=null, $editable=true) {
-        debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
-        self::__construct($action, $customdata, $method, $target, $attributes, $editable);
     }
 
     /**
@@ -1790,16 +1781,6 @@ class MoodleQuickForm extends HTML_QuickForm_DHTMLRulesTableless {
     }
 
     /**
-     * Old syntax of class constructor. Deprecated in PHP7.
-     *
-     * @deprecated since Moodle 3.1
-     */
-    public function MoodleQuickForm($formName, $method, $action, $target='', $attributes=null) {
-        debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
-        self::__construct($formName, $method, $action, $target, $attributes);
-    }
-
-    /**
      * Use this method to indicate an element in a form is an advanced field. If items in a form
      * are marked as advanced then 'Hide/Show Advanced' buttons will automatically be displayed in the
      * form so the user can decide whether to display advanced form controls.
@@ -3276,16 +3257,6 @@ class MoodleQuickForm_Renderer extends HTML_QuickForm_Renderer_Tableless{
         'nodisplay' => '');
 
         parent::__construct();
-    }
-
-    /**
-     * Old syntax of class constructor. Deprecated in PHP7.
-     *
-     * @deprecated since Moodle 3.1
-     */
-    public function MoodleQuickForm_Renderer() {
-        debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
-        self::__construct();
     }
 
     /**

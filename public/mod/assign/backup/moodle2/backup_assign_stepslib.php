@@ -91,6 +91,8 @@ class backup_assign_activity_structure_step extends backup_activity_structure_st
                                                   'maxattempts',
                                                   'markingworkflow',
                                                   'markingallocation',
+                                                  'markercount',
+                                                  'multimarkmethod',
                                                   'markinganonymous',
                                                   'preventsubmissionnotingroup',
                                                   'activity',
@@ -101,14 +103,30 @@ class backup_assign_activity_structure_step extends backup_activity_structure_st
 
         $userflags = new backup_nested_element('userflags');
 
-        $userflag = new backup_nested_element('userflag', array('id'),
-                                                array('userid',
-                                                      'assignment',
-                                                      'mailed',
-                                                      'locked',
-                                                      'extensionduedate',
-                                                      'workflowstate',
-                                                      'allocatedmarker'));
+        $userflag = new backup_nested_element(
+            'userflag',
+            ['id'],
+            [
+                'userid',
+                'assignment',
+                'mailed',
+                'locked',
+                'extensionduedate',
+                'workflowstate',
+            ]
+        );
+
+        $allocatedmarkers = new backup_nested_element('allocatedmarkers');
+
+        $allocatedmarker = new backup_nested_element(
+            'allocatedmarker',
+            ['id'],
+            [
+                'student',
+                'assignment',
+                'marker',
+            ]
+        );
 
         $submissions = new backup_nested_element('submissions');
 
@@ -133,6 +151,22 @@ class backup_assign_activity_structure_step extends backup_activity_structure_st
                                                  'penalty',
                                                  'attemptnumber'));
 
+        $marks = new backup_nested_element('marks');
+
+        $mark = new backup_nested_element(
+            'mark',
+            ['id'],
+            [
+                'assignment',
+                'gradeid',
+                'timecreated',
+                'timemodified',
+                'marker',
+                'mark',
+                'workflowstate',
+            ]
+        );
+
         $pluginconfigs = new backup_nested_element('plugin_configs');
 
         $pluginconfig = new backup_nested_element('plugin_config', array('id'),
@@ -142,16 +176,29 @@ class backup_assign_activity_structure_step extends backup_activity_structure_st
                                                          'value'));
 
         $overrides = new backup_nested_element('overrides');
-        $override = new backup_nested_element('override', array('id'), array(
-            'groupid', 'userid', 'sortorder', 'allowsubmissionsfromdate', 'duedate', 'cutoffdate', 'timelimit'));
+        $override = new backup_nested_element('override', ['id'], [
+            'groupid',
+            'userid',
+            'sortorder',
+            'allowsubmissionsfromdate',
+            'duedate',
+            'cutoffdate',
+            'timelimit',
+            'reason',
+            'reasonformat',
+        ]);
 
         // Build the tree.
         $assign->add_child($userflags);
         $userflags->add_child($userflag);
+        $assign->add_child($allocatedmarkers);
+        $allocatedmarkers->add_child($allocatedmarker);
         $assign->add_child($submissions);
         $submissions->add_child($submission);
         $assign->add_child($grades);
         $grades->add_child($grade);
+        $assign->add_child($marks);
+        $marks->add_child($mark);
         $assign->add_child($pluginconfigs);
         $pluginconfigs->add_child($pluginconfig);
         $assign->add_child($overrides);
@@ -162,12 +209,25 @@ class backup_assign_activity_structure_step extends backup_activity_structure_st
         $pluginconfig->set_source_table('assign_plugin_config',
                                         array('assignment' => backup::VAR_PARENTID));
 
+        // Allow subplugins to backup data at assign level.
+        $this->add_subplugin_structure('assignsubmission', $assign, true);
+        $this->add_subplugin_structure('assignfeedback', $assign, true);
+
         // Assign overrides to backup are different depending of user info.
         $overrideparams = array('assignid' => backup::VAR_PARENTID);
 
         if ($userinfo) {
             $userflag->set_source_table('assign_user_flags',
                                      array('assignment' => backup::VAR_PARENTID));
+            $allocatedmarker->set_source_table(
+                'assign_allocated_marker',
+                ['assignment' => backup::VAR_PARENTID]
+            );
+
+            $mark->set_source_table(
+                'assign_mark',
+                ['assignment' => backup::VAR_PARENTID]
+            );
 
             $submissionparams = array('assignment' => backup::VAR_PARENTID);
             if (!$groupinfo) {
@@ -194,7 +254,9 @@ class backup_assign_activity_structure_step extends backup_activity_structure_st
 
         // Define id annotations.
         $userflag->annotate_ids('user', 'userid');
-        $userflag->annotate_ids('user', 'allocatedmarker');
+        $allocatedmarker->annotate_ids('user', 'student');
+        $allocatedmarker->annotate_ids('user', 'marker');
+        $mark->annotate_ids('user', 'marker');
         $submission->annotate_ids('user', 'userid');
         $submission->annotate_ids('group', 'groupid');
         $grade->annotate_ids('user', 'userid');

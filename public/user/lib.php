@@ -815,6 +815,33 @@ function user_convert_text_to_menu_items($text, $page) {
 }
 
 /**
+ * Returns available default homepage options for user preferences.
+ *
+ * @return array
+ */
+function user_get_default_homepage_options(): array {
+    global $CFG;
+
+    $options = [];
+    if (!isset($CFG->enablemyhome) || $CFG->enablemyhome) {
+        $options[HOMEPAGE_SITE] = new lang_string('home');
+    }
+    if (!isset($CFG->enabledashboard) || $CFG->enabledashboard) {
+        $options[HOMEPAGE_MY] = new lang_string('mymoodle', 'admin');
+    }
+    if (!isset($CFG->enablemycourses) || $CFG->enablemycourses) {
+        $options[HOMEPAGE_MYCOURSES] = new lang_string('mycourses', 'admin');
+    }
+
+    // Allow hook callbacks to extend options.
+    $hook = new \core_user\hook\extend_default_homepage(true);
+    \core\di::get(\core\hook\manager::class)->dispatch($hook);
+    $options += $hook->get_options();
+
+    return $options;
+}
+
+/**
  * Get a list of essential user navigation items.
  *
  * @param stdclass $user user object.
@@ -1121,13 +1148,16 @@ function user_is_previously_used_password($userid, $password) {
  *
  * @param string $uuid The device UUID.
  * @param string $appid The app id. If empty all the devices matching the UUID for the user will be removed.
+ * @param int|null $userid The user id. If null, the current user will be used.
  * @return bool true if removed, false if the device didn't exists in the database
  * @since Moodle 2.9
  */
-function user_remove_user_device($uuid, $appid = "") {
+function user_remove_user_device($uuid, $appid = "", $userid = null) {
     global $DB, $USER;
 
-    $conditions = array('uuid' => $uuid, 'userid' => $USER->id);
+    $userid ??= $USER->id;
+
+    $conditions = ['uuid' => $uuid, 'userid' => $userid];
     if (!empty($appid)) {
         $conditions['appid'] = $appid;
     }

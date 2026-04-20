@@ -792,7 +792,7 @@ class repository_onedrive extends repository {
     protected function upload_file(\repository_onedrive\rest $service, \curl $curl, \curl $authcurl,
                                    $filepath, $mimetype, $parentid, $filename) {
         // Start an upload session.
-        // Docs https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/api/item_createuploadsession link.
+        // Docs https://learn.microsoft.com/en-us/graph/api/driveitem-createuploadsession?view=graph-rest-1.0 link.
 
         $params = ['parentid' => $parentid, 'filename' => urlencode($filename)];
         $behaviour = [ 'item' => [ "@microsoft.graph.conflictBehavior" => "rename" ] ];
@@ -813,7 +813,12 @@ class repository_onedrive extends repository {
             $curlinstance->setHeader('Content-type: ' . $mimetype);
             $size = filesize($filepath);
             $curlinstance->setHeader('Content-Range: bytes 0-' . ($size - 1) . '/' . $size);
-            $response = $curlinstance->put($created->uploadUrl, $options);
+            // Microsoft does not allow authorization headers for PUT, so we do not include them here.
+            $response = $curlinstance->put(
+                $created->uploadUrl,
+                $options,
+                ['CURLOPT_USERPWD' => false], // We need to make sure no auth headers are sent.
+            );
             if ($curlinstance->errno == 0) {
                 $response = json_decode($response);
             }
@@ -1013,22 +1018,6 @@ class repository_onedrive extends repository {
         } else {
             return $info->name;
         }
-    }
-
-    /**
-     * @deprecated since Moodle 4.0
-     */
-    #[\core\attribute\deprecated(null, reason: 'It is no longer used', since: '4.0', final: true)]
-    public static function can_import_skydrive_files() {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-
-    /**
-     * @deprecated since Moodle 4.0
-     */
-    #[\core\attribute\deprecated(null, reason: 'It is no longer used', since: '4.0', final: true)]
-    public static function import_skydrive_files() {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
     }
 
     /**

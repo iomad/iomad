@@ -39,6 +39,7 @@ define(['jquery', 'core/notification', 'core/str', 'core/form-autocomplete',
         this._filteredUsers = [];
         this._lastXofYUpdate = 0;
         this._firstLoadUsers = true;
+        this._isMarking = false;
 
         let url = new URL(window.location);
         if (parseInt(url.searchParams.get('treset')) > 0) {
@@ -133,10 +134,11 @@ define(['jquery', 'core/notification', 'core/str', 'core/form-autocomplete',
             return false;
         }
         this._lastFilters = filter;
+        this._isMarking = select.attr('data-ismarking') ?? false;
 
         ajax.call([{
             methodname: 'mod_assign_list_participants',
-            args: {assignid: assignmentid, groupid: groupid, filter: '', onlyids: true, tablesort: true},
+            args: {assignid: assignmentid, groupid: groupid, filter: '', onlyids: true, tablesort: true, marking: this._isMarking},
             done: this._usersLoaded.bind(this),
             fail: notification.exception
         }]);

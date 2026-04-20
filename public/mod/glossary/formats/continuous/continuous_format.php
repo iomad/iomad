@@ -1,16 +1,42 @@
 <?php
 
-function glossary_show_entry_continuous($course, $cm, $glossary, $entry, $mode='', $hook='', $printicons=1, $aliases=false) {
+use mod_glossary\output\renderer;
 
-    global $USER, $OUTPUT;
+/**
+ * Displays a glossary entry in continuous format.
+ *
+ * @param stdClass $course The course object.
+ * @param stdClass $cm The course module object.
+ * @param stdClass $glossary The glossary object.
+ * @param stdClass $entry The glossary entry object.
+ * @param string $mode The mode in which the entry is being displayed.
+ * @param string $hook
+ * @param int $printicons Whether to print editing icons.
+ * @param bool $aliases Whether to show aliases popup.
+ * @param int $conceptheadinglevel The heading level to use for rendering the concept within the heading element.
+ * @return void
+ * @package mod_glossary
+ */
+function glossary_show_entry_continuous(
+    $course,
+    $cm,
+    $glossary,
+    $entry,
+    $mode = '',
+    $hook = '',
+    $printicons = 1,
+    $aliases = false,
+    $conceptheadinglevel = 3,
+) {
+    global $OUTPUT, $PAGE;
 
-    echo '<table class="glossarypost continuous table-reboot" cellspacing="0">';
-    echo '<tr valign="top">';
-    echo '<td class="entry">';
-    glossary_print_entry_approval($cm, $entry, $mode);
-    echo '<div class="concept">';
-    glossary_print_entry_concept($entry);
-    echo '</div> ';
+    echo '<div class="glossarypost continuous">';
+
+    /** @var renderer $renderer */
+    $renderer = $PAGE->get_renderer('mod_glossary');
+    echo $renderer->concept_entry_header($entry, $mode, $conceptheadinglevel);
+
+    echo '<div class="entry">';
     glossary_print_entry_definition($entry, $glossary, $cm);
     glossary_print_entry_attachment($entry, $cm, 'html');
 
@@ -19,25 +45,43 @@ function glossary_show_entry_continuous($course, $cm, $glossary, $entry, $mode='
             'mod_glossary', 'glossary_entries', $entry->id), null, 'glossary-tags');
     }
     $entry->alias = '';
-    echo '</td></tr>';
+    echo '</div>';
 
-    echo '<tr valign="top"><td class="entrylowersection">';
+    echo '<div class="entrylowersection">';
     glossary_print_entry_lower_section($course, $cm, $glossary, $entry, $mode, $hook, $printicons, $aliases, false);
-    echo '</td>';
-    echo '</tr>';
-    echo "</table>\n";
+    echo '</div>';
+
+    echo "</div>";
 }
 
-function glossary_print_entry_continuous($course, $cm, $glossary, $entry, $mode='', $hook='', $printicons=1) {
+/**
+ * Display entries in the continuous glossary format for printing.
+ *
+ * @param stdClass $course The course object.
+ * @param stdClass $cm The course module object.
+ * @param stdClass $glossary The glossary object.
+ * @param stdClass $entry The glossary entry object.
+ * @param string $mode The mode in which the entry is being displayed.
+ * @param string $hook
+ * @param int $printicons Whether to print editing icons.
+ * @param int $conceptheadinglevel The heading level to use for rendering the concept within the heading element.
+ * @package mod_glossary
+ */
+function glossary_print_entry_continuous(
+    $course,
+    $cm,
+    $glossary,
+    $entry,
+    $mode = '',
+    $hook = '',
+    $printicons = 1,
+    $conceptheadinglevel = 3
+) {
+    // The print view for this format is exactly the normal view, so we use it.
 
-    //The print view for this format is exactly the normal view, so we use it
+    // Take out auto-linking in definitions in print view.
+    $entry->definition = '<span class="nolink">' . $entry->definition . '</span>';
 
-    //Take out autolinking in definitions un print view
-    $entry->definition = '<span class="nolink">'.$entry->definition.'</span>';
-
-    //Call to view function (without icons, ratings and aliases) and return its result
-    glossary_show_entry_continuous($course, $cm, $glossary, $entry, $mode, $hook, false, false, false);
-
+    // Call to view function (without icons, ratings and aliases) and return its result.
+    glossary_show_entry_continuous($course, $cm, $glossary, $entry, $mode, $hook, false, false, $conceptheadinglevel);
 }
-
-

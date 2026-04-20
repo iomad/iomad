@@ -55,6 +55,7 @@
         "extrafiltersdropdown": "<div class='dropdown extrafilters'></div>",
         "pagereset": "http://moodle.local/mod/assign/view.php?id=2&action=grading&group=0",
         "graderurl": "http://moodle.local/mod/assign/view.php?id=2&action=grader",
+        "markerurl": "http://moodle.local/mod/assign/view.php?id=2&action=marker",
         "quickgrading": {
             "baseurl": "http://moodle.local/mod/assign/view.php?id=2&action=grading",
             "enabled": true
@@ -114,10 +115,15 @@
             </div>
             <div class="navitem-divider"></div>
         {{/pagereset}}
+        {{#markerurl}}
+            <div class="navitem ms-sm-auto align-self-center">
+                <a class="btn btn-primary text-nowrap" href="{{markerurl}}">{{#str}}markallocatedsubmissions, mod_assign{{/str}}</a>
+            </div>
+        {{/markerurl}}
         {{#graderurl}}
-        <div class="navitem ms-sm-auto align-self-center">
-            <a class="btn btn-primary" href="{{graderurl}}">{{#str}}gradeverb, core{{/str}}</a>
-        </div>
+            <div class="navitem {{^markerurl}}ms-sm-auto{{/markerurl}} align-self-center">
+                <a class="btn btn-primary" href="{{graderurl}}">{{#str}}gradeverb, core{{/str}}</a>
+            </div>
         {{/graderurl}}
     </div>
 </div>

@@ -16,19 +16,18 @@
 
 namespace core_question\output;
 
+use core\output\select_menu;
 use core_question\local\bank\navigation_node_base;
 use core_question\local\bank\plugin_features_base;
 use moodle_url;
 use renderer_base;
 use templatable;
 use renderable;
-use url_select;
 
 /**
  * Rendered HTML elements for tertiary nav for Question bank.
  *
  * Provides a menu of links for question bank tertiary navigation, based on get_navigation_node() implemented by each plugin.
- * Optionally includes and additional action button to display alongside the menu.
  *
  * @package   core_question
  * @copyright 2021 Sujith Haridasan <sujith@moodle.com>
@@ -92,7 +91,6 @@ class qbank_action_menu implements templatable, renderable {
             $url->params($this->currenturl->params());
             $menu[$url->out(false)] = $navigationnode->get_navigation_title();
         }
-
         $actionbutton = null;
         if ($this->actionurl) {
             $actionbutton = [
@@ -101,11 +99,19 @@ class qbank_action_menu implements templatable, renderable {
             ];
         }
 
-        $urlselect = new url_select($menu, $this->currenturl->out(false), null, 'questionbankaction');
-        $urlselect->set_label(get_string('questionbanknavigation', 'question'), ['class' => 'accesshide']);
+        $selectmenu = new select_menu(
+            'questionbanknavigation',
+            $menu,
+            $this->currenturl->out(false)
+        );
+        $selectmenu->set_label(
+            get_string('questionbanknavigation', 'question'),
+            ['class' => 'visually-hidden']
+        );
 
         return [
-            'questionbankselect' => $urlselect->export_for_template($output),
+            'navigation' => $selectmenu->export_for_template($output),
+            'headinglevel' => 2,
             'actionbutton' => $actionbutton
         ];
     }

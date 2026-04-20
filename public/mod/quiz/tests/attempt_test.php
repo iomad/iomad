@@ -588,4 +588,77 @@ final class attempt_test extends \advanced_testcase {
         $questionattempt->render(new \question_display_options(), 1);
         $this->assertEqualsWithDelta(time(), $questionattempt->get_step(0)->get_timecreated(), 1);
     }
+
+    /**
+     * Test that enabling shuffle on the first quiz section randomizes question order between attempts.
+     *
+     * @return void
+     * @covers ::quiz_start_new_attempt
+     */
+    public function test_question_shuffle(): void {
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+
+        // Create quiz with two sections (shuffled, non-shuffled) using create_test_quiz.
+        $quizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_quiz');
+        $quizobj = $quizgenerator->create_test_quiz([
+            'Shuffled section*',
+            ['Q1', 1, 'shortanswer'],
+            ['Q2', 1, 'shortanswer'],
+            ['Q3', 1, 'shortanswer'],
+            ['Q4', 1, 'shortanswer'],
+            ['Q5', 1, 'shortanswer'],
+            'Non-shuffled section',
+            ['Q6', 2, 'shortanswer'],
+            ['Q7', 2, 'shortanswer'],
+            ['Q8', 2, 'shortanswer'],
+            ['Q9', 2, 'shortanswer'],
+            ['Q10', 2, 'shortanswer'],
+        ]);
+
+        // Start the reference attempt (Attempt 1).
+        $attempt1 = quiz_prepare_and_start_new_attempt($quizobj, 1, null, false, [], [], $user->id);
+        $attemptobj1 = quiz_attempt::create($attempt1->id);
+
+        // Shuffled section
+        $slots1a = $attemptobj1->get_slots(0);
+        // Non-shuffled section
+        $slots2a = $attemptobj1->get_slots(1);
+        // Get reference orders.
+        $order1a = array_map(fn($slot) => $attemptobj1->get_question_attempt($slot)->get_question()->id, $slots1a);
+        $order2a = array_map(fn($slot) => $attemptobj1->get_question_attempt($slot)->get_question()->id, $slots2a);
+
+        // Start comparison attempt (Attempt 2) with a retry mechanism.
+        // We try up to 5 times to get a different shuffle.
+        // If it matches 5 times in a row, the shuffle feature is likely broken.
+        $maxretries = 5;
+        $isshuffled = false;
+
+        for ($i = 0; $i < $maxretries; $i++) {
+            $attempt2 = quiz_prepare_and_start_new_attempt($quizobj, 2 + $i, null, false, [], [], $user->id);
+            $attemptobj2 = quiz_attempt::create($attempt2->id);
+
+            $slots1b = $attemptobj2->get_slots(0);
+            $order1b = array_map(fn($slot) => $attemptobj2->get_question_attempt($slot)->get_question()->id, $slots1b);
+
+            // If the orders are different, the shuffle is working.
+            if ($order1a !== $order1b) {
+                $isshuffled = true;
+                break;
+            }
+            // Otherwise try again.
+        }
+
+        // Assert that we eventually found a different order.
+        $message = "Shuffled section should have different order between attempts after $maxretries tries.";
+        $this->assertTrue($isshuffled, $message);
+
+        // Verify the non-shuffled section on the final attempt used.
+        // We only need to check this on the last attempt generated, as it should never change.
+        $slots2b = $attemptobj2->get_slots(1);
+        $order2b = array_map(fn($slot) => $attemptobj2->get_question_attempt($slot)->get_question()->id, $slots2b);
+        $this->assertEquals($order2a, $order2b, 'Non-shuffled section should have same order between attempts.');
+    }
 }

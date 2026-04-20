@@ -1,0 +1,130 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+namespace core_course\route\controller;
+
+use core\router\route;
+use core\router\require_login;
+use core_course\modinfo;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
+/**
+ * Restricted modules rediretion.
+ *
+ * @package    core_course
+ * @copyright  2026 Amaia Anabitarte <amaia@moodle.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class restricted_module {
+    use \core\router\route_controller;
+
+    /**
+     * Restricted module.
+     *
+     * @param ResponseInterface $response
+     * @param \stdClass $cmdata
+     * @return ResponseInterface
+     */
+    #[route(
+        path: '/cms/{cm}/restricted',
+        pathtypes: [
+            new \core\router\parameters\path_coursemodule(name: 'cm'),
+        ],
+        requirelogin: new require_login(
+            requirelogin: true,
+            courseattributename: 'course',
+        ),
+    )]
+    public function restricted_module_page(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        \stdClass $cmdata,
+    ): ResponseInterface {
+        global $OUTPUT, $PAGE;
+
+        $context = \context_module::instance($cmdata->id);
+
+        $course = get_course($cmdata->course);
+        $modinfo = get_fast_modinfo($course);
+        $cminfo = $modinfo->get_cm($cmdata->id);
+        $sectioninfo = $modinfo->get_section_info_by_id($cmdata->section);
+
+        $format = course_get_format($course);
+        $course->format = $format->get_format();
+
+        // Confirm the module has a view page. Redirect to section page otherwise.
+        if (!$cmurl = $cminfo->get_url()) {
+            $cmurl = $format->get_view_url($sectioninfo->section, ['navigation' => true]);
+            $cmurl->set_anchor('module-' . $cmdata->id);
+            return $this->redirect($response, $cmurl);
+        }
+
+        // Confirm the module is actually restricted. Redirect to module page otherwise.
+        if ($cminfo->get_user_visible()) {
+            return $this->redirect($response, $cmurl);
+        }
+
+        // Confirm the module is not stealth and restrictions are visible.
+        // Redirect to module page to require_login() otherwise.
+        if (!$cminfo->is_visible_on_course_page()) {
+            return $this->redirect($response, $cmurl);
+        }
+
+        $url = \core\router\util::get_path_for_callable(
+            [self::class, 'restricted_module_page'],
+            ['cm' => $cmdata->id],
+        );
+        $PAGE->set_url($url, ['cm' => $cmdata->id]);
+        $PAGE->add_body_class('limitedwidth');
+        $PAGE->set_context($context);
+        $PAGE->set_pagetype('mod-' . $cminfo->modname . '-restricted');
+        $strtitle = get_string('restrictedtitle', 'course', $cminfo->get_name());
+        $PAGE->set_title($strtitle . \moodle_page::TITLE_SEPARATOR . $course->shortname);
+        $PAGE->set_heading($course->fullname);
+        $PAGE->set_cm($cminfo);
+        $PAGE->set_pagelayout('incourse');
+        $PAGE->set_secondary_navigation(false);
+        $PAGE->set_hide_settings(true);
+        $PAGE->set_ai_visibility_hint(false);
+
+        $restrictedclass = $format->get_output_classname('content\\cm\\restricted');
+        $cmoutput = new $restrictedclass(
+            format: $format,
+            section: $sectioninfo,
+            mod: $cminfo,
+        );
+        $renderer = $format->get_renderer($PAGE);
+
+        if ($header = $OUTPUT->header()) {
+            $response->getBody()->write($header);
+        }
+        $response->getBody()->write($renderer->render($cmoutput));
+        if ($footer = $OUTPUT->footer()) {
+            $response->getBody()->write($footer);
+        }
+
+        $eventdata = [
+            'objectid' => $cmdata->id,
+            'context' => $context,
+        ];
+        $event = \core\event\course_restricted_module_viewed::create($eventdata);
+        $event->trigger();
+        user_accesstime_log($context->instanceid);
+
+        return $response;
+    }
+}

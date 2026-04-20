@@ -62,17 +62,26 @@ class grading_app implements templatable, renderable {
     public $participants = [];
 
     /**
+     * @var bool - True to show fields for marking, false to show fields for
+     * grading (used when there are multiple markers).
+     */
+    public $marker = false;
+
+    /**
      * Constructor for this renderable.
      *
      * @param int $userid The user we will open the grading app too.
      * @param int $groupid If groups are enabled this is the current course group.
      * @param \assign $assignment The assignment class
+     * @param bool $marker If assignment instance uses multiple markers $marker
+     * is true to show fields for marking (as opposed to grading).
      */
-    public function __construct($userid, $groupid, $assignment) {
+    public function __construct($userid, $groupid, $assignment, $marker = false) {
         $this->userid = $userid;
         $this->groupid = $groupid;
         $this->assignment = $assignment;
         $this->participants = $assignment->list_participants_with_filter_status_and_group($groupid);
+        $this->marker = $marker;
         if (!$this->userid && count($this->participants)) {
             $this->userid = reset($this->participants)->id;
         }
@@ -101,6 +110,7 @@ class grading_app implements templatable, renderable {
         $export->hasmarkingworkflow = count($export->markingworkflowfilters) > 0;
         $export->markingallocationfilters = $this->assignment->get_marking_allocation_filters(true);
         $export->hasmarkingallocation = count($export->markingallocationfilters) > 0;
+        $export->ismarking = (int)$this->marker;
 
         $num = 1;
         foreach ($this->participants as $idx => $record) {

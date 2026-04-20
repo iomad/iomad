@@ -2,38 +2,42 @@
 // Bootstrap variables
 //
 
+// Import Moodle Design System tokens.
+// Must be imported before Bootstrap so that the design system tokens can be used to override Bootstrap variables.
+@import "design-system";
+
 // Prefix for all CSS variables
 $prefix: bs- !default;
 
 // Colors
-$white:    #fff !default;
-$gray-100: #f8f9fa !default;
-$gray-200: #e9ecef !default;
-$gray-300: #dee2e6 !default;
-$gray-400: #ced4da !default;
-$gray-500: #8f959e !default;
-$gray-600: #6a737b !default;
-$gray-700: #495057 !default;
-$gray-800: #343a40 !default;
-$gray-900: #1d2125 !default;
-$black:    #000 !default;
+$white:    $mds-color-gray-white !default;
+$gray-100: $mds-color-gray-100 !default;
+$gray-200: $mds-color-gray-200 !default;
+$gray-300: $mds-color-gray-300 !default;
+$gray-400: $mds-color-gray-400 !default;
+$gray-500: $mds-color-gray-500 !default;
+$gray-600: $mds-color-gray-600 !default;
+$gray-700: $mds-color-gray-700 !default;
+$gray-800: $mds-color-gray-800 !default;
+$gray-900: $mds-color-gray-900 !default;
+$black:    $mds-color-gray-black !default;
 
-$blue:    #0f6cbf !default;
-$indigo:  #6610f2 !default;
-$purple:  #613d7c !default;
-$pink:    #db1a74 !default;
-$red:     #ca3120 !default;
-$orange:  #f0ad4e !default;
-$yellow:  #ff7518 !default;
-$green:   #357a32 !default;
-$teal:    #20c997 !default;
-$cyan:    #008196 !default;
+$blue:    $mds-color-blue-500 !default;
+$indigo:  $mds-color-indigo-500 !default;
+$purple:  $mds-color-purple-500 !default;
+$pink:    $mds-color-pink-500 !default;
+$red:     $mds-color-red-500 !default;
+$orange:  $mds-color-orange-500 !default;
+$yellow:  $mds-color-yellow-500 !default;
+$green:   $mds-color-green-500 !default;
+$teal:    $mds-color-teal-500 !default;
+$cyan:    $mds-color-cyan-500 !default;
 
 $primary:       $blue !default;
 $secondary:     $gray-400 !default;
 $success:       $green !default;
 $info:          $cyan !default;
-$warning:       $orange !default;
+$warning:       $yellow !default;
 $danger:        $red !default;
 $light:         $gray-100 !default;
 $dark:          $gray-900 !default;
@@ -51,9 +55,6 @@ $theme-colors: map-merge((
     "dark":       $dark
 ), $theme-colors);
 // stylelint-enable
-
-// Fonts
-$font-size-base: 0.9375rem !default;
 
 // Links
 $link-decoration: none !default;

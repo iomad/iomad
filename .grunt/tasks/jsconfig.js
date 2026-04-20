@@ -14,6 +14,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 /* jshint node: true, browser: false */
 /* eslint-env node */
+// @ts-nocheck
 
 /**
  * @copyright  2022 Andrew Lyons <andrew@nicols.co.uk>
@@ -34,20 +35,49 @@ const configuration = {
     include: [],
 };
 
+/**
+ * Generate jsconfig.json with AMD module path aliases for all components.
+ *
+ * @param {object} grunt The Grunt instance.
+ */
+const generateJsconfig = (grunt) => {
+    const jsconfigData = Object.assign({}, configuration);
+    const path = require('path');
+
+    const {fetchComponentData} = require(path.join(process.cwd(), '.grunt', 'components.js'));
+
+    const componentData = fetchComponentData().components;
+    for (const [thisPath, component] of Object.entries(componentData)) {
+        jsconfigData.compilerOptions.paths[`${component}/*`] = [`${thisPath}/amd/src/*`];
+        jsconfigData.include.push(`${thisPath}/amd/src/**/*`);
+    }
+
+    grunt.file.write('jsconfig.json', JSON.stringify(jsconfigData, null, "  ") + "\n");
+    grunt.log.write('✓ Generating jsconfig.json\n');
+};
+
+/**
+ * Generate tsconfig.aliases.json with TypeScript path aliases for all ESM components.
+ *
+ * @returns {Promise<void>}
+ */
+const generateTsAliases = async() => {
+    const {generateAliases} = await import('../../.esbuild/generate-aliases.mjs');
+    generateAliases();
+};
+
 module.exports = (grunt) => {
-    const handler = () => {
-        const jsconfigData = Object.assign({}, configuration);
+    const handler = async function() {
+        const done = this.async();
 
-        const path = require('path');
-        const {fetchComponentData} = require(path.join(process.cwd(), '.grunt', 'components.js'));
-
-        const componentData = fetchComponentData().components;
-        for (const [thisPath, component] of Object.entries(componentData)) {
-            jsconfigData.compilerOptions.paths[`${component}/*`] = [`public/${thisPath}/amd/src/*`];
-            jsconfigData.include.push(`public/${thisPath}/amd/src/**/*`);
+        try {
+            generateJsconfig(grunt);
+            await generateTsAliases();
+            done();
+        } catch (err) {
+            grunt.log.error(err.message);
+            done(false);
         }
-
-        grunt.file.write('jsconfig.json', JSON.stringify(jsconfigData, null, "  ") + "\n");
     };
     grunt.registerTask('jsconfig', 'Generate a jsconfig configuration compatible with the LSP', handler);
 };

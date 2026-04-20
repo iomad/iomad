@@ -65,7 +65,7 @@ class sectionnavigation implements named_templatable, renderable {
     /**
      * Export this data so it can be used as the context for a mustache template.
      *
-     * @param renderer_base $output typically, the renderer that's calling this function
+     * @param \renderer_base $output typically, the renderer that's calling this function
      * @return stdClass data context for a mustache template
      */
     public function export_for_template(\renderer_base $output): stdClass {
@@ -101,7 +101,8 @@ class sectionnavigation implements named_templatable, renderable {
                 }
                 $data->previousname = get_section_name($course, $sections[$back]);
                 $data->previousurl = course_get_url($course, $back, ['navigation' => true]);
-                $data->hasprevious = true;
+                // If there is no url for the section the link should not be displayed.
+                $data->hasprevious = !empty($data->previousurl);
             }
             $back--;
         }
@@ -115,7 +116,8 @@ class sectionnavigation implements named_templatable, renderable {
                 }
                 $data->nextname = get_section_name($course, $sections[$forward]);
                 $data->nexturl = course_get_url($course, $forward, ['navigation' => true]);
-                $data->hasnext = true;
+                // If there is no url for the section the link should not be displayed.
+                $data->hasnext = !empty($data->nexturl);
             }
             $forward++;
         }

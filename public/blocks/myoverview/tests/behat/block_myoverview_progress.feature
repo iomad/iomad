@@ -5,7 +5,9 @@ Feature: Course overview block show users their progress on courses
   I can see the progress percentage of the courses I am enrolled in
 
   Background:
-    Given the following "users" exist:
+    Given the following config values are set as admin:
+      | enablemycourses | 1 |
+    And the following "users" exist:
       | username | firstname | lastname | email | idnumber |
       | teacher1 | Teacher | 1 | teacher1@example.com | T1 |
       | student1 | Student | 1 | student1@example.com | S1 |

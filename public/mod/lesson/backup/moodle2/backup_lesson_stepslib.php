@@ -137,7 +137,7 @@ class backup_lesson_activity_structure_step extends backup_activity_structure_st
         $overrides = new backup_nested_element('overrides');
         $override = new backup_nested_element('override', array('id'), array(
             'groupid', 'userid', 'available', 'deadline', 'timelimit',
-            'review', 'maxattempts', 'retake', 'password'));
+            'review', 'maxattempts', 'retake', 'password', 'reason', 'reasonformat'));
 
         // Now that we have all of the elements created we've got to put them
         // together correctly.

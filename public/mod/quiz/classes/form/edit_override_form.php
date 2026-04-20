@@ -224,6 +224,16 @@ class edit_override_form extends moodleform {
         $mform->addHelpButton('attempts', 'attempts', 'quiz');
         $mform->setDefault('attempts', $this->quiz->attempts);
 
+        // Reason for override.
+        $editoroptions = [
+            'maxfiles' => 0,
+            'noclean' => false,
+            'context' => $this->context,
+        ];
+        $mform->addElement('editor', 'reason_editor', get_string('overridereason', 'quiz'), null, $editoroptions);
+        $mform->setType('reason_editor', PARAM_RAW);
+        $mform->addHelpButton('reason_editor', 'overridereason', 'quiz');
+
         // Submit buttons.
         $mform->addElement('submit', 'resetbutton',
                 get_string('reverttodefaults', 'quiz'));

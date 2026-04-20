@@ -28,6 +28,8 @@ require_once($CFG->libdir.'/adminlib.php');
 
 admin_externalpage_setup('qbank_customfields');
 
+$PAGE->add_body_class('limitedwidth');
+
 $output = $PAGE->get_renderer('core_customfield');
 $customfieldhandler = qbank_customfields\customfield\question_handler::create();
 $outputpage = new \core_customfield\output\management($customfieldhandler);

@@ -5,7 +5,9 @@ Feature: Anonymous feedback
   I need to be able to allow anonymous feedbacks
 
   Background:
-    Given the following "users" exist:
+    Given the following config values are set as admin:
+      | enablemyhome | 1 |
+    And the following "users" exist:
       | username | firstname | lastname |
       | user1    | Username  | 1        |
       | user2    | Username  | 2        |
@@ -39,7 +41,10 @@ Feature: Anonymous feedback
     And I log out
 
   Scenario: Guests can see anonymous feedback on front page but can not complete
-    When I follow "Site feedback"
+    Given the following config values are set as admin:
+      | forcelogin | 0 |
+    When I am on site homepage
+    And I follow "Site feedback"
     Then I should not see "Answer the questions"
     And I should not see "Preview questions"
 
@@ -102,8 +107,10 @@ Feature: Anonymous feedback
   Scenario: Complete fully anonymous feedback on the front page as a guest
     Given the following config values are set as admin:
       | feedback_allowfullanonymous | 1 |
-    When I follow "Site feedback"
-    And I should not see "Preview questions"
+      | forcelogin | 0 |
+    When I am on site homepage
+    And I follow "Site feedback"
+    Then I should not see "Preview questions"
     And I follow "Answer the questions"
     And I should see "Do you like our site?"
     And I set the following fields to these values:
@@ -116,11 +123,13 @@ Feature: Anonymous feedback
   Scenario: Complete fully anonymous feedback and view analyze on the front page as a guest
     Given the following config values are set as admin:
       | feedback_allowfullanonymous | 1 |
+      | forcelogin | 0 |
     And the following "role capability" exists:
       | role                         | guest |
       | mod/feedback:viewanalysepage | allow |
-    When I follow "Site feedback"
-    And I should not see "Preview questions"
+    When I am on site homepage
+    And I follow "Site feedback"
+    Then I should not see "Preview questions"
     And I follow "Answer the questions"
     And I should see "Do you like our site?"
     And I set the following fields to these values:

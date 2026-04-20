@@ -47,3 +47,23 @@
         white-space: pre-wrap;
     }
 }
+
+// Manual completion button in activity header
+.header-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.path-mod {
+    .activity-header {
+        max-width: initial;
+    }
+}
+
+@media (max-width: map-get($grid-breakpoints, "xl")) {
+    .path-mod .activity-dates {
+        grid-template-columns: 1fr; // Stack them on small screens
+    }
+}

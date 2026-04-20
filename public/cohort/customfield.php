@@ -30,6 +30,8 @@ require_once($CFG->libdir . '/adminlib.php');
 
 admin_externalpage_setup('cohort_customfield');
 
+$PAGE->add_body_class('limitedwidth');
+
 $output = $PAGE->get_renderer('core_customfield');
 $handler = cohort_handler::create();
 $outputpage = new management($handler);

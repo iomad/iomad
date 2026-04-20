@@ -2714,6 +2714,7 @@ abstract class enrol_plugin {
         global $DB;
 
         $instance->status = $newstatus;
+        $instance->timemodified = time();
         $DB->update_record('enrol', $instance);
 
         // Dispatch the hook for post enrol status update actions.
@@ -2728,14 +2729,6 @@ abstract class enrol_plugin {
 
         // Invalidate all enrol caches.
         $context->mark_dirty();
-    }
-
-    /**
-     * @deprecated Since Moodle 4.4.0.
-     */
-    #[\core\attribute\deprecated(null, reason: 'Replaced with hooks', since: '4.4', mdl: 'MDL-78551', final: true)]
-    public function update_communication(): void {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
     }
 
     /**

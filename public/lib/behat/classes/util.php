@@ -26,7 +26,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . '/../lib.php');
-require_once(__DIR__ . '/../../testing/classes/util.php');
 require_once(__DIR__ . '/behat_command.php');
 require_once(__DIR__ . '/behat_config_manager.php');
 
@@ -45,7 +44,7 @@ use Behat\Mink\Exception\ExpectationException;
  * @copyright 2013 David Monllaó
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class behat_util extends testing_util {
+class behat_util extends \core\test\testing_util {
 
     /**
      * The behat test site fullname and shortname.
@@ -423,6 +422,7 @@ class behat_util extends testing_util {
 
         filter_manager::reset_caches();
 
+        \core_customfield\handler::reset_caches();
         \core_reportbuilder\manager::reset_caches();
 
         // Reset course and module caches.
@@ -486,7 +486,7 @@ class behat_util extends testing_util {
         $posixexists = function_exists('posix_isatty');
 
         // Make sure this step is only used with interactive terminal (if detected).
-        if ($posixexists && !@posix_isatty(STDOUT)) {
+        if ($posixexists && !@posix_isatty(STDOUT) && getenv('MOODLE_BEHAT_RUNNING_IN_TTY') !== '1') {
             throw new ExpectationException('Break point should only be used with interactive terminal.', $session);
         }
 
@@ -530,5 +530,11 @@ Run optional tests:
 EOF;
 
         return $siteinfo;
+    }
+
+
+    #[\Override]
+    protected static function get_framework() {
+        return 'behat';
     }
 }

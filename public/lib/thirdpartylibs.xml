@@ -4,7 +4,7 @@
     <location>adodb</location>
     <name>ADOdb</name>
     <description>Database abstraction library for MySQL, PostgreSQL, MSSQL, Oracle, Interbase, Foxpro, Access, ADO, Sybase, DB2 and ODBC.</description>
-    <version>5.22.9</version>
+    <version>5.22.11</version>
     <license>BSD/LGPL</license>
     <licenseversion>3-Clause/2.1+</licenseversion>
     <repository>https://github.com/ADOdb/ADOdb</repository>
@@ -53,7 +53,7 @@
     <location>evalmath</location>
     <name>EvalMath</name>
     <description>Class to safely evaluate math expressions.</description>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <license>BSD</license>
     <repository>https://github.com/dbojdo/eval-math</repository>
     <copyrights>
@@ -65,7 +65,7 @@
     <location>phpspreadsheet/phpspreadsheet</location>
     <name>PhpSpreadsheet</name>
     <description>Library to read, write and create spreadsheet documents in PHP.</description>
-    <version>4.1.0</version>
+    <version>5.2.0</version>
     <license>MIT</license>
     <repository>https://github.com/PHPOffice/PhpSpreadsheet</repository>
     <customised/>
@@ -74,7 +74,7 @@
     <location>phpspreadsheet/markbaker/complex</location>
     <name>PHPComplex</name>
     <description>PHP Class Library for working with Complex numbers.</description>
-    <version>3.0.1</version>
+    <version>3.0.2</version>
     <license>MIT</license>
     <repository>https://github.com/MarkBaker/PHPComplex</repository>
   </library>
@@ -82,7 +82,7 @@
     <location>phpspreadsheet/markbaker/matrix</location>
     <name>PHPMatrix</name>
     <description>PHP Class for handling Matrices.</description>
-    <version>3.0.0</version>
+    <version>3.0.1</version>
     <license>MIT</license>
     <repository>https://github.com/MarkBaker/PHPMatrix</repository>
   </library>
@@ -323,13 +323,12 @@ All rights reserved.</copyright>
     <location>mustache</location>
     <name>Mustache</name>
     <description>PHP library for displaying mustache templates.</description>
-    <version>2.14.2</version>
+    <version>3.0.0</version>
     <license>MIT</license>
     <repository>https://github.com/bobthecow/mustache.php</repository>
     <copyrights>
-      <copyright>2010-2016 Justin Hileman</copyright>
+      <copyright>2010-2025 Justin Hileman</copyright>
     </copyrights>
-    <customised/>
   </library>
   <library>
     <location>amd/src/mustache.js</location>
@@ -404,11 +403,11 @@ All rights reserved.</copyright>
     <location>amd/src/chartjs-lazy.js</location>
     <name>Chart.js</name>
     <description>Simple yet flexible JavaScript charting for designers &amp; developers.</description>
-    <version>4.5.0</version>
+    <version>4.5.1</version>
     <license>MIT</license>
     <repository>https://github.com/chartjs/Chart.js</repository>
     <copyrights>
-      <copyright>2014-2022 Chart.js Contributors</copyright>
+      <copyright>2014-2025 Chart.js Contributors</copyright>
     </copyrights>
     <customised/>
   </library>
@@ -452,7 +451,7 @@ All rights reserved.</copyright>
     <location>lti1p3</location>
     <name>LTI 1.3 Tool Library</name>
     <description>A library used for building IMS-certified LTI 1.3 tool providers in PHP.</description>
-    <version>6.0.0</version>
+    <version>6.2.0</version>
     <license>Apache</license>
     <licenseversion>2.0</licenseversion>
     <repository>https://github.com/packbackbooks/lti-1-3-php-library</repository>
@@ -543,7 +542,7 @@ All rights reserved.</copyright>
     <location>php-jwt</location>
     <name>PHP-JWT</name>
     <description>A simple library to encode and decode JSON Web Tokens (JWT) in PHP, conforming to RFC 7519</description>
-    <version>6.11.0</version>
+    <version>6.11.1</version>
     <license>BSD</license>
     <licenseversion>3-Clause</licenseversion>
     <repository>https://github.com/firebase/php-jwt</repository>
@@ -611,7 +610,7 @@ All rights reserved.</copyright>
     <location>zipstream</location>
     <name>ZipStream-PHP</name>
     <description>PHP ZIP Streaming Library</description>
-    <version>3.1.2</version>
+    <version>3.2.0</version>
     <license>MIT</license>
     <repository>https://github.com/maennchen/ZipStream-PHP</repository>
     <copyrights>
@@ -716,17 +715,17 @@ All rights reserved.</copyright>
   </library>
   <library>
     <location>guzzlehttp/guzzle</location>
-    <name>GuzzleHttp/Guzzle</name>
+    <name>guzzlehttp/guzzle</name>
     <description>Guzzle is a PHP HTTP client library</description>
-    <version>7.9.2</version>
+    <version>7.10.0</version>
     <license>MIT</license>
     <repository>https://github.com/guzzle/guzzle</repository>
   </library>
   <library>
     <location>guzzlehttp/promises</location>
-    <name>GuzzleHttp/Promises</name>
+    <name>guzzlehttp/promises</name>
     <description>Guzzle promises library</description>
-    <version>2.0.4</version>
+    <version>2.3.0</version>
     <license>MIT</license>
     <repository>https://github.com/guzzle/promises</repository>
   </library>
@@ -740,9 +739,9 @@ All rights reserved.</copyright>
   </library>
   <library>
     <location>guzzlehttp/psr7</location>
-    <name>GuzzleHttp/PSR7</name>
+    <name>guzzlehttp/psr7</name>
     <description>PSR-7 message implementation that also provides common utility methods</description>
-    <version>2.7.0</version>
+    <version>2.8.0</version>
     <license>MIT</license>
     <repository>https://github.com/guzzle/psr7</repository>
   </library>
@@ -750,22 +749,22 @@ All rights reserved.</copyright>
     <location>symfony/deprecation-contracts</location>
     <name>Symfony Deprecation contracts</name>
     <description>A generic function and convention to trigger deprecation notices</description>
-    <version>3.5.1</version>
+    <version>3.6.0</version>
     <license>MIT</license>
     <repository>https://github.com/symfony/deprecation-contracts</repository>
   </library>
   <library>
     <location>guzzlehttp/kevinrob/guzzlecache</location>
-    <name>Guzzle cache middleware</name>
+    <name>kevinrob/guzzle-cache-middleware</name>
     <description>A HTTP Cache for Guzzle as a simple Middleware to be added in the HandlerStack.</description>
-    <version>6.0.0</version>
+    <version>7.0.0</version>
     <license>MIT</license>
     <repository>https://github.com/Kevinrob/guzzle-cache-middleware</repository>
   </library>
   <library>
       <location>webauthn</location>
       <name>WebAuthn</name>
-      <version>2.2.2</version>
+      <version>2.2.0</version>
       <license>MIT</license>
       <repository>https://github.com/lbuchs/WebAuthn</repository>
   </library>
@@ -773,7 +772,7 @@ All rights reserved.</copyright>
     <location>aws-sdk</location>
     <name>AWS SDK for PHP</name>
     <description>The AWS SDK for PHP library</description>
-    <version>3.342.2</version>
+    <version>3.369.22</version>
     <license>Apache</license>
     <licenseversion>2.0</licenseversion>
     <repository>https://github.com/aws/aws-sdk-php</repository>
@@ -792,7 +791,7 @@ All rights reserved.</copyright>
   <library>
       <location>laravel/serializable-closure</location>
       <name>Serializable Closure</name>
-      <version>2.0.3</version>
+      <version>2.0.10</version>
       <license>MIT</license>
       <repository>https://github.com/laravel/serializable-closure</repository>
   </library>
@@ -813,7 +812,7 @@ All rights reserved.</copyright>
   <library>
       <location>slim/slim</location>
       <name>Slim Framework</name>
-      <version>4.13.0</version>
+      <version>4.15.1</version>
       <license>MIT</license>
       <repository>https://github.com/slimphp/Slim</repository>
   </library>
@@ -838,5 +837,48 @@ All rights reserved.</copyright>
       <version>9.0.12</version>
       <license>Apache 2.0</license>
       <repository>https://github.com/giggsey/libphonenumber-for-php-lite</repository>
+  </library>
+  <library>
+      <location>monolog</location>
+      <name>Monolog</name>
+      <description>Monolog - Logging for PHP</description>
+      <version>3.9.0</version>
+      <license>MIT</license>
+      <repository>https://github.com/Seldaek/monolog</repository>
+  </library>
+  <library>
+      <location>psr/cache</location>
+      <name>cache</name>
+      <description>Caching Interface (PHP FIG PSR-6).</description>
+      <version>3.0.0</version>
+      <license>MIT</license>
+      <repository>https://github.com/php-fig/cache</repository>
+  </library>
+  <library>
+      <location>google2</location>
+      <name>Google APIs</name>
+      <description>Library Google APIs Client Library for PHP</description>
+      <version>2.18.4</version>
+      <license>Apache</license>
+      <licenseversion>2.0</licenseversion>
+      <repository>https://github.com/googleapis/google-api-php-client</repository>
+  </library>
+  <library>
+      <location>google2-auth</location>
+      <name>Google Auth</name>
+      <description>Google Auth Library for PHP</description>
+      <version>1.49.0</version>
+      <license>Apache</license>
+      <licenseversion>2.0</licenseversion>
+      <repository>https://github.com/googleapis/google-auth-library-php</repository>
+  </library>
+  <library>
+      <location>google2-service</location>
+      <name>Google Client Services</name>
+      <description>Google PHP API Client Services</description>
+      <version>0.424.0</version>
+      <license>Apache</license>
+      <licenseversion>2.0</licenseversion>
+      <repository>https://github.com/googleapis/google-api-php-client-services</repository>
   </library>
 </libraries>

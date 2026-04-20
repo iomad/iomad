@@ -253,7 +253,7 @@ final class modlib_test extends \advanced_testcase {
         $this->assertEquals($modulescm[3]->id, $moduleinfo[2]->beforemod);
 
         // Insert before a not existing module.
-        course_delete_module($modulescm[2]->id);
+        formatactions::cm($course->id)->delete($modulescm[2]->id);
 
         list($module, $context, $cw, $cm, $data) = prepare_new_moduleinfo_data($course, $labelmodule->name, $sectionnumber);
         $data->beforemod = $modulescm[2]->id;
@@ -338,7 +338,7 @@ final class modlib_test extends \advanced_testcase {
         $this->setUser($user);
 
         $this->expectException(\moodle_exception::class);
-
+        $this->expectExceptionMessage('This module (label) has been disabled for this particular course');
         can_add_moduleinfo($course, 'label', $section->section);
     }
 

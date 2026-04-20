@@ -16,7 +16,6 @@
 
 namespace core_courseformat\output\local\content;
 
-use core\moodlenet\utilities;
 use core\output\named_templatable;
 use core_courseformat\base as course_format;
 use core_courseformat\output\local\courseformat_named_templatable;
@@ -48,7 +47,7 @@ class bulkedittools implements named_templatable, renderable {
     /**
      * Export this data so it can be used as the context for a mustache template (core/inplace_editable).
      *
-     * @param renderer_base $output typically, the renderer that's calling this function
+     * @param \renderer_base $output typically, the renderer that's calling this function
      * @return stdClass data context for a mustache template
      */
     public function export_for_template(\renderer_base $output): stdClass {
@@ -128,18 +127,6 @@ class bulkedittools implements named_templatable, renderable {
                 'action' => 'cmDelete',
                 'name' => get_string('delete'),
                 'title' => get_string('cmsdelete', 'core_courseformat'),
-                'bulk' => 'cm',
-            ];
-        }
-
-        $usercanshare = utilities::can_user_share($context, $user->id, 'course');
-        if ($CFG->enablesharingtomoodlenet && $usercanshare) {
-            $controls['sharetomoodlenet'] = [
-                'id' => 'cmShareToMoodleNet',
-                'icon' => 'i/share',
-                'action' => 'cmShareToMoodleNet',
-                'name' => get_string('moodlenet:sharetomoodlenet'),
-                'title' => get_string('moodlenet:sharetomoodlenet'),
                 'bulk' => 'cm',
             ];
         }

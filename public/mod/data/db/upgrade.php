@@ -43,28 +43,6 @@ function xmldb_data_upgrade($oldversion) {
     global $DB;
     $dbman = $DB->get_manager();
 
-    // Automatically generated Moodle v4.2.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    if ($oldversion < 2023061300) {
-        // Clean orphan data_records.
-        $sql = "SELECT d.id FROM {data} d
-            LEFT JOIN {data_fields} f ON d.id = f.dataid
-            WHERE f.id IS NULL";
-        $emptydatas = $DB->get_records_sql($sql);
-        if (!empty($emptydatas)) {
-            $dataids = array_keys($emptydatas);
-            [$datainsql, $dataparams] = $DB->get_in_or_equal($dataids, SQL_PARAMS_NAMED, 'data');
-            $DB->delete_records_select('data_records', "dataid $datainsql", $dataparams);
-        }
-
-        // Data savepoint reached.
-        upgrade_mod_savepoint(true, 2023061300, 'data');
-    }
-
-    // Automatically generated Moodle v4.3.0 release upgrade line.
-    // Put any upgrade step following this.
-
     // Automatically generated Moodle v4.4.0 release upgrade line.
     // Put any upgrade step following this.
 
@@ -74,8 +52,10 @@ function xmldb_data_upgrade($oldversion) {
     // Automatically generated Moodle v5.0.0 release upgrade line.
     // Put any upgrade step following this.
 
-    if ($oldversion < 2025041401) {
+    // Automatically generated Moodle v5.1.0 release upgrade line.
+    // Put any upgrade step following this.
 
+    if ($oldversion < 2026022300) {
         // Changing precision of field name on table data to (1333).
         $table = new xmldb_table('data');
         $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '1333', null, XMLDB_NOTNULL, null, null, 'course');
@@ -84,7 +64,7 @@ function xmldb_data_upgrade($oldversion) {
         $dbman->change_field_precision($table, $field);
 
         // Data savepoint reached.
-        upgrade_mod_savepoint(true, 2025041401, 'data');
+        upgrade_mod_savepoint(true, 2026022300, 'data');
     }
 
     return true;

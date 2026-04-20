@@ -1,5 +1,65 @@
 # core_reportbuilder (subsystem) Upgrade notes
 
+## 5.2
+
+### Added
+
+- The text filter "Contains" and "Not contains" operators now support `*` and `?` wildcard characters for better text content filtering
+
+  For more information see [MDL-84082](https://tracker.moodle.org/browse/MDL-84082)
+- The base entity class now implements a default `initialise` method, that will automatically call each of the following methods to load entity report data:
+
+  * `get_available_columns()`
+  * `get_available_filters()`
+  * `get_available_conditions()`
+
+  This change allows for a lot of boilerplate to be removed from report entity classes
+
+  For more information see [MDL-86678](https://tracker.moodle.org/browse/MDL-86678)
+- There are two new entities intended for reports specific to course module data, in order to provide a baseline in terms of module reporting and API usage:
+
+  * `core_course\reportbuilder\local\entities\{course_module,course_module_base}`
+
+  For more information see [MDL-86699](https://tracker.moodle.org/browse/MDL-86699)
+
+### Changed
+
+- The order in which `$entitynames` are passed to the datasource `add_all_from_entities()` method is now observed, taking precedence over the order in which they were already added to the report
+
+  For more information see [MDL-87263](https://tracker.moodle.org/browse/MDL-87263)
+- The following methods now support both string or entity instance types for parameters referring to entities by name, which prevents lookups of instances which most report sources will already have:
+
+  * `add_all_from_[entity|entities]()`
+  * `add_[columns|filters|conditions]_from_entity()`
+
+  For more information see [MDL-87451](https://tracker.moodle.org/browse/MDL-87451)
+
+### Deprecated
+
+- The following `user_filter_manager` methods have been deprecated:
+
+  * `reset_all()` - to be replaced by new `reset()` method
+  * `reset_single()`
+  * `merge()`
+
+  For more information see [MDL-86997](https://tracker.moodle.org/browse/MDL-86997)
+- The following enrolment entity formatter methods have been deprecated:
+
+  * `enrolment_status()`
+  * `enrolment_values()`
+
+  For more information see [MDL-87000](https://tracker.moodle.org/browse/MDL-87000)
+
+### Removed
+
+- The following deprecated report helper methods have been removed:
+  - `audience::get_all_audiences_menu_types()`
+  - `report::get_available_columns()`
+
+  The stub `get_default_table_aliases()` method of the base entity class has also been removed as it hasn't been supported for some time
+
+  For more information see [MDL-87425](https://tracker.moodle.org/browse/MDL-87425)
+
 ## 5.1
 
 ### Added

@@ -4,6 +4,24 @@
     border-collapse: separate;
     margin: 0 auto;
     text-align: left;
+
+    &.encyclopedia,
+    &.fullwithauthor {
+        .entry,
+        .entrylowersection {
+            margin-left: 2.7rem;
+        }
+    }
+
+    .entryheader {
+        .author {
+            font-weight: bold;
+        }
+    }
+
+    .time {
+        font-weight: bold;
+    }
 }
 
 .path-mod-glossary .glossarypost.entrylist {
@@ -64,7 +82,7 @@
 
 .path-mod-glossary .entrybox,
 .path-mod-glossary table.glossaryapproval,
-.path-mod-glossary .glossarypost .entrylowersection table {
+.path-mod-glossary .glossarypost .entrylowersection {
     width: 100%;
     margin-bottom: 0;
 }
@@ -85,18 +103,9 @@
     margin: 5px 0;
 }
 
-#page-mod-glossary-view table.glossarycategoryheader,
 #page-mod-glossary-import table.glossaryimportexport {
     margin-left: auto;
     margin-right: auto;
-}
-
-#page-mod-glossary-view table.glossarycategoryheader {
-    margin-bottom: 0;
-}
-
-#page-mod-glossary-view table.glossarycategoryheader th {
-    padding: 0;
 }
 
 #page-mod-glossary-view td.glossarysearchbox label {

@@ -1,5 +1,14 @@
 # core_availability (subsystem) Upgrade notes
 
+## 5.2
+
+### Removed
+
+- - The `public/availability/amd/src/availability_more.js` file has been removed.
+  - The `public/availability/renderer.php` file has been removed.
+
+  For more information see [MDL-87425](https://tracker.moodle.org/browse/MDL-87425)
+
 ## 4.5
 
 ### Removed

@@ -82,6 +82,11 @@ class user_picture implements renderable {
     public $includefullname = false;
 
     /**
+     * @var bool Whether to include the suspended label.
+     */
+    public $showsuspended = false;
+
+    /**
      * @var mixed Include user authentication token. True indicates to generate a token for current user, and integer value
      * indicates to generate a token for the user whose id is the value indicated.
      */

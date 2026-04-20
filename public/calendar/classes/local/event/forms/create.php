@@ -87,11 +87,14 @@ class create extends \moodleform {
         $mform->addRule('name', get_string('required'), 'required', null, 'client');
         $mform->setType('name', PARAM_TEXT);
 
+        // Add the select elements for the available event types.
+        $this->add_event_type_elements($mform, $eventtypes);
+
         // Event time start field.
         $mform->addElement('date_time_selector', 'timestart', get_string('date'), ['defaulttime' => $starttime]);
 
-        // Add the select elements for the available event types.
-        $this->add_event_type_elements($mform, $eventtypes);
+        // Add the variety of elements allowed for selecting event duration.
+        $this->add_event_duration_elements($mform);
 
         // Start of advanced elements.
         // Advanced elements are not visible to the user by default.
@@ -103,9 +106,6 @@ class create extends \moodleform {
         $mform->addElement('text', 'location', get_string('location', 'moodle'), 'size="50"');
         $mform->setType('location', PARAM_RAW_TRIMMED);
         $mform->setAdvanced('location');
-
-        // Add the variety of elements allowed for selecting event duration.
-        $this->add_event_duration_elements($mform);
 
         // Add the form elements for repeating events.
         $this->add_event_repeat_elements($mform);
@@ -217,7 +217,6 @@ class create extends \moodleform {
                 get_string('durationminutes', 'calendar'), 'maxlength="7" size="7"');
 
         $mform->addGroup($group, 'durationgroup', get_string('eventduration', 'calendar'), '<br />', false);
-        $mform->setAdvanced('durationgroup');
 
         $mform->disabledIf('timedurationuntil',         'duration', 'noteq', 1);
         $mform->disabledIf('timedurationuntil[day]',    'duration', 'noteq', 1);

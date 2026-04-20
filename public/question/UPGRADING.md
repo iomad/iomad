@@ -1,5 +1,62 @@
 # core_question (subsystem) Upgrade notes
 
+## 5.2
+
+### Added
+
+- During restore of a question_set_reference, mapping of IDs in the filtercondition is now delegated to qbank plugins. If your qbank plugin defines a filter condition that uses database IDs, add an override of `restore_filtercondition()` to the `condition` class, which checks the condition's data and replaces the IDs with mapped values if required. See  `qbank_managecategories\category_condition` for an example.
+
+  For more information see [MDL-86524](https://tracker.moodle.org/browse/MDL-86524)
+- Moved the route for returning counts of questions in each of a course's question banks to `/api/rest/v2/question/counts`, for a more RESTful URL and consistency with other `core_question` routes.
+
+  For more information see [MDL-87264](https://tracker.moodle.org/browse/MDL-87264)
+- Added a new route at `/api/rest/v2/question/categories` for returning a list of question categories in a particular course module.
+
+  For more information see [MDL-87264](https://tracker.moodle.org/browse/MDL-87264)
+
+### Changed
+
+- The UI for switching question banks is now encapsulated in the `core_question/bank_switcher` Javascript module. This takes an existing modal and replaces the content with the switcher. It will then emit a custom `bankSwitched` event on the modal's DOM element when a new bank is selected.
+
+  For more information see [MDL-87264](https://tracker.moodle.org/browse/MDL-87264)
+
+### Deprecated
+
+- `get_next_version()` from questionlib.php is now deprecated. Use `\core_question\versions::get_next_version()` instead.
+
+  For more information see [MDL-86798](https://tracker.moodle.org/browse/MDL-86798)
+- The `\core_question\output\switch_question_bank` renderable is now deprecated, as rendering of the switch_question_bank template is now all handled client-side by the `core_question/bank_switcher` Javascript module.
+
+  For more information see [MDL-87264](https://tracker.moodle.org/browse/MDL-87264)
+- `core_question\output\question_category_selector::question_count_sql` has been replaces with `core_question\local\bank\question_counts\by_category_query`, to keep all the question counting logic together in one place.
+
+  For more information see [MDL-87848](https://tracker.moodle.org/browse/MDL-87848)
+
+### Removed
+
+- core_question:
+      - message: |
+          Final deprecation of `moodle-question-chooser` YUI module.
+        type: removed
+      - message: |
+          Final deprecation of `core_question/qbank_chooser` template.
+        type: removed
+
+  For more information see [MDL-81961](https://tracker.moodle.org/browse/MDL-81961)
+- - The following methods have been removed from `public/question/renderer.php`:
+    - `\core_question_bank_renderer::render_category_condition()`
+    - `\core_question_bank_renderer::render_category_condition_advanced()`
+    - `\core_question_bank_renderer::render_hidden_condition_advanced()`
+
+  For more information see [MDL-87425](https://tracker.moodle.org/browse/MDL-87425)
+
+### Fixed
+
+- In order to prevent re-use of question version numbers after a version is deleted, the `nextversion` column was added to `question_bank_entries`. This serves as a counter incremented each time a version is created.
+  Do not query this field directly. Instead use `core_question\versions::get_next_version()` to read the value, which will initialise it based on the existing versions if it is not set yet. By default, it will increment the version number automatically, unless you pass `increment: false`. Because of this, it is advisable to call it inside a transaction, that is only committed after the version number is used in a `question_versions` record.
+
+  For more information see [MDL-86798](https://tracker.moodle.org/browse/MDL-86798)
+
 ## 5.1
 
 ### Added

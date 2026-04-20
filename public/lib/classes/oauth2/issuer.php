@@ -274,7 +274,8 @@ class issuer extends persistent {
      * @return string
      */
     public function get_display_name(): string {
-        return $this->get('loginpagename') ? $this->get('loginpagename') : $this->get('name');
+        $displayname = $this->get('loginpagename') ? $this->get('loginpagename') : $this->get('name');
+        return format_string($displayname, options: ['context' => \core\context\system::instance()]);
     }
 
     /**

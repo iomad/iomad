@@ -32,14 +32,6 @@ require_once($CFG->dirroot . '/message/lib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class helper {
-
-    /**
-     * @deprecated since 3.6
-     */
-    public static function get_messages() {
-        throw new \coding_exception('\core_message\helper::get_messages has been removed.');
-    }
-
     /**
      * Helper function to retrieve conversation messages.
      *
@@ -159,13 +151,6 @@ class helper {
     }
 
     /**
-     * @deprecated since 3.6
-     */
-    public static function create_messages() {
-        throw new \coding_exception('\core_message\helper::create_messages has been removed.');
-    }
-
-    /**
      * Helper function for creating a contact object.
      *
      * @param stdClass $contact
@@ -181,6 +166,7 @@ class helper {
         $data->userid = $userfields->id;
         $data->useridfrom = null;
         $data->fullname = fullname($userfields);
+        $data->initials = \core_user::get_initials($userfields);
         // Get the user picture data.
         $userpicture = new \user_picture($userfields);
         $userpicture->size = 1; // Size f1.
@@ -452,6 +438,7 @@ class helper {
             $data = new stdClass();
             $data->id = $member->id;
             $data->fullname = fullname($member);
+            $data->initials = \core_user::get_initials($member);
 
             // Create the URL for their profile.
             $profileurl = new \moodle_url('/user/profile.php', ['id' => $member->id]);
@@ -532,12 +519,6 @@ class helper {
         $members = array_replace(array_flip($userids), $members);
 
         return $members;
-    }
-    /**
-     * @deprecated since 3.6
-     */
-    public static function get_conversations_legacy_formatter() {
-        throw new \coding_exception('\core_message\helper::get_conversations_legacy_formatter has been removed.');
     }
 
     /**
@@ -708,13 +689,25 @@ class helper {
         if (!empty($message)) {
             $doc = new DOMDocument();
             $olderror = libxml_use_internal_errors(true);
-            $doc->loadHTML('<?xml version="1.0" encoding="UTF-8" ?>' . $message);
+            // Use meta charset tag to properly handle UTF-8 instead of XML declaration hack.
+            // The XML declaration approach no longer works with libxml2 >= 2.14.0.
+            $doc->loadHTML('<meta http-equiv="Content-Type" content="text/html; charset=utf-8">' . $message);
             libxml_clear_errors();
             libxml_use_internal_errors($olderror);
-            $html = $doc->getElementsByTagName('body')->item(0)->C14N(false, true);
-            if ($removebody) {
-                // Remove <body> element added in C14N function.
-                $html = preg_replace('~<(/?(?:body))[^>]*>\s*~i', '', $html);
+            $body = $doc->getElementsByTagName('body')->item(0);
+            if ($body) {
+                $html = $body->C14N(false, true);
+                if ($removebody) {
+                    // Remove <body> element added in C14N function.
+                    $html = preg_replace('~<(/?(?:body))[^>]*>\s*~i', '', $html);
+                    // Libxml2 >= 2.14.0 doesn't wrap plain text in <p> tags, so add them for consistency.
+                    if (LIBXML_VERSION >= 21400) {
+                        $trimmed = trim($html);
+                        if ($trimmed !== '' && !preg_match('/^</', $trimmed)) {
+                            $html = '<p>' . $html . '</p>';
+                        }
+                    }
+                }
             }
         }
 

@@ -31,9 +31,9 @@ $definitions = array(
         'staticacceleration' => true,
         'staticaccelerationsize' => 1
     ),
-    'subscriptiondata' => array(
-        'mode' => cache_store::MODE_SESSION,
+    'subscriptioninfo' => [
+        'mode' => cache_store::MODE_APPLICATION,
         'simplekeys' => true,
         'simpledata' => false,
-    ),
+    ],
 );

@@ -1,5 +1,19 @@
 # core_enrol (subsystem / plugintype) Upgrade notes
 
+## 5.2
+
+### Changed
+
+- The external function core_enrol::get_enrolled_users() now behaves consistently with the web version; returning the basic user information even if the current user does not have permission to view the full details.
+
+  For more information see [MDL-87242](https://tracker.moodle.org/browse/MDL-87242)
+
+### Removed
+
+- - The `\enrol_plugin::update_communication()` has been removed from `public/lib/enrollib.php`.
+
+  For more information see [MDL-87425](https://tracker.moodle.org/browse/MDL-87425)
+
 ## 5.0
 
 ### Added

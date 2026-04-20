@@ -31,7 +31,7 @@ Feature: Site administrators can manage categories for question custom fields
       | Field 1 | Category for test | text | f1        |
     And I log in as "admin"
     And I navigate to "Plugins > Question bank plugins > Question custom fields" in site administration
-    And I click on "[data-role='deletecategory']" "css_element"
+    And I choose the "Delete" item in the "Actions" action menu of the "Category for test" "core_customfield > Category header"
     And I click on "Yes" "button" in the "Confirm" "dialogue"
     And I wait until the page is ready
     And I wait until "Test category" "text" does not exist

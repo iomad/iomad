@@ -18,5 +18,4 @@ Removed:
  * session/
 
 Added:
- * index.html - prevent directory browsing on misconfigured servers
  * readme_moodle.txt - this file ;-)

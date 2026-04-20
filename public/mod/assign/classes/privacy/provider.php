@@ -83,7 +83,8 @@ class provider implements
                 'userid' => 'privacy:metadata:userid',
                 'allowsubmissionsfromdate' => 'allowsubmissionsfromdate',
                 'duedate' => 'duedate',
-                'cutoffdate' => 'cutoffdate'
+                'cutoffdate' => 'cutoffdate',
+                'reason' => 'privacy:metadata:assignoverrides:reason',
         ];
         $assignsubmission = [
                 'userid' => 'privacy:metadata:userid',
@@ -108,11 +109,23 @@ class provider implements
                 'assignment' => 'privacy:metadata:assignmentid',
                 'userid' => 'privacy:metadata:userid'
         ];
+        $assignmark = [
+            'assignment' => 'privacy:metadata:assignmentid',
+            'gradeid' => 'privacy:metadata:grade',
+            'marker' => 'privacy:metadata:userid',
+        ];
+        $assignallocatedusers = [
+            'assignment' => 'privacy:metadata:assignmentid',
+            'studentid' => 'privacy:metadata:userid',
+            'marker' => 'privacy:metadata:userid',
+        ];
         $collection->add_database_table('assign_grades', $assigngrades, 'privacy:metadata:assigngrades');
         $collection->add_database_table('assign_overrides', $assignoverrides, 'privacy:metadata:assignoverrides');
         $collection->add_database_table('assign_submission', $assignsubmission, 'privacy:metadata:assignsubmissiondetail');
         $collection->add_database_table('assign_user_flags', $assignuserflags, 'privacy:metadata:assignuserflags');
         $collection->add_database_table('assign_user_mapping', $assignusermapping, 'privacy:metadata:assignusermapping');
+        $collection->add_database_table('assign_mark', $assignmark, 'privacy:metadata:assignmark');
+        $collection->add_database_table('assign_allocated_marker', $assignallocatedusers, 'privacy:metadata:assignallocatedmarker');
         $collection->add_user_preference('assign_perpage', 'privacy:metadata:assignperpage');
         $collection->add_user_preference('assign_filter', 'privacy:metadata:assignfilter');
         $collection->add_user_preference('assign_markerfilter', 'privacy:metadata:assignmarkerfilter');
@@ -194,6 +207,37 @@ class provider implements
 
         $contextlist->add_from_sql($sql, $params);
 
+        // Contexts where the given user has assignment marks.
+        $sql = "SELECT ctx.id
+                  FROM {course_modules} cm
+                  JOIN {modules} m ON cm.module = m.id AND m.name = :modulename
+                  JOIN {assign} a ON cm.instance = a.id
+                  JOIN {context} ctx ON cm.id = ctx.instanceid AND ctx.contextlevel = :contextlevel
+                  JOIN {assign_grades} ag ON a.id = ag.assignment
+                  JOIN {assign_mark} am ON am.gradeid = ag.id
+                 WHERE ag.userid = :userid";
+        $contextlist->add_from_sql($sql, $params);
+
+        // Contexts where the given user has assigned assignment marks.
+        $sql = "SELECT ctx.id
+                  FROM {course_modules} cm
+                  JOIN {modules} m ON cm.module = m.id AND m.name = :modulename
+                  JOIN {assign} a ON cm.instance = a.id
+                  JOIN {context} ctx ON cm.id = ctx.instanceid AND ctx.contextlevel = :contextlevel
+                  JOIN {assign_mark} am ON am.assignment = a.id
+                 WHERE am.marker = :userid";
+        $contextlist->add_from_sql($sql, $params);
+
+        // Contexts where the given user is either an allocated marker or has an allocated marker.
+        $sql = "SELECT ctx.id
+                  FROM {course_modules} cm
+                  JOIN {modules} m ON cm.module = m.id AND m.name = :modulename
+                  JOIN {assign} a ON cm.instance = a.id
+                  JOIN {context} ctx ON cm.id = ctx.instanceid AND ctx.contextlevel = :contextlevel
+                  JOIN {assign_allocated_marker} am ON am.assignment = a.id
+                 WHERE am.marker = :graderid OR am.student = :userid";
+        $contextlist->add_from_sql($sql, $params);
+
         manager::plugintype_class_callback('assignfeedback', self::ASSIGNFEEDBACK_INTERFACE,
                 'get_context_for_userid_within_feedback', [$userid, $contextlist]);
         manager::plugintype_class_callback('assignsubmission', self::ASSIGNSUBMISSION_INTERFACE,
@@ -266,6 +310,29 @@ class provider implements
                  WHERE ctx.id = :contextid AND ctx.contextlevel = :contextlevel";
         $userlist->add_from_sql('userid', $sql, $params);
 
+        // Users who are either a student with a mark, or the teacher who has given a mark.
+        $sql = "SELECT g.userid, am.marker
+                  FROM {context} ctx
+                  JOIN {course_modules} cm ON cm.id = ctx.instanceid
+                  JOIN {modules} m ON m.id = cm.module AND m.name = :modulename
+                  JOIN {assign} a ON a.id = cm.instance
+                  JOIN {assign_grades} g ON a.id = g.assignment
+                  JOIN {assign_mark} am ON am.gradeid = g.id
+                 WHERE ctx.id = :contextid AND ctx.contextlevel = :contextlevel";
+        $userlist->add_from_sql('userid', $sql, $params);
+        $userlist->add_from_sql('marker', $sql, $params);
+
+        // Users who are either a student with an allocated marker, or the allocated marker.
+        $sql = "SELECT am.student, am.marker
+                  FROM {context} ctx
+                  JOIN {course_modules} cm ON cm.id = ctx.instanceid
+                  JOIN {modules} m ON m.id = cm.module AND m.name = :modulename
+                  JOIN {assign} a ON a.id = cm.instance
+                  JOIN {assign_allocated_marker} am ON am.assignment = a.id
+                 WHERE ctx.id = :contextid AND ctx.contextlevel = :contextlevel";
+        $userlist->add_from_sql('student', $sql, $params);
+        $userlist->add_from_sql('marker', $sql, $params);
+
         manager::plugintype_class_callback('assignsubmission', self::ASSIGNSUBMISSION_USER_INTERFACE,
                 'get_userids_from_context', [$userlist]);
         manager::plugintype_class_callback('assignfeedback', self::ASSIGNFEEDBACK_USER_INTERFACE,
@@ -302,6 +369,8 @@ class provider implements
 
             static::export_overrides($context, $assign, $user);
             static::export_submission($assign, $user, $context, []);
+            static::export_marks($assign, $user, $context);
+            static::export_allocations($assign, $user, $context);
             // Meta data.
             self::store_assign_user_flags($context, $assign, $user->id);
             if ($assign->is_blind_marking()) {
@@ -349,6 +418,8 @@ class provider implements
                 $DB->delete_records('assign_submission', ['assignment' => $assign->get_instance()->id]);
                 $DB->delete_records('assign_user_flags', ['assignment' => $assign->get_instance()->id]);
                 $DB->delete_records('assign_user_mapping', ['assignment' => $assign->get_instance()->id]);
+                static::delete_allocated_markers_for_users($assign);
+                static::delete_marks_for_users($assign);
             }
         }
     }
@@ -394,6 +465,8 @@ class provider implements
             static::delete_overrides_for_users($assign, [$user->id]);
             $DB->delete_records('assign_user_flags', ['assignment' => $assignid, 'userid' => $user->id]);
             $DB->delete_records('assign_user_mapping', ['assignment' => $assignid, 'userid' => $user->id]);
+            static::delete_allocated_markers_for_users($assign, [$user->id]);
+            static::delete_marks_for_users($assign, [$user->id]);
             $DB->delete_records('assign_grades', ['assignment' => $assignid, 'userid' => $user->id]);
             $DB->delete_records('assign_submission', ['assignment' => $assignid, 'userid' => $user->id]);
         }
@@ -440,6 +513,8 @@ class provider implements
         $params['assignment'] = $assignid;
         $DB->delete_records_select('assign_user_flags', "assignment = :assignment AND userid $sql", $params);
         $DB->delete_records_select('assign_user_mapping', "assignment = :assignment AND userid $sql", $params);
+        static::delete_allocated_markers_for_users($assign, $userids);
+        static::delete_marks_for_users($assign, $userids);
         $DB->delete_records_select('assign_grades', "assignment = :assignment AND userid $sql", $params);
         $DB->delete_records_select('assign_submission', "assignment = :assignment AND userid $sql", $params);
     }
@@ -627,6 +702,10 @@ class provider implements
             if (!empty($overrides->allowsubmissionsfromdate)) {
                 $data->allowsubmissionsfromdate = transform::datetime($overrides->allowsubmissionsfromdate);
             }
+            if (!empty($overrides->reason)) {
+                $format = $overrides->reasonformat ?? FORMAT_MOODLE;
+                $data->reason = format_text($overrides->reason, $format, ['context' => $context]);
+            }
             if (!empty($data)) {
                 writer::with_context($context)->export_data([get_string('overrides', 'mod_assign')], $data);
             }
@@ -673,5 +752,128 @@ class provider implements
                 }
             }
         }
+    }
+
+    /**
+     * Delete all allocated markers for an array of users, for the given assignment.
+     *
+     * @param \assign $assign The assignment object.
+     * @param array $userids If empty, delete all marks for the assignment.
+     */
+    protected static function delete_allocated_markers_for_users(\assign $assign, array $userids = []): void {
+        global $DB;
+
+        if ($userids) {
+            [$insql, $inparams] = $DB->get_in_or_equal($userids);
+            $params = [$assign->get_instance()->id];
+            // We need this twice as we're using the same $insql for student and marker.
+            $params = array_merge($params, $inparams);
+            $params = array_merge($params, $inparams);
+            $sql = "
+                SELECT id
+                  FROM {assign_allocated_marker}
+                 WHERE assignment = ?
+                   AND (student {$insql} OR marker {$insql})
+            ";
+            $DB->delete_records_subquery('assign_allocated_marker', 'id', 'id', $sql, $params);
+        } else {
+            $DB->delete_records('assign_allocated_marker', ['assignment' => $assign->get_instance()->id]);
+        }
+    }
+
+    /**
+     * Delete all assignment marks for an array of users, for the given assignment.
+     *
+     * @param \assign $assign The assignment object.
+     * @param array $userids If empty, delete all marks for the assignment.
+     */
+    protected static function delete_marks_for_users(\assign $assign, array $userids = []): void {
+        global $DB;
+        if ($userids) {
+            [$insql, $inparams] = $DB->get_in_or_equal($userids);
+            $params = [$assign->get_instance()->id];
+            // We need this twice as we're using the same $insql for student and marker.
+            $params = array_merge($params, $inparams);
+            $params = array_merge($params, $inparams);
+            $sql = "
+                SELECT am.id
+                  FROM {assign_mark} am
+             LEFT JOIN {assign_grades} ag ON ag.id = am.gradeid
+                 WHERE am.assignment = ?
+                   AND (ag.userid {$insql} OR am.marker {$insql})
+            ";
+            $DB->delete_records_subquery('assign_mark', 'id', 'id', $sql, $params);
+        } else {
+            $DB->delete_records('assign_mark', ['assignment' => $assign->get_instance()->id]);
+        }
+    }
+
+    /**
+     * Export the user's marks for the given assignment.
+     *
+     * @param \assign $assign The assignment object
+     * @param \stdClass $user The user object
+     * @param \context $context The context
+     */
+    protected static function export_marks(\assign $assign, \stdClass $user, \context $context): void {
+        global $DB;
+
+        $records = $DB->get_records_sql(
+            "
+                SELECT am.*
+                  FROM {assign_mark} am
+             LEFT JOIN {assign_grades} ag on ag.id = am.gradeid
+                 WHERE am.assignment = :assignment
+                   AND (ag.userid = :uid1 OR am.marker = :uid2)
+                ",
+            [
+                'assignment' => $assign->get_instance()->id,
+                'uid1' => $user->id,
+                'uid2' => $user->id,
+            ]
+        );
+
+        $data = [];
+        foreach ($records as $row) {
+            $row = (array)$row;
+            unset($row['id']);
+            $data[] = $row;
+        }
+
+        writer::with_context($context)->export_data([get_string('marks', 'mod_assign')], (object) ['data' => $data]);
+    }
+
+    /**
+     * Export the user's marker allocations for the given assignment.
+     *
+     * @param \assign $assign The assignment object
+     * @param \stdClass $user The user object
+     * @param \context $context The context
+     */
+    protected static function export_allocations(\assign $assign, \stdClass $user, \context $context): void {
+        global $DB;
+
+        $records = $DB->get_records_sql(
+            "
+                SELECT *
+                  FROM {assign_allocated_marker}
+                 WHERE assignment = :assignment
+                   AND (student = :uid1 OR marker = :uid2)
+               ",
+            [
+                'assignment' => $assign->get_instance()->id,
+                'uid1' => $user->id,
+                'uid2' => $user->id,
+            ]
+        );
+
+        $data = [];
+        foreach ($records as $row) {
+            $row = (array)$row;
+            unset($row['id']);
+            $data[] = $row;
+        }
+
+        writer::with_context($context)->export_data([get_string('markerallocations', 'mod_assign')], (object) ['data' => $data]);
     }
 }

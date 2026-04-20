@@ -184,11 +184,6 @@
         "allowedlevel2": true,
         "allowedspread": true
     },
-    "moodlenet": {
-        "component": "core",
-        "allowedlevel2": false,
-        "allowedspread": false
-    },
     "navigation": {
         "component": "core",
         "allowedlevel2": true,

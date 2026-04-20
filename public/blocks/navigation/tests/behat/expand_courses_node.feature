@@ -35,7 +35,9 @@ Feature: Expand the courses nodes within the navigation block
       | student1 | c2     | student |
       | student1 | c4     | student |
     And the following config values are set as admin:
+      | enablemyhome      | 1 |
       | navshowallcourses | 1 |
+      | enablemycourses | 1 |
     And I log in as "admin"
     And I am on site homepage
     And I turn editing mode on
@@ -56,7 +58,10 @@ Feature: Expand the courses nodes within the navigation block
 
   @javascript
   Scenario: As an anonymous user I expand the courses node to see courses.
-    When I should see "You are not logged in." in the ".logininfo" "css_element"
+    Given the following config values are set as admin:
+      | forcelogin | 0 |
+    When I am on site homepage
+    Then I should see "You are not logged in." in the ".logininfo" "css_element"
     And I should see "Home" in the "Navigation" "block"
     And I should see "Courses" in the "Navigation" "block"
     And I expand "Courses" node

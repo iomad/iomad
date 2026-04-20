@@ -14,24 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * The abstract custom fields handler
- *
- * @package   core_customfield
- * @copyright 2018 David Matamoros <davidmc@moodle.com>
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace core_customfield;
 
 use backup_nested_element;
+use core\exception\coding_exception;
 use core_customfield\output\field_data;
 use stdClass;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
- * Base class for custom fields handlers
+ * The abstract custom fields handler
  *
  * This handler provides callbacks for field configuration form and also allows to add the fields to the instance editing form
  *
@@ -46,11 +37,13 @@ defined('MOODLE_INTERNAL') || die;
  * - \core_customfield\api::get_field($fieldid)
  * - \core_customfield\api::get_category($categoryid)
  *
- * @package core_customfield
+ * @package   core_customfield
  * @copyright 2018 David Matamoros <davidmc@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class handler {
+    /** @var handler[] $instances */
+    private static $instances = [];
 
     /**
      * The component this handler handles
@@ -95,13 +88,31 @@ abstract class handler {
     /**
      * Returns an instance of the handler
      *
-     * Some areas may choose to use singleton/caching here
+     * We statically cache the list of instances during request lifecycle, to allow this method to be called
+     * repeatedly without potential performance problems
      *
      * @param int $itemid
-     * @return handler
+     * @return static
      */
     public static function create(int $itemid = 0): handler {
-        return new static($itemid);
+        $instancekey = static::class . ':' . $itemid;
+        if (!array_key_exists($instancekey, static::$instances)) {
+            static::$instances[$instancekey] = new static($itemid);
+        }
+        return static::$instances[$instancekey];
+    }
+
+    /**
+     * Run reset code after tests to reset the instance cache
+     *
+     * @throws coding_exception If called outside of test infrastructure
+     */
+    public static function reset_caches(): void {
+        if (PHPUNIT_TEST || defined('BEHAT_TEST')) {
+            static::$instances = [];
+        } else {
+            throw new coding_exception('This feature is only intended for use in tests');
+        }
     }
 
     /**
@@ -447,7 +458,13 @@ abstract class handler {
      *     In the last case data_controller::get_value() and export_value() functions will return default values.
      */
     public function get_instances_data(array $instanceids, bool $returnall = false): array {
-        $result = api::get_instances_fields_data($this->get_fields(), $instanceids);
+        $result = api::get_instances_fields_data(
+            fields: $this->get_fields(),
+            instanceids: $instanceids,
+            component: $this->get_component(),
+            area: $this->get_area(),
+            itemid: $this->get_itemid(),
+        );
 
         if (!$returnall) {
             // Filter only by visible fields (list of visible fields may be different for each instance).
@@ -706,6 +723,7 @@ abstract class handler {
             }
             $data->instance_form_save($instance);
         }
+        $this->clear_configuration_cache();
     }
 
     /**

@@ -337,6 +337,8 @@ class page_requirements_manager {
                 'templaterev'           => $this->get_templaterev(),
                 'siteId'                => (int) SITEID,
                 'userId'                => (int) $USER->id,
+                'deprecationignorelist'       => !empty($CFG->jsdeprecationignorelist) ? $CFG->jsdeprecationignorelist : [],
+                'traceId'               => \core\telemetry::get_trace_parent_id(),
             ];
             if ($CFG->debugdeveloper) {
                 $this->M_cfg['developerdebug'] = true;
@@ -476,10 +478,6 @@ class page_requirements_manager {
      * @param bool $inhead initialise in head
      */
     public function js($url, $inhead = false) {
-        if ($url == '/question/qengine.js') {
-            debugging('The question/qengine.js has been deprecated. ' .
-                'Please use core_question/question_engine', DEBUG_DEVELOPER);
-        }
         $url = $this->js_fix_url($url);
         $where = $inhead ? 'head' : 'footer';
         $this->jsincludes[$where][$url->out()] = $url;
@@ -827,6 +825,7 @@ class page_requirements_manager {
                             ['renameto', 'repository'],
                             ['referencesexist', 'repository'],
                             ['select', 'repository'],
+                            ['invalidfiletypetitle', 'repository'],
                         ],
                     ];
                     break;
@@ -861,13 +860,6 @@ class page_requirements_manager {
                         'requires' => ['node', 'overlay', 'event-mouseenter'],
                     ];
                     break;
-                case 'core_question_engine':
-                    $module = [
-                        'name' => 'core_question_engine',
-                        'fullpath' => '/question/qengine.js',
-                        'requires' => ['node', 'event'],
-                    ];
-                    break;
                 case 'core_rating':
                     $module = [
                         'name' => 'core_rating',
@@ -886,6 +878,9 @@ class page_requirements_manager {
                             ['sizegb', 'moodle'], ['sizemb', 'moodle'], ['sizekb', 'moodle'], ['sizeb', 'moodle'],
                             ['maxareabytesreached', 'moodle'], ['serverconnection', 'error'],
                             ['changesmadereallygoaway', 'moodle'], ['complete', 'moodle'],
+                            ['invalidfiletypetitle', 'repository'],
+                            ['upload_error_folders_not_supported', 'repository_upload'],
+                            ['upload_error_folders_not_supported_title', 'repository_upload'],
                         ],
                     ];
                     break;
@@ -990,7 +985,7 @@ class page_requirements_manager {
      *
      * @param string $stylesheet The path to the .css file, relative to $CFG->wwwroot.
      *   For example:
-     *      $PAGE->requires->css('mod/data/css.php?d='.$data->id);
+     *      $PAGE->requires->css('/mod/data/css.php?d='.$data->id);
      */
     public function css($stylesheet) {
         global $CFG;
@@ -1043,6 +1038,61 @@ class page_requirements_manager {
             return;
         }
         $this->skiplinks[$target] = $linktext;
+    }
+
+    /**
+     * Returns the import map script tag for React platform files.
+     *
+     * @return string
+     */
+    public function get_import_map(): string {
+        $importmap = \core\di::get(import_map::class);
+        $importmap->set_default_loader(
+            \core\router\util::get_path_for_callable(
+                [\core\route\controller\esm_controller::class, 'serve'],
+                [
+                    'revision' => $this->get_jsrev(),
+                    'scriptpath' => '',
+                ]
+            ),
+        );
+
+        return html_writer::tag(
+            'script',
+            json_encode(
+                $importmap,
+                JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
+            ),
+            ['type' => 'importmap'],
+        );
+    }
+
+    /**
+     * Returns the `<script>` tag used to load the React auto-init bundle for Mustache templates.
+     *
+     * This bundle scans the page for React placeholders rendered by Mustache and bootstraps
+     * the registered components automatically so that calling code does not need to add its own
+     * inline initialisation script.
+     *
+     * @return string Returns the script html to include the react auto init code
+     */
+    public function react_mustache_autoinit(): string {
+        $path = \core\router\util::get_path_for_callable(
+            [\core\route\controller\esm_controller::class, 'serve'],
+            [
+                'revision' => $this->get_jsrev(),
+                'scriptpath' => '@moodle/lms/core/react_autoinit',
+            ]
+        );
+        $scripthtml = html_writer::tag(
+            tagname: 'script',
+            contents: '',
+            attributes: [
+                'type' => 'module',
+                'src' => $path->out(),
+            ],
+        ) . "\n";
+        return $scripthtml;
     }
 
     /**
@@ -1708,6 +1758,9 @@ EOF;
             $output .= html_writer::script($js);
         }
 
+        // Inject the ES module import map for bare specifier resolution.
+        $output .= $this->get_import_map();
+
         // Mark head sending done, it is not possible to anything there.
         $this->headdone = true;
 
@@ -1747,6 +1800,9 @@ EOF;
                 $output .= html_writer::script('', $url);
             }
         }
+
+        // Add the react auto initialisation script to mount react code from mustache templates.
+        $output .= $this->react_mustache_autoinit();
 
         // Then the clever trick for hiding of things not needed when JS works.
         $output .= html_writer::script("document.body.className += ' jsenabled';") . "\n";

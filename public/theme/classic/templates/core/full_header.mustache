@@ -25,10 +25,12 @@
         "hasnavbar": false,
         "navbar": "navbar_if_available",
         "courseheader": "course_header_html",
+        "headeractions": ["action1_html", "action2_html"],
+        "headerextras": ["extra1_html", "extra2_html"],
         "welcomemessage": "welcomemessage"
     }
 }}
-<header id="page-header" class="row">
+<header id="page-header" class="row" data-for="page-heading">
     <div class="col-12 pt-3 pb-3">
         <div class="card {{^contextheader}}border-0 bg-transparent{{/contextheader}}">
             <div class="card-body {{^contextheader}}p-2{{/contextheader}}">
@@ -64,5 +66,10 @@
                 </div>
             </div>
         {{/welcomemessage}}
+        <div class="header-extras-container ms-auto" data-region="header-extras-container">
+            {{#headerextras}}
+            <div class="header-extra ms-2">{{{.}}}</div>
+            {{/headerextras}}
+        </div>
     </div>
 </header>

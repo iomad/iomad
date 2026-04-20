@@ -20,8 +20,26 @@
  * @copyright  2019 Damyon Wiese
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['jquery', 'core/ajax', 'core/config', 'core/notification', 'core/str'],
-        function($, Ajax, Config, Notification, Str) {
+define([
+    'jquery',
+    'core/ajax',
+    'core/config',
+    'core/notification',
+    'core/str',
+    'core/modal_save_cancel',
+    'core/modal_events',
+    'core/network_events',
+],
+function(
+    $,
+    Ajax,
+    Config,
+    Notification,
+    Str,
+    SaveCancelModal,
+    ModalEvents,
+    NetworkEvents,
+) {
 
     var started = false;
     var warningDisplayed = false;
@@ -36,6 +54,12 @@ define(['jquery', 'core/ajax', 'core/config', 'core/notification', 'core/str'],
     // First wait is minimum of remaining time or half of the session timeout.
     var firstWait = (Config.sessiontimeoutwarning > 0) ?
         Math.min((Config.sessiontimeout - Config.sessiontimeoutwarning) * 1000, checkFrequency * 5) : checkFrequency * 5;
+    // Modal to display when the connection is unstable.
+    var alertModal = null;
+    // URL to redirect to if network is unstable.
+    var redirectUrl = null;
+    // Number of times we have tried to touch the session after a network request failure.
+    var connectionRetries = 0;
     /**
      * The session time has expired - we can't extend it now.
      * @param {Modal} modal
@@ -109,12 +133,10 @@ define(['jquery', 'core/ajax', 'core/config', 'core/notification', 'core/str'],
             return displaySessionExpired();
         } else {
             return Ajax.call([request], true, true, false, requestTimeout)[0].then(function() {
-                if (keepAliveFrequency > 0) {
-                    setTimeout(touchSession, keepAliveFrequency);
-                }
+                window.dispatchEvent(new CustomEvent(NetworkEvents.sessionTouched));
                 return true;
             }).catch(function() {
-                Notification.alert('', keepAliveMessage);
+                window.dispatchEvent(new CustomEvent(NetworkEvents.unstableConnection));
             });
         }
     };
@@ -232,14 +254,65 @@ define(['jquery', 'core/ajax', 'core/config', 'core/notification', 'core/str'],
     };
 
     /**
+     * Leave the page, either by redirecting or reloading.
+     */
+    var leavePage = function() {
+        if (typeof redirectUrl === 'string') {
+            window.location.replace(redirectUrl);
+            return;
+        }
+        window.location.reload();
+    };
+
+    /**
+     * When the network connection is unstable show the user an alert.
+     * If the unstable connection persists, force the user to exit the
+     * current page.
+     */
+    var handleUnstableConnection = function() {
+        // Show the alert modal warning the user that their
+        // connection is unstable but allow them to continue
+        // interacting with the page if they choose.
+        if (connectionRetries < 1) {
+            alertModal.show();
+            setTimeout(touchSession, keepAliveFrequency);
+            connectionRetries++;
+            return;
+        }
+
+        // If we have failed to touch the session twice in a row,
+        // show the alert modal (if not already visible) but remove
+        // any option for the user to continue on this page.
+        if (alertModal !== null) {
+            alertModal.getRoot().find('[data-action="cancel"]').hide();
+            alertModal.show().then(function() {
+                alertModal.getRoot().on(ModalEvents.hidden, leavePage);
+                return true;
+            }).catch(Notification.exception);
+        }
+    };
+
+    /**
+     * When the session is touched, set a timeout to touch it again
+     * and reset the number of failed connection retries.
+     */
+    var handleSessionTouched = function() {
+        if (keepAliveFrequency > 0) {
+            setTimeout(touchSession, keepAliveFrequency);
+            connectionRetries = 0;
+        }
+    };
+
+    /**
      * Start polling with more specific values for the frequency, timeout and message.
      *
      * @param {number} freq How ofter to poll the server.
      * @param {number} timeout The time to wait for each request to the server.
      * @param {string} identifier The string identifier for the message to show if session is going to time out.
      * @param {string} component The string component for the message to show if session is going to time out.
+     * @param {string|null} redirect A url to redirect to in case of a lost connection to the server.
      */
-    var keepalive = async function(freq, timeout, identifier, component) {
+    var keepalive = async function(freq, timeout, identifier, component, redirect = null) {
         // We only allow one concurrent instance of this checker.
         if (started) {
             window.console.warn('Ignoring session keep-alive. The core/network module was already initialised.');
@@ -257,6 +330,31 @@ define(['jquery', 'core/ajax', 'core/config', 'core/notification', 'core/str'],
         keepAliveFrequency = freq * 1000;
         keepAliveMessage = await Str.get_string(identifier, component);
         requestTimeout = timeout * 1000;
+        redirectUrl = redirect;
+
+        var strings = await Str.get_strings([
+            {key: 'unstablenetwork', component: 'mod_scorm'},
+            {key: 'leavepage', component: 'mod_scorm'},
+            {key: 'refresh', component: 'moodle'},
+        ]);
+
+        alertModal = await SaveCancelModal.create({
+            title: strings[0],
+            body: keepAliveMessage,
+            buttons: {
+                save: typeof redirectUrl === 'string' ? strings[1] : strings[2],
+            },
+            removeOnClose: false,
+            show: false
+        });
+
+        // The save button is renamed and will redirect the user or
+        // reload the page when clicked.
+        alertModal.getRoot().on(ModalEvents.save, leavePage);
+
+        window.addEventListener(NetworkEvents.sessionTouched, handleSessionTouched);
+        window.addEventListener(NetworkEvents.unstableConnection, handleUnstableConnection);
+
         start();
     };
 

@@ -78,15 +78,6 @@ class manage_competency_frameworks_page implements renderable, templatable {
                 'get'
             );
             $this->navigation[] = $addpage;
-
-            $icon = $OUTPUT->pix_icon('i/externallink', get_string('opensinnewwindow'), 'moodle', ['class' => 'ms-1']);
-            $competenciesrepository = new action_link(
-                new moodle_url('https://moodle.net/search', ['q' => 'competency frameworks']),
-                get_string('competencyframeworksrepository', 'tool_lp') . $icon,
-                null,
-                ['target' => '_blank', 'class' => button::SECONDARY->classes() . ' ms-sm-2'],
-            );
-            $this->navigation[] = $competenciesrepository;
         }
 
         $this->competencyframeworks = api::list_frameworks('shortname', 'ASC', 0, 0, $this->pagecontext);

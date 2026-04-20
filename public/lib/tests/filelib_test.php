@@ -511,6 +511,27 @@ final class filelib_test extends \advanced_testcase {
         $this->assertNotEquals(0, $curl->get_errno());
         $this->assertNotEquals('47250a973d1b88d9445f94db4ef2c97a', md5($contents));
 
+        // Test multiple queries with proxy.
+        $curl = new \curl(['debug' => 1]);
+        ob_start();
+        $requests = [[
+            'nobody' => true,
+            'header' => 1,
+            'url' => $testurl,
+            'returntransfer' => true,
+        ],
+        [
+            'nobody' => true,
+            'header' => 1,
+            'url' => $testurl,
+            'returntransfer' => true,
+        ]];
+        $curl->download($requests);
+        $output = ob_get_contents();
+        ob_end_clean();
+        // We must have exactly 2 occurrences of ["CURLOPT_PROXY"].
+        $this->assertMatchesRegularExpression('/(\["CURLOPT_PROXY"\].*){2}/ms', $output);
+
         // Test with proxy bypass.
         $testurlhost = parse_url($testurl, PHP_URL_HOST);
         $CFG->proxybypass = $testurlhost;
@@ -518,6 +539,26 @@ final class filelib_test extends \advanced_testcase {
         $contents = $curl->get($testurl);
         $this->assertSame(0, $curl->get_errno());
         $this->assertSame('47250a973d1b88d9445f94db4ef2c97a', md5($contents));
+
+        // Test multiple queries with proxy bypass.
+        $curl = new \curl(['debug' => 1]);
+        ob_start();
+        $requests = [[
+            'nobody' => true,
+            'header' => 1,
+            'url' => $testurl,
+            'returntransfer' => true,
+        ],
+        [
+            'nobody' => true,
+            'header' => 1,
+            'url' => $testurl,
+            'returntransfer' => true,
+        ]];
+        $curl->download($requests);
+        $output = ob_get_contents();
+        ob_end_clean();
+        $this->assertStringNotContainsString('["CURLOPT_PROXY"]', $output);
 
         $CFG->proxyhost = $oldproxy;
         $CFG->proxybypass = $oldproxybypass;
@@ -2125,6 +2166,48 @@ EOF;
             $filepath . '. Buffer contents (first 20 characters): test text', $output);
         $this->assertStringContainsString('Non-empty default output handler buffer detected while serving the file ' .
             $filename . '. Buffer contents (first 20 characters): test text', $output);
+    }
+
+    /**
+     * Test curl removeopt method.
+     *
+     * @covers \curl::removeopt
+     */
+    public function test_curl_removeopt(): void {
+        $curl = new testable_curl();
+
+        // Short option name should be auto-prefixed with CURLOPT_ and then removed.
+        $curl->setopt(['USERPWD' => 'user:pass']);
+        $this->assertArrayHasKey('CURLOPT_USERPWD', $curl->get_options());
+        $curl->removeopt(['USERPWD']);
+        $this->assertArrayNotHasKey('CURLOPT_USERPWD', $curl->get_options());
+
+        // Full CURLOPT_ name should be normalised to uppercase and removed.
+        $curl->setopt(['CURLOPT_TIMEOUT' => 30]);
+        $this->assertArrayHasKey('CURLOPT_TIMEOUT', $curl->get_options());
+        $curl->removeopt(['CURLOPT_TIMEOUT']);
+        $this->assertArrayNotHasKey('CURLOPT_TIMEOUT', $curl->get_options());
+
+        // CURLINFO_ option should not be prefixed with CURLOPT_.
+        $curl->setopt(['CURLINFO_HEADER_OUT' => 1]);
+        $this->assertArrayHasKey('CURLINFO_HEADER_OUT', $curl->get_options());
+        $curl->removeopt(['CURLINFO_HEADER_OUT']);
+        $this->assertArrayNotHasKey('CURLINFO_HEADER_OUT', $curl->get_options());
+
+        // Removing a non-existent option should silently succeed.
+        $curl->removeopt(['CURLOPT_NONEXISTENT']);
+
+        // Multiple options can be removed in a single call.
+        $curl->setopt(['CURLOPT_TIMEOUT' => 30, 'CURLOPT_CONNECTTIMEOUT' => 10]);
+        $this->assertArrayHasKey('CURLOPT_TIMEOUT', $curl->get_options());
+        $this->assertArrayHasKey('CURLOPT_CONNECTTIMEOUT', $curl->get_options());
+        $curl->removeopt(['CURLOPT_TIMEOUT', 'CURLOPT_CONNECTTIMEOUT']);
+        $this->assertArrayNotHasKey('CURLOPT_TIMEOUT', $curl->get_options());
+        $this->assertArrayNotHasKey('CURLOPT_CONNECTTIMEOUT', $curl->get_options());
+
+        // Passing a non-string option (integer constant) should throw a coding_exception.
+        $this->expectException(\coding_exception::class);
+        $curl->removeopt([CURLOPT_VERBOSE]);
     }
 }
 

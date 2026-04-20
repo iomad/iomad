@@ -4,6 +4,10 @@ Feature: Authentication
   As a user
   I need to log into the system
 
+  Background:
+    Given the following config values are set as admin:
+      | enablemyhome | 1 |
+
   Scenario: Log in with the predefined admin user with Javascript disabled
     Given I log in as "admin"
     Then I should see "You are logged in as Admin User" in the "page-footer" "region"
@@ -17,8 +21,7 @@ Feature: Authentication
     Given the following "users" exist:
       | username | password | firstname | lastname | email |
       | testuser | testuser | Test | User | moodle@example.com |
-    And I am on site homepage
-    When I follow "Log in"
+    And I am on homepage
     And I set the field "Username" to "testuser"
     And I set the field "Password" to "testuser"
     And I press "Log in"
@@ -28,12 +31,11 @@ Feature: Authentication
     Given the following "users" exist:
       | username | password | firstname | lastname | email |
       | testuser | testuser | Test | User | moodle@example.com |
-    And I am on site homepage
-    When I follow "Log in"
+    And I am on homepage
     And I set the field "Username" to "testuser"
     And I set the field "Password" to "unexisting"
     And I press "Log in"
-    Then I should see "Invalid login, please try again"
+    Then I should see "Unable to log in"
 
   Scenario: Log out using the Log out link
     Given I log in as "admin"
@@ -42,6 +44,8 @@ Feature: Authentication
 
   @javascript @accessibility
   Scenario: Login page must be accessible
+    Given the following config values are set as admin:
+      | forcelogin | 0 |
     When I am on site homepage
     # The following tests are all provided to ensure that the accessibility tests themselves are tested.
     # In normal tests only one of the following is required.
@@ -57,6 +61,7 @@ Feature: Authentication
   @javascript @accessibility
   Scenario: The login page must meet accessibility standards
     Given the following config values are set as admin:
+      | forcelogin | 0 |
       | custommenuitems | -This is a custom item\|/customurl/ |
     When I am on site homepage
     Then the page should meet accessibility standards with "best-practice" extra tests

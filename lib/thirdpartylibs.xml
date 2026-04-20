@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<libraries>
+  <library>
+      <location>js/bundles/react</location>
+      <name>react</name>
+      <description>Core library for building user interfaces with components</description>
+      <version>19.2.4</version>
+      <license>MIT</license>
+      <licenseversion/>
+      <repository>https://github.com/facebook/react</repository>
+  </library>
+  <library>
+      <location>js/bundles/react-dom</location>
+      <name>react-dom</name>
+      <description>React renderer for web browsers</description>
+      <version>19.2.4</version>
+      <license>MIT</license>
+      <licenseversion/>
+      <repository>https://github.com/facebook/react</repository>
+  </library>
+  <library>
+    <location>js/bundles/design-system</location>
+    <name>@moodlehq/design-system</name>
+    <description>The Moodle HQ design system based on React</description>
+    <version>2.1.1</version>
+    <license>GNU</license>
+    <repository>https://github.com/moodlehq/design-system</repository>
+    <copyrights>
+      <copyright>Moodle HQ</copyright>
+    </copyrights>
+  </library>
+</libraries>

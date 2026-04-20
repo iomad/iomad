@@ -21,7 +21,16 @@
 
     Example context (json):
     {
-        "movetitle": "Move this element"
+        "movetitle": "Move this element",
+        "extraclasses": "icon-size-2"
     }
 }}
-<span tabindex="0" role="button" aria-haspopup="true" data-drag-type="move" title="{{movetitle}}">{{#pix}} i/dragdrop, core {{/pix}}</span>
+<button type="button"
+    class="btn btn-icon {{$ extraclasses }}{{extraclasses}}{{/ extraclasses }}"
+    title="{{movetitle}}"
+    data-drag-type="move"
+    aria-haspopup="true"
+    aria-label="{{movetitle}}"
+>
+    {{#pix}} i/dragdrop, core {{/pix}}
+</button>

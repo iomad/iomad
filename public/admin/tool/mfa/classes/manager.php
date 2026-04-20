@@ -53,7 +53,48 @@ class manager {
         'tool_mfa' => [
             'guidance',
         ],
+        'theme_*' => [
+            'loginbackgroundimage',
+        ],
     ];
+
+    /**
+     * Returns allowed fileareas for a component.
+     *
+     * Supports exact component matches and wildcard suffix matches such as `theme_*`.
+     *
+     * @param string $component the component to check.
+     * @return array|null the allowed fileareas, or null if the component is not allowed.
+     */
+    protected static function get_allowed_fileareas_for_component(string $component): ?array {
+        if (array_key_exists($component, static::ALLOWED_COMPONENTS)) {
+            return static::ALLOWED_COMPONENTS[$component];
+        }
+
+        foreach (static::ALLOWED_COMPONENTS as $pattern => $fileareas) {
+            if (!str_ends_with($pattern, '*')) {
+                continue;
+            }
+
+            $prefix = substr($pattern, 0, -1);
+            if ($prefix !== '' && str_starts_with($component, $prefix)) {
+                return $fileareas;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Checks whether a filearea is allowed.
+     *
+     * @param string $filearea the filearea to check.
+     * @param array $allowedfileareas the allowed fileareas for the component, where '*' allows all fileareas.
+     * @return bool
+     */
+    protected static function is_allowed_filearea(string $filearea, array $allowedfileareas): bool {
+        return in_array('*', $allowedfileareas) || in_array($filearea, $allowedfileareas);
+    }
 
     /**
      * Displays a debug table with current factor information.
@@ -85,7 +126,7 @@ class manager {
             get_string('achievedweight', 'tool_mfa'),
             get_string('status'),
         ];
-        $table->attributes['class'] = 'admintable generaltable table table-bordered';
+        $table->attributes['class'] = 'admintable generaltable table table-bordered table-hover';
         $table->colclasses = [
             'text-end',
             '',
@@ -489,13 +530,15 @@ class manager {
             $component = clean_param(array_shift($args), PARAM_COMPONENT);
             $filearea = clean_param(array_shift($args), PARAM_AREA);
 
+            $allowedfileareas = static::get_allowed_fileareas_for_component($component);
+
             // Check allowed components.
-            if (!array_key_exists($component, static::ALLOWED_COMPONENTS)) {
+            if ($allowedfileareas === null) {
                 return self::REDIRECT;
             }
 
             // Check allowed fileareas.
-            if (!in_array($filearea, static::ALLOWED_COMPONENTS[$component])) {
+            if (!static::is_allowed_filearea($filearea, $allowedfileareas)) {
                 return self::REDIRECT;
             }
 
@@ -629,6 +672,10 @@ class manager {
         $urls = [
             new \moodle_url('/login/logout.php'),
             new \moodle_url('/admin/tool/mfa/guide.php'),
+            // Allow email self-registration confirmation to complete so that
+            // auth_email can restore wantsurl from the auth_email_wantsurl user
+            // preference before MFA intercepts on the next request.
+            new \moodle_url('/login/confirm.php'),
         ];
         foreach ($factors as $factor) {
             $urls = array_merge($urls, $factor->get_no_redirect_urls());
@@ -636,8 +683,9 @@ class manager {
 
         // Allow forced redirection exclusions.
         if ($exclusions = get_config('tool_mfa', 'redir_exclusions' . $postfix)) {
-            foreach (explode("\n", $exclusions) as $exclusion) {
-                $urls[] = new \moodle_url($exclusion);
+            $exclusions = preg_split('/\n|\r/', $exclusions, -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($exclusions as $exclusion) {
+                $urls[] = new \moodle_url(trim($exclusion));
             }
         }
 

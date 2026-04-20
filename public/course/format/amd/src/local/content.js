@@ -101,7 +101,7 @@ export default class Component extends BaseComponent {
             log.debug('Init component with id is deprecated, use a query selector instead.');
             element = document.getElementById(target);
         }
-        return new Component({
+        return new this({
             element,
             reactive: getCurrentCourseEditor(),
             selectors,
@@ -418,10 +418,7 @@ export default class Component extends BaseComponent {
      *
      * The courseActions module used for most course section tools still depends on css classes and
      * section numbers (not id). To prevent inconsistencies when a section is moved, we need to refresh
-     * the
-     *
-     * Course formats can override the section title rendering so the frontend depends heavily on backend
-     * rendering. Luckily in edit mode we can trigger a title update using the inplace_editable module.
+     * the section number.
      *
      * @param {Object} param
      * @param {Object} param.element details the update details.
@@ -441,26 +438,13 @@ export default class Component extends BaseComponent {
         target.dataset.sectionid = element.number;
         // The data-number is the attribute used by components to store the section number.
         target.dataset.number = element.number;
-
-        // Update title and title inplace editable, if any.
-        const inplace = inplaceeditable.getInplaceEditable(target.querySelector(this.selectors.SECTION_ITEM));
-        if (inplace) {
-            // The course content HTML can be modified at any moment, so the function need to do some checkings
-            // to make sure the inplace editable still represents the same itemid.
-            const currentvalue = inplace.getValue();
-            const currentitemid = inplace.getItemId();
-            // Unnamed sections must be recalculated.
-            if (inplace.getValue() === '') {
-                // The value to send can be an empty value if it is a default name.
-                if (currentitemid == element.id && (currentvalue != element.rawtitle || element.rawtitle == '')) {
-                    inplace.setValue(element.rawtitle);
-                }
-            }
-        }
     }
 
     /**
      * Update a course section name on the whole page.
+     *
+     * Course formats can override the section title rendering so the frontend depends heavily on backend
+     * rendering. Luckily in edit mode we can trigger a title update using the inplace_editable module.
      *
      * @param {object} param
      * @param {Object} param.element details the update details.
@@ -473,6 +457,24 @@ export default class Component extends BaseComponent {
         allSectionNamesFor.forEach((sectionNameFor) => {
             sectionNameFor.textContent = element.title;
         });
+
+        // Find the element.
+        const target = this.getElement(this.selectors.SECTION, element.id);
+        if (!target) {
+            // Job done. Nothing to refresh.
+            return;
+        }
+
+        // Update title and title inplace editable, if any.
+        const inplace = inplaceeditable.getInplaceEditable(target.querySelector(this.selectors.SECTION_ITEM));
+        if (inplace) {
+            // The course content HTML can be modified at any moment, so the function need to do some checkings
+            // to make sure the inplace editable still represents the same itemid.
+            const currentitemid = inplace.getItemId();
+            if (currentitemid == element.id) {
+                inplace.setValue(element.rawtitle);
+            }
+        }
     }
 
     /**
@@ -525,19 +527,35 @@ export default class Component extends BaseComponent {
         this._scanIndex(
             this.selectors.SECTION,
             this.sections,
-            (item) => {
-                return new Section(item);
-            }
+            this._newSection
         );
 
         // Find unindexed cms.
         this._scanIndex(
             this.selectors.CM,
             this.cms,
-            (item) => {
-                return new CmItem(item);
-            }
+            this._newCmItem
         );
+    }
+
+    /**
+     * Create a new Section object.
+     *
+     * @param {Object} item the constructor data
+     * @return {Section} the new object
+     */
+    _newSection(item) {
+        return new Section(item);
+    }
+
+    /**
+     * Create a new CM object.
+     *
+     * @param {Object} item the constructor data
+     * @return {CmItem} the new object
+     */
+    _newCmItem(item) {
+        return new CmItem(item);
     }
 
     /**

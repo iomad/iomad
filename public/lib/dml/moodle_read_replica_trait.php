@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use core\exception\coding_exception;
+
 /**
  * Trait that adds read-only replica connection capability.
  *
@@ -303,6 +305,35 @@ trait moodle_read_replica_trait {
      */
     public function perf_get_reads_replica(): int {
         return $this->readsreplica;
+    }
+
+    /**
+     * Mark one or more tables as requiring reads from the primary (writer) connection.
+     *
+     * This marks the provided table(s) as having been recently written which forces
+     * SELECT queries on those tables to be routed to the writer until the configured
+     * replica latency has elapsed.
+     *
+     * @param string ...$tables Unprefixed table names (e.g., 'user', 'task_adhoc').
+     * @throws coding_exception If an invalid table name is provided.
+     */
+    public function mark_tables_for_primary(string ...$tables): void {
+        if (!$this->wantreadreplica || empty($tables)) {
+            return;
+        }
+
+        $now = microtime(true);
+        foreach ($tables as $tablename) {
+            if (empty($tablename)) {
+                throw new coding_exception('Table name must not be empty');
+            }
+
+            if (!preg_match('/^[a-z][a-z0-9_]*$/', $tablename)) {
+                throw new coding_exception('Invalid table name: ' . $tablename);
+            }
+
+            $this->written[$tablename] = $now;
+        }
     }
 
     /**

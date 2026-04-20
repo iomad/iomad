@@ -27,6 +27,8 @@ require_once($CFG->libdir.'/adminlib.php');
 
 admin_externalpage_setup('course_customfield');
 
+$PAGE->add_body_class('limitedwidth');
+
 $output = $PAGE->get_renderer('core_customfield');
 $handler = core_course\customfield\course_handler::create();
 $outputpage = new \core_customfield\output\management($handler);

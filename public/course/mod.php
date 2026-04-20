@@ -23,6 +23,8 @@
  * @package course
  */
 
+use core_courseformat\formatactions;
+
 require("../config.php");
 require_once("lib.php");
 
@@ -137,7 +139,8 @@ if (!empty($add)) {
     require_all_capabilities(['moodle/backup:backuptargetimport', 'moodle/restore:restoretargetimport'], $coursecontext);
 
     // Duplicate the module.
-    $newcm = duplicate_module($course, $cm);
+    $cmaction = \core_courseformat\formatactions::cm($course->id);
+    $newcm = $cmaction->duplicate($cm->id);
     redirect(course_get_url($course, $cm->sectionnum, $urloptions));
 
 } else if (!empty($delete)) {
@@ -191,7 +194,7 @@ if (!empty($add)) {
     }
 
     // Delete the module.
-    course_delete_module($cm->id);
+    \core_courseformat\formatactions::cm($course->id)->delete($cm->id);
 
     redirect($return);
 }
@@ -230,7 +233,14 @@ if ((!empty($movetosection) or !empty($moveto)) and confirm_sesskey()) {
         throw new \moodle_exception('needcopy', '', "view.php?id=$section->course");
     }
 
-    moveto_module($cm, $section, $beforecm);
+    $formatactions = formatactions::cm($course->id);
+    if (!empty($section)) {
+        $formatactions->move_end_section($cm->id, $section->id);
+    } else if (!empty($beforecm)) {
+        $formatactions->move_before($cm->id, $beforecm->id);
+    } else {
+        throw new \moodle_exception('invalidmovetarget');
+    }
 
     $sectionreturn = $USER->activitycopysectionreturn;
     unset($USER->activitycopy);
@@ -336,7 +346,7 @@ if ((!empty($movetosection) or !empty($moveto)) and confirm_sesskey()) {
     $modcontext = context_module::instance($cm->id);
     require_capability('moodle/course:manageactivities', $modcontext);
 
-    set_coursemodule_groupmode($cm->id, $groupmode);
+    formatactions::cm($coursecontext->instanceid)->set_groupmode($cm->id, $groupmode);
     \core\event\course_module_updated::create_from_cm($cm, $modcontext)->trigger();
     redirect(course_get_url($course, $cm->sectionnum, $urloptions));
 

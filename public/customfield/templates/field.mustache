@@ -1,0 +1,46 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_customfield/field
+
+    This template renders a customfield category field.
+
+
+    Example context (json):
+    {
+        "id": 0,
+        "name": "Field name",
+        "shortname": "shortname",
+        "type": "Text",
+        "canedit": true,
+        "canmovefields": true,
+        "actionsmenu": "<button class=\"btn btn-secondary\">Actions</button>"
+    }
+}}
+<tr data-field-name="{{name}}" data-field-id="{{id}}"  class="field">
+    <td>
+        {{#canmovefields}}
+            {{#canedit}}<span class="movefield">{{> core/drag_handle}}</span>{{/canedit}}
+        {{/canmovefields}}
+        {{{name}}}
+    </td>
+    <td>{{{shortname}}}</td>
+    <td>{{{type}}}</td>
+    {{#canedit}}
+    <td>{{{actionsmenu}}}</td>
+    {{/canedit}}
+</tr>

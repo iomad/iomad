@@ -24,9 +24,6 @@
  */
 namespace mod_url;
 
-defined('MOODLE_INTERNAL') || die();
-
-
 /**
  * mod_url tests
  *
@@ -36,7 +33,6 @@ defined('MOODLE_INTERNAL') || die();
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class lib_test extends \advanced_testcase {
-
     /**
      * Prepares things before this test case is initialised
      * @return void
@@ -244,6 +240,29 @@ final class lib_test extends \advanced_testcase {
 
         // Ensure result was null.
         $this->assertNull($actionevent);
+    }
+
+    /**
+     * Test that mod_url_cm_info_dynamic overrides the navigation URL.
+     *
+     * @covers ::mod_url_cm_info_dynamic
+     */
+    public function test_cm_info_dynamic(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Create the activity.
+        $course = $this->getDataGenerator()->create_course();
+        $module = $this->getDataGenerator()->create_module('url', ['course' => $course->id]);
+        $cminfo = \cm_info::create(get_coursemodule_from_instance('url', $module->id));
+
+        $navigationurl = $cminfo->get_navigation_url();
+        $this->assertInstanceOf(\core\url::class, $navigationurl);
+
+        $this->assertNotEquals(
+            $cminfo->get_url(),
+            $navigationurl,
+        );
     }
 
     /**

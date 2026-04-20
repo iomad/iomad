@@ -282,13 +282,30 @@ class core_admin_renderer extends plugin_renderer_base {
      *
      * @return string HTML to output.
      */
-    public function admin_notifications_page($maturity, $insecuredataroot, $errorsdisplayed,
-            $cronoverdue, $dbproblems, $maintenancemode, $availableupdates, $availableupdatesfetch,
-            $buggyiconvnomb, $registered, array $cachewarnings = array(), $eventshandlers = 0,
-            $themedesignermode = false, $devlibdir = false, $mobileconfigured = false,
-            $overridetossl = false, $invalidforgottenpasswordurl = false, $croninfrequent = false,
-            $showcampaigncontent = false, bool $showfeedbackencouragement = false, bool $showservicesandsupport = false,
-            $xmlrpcwarning = '') {
+    public function admin_notifications_page(
+        $maturity,
+        $insecuredataroot,
+        $errorsdisplayed,
+        $cronoverdue,
+        $dbproblems,
+        $maintenancemode,
+        $availableupdates,
+        $availableupdatesfetch,
+        $buggyiconvnomb,
+        $registered,
+        array $cachewarnings = [],
+        $eventshandlers = 0,
+        $themedesignermode = false,
+        $devlibdir = false,
+        $mobileconfigured = false,
+        $overridetossl = false,
+        $invalidforgottenpasswordurl = false,
+        $croninfrequent = false,
+        $showcampaigncontent = false,
+        bool $showfeedbackencouragement = false,
+        bool $showservicesandsupport = false,
+        $xmlrpcwarning = ''
+    ) {
 
         global $CFG;
         $output = '';
@@ -313,6 +330,8 @@ class core_admin_renderer extends plugin_renderer_base {
         $output .= $this->mobile_configuration_warning($mobileconfigured);
         $output .= $this->forgotten_password_url_warning($invalidforgottenpasswordurl);
         $output .= $this->mnet_deprecation_warning($xmlrpcwarning);
+        $output .= $this->moodlenet_removal_warning();
+        $output .= $this->marketplace_integration_notice();
         $output .= $this->userfeedback_encouragement($showfeedbackencouragement);
         $output .= $this->services_and_support_content($showservicesandsupport);
         $output .= $this->campaign_content($showcampaigncontent);
@@ -1809,6 +1828,7 @@ class core_admin_renderer extends plugin_renderer_base {
 
         $table = new html_table();
         $table->id = 'plugins-control-panel';
+        $table->attributes['class'] = 'generaltable table table-striped table-hover';
         $table->head = array(
             get_string('displayname', 'core_plugin'),
             get_string('version', 'core_plugin'),
@@ -2063,7 +2083,7 @@ class core_admin_renderer extends plugin_renderer_base {
             get_string('status'),
         );
         $servertable->colclasses = array('centeralign name', 'centeralign info', 'leftalign report', 'leftalign plugin', 'centeralign status');
-        $servertable->attributes['class'] = 'table table-striped admintable environmenttable generaltable table-sm';
+        $servertable->attributes['class'] = 'table table-striped admintable environmenttable generaltable table-sm table-hover';
         $servertable->id = 'serverstatus';
 
         $serverdata = array('ok'=>array(), 'warn'=>array(), 'error'=>array());
@@ -2076,7 +2096,7 @@ class core_admin_renderer extends plugin_renderer_base {
             get_string('status'),
         );
         $othertable->colclasses = array('aligncenter info', 'alignleft report', 'alignleft plugin', 'aligncenter status');
-        $othertable->attributes['class'] = 'table table-striped admintable environmenttable generaltable table-sm';
+        $othertable->attributes['class'] = 'table table-striped admintable environmenttable generaltable table-sm table-hover';
         $othertable->id = 'otherserverstatus';
 
         $otherdata = array('ok'=>array(), 'warn'=>array(), 'error'=>array());
@@ -2323,6 +2343,33 @@ class core_admin_renderer extends plugin_renderer_base {
         }
 
         return $this->warning($xmlrpcwarning);
+    }
+
+    /**
+     * Display a warning about the removal of MoodleNet integration.
+     *
+     * @return string HTML to output.
+     */
+    protected function moodlenet_removal_warning(): string {
+        $moodlenetenabled = get_config('tool_moodlenet', 'enablemoodlenet');
+        if (!empty($moodlenetenabled)) {
+            $moodlenetwarning = get_string('moodlenetremovalwarning', 'admin');
+            return $this->warning($moodlenetwarning);
+        }
+
+        return '';
+    }
+
+    /**
+     * Display a notice about Moodle Marketplace integration.
+     *
+     * @return string HTML to output.
+     */
+    protected function marketplace_integration_notice(): string {
+        $installer = tool_installaddon_installer::instance();
+        $url = $installer->get_marketplace_url();
+        $notice = get_string('marketplaceavailablenotice', 'admin', $url->out());
+        return $this->warning($notice, 'info');
     }
 
     /**

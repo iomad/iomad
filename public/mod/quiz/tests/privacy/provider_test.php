@@ -148,6 +148,8 @@ final class provider_test extends \core_privacy\tests\provider_testcase {
                 'userid' => $user->id,
                 'timeclose' => 1300,
                 'timelimit' => null,
+                'reason' => 'This is a reason',
+                'reasonformat' => FORMAT_MOODLE,
             ]);
 
         // Run as the user and make an attempt on the quiz.
@@ -177,6 +179,7 @@ final class provider_test extends \core_privacy\tests\provider_testcase {
 
         $quizdata = $writer->get_data([]);
         $this->assertEquals($quizobj->get_quiz_name(), $quizdata->name);
+        $this->assertEquals(format_text('This is a reason', FORMAT_MOODLE, ['context' => $context]), $quizdata->override->reason);
 
         // Every module has an intro.
         $this->assertTrue(isset($quizdata->intro));

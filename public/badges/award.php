@@ -24,9 +24,12 @@
  * @author     Yuliya Bozhko <yuliya.bozhko@totaralms.com>
  */
 
+use core_badges\award_manager;
+use core_badges\existing_award_selector;
+use core_badges\potential_award_selector;
+
 require_once(__DIR__ . '/../config.php');
 require_once($CFG->libdir . '/badgeslib.php');
-require_once($CFG->dirroot . '/badges/lib/awardlib.php');
 
 $badgeid = required_param('id', PARAM_INT);
 $role = optional_param('role', 0, PARAM_INT);
@@ -80,6 +83,16 @@ if (!$badge->is_active()) {
     echo $OUTPUT->notification(get_string('donotaward', 'badges'));
     echo $OUTPUT->footer();
     die();
+}
+
+if (!empty($role)) {
+    if (!user_has_role_assignment($USER->id, $role, $context->id) && !$isadmin) {
+        // User does not have the role passed by the parameter.
+        echo $OUTPUT->header();
+        echo $OUTPUT->notification(get_string('wrongrole', 'badges'));
+        echo $OUTPUT->footer();
+        die();
+    }
 }
 
 $returnurl = new moodle_url('recipients.php', array('id' => $badge->id));
@@ -180,15 +193,15 @@ $options = array(
         'currentgroup' => $currentgroup,
         'url' => $url,
     );
-$existingselector = new badge_existing_users_selector('existingrecipients', $options);
-$recipientselector = new badge_potential_users_selector('potentialrecipients', $options);
+$existingselector = new existing_award_selector('existingrecipients', $options);
+$recipientselector = new potential_award_selector('potentialrecipients', $options);
 $recipientselector->set_existing_recipients($existingselector->find_users(''));
 
 if ($award && data_submitted() && has_capability('moodle/badges:awardbadge', $context)) {
     require_sesskey();
     $users = $recipientselector->get_selected_users();
     foreach ($users as $user) {
-        if (process_manual_award($user->id, $USER->id, $issuerrole->roleid, $badgeid)) {
+        if (award_manager::process_manual_award($user->id, $USER->id, $issuerrole->roleid, $badgeid)) {
             // If badge was successfully awarded, review manual badge criteria.
             $data = new stdClass();
             $data->crit = $badge->criteria[BADGE_CRITERIA_TYPE_MANUAL];
@@ -207,7 +220,7 @@ if ($award && data_submitted() && has_capability('moodle/badges:awardbadge', $co
     $users = $existingselector->get_selected_users();
 
     foreach ($users as $user) {
-        if (!process_manual_revoke($user->id, $USER->id, $issuerrole->roleid, $badgeid)) {
+        if (!award_manager::process_manual_revoke($user->id, 0, $issuerrole->roleid, $badgeid)) {
             echo $OUTPUT->error_text(get_string('error:cannotrevokebadge', 'badges'));
         }
     }

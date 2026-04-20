@@ -70,6 +70,84 @@ final class update_slots_test extends \core_external\tests\externallib_testcase 
     }
 
     /**
+     * Test that changing displaynumber via the service fails without the required capability.
+     *
+     * #[CoversMethod(\mod_quiz\external\update_slots\::class, 'execute')]
+     */
+    public function test_update_slots_teacher_without_customisequestionnumbers_capability(): void {
+        global $DB;
+        $quizobj = $this->create_quiz_with_two_shortanswer_questions();
+        $course = $quizobj->get_course();
+        $context = \context_module::instance($quizobj->get_cmid());
+
+        // Assign capability 'mod/quiz:manage' to teacher role.
+        $teacherrole = $DB->get_record('role', ['shortname' => 'teacher'], '*', MUST_EXIST);
+        assign_capability(
+            'mod/quiz:manage',
+            CAP_ALLOW,
+            $teacherrole->id,
+            $context,
+        );
+
+        $teacher = $this->getDataGenerator()->create_and_enrol($course, 'teacher');
+        role_assign($teacherrole->id, $teacher->id, $context);
+        $this->setUser($teacher);
+
+        $slotid = $quizobj->get_structure()->get_slot_by_number(1)->id;
+
+        // User is missing the 'mod/quiz:customisequestionnumbers' capability, so we expect this exception.
+        $this->expectException(required_capability_exception::class);
+        update_slots::execute($quizobj->get_quizid(), [[
+            'id' => $slotid,
+            'displaynumber' => '1a',
+        ]]);
+    }
+
+    /**
+     * Test that a user with the 'customisequestionnumbers' capability can update slot displaynumbers.
+     *
+     * #[CoversMethod(\mod_quiz\external\update_slots\::class, 'execute')]
+     */
+    public function test_update_slots_teacher_with_customisequestionnumbers_capability(): void {
+        global $DB;
+        $quizobj = $this->create_quiz_with_two_shortanswer_questions();
+        $course = $quizobj->get_course();
+        $context = \context_module::instance($quizobj->get_cmid());
+
+        // Assign capability 'mod/quiz:manage' and 'mod/quiz:customisequestionnumbers' capability to the teacher role.
+        $teacherrole = $DB->get_record('role', ['shortname' => 'teacher'], '*', MUST_EXIST);
+        assign_capability(
+            'mod/quiz:manage',
+            CAP_ALLOW,
+            $teacherrole->id,
+            $context,
+        );
+        assign_capability(
+            'mod/quiz:customisequestionnumbers',
+            CAP_ALLOW,
+            $teacherrole->id,
+            $context,
+        );
+
+        $teacher = $this->getDataGenerator()->create_and_enrol($course, 'teacher');
+        role_assign($teacherrole->id, $teacher->id, $context);
+        $this->setUser($teacher);
+
+        $slotid = $quizobj->get_structure()->get_slot_by_number(1)->id;
+
+        $displaynumber = $DB->get_field('quiz_slots', 'displaynumber', ['id' => $slotid]);
+        $this->assertNull($displaynumber);
+
+        update_slots::execute($quizobj->get_quizid(), [[
+            'id' => $slotid,
+            'displaynumber' => '1a',
+        ]]);
+
+        $updateddisplaynumber = $DB->get_field('quiz_slots', 'displaynumber', ['id' => $slotid]);
+        $this->assertEquals('1a', $updateddisplaynumber);
+    }
+
+    /**
      * Create a quiz of two shortanswer questions.
      *
      * @return quiz_settings the newly created quiz.

@@ -62,6 +62,8 @@ $string['pathsunsecuredataroot'] = 'Lokasi dataroot tidak aman';
 $string['pathswrongadmindir'] = 'Direktori admin tidak ada';
 $string['phpextension'] = 'Ekstensi PHP {$a}';
 $string['phpversion'] = 'Versi PHP';
+$string['webserverconfigproblemdescription'] = 'Server web Anda tidak dikonfigurasi untuk mencegah akses ke berkas di luar direktori /public. Untuk rincian tentang cara mengkonfigurasi server web Anda dengan benar, lihat dokumentasi <a href="https://docs.moodle.org/en/Upgrading#Code_directories_restructure">Pembaruan - Struktur ulang direktori kode</a>. Setelah dikonfigurasi ulang, <a href="{$a}">kunjungi kembali root web</a>.';
+$string['webservernotconfigured'] = 'Server web belum dikonfigurasi';
 $string['welcomep10'] = '{$a->installername} ({$a->installerversion})';
 $string['welcomep20'] = 'Anda melihat halaman ini karena Anda telah berhasil memasang dan meluncurkan paket <strong> {$a->packname} {$a->packversion}</strong> di komputer Anda. Selamat!';
 $string['welcomep30'] = 'Rilis <strong> {$a->installername}</strong> ini mencakup aplikasi untuk menciptakan lingkungan tempat <strong> Moodle </strong> yang akan digunakan, yaitu:';

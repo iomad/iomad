@@ -393,9 +393,19 @@ class moodle_page {
     protected $_headeractions = [];
 
     /**
+     * @var array Array of extras HTML to add to the page header.
+     */
+    protected $headerextras = [];
+
+    /**
      * @var bool Should the region main settings menu be rendered in the header.
      */
     protected $_regionmainsettingsinheader = false;
+
+    /**
+     * @var bool Should the settings menu be hidden.
+     */
+    protected $hidesettings = false;
 
     /**
      * @var bool Should the secondary menu be rendered.
@@ -436,6 +446,16 @@ class moodle_page {
      * @var bool Indicates whether the course index drawer should be shown.
      */
     protected bool $_showcourseindex = true;
+
+    /**
+     * Hint indicating whether AI-related UI elements should be shown on this page.
+     *
+     * This value is advisory only. Individual AI placements are responsible
+     * for deciding whether to respect this hint.
+     *
+     * @var bool
+     */
+    protected bool $aivisibilityhint = true;
 
     /**
      * Force the settings menu to be displayed on this page. This will only force the
@@ -2365,6 +2385,24 @@ class moodle_page {
     }
 
     /**
+     * Add some HTML to the list of extra information to render in the header.
+     *
+     * @param string $html The HTML to add.
+     */
+    public function add_header_extras(string $html): void {
+        $this->headerextras[] = $html;
+    }
+
+    /**
+     * Get the list of HTML for extras to render in the header.
+     *
+     * @return string[]
+     */
+    public function get_header_extras(): array {
+        return $this->headerextras;
+    }
+
+    /**
      * Set the flag to indicate if the region main settings should be rendered as an action
      * in the header actions menu rather than at the top of the content.
      *
@@ -2382,6 +2420,24 @@ class moodle_page {
      */
     public function include_region_main_settings_in_header_actions(): bool {
         return $this->_regionmainsettingsinheader;
+    }
+
+    /**
+     * Set the flag to indicate if the settings should be hidden or rendered.
+     *
+     * @param bool $value If the settings should be hidden.
+     */
+    public function set_hide_settings(bool $value): void {
+        $this->hidesettings = $value;
+    }
+
+    /**
+     * Check if the settings should be hidden or rendered.
+     *
+     * @return bool
+     */
+    public function hide_settings(): bool {
+        return $this->hidesettings;
     }
 
     /**
@@ -2487,5 +2543,33 @@ class moodle_page {
      */
     public function get_show_course_index(): bool {
         return $this->_showcourseindex;
+    }
+
+    /**
+     * Sets a hint indicating whether AI-related UI elements should be shown
+     * on this page.
+     *
+     * This hint is not enforced globally and does not guarantee that AI UI
+     * elements will be hidden or shown. Each AI placement must explicitly
+     * check this value.
+     *
+     * @param bool $visible
+     * @return void
+     */
+    public function set_ai_visibility_hint(bool $visible): void {
+        $this->aivisibilityhint = $visible;
+    }
+
+    /**
+     * Returns a hint indicating whether AI-related UI elements should be shown
+     * on this page.
+     *
+     * This value does not enforce visibility. AI placements may choose whether
+     * and how to respect this hint.
+     *
+     * @return bool
+     */
+    public function get_ai_visibility_hint(): bool {
+        return $this->aivisibilityhint;
     }
 }

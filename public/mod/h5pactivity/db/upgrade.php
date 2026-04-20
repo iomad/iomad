@@ -48,26 +48,6 @@ function xmldb_h5pactivity_upgrade($oldversion) {
     global $DB;
     $dbman = $DB->get_manager();
 
-    // Automatically generated Moodle v4.2.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    if ($oldversion < 2023042401) {
-        // Remove any orphaned attempt/result records (pointing to non-existing activities).
-        $DB->delete_records_select('h5pactivity_attempts', 'NOT EXISTS (
-            SELECT 1 FROM {h5pactivity} h5p WHERE h5p.id = {h5pactivity_attempts}.h5pactivityid
-        )');
-
-        $DB->delete_records_select('h5pactivity_attempts_results', 'NOT EXISTS (
-            SELECT 1 FROM {h5pactivity_attempts} attempt WHERE attempt.id = {h5pactivity_attempts_results}.attemptid
-        )');
-
-        // H5pactivity savepoint reached.
-        upgrade_mod_savepoint(true, 2023042401, 'h5pactivity');
-    }
-
-    // Automatically generated Moodle v4.3.0 release upgrade line.
-    // Put any upgrade step following this.
-
     // Automatically generated Moodle v4.4.0 release upgrade line.
     // Put any upgrade step following this.
 
@@ -77,8 +57,10 @@ function xmldb_h5pactivity_upgrade($oldversion) {
     // Automatically generated Moodle v5.0.0 release upgrade line.
     // Put any upgrade step following this.
 
-    if ($oldversion < 2025041401) {
+    // Automatically generated Moodle v5.1.0 release upgrade line.
+    // Put any upgrade step following this.
 
+    if ($oldversion < 2026022300) {
         // Changing precision of field name on table h5pactivity to (1333).
         $table = new xmldb_table('h5pactivity');
         $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '1333', null, XMLDB_NOTNULL, null, null, 'course');
@@ -87,7 +69,7 @@ function xmldb_h5pactivity_upgrade($oldversion) {
         $dbman->change_field_precision($table, $field);
 
         // H5pactivity savepoint reached.
-        upgrade_mod_savepoint(true, 2025041401, 'h5pactivity');
+        upgrade_mod_savepoint(true, 2026022300, 'h5pactivity');
     }
 
     return true;

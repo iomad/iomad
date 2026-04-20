@@ -5,7 +5,9 @@ Feature: Contact site support method and availability can be customised
   I need to be able to configure the site support method and who has access to it
 
   Background:
-    Given the following "users" exist:
+    Given the following config values are set as admin:
+      | enablemyhome | 1 |
+    And the following "users" exist:
       | username | firstname | lastname | email             |
       | user1    | User      | One      | user1@example.com |
 
@@ -32,6 +34,8 @@ Feature: Contact site support method and availability can be customised
   Scenario: Contact site support can be limited to authenticated users
     Given the following config values are set as admin:
       | supportavailability | 1 |
+    And the following config values are set as admin:
+      | forcelogin | 0 |
     # Confirm unauthenticated visitor cannot see the option or directly access the page.
     When I am on site homepage
     Then I should not see "Contact site support" in the "page-footer" "region"

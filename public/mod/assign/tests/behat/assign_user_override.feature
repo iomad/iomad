@@ -83,6 +83,30 @@ Feature: Assign user override
     And the activity date in "Test assignment name" should contain "Due: Wednesday, 1 January 2020, 8:00"
 
   @javascript
+  Scenario: Ensure an overridden due date is before any extension date
+    Given I am on the "Test assignment name" Activity page logged in as teacher1
+    When I navigate to "Settings" in current page administration
+    And I set the field "Due date" to "##1 Jan 2000 08:00##"
+    And I press "Save and display"
+    And I navigate to "Submissions" in current page administration
+    And I open the action menu in "Student1" "table_row"
+    And I follow "Grant extension"
+    And I set the field "Extension due date" to "##3 Jan 2000 08:00##"
+    And I press "Save changes"
+    And I navigate to "Overrides" in current page administration
+    And I press "Add user override"
+    And I set the following fields to these values:
+      | Override user | Student1             |
+      | Due date      | ##4 Jan 2000 08:00## |
+    And I press "Save"
+    Then I should see "Extension date must be after the due date"
+    And I set the field "Due date" to "##2 Jan 2000 08:00##"
+    And I press "Save"
+    And the following should exist in the "generaltable" table:
+      | User          | Overrides | -3-                          |
+      | Sam1 Student1 | Due date  | Sunday, 2 January 2000, 8:00 |
+
+  @javascript
   Scenario: Allow a user to have a different cut off date
     Given I am on the "Test assignment name" Activity page logged in as teacher1
     When I navigate to "Settings" in current page administration
@@ -141,7 +165,7 @@ Feature: Assign user override
       | assign   | Assignment 2 | Assignment 2 description | C1     | 1         |
     And I am on the "Assignment 2" Activity page logged in as teacher1
     When I navigate to "Overrides" in current page administration
-    Then I should see "No groups you can access."
+    Then I should see "There are no groups in this course."
     And the "Add user override" "button" should be disabled
 
   Scenario: A teacher without accessallgroups permission should only be able to add user override for users that he/she shares groups with,

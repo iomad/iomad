@@ -580,7 +580,7 @@ function forum_print_recent_activity($course, $viewfullnames, $timestart) {
                                               f.scale, f.grade_forum, f.maxbytes, f.maxattachments, f.forcesubscribe,
                                               f.trackingtype, f.rsstype, f.rssarticles, f.timemodified, f.warnafter, f.blockafter,
                                               f.blockperiod, f.completiondiscussions, f.completionreplies, f.completionposts,
-                                              f.displaywordcount, f.lockdiscussionafter, f.grade_forum_notify,
+                                              f.displaywordcount, f.lockdiscussionafter, f.grade_forum_notify, f.showimmediately,
                                               d.name AS discussionname, d.firstpost, d.userid AS discussionstarter,
                                               d.assessed AS discussionassessed, d.timemodified, d.usermodified, d.forum, d.groupid,
                                               d.timestart, d.timeend, d.pinned, d.timelocked,
@@ -672,7 +672,8 @@ function forum_print_recent_activity($course, $viewfullnames, $timestart) {
                 'completionposts' => $post->completionposts,
                 'displaywordcount' => $post->displaywordcount,
                 'lockdiscussionafter' => $post->lockdiscussionafter,
-                'grade_forum_notify' => $post->grade_forum_notify
+                'grade_forum_notify' => $post->grade_forum_notify,
+                'showimmediately' => $post->showimmediately,
             ];
             // Build the forum entity from the factory.
             $forumentity = $entityfactory->get_forum_from_stdclass($forumrecord, $context, $coursemodule, $course);
@@ -2298,6 +2299,12 @@ function mod_forum_rating_can_see_item_ratings($params) {
     $forum = $DB->get_record('forum', array('id' => $discussion->forum), '*', MUST_EXIST);
     $course = $DB->get_record('course', array('id' => $forum->course), '*', MUST_EXIST);
     $cm = get_coursemodule_from_instance('forum', $forum->id, $course->id , false, MUST_EXIST);
+    $context = context_module::instance($cm->id);
+    $ratingpermissions = forum_rating_permissions($context->id, 'mod_forum', 'post');
+    $requiredpermission = ($post->userid != $USER->id) ? 'viewall' : 'view';
+    if (!$ratingpermissions[$requiredpermission]) {
+        return false;
+    }
 
     // Perform some final capability checks.
     if (!forum_user_can_see_post($forum, $discussion, $post, $USER, $cm)) {
@@ -3895,7 +3902,7 @@ function forum_user_can_see_post($forum, $discussion, $post, $user = null, $cm =
             return true;
         }
         $userfirstpost = forum_get_user_posted_time($discussion->id, $user->id);
-        return (($userfirstpost !== false && (time() - $userfirstpost >= $CFG->maxeditingtime)));
+        return ($userfirstpost !== false && (time() - $userfirstpost >= $CFG->maxeditingtime || $forum->showimmediately));
     }
     return true;
 }

@@ -74,7 +74,7 @@ class overrides implements data_source_interface {
                 $override = $DB->get_record(
                     'assign_overrides',
                     ['assignid' => $assignid, 'userid' => $userid],
-                    'duedate, cutoffdate, allowsubmissionsfromdate'
+                    'duedate, cutoffdate, allowsubmissionsfromdate, reason, reasonformat'
                 );
                 break;
             case 'g':
@@ -82,7 +82,7 @@ class overrides implements data_source_interface {
                 $override = $DB->get_record(
                     'assign_overrides',
                     ['assignid' => $assignid, 'groupid' => $groupid],
-                    'sortorder, duedate, cutoffdate, allowsubmissionsfromdate'
+                    'sortorder, duedate, cutoffdate, allowsubmissionsfromdate, reason, reasonformat'
                 );
                 break;
             default:

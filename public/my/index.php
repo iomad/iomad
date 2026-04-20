@@ -60,6 +60,11 @@ if (empty($CFG->enabledashboard)) {
     if ($defaultpage == HOMEPAGE_MYCOURSES) {
         // If default page is set to "My courses", redirect to it.
         redirect(new moodle_url('/my/courses.php'));
+    } else if ($defaultpage == HOMEPAGE_SITE) {
+        redirect(new moodle_url('/'));
+    } else if ($defaultpage == HOMEPAGE_USER) {
+        // All homepage options disabled - redirect to user preferences page.
+        redirect(new moodle_url('/user/preferences.php'));
     } else {
         // Otherwise, raise an exception to inform the dashboard is disabled.
         throw new moodle_exception('error:dashboardisdisabled', 'my');

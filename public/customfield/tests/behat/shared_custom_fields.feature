@@ -10,10 +10,41 @@ Feature: Create shared categories and fields
     And I press "Add a new category"
     And I wait until the page is ready
     Then I should see "Other fields" in the "#customfield_catlist" "css_element"
-    And I click on "[data-role='deletecategory']" "css_element"
+    And I choose the "Delete" item in the "Actions" action menu of the "Other fields" "core_customfield > Category header"
     And I click on "Yes" "button" in the "Confirm" "dialogue"
     And I wait until the page is ready
     And I wait until "Other fields" "text" does not exist
+
+  Scenario: Shared custom field short name must be unique across all instance fields
+    Given the following "custom field categories" exist:
+      | name                | component        | area   | itemid |
+      | Category for course | core_course      | course | 0      |
+      | Category for cohort | core_cohort      | cohort | 0      |
+      | Shared category     | core_customfield | shared | 0      |
+    And the following "custom fields" exist:
+      | name    | category            | type   | shortname | description |
+      | Field 1 | Category for course | text   | f1        | d1          |
+      | Field 2 | Category for cohort | text   | f2        | d2          |
+      | Field 3 | Shared category     | text   | shf1      | shd1        |
+    When I log in as "admin"
+    And I navigate to "Custom fields > Shared custom fields" in site administration
+    And I click on "Add field" "link"
+    And I click on "Short text" "link"
+    And I set the following fields to these values:
+      | Name        | Test field |
+      | Short name  | shf1       |
+    And I click on "Save changes" "button" in the "Adding a new Short text" "dialogue"
+    Then I should see "Short name already exists" in the "Short name" "form_row"
+    And I set the field "Short name" to "f1"
+    And I click on "Save changes" "button" in the "Adding a new Short text" "dialogue"
+    Then I should see "Short name already exists" in the "Short name" "form_row"
+    And I set the field "Short name" to "f2"
+    And I click on "Save changes" "button" in the "Adding a new Short text" "dialogue"
+    Then I should see "Short name already exists" in the "Short name" "form_row"
+    And I set the field "Short name" to "f3"
+    And I click on "Save changes" "button" in the "Adding a new Short text" "dialogue"
+    And I should see "Add a new category"
+    And I should see "f3"
 
   Scenario: Shared customfields are displayed in other entities
     Given the following "custom field categories" exist:
@@ -42,17 +73,24 @@ Feature: Create shared categories and fields
     And I log in as "admin"
     And I navigate to "Courses > Default settings > Course custom fields" in site administration
     # Check that the delete category link exists for course categories but not for shared categories.
-    Then "Delete" "link" should exist in the ".//div[contains(@class, 'categoryinstance')][.//span[@data-value='My course category']]" "xpath_element"
-    And "Delete" "link" should not exist in the ".//div[contains(@class,'categoryinstance')]/h3[normalize-space(text())='My shared category']" "xpath_element"
+    Then the "Delete" item should exist in the "Actions" action menu of the "My course category" "core_customfield > Category header"
+    And "Actions" "link" should not exist in the "My shared category" "core_customfield > Category header"
     # Check that the inplaceeditable exists for course categories but not for shared categories.
     And "//div[contains(@class,'categoryinstance') and contains(.,'My course category') and .//span[contains(@class,'inplaceeditable')]]" "xpath_element" should exist
     And "//div[contains(@class,'categoryinstance') and contains(.,'My shared category') and .//span[contains(@class,'inplaceeditable')]]" "xpath_element" should not exist
-    # Check that the move category option exists for course categories but not for shared categories.
-    And "//span[contains(@class,'movecategory')][.//span[@title='Move \"My course category\"']]" "xpath_element" should exist
-    And "//span[contains(@class,'movecategory')][.//span[@title='Move \"My shared category\"']]" "xpath_element" should not exist
-    # Check that the move field option exists for course fields but not for shared fields.
-    And "//tr[@data-field-name='Course field 1']//span[@title='Move \"Course field 1\"']" "xpath_element" should exist
-    And "//tr[@data-field-name='Shared field 1']//span[@title='Move \"Shared field 1\"']" "xpath_element" should not exist
+    # There should be no move button for lone custom field categories.
+    And "Move \"My course category\"" "button" should not exist
+    # There should be no move button for lone custom fields within a single custom field category.
+    And "Move \"Course field 1\"" "button" should not exist
+    And I press "Add a new category"
+    # There should be no move button for shared categories and custom fields.
+    And "Move \"My shared category\"" "button" should not exist
+    And "Move \"Shared field 1\"" "button" should not exist
+    # TODO. We should not need to reload the page, but behat fails to find the move buttons otherwise.
+    And I reload the page
+    # With more than one category there should be move buttons for course categories and fields.
+    And "Move \"My course category\"" "button" should exist
+    And "Move \"Course field 1\"" "button" should exist
 
   Scenario: Select which shared custom fields categories are used in the course entity
     Given the following "custom field categories" exist:

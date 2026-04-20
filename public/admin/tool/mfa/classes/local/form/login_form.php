@@ -88,7 +88,12 @@ class login_form extends \moodleform {
         $this->globalmanager->definition_after_data($mform);
 
         $buttonarray = [];
-        $buttonarray[] = &$mform->createElement('submit', 'submitbutton', get_string('loginsubmit', 'factor_' . $factor->name));
+        $buttonarray[] = &$mform->createElement(
+            'submit',
+            'submitbutton',
+            get_string('loginsubmit', 'factor_' . $factor->name),
+            ['class' => 'tool-mfa-verify-submit w-100'],
+        );
         $mform->addGroup($buttonarray, 'buttonar', '', [' '], false);
         $mform->closeHeaderBefore('buttonar');
     }

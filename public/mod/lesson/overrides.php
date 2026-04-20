@@ -265,6 +265,20 @@ foreach ($overrides as $override) {
                 get_string('enabled', 'lesson') : get_string('none', 'lesson');
     }
 
+    // Format reason.
+    if (isset($override->reason) && $override->reason !== '') {
+        $formattedreason = format_text(
+            $override->reason,
+            $override->reasonformat ?? FORMAT_MOODLE,
+            ['context' => $context],
+        );
+
+        if ($formattedreason !== '') {
+            $fields[] = get_string('overridereason', 'lesson');
+            $values[] = $formattedreason;
+        }
+    }
+
     // Icons.
     $iconstr = '';
 

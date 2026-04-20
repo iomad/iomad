@@ -68,6 +68,8 @@ $string['pathsunsecuredataroot'] = 'L’emplacement du dossier de données n’e
 $string['pathswrongadmindir'] = 'Le dossier d’administration n’existe pas';
 $string['phpextension'] = 'Extension PHP {$a}';
 $string['phpversion'] = 'Version de PHP';
+$string['webserverconfigproblemdescription'] = 'Votre serveur web n’est pas configuré pour accéder aux fichiers en dehors du dossier /public. Pour des informations sur la façon de configurer votre serveur web correctement, veuillez vous référer à <a href="https://docs.moodle.org/501/en/Upgrading#Code_directories_restructure">la documentation (en anglais)</a>. Une fois celui-ci configuré, <a href="{$a}">visitez de nouveau la racine du site web</a>.';
+$string['webservernotconfigured'] = 'Serveur web non configuré';
 $string['welcomep10'] = '{$a->installername} ({$a->installerversion})';
 $string['welcomep20'] = 'Vous voyez cette page, car vous avez installé Moodle correctement et lancé le logiciel <strong>{$a->packname} {$a->packversion}</strong> sur votre ordinateur. Félicitations !';
 $string['welcomep30'] = 'Cette version de <b>{$a->installername}</b> comprend des logiciels qui créent un environnement dans lequel <b>Moodle</b> va fonctionner, à savoir :';

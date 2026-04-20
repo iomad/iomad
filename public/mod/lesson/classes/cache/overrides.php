@@ -66,7 +66,7 @@ class overrides implements data_source_interface {
                 $override = $DB->get_record(
                     'lesson_overrides',
                     ['lessonid' => $lessonid, 'userid' => $userid],
-                    'available, deadline, timelimit, review, maxattempts, retake, password'
+                    'available, deadline, timelimit, review, maxattempts, retake, password, reason, reasonformat'
                 );
                 break;
             case 'g':
@@ -74,7 +74,7 @@ class overrides implements data_source_interface {
                 $override = $DB->get_record(
                     'lesson_overrides',
                     ['lessonid' => $lessonid, 'groupid' => $groupid],
-                    'available, deadline, timelimit, review, maxattempts, retake, password'
+                    'available, deadline, timelimit, review, maxattempts, retake, password, reason, reasonformat'
                 );
                 break;
             default:

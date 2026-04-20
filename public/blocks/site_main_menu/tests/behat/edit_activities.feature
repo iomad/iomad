@@ -4,6 +4,10 @@ Feature: Edit activities in Additional activities block
   As an admin
   I need to add and edit activities there
 
+  Background:
+    Given the following config values are set as admin:
+      | enablemyhome | 1 |
+
   @javascript
   Scenario: Edit name of activity in-place in Additional activities block
     Given the following "activity" exists:
@@ -28,6 +32,7 @@ Feature: Edit activities in Additional activities block
   Scenario: Activities in Additional activities block can be made available but not visible on a course page
     Given the following config values are set as admin:
       | allowstealth | 1 |
+      | forcelogin   | 0 |
     And the following "blocks" exist:
       | blockname      | contextlevel | reference | pagetypepattern | defaultregion |
       | site_main_menu | System       | 1         | site-index      | side-pre      |

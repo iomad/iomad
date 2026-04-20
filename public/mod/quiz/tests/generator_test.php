@@ -138,4 +138,49 @@ final class generator_test extends \advanced_testcase {
         $this->assertEquals($quiz->id, $newgradeitem->quizid);
         $this->assertEquals('Awesomeness!', $newgradeitem->name);
     }
+
+    public function test_generating_overall_feedback(): void {
+        global $DB;
+
+        $this->resetAfterTest(true);
+
+        $course = $this->getDataGenerator()->create_course();
+
+        /** @var \mod_quiz_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_quiz');
+        $quiz = $generator->create_instance(
+            [
+                'course' => $course->id,
+                'grade' => 200,
+                'overallfeedbacks' => [
+                    [
+                        'mingrade' => '0',
+                        'maxgrade' => '50%',
+                        'feedbacktext' => '<p>Bad</p>',
+                        'feedbacktextformat' => FORMAT_HTML,
+                    ],
+                    [
+                        'mingrade' => '50%',
+                        'maxgrade' => '100%',
+                        'feedbacktext' => '<p>Good</p>',
+                        'feedbacktextformat' => FORMAT_HTML,
+                    ],
+                ],
+            ],
+        );
+
+        $feedbackrows = $DB->get_records('quiz_feedback', ['quizid' => $quiz->id], 'id ASC');
+        $this->assertCount(2, $feedbackrows);
+
+        $feedbackrows = array_values($feedbackrows);
+        $this->assertEquals(0.0, (float)$feedbackrows[0]->mingrade);
+        $this->assertEquals(100.0, (float)$feedbackrows[0]->maxgrade);
+        $this->assertEquals('<p>Bad</p>', $feedbackrows[0]->feedbacktext);
+        $this->assertEquals(FORMAT_HTML, $feedbackrows[0]->feedbacktextformat);
+
+        $this->assertEquals(100.0, (float)$feedbackrows[1]->mingrade);
+        $this->assertEquals(200.0, (float)$feedbackrows[1]->maxgrade);
+        $this->assertEquals('<p>Good</p>', $feedbackrows[1]->feedbacktext);
+        $this->assertEquals(FORMAT_HTML, $feedbackrows[1]->feedbacktextformat);
+    }
 }

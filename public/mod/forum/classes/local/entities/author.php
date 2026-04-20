@@ -57,6 +57,8 @@ class author {
     private $alternatename;
     /** @var string $imagealt Image alt */
     private $imagealt;
+    /** @var string $initials Initials */
+    private $initials;
 
     /**
      * Constructor.
@@ -85,7 +87,8 @@ class author {
         ?string $firstnamephonetic = null,
         ?string $lastnamephonetic = null,
         ?string $alternatename = null,
-        ?string $imagealt = null
+        ?string $imagealt = null,
+        ?string $initials = null
     ) {
         $this->id = $id;
         $this->pictureitemid = $pictureitemid;
@@ -99,6 +102,7 @@ class author {
         $this->lastnamephonetic = $lastnamephonetic;
         $this->alternatename = $alternatename;
         $this->imagealt = $imagealt;
+        $this->initials = $initials;
     }
 
     /**
@@ -207,5 +211,14 @@ class author {
      */
     public function get_image_alt(): ?string {
         return $this->imagealt;
+    }
+
+    /**
+     * Return the initials.
+     *
+     * @return string
+     */
+    public function get_initials(): string {
+        return $this->initials ?? '';
     }
 }

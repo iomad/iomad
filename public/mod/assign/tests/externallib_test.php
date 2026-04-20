@@ -735,7 +735,6 @@ final class externallib_test extends \mod_assign\externallib_advanced_testcase {
         $userflag->mailed = 0;
         $userflag->extensionduedate = 0;
         $userflag->workflowstate = 'inmarking';
-        $userflag->allocatedmarker = $USER->id;
 
         $DB->insert_record('assign_user_flags', $userflag);
 
@@ -757,7 +756,6 @@ final class externallib_test extends \mod_assign\externallib_advanced_testcase {
         $this->assertEquals(0, $userflag['mailed']);
         $this->assertEquals(0, $userflag['extensionduedate']);
         $this->assertEquals('inmarking', $userflag['workflowstate']);
-        $this->assertEquals($USER->id, $userflag['allocatedmarker']);
     }
 
     /**
@@ -1742,7 +1740,6 @@ final class externallib_test extends \mod_assign\externallib_advanced_testcase {
         $userflags = array();
         $userflag['userid'] = $student->id;
         $userflag['workflowstate'] = 'inmarking';
-        $userflag['allocatedmarker'] = $USER->id;
         $userflags = array($userflag);
 
         $createduserflags = mod_assign_external::set_user_flags($assign->id, $userflags);
@@ -1759,7 +1756,6 @@ final class externallib_test extends \mod_assign\externallib_advanced_testcase {
         $this->assertEquals(2, $createduserflag->mailed);
         $this->assertEquals(0, $createduserflag->extensionduedate);
         $this->assertEquals('inmarking', $createduserflag->workflowstate);
-        $this->assertEquals($USER->id, $createduserflag->allocatedmarker);
 
         // Create update data.
         $userflags = array();
@@ -1781,7 +1777,6 @@ final class externallib_test extends \mod_assign\externallib_advanced_testcase {
         $this->assertEquals(2, $updateduserflag->mailed);
         $this->assertEquals(0, $updateduserflag->extensionduedate);
         $this->assertEquals('readyforreview', $updateduserflag->workflowstate);
-        $this->assertEquals($USER->id, $updateduserflag->allocatedmarker);
     }
 
     /**
@@ -2824,7 +2819,7 @@ final class externallib_test extends \mod_assign\externallib_advanced_testcase {
         $DB->update_record('user', $student);
 
         $this->setUser($teacher);
-        $participants = mod_assign_external::list_participants($assignment->id, 0, '', 0, 0, false, true, true);
+        $participants = mod_assign_external::list_participants($assignment->id, 0, '', 0, 0, false, true, true, false);
         $participants = external_api::clean_returnvalue(mod_assign_external::list_participants_returns(), $participants);
         $this->assertCount(1, $participants);
 
@@ -2843,7 +2838,7 @@ final class externallib_test extends \mod_assign\externallib_advanced_testcase {
         $this->assertEquals('', $participant['submissionstatus']);
         $this->assertArrayHasKey('enrolledcourses', $participant);
 
-        $participants = mod_assign_external::list_participants($assignment->id, 0, '', 0, 0, false, false, true);
+        $participants = mod_assign_external::list_participants($assignment->id, 0, '', 0, 0, false, false, true, false);
         $participants = external_api::clean_returnvalue(mod_assign_external::list_participants_returns(), $participants);
         // Check that the list of courses the participant is enrolled is not returned.
         $participant = $participants[0];
@@ -2919,7 +2914,7 @@ final class externallib_test extends \mod_assign\externallib_advanced_testcase {
         $this->setUser($teacher);
 
         // Test mod_assign_external::list_participants.
-        $participants = mod_assign_external::list_participants($assignmodule->id, $group->id, '', 0, 0, false, true, true);
+        $participants = mod_assign_external::list_participants($assignmodule->id, $group->id, '', 0, 0, false, true, true, false);
         $participants = external_api::clean_returnvalue(mod_assign_external::list_participants_returns(), $participants);
         $this->assertEquals($group->id, $participants[0]['groupid']);
         $this->assertEquals(format_string($gname, true), $participants[0]['groupname']);

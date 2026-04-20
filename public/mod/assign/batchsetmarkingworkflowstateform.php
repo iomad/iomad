@@ -34,6 +34,7 @@ class mod_assign_batch_set_marking_workflow_state_form extends moodleform {
      * Define this form - called by the parent constructor
      */
     public function definition() {
+        global $PAGE;
         $mform = $this->_form;
         $params = $this->_customdata;
         $formheader = get_string('batchsetmarkingworkflowstateforusers', 'assign', $params['userscount']);
@@ -41,8 +42,38 @@ class mod_assign_batch_set_marking_workflow_state_form extends moodleform {
         $mform->addElement('header', 'general', $formheader);
         $mform->addElement('static', 'userslist', get_string('selectedusers', 'assign'), $params['usershtml']);
 
-        $options = $params['markingworkflowstates'];
-        $mform->addElement('select', 'markingworkflowstate', get_string('markingworkflowstate', 'assign'), $options);
+        $states = $params['markingworkflowstates'];
+
+        // If the assignment is using multi marking, do we want to set this workflow as the overall workflow for the submissions?
+        // Or for our allocated mark on them?
+        if ($params['assignment'] && $params['assignment']->is_using_multiple_marking()) {
+            $options = new core\output\choicelist();
+            $options->add_option(
+                'mark',
+                get_string('markverb', 'assign'),
+                [
+                    'description' => get_string('workflowcontext_help_mark', 'assign'),
+                ],
+            );
+            $options->add_option(
+                'grade',
+                get_string('gradenoun'),
+                [
+                    'description' => get_string('workflowcontext_help_grade', 'assign'),
+                ],
+            );
+            $mform->addElement('choicedropdown', 'workflowcontext', get_string('workflowcontext', 'assign'), $options);
+            $PAGE->requires->js_call_amd('mod_assign/batch_set_marking_workflow_state', 'init', [[
+                'mark' => [
+                    ASSIGN_MARKING_WORKFLOW_STATE_NOTMARKED,
+                    ASSIGN_MARKING_WORKFLOW_STATE_INMARKING,
+                    ASSIGN_MARKING_WORKFLOW_STATE_READYFORREVIEW,
+                ],
+                'grade' => array_keys($states),
+            ]]);
+        }
+
+        $mform->addElement('select', 'markingworkflowstate', get_string('markingworkflowstate', 'assign'), $states);
 
         // Don't allow notification to be sent until in "Released" state.
         $mform->addElement('selectyesno', 'sendstudentnotifications', get_string('sendstudentnotifications', 'assign'));

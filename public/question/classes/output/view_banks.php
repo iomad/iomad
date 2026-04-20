@@ -17,6 +17,7 @@
 namespace core_question\output;
 
 use context_course;
+use core_question\local\bank\formatted_bank;
 use core_question\local\bank\question_bank_helper;
 use renderer_base;
 use single_button;
@@ -35,14 +36,14 @@ class view_banks implements \templatable, \renderable {
     /**
      * Create a new view_banks instance.
      *
-     * @param array $sharedbanks {@see question_bank_helper::get_activity_instances_with_shareable_questions()}
-     * @param array $privatebanks {@see question_bank_helper::get_activity_instances_with_private_questions()}
+     * @param formatted_bank[] $sharedbanks {@see question_bank_helper::get_activity_instances_with_shareable_questions()}
+     * @param formatted_bank[] $privatebanks {@see question_bank_helper::get_activity_instances_with_private_questions()}
      * @param stdClass $course the viewing course.
      */
     public function __construct(
-        /** @var array Banks that can be shared */
+        /** @var formatted_bank[] Banks that can be shared */
         protected readonly array $sharedbanks,
-        /** @var array Banks that cannot be shared */
+        /** @var formatted_bank[] Banks that cannot be shared */
         protected readonly array $privatebanks,
         /** @var stdClass current course object */
         protected readonly stdClass $course,
@@ -84,16 +85,17 @@ class view_banks implements \templatable, \renderable {
             get_string('createdefault', 'question')
         );
 
-        $cancreatedefault = has_capability('moodle/course:manageactivities', context_course::instance($this->course->id));
+        $cancreate = has_capability('moodle/course:manageactivities', context_course::instance($this->course->id));
 
         return [
-            'addqbank' => $addqbanklink->export_for_template($output),
+            'addqbank' => $cancreate ? $addqbanklink->export_for_template($output) : false,
             'hassharedbanks' => !empty($sharedbankscontext),
             'sharedbanks' => $sharedbankscontext,
             'hasprivatebanks' => !empty($privatebankscontext),
             'privatebanks' => $privatebankscontext,
-            'addcustombanks' => $addcustombanksrenderable->export_for_template($output),
-            'createdefault' => $cancreatedefault ? $createdefaultrenderable->export_for_template($output) : false,
+            'addcustombanks' => $cancreate ? $addcustombanksrenderable->export_for_template($output) : false,
+            'createdefault' => $cancreate ? $createdefaultrenderable->export_for_template($output) : false,
+            'courseid' => $this->course->id,
         ];
     }
 }

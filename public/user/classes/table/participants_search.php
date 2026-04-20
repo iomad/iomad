@@ -235,12 +235,12 @@ class participants_search {
         }
 
         if ($isfrontpage) {
-            $outerselect = "SELECT u.lastaccess $userfieldssql";
+            $outerselect = "SELECT u.lastaccess, u.suspended $userfieldssql";
             if ($accesssince) {
                 $wheres[] = user_get_user_lastaccess_sql($accesssince, 'u', $matchaccesssince);
             }
         } else {
-            $outerselect = "SELECT COALESCE(ul.timeaccess, 0) AS lastaccess $userfieldssql";
+            $outerselect = "SELECT COALESCE(ul.timeaccess, 0) AS lastaccess, u.suspended $userfieldssql";
             // Not everybody has accessed the course yet.
             $outerjoins[] = 'LEFT JOIN {user_lastaccess} ul ON (ul.userid = u.id AND ul.courseid = :courseid2)';
             $params['courseid2'] = $this->course->id;

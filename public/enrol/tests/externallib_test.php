@@ -16,10 +16,12 @@
 
 namespace core_enrol;
 
+use core_courseformat\formatactions;
 use core_enrol_external;
 use core_external\external_api;
 use enrol_user_enrolment_form;
 use stdClass;
+use core_user;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -36,6 +38,7 @@ require_once($CFG->dirroot . '/enrol/externallib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @since Moodle 2.4
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(core_enrol_external::class)]
 final class externallib_test extends \core_external\tests\externallib_testcase {
     /**
      * dataProvider for test_get_enrolled_users_visibility().
@@ -300,7 +303,7 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
         $this->getDataGenerator()->create_group_member(array('groupid' => $group2->id, 'userid' => $userall->id));
         $this->getDataGenerator()->create_group_member(array('groupid' => $group3->id, 'userid' => $userall->id));
 
-        // Create a role to add the allowedcaps. Users will have this role assigned.
+        // Create a role to add the allowed capabilities. Users will have this role assigned.
         $roleid = $this->getDataGenerator()->create_role();
         // Allow the specified capabilities.
         if (!empty($settings['allowedcaps'])) {
@@ -448,6 +451,105 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
                         'and onlysuspended are set, this is probably not what you want!';
         $this->expectExceptionMessage($message);
         core_enrol_external::get_enrolled_users($course->id, $options);
+    }
+
+    /**
+     * Verify get_enrolled_users() initials behaviour with and without userfields.
+     */
+    public function test_get_enrolled_users_initials(): void {
+        $this->resetAfterTest();
+
+        // Create the course and the users.
+        $course = $this->getDataGenerator()->create_course();
+        $coursecontext = \context_course::instance($course->id);
+        $user0 = $this->getDataGenerator()->create_user(['username' => 'user0active']);
+
+        // Create a role to add the allowedcaps. Users will have this role assigned.
+        $roleid = $this->getDataGenerator()->create_role();
+        // Allow the specified capabilities.
+        assign_capability('moodle/course:enrolreview', CAP_ALLOW, $roleid, $coursecontext);
+        assign_capability('moodle/user:viewalldetails', CAP_ALLOW, $roleid, $coursecontext);
+
+        // Enrol the user in the course.
+        $this->getDataGenerator()->enrol_user($user0->id, $course->id, $roleid);
+
+        // Switch to the enrolled user so the external function has a valid course context.
+        $this->setUser($user0);
+
+        // Case 1: No userfields requested => initials must be returned.
+        $options = [
+            ['name' => 'onlyactive', 'value' => true],
+        ];
+        $activeusers = core_enrol_external::get_enrolled_users($course->id, $options);
+
+        // We need to execute the return values cleaning process to simulate the web service server.
+        $activeusers = external_api::clean_returnvalue(core_enrol_external::get_enrolled_users_returns(), $activeusers);
+        $this->assertCount(1, $activeusers);
+        $this->assertArrayHasKey('initials', $activeusers[0]);
+
+        // Case 2: userfields requested but "initials" not included => initials must NOT be returned.
+        $options = [
+            ['name' => 'onlyactive', 'value' => true],
+            ['name' => 'userfields', 'value' => 'id,username'],
+        ];
+        $activeusers = core_enrol_external::get_enrolled_users($course->id, $options);
+        $activeusers = external_api::clean_returnvalue(core_enrol_external::get_enrolled_users_returns(), $activeusers);
+        $this->assertCount(1, $activeusers);
+        $this->assertArrayNotHasKey('initials', $activeusers[0]);
+
+        // Case 3: userfields requested including "initials" => initials must be returned.
+        $options = [
+            ['name' => 'onlyactive', 'value' => true],
+            ['name' => 'userfields', 'value' => 'id,username,initials'],
+        ];
+        $activeusers = core_enrol_external::get_enrolled_users($course->id, $options);
+        $activeusers = external_api::clean_returnvalue(core_enrol_external::get_enrolled_users_returns(), $activeusers);
+        $this->assertCount(1, $activeusers);
+        $this->assertArrayHasKey('initials', $activeusers[0]);
+    }
+
+    /**
+     * Test initials behaviour using the default name fields (no userfields option).
+     */
+    public function test_get_enrolled_users_initials_alternative_names(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $user1 = $this->getDataGenerator()->create_user([
+            'firstname' => 'John',
+            'lastname' => 'Smith',
+            'middlename' => 'William',
+        ]);
+        $users[$user1->id] = $user1;
+        $user2 = $this->getDataGenerator()->create_user([
+            'firstname' => 'María',
+            'lastname' => 'García',
+            'firstnamephonetic' => 'Maria',
+            'lastnamephonetic' => 'Garcia',
+        ]);
+        $users[$user2->id] = $user2;
+        $user3 = $this->getDataGenerator()->create_user([
+            'firstname' => 'Robert',
+            'lastname' => 'Johnson',
+            'alternatename' => 'Bob',
+        ]);
+        $users[$user3->id] = $user3;
+
+        $this->getDataGenerator()->enrol_user($user1->id, $course->id);
+        $this->getDataGenerator()->enrol_user($user2->id, $course->id);
+        $this->getDataGenerator()->enrol_user($user3->id, $course->id);
+
+        $result = core_enrol_external::get_enrolled_users($course->id);
+        // We need to execute the return values cleaning process to simulate the web service server.
+        $result = external_api::clean_returnvalue(core_enrol_external::get_enrolled_users_returns(), $result);
+
+        // Default format (firstname lastname): initials must match core_user::get_initials().
+        foreach ($result as $user) {
+            $this->assertNotEmpty($user['initials']);
+            $expectedinitials = core_user::get_initials($users[$user['id']]);
+            $this->assertEquals($expectedinitials, $user['initials']);
+        }
     }
 
     /**
@@ -1066,7 +1168,80 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
         $expecteduserlist = $result[0]['users'];
         $expecteduser = reset($expecteduserlist);
         $this->assertEquals(1, count($expecteduserlist));
+        // The returned user must contain a valid user structure.
+        $this->assertArrayHasKey('id', $expecteduser);
         $this->assertEquals($data->student1->id, $expecteduser['id']);
+        // With userfields restricted to id, initials should not be present.
+        $this->assertArrayNotHasKey('initials', $expecteduser);
+    }
+
+    /**
+     * Test get_enrolled_users_with_capability initials behaviour with and without userfields.
+     */
+    public function test_get_enrolled_users_with_capability_initials(): void {
+        $capability = 'moodle/course:viewparticipants';
+        $data = $this->get_enrolled_users_with_capability_setup($capability);
+
+        // Case 1: No userfields requested => initials must be returned.
+        $result = core_enrol_external::get_enrolled_users_with_capability(
+            [
+                'coursecapabilities' => [
+                    'courseid' => $data->course->id,
+                    'capabilities' => [
+                        $capability,
+                    ],
+                ],
+            ],
+            []
+        );
+        $result = external_api::clean_returnvalue(core_enrol_external::get_enrolled_users_with_capability_returns(), $result);
+        $expecteduserlist = $result[0]['users'];
+        $this->assertEquals(2, count($expecteduserlist));
+        foreach ($expecteduserlist as $user) {
+            $this->assertArrayHasKey('initials', $user);
+        }
+
+        // Case 2: userfields requested but "initials" not included => initials must NOT be returned.
+        $result = core_enrol_external::get_enrolled_users_with_capability(
+            [
+                'coursecapabilities' => [
+                    'courseid' => $data->course->id,
+                    'capabilities' => [
+                        $capability,
+                    ],
+                ],
+            ],
+            [
+                ['name' => 'userfields', 'value' => 'id,firstname'],
+            ]
+        );
+        $result = external_api::clean_returnvalue(core_enrol_external::get_enrolled_users_with_capability_returns(), $result);
+        $expecteduserlist = $result[0]['users'];
+        $this->assertEquals(2, count($expecteduserlist));
+        foreach ($expecteduserlist as $user) {
+            $this->assertArrayNotHasKey('initials', $user);
+        }
+
+        // Case 3: userfields requested including "initials" => initials must be returned.
+        $result = core_enrol_external::get_enrolled_users_with_capability(
+            [
+                'coursecapabilities' => [
+                    'courseid' => $data->course->id,
+                    'capabilities' => [
+                        $capability,
+                    ],
+                ],
+            ],
+            [
+                ['name' => 'userfields', 'value' => 'id,firstname,initials'],
+            ]
+        );
+        $result = external_api::clean_returnvalue(core_enrol_external::get_enrolled_users_with_capability_returns(), $result);
+        $expecteduserlist = $result[0]['users'];
+        $this->assertEquals(2, count($expecteduserlist));
+        foreach ($expecteduserlist as $user) {
+            $this->assertArrayHasKey('initials', $user);
+        }
     }
 
     /**
@@ -1250,7 +1425,7 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
         require_once("$CFG->dirroot/enrol/editenrolment_form.php");
         $formdata = enrol_user_enrolment_form::mock_generate_submit_keys($formdata);
 
-        $querystring = http_build_query($formdata, '', '&');
+        $querystring = http_build_query($formdata);
 
         $result = external_api::clean_returnvalue(
                 core_enrol_external::submit_user_enrolment_form_returns(),
@@ -1403,6 +1578,7 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
         $this->assertEquals($user1->id, $result['id']);
         $this->assertEquals($user1->email, $result['email']);
         $this->assertEquals(fullname($user1), $result['fullname']);
+        $this->assertEquals(core_user::get_initials($user1), $result['initials']);
 
         $this->setUser($user1);
 
@@ -1479,7 +1655,7 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
         $this->assertCount(7, $result);
 
         // Now change the group mode to no groups.
-        set_coursemodule_groupmode($forum->cmid, NOGROUPS);
+        formatactions::cm($course->id)->set_groupmode($forum->cmid, NOGROUPS);
         $this->setUser($teacher1);
         $result = core_enrol_external::search_users($course->id, 'user', true, 0, 30, $contextid);
         $this->assertCount(7, $result);
@@ -1528,8 +1704,9 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
 
         // Check the fields are the expected ones.
         $this->assertEquals(['id', 'fullname', 'customfields',
-                'profileimageurl', 'profileimageurlsmall', 'department'], array_keys($result1));
+                'profileimageurl', 'profileimageurlsmall', 'department', 'initials'], array_keys($result1));
         $this->assertEquals('Eigh User', $result1['fullname']);
+        $this->assertEquals(core_user::get_initials($user1), $result1['initials']);
         $this->assertEquals('Amphibians', $result1['department']);
 
         // Check the custom fields ONLY include the user identity one.

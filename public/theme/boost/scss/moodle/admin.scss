@@ -672,3 +672,19 @@
         background-color: $state-success-bg;
     }
 }
+
+/* Custom fields management */
+.path-admin .customfield-category-list {
+    .categorieslist {
+        tbody,
+        tr,
+        td {
+            border-style: inherit;
+        }
+    }
+    .sharedcategorieslist {
+        .card.disabled {
+            opacity: .65;
+        }
+    }
+}

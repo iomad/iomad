@@ -1,0 +1,86 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_customfield/category
+
+    This template renders a customfield category.
+
+
+    Example context (json):
+    {
+        "id": "0",
+        "name": "Other fields",
+        "nameeditable": "Other fields",
+        "addfieldmenu": "<button class=\"btn btn-secondary\">Add field</button>",
+        "canedit": true,
+        "canmovecategories": true,
+        "usescategories": true,
+        "actionsmenu": "<button class=\"btn btn-secondary\">Actions</button>",
+        "toggle": "<input type=\"checkbox\" class=\"form-check-input\">",
+        "fields": [
+            { "id": 0, "name": "Field name", "shortname": "shortname", "type": "Text" },
+            { "id": 0, "name": "Another field", "shortname": "checkme", "type": "Checkbox" }
+        ]
+    }
+}}
+<div class="categoryinstance card mt-4 {{#extraclasses}}{{extraclasses}}{{/extraclasses}}"
+    data-category-id="{{id}}"
+    data-category-name="{{name}}"
+    id="category-{{id}}"
+>
+    <div class="card-header d-flex align-items-center px-2" data-region="category-header">
+        {{#usescategories}}
+        <div class="d-flex align-items-center">
+            {{#canmovecategories}}
+                {{#canedit}}<span class="movecategory icon-size-3">{{> core/drag_handle}}</span>{{/canedit}}
+            {{/canmovecategories}}
+            <h3 class="h4 ms-2 mb-0">{{{nameeditable}}}</h3>
+        </div>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            {{{addfieldmenu}}}
+            {{{actionsmenu}}}
+            {{#toggle}}
+            <div class="ms-auto" data-bs-toggle="tooltip" data-bs-placement="top" title="{{#str}} sharedcategoryhelptext, customfield {{/str}}">
+                {{{.}}}
+            </div>
+            {{/toggle}}
+        </div>
+        {{/usescategories}}
+    </div>
+    <div class="card-body p-0">
+        <table class="table generaltable table-striped table-hover mb-0 {{#canedit}}fieldslist{{/canedit}}">
+            <thead>
+                <tr>
+                    <th scope="col">{{#str}} customfield, core_customfield {{/str}}</th>
+                    <th scope="col">{{#str}} shortname, core_customfield {{/str}}</th>
+                    <th scope="col">{{#str}} type, core_customfield {{/str}}</th>
+                    {{#canedit}}
+                    <th scope="col"><span class="visually-hidden">{{#str}}actions{{/str}}</span></th>
+                    {{/canedit}}
+                </tr>
+            </thead>
+            <tbody>
+                {{#fields}}
+                {{> core_customfield/field }}
+                {{/fields}}
+                {{^fields}}
+                {{> core_customfield/nofields }}
+                {{/fields}}
+            </tbody>
+        </table>
+    </div>
+</div>

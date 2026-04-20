@@ -1,5 +1,28 @@
 # core_customfield (subsystem) Upgrade notes
 
+## 5.2
+
+### Added
+
+- Added new `\core_customfield\api::is_shortname_unique(...)` method to determine whether a shortname is available for use inside a given handler
+
+  For more information see [MDL-87059](https://tracker.moodle.org/browse/MDL-87059)
+- A new WebService `core_customfield_convert_category` has been added. It allows the conversion of any entity custom field category to a shared category.
+
+  For more information see [MDL-87690](https://tracker.moodle.org/browse/MDL-87690)
+
+### Changed
+
+- The base `\core_customfield\handler` class now implements static caching/reset itself, so all implementations of the same from extending handler classes should be removed
+
+  For more information see [MDL-88176](https://tracker.moodle.org/browse/MDL-88176)
+
+### Deprecated
+
+- The Javascript module `core_customfield/repository/toggle_shared` has been deprecated. Please, use `core_customfield/repository` instead.
+
+  For more information see [MDL-87690](https://tracker.moodle.org/browse/MDL-87690)
+
 ## 5.1
 
 ### Changed

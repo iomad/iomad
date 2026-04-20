@@ -33,12 +33,6 @@ function xmldb_tool_recyclebin_upgrade($oldversion) {
 
     $dbman = $DB->get_manager();
 
-    // Automatically generated Moodle v4.2.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    // Automatically generated Moodle v4.3.0 release upgrade line.
-    // Put any upgrade step following this.
-
     // Automatically generated Moodle v4.4.0 release upgrade line.
     // Put any upgrade step following this.
 
@@ -49,8 +43,10 @@ function xmldb_tool_recyclebin_upgrade($oldversion) {
     // Automatically generated Moodle v5.0.0 release upgrade line.
     // Put any upgrade step following this.
 
-    if ($oldversion < 2025041401) {
+    // Automatically generated Moodle v5.1.0 release upgrade line.
+    // Put any upgrade step following this.
 
+    if ($oldversion < 2026022300) {
         // Changing precision of field shortname on table tool_recyclebin_category to (1333).
         $table = new xmldb_table('tool_recyclebin_category');
         $field = new xmldb_field('shortname', XMLDB_TYPE_CHAR, '1333', null, XMLDB_NOTNULL, null, null, 'categoryid');
@@ -73,7 +69,7 @@ function xmldb_tool_recyclebin_upgrade($oldversion) {
         $dbman->change_field_precision($table, $field);
 
         // Recyclebin savepoint reached.
-        upgrade_plugin_savepoint(true, 2025041401, 'tool', 'recyclebin');
+        upgrade_plugin_savepoint(true, 2026022300, 'tool', 'recyclebin');
     }
 
     return true;

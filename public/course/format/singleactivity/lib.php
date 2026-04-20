@@ -41,7 +41,7 @@ class format_singleactivity extends core_courseformat\base implements core_cours
      * @param array $options options for view URL. At the moment core uses:
      *     'navigation' (bool) ignored by this format
      *     'sr' (int) ignored by this format
-     * @return null|moodle_url
+     * @return moodle_url
      */
     public function get_view_url($section, $options = []) {
         return new moodle_url('/course/view.php', ['id' => $this->courseid]);
@@ -225,10 +225,11 @@ class format_singleactivity extends core_courseformat\base implements core_cours
     public static function get_supported_activities() {
         $availabletypes = get_module_types_names();
         foreach ($availabletypes as $module => $name) {
-            if (plugin_supports('mod', $module, FEATURE_NO_VIEW_LINK, false)) {
-                unset($availabletypes[$module]);
-            }
-            if (sectiondelegate::has_delegate_class('mod_' . $module)) {
+            if (
+                plugin_supports('mod', $module, FEATURE_NO_VIEW_LINK, false)
+                || sectiondelegate::has_delegate_class('mod_' . $module)
+                || !course_modinfo::is_mod_type_visible_on_course($module)
+            ) {
                 unset($availabletypes[$module]);
             }
         }

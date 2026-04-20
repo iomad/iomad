@@ -1763,4 +1763,81 @@ calendar,core_calendar|/calendar/view.php?view=month',
         $this->assertEquals('Aurora compatibility', $result->getInfo());
         $this->assertFalse($result->getStatus());
     }
+
+    /**
+     * Test moodlenet_migrate_profile_field creates category, field and migrates data.
+     *
+     * @covers ::moodlenet_migrate_profile_field
+     */
+    public function test_moodlenet_migrate_profile_field(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table('user');
+        $field = new xmldb_field('moodlenetprofile', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'city');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $generator = $this->getDataGenerator();
+        $user1 = $generator->create_user(); // Normal value.
+        $user2 = $generator->create_user(); // Empty string.
+        $user3 = $generator->create_user(); // Not set.
+
+        // Run migration with no MoodleNet data: no category/field should be created.
+        moodlenet_migrate_profile_field();
+        $this->assertFalse($DB->record_exists('user_info_category', ['name' => 'MoodleNet']));
+        $this->assertFalse($DB->record_exists('user_info_field', ['shortname' => 'moodlenetprofile']));
+
+        // Set moodlenetprofile values.
+        $DB->set_field('user', 'moodlenetprofile', '@user1@moodlenet.org', ['id' => $user1->id]);
+        $DB->set_field('user', 'moodlenetprofile', '', ['id' => $user2->id]);
+
+        // Run the migration.
+        moodlenet_migrate_profile_field();
+
+        // Verify that the MoodleNet category was created.
+        $category = $DB->get_record('user_info_category', ['name' => 'MoodleNet']);
+        $this->assertNotEmpty($category);
+
+        // Verify that the moodlenetprofile custom profile field was created.
+        $field = $DB->get_record('user_info_field', [
+            'shortname' => 'moodlenetprofile',
+            'categoryid' => $category->id,
+        ]);
+        $this->assertNotEmpty($field);
+        $this->assertEquals('MoodleNet profile ID', $field->name);
+        $this->assertEquals('text', $field->datatype);
+
+        // Verify that only one record was migrated (non-empty value only).
+        $userinfodata = $DB->get_records('user_info_data', ['fieldid' => $field->id]);
+        $this->assertCount(1, $userinfodata);
+
+        // User 1: Verify that the moodlenetprofile value was migrated correctly.
+        $data1 = $DB->get_record('user_info_data', [
+            'userid' => $user1->id,
+            'fieldid' => $field->id,
+        ]);
+        $this->assertEquals('@user1@moodlenet.org', $data1->data);
+
+        // User 2: Verify that no data was created because the value is an empty string.
+        $data2 = $DB->get_record('user_info_data', [
+            'userid' => $user2->id,
+            'fieldid' => $field->id,
+        ]);
+        $this->assertFalse($data2);
+
+        // User 3: Verify that no data was created because no value was set.
+        $data3 = $DB->get_record('user_info_data', [
+            'userid' => $user3->id,
+            'fieldid' => $field->id,
+        ]);
+        $this->assertFalse($data3);
+
+        // Re-run migration to confirm that it does not create duplicates.
+        moodlenet_migrate_profile_field();
+        $this->assertCount(1, $DB->get_records('user_info_data', ['fieldid' => $field->id]));
+    }
 }

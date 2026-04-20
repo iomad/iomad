@@ -17,6 +17,7 @@
 namespace mod_quiz\external;
 
 use core_external\external_api;
+use core_external\external_format_value;
 use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
@@ -46,6 +47,8 @@ class save_overrides extends external_api {
             'timelimit' => new external_value(PARAM_INT, 'Quiz override time limit', VALUE_DEFAULT, null),
             'attempts' => new external_value(PARAM_INT, 'Quiz override attempt count', VALUE_DEFAULT, null),
             'password' => new external_value(PARAM_TEXT, 'Quiz override password', VALUE_DEFAULT, null),
+            'reason' => new external_value(PARAM_RAW, 'Quiz override reason', VALUE_OPTIONAL),
+            'reasonformat' => new external_format_value('reason', VALUE_OPTIONAL),
         ]);
 
         return new external_function_parameters([
@@ -82,7 +85,14 @@ class save_overrides extends external_api {
         );
 
         // Iterate over and save all overrides.
-        $ids = array_map(fn($override) => $manager->save_override($override), $overrides);
+        $ids = array_map(function (array $override) use ($manager): int {
+            // Ensure reasonformat is set on create when a reason is supplied but no format given.
+            if (empty($override['id']) && isset($override['reason']) && !isset($override['reasonformat'])) {
+                $override['reasonformat'] = FORMAT_MOODLE;
+            }
+
+            return $manager->save_override($override);
+        }, $overrides);
 
         return ['ids' => $ids];
     }

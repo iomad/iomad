@@ -91,6 +91,12 @@ class author extends exporter {
                 'default' => null,
                 'null' => NULL_ALLOWED
             ],
+            'initials' => [
+                'type' => PARAM_NOTAGS,
+                'optional' => true,
+                'default' => null,
+                'null' => NULL_ALLOWED,
+            ],
             'isdeleted' => [
                 'type' => PARAM_BOOL,
                 'optional' => true,
@@ -154,6 +160,7 @@ class author extends exporter {
                 return [
                     'id' => $author->get_id(),
                     'fullname' => get_string('deleteduser', 'mod_forum'),
+                    'initials' => null,
                     'isdeleted' => true,
                     'groups' => [],
                     'urls' => [
@@ -172,7 +179,7 @@ class author extends exporter {
 
                     return [
                         'id' => $group->id,
-                        'name' => format_string($group->name, true, ['context' => $context]),
+                        'name' => clean_string(format_string($group->name, true, ['context' => $context])),
                         'urls' => [
                             'image' => $imageurl ? $imageurl->out(false) : null,
                             'group' => $groupurl ? $groupurl->out(false) : null
@@ -184,6 +191,7 @@ class author extends exporter {
                 return [
                     'id' => $author->get_id(),
                     'fullname' => $author->get_full_name(),
+                    'initials' => $author->get_initials(),
                     'isdeleted' => false,
                     'groups' => $groups,
                     'urls' => [
@@ -197,6 +205,7 @@ class author extends exporter {
             return [
                 'id' => null,
                 'fullname' => get_string('forumauthorhidden', 'mod_forum'),
+                'initials' => null,
                 'isdeleted' => null,
                 'groups' => [],
                 'urls' => [

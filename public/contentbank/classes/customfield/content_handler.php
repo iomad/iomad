@@ -27,12 +27,6 @@ use core_customfield\field_controller;
  * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class content_handler extends \core_customfield\handler {
-
-    /**
-     * @var content_handler
-     */
-    static protected $singleton;
-
     /**
      * @var \context
      */
@@ -42,30 +36,6 @@ class content_handler extends \core_customfield\handler {
     const VISIBLETOALL = 2;
     /** @var int Field is not displayed in the content bank edit page */
     const NOTVISIBLE = 0;
-
-    /**
-     * Returns a singleton
-     *
-     * @param int $itemid
-     * @return \core_contentbank\customfield\content_handler
-     */
-    public static function create(int $itemid = 0): \core_contentbank\customfield\content_handler {
-        if (static::$singleton === null) {
-            self::$singleton = new static(0);
-        }
-        return self::$singleton;
-    }
-
-    /**
-     * Run reset code after unit tests to reset the singleton usage.
-     */
-    public static function reset_caches(): void {
-        if (!PHPUNIT_TEST) {
-            throw new \coding_exception('This feature is only intended for use in unit tests');
-        }
-
-        static::$singleton = null;
-    }
 
     /**
      * The current user can configure custom fields on this component.

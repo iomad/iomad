@@ -2867,29 +2867,9 @@ $capabilities = array(
         'archetypes' => [],
     ],
 
-    // Allow users to share activities to MoodleNet.
-    'moodle/moodlenet:shareactivity' => [
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => [
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        ]
-    ],
-
     // Allow users to configure course communication rooms.
     'moodle/course:configurecoursecommunication' => [
         'captype' => 'write',
-        'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => [
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        ]
-    ],
-
-    // Allow users to share courses to MoodleNet.
-    'moodle/moodlenet:sharecourse' => [
-        'captype' => 'read',
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => [
             'editingteacher' => CAP_ALLOW,

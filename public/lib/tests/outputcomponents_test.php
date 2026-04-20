@@ -133,6 +133,7 @@ final class outputcomponents_test extends \advanced_testcase {
         global $DB, $CFG, $USER;
 
         $this->resetAfterTest();
+        $this->setAdminUser();
 
         // Verify new install contains expected defaults.
         $this->assertSame(theme_config::DEFAULT_THEME, $CFG->theme);
@@ -738,7 +739,7 @@ EOF;
             'Null' => [null, false],
             'Not set' => [false, false],
             'Fake' => ['_fake', true],
-            'Real block' => ['activity_modules', false],
+            'Real block' => ['comments', false],
         ];
     }
 

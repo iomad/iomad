@@ -449,7 +449,9 @@ final class provider_test extends provider_testcase {
             'review' => 1,
             'maxattempts' => 1,
             'retake' => 0,
-            'password' => '1337 5p34k'
+            'password' => '1337 5p34k',
+            'reason' => 'This is a reason',
+            'reasonformat' => FORMAT_MOODLE,
         ]);
         $this->create_override($cm1, $u2, [
             'available' => $now - 1230,
@@ -480,6 +482,7 @@ final class provider_test extends provider_testcase {
         $this->assertEquals(1, $data->maxattempts);
         $this->assertEquals(transform::yesno(false), $data->retake);
         $this->assertEquals('1337 5p34k', $data->password);
+        $this->assertEquals(format_text('This is a reason', FORMAT_MOODLE, ['context' => $cm2ctx]), $data->reason);
 
         writer::reset();
         provider::export_user_data(new approved_contextlist($u2, 'mod_lesson', [$cm1ctx->id, $cm2ctx->id]));

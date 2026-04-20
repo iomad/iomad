@@ -30,6 +30,16 @@ const placeholderString = 's';
 /** @var {string} The placeholder character used for cleaned strings */
 const placeholderCleanedString = 'c';
 
+/** @var {Function} originalMustacheEscape */
+const originalMustacheEscape = mustache.escape;
+
+// Replicate escaping logic of PHP s() function.
+mustache.escape = function(string) {
+    string = originalMustacheEscape(string);
+    string = string.replace(/&amp;#([0-9]+|x[0-9a-fA-F]+);/g, '&#$1;');
+    return string;
+};
+
 /**
  * Template Renderer Class.
  *
@@ -220,6 +230,84 @@ export default class Renderer {
     jsHelper(context, sectionText, helper) {
         this.requiredJS.push(helper(sectionText, context));
         return '';
+    }
+
+    /**
+     * Helper used to render {{#react}}{"component": "mycomponent", "props": {"a": "b"}}[optional placeholder content]{{/react}}.
+     *
+     * @param {object} context
+     * @param {string} sectionText
+     * @param {function} helper
+     * @returns {string}
+     */
+    reactHelper(context, sectionText, helper) {
+        // The sectionText should be a JSON string containing the component and props for the React component to render.
+        // It has an optional placeholder content that can be used to provide content for the React component in case
+        // the JS fails to load or execute. This is rendered as part of the helper and passed to the React component as a prop.
+        const trimmedContent = helper(
+            sectionText,
+            context,
+        );
+
+        const createReactRoot = (content) => {
+            // Attempt to parse the content as JSON.
+            // Strip trailing commas (common mistake) to match the PHP helper behaviour.
+            // If this fails, it will be caught in the parent.
+            const data = JSON.parse(content.trim().replace(/,(\s*[}\]])/g, '$1'));
+
+            const root = document.createElement('div');
+
+            for (const [key, value] of Object.entries(data)) {
+                // Skip null or empty values.
+                if (value === null || value === '') {
+                    continue;
+                } else if (key === 'component') {
+                    root.setAttribute('data-react-component', value);
+                } else if (key === 'props') {
+                    root.setAttribute('data-react-props', JSON.stringify(value));
+                } else if (typeof value === 'boolean') {
+                    if (value) {
+                        root.setAttribute(key, '');
+                    }
+                } else if (typeof value === 'object') {
+                    root.setAttribute(key, JSON.stringify(value));
+                } else {
+                    // By the time you reach the else branch, every other type has been handled
+                    // The only remaining types are number and string.
+                    root.setAttribute(key, String(value));
+                }
+            }
+
+            return root;
+        };
+
+        // We are going to try and extract the JSON part of the content by looking for the first {
+        // Then we'll look for the matching } by moving from the end of the string until we find a valid JSON.
+        // This allows us to support content after the JSON which can be used as a placeholder for when JS fails to load or execute.
+        const firstCurlyIndex = trimmedContent.indexOf('{');
+        if (firstCurlyIndex === -1) {
+            // No JSON found, render the whole content as a placeholder.
+            return helper(sectionText, context);
+        }
+
+        let lastCurlyIndex = trimmedContent.length;
+
+        do {
+            try {
+                const contentDiv = createReactRoot(trimmedContent.substring(firstCurlyIndex, lastCurlyIndex + 1));
+                contentDiv.innerHTML = trimmedContent.substring(lastCurlyIndex + 1);
+
+                return contentDiv.outerHTML;
+            } catch (e) {
+                // Still not valid JSON. Keep trying.
+            }
+
+            // Find the last curly brace before the current lastCurlyIndex.
+            lastCurlyIndex = trimmedContent.lastIndexOf('}', lastCurlyIndex - 1);
+        } while (lastCurlyIndex > firstCurlyIndex);
+
+        // No JSON found, render the whole content as a placeholder.
+        return trimmedContent;
     }
 
     /**
@@ -438,6 +526,7 @@ export default class Renderer {
         context.cleanstr = this.addHelperFunction(this.cleanStringHelper, context);
         context.pix = this.addHelperFunction(this.pixHelper, context);
         context.js = this.addHelperFunction(this.jsHelper, context);
+        context.react = this.addHelperFunction(this.reactHelper, context);
         context.quote = this.addHelperFunction(this.quoteHelper, context);
         context.shortentext = this.addHelperFunction(this.shortenTextHelper, context);
         context.userdate = this.addHelperFunction(this.userDateHelper, context);

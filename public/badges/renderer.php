@@ -282,14 +282,6 @@ class core_badges_renderer extends plugin_renderer_base {
     }
 
     /**
-     * @deprecated sinde Moodle 4.3
-     */
-    #[\core\attribute\deprecated(null, reason: 'It is no longer used', since: '4.3', mdl: 'MDL-77061', final: true)]
-    public function print_badge_table_actions() {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-
-    /**
      * Render an issued badge.
      *
      * @param \core_badges\output\issued_badge $ibadge
@@ -399,22 +391,6 @@ class core_badges_renderer extends plugin_renderer_base {
         }
 
         return $localhtml . $externalhtml;
-    }
-
-    /**
-     * @deprecated since Moodle 4.4
-     */
-    #[\core\attribute\deprecated(null, since: '4.4', mdl: 'MDL-80052', final: true)]
-    protected function render_badge_collection(\core_badges\output\badge_collection $badges) {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-
-    /**
-     * @deprecated since Moodle 4.3
-     */
-    #[\core\attribute\deprecated(null, reason: 'It is no longer used', since: '4.3', mdl: 'MDL-77061', final: true)]
-    protected function render_badge_management() {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
     }
 
     /**
@@ -588,14 +564,6 @@ class core_badges_renderer extends plugin_renderer_base {
         }
 
         return $output;
-    }
-
-    /**
-     * @deprecated since Moodle 4.4
-     */
-    #[\core\attribute\deprecated(null, since: '4.4', mdl: 'MDL-80052', final: true)]
-    protected function render_badge_recipients(\core_badges\output\badge_recipients $recipients) {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -781,7 +749,7 @@ class core_badges_renderer extends plugin_renderer_base {
         $paging = new paging_bar($related->totalcount, $related->page, $related->perpage, $this->page->url, 'page');
         $htmlpagingbar = $this->render($paging);
         $table = new html_table();
-        $table->attributes['class'] = 'table generaltable';
+        $table->attributes['class'] = 'table generaltable table-hover';
         $table->head = array(
             get_string('name'),
             get_string('version', 'badges'),
@@ -840,7 +808,7 @@ class core_badges_renderer extends plugin_renderer_base {
         $paging = new paging_bar($alignments->totalcount, $alignments->page, $alignments->perpage, $this->page->url, 'page');
         $htmlpagingbar = $this->render($paging);
         $table = new html_table();
-        $table->attributes['class'] = 'table generaltable';
+        $table->attributes['class'] = 'table generaltable table-hover';
         $table->head = array('Name', 'URL', '');
 
         foreach ($alignments->alignments as $item) {

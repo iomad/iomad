@@ -178,7 +178,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      * Get list of plugin callback functions.
      *
      * @param string $name Callback function name.
-     * @return [callable] $pluginfunctions
+     * @return callable[] $pluginfunctions
      */
     public function get_plugins_callback_function(string $name): array {
         $pluginfunctions = [];
@@ -707,6 +707,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      *
      * @param stdClass $course course object (must have 'id', 'visible' and 'category' fields)
      * @param null|stdClass $user The user id or object. By default (null) checks access for the current user.
+     * @return bool
      */
     public static function can_view_course_info($course, $user = null) {
         if ($course->id == SITEID) {
@@ -1350,14 +1351,9 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         } else {
             $sortfields = array('sortorder' => 1);
         }
-        $limit = null;
-        if (!empty($options['limit']) && (int)$options['limit']) {
-            $limit = (int)$options['limit'];
-        }
-        $offset = 0;
-        if (!empty($options['offset']) && (int)$options['offset']) {
-            $offset = (int)$options['offset'];
-        }
+
+        $offset = !empty($options['offset']) && (int) $options['offset'] ? (int) $options['offset'] : 0;
+        $limit = !empty($options['limit']) && (int) $options['limit'] ? (int) $options['limit'] : null;
 
         // First retrieve list of user-visible and sorted children ids from cache.
         $sortedids = $coursecatcache->get('c'. $this->id. ':'.  serialize($sortfields));
@@ -1552,7 +1548,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
     /**
      * Returns true if the category has ANY children, including those not visible to the user
      *
-     * @return boolean
+     * @return bool
      */
     public function has_children() {
         $allchildren = self::get_tree($this->id);
@@ -1603,8 +1599,9 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      */
     public static function search_courses($search, $options = array(), $requiredcapabilities = array()) {
         global $DB;
-        $offset = !empty($options['offset']) ? $options['offset'] : 0;
-        $limit = !empty($options['limit']) ? $options['limit'] : null;
+
+        $offset = !empty($options['offset']) && (int) $options['offset'] ? (int) $options['offset'] : 0;
+        $limit = !empty($options['limit']) && (int) $options['limit'] ? (int) $options['limit'] : null;
         $sortfields = !empty($options['sort']) ? $options['sort'] : array('sortorder' => 1);
 
         $coursecatcache = cache::make('core', 'coursecat');
@@ -1862,9 +1859,10 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      */
     public function get_courses($options = array()) {
         global $DB;
+
         $recursive = !empty($options['recursive']);
-        $offset = !empty($options['offset']) ? $options['offset'] : 0;
-        $limit = !empty($options['limit']) ? $options['limit'] : null;
+        $offset = !empty($options['offset']) && (int) $options['offset'] ? (int) $options['offset'] : 0;
+        $limit = !empty($options['limit']) && (int) $options['limit'] ? (int) $options['limit'] : null;
         $sortfields = !empty($options['sort']) ? $options['sort'] : array('sortorder' => 1);
 
         if (!$this->id && !$recursive) {
@@ -1998,7 +1996,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      * {@link core_course_category::can_delete_full()} or {@link core_course_category::can_move_content_to()}
      * depending upon what the user wished to do.
      *
-     * @return boolean
+     * @return bool
      */
     public function can_delete() {
         if (!$this->has_manage_capability()) {
@@ -2077,7 +2075,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      * to calling this function because there is no capability check
      * inside this function
      *
-     * @param boolean $showfeedback display some notices
+     * @param bool $showfeedback display some notices
      * @return array return deleted courses
      * @throws moodle_exception
      */
@@ -2682,10 +2680,10 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      * moving categories, where you do not want to allow people to move a category
      * to be the child of itself.
      *
-     * @param string/array $requiredcapability if given, only categories where the current
+     * @param string|array $requiredcapability if given, only categories where the current
      *      user has this capability will be returned. Can also be an array of capabilities,
      *      in which case they are all required.
-     * @param integer $excludeid Exclude this category and its children from the lists built.
+     * @param int $excludeid Exclude this category and its children from the lists built.
      * @param string $separator string to use as a separator between parent and child category. Default ' / '
      * @return array of strings
      */
@@ -3296,41 +3294,68 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
             return null;
         }
 
-        // Get all course category contexts that are children of the parent category's context where
-        // a) there is a role assignment for the current user or
-        // b) there are role capability overrides for a role that the user has in this context.
-        // We never need to return the system context because it cannot be a child of another context.
+        // Build portable SQL parts.
         $fields = array_keys(array_filter(self::$coursecatfields));
         $ctxselect = context_helper::get_preload_record_columns_sql('ctx');
-        $rs = $DB->get_recordset_sql("
-                SELECT cc.". join(',cc.', $fields). ", $ctxselect
-                  FROM {course_categories} cc
-                  JOIN {context} ctx ON cc.id = ctx.instanceid AND ctx.contextlevel = :contextcoursecat1
-                  JOIN {role_assignments} ra ON ra.contextid = ctx.id
-                 WHERE ctx.path LIKE :parentpath1
-                       AND ra.userid = :userid1
-            UNION
-                SELECT cc.". join(',cc.', $fields). ", $ctxselect
-                  FROM {course_categories} cc
-                  JOIN {context} ctx ON cc.id = ctx.instanceid AND ctx.contextlevel = :contextcoursecat2
-                  JOIN {role_capabilities} rc ON rc.contextid = ctx.id
-                  JOIN {role_assignments} rc_ra ON rc_ra.roleid = rc.roleid
-                  JOIN {context} rc_ra_ctx ON rc_ra_ctx.id = rc_ra.contextid
-                 WHERE ctx.path LIKE :parentpath2
-                       AND rc_ra.userid = :userid2
-                       AND (ctx.path = rc_ra_ctx.path OR ctx.path LIKE " . $DB->sql_concat("rc_ra_ctx.path", "'/%'") . ")
-        ", [
-            'contextcoursecat1' => CONTEXT_COURSECAT,
-            'contextcoursecat2' => CONTEXT_COURSECAT,
-            'parentpath1' => $parentcat->get_context()->path . '/%',
-            'parentpath2' => $parentcat->get_context()->path . '/%',
-            'userid1' => $USER->id,
-            'userid2' => $USER->id
-        ]);
 
-        // Check if user has required capabilities in any of the contexts.
+        // Paths under the given parent context path.
+        $parentpath = $parentcat->get_context()->path . '/%';
+        $likeparent = $DB->sql_like('path', ':parentpath', false);
+
+        // Join predicate for descendant-or-equal between ctx.path and uc.upath.
+        $eqpaths = $DB->sql_compare_text('ctx.path') . ' = ' . $DB->sql_compare_text('uc.upath');
+        $likechild = "ctx.path LIKE " . $DB->sql_concat('uc.upath', "'/%'");
+
+        // NOTE: This query intentionally uses a CTE (WITH clause).
+        // CTEs are supported by PostgreSQL, MySQL 8+, and SQL Server, and Moodle allows
+        // pass-through SQL when needed.
+        //
+        // Moodle generally avoids using raw SQL features that are not represented in
+        // the database abstraction layer, but in this case the CTE delivers a substantial
+        // performance improvement for large datasets.
+        //
+        // IMPORTANT: This is an exception, not a precedent. The broader use of CTEs
+        // and potential abstraction-layer support will be discussed separately.
+        $sql = "
+        WITH ctx AS (
+            SELECT id, instanceid, path, depth, contextlevel, locked
+              FROM {context}
+             WHERE contextlevel = :ctxlevel
+               AND $likeparent
+        ),
+        user_ctx AS (
+            SELECT DISTINCT c.path AS upath, ra.roleid
+              FROM {role_assignments} ra
+              JOIN {context} c ON c.id = ra.contextid
+             WHERE ra.userid = :userid
+        )
+        SELECT DISTINCT cc." . join(', cc.', $fields) . ", $ctxselect
+          FROM {course_categories} cc
+          JOIN ctx ON cc.id = ctx.instanceid
+     LEFT JOIN {role_assignments} ra
+            ON ra.userid = :userid2
+           AND ra.contextid = ctx.id
+     LEFT JOIN {role_capabilities} rc
+            ON rc.contextid = ctx.id
+     LEFT JOIN user_ctx uc
+            ON uc.roleid = rc.roleid
+           AND ( $eqpaths OR $likechild )
+         WHERE (ra.id IS NOT NULL OR uc.upath IS NOT NULL)
+      ORDER BY cc.sortorder, cc.id
+    ";
+
+        $params = [
+            'ctxlevel'   => CONTEXT_COURSECAT,
+            'parentpath' => $parentpath,
+            'userid'     => $USER->id,
+            'userid2'    => $USER->id,
+        ];
+
+        // Stream results and pick the first subcategory that actually passes capability checks.
         $tocache = [];
         $result = null;
+
+        $rs = $DB->get_recordset_sql($sql, $params);
         foreach ($rs as $record) {
             $subcategory = new self($record);
             $tocache[$subcategory->id] = $subcategory;

@@ -69,7 +69,7 @@ class report_helper {
                 }
 
             }
-            $selectmenu = new \core\output\select_menu('reporttype', $menuarray, $activeurl);
+            $selectmenu = new \core\output\select_menu('reporttype', $menuarray, $activeurl, true);
             $selectmenu->set_label(get_string('reporttype'), ['class' => 'visually-hidden']);
             $options = \html_writer::tag(
                 'div',
@@ -89,14 +89,6 @@ class report_helper {
         } else {
             echo $OUTPUT->heading($pluginname, 2, 'mb-3');
         }
-    }
-
-    /**
-     * @deprecated since Moodle 4.0
-     */
-    #[\core\attribute\deprecated(null, reason: 'It is no longer used', since: '4.0', final: true)]
-    public static function save_selected_report() {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
     }
 
     /**

@@ -1,0 +1,58 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_glossary/concept_entry_header
+
+    Template for the header of a glossary entry showing the concept, editing date, and the author's picture, if provided.
+
+    Classes required for JS:
+        * none
+    Data attributes required for JS:
+        * none
+
+    Example context (json):
+    {
+        "authorpicture": "<span class=\"userinitials size-35\" title=\"Admin User\" aria-label=\"Admin User\" role=\"img\">AU</span>",
+        "concept": "Sample concept",
+        "authordate": "John Doe - Wednesday, 14 January 2026, 4:38 PM",
+        "lastedited": ""
+    }
+}}
+<div class="d-flex align-items-start mb-1">
+    {{#authorpicture}}
+    <div class="left picture me-1">
+        {{{.}}}
+    </div>
+    {{/authorpicture}}
+    <div class="entryheader flex-grow-1">
+        <div class="concept">
+            {{{concept}}}
+        </div>
+        {{#authordate}}
+        <div class="author">
+            {{{.}}}
+        </div>
+        {{/authordate}}
+        {{#lastedited}}
+        <div class="time">
+            {{{.}}}
+        </div>
+        {{/lastedited}}
+    </div>
+    {{#entryapproval}}
+    <div class="entryapproval">
+        {{{ . }}}
+    </div>
+    {{/entryapproval}}
+</div>

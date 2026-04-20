@@ -89,16 +89,6 @@ class MoodleQuickForm_filepicker extends HTML_QuickForm_input implements templat
     }
 
     /**
-     * Old syntax of class constructor. Deprecated in PHP7.
-     *
-     * @deprecated since Moodle 3.1
-     */
-    public function MoodleQuickForm_filepicker($elementName=null, $elementLabel=null, $attributes=null, $options=null) {
-        debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
-        self::__construct($elementName, $elementLabel, $attributes, $options);
-    }
-
-    /**
      * Returns html for help button.
      *
      * @return string html for help button
@@ -185,7 +175,13 @@ class MoodleQuickForm_filepicker extends HTML_QuickForm_input implements templat
         $html .= '</noscript>';
 
         if (!empty($args->accepted_types) && $args->accepted_types != '*') {
-            $html .= html_writer::tag('p', get_string('filesofthesetypes', 'form'));
+            $html .= html_writer::tag(
+                'div',
+                get_string('filesofthesetypes', 'form'),
+                [
+                    'class' => 'filetypes-descriptions-intro mt-1',
+                ],
+            );
             $util = new \core_form\filetypes_util();
             $filetypedescriptions = $util->describe_file_types($args->accepted_types);
             $html .= $OUTPUT->render_from_template('core_form/filetypes-descriptions', $filetypedescriptions);

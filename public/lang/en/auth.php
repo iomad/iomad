@@ -81,10 +81,14 @@ $string['emailnowexists'] = 'The email address you tried to assign to your profi
 $string['emailupdate'] = 'Email address update';
 $string['emailupdatemessage'] = 'Hi {$a->firstname},
 
-You have requested a change of your email address for your account on {$a->site}. To confirm this change, please go to the following web address:
+You have requested a change of your email address for your account on {$a->site}.
 
-{$a->url}
-The confirmation link will expire in <b>10 minutes</b>.
+To confirm this change, please click the link below:
+
+<a href="{$a->url}">Confirm email change</a>
+
+
+The confirmation link will expire in <strong>10 minutes</strong>.
 
 {$a->supportemail}';
 $string['emailupdatesuccess'] = 'Email address of user <em>{$a->fullname}</em> was successfully updated to <em>{$a->email}</em>.';
@@ -135,7 +139,7 @@ $string['nopasswordchangeforced'] = 'You cannot proceed without changing your pa
 $string['noprofileedit'] = 'Profile can not be edited';
 $string['ntlmsso_attempting'] = 'Attempting Single Sign On via NTLM...';
 $string['ntlmsso_failed'] = 'Auto-login failed, try the normal login page...';
-$string['ntlmsso_isdisabled'] = 'NTLM SSO is disabled.';
+$string['ntlmsso_isdisabled'] = 'New Technology LAN Manager (NTLM) SSO is disabled.';
 $string['passwordhandling'] = 'Password field handling';
 $string['plaintext'] = 'Plain text';
 $string['pluginnotenabled'] = 'Authentication plugin \'{$a}\' is not enabled.';

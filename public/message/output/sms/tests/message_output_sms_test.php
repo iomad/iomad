@@ -100,6 +100,7 @@ final class message_output_sms_test extends \advanced_testcase {
         $this->assertCount(1, $adhoctask);
 
         // Now lets run the task and check if SMS is sent.
+        $this->expectOutputRegex('/SMS send status: gateway_sent/');
         $this->run_all_adhoc_tasks();
 
         $message = $manager->get_message(['id' => $message->id]);

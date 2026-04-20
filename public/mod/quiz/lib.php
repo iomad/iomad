@@ -26,6 +26,8 @@
  */
 
 use core_question\local\bank\question_bank_helper;
+use mod_quiz\local\override_manager;
+use mod_quiz\local\quiz_overrides_cache_manager;
 use qbank_managecategories\helper;
 
 defined('MOODLE_INTERNAL') || die();
@@ -38,7 +40,6 @@ use mod_quiz\question\display_options;
 use mod_quiz\question\qubaids_for_quiz;
 use mod_quiz\question\qubaids_for_users_attempts;
 use core_question\statistics\questions\all_calculated_for_qubaid_condition;
-use mod_quiz\local\override_cache;
 use mod_quiz\quiz_attempt;
 use mod_quiz\quiz_settings;
 
@@ -1115,6 +1116,9 @@ function mod_quiz_inplace_editable(string $itemtype, int $itemid, string $newval
         \core_external\external_api::validate_context($context);
         require_capability('mod/quiz:manage', $context);
 
+        // Validate capability to customise question numbers.
+        require_capability('mod/quiz:customisequestionnumbers', $context);
+
         // Update the value - truncating the size of the DB column.
         $structure = $quizobj->get_structure();
         $structure->update_slot_display_number($itemid, core_text::substr($newvalue, 0, 16));
@@ -1499,31 +1503,39 @@ function quiz_reset_userdata($data) {
             'error' => false];
     }
 
-    $purgeoverrides = false;
+    $overrides = [];
 
     // Remove user overrides.
     if (!empty($data->reset_quiz_user_overrides)) {
-        $DB->delete_records_select('quiz_overrides',
-                'quiz IN (SELECT id FROM {quiz} WHERE course = ?) AND userid IS NOT NULL', [$data->courseid]);
+        $select = 'quiz IN (SELECT id FROM {quiz} WHERE course = ?) AND userid IS NOT NULL';
+        $params = [$data->courseid];
+
+        $overrides = array_merge($overrides, $DB->get_records_select('quiz_overrides', $select, $params));
+        $DB->delete_records_select('quiz_overrides', $select, $params);
         $status[] = [
             'component' => $componentstr,
             'item' => get_string('useroverrides', 'quiz'),
             'error' => false];
-        $purgeoverrides = true;
     }
     // Remove group overrides.
     if (!empty($data->reset_quiz_group_overrides)) {
-        $DB->delete_records_select('quiz_overrides',
-                'quiz IN (SELECT id FROM {quiz} WHERE course = ?) AND groupid IS NOT NULL', [$data->courseid]);
+        $select = 'quiz IN (SELECT id FROM {quiz} WHERE course = ?) AND groupid IS NOT NULL';
+        $params = [$data->courseid];
+
+        $overrides = array_merge($overrides, $DB->get_records_select('quiz_overrides', $select, $params));
+        $DB->delete_records_select('quiz_overrides', $select, $params);
         $status[] = [
             'component' => $componentstr,
             'item' => get_string('groupoverrides', 'quiz'),
             'error' => false];
-        $purgeoverrides = true;
     }
 
     // Updating dates - shift may be negative too.
     if ($data->timeshift) {
+        $select = 'quiz IN (SELECT id FROM {quiz} WHERE course = ?)';
+        $params = [$data->courseid];
+
+        $overrides = array_merge($overrides, $DB->get_records_select('quiz_overrides', $select, $params));
         $DB->execute("UPDATE {quiz_overrides}
                          SET timeopen = timeopen + ?
                        WHERE quiz IN (SELECT id FROM {quiz} WHERE course = ?)
@@ -1532,8 +1544,6 @@ function quiz_reset_userdata($data) {
                          SET timeclose = timeclose + ?
                        WHERE quiz IN (SELECT id FROM {quiz} WHERE course = ?)
                          AND timeclose <> 0", [$data->timeshift, $data->courseid]);
-
-        $purgeoverrides = true;
 
         // Any changes to the list of dates that needs to be rolled should be same during course restore and course reset.
         // See MDL-9367.
@@ -1546,8 +1556,8 @@ function quiz_reset_userdata($data) {
             'error' => false];
     }
 
-    if ($purgeoverrides) {
-        \cache_helper::purge_by_event(\mod_quiz\local\override_cache::INVALIDATION_USERDATARESET);
+    if (!empty($overrides)) {
+        quiz_overrides_cache_manager::purge_for_overrides($overrides);
     }
 
     return $status;
@@ -2212,50 +2222,8 @@ function quiz_get_coursemodule_info($coursemodule) {
  */
 function mod_quiz_cm_info_dynamic(cm_info $cm) {
     global $USER;
-
-    $cache = new override_cache($cm->instance);
-    $override = $cache->get_cached_user_override($USER->id);
-
-    if (!$override) {
-        $override = (object) [
-            'timeopen' => null,
-            'timeclose' => null,
-        ];
-    }
-
-    // No need to look for group overrides if there are user overrides for both timeopen and timeclose.
-    if (is_null($override->timeopen) || is_null($override->timeclose)) {
-        $opens = [];
-        $closes = [];
-        $groupings = groups_get_user_groups($cm->course, $USER->id);
-        foreach ($groupings[0] as $groupid) {
-            $groupoverride = $cache->get_cached_group_override($groupid);
-            if (isset($groupoverride->timeopen)) {
-                $opens[] = $groupoverride->timeopen;
-            }
-            if (isset($groupoverride->timeclose)) {
-                $closes[] = $groupoverride->timeclose;
-            }
-        }
-        // If there is a user override for a setting, ignore the group override.
-        if (is_null($override->timeopen) && count($opens)) {
-            $override->timeopen = min($opens);
-        }
-        if (is_null($override->timeclose) && count($closes)) {
-            if (in_array(0, $closes)) {
-                $override->timeclose = 0;
-            } else {
-                $override->timeclose = max($closes);
-            }
-        }
-    }
-
-    // Populate some other values that can be used in calendar or on dashboard.
-    if (!is_null($override->timeopen)) {
-        $cm->override_customdata('timeopen', $override->timeopen);
-    }
-    if (!is_null($override->timeclose)) {
-        $cm->override_customdata('timeclose', $override->timeclose);
+    foreach (override_manager::get_effective_open_close_times($cm->instance, $USER->id) as $key => $value) {
+        $cm->override_customdata($key, $value);
     }
 }
 
@@ -2490,8 +2458,15 @@ function mod_quiz_output_fragment_quiz_question_bank($args): string {
  * @param array $args provided by the AJAX request.
  * @return string html to render to the modal.
  */
+#[\core\attribute\deprecated(
+    replacement: 'core_question\route\api\bank::switcher',
+    since: '5.2',
+    reason: 'Replaced with a non-quiz-specific API endpoint',
+    mdl: 'MDL-87264',
+)]
 function mod_quiz_output_fragment_switch_question_bank($args): string {
     global $USER, $COURSE, $OUTPUT;
+    \core\deprecation::emit_deprecation(__FUNCTION__);
 
     $quizcmid = clean_param($args['quizcmid'], PARAM_INT);
 
@@ -2520,9 +2495,14 @@ function mod_quiz_output_fragment_add_random_question_form($args) {
     if (empty($slotid)) {
         $params = $args;
     } else {
+        $contextid = \core\context\module::instance(clean_param($args['quizcmid'], PARAM_INT))->id;
         // Load the stored filters for the current slot.
-        $setreference = $DB->get_record('question_set_references',
-            ['itemid' => $slotid, 'component' => 'mod_quiz', 'questionarea' => 'slot']);
+        $setreference = $DB->get_record('question_set_references', [
+            'usingcontextid' => $contextid,
+            'component' => 'mod_quiz',
+            'questionarea' => 'slot',
+            'itemid' => $slotid,
+        ]);
         $filterconditions = json_decode($setreference->filtercondition, true);
         $filterconditions = \core_question\question_reference_manager::convert_legacy_set_reference_filter_condition(
             $filterconditions,

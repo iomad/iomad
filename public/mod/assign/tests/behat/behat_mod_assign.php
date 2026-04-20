@@ -86,4 +86,31 @@ class behat_mod_assign extends behat_base {
         $rule = ['contextid' => 1, 'overdueby' => DAYSECS, 'penalty' => 10, 'sortorder' => 0];
         $DB->insert_record('gradepenalty_duedate_rule', (object) $rule);
     }
+
+    /**
+     * Goes to the student's advanced marking page.
+     *
+     * @Given /^I go to "(?P<user_fullname>(?:[^"]|\\")*)" "(?P<activity_name>(?:[^"]|\\")*)" activity advanced marking page$/
+     * @param string $userfullname The user's full name including firstname and lastname.
+     * @param string $activityname The activity name
+     */
+    public function i_go_to_activity_advanced_marking_page(string $userfullname, string $activityname): void {
+
+        // Step to access the user grade page from the grading page.
+        $this->execute('behat_navigation::go_to_breadcrumb_location', $this->escape($activityname));
+
+        $this->execute('behat_general::click_link', get_string('gradeitem:submissions', 'mod_assign'));
+
+        $this->execute(
+            'behat_general::i_click_on_in_the',
+            [
+                $this->escape(get_string('markactions', 'assign')),
+                'actionmenu',
+                $this->escape($userfullname),
+                'table_row',
+            ]
+        );
+
+        $this->execute('behat_action_menu::i_choose_in_the_open_action_menu', get_string('markverb', 'mod_assign'));
+    }
 }

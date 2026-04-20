@@ -1,5 +1,44 @@
 # core_badges (subsystem) Upgrade notes
 
+## 5.2
+
+### Added
+
+- The following classes and functions are now also available in the following new
+  locations. They will continue to work in their old locations:
+
+  | Old classname/function | New classname/function |
+  | --- | --- |
+  | `\badge_award_selector_base` | `\core_badges\award_selector_base` |
+  | `\badge_potential_users_selector` | `\core_badges\potential_award_selector` |
+  | `\badge_existing_users_selector` | `\core_badges\existing_award_selector` |
+  | `process_manual_award()` | `\core_badges\award_manager::process_manual_award()` |
+  | `process_manual_revoke()` | `\core_badges\award_manager::process_manual_revoke()` |
+
+  For more information see [MDL-83902](https://tracker.moodle.org/browse/MDL-83902)
+
+### Changed
+
+- The create_issued_badge generator now returns the issued badge object.
+
+  For more information see [MDL-85621](https://tracker.moodle.org/browse/MDL-85621)
+
+### Deprecated
+
+- The class core_badges_assertion has been deprecated and replaced by \core_badges\achievement_credential. The method badges_get_default_issuer() has also been deprecated because it is no longer needed. The file badges/endorsement.php has been removed because it stopped being used when MDL-84323 was integrated.
+
+  For more information see [MDL-85621](https://tracker.moodle.org/browse/MDL-85621)
+
+### Removed
+
+- - The following methods have been removed from `public/badges/renderer.php`:
+    - `\core_badges_renderer::print_badge_table_actions()`
+    - `\core_badges_renderer::render_badge_collection()`
+    - `\core_badges_renderer::render_badge_management()`
+    - `\core_badges_renderer::render_badge_recipients()`
+
+  For more information see [MDL-87425](https://tracker.moodle.org/browse/MDL-87425)
+
 ## 5.1
 
 ### Added

@@ -7,6 +7,7 @@ Feature: Enable dashboard setting
   Scenario: Hide setting when dashboard is disabled
     Given the following config values are set as admin:
       | enabledashboard | 0 |
+      | enablemycourses | 1 |
 # 2 = User preference.
       | defaulthomepage | 2 |
     When I log in as "admin"

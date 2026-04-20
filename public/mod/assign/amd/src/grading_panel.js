@@ -154,10 +154,13 @@ define([
         var data = form.serialize();
         var assignmentid = this._region.attr('data-assignmentid');
 
+        var vars = window.location.search.substring(1).split('&');
+        var marker = vars.includes('action=marker');
+
         // Now we can continue...
         ajax.call([{
             methodname: 'mod_assign_submit_grading_form',
-            args: {assignmentid: assignmentid, userid: this._lastUserId, jsonformdata: JSON.stringify(data)},
+            args: {assignmentid: assignmentid, userid: this._lastUserId, marker: marker, jsonformdata: JSON.stringify(data)},
             done: this._handleFormSubmissionResponse.bind(this, data, nextUserId, nextUser),
             fail: notification.exception
         }]);
@@ -336,8 +339,12 @@ define([
             this._niceReplaceNodeContents(this._region, html, js).done(function() {
                 if (userid > 0) {
                     this._region.show();
+                    var vars = window.location.search.substring(1).split('&');
+                    var marker = vars.includes('action=marker');
                     // Reload the grading form "fragment" for this user.
-                    var params = {userid: userid, attemptnumber: attemptnumber, jsonformdata: JSON.stringify(submissiondata)};
+                    var params = {userid: userid, attemptnumber: attemptnumber,
+                        jsonformdata: JSON.stringify(submissiondata),
+                        marker: marker};
                     fragment.loadFragment('mod_assign', 'gradingpanel', contextid, params).done(function(html, js) {
 
                         // Reset whole grading page when there is a failure in retrieving the html

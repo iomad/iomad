@@ -64,16 +64,6 @@
     .modal-footer {
         height: 70px;
         background: $modal-content-bg;
-
-        .moodlenet-logo {
-            .icon {
-                height: 2.5rem;
-                width: 6rem;
-                max-height: 2.5rem;
-                max-width: 6rem;
-                margin-bottom: .6rem;
-            }
-        }
     }
 }
 
@@ -239,6 +229,9 @@
             padding-bottom: map-get($spacers, 4);
             border-bottom: $border-width $border-style $border-color;
         }
+    }
+    .optionsummary-summary {
+        font-size: larger;
     }
 }
 

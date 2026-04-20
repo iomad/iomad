@@ -126,7 +126,12 @@ class phpFlickr {
                           "content_type" => $args['content_type'],
                           "hidden" => $args['hidden']);
         } else {
-            $args = array_merge(array("method" => $command, "format" => "php_serial", "api_key" => $this->api_key), $args);
+            $args = array_merge([
+                'method' => $command,
+                'format' => 'json',
+                'nojsoncallback' => 1,
+                'api_key' => $this->api_key,
+            ], $args);
         }
 
         if (!empty($this->token)) {
@@ -147,7 +152,7 @@ class phpFlickr {
         //$this->req->addHeader("Connection", "Keep-Alive");
         if ($command != 'flickr.upload') {
             $ret = $this->curl->post($this->REST, $args);
-            $this->parsed_response = $this->clean_text_nodes(unserialize($ret));
+            $this->parsed_response = $this->clean_text_nodes(json_decode($ret, true));
         } else {
             $args['photo'] = $photo;
             $xml = simplexml_load_string($this->curl->post($this->Upload, $args));
@@ -242,14 +247,6 @@ class phpFlickr {
             $url = "http://farm" . $photo['farm'] . ".static.flickr.com/" . $photo['server'] . "/" . $photo['id'] . "_" . $photo['secret'] . $sizes[$size] . ".jpg";
         }
         return $url;
-    }
-
-    function getFriendlyGeodata($lat, $lon) {
-        /** I've added this method to get the friendly geodata (i.e. 'in New York, NY') that the
-         * website provides, but isn't available in the API. I'm providing this service as long
-         * as it doesn't flood my server with requests and crash it all the time.
-         */
-        return unserialize(file_get_contents('http://phpflickr.com/geodata/?format=php&lat=' . $lat . '&lon=' . $lon));
     }
 
     function auth($perms = "write", $remember_uri = true)

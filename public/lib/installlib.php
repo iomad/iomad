@@ -259,7 +259,8 @@ function install_generate_configphp($database, $cfg) {
 }
 
 /**
- * Prints installation page header, we can not use weblib yet in installer.
+ * Prints installation page header, we can not use weblib yet in installer nor reference any file serving scripts
+ * directly (images, styles, etc. files must all be referenced by direct URL)
  *
  * @global object
  * @param stdClass $config
@@ -267,9 +268,17 @@ function install_generate_configphp($database, $cfg) {
  * @param string $heading
  * @param string $stagetext
  * @param string $stageclass
+ * @param string $warning Additional information that is a warning
  * @return void
  */
-function install_print_header($config, $stagename, $heading, $stagetext, $stageclass = "alert-info") {
+function install_print_header(
+    $config,
+    $stagename,
+    $heading,
+    $stagetext,
+    $stageclass = "alert-info",
+    $warning = '',
+) {
     global $CFG;
 
     @header('Content-Type: text/html; charset=UTF-8');
@@ -283,7 +292,7 @@ function install_print_header($config, $stagename, $heading, $stagetext, $stagec
     echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
     echo '<html dir="'.(right_to_left() ? 'rtl' : 'ltr').'">
           <head>
-          <link rel="shortcut icon" href="theme/clean/pix/favicon.ico" />';
+          <link rel="shortcut icon" href="' . $CFG->wwwroot . '/theme/boost/pix/favicon.ico" />';
 
     echo '<link rel="stylesheet" type="text/css" href="'.$CFG->wwwroot.'/install/css.php" />
           <title>'.get_string('installation', 'install') . moodle_page::TITLE_SEPARATOR . 'Moodle '.$CFG->target_release.'</title>
@@ -309,6 +318,11 @@ function install_print_header($config, $stagename, $heading, $stagetext, $stagec
     if ($stagetext !== '') {
         echo '<div class="alert ' . $stageclass . '">';
         echo $stagetext;
+        echo '</div>';
+    }
+    if ($warning !== '') {
+        echo '<div class="alert alert-danger">';
+        echo $warning;
         echo '</div>';
     }
     // main
@@ -343,7 +357,8 @@ function install_print_footer($config, $reload=false) {
     }
 
     if ($reload) {
-        $next = '<input type="submit" id="nextbutton" class="btn btn-primary ms-1 flex-grow-0 me-auto" name="next" value="'.s(get_string('reload')).'" />';
+        $next = '<input type="submit" id="nextbutton" class="btn btn-primary ms-1 flex-grow-0 me-auto" name="reload"
+         value="' . s(get_string('reload')) . '" />';
     } else {
         $next = '<input type="submit" id="nextbutton" class="btn btn-primary ms-1 flex-grow-0 me-auto" name="next" value="'.s(get_string('next')).' &raquo;" />';
     }
@@ -453,6 +468,11 @@ function install_cli_database(array $options, $interactive) {
         set_config('supportemail', $options['supportemail']);
     } else if (!empty($options['adminemail'])) {
         set_config('supportemail', $options['adminemail']);
+    }
+
+    // Set the noreply address if specified.
+    if (!empty($options['noreplyemail'])) {
+        set_config('noreplyaddress', $options['noreplyemail']);
     }
 
     // indicate that this site is fully configured

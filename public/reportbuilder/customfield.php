@@ -27,6 +27,8 @@ require_once($CFG->libdir.'/adminlib.php');
 
 admin_externalpage_setup('reportbuildercustomfields');
 
+$PAGE->add_body_class('limitedwidth');
+
 /** @var \core_customfield\output\renderer $output */
 $output = $PAGE->get_renderer('core_customfield');
 $handler = core_reportbuilder\customfield\report_handler::create();

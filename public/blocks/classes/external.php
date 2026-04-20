@@ -269,6 +269,11 @@ class core_block_external extends external_api {
         $context = context_user::instance($userid);;
         self::validate_context($context);
 
+        // Accessing My courses blocks via the web service is not allowed when it is disabled.
+        if ($params['mypage'] === MY_PAGE_COURSES && empty($CFG->enablemycourses)) {
+            throw new moodle_exception('error:mycoursesisdisabled', 'my');
+        }
+
         $currentpage = null;
         if ($params['mypage'] === MY_PAGE_DEFAULT) {
             $currentpage = my_get_page($userid);

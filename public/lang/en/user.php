@@ -23,8 +23,6 @@
  */
 
 $string['countparticipantsfound'] = '{$a} participants found';
-$string['moodlenetprofile'] = 'MoodleNet profile ID';
-$string['moodlenetprofile_help'] = 'Your MoodleNet profile ID links your MoodleNet profile with this site.';
 $string['placeholdertype'] = 'Type...';
 $string['privacy:courserequestpath'] = 'Requested courses';
 $string['privacy:descriptionpath'] = 'Profile description';
@@ -78,7 +76,6 @@ $string['privacy:metadata:maildisplay'] = 'A preference for the user about displ
 $string['privacy:metadata:middlename'] = 'The middle name of the user';
 $string['privacy:metadata:mnethostid'] = 'An identifier for the MNet host if used';
 $string['privacy:metadata:model'] = 'The device name, occam or iPhone etc..';
-$string['privacy:metadata:moodlenetprofile'] = 'The MoodleNet profile for the user';
 $string['privacy:metadata:msn'] = 'The MSN identifier of the user';
 $string['privacy:metadata:my_pages'] = 'User pages - dashboard and profile. This table does not contain personal data and only used to link dashboard blocks to users';
 $string['privacy:metadata:my_pages:name'] = 'Page name';
@@ -141,3 +138,8 @@ $string['target:upcomingactivitiesdue_help'] = 'This target generates reminders 
 $string['target:upcomingactivitiesdueinfo'] = 'All upcoming activities due insights are listed here. These students have received these insights directly.';
 $string['usergroupselectorcount'] = '{$a->fullname} ({$a->groupcount})';
 $string['userprofile'] = 'User profile';
+
+// Deprecated since Moodle 5.2.
+$string['moodlenetprofile'] = 'MoodleNet profile ID';
+$string['moodlenetprofile_help'] = 'Your MoodleNet profile ID links your MoodleNet profile with this site.';
+$string['privacy:metadata:moodlenetprofile'] = 'The MoodleNet profile for the user';

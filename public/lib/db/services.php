@@ -2918,6 +2918,12 @@ $functions = array(
         'type'        => 'write',
         'ajax'        => true,
     ),
+    'core_customfield_convert_category' => [
+        'classname'   => core_customfield\external\convert_category::class,
+        'description' => 'Convert an entity custom field category to a shared category.',
+        'type'        => 'write',
+        'ajax'        => true,
+    ],
     'core_customfield_move_field'   => array(
         'classname'   => 'core_customfield_external',
         'methodname'  => 'move_field',
@@ -3240,36 +3246,6 @@ $functions = array(
         'description' => 'Set the protection state for a block plugin',
         'type' => 'write',
         'ajax' => true,
-    ],
-    'core_moodlenet_send_activity' => [
-        'classname'   => 'core\external\moodlenet_send_activity',
-        'description' => 'Send activity to MoodleNet',
-        'type'        => 'read',
-        'ajax'        => true,
-    ],
-    'core_moodlenet_get_share_info_activity' => [
-        'classname'   => 'core\external\moodlenet_get_share_info_activity',
-        'description' => 'Get information about an activity being shared',
-        'type'        => 'read',
-        'ajax'        => true,
-    ],
-    'core_moodlenet_auth_check' => [
-        'classname'   => 'core\external\moodlenet_auth_check',
-        'description' => 'Check a user has authorized for a given MoodleNet site',
-        'type'        => 'write',
-        'ajax'        => true,
-    ],
-    'core_moodlenet_get_shared_course_info' => [
-        'classname'   => 'core\external\moodlenet_get_shared_course_info',
-        'description' => 'Get information about an course being shared',
-        'type'        => 'read',
-        'ajax'        => true,
-    ],
-    'core_moodlenet_send_course' => [
-        'classname'   => 'core\external\moodlenet_send_course',
-        'description' => 'Send course to MoodleNet',
-        'type'        => 'read',
-        'ajax'        => true,
     ],
     'core_output_poll_stored_progress' => [
         'classname'   => 'core\external\output\poll_stored_progress',

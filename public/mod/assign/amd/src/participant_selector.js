@@ -20,7 +20,7 @@
  * @copyright  2015 Damyon Wiese <damyon@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['core/ajax', 'jquery', 'core/templates'], function(ajax, $, templates) {
+define(['core/ajax', 'core/templates'], function(ajax, templates) {
 
 
     return /** @alias module:mod_assign/participants_selector */ {
@@ -48,14 +48,18 @@ define(['core/ajax', 'jquery', 'core/templates'], function(ajax, $, templates) {
          * @param {Function} failure Failure handler
          */
         transport: function(selector, query, success, failure) {
-            var assignmentid = $(selector).attr('data-assignmentid');
-            var groupid = $(selector).attr('data-groupid');
-            var filters = $('[data-region="configure-filters"] input[type="checkbox"]');
+            const element = document.querySelector(selector);
+            var assignmentid = element.getAttribute('data-assignmentid');
+            var groupid = element.getAttribute('data-groupid');
+            var filters = document.querySelectorAll('[data-region="configure-filters"] input[type="checkbox"]');
             var filterstrings = [];
 
-            filters.each(function(index, element) {
-                filterstrings[$(element).attr('name')] = $(element).prop('checked');
+            filters.forEach((e) => {
+                let filterelement = document.querySelector(e);
+                filterstrings[filterelement.getAttribute('name')] = filterelement.checked;
             });
+
+            var marking = element.getAttribute('data-ismarking');
 
             ajax.call([{
                 methodname: 'mod_assign_list_participants',
@@ -65,14 +69,15 @@ define(['core/ajax', 'jquery', 'core/templates'], function(ajax, $, templates) {
                     filter: query,
                     limit: 30,
                     includeenrolments: false,
-                    tablesort: true
+                    tablesort: true,
+                    marking: marking,
                 }
             }])[0].then(function(results) {
                 var promises = [];
-                var identityfields = $('[data-showuseridentity]').data('showuseridentity').split(',');
+                var identityfields = document.querySelector('[data-showuseridentity]').dataset.showuseridentity.split(',');
 
                 // We got the results, now we loop over them and render each one from a template.
-                $.each(results, function(index, user) {
+                results.forEach((user) => {
                     var ctx = user,
                         identity = [],
                         show = true;
@@ -90,7 +95,7 @@ define(['core/ajax', 'jquery', 'core/templates'], function(ajax, $, templates) {
                         show = false;
                     }
                     if (show) {
-                        $.each(identityfields, function(i, k) {
+                        identityfields.forEach((k) => {
                             if (typeof user[k] !== 'undefined' && user[k] !== '') {
                                 ctx.hasidentity = true;
                                 identity.push(user[k]);
@@ -102,17 +107,8 @@ define(['core/ajax', 'jquery', 'core/templates'], function(ajax, $, templates) {
                         }));
                     }
                 });
-                // Do the dance for $.when()
-                return $.when.apply($, promises);
-            }).then(function() {
-                var users = [];
-
-                // Determine if we've been passed any arguments..
-                if (arguments[0]) {
-                    // Undo the $.when() dance from arguments object into an array..
-                    users = Array.prototype.slice.call(arguments);
-                }
-
+                return Promise.all(promises);
+            }).then(function(users) {
                 success(users);
                 return;
             }).catch(failure);

@@ -90,4 +90,10 @@ if ($hassiteconfig) { // speedup for non-admins, add all caps used on this page
             new lang_string('configallowemojipickerincompatible', 'admin')
         ));
     }
+    $optionalsubsystems->add(new admin_setting_configcheckbox(
+        'enableasyncresets',
+        new lang_string('enableasyncresets', 'admin'),
+        new lang_string('configenableasyncresets', 'admin'),
+        0
+    ));
 }

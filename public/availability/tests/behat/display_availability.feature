@@ -180,4 +180,94 @@ Feature: Display availability for activities and sections
     And I should not see "Date" in the "Restrict access" "fieldset"
     And I press "Add restriction..."
     And I click on "Grade" "button" in the "Add restriction..." "dialogue"
-    And the "alt" attribute of ".availability-item .availability-eye img" "css_element" should contain "Displayed if student"
+    And the "alt" attribute of ".availability-item .availability-eye img" "css_element" should contain "Item name displayed"
+
+  @javascript
+  Scenario: Restricted section page
+    # Set up.
+    Given the following config values are set as admin:
+      | unaddableblocks | | theme_boost|
+    And the following "groups" exist:
+      | course | name | idnumber |
+      | C1     | G1   | GI1      |
+    And the following "groupings" exist:
+      | name | course | idnumber |
+      | GX1  | C1     | GXI1     |
+    And I am on the "C1" "Course" page logged in as "teacher1"
+    And I turn editing mode on
+    And I add the "Navigation" block if not present
+    # Add a couple of restrictions to section 1 (visible to students).
+    And I edit the section "1"
+    And I set the following fields to these values:
+      | Access restrictions | Grouping: GX1 |
+    And I expand all fieldsets
+    And I press "Add restriction..."
+    And I click on "Date" "button" in the "Add restriction..." "dialogue"
+    And I set the field "direction" to "until"
+    And I set the field "x[year]" to "2020"
+    And I press "Save changes"
+    # Change to student view.
+    And I am on the "Course 1" "Course" page logged in as "student1"
+    And "Section 1" "link" should appear before "Section 2" "link" in the "Navigation" "block"
+    When I click on "Section 1" "link" in the "Navigation" "block"
+    # Section 1 should be visible and show info.
+    And I should see "Section 1" in the "page-header" "region"
+    And I should see "It is before end of" in the "region-main" "region"
+    And I should not see "Show more" in the "region-main" "region"
+    And I should not see "Show less" in the "region-main" "region"
+    And "Page 1" "link" should not exist in the "region-main" "region"
+    # Check the logs.
+    And I am on the "C1" "Course" page logged in as "teacher1"
+    And I navigate to "Reports > Logs" in current page administration
+    And I click on "Get these logs" "button"
+    And I should see "Restricted section viewed"
+    And I click on "Restricted section viewed" "link"
+    And I switch to "action" window
+    And I should see "Section 1" in the "page-header" "region"
+    And I should see "Not available unless" in the "region-main" "region"
+
+  @javascript
+  Scenario: Restricted activity page
+    # Set up.
+    Given the following config values are set as admin:
+      | unaddableblocks | | theme_boost|
+    And the following "activities" exist:
+      | activity | course | section | name       |
+      | glossary | C1     | 1       | Glossary 1 |
+    And the following "groups" exist:
+      | course | name | idnumber |
+      | C1     | G1   | GI1      |
+    And the following "groupings" exist:
+      | name | course | idnumber |
+      | GX1  | C1     | GXI1     |
+    And I am on the "Glossary 1" "glossary activity editing" page logged in as "teacher1"
+    # Add a couple of restrictions to Glossary 1 (visible to students).
+    And I set the following fields to these values:
+      | Access restrictions | Grouping: GX1 |
+    And I expand all fieldsets
+    And I press "Add restriction..."
+    And I click on "Date" "button" in the "Add restriction..." "dialogue"
+    And I set the field "direction" to "until"
+    And I set the field "x[year]" to "2020"
+    And I press "Save and return to course"
+    And I turn editing mode on
+    And I add the "Navigation" block if not present
+    # Change to student view.
+    And I am on the "Course 1" "Course" page logged in as "student1"
+    And I expand "Section 1" node
+    And "Glossary 1" "link" should appear before "Section 2" "link" in the "Navigation" "block"
+    When I click on "Glossary 1" "link" in the "Navigation" "block"
+    # Glossary 1 should be visible and show info.
+    Then I should see "Glossary 1" in the "page-header" "region"
+    And I should see "It is before end of" in the "region-main" "region"
+    And I should not see "Show more" in the "region-main" "region"
+    And I should not see "Show less" in the "region-main" "region"
+    And "Add a new entry" "link" should not exist
+    # Check the logs.
+    And I am on the "C1" "Course" page logged in as "teacher1"
+    And I navigate to "Reports > Logs" in current page administration
+    And I click on "Get these logs" "button"
+    And I should see "Restricted module viewed"
+    And I click on "Restricted module viewed" "link"
+    And I switch to "action" window
+    And I should see "Glossary 1" in the "page-header" "region"

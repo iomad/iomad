@@ -177,14 +177,17 @@ if ($ADMIN->fulltree) {
                                                     ]);
     $settings->add($setting);
 
-    /** @var grade_scale[] $scales */
-    $scales = grade_scale::fetch_all_global();
-    $choices = ['' => new lang_string('choosedots')];
-    foreach ($scales as $scale) {
-        $choices[$scale->id] = $scale->get_name();
-    }
     $name = new lang_string('defaultgradescale', 'mod_assign');
     $description = new lang_string('defaultgradescale_help', 'mod_assign');
+
+    $choices = ['' => new lang_string('choosedots')];
+    $scales = grade_scale::fetch_all_global();
+    if ($scales !== false) {
+        foreach ($scales as $scale) {
+            $choices[$scale->id] = $scale->get_name();
+        }
+    }
+
     if (count($choices) > 1) {
         $setting = new admin_setting_configselect('mod_assign/defaultgradescale',
             $name,
@@ -353,6 +356,62 @@ if ($ADMIN->fulltree) {
                                                     $name,
                                                     $description,
                                                     0);
+    $setting->set_advanced_flag_options(admin_setting_flag::ENABLED, false);
+    $setting->set_locked_flag_options(admin_setting_flag::ENABLED, false);
+    $settings->add($setting);
+
+    // Default setting for number of markers.
+    $name = new lang_string('markercount', 'mod_assign');
+    $description = new lang_string('markercount_help', 'mod_assign');
+    $setting = new admin_setting_configselect(
+        'assign/markercount',
+        $name,
+        $description,
+        ASSIGN_MULTIMARKING_DEFAULT_MARKERS,
+        array_combine(
+            range(1, ASSIGN_MULTIMARKING_MAX_MARKERS),
+            range(1, ASSIGN_MULTIMARKING_MAX_MARKERS)
+        ),
+    );
+    $setting->set_advanced_flag_options(admin_setting_flag::ENABLED, false);
+    $setting->set_locked_flag_options(admin_setting_flag::ENABLED, false);
+    $settings->add($setting);
+
+    // Default setting for multi-marking method (e.g. manual, max, etc...).
+    $name = new lang_string('multimarkmethod', 'mod_assign');
+    $description = new lang_string('multimarkmethod_help', 'mod_assign');
+    $options = [
+        ASSIGN_MULTIMARKING_METHOD_MANUAL => get_string('markgrade' . ASSIGN_MULTIMARKING_METHOD_MANUAL, 'assign'),
+        ASSIGN_MULTIMARKING_METHOD_MAX => get_string('markgrade' . ASSIGN_MULTIMARKING_METHOD_MAX, 'assign'),
+        ASSIGN_MULTIMARKING_METHOD_AVERAGE => get_string('markgrade' . ASSIGN_MULTIMARKING_METHOD_AVERAGE, 'assign'),
+    ];
+    $setting = new admin_setting_configselect(
+        'assign/multimarkmethod',
+        $name,
+        $description,
+        ASSIGN_MULTIMARKING_METHOD_MANUAL,
+        $options,
+    );
+    $setting->set_advanced_flag_options(admin_setting_flag::ENABLED, false);
+    $setting->set_locked_flag_options(admin_setting_flag::ENABLED, false);
+    $settings->add($setting);
+
+    // Default setting for multi-marking rounding (e.g. up, down, none).
+    $name = new lang_string('multimarkrounding', 'mod_assign');
+    $description = new lang_string('multimarkrounding_help', 'mod_assign');
+    $options = [
+        ASSIGN_MULTIMARKING_AVERAGE_ROUND_NONE  => get_string('multimarkrounding:none', 'assign'),
+        ASSIGN_MULTIMARKING_AVERAGE_ROUND_NATURAL  => get_string('multimarkrounding:natural', 'assign'),
+        ASSIGN_MULTIMARKING_AVERAGE_ROUND_DOWN => get_string('multimarkrounding:down', 'assign'),
+        ASSIGN_MULTIMARKING_AVERAGE_ROUND_UP  => get_string('multimarkrounding:up', 'assign'),
+    ];
+    $setting = new admin_setting_configselect(
+        'assign/multimarkrounding',
+        $name,
+        $description,
+        ASSIGN_MULTIMARKING_AVERAGE_ROUND_NONE,
+        $options,
+    );
     $setting->set_advanced_flag_options(admin_setting_flag::ENABLED, false);
     $setting->set_locked_flag_options(admin_setting_flag::ENABLED, false);
     $settings->add($setting);

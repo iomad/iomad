@@ -126,8 +126,8 @@ class settings {
         $this->add_lock_settings();
         // Renders settings for extended capabilities.
         $this->add_extended_settings();
-        // Renders settings for experimental features.
-        $this->add_experimental_settings();
+        // Renders settings for session access features.
+        $this->add_sessionaccess_settings();
 
         // Add all subplugin settings if any.
         $this->admin->add($this->parent, new admin_category('bbbextplugins',
@@ -971,6 +971,18 @@ class settings {
                 get_string('config_extended_capabilities_description', 'bigbluebuttonbn')
             );
             $extendedcapabilitiessetting->add($item);
+            // UI for 'register meeting events' feature.
+            $item = new admin_setting_configcheckbox(
+                'bigbluebuttonbn_meetingevents_enabled',
+                get_string('config_meetingevents_enabled', 'bigbluebuttonbn'),
+                get_string('config_meetingevents_enabled_description', 'bigbluebuttonbn'),
+                0
+            );
+            $this->add_conditional_element(
+                'meetingevents_enabled',
+                $item,
+                $extendedcapabilitiessetting
+            );
             // UI for 'notify users when recording ready' feature.
             $item = new admin_setting_configcheckbox(
                 'bigbluebuttonbn_recordingready_enabled' . $this->postfix,
@@ -1000,36 +1012,24 @@ class settings {
     }
 
     /**
-     * Helper function renders experimental settings if any of the features there is enabled.
+     * Helper function renders session access settings if any of the features there is enabled.
      */
-    protected function add_experimental_settings(): void {
-        // Configuration for experimental features should go here.
-        $experimentalfeaturessetting = new admin_settingpage(
-            "{$this->sectionnameprefix}_experimentalfeatures",
-            get_string('config_experimental_features', 'bigbluebuttonbn'),
+    protected function add_sessionaccess_settings(): void {
+        // Configuration for session access should go here.
+        $sessionaccessfeaturesetting = new admin_settingpage(
+            "{$this->sectionnameprefix}_sessionaccess",
+            get_string('config_session_access', 'bigbluebuttonbn'),
             'moodle/site:config',
-            !((boolean) setting_validator::section_settings_extended_shown()) && ($this->moduleenabled)
+            !((bool) setting_validator::section_session_access_shown()) && ($this->moduleenabled)
         );
 
         if ($this->admin->fulltree) {
             $item = new admin_setting_heading(
-                'bigbluebuttonbn_config_experimental_features',
+                'bigbluebuttonbn_config_session_access',
                 '',
-                get_string('config_experimental_features_description', 'bigbluebuttonbn')
+                get_string('config_session_access_description', 'bigbluebuttonbn')
             );
-            $experimentalfeaturessetting->add($item);
-            // UI for 'register meeting events' feature.
-            $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_meetingevents_enabled' . $this->postfix,
-                get_string('config_meetingevents_enabled', 'bigbluebuttonbn'),
-                get_string('config_meetingevents_enabled_description', 'bigbluebuttonbn'),
-                0
-            );
-            $this->add_conditional_element(
-                'meetingevents_enabled',
-                $item,
-                $experimentalfeaturessetting
-            );
+            $sessionaccessfeaturesetting->add($item);
             // UI for 'register meeting events' feature.
             $item = new admin_setting_configcheckbox(
                 'bigbluebuttonbn_guestaccess_enabled' . $this->postfix,
@@ -1040,10 +1040,10 @@ class settings {
             $this->add_conditional_element(
                 'guestaccess_enabled',
                 $item,
-                $experimentalfeaturessetting
+                $sessionaccessfeaturesetting
             );
         }
-        $this->admin->add($this->parent, $experimentalfeaturessetting);
+        $this->admin->add($this->parent, $sessionaccessfeaturesetting);
     }
 
     /**

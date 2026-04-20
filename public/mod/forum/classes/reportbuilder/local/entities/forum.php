@@ -20,9 +20,9 @@ namespace mod_forum\reportbuilder\local\entities;
 
 use core\{context, context_helper};
 use core\lang_string;
-use core_reportbuilder\local\entities\base;
+use core_course\reportbuilder\local\entities\course_module_base;
 use core_reportbuilder\local\filters\{date, select, text};
-use core_reportbuilder\local\helpers\{database, format};
+use core_reportbuilder\local\helpers\format;
 use core_reportbuilder\local\report\{column, filter};
 use stdClass;
 
@@ -33,17 +33,19 @@ use stdClass;
  * @copyright   2025 Paul Holden <paulh@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class forum extends base {
+class forum extends course_module_base {
     /**
      * Database tables that this entity uses
      *
      * @return string[]
      */
     protected function get_default_tables(): array {
-        return [
-            'context',
-            'forum',
-        ];
+        return array_merge(
+            parent::get_default_tables(),
+            [
+                'forum',
+            ],
+        );
     }
 
     /**
@@ -56,33 +58,11 @@ class forum extends base {
     }
 
     /**
-     * Initialise the entity
-     *
-     * @return base
-     */
-    public function initialise(): base {
-        $columns = $this->get_all_columns();
-        foreach ($columns as $column) {
-            $this->add_column($column);
-        }
-
-        // All the filters defined by the entity can also be used as conditions.
-        $filters = $this->get_all_filters();
-        foreach ($filters as $filter) {
-            $this
-                ->add_filter($filter)
-                ->add_condition($filter);
-        }
-
-        return $this;
-    }
-
-    /**
      * Returns list of all available columns
      *
      * @return column[]
      */
-    protected function get_all_columns(): array {
+    protected function get_available_columns(): array {
         [
             'context' => $contextalias,
             'forum' => $forumalias,
@@ -184,7 +164,7 @@ class forum extends base {
      *
      * @return filter[]
      */
-    protected function get_all_filters(): array {
+    protected function get_available_filters(): array {
         $forumalias = $this->get_table_alias('forum');
 
         // Name.
@@ -250,20 +230,17 @@ class forum extends base {
      * Return context joins
      *
      * @return string[]
+     *
+     * @deprecated since Moodle 5.2 - please do not use this function any more, {@see get_course_modules_joins}
      */
+    #[\core\attribute\deprecated('::get_course_modules_joins', since: '5.2', mdl: 'MDL-86699')]
     public function get_context_joins(): array {
+        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
+
         [
-            'context' => $contextalias,
             'forum' => $forumalias,
         ] = $this->get_table_aliases();
 
-        [$coursemodulealias, $modulealias] = database::generate_aliases(2);
-
-        return [
-            "JOIN {course_modules} {$coursemodulealias} ON {$coursemodulealias}.instance = {$forumalias}.id",
-            "JOIN {modules} {$modulealias} ON {$modulealias}.id = {$coursemodulealias}.module AND {$modulealias}.name = 'forum'",
-            "JOIN {context} {$contextalias} ON {$contextalias}.contextlevel = " . CONTEXT_MODULE . "
-                    AND {$contextalias}.instanceid = {$coursemodulealias}.id",
-        ];
+        return $this->get_course_modules_joins('forum', "{$forumalias}.id");
     }
 }

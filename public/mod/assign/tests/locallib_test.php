@@ -2157,7 +2157,7 @@ You can see it appended to your <a href="' . $assignurl .
         $this->add_submission($student, $assign);
         $this->submit_for_grading($student, $assign);
         $this->mark_submission($teacher, $assign, $student);
-        \phpunit_util::stop_message_redirection();
+        \core\test\phpunit\phpunit_util::stop_message_redirection();
 
         // Now run cron and see that one message was sent.
         \core\cron::setup_user();
@@ -3350,46 +3350,6 @@ You can see it appended to your <a href="' . $assignurl .
     }
 
     /**
-     * Test that a student allocated a specific marker is only shown to that marker.
-     */
-    public function test_markerallocation(): void {
-        global $PAGE;
-
-        $this->resetAfterTest();
-        $course = $this->getDataGenerator()->create_course();
-        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
-        $teacher = $this->getDataGenerator()->create_and_enrol($course, 'teacher');
-        $otherteacher = $this->getDataGenerator()->create_and_enrol($course, 'teacher');
-
-        $assign = $this->create_instance($course, [
-            'markingworkflow' => 1,
-            'markingallocation' => 1,
-        ]);
-
-        $PAGE->set_url(new \moodle_url('/mod/assign/view.php', ['id' => $assign->get_course_module()->id]));
-
-        // Allocate marker to submission.
-        $this->mark_submission($teacher, $assign, $student, null, [
-            'allocatedmarker' => $teacher->id,
-        ]);
-
-        // Check the allocated marker can view the submission.
-        $this->setUser($teacher);
-        $users = $assign->list_participants(0, true);
-        $this->assertEquals(1, count($users));
-        $this->assertTrue(isset($users[$student->id]));
-
-        $cm = get_coursemodule_from_instance('assign', $assign->get_instance()->id);
-        $context = \context_module::instance($cm->id);
-        $assign = new mod_assign_testable_assign($context, $cm, $course);
-
-        // Check that other teachers can't view this submission.
-        $this->setUser($otherteacher);
-        $users = $assign->list_participants(0, true);
-        $this->assertEquals(0, count($users));
-    }
-
-    /**
      * Ensure that a teacher cannot submit for students as standard.
      */
     public function test_teacher_submit_for_student(): void {
@@ -4245,6 +4205,8 @@ Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
                 'duedate' => 2,
                 'cutoffdate' => 3,
                 'timelimit' => null,
+                'reason' => null,
+                'reasonformat' => 0,
             ],
             (object) [
                 // Override for group 2, lower priority (numerically higher sortorder).
@@ -4256,6 +4218,8 @@ Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
                 'duedate' => 6,
                 'cutoffdate' => 6,
                 'timelimit' => null,
+                'reason' => null,
+                'reasonformat' => 0,
             ],
             (object) [
                 // User override.
@@ -4267,6 +4231,8 @@ Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
                 'duedate' => 8,
                 'cutoffdate' => 9,
                 'timelimit' => null,
+                'reason' => null,
+                'reasonformat' => 0,
             ],
         ];
 

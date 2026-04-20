@@ -77,10 +77,12 @@
             </div>
         {{/primarymoremenu}}
 
-        <ul class="navbar-nav d-none d-md-flex my-1 px-1">
-            <!-- page_heading_menu -->
-            {{{ output.page_heading_menu }}}
-        </ul>
+        {{# output.page_heading_menu}}
+            <ul class="navbar-nav d-none d-md-flex my-1 px-1">
+                <!-- page_heading_menu -->
+                {{{ output.page_heading_menu }}}
+            </ul>
+        {{/output.page_heading_menu}}
 
         <div id="usernavigation" class="navbar-nav ms-auto h-100">
             {{# output.search_box }}
@@ -91,13 +93,16 @@
                 {{> theme_boost/language_menu }}
                 <div class="divider border-start h-75 align-self-center mx-1"></div>
             {{/langmenu}}
-            {{{ output.navbar_plugin_output }}}
-            <div class="d-flex align-items-stretch usermenu-container" data-region="usermenu">
-                {{#usermenu}}
-                    {{> core/user_menu }}
-                {{/usermenu}}
-            </div>
             {{{ output.edit_switch }}}
+            {{# output.navbar_plugin_output }}
+            {{{ . }}}
+                <div class="divider border-start h-75 align-self-center mx-1"></div>
+            {{/output.navbar_plugin_output}}
+            {{#usermenu}}
+                <div class="d-flex align-items-stretch usermenu-container" data-region="usermenu">
+                    {{> core/user_menu }}
+                </div>
+            {{/usermenu}}
         </div>
     </div>
 </nav>

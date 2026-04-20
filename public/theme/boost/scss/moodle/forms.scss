@@ -406,6 +406,10 @@ textarea[data-auto-rows] {
     padding-bottom: $input-padding-y;
 }
 
+[data-fieldtype="modgrade"] .form-select {
+    width: 100%;
+}
+
 // We dont' use the mixin because it's expensive.
 [data-fieldtype="modgrade"] {
     background-color: $card-bg;
@@ -516,4 +520,15 @@ textarea[data-auto-rows] {
             display: none;
         }
     }
+}
+
+// Readonly inputs should have visual distinction from editable inputs.
+// Apply the same styling as disabled inputs to make them clearly readonly.
+.form-control[readonly] {
+    color: $input-disabled-color;
+    background-color: $input-disabled-bg;
+    border-color: $input-disabled-border-color;
+    // Follows disabled styles in bootstrap/forms/_form-control.scss.
+    // iOS fix for unreadable content.
+    opacity: 1;
 }

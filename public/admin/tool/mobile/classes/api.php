@@ -96,7 +96,7 @@ class api {
 
         $pluginsinfo = [];
         // For not logged users return only auth plugins.
-        // This is to avoid anyone (not being a registered user) to obtain and download all the site remote add-ons.
+        // This is to prevent anyone (not being a registered user) from obtaining and downloading all the site plugins.
         if (!isloggedin()) {
             $plugintypes = array('auth' => $CFG->dirroot.'/auth');
         } else {
@@ -115,11 +115,11 @@ class api {
                 foreach ($addons as $addonname => $addoninfo) {
 
                     // Add handlers (for site add-ons).
-                    $handlers = !empty($addoninfo['handlers']) ? $addoninfo['handlers'] : array();
+                    $handlers = !empty($addoninfo['handlers']) ? $addoninfo['handlers'] : [];
                     $handlers = json_encode($handlers); // JSON formatted, since it is a complex structure that may vary over time.
 
                     // Now language strings used by the app.
-                    $lang = array();
+                    $lang = [];
                     if (!empty($addoninfo['lang'])) {
                         $stringmanager = get_string_manager();
                         $langs = $stringmanager->get_list_of_translations(true);
@@ -140,7 +140,7 @@ class api {
                         'component' => $component,
                         'version' => $version,
                         'addon' => $addonname,
-                        'dependencies' => !empty($addoninfo['dependencies']) ? $addoninfo['dependencies'] : array(),
+                        'dependencies' => !empty($addoninfo['dependencies']) ? $addoninfo['dependencies'] : [],
                         'fileurl' => '',
                         'filehash' => '',
                         'filesize' => 0,
@@ -215,6 +215,9 @@ class api {
             'supportpage' => $sitesupportavailable ? clean_param($CFG->supportpage, PARAM_URL) : '',
             'supportavailability' => clean_param($CFG->supportavailability, PARAM_INT),
             'showloginform' => (int) get_config('core', 'showloginform'),
+            'tool_mfa_enabled' => clean_param(get_config('tool_mfa', 'enabled'), PARAM_BOOL),
+            'enableloginrecaptcha' => clean_param(login_captcha_enabled(), PARAM_BOOL),
+            'enableforgotpasswordrecaptcha' => clean_param(forgotpassword_captcha_enabled(), PARAM_BOOL),
         );
 
         $typeoflogin = get_config('tool_mobile', 'typeoflogin');
@@ -322,13 +325,17 @@ class api {
             $settings->tool_mobile_disabledfeatures = get_config('tool_mobile', 'disabledfeatures');
             $settings->tool_mobile_filetypeexclusionlist = get_config('tool_mobile', 'filetypeexclusionlist');
             $custommenuitems = get_config('tool_mobile', 'custommenuitems');
+            $customusermenuitems = get_config('tool_mobile', 'customusermenuitems');
             // If filtering of the primary custom menu is enabled, apply only the string filters.
             if (!empty($CFG->navfilter && !empty($CFG->stringfilters))) {
                 // Apply filters that are enabled for Content and Headings.
                 $filtermanager = \filter_manager::instance();
                 $custommenuitems = $filtermanager->filter_string($custommenuitems, \context_system::instance());
+                $customusermenuitems = $filtermanager->filter_string($customusermenuitems, \context_system::instance());
             }
             $settings->tool_mobile_custommenuitems = $custommenuitems;
+            $settings->tool_mobile_customusermenuitems = $customusermenuitems;
+            $settings->tool_mobile_scriptallowlist = get_config('tool_mobile', 'scriptallowlist');
             $settings->tool_mobile_apppolicy = get_config('tool_mobile', 'apppolicy');
             // This setting could be not set in some edge cases such as bad upgrade.
             $mintimereq = get_config('tool_mobile', 'autologinmintimebetweenreq');
@@ -374,7 +381,9 @@ class api {
         }
 
         if (empty($section) || $section === 'navigation') {
+            $settings->enablemyhome = $CFG->enablemyhome ?? 1;
             $settings->enabledashboard = $CFG->enabledashboard;
+            $settings->enablemycourses = $CFG->enablemycourses ?? 1;
         }
 
         if (empty($section) || ($section === 'themesettings' || $section === 'themesettingsadvanced')) {
@@ -498,35 +507,39 @@ class api {
         $useraccount = new lang_string('useraccount');
         $participants = new lang_string('participants');
         $files = new lang_string('files');
-        $remoteaddons = new lang_string('remoteaddons', 'tool_mobile');
+        $siteplugins = new lang_string('siteplugins', 'tool_mobile');
         $identityproviders = new lang_string('oauth2identityproviders', 'tool_mobile');
 
         $availablemods = core_plugin_manager::instance()->get_plugins_of_type('mod');
-        $coursemodules = array();
-        $appsupportedmodules = array(
+        $coursemodules = [];
+        $appsupportedmodules = [
             'assign', 'bigbluebuttonbn', 'book', 'choice', 'data', 'feedback', 'folder', 'forum', 'glossary', 'h5pactivity',
-            'imscp', 'label', 'lesson', 'lti', 'page', 'quiz', 'resource', 'scorm', 'url', 'wiki', 'workshop');
+            'imscp', 'label', 'lesson', 'lti', 'page', 'quiz', 'resource', 'scorm', 'url', 'wiki', 'workshop'];
 
         foreach ($availablemods as $mod) {
             if (in_array($mod->name, $appsupportedmodules)) {
-                $coursemodules['$mmCourseDelegate_mmaMod' . ucfirst($mod->name)] = $mod->displayname;
+                $modfeaturename = ucfirst($mod->name);
+                if ($mod->name === 'bigbluebuttonbn') {
+                    $modfeaturename = 'BBB';
+                } else if ($mod->name === 'h5pactivity') {
+                    $modfeaturename = 'H5PActivity';
+                }
+                $coursemodules['CoreCourseModuleDelegate_AddonMod' . $modfeaturename] = $mod->displayname;
             }
         }
         asort($coursemodules);
 
-        $remoteaddonslist = array();
+        $sitepluginslist = [];
         $mobileplugins = self::get_plugins_supporting_mobile();
         foreach ($mobileplugins as $plugin) {
             $displayname = core_plugin_manager::instance()->plugin_name($plugin['component']) . " - " . $plugin['addon'];
-            $remoteaddonslist['sitePlugin_' . $plugin['component'] . '_' . $plugin['addon']] = $displayname;
-
+            $sitepluginslist['sitePlugin_' . $plugin['component'] . '_' . $plugin['addon']] = $displayname;
         }
 
         // Display blocks.
         $availableblocks = core_plugin_manager::instance()->get_plugins_of_type('block');
-        $courseblocks = array();
-        $appsupportedblocks = array(
-            'activity_modules' => 'CoreBlockDelegate_AddonBlockActivityModules',
+        $courseblocks = [];
+        $appsupportedblocks = [
             'activity_results' => 'CoreBlockDelegate_AddonBlockActivityResults',
             'site_main_menu' => 'CoreBlockDelegate_AddonBlockSiteMainMenu',
             'myoverview' => 'CoreBlockDelegate_AddonBlockMyOverview',
@@ -556,7 +569,7 @@ class api {
             'search_forums' => 'CoreBlockDelegate_AddonBlockSearchForums',
             'selfcompletion' => 'CoreBlockDelegate_AddonBlockSelfCompletion',
             'tags' => 'CoreBlockDelegate_AddonBlockTags',
-        );
+        ];
 
         foreach ($availableblocks as $block) {
             if (isset($appsupportedblocks[$block->name])) {
@@ -565,14 +578,14 @@ class api {
         }
         asort($courseblocks);
 
-        $features = array(
-            "$general" => array(
+        $features = [
+            "$general" => [
                 'NoDelegate_CoreOffline' => new lang_string('offlineuse', 'tool_mobile'),
                 'NoDelegate_SiteBlocks' => new lang_string('blocks'),
                 'NoDelegate_CoreComments' => new lang_string('comments'),
                 'NoDelegate_CoreRating' => new lang_string('ratings', 'rating'),
                 'NoDelegate_CoreTag' => new lang_string('tags'),
-                '$mmLoginEmailSignup' => new lang_string('startsignup'),
+                'CoreLoginEmailSignup' => new lang_string('startsignup'),
                 'NoDelegate_ForgottenPassword' => new lang_string('forgotten'),
                 'NoDelegate_ResponsiveMainMenuItems' => new lang_string('responsivemainmenuitems', 'tool_mobile'),
                 'NoDelegate_H5POffline' => new lang_string('h5poffline', 'tool_mobile'),
@@ -581,61 +594,62 @@ class api {
                 'CoreReportBuilderDelegate' => new lang_string('reportbuilder', 'core_reportbuilder'),
                 'NoDelegate_CoreUserSupport' => new lang_string('contactsitesupport', 'admin'),
                 'NoDelegate_GlobalSearch' => new lang_string('globalsearch', 'search'),
-            ),
-            "$mainmenu" => array(
-                '$mmSideMenuDelegate_mmaFrontpage' => new lang_string('sitehome'),
+            ],
+            "$mainmenu" => [
+                'CoreMainMenuDelegate_CoreSiteHome' => new lang_string('sitehome'),
                 'CoreMainMenuDelegate_CoreCoursesDashboard' => new lang_string('myhome'),
-                '$mmSideMenuDelegate_mmCourses' => new lang_string('mycourses'),
-                '$mmSideMenuDelegate_mmaMessages' => new lang_string('messages', 'message'),
-                '$mmSideMenuDelegate_mmaNotifications' => new lang_string('notifications', 'message'),
-                '$mmSideMenuDelegate_mmaCalendar' => new lang_string('calendar', 'calendar'),
+                'CoreMainMenuDelegate_CoreCourses' => new lang_string('mycourses'),
+                'CoreMainMenuDelegate_AddonMessages' => new lang_string('messages', 'message'),
+                'CoreMainMenuDelegate_AddonNotifications' => new lang_string('notifications', 'message'),
+                'CoreMainMenuDelegate_AddonCalendar' => new lang_string('calendar', 'calendar'),
                 'CoreMainMenuDelegate_AddonBlog' => new lang_string('blog', 'blog'),
                 'CoreMainMenuDelegate_CoreTag' => new lang_string('tags'),
                 'CoreMainMenuDelegate_QrReader' => new lang_string('scanqrcode', 'tool_mobile'),
-            ),
-            "$useraccount" => array(
-                '$mmSideMenuDelegate_mmaGrades' => new lang_string('grades', 'grades'),
-                '$mmSideMenuDelegate_mmaFiles' => new lang_string('files'),
+            ],
+            "$useraccount" => [
+                'CoreUserDelegate_CoreGrades' => new lang_string('grades', 'grades'),
+                'CoreUserDelegate_AddonPrivateFiles' => new lang_string('files'),
                 'CoreUserDelegate_AddonBadges:account' => new lang_string('badges', 'badges'),
                 'CoreUserDelegate_AddonBlog:account' => new lang_string('blog', 'blog'),
-                '$mmSideMenuDelegate_mmaCompetency' => new lang_string('myplans', 'tool_lp'),
+                'CoreUserDelegate_AddonCompetency' => new lang_string('myplans', 'tool_lp'),
                 'CoreUserDelegate_CorePolicy' => new lang_string('policiesagreements', 'tool_policy'),
                 'CoreUserDelegate_CoreDataPrivacy' => new lang_string('pluginname', 'tool_dataprivacy'),
                 'NoDelegate_SwitchAccount' => new lang_string('switchaccount', 'tool_mobile'),
-            ),
-            "$course" => array(
-                '$mmCoursesDelegate_mmaParticipants' => new lang_string('participants'),
-                '$mmCoursesDelegate_mmaGrades' => new lang_string('grades', 'grades'),
-                '$mmCoursesDelegate_mmaCompetency' => new lang_string('competencies', 'competency'),
-                '$mmCoursesDelegate_mmaNotes' => new lang_string('notes', 'notes'),
-                '$mmCoursesDelegate_mmaCourseCompletion' => new lang_string('coursecompletion', 'completion'),
+            ],
+            "$course" => [
+                'CoreCourseOptionsDelegate_CoreUserParticipants' => new lang_string('participants'),
+                'CoreCourseOptionsDelegate_CoreGrades' => new lang_string('grades', 'grades'),
+                'CoreCourseOptionsDelegate_AddonCompetency' => new lang_string('competencies', 'competency'),
+                'CoreCourseOptionsDelegate_AddonNotes' => new lang_string('notes', 'notes'),
+                'CoreCourseOptionsDelegate_AddonCourseCompletion' => new lang_string('coursecompletion', 'completion'),
                 'NoDelegate_CourseBlocks' => new lang_string('blocks'),
                 'CoreCourseOptionsDelegate_AddonBlog' => new lang_string('blog', 'blog'),
-                '$mmCoursesDelegate_search' => new lang_string('search'),
+                'CoreCourseOptionsDelegate_search' => new lang_string('search'),
                 'NoDelegate_CoreCourseDownload' => new lang_string('downloadcourse', 'tool_mobile'),
                 'NoDelegate_CoreCoursesDownload' => new lang_string('downloadcourses', 'tool_mobile'),
-            ),
-            "$participants" => array(
-                '$mmUserDelegate_mmaGrades:viewGrades' => new lang_string('grades', 'grades'),
-                '$mmUserDelegate_mmaCourseCompletion:viewCompletion' => new lang_string('coursecompletion', 'completion'),
-                '$mmUserDelegate_mmaBadges' => new lang_string('badges', 'badges'),
-                '$mmUserDelegate_mmaNotes:addNote' => new lang_string('notes', 'notes'),
+                'CoreCourseOptionsDelegate_CoreCourseOverview' => new lang_string('activitiesoverview', 'tool_mobile'),
+            ],
+            "$participants" => [
+                'CoreUserDelegate_CoreGrades:viewGrades' => new lang_string('grades', 'grades'),
+                'CoreUserDelegate_AddonCourseCompletion:viewCompletion' => new lang_string('coursecompletion', 'completion'),
+                'CoreUserDelegate_AddonBadges' => new lang_string('badges', 'badges'),
+                'CoreUserDelegate_AddonNotes:notes' => new lang_string('notes', 'notes'),
                 'CoreUserDelegate_AddonBlog:blogs' => new lang_string('blog', 'blog'),
-                '$mmUserDelegate_mmaCompetency:learningPlan' => new lang_string('competencies', 'competency'),
-                '$mmUserDelegate_mmaMessages:sendMessage' => new lang_string('sendmessage', 'message'),
-                '$mmUserDelegate_picture' => new lang_string('userpic'),
-            ),
-            "$files" => array(
-                'files_privatefiles' => new lang_string('privatefiles'),
-                'files_sitefiles' => new lang_string('sitefiles'),
-                'files_upload' => new lang_string('upload'),
-            ),
+                'CoreUserDelegate_AddonCompetency:learningPlan' => new lang_string('competencies', 'competency'),
+                'CoreUserDelegate_AddonMessages:sendMessage' => new lang_string('sendmessage', 'message'),
+                'CoreUserDelegate_picture' => new lang_string('userpic'),
+            ],
+            "$files" => [
+                'AddonPrivateFilesPrivateFiles' => new lang_string('privatefiles'),
+                'AddonPrivateFilesSiteFiles' => new lang_string('sitefiles'),
+                'AddonPrivateFilesUpload' => new lang_string('upload'),
+            ],
             "$modules" => $coursemodules,
             "$blocks" => $courseblocks,
-        );
+        ];
 
-        if (!empty($remoteaddonslist)) {
-            $features["$remoteaddons"] = $remoteaddonslist;
+        if (!empty($sitepluginslist)) {
+            $features["$siteplugins"] = $sitepluginslist;
         }
 
         if (!empty($availablemods['lti'])) {
@@ -646,7 +660,7 @@ class api {
 
         // Display OAuth 2 identity providers.
         if (is_enabled_auth('oauth2')) {
-            $identityproviderslist = array();
+            $identityproviderslist = [];
             $idps = \auth_plugin_base::get_identity_providers(['oauth2']);
 
             foreach ($idps as $idp) {
@@ -658,7 +672,7 @@ class api {
             }
 
             if (!empty($identityproviderslist)) {
-                $features["$identityproviders"] = array();
+                $features["$identityproviders"] = [];
 
                 if (count($identityproviderslist) > 1) {
                     // Include an option to disable them all.
@@ -683,7 +697,7 @@ class api {
         require_once($CFG->dirroot . "/lib/filelib.php");
         require_once($CFG->dirroot . '/message/lib.php');
 
-        $warnings = array();
+        $warnings = [];
 
         if (is_https()) {
             $curl = new curl();
@@ -796,15 +810,28 @@ class api {
     /**
      * Gets Moodle app plan subscription information for the current site as it is returned by the Apps Portal.
      *
+     * @param bool $forcecache If true, return only cached data. Has priority over $ignorecache.
+     * @param bool $ignorecache If true, ignore cached data and request information from the Application Portal.
+     * @param int $timeout Time in seconds to wait for the Apps Portal response before giving up. Defaults to 10 seconds.
      * @return array Subscription information
      */
-    public static function get_subscription_information(): ?array {
+    public static function get_subscription_information($forcecache = false, $ignorecache = false, $timeout = 10): ?array {
         global $CFG;
 
-        // Use session cache to prevent multiple requests.
-        $cache = \cache::make('tool_mobile', 'subscriptiondata');
+        require_once($CFG->libdir . '/filelib.php');
+
+        $timeout = min(30, $timeout);
+        // Manage cache of the subscription information to avoid requesting it too often to the Moodle Apps Portal.
+        $cache = \cache::make('tool_mobile', 'subscriptioninfo');
         $subscriptiondata = $cache->get(0);
-        if ($subscriptiondata !== false) {
+
+        // If we must force using cache, return it (or null if not present) and never contact the portal.
+        if ($forcecache) {
+            return $subscriptiondata !== false ? $subscriptiondata : null;
+        }
+
+        // If we are allowed to use cache and we have data, return it early.
+        if (!$ignorecache && $subscriptiondata !== false) {
             return $subscriptiondata;
         }
 
@@ -818,7 +845,7 @@ class api {
             $credentials[] = ['type' => 'airnotifieraccesskey', 'value' => $CFG->airnotifieraccesskey];
         }
         if (\core\hub\registration::is_registered()) {
-            $credentials[] = ['type' => 'siteid', 'value' => $CFG->siteidentifier];
+            $credentials[] = ['type' => 'siteid', 'value' => \core\hub\registration::get_secret()];
         }
         // Generate a hash key for validating that the request is coming from this site via WS.
         $key = complex_random_string(32);
@@ -834,20 +861,25 @@ class api {
             'appids' => [$androidappid, $iosappid],
             'credentials' => $credentials,
         ];
+        // Get the current language to send to the WS.
+        $settingslang = current_language();
         // Prepare the arguments for a request to the AJAX nologin endpoint.
         $args = [
             (object) [
                 'index' => 0,
                 'methodname' => 'local_apps_get_site_info',
                 'args' => $fnparams,
-            ]
+            ],
         ];
 
         // Ask the Moodle Apps Portal for the subscription information.
-        $curl = new curl();
-        $curl->setopt(array('CURLOPT_TIMEOUT' => 10, 'CURLOPT_CONNECTTIMEOUT' => 10));
+        $curl = new \curl();
+        $curl->setopt([
+            'CURLOPT_TIMEOUT' => $timeout,
+            'CURLOPT_CONNECTTIMEOUT' => $timeout,
+        ]);
 
-        $serverurl = static::MOODLE_APPS_PORTAL_URL . "/lib/ajax/service-nologin.php";
+        $serverurl = static::MOODLE_APPS_PORTAL_URL . "/lib/ajax/service-nologin.php?lang=$settingslang";
         $query = 'args=' . urlencode(json_encode($args));
         $wsresponse = @json_decode($curl->post($serverurl, $query), true);
 
@@ -855,10 +887,23 @@ class api {
         if ($curlerrno = $curl->get_errno()) {
             // CURL connection error.
             debugging("Unexpected response from the Moodle Apps Portal server, CURL error number: $curlerrno");
+            if (!$ignorecache && $subscriptiondata !== false) {
+                return $subscriptiondata;
+            }
+            return null;
+        } else if (!empty($curl->error)) {
+            // CURL error without an error number.
+            debugging('Unexpected response from the Moodle Apps Portal server, CURL error: ' . $curl->error);
+            if (!$ignorecache && $subscriptiondata !== false) {
+                return $subscriptiondata;
+            }
             return null;
         } else if ($info['http_code'] != 200) {
             // Unexpected error from server.
-            debugging('Unexpected response from the Moodle Apps Portal server, HTTP code:' . $info['httpcode']);
+            debugging('Unexpected response from the Moodle Apps Portal server, HTTP code:' . $info['http_code']);
+            if (!$ignorecache && $subscriptiondata !== false) {
+                return $subscriptiondata;
+            }
             return null;
         } else if (!empty($wsresponse[0]['error'])) {
             // Unexpected error from Moodle Apps Portal.
@@ -870,7 +915,7 @@ class api {
         }
 
         $cache->set(0, $wsresponse[0]['data']);
-
+        set_config('subscriptioninfoupdated', time(), 'tool_mobile');
         return $wsresponse[0]['data'];
     }
 }

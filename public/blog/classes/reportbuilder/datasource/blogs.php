@@ -105,26 +105,17 @@ class blogs extends datasource {
             ->add_join("LEFT JOIN {user} {$commenteralias} ON {$commenteralias}.id = {$commentalias}.userid"));
 
         // Add report elements from each of the entities we added to the report.
-        $this->add_all_from_entity($blogentity->get_entity_name());
-
-        // Add specific file/tag entity elements.
-        $this->add_columns_from_entity($fileentity->get_entity_name(), ['name', 'size', 'type', 'timecreated']);
-        $this->add_filters_from_entity($fileentity->get_entity_name(), ['name', 'size', 'timecreated']);
-        $this->add_conditions_from_entity($fileentity->get_entity_name(), ['name', 'size', 'timecreated']);
-
-        $this->add_columns_from_entity($tagentity->get_entity_name(), ['name', 'namewithlink']);
-        $this->add_filter($tagentity->get_filter('name'));
-        $this->add_condition($tagentity->get_condition('name'));
-
-        $this->add_all_from_entity($authorentity->get_entity_name());
-        $this->add_all_from_entity($courseentity->get_entity_name());
-
-        // Add specific comment entity elements.
-        $this->add_columns_from_entity($commententity->get_entity_name(), ['content', 'timecreated']);
-        $this->add_filter($commententity->get_filter('timecreated'));
-        $this->add_condition($commententity->get_filter('timecreated'));
-
-        $this->add_all_from_entity($commenterentity->get_entity_name());
+        $this->add_all_from_entity($blogentity);
+        $this->add_all_from_entity(
+            $fileentity,
+            ['name', 'size', 'type', 'timecreated'],
+            ['name', 'size', 'timecreated'],
+            ['name', 'size', 'timecreated'],
+        );
+        $this->add_all_from_entity($tagentity, ['name', 'namewithlink'], ['name'], ['name']);
+        $this->add_all_from_entities([$authorentity, $courseentity]);
+        $this->add_all_from_entity($commententity, ['content', 'timecreated'], ['timecreated'], ['timecreated']);
+        $this->add_all_from_entity($commenterentity);
     }
 
     /**

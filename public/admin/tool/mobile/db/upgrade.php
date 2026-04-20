@@ -29,12 +29,6 @@
  * @return bool always true
  */
 function xmldb_tool_mobile_upgrade($oldversion) {
-    // Automatically generated Moodle v4.2.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    // Automatically generated Moodle v4.3.0 release upgrade line.
-    // Put any upgrade step following this.
-
     // Automatically generated Moodle v4.4.0 release upgrade line.
     // Put any upgrade step following this.
 
@@ -44,5 +38,75 @@ function xmldb_tool_mobile_upgrade($oldversion) {
     // Automatically generated Moodle v5.0.0 release upgrade line.
     // Put any upgrade step following this.
 
+    // Automatically generated Moodle v5.1.0 release upgrade line.
+    // Put any upgrade step following this.
+    if ($oldversion < 2026031000) {
+        $config = get_config('tool_mobile', 'disabledfeatures');
+        if (!empty($config)) {
+            $replacements = [
+                '$mmLoginEmailSignup' => 'CoreLoginEmailSignup',
+                '$mmSideMenuDelegate' => 'CoreMainMenuDelegate',
+                '$mmCoursesDelegate' => 'CoreCourseOptionsDelegate',
+                '$mmUserDelegate' => 'CoreUserDelegate',
+                '$mmCourseDelegate' => 'CoreCourseModuleDelegate',
+                '_mmCourses' => '_CoreCourses',
+                '_mmaFrontpage' => '_CoreSiteHome',
+                '_mmaGrades' => '_CoreGrades',
+                '_mmaCompetency' => '_AddonCompetency',
+                '_mmaNotifications' => '_AddonNotifications',
+                '_mmaMessages' => '_AddonMessages',
+                '_mmaCalendar' => '_AddonCalendar',
+                '_mmaFiles' => '_AddonPrivateFiles',
+                '_mmaParticipants' => '_CoreUserParticipants',
+                '_mmaCourseCompletion' => '_AddonCourseCompletion',
+                '_mmaNotes' => '_AddonNotes',
+                '_mmaBadges' => '_AddonBadges',
+                'files_privatefiles' => 'AddonPrivateFilesPrivateFiles',
+                'files_sitefiles' => 'AddonPrivateFilesSiteFiles',
+                'files_upload' => 'AddonPrivateFilesUpload',
+                '_mmaModAssign' => '_AddonModAssign',
+                '_mmaModBigbluebuttonbn' => '_AddonModBBB',
+                '_mmaModBook' => '_AddonModBook',
+                '_mmaModChat' => '_AddonModChat',
+                '_mmaModChoice' => '_AddonModChoice',
+                '_mmaModData' => '_AddonModData',
+                '_mmaModFeedback' => '_AddonModFeedback',
+                '_mmaModFolder' => '_AddonModFolder',
+                '_mmaModForum' => '_AddonModForum',
+                '_mmaModGlossary' => '_AddonModGlossary',
+                '_mmaModH5pactivity' => '_AddonModH5PActivity',
+                '_mmaModImscp' => '_AddonModImscp',
+                '_mmaModLabel' => '_AddonModLabel',
+                '_mmaModLesson' => '_AddonModLesson',
+                '_mmaModLti' => '_AddonModLti',
+                '_mmaModPage' => '_AddonModPage',
+                '_mmaModQuiz' => '_AddonModQuiz',
+                '_mmaModResource' => '_AddonModResource',
+                '_mmaModScorm' => '_AddonModScorm',
+                '_mmaModSurvey' => '_AddonModSurvey',
+                '_mmaModUrl' => '_AddonModUrl',
+                '_mmaModWiki' => '_AddonModWiki',
+                '_mmaModWorkshop' => '_AddonModWorkshop',
+                'AddonNotes:addNote' => 'AddonNotes:notes',
+                'CoreMainMenuDelegate_AddonCompetency' => 'CoreUserDelegate_AddonCompetency',
+                'CoreMainMenuDelegate_AddonPrivateFiles' => 'CoreUserDelegate_AddonPrivateFiles',
+                'CoreMainMenuDelegate_CoreGrades' => 'CoreUserDelegate_CoreGrades',
+            ];
+
+            foreach ($replacements as $old => $new) {
+                $config = str_replace($old, $new, $config);
+            }
+            set_config('disabledfeatures', $config, 'tool_mobile');
+        }
+
+        upgrade_plugin_savepoint(true, 2026031000, 'tool', 'mobile');
+    }
+
+    if ($oldversion < 2026031100) {
+        // Run the subscription cache refresh task as soon as possible after upgrade by queueing an adhoc task.
+        $task = new \tool_mobile\task\refresh_subscription_cache_adhoc();
+        \core\task\manager::queue_adhoc_task($task, true);
+        upgrade_plugin_savepoint(true, 2026031100, 'tool', 'mobile');
+    }
     return true;
 }

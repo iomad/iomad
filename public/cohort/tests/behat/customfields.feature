@@ -12,7 +12,7 @@ Feature: Add and use cohort custom fields
   Scenario: Create a new cohort custom field and use the field for a new cohort
     When I log in as "admin"
     And I navigate to "Users > Accounts > Cohort custom fields" in site administration
-    And I click on "Add a new custom field" "link"
+    And I click on "Add field" "link"
     And I click on "Short text" "link"
     And I set the following fields to these values:
       | Name       | Test field |

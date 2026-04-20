@@ -62,7 +62,12 @@ if ($class === 'section' && $field === 'move') {
     }
 
     require_capability('moodle/course:movesections', $coursecontext);
-    move_section_to($course, $id, $value);
+
+    $sectionactions = \core_courseformat\formatactions::section($course);
+    $modinfo = get_fast_modinfo($course);
+    $sectioninfo = $modinfo->get_section_info_by_id($id);
+    $sectionactions->move_at($sectioninfo, $value);
+
     // See if format wants to do something about it.
     $response = course_get_format($course)->ajax_section_move();
     if ($response !== null) {
@@ -81,7 +86,13 @@ if ($class === 'section' && $field === 'move') {
     } else {
         $beforemod = null;
     }
-
-    $isvisible = moveto_module($cm, $section, $beforemod);
+    $action = \core_courseformat\formatactions::cm($course);
+    if (!$beforemod) {
+        $action->move_end_section($cm, $section->id);
+    } else {
+        $action->move_before($cm->id, $beforemod->id);
+    }
+    $modinfo = get_fast_modinfo($course);
+    $isvisible = $modinfo->get_cm($cm->id)->is_visible();
     echo json_encode(array('visible' => (bool) $isvisible));
 }

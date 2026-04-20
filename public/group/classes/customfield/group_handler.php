@@ -34,36 +34,6 @@ use restore_task;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class group_handler extends handler {
-
-    /**
-     * @var group_handler
-     */
-    static protected $singleton;
-
-    /**
-     * Returns a singleton.
-     *
-     * @param int $itemid
-     * @return \core_customfield\handler
-     */
-    public static function create(int $itemid = 0): handler {
-        if (static::$singleton === null) {
-            self::$singleton = new static(0);
-        }
-        return self::$singleton;
-    }
-
-    /**
-     * Run reset code after unit tests to reset the singleton usage.
-     */
-    public static function reset_caches(): void {
-        if (!PHPUNIT_TEST) {
-            throw new \coding_exception('This feature is only intended for use in unit tests');
-        }
-
-        static::$singleton = null;
-    }
-
     /**
      * The current user can configure custom fields on this component.
      *

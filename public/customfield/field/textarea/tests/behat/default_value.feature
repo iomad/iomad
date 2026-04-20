@@ -1,11 +1,13 @@
-@customfield @customfield_textarea @javascript @editor_tiny
+@core_customfield @customfield_textarea @javascript @editor_tiny
 Feature: Default value for the textarea custom field can contain images
   In order to see images on custom fields
   As a manager
   I need to be able to add images to the default value
 
   Background:
-    Given the following "users" exist:
+    Given the following config values are set as admin:
+      | enablemyhome | 1 |
+    And the following "users" exist:
       | username | firstname | lastname | email                |
       | teacher  | Teacher   | 1        | teacher1@example.com |
       | manager  | Manager   | 1        | manager1@example.com |
@@ -24,9 +26,11 @@ Feature: Default value for the textarea custom field can contain images
     And the following "user private files" exist:
       | user  | filepath                       |
       | admin | lib/tests/fixtures/gd-logo.png |
+    And the following config values are set as admin:
+      | forcelogin | 0 |
     And I log in as "admin"
     And I navigate to "Courses > Default settings > Course custom fields" in site administration
-    And I click on "Add a new custom field" "link"
+    And I click on "Add field" "link"
     And I click on "Text area" "link"
     And I set the following fields to these values:
       | Name       | Test field |

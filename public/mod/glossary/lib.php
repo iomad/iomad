@@ -1043,10 +1043,10 @@ function glossary_get_entries_search($concept, $courseid) {
 }
 
 /**
- * @global object
- * @global object
+ * Print the glossary entry.
+ *
  * @param object $course
- * @param object $course
+ * @param stdClass $cm
  * @param object $glossary
  * @param object $entry
  * @param string $mode
@@ -1054,9 +1054,22 @@ function glossary_get_entries_search($concept, $courseid) {
  * @param int $printicons
  * @param int $displayformat
  * @param bool $printview
+ * @param int $conceptheadinglevel The heading level to use for rendering the concept within the heading element.
  * @return mixed
+ * @package mod_glossary
  */
-function glossary_print_entry($course, $cm, $glossary, $entry, $mode='',$hook='',$printicons = 1, $displayformat  = -1, $printview = false) {
+function glossary_print_entry(
+    $course,
+    $cm,
+    $glossary,
+    $entry,
+    $mode = '',
+    $hook = '',
+    $printicons = 1,
+    $displayformat = -1,
+    $printview = false,
+    $conceptheadinglevel = 3,
+) {
     global $USER, $CFG;
     $return = false;
     if ( $displayformat < 0 ) {
@@ -1073,7 +1086,16 @@ function glossary_print_entry($course, $cm, $glossary, $entry, $mode='',$hook=''
         if (file_exists($formatfile)) {
             include_once($formatfile);
             if (function_exists($functionname)) {
-                $return = $functionname($course, $cm, $glossary, $entry,$mode,$hook,$printicons);
+                $return = $functionname(
+                    $course,
+                    $cm,
+                    $glossary,
+                    $entry,
+                    $mode,
+                    $hook,
+                    $printicons,
+                    conceptheadinglevel: $conceptheadinglevel,
+                );
             } else if ($printview) {
                 //If the glossary_print_entry_XXXX function doesn't exist, print default (old) print format
                 $return = glossary_print_entry_default($entry, $glossary, $cm);
@@ -1116,13 +1138,17 @@ function glossary_print_entry_default ($entry, $glossary, $cm) {
 }
 
 /**
- * Print glossary concept/term as a heading &lt;h4>
- * @param object $entry
+ * Print glossary concept/term as a heading.
+ *
+ * @param object $entry The glossary entry object.
+ * @param bool $return Whether to return the text instead of echoing it.
+ * @param int $headinglevel What heading level to use.
+ * @return string|void
+ * @package mod_glossary
  */
-function  glossary_print_entry_concept($entry, $return=false) {
+function glossary_print_entry_concept($entry, $return = false, int $headinglevel = 3) {
     global $OUTPUT;
-
-    $text = $OUTPUT->heading(format_string($entry->concept), 4);
+    $text = $OUTPUT->heading(format_string($entry->concept), $headinglevel);
     if (!empty($entry->highlight)) {
         $text = highlight($entry->highlight, $text);
     }
@@ -1359,22 +1385,24 @@ function glossary_print_entry_lower_section($course, $cm, $glossary, $entry, $mo
         $icons   = glossary_print_entry_icons($course, $cm, $glossary, $entry, $mode, $hook,'html');
     }
     if ($aliases || $icons || !empty($entry->rating)) {
-        echo '<table class="table-reboot">';
         if ( $aliases ) {
             $id = "keyword-{$entry->id}";
-            echo '<tr valign="top"><td class="aliases hstack gap-2">' .
-                '<label for="' . $id . '">' . get_string('aliases', 'glossary') . ': </label>' .
-                $aliases . '</td></tr>';
+            $label = html_writer::label(get_string('aliases', 'glossary') . ': ', $id, attributes: [
+                'class' => 'col-auto col-form-label',
+            ]);
+            $select = html_writer::div($aliases, 'col-auto ps-0');
+            echo html_writer::div($label . $select, 'row mb-3 aliases pt-1');
         }
         if ($icons) {
-            echo '<tr valign="top"><td class="icons">'.$icons.'</td></tr>';
+            echo html_writer::div($icons, 'text-end');
         }
         if (!empty($entry->rating)) {
-            echo '<tr valign="top"><td class="ratings pt-3">';
+            echo html_writer::start_tag('div', [
+                'class' => 'ratings pt-3',
+            ]);
             glossary_print_entry_ratings($course, $entry);
-            echo '</td></tr>';
+            echo html_writer::end_tag('div');
         }
-        echo '</table>';
 
         if ($printseparator) {
             echo "<hr>\n";
@@ -1408,29 +1436,40 @@ function glossary_print_entry_attachment($entry, $cm, $format = null, $unused1 =
 }
 
 /**
- * @global object
+ * Returns the HTML for the approval button for the entries pending approval.
+ *
+ * @param stdClass $entry The glossary entry record.
+ * @param string $mode The display mode.
+ * @param string $align The alignment of the approval button.
+ */
+function glossary_get_entry_approval(stdClass $entry, string $mode, string $align = "right"): string {
+    global $OUTPUT;
+
+    if ($mode == 'approval' && !$entry->approved) {
+        $actionicon = $OUTPUT->action_icon(
+            new moodle_url('approve.php', ['eid' => $entry->id, 'mode' => $mode, 'sesskey' => sesskey()]),
+            new pix_icon('t/approve', get_string('approve', 'glossary'), '', ['class' => 'iconsmall', 'align' => $align])
+        );
+        $alignclass = '';
+        if ($align === 'right') {
+            $alignclass = 'text-end';
+        }
+        return html_writer::div($actionicon, $alignclass);
+    }
+    return '';
+}
+
+/**
+ * Prints the approval button for the entries pending approval.
+ *
  * @param object $cm
  * @param object $entry
  * @param string $mode
  * @param string $align
- * @param bool $insidetable
+ * @param bool $insidetable Deprecated since Moodle 5.2. The approval button should not be rendered inside a layout table.
  */
-function  glossary_print_entry_approval($cm, $entry, $mode, $align="right", $insidetable=true) {
-    global $CFG, $OUTPUT;
-
-    if ($mode == 'approval' and !$entry->approved) {
-        if ($insidetable) {
-            echo '<table class="glossaryapproval table-reboot" align="' . $align . '"><tr><td align="' . $align . '">';
-        }
-        echo $OUTPUT->action_icon(
-            new moodle_url('approve.php', array('eid' => $entry->id, 'mode' => $mode, 'sesskey' => sesskey())),
-            new pix_icon('t/approve', get_string('approve','glossary'), '',
-                array('class' => 'iconsmall', 'align' => $align))
-        );
-        if ($insidetable) {
-            echo '</td></tr></table>';
-        }
-    }
+function glossary_print_entry_approval($cm, $entry, $mode, $align = "right", $insidetable = true) {
+    echo glossary_get_entry_approval($entry, $mode, $align);
 }
 
 /**
@@ -2228,7 +2267,7 @@ function glossary_print_dynaentry($courseid, $entries, $displayformat = -1) {
             if (file_exists($formatfile)) {
                 include_once($formatfile);
                 if (function_exists($functionname)) {
-                    $functionname($course, $cm, $glossary, $entry,'','','','');
+                    $functionname($course, $cm, $glossary, $entry, '', '', 1, '');
                 }
             }
         }
@@ -3506,10 +3545,21 @@ function glossary_get_entries_by_letter($glossary, $context, $letter, $from, $li
         $filteredentries = $entries;
     }
 
-    // Now sort the array in regard to the current language.
-    usort($filteredentries, function($a, $b) {
-        return format_string($a->concept) <=> format_string($b->concept);
-    });
+    // Build an auxiliary array mapping keys to formatted concepts for locale-aware sorting.
+    $sortkeys = [];
+    foreach ($filteredentries as $key => $entry) {
+        $sortkeys[$key] = format_string($entry->concept);
+    }
+
+    // Sort the auxiliary array using the collator for locale-aware, case-insensitive sorting.
+    core_collator::asort($sortkeys, core_collator::SORT_STRING);
+
+    // Reorder the original array based on the sorted keys.
+    $sortedentries = [];
+    foreach (array_keys($sortkeys) as $key) {
+        $sortedentries[$key] = $filteredentries[$key];
+    }
+    $filteredentries = $sortedentries;
 
     // Size of the overall array.
     $count = count($entries);
@@ -3994,10 +4044,21 @@ function glossary_get_entries_by_term($glossary, $context, $term, $from, $limit,
     $entries = $filteredentries;
     // Check whether concept or alias match the term.
 
-    // Now sort the array in regard to the current language.
-    usort($filteredentries, function($a, $b) {
-        return format_string($a->concept) <=> format_string($b->concept);
-    });
+    // Build an auxiliary array mapping keys to formatted concepts for locale-aware sorting.
+    $sortkeys = [];
+    foreach ($filteredentries as $key => $entry) {
+        $sortkeys[$key] = format_string($entry->concept);
+    }
+
+    // Sort the auxiliary array using the collator for locale-aware, case-insensitive sorting.
+    core_collator::asort($sortkeys, core_collator::SORT_STRING);
+
+    // Reorder the original array based on the sorted keys.
+    $sortedentries = [];
+    foreach (array_keys($sortkeys) as $key) {
+        $sortedentries[$key] = $filteredentries[$key];
+    }
+    $filteredentries = $sortedentries;
 
     // Size of the overall array.
     $count = count($entries);
@@ -4068,7 +4129,6 @@ function glossary_get_entries_to_approve($glossary, $context, $letter, $order, $
         $filteredentries = $entries;
     }
 
-    // Now sort the array in regard to the current language.
     if ($order == 'CREATION') {
         if (strcasecmp($sort, 'DESC') === 0) {
             usort($filteredentries, function($a, $b) {
@@ -4090,15 +4150,24 @@ function glossary_get_entries_to_approve($glossary, $context, $letter, $order, $
             });
         }
     } else {
-        // This means CONCEPT.
+        // Build an auxiliary array mapping keys to formatted concepts for locale-aware sorting.
+        $sortkeys = [];
+        foreach ($filteredentries as $key => $entry) {
+            $sortkeys[$key] = format_string($entry->concept);
+        }
+
+        // Sort the auxiliary array using the collator for locale-aware, case-insensitive sorting.
+        core_collator::asort($sortkeys, core_collator::SORT_STRING);
+
+        // Reorder the original array based on the sorted keys.
+        $sortedentries = [];
+        foreach (array_keys($sortkeys) as $key) {
+            $sortedentries[$key] = $filteredentries[$key];
+        }
+        $filteredentries = $sortedentries;
+
         if (strcasecmp($sort, 'DESC') === 0) {
-            usort($filteredentries, function($a, $b) {
-                return format_string($b->concept) <=> format_string($a->concept);
-            });
-        } else {
-            usort($filteredentries, function($a, $b) {
-                return format_string($a->concept) <=> format_string($b->concept);
-            });
+            $filteredentries = array_reverse($filteredentries);
         }
     }
 
@@ -4725,4 +4794,53 @@ function mod_glossary_get_comments(cm_info $cm): array {
     }
 
     return $comments;
+}
+
+/**
+ * Checks whether the current user can see ratings for a given itemid.
+ *
+ * @param array $params submitted data
+ *            contextid => int contextid [required]
+ *            component => The component for this module - should always be mod_glossary [required]
+ *            ratingarea => Should always be entry (the only rating area in glossary) [required]
+ *            itemid => int the ID of the entry being rated [required]
+ * @return bool
+ */
+function mod_glossary_rating_can_see_item_ratings(array $params): bool {
+    global $DB, $USER;
+
+    if (!isset($params['component']) || $params['component'] != 'mod_glossary') {
+        throw new rating_exception('invalidcomponent');
+    }
+
+    if (!isset($params['ratingarea']) || $params['ratingarea'] != 'entry') {
+        throw new rating_exception('invalidratingarea');
+    }
+
+    if (!isset($params['itemid'])) {
+        throw new rating_exception('invaliditemid');
+    }
+
+    $entry = $DB->get_record('glossary_entries', ['id' => $params['itemid']], '*', MUST_EXIST);
+    $glossary = $DB->get_record('glossary', ['id' => $entry->glossaryid], '*', MUST_EXIST);
+    $cm = get_coursemodule_from_instance('glossary', $glossary->id, $glossary->course, false, MUST_EXIST);
+    $cminfo = get_fast_modinfo($glossary->course)->instances['glossary'][$cm->instance];
+
+    if ($cminfo->context->id != $params['contextid']) {
+        throw new rating_exception('invalidcontext');
+    }
+
+    $context = context::instance_by_id($params['contextid']);
+
+    $ratingpermissions = glossary_rating_permissions($context->id, 'mod_glossary', 'entry');
+    $requiredpermission = ($entry->userid != $USER->id) ? 'viewall' : 'view';
+    if (!$ratingpermissions[$requiredpermission]) {
+        return false;
+    }
+
+    if (!glossary_can_view_entry($entry, $cminfo)) {
+        return false;
+    }
+
+    return true;
 }

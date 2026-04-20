@@ -4,14 +4,17 @@ Feature: User must accept policy managed by this plugin when logging in and sign
   As a user
   I need to be able to accept site policy during sign up
 
+  Background:
+    Given the following config values are set as admin:
+      | enablemyhome | 1 |
+
   Scenario: Accept policy on sign up manage by plugin, no site policy
     Given the following config values are set as admin:
       | registerauth    | email |
       | passwordpolicy  | 0     |
       | sitepolicyhandler | tool_policy |
-    And I am on site homepage
-    And I follow "Log in"
-    When I click on "Create new account" "link"
+    And I am on homepage
+    When I click on "Sign up" "link"
     Then I should not see "I understand and agree"
     And I set the following fields to these values:
       | Username      | user1                 |
@@ -43,9 +46,8 @@ Feature: User must accept policy managed by this plugin when logging in and sign
       | Policy | Name             | Revision | Content    | Summary     | Status   |
       | P1     | This site policy |          | full text1 | short text1 | draft |
       | P1     | This privacy policy |          | full text2 | short text2 | draft |
-    And I am on site homepage
-    And I follow "Log in"
-    When I click on "Create new account" "link"
+    And I am on homepage
+    When I click on "Sign up" "link"
     Then I should not see "I understand and agree"
     And I set the following fields to these values:
       | Username      | user1                 |
@@ -78,9 +80,8 @@ Feature: User must accept policy managed by this plugin when logging in and sign
       | P1     | This site policy |          | full text1 | short text1 | archived |
       | P1     | This site policy |          | full text2 | short text2 | active   |
       | P1     | This site policy |          | full text3 | short text3 | draft    |
-    And I am on site homepage
-    And I follow "Log in"
-    When I click on "Create new account" "link"
+    And I am on homepage
+    When I click on "Sign up" "link"
     Then I should see "This site policy" in the "region-main" "region"
     And I should see "short text2"
     And I should see "full text2"
@@ -126,9 +127,8 @@ Feature: User must accept policy managed by this plugin when logging in and sign
       | This site policy    | 0    |          | full text2 | short text2 | active   | all      |
       | This privacy policy | 1    |          | full text3 | short text3 | active   | loggedin |
       | This guests policy  | 0    |          | full text4 | short text4 | active   | guest    |
-    And I am on site homepage
-    And I follow "Log in"
-    When I click on "Create new account" "link"
+    And I am on homepage
+    When I click on "Sign up" "link"
     Then I should see "This site policy" in the "region-main" "region"
     And I should see "short text2"
     And I should see "full text2"
@@ -186,9 +186,8 @@ Feature: User must accept policy managed by this plugin when logging in and sign
     Given the following policies exist:
       | Name             | Revision | Content    | Summary     | Status   |
       | This site policy |          | full text2 | short text2 | active   |
-    And I am on site homepage
-    And I follow "Log in"
-    When I click on "Create new account" "link"
+    And I am on homepage
+    When I click on "Sign up" "link"
     Then I should see "Age and location verification"
     And I set the field "What is your age?" to "16"
     And I set the field "In which country do you live?" to "DZ"
@@ -237,9 +236,8 @@ Feature: User must accept policy managed by this plugin when logging in and sign
       | Name                | Type | Revision | Content    | Summary     | Status   | Audience |
       | This site policy    | 0    |          | full text2 | short text2 | active   | all      |
       | This privacy policy | 1    |          | full text3 | short text3 | active   | loggedin |
-    And I am on site homepage
-    And I follow "Log in"
-    And I click on "Create new account" "link"
+    And I am on homepage
+    And I click on "Sign up" "link"
     And I should see "This site policy"
     And I press "Next"
     And I should see "This privacy policy"
@@ -451,15 +449,15 @@ Feature: User must accept policy managed by this plugin when logging in and sign
       | registerauth    | email |
       | passwordpolicy  | 0     |
       | sitepolicyhandler | tool_policy |
+      | guestloginbutton | 1 |
     And the following policies exist:
       | Name                | Type | Revision | Content    | Summary     | Status   | Audience |
       | This site policy    | 0    |          | full text2 | short text2 | active   | all      |
       | This privacy policy | 1    |          | full text3 | short text3 | active   | loggedin |
       | This guests policy  | 0    |          | full text4 | short text4 | active   | guest    |
-    And I am on site homepage
+    And I am on homepage
     And I change window size to "large"
-    And I follow "Log in"
-    When I press "Access as a guest"
+    When I press "Log in as guest"
     Then I should see "If you continue browsing this website, you agree to our policies"
     # Confirm when navigating, the pop-up policies are displayed.
     When I am on the "My courses" page
@@ -490,9 +488,8 @@ Feature: User must accept policy managed by this plugin when logging in and sign
       | This site policy    | 0    |          | full text2 | short text2 | active   | all      |
       | This privacy policy | 1    |          | full text3 | short text3 | active   | loggedin |
       | This guests policy  | 0    |          | full text4 | short text4 | active   | guest    |
-    And I am on site homepage
-    And I follow "Log in"
-    When I click on "Create new account" "link"
+    And I am on homepage
+    When I click on "Sign up" "link"
     Then I should see "This site policy" in the "region-main" "region"
     And I should see "short text2"
     And I should see "full text2"
@@ -524,7 +521,7 @@ Feature: User must accept policy managed by this plugin when logging in and sign
     Then I should see "Confirm your account"
     And I should see "An email should have been sent to your address at user1@example.com"
     And I follow "Log in"
-    When I click on "Create new account" "link"
+    When I click on "Sign up" "link"
     # Confirm that the user can view and accept policies when attempting to create another account.
     Then I should see "This site policy" in the "region-main" "region"
     And I should see "short text2"
@@ -612,18 +609,18 @@ Feature: User must accept policy managed by this plugin when logging in and sign
       | registerauth    | email |
       | passwordpolicy  | 0     |
       | sitepolicyhandler | tool_policy |
+      | guestloginbutton | 1 |
     Given the following policies exist:
       | Policy | Name             | Revision | Content    | Summary     | Status   |
       | P1     | This site policy |          | full text1 | short text1 | archived |
       | P1     | This site policy |          | full text2 | short text2 | active   |
       | P1     | This site policy |          | full text3 | short text3 | draft    |
-    And I am on site homepage
-    And I follow "Log in"
+    And I am on homepage
     # First log in as a guest
-    And I press "Access as a guest"
+    And I press "Log in as guest"
     # Now sign up
     And I follow "Log in"
-    When I click on "Create new account" "link"
+    When I click on "Sign up" "link"
     Then I should see "This site policy"
     And I should see "short text2"
     And I should see "full text2"
@@ -670,9 +667,8 @@ Feature: User must accept policy managed by this plugin when logging in and sign
       | Digital maturity declaration  | You declare be old enough | Here goes content.  | 1               |
       | Cookies policy                | We eat cookies, srsly     | Here goes content.  | 0               |
       | Terms of Service              | We teach, you learn       | Here goes content.  | 1               |
-    And I am on site homepage
-    And I follow "Log in"
-    When I click on "Create new account" "link"
+    And I am on homepage
+    When I click on "Sign up" "link"
     # The first policy with the agreement style "on its own page" must be accepted first.
     Then I should see "Digital maturity declaration" in the "region-main" "region"
     And I should see "You declare be old enough"
@@ -834,9 +830,8 @@ Feature: User must accept policy managed by this plugin when logging in and sign
       | Digital maturity declaration  | You declare be old enough | Here goes content.  | 1               | all       |
       | Cookies policy                | We eat cookies, srsly     | Here goes content.  | 1               | loggedin  |
       | Terms of Service              | We teach, you learn       | Here goes content.  | 1               | guest     |
-    And I am on site homepage
-    And I follow "Log in"
-    When I click on "Create new account" "link"
+    And I am on homepage
+    When I click on "Sign up" "link"
     # All the policies to be displayed one by one with a button to accept each of them prior seeing the next.
     Then I should see "Digital maturity declaration" in the "region-main" "region"
     And I should see "You declare be old enough"

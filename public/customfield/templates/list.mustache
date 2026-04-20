@@ -13,127 +13,97 @@
 
     You should have received a copy of the GNU General Public License
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-  }}
+}}
 {{!
-  @template core_customfield/list
+    @template core_customfield/list
 
-  Moodle list template.
+    Moodle list template.
+    The purpose of this template is to render a list.
 
-  The purpose of this template is to render a list.
+    Classes required for JS:
+    * none
 
-  Classes required for JS:
-  * none
+    Data attributes required for JS:
+    * data-component
+    * data-area
+    * data-itemid
 
-  Data attributes required for JS:
-  * data-component
-  * data-area
-  * data-itemid
+    Context variables required for this template:
+    * attributes Array of name / value pairs.
 
-  Context variables required for this template:
-  * attributes Array of name / value pairs.
-
-  Example context (json):
-  {
-      "component": "core_nonexisting",
-      "area": "course",
-      "itemid": 0,
-      "usescategories": 1,
-      "categories": [
-          { "id": "0",
-            "nameeditable": "Other fields",
-            "addfieldmenu": "Add field",
-            "canedit": true,
-            "fields": [
-                { "id": 0, "name": "Field name", "shortname": "shortname", "type": "Text" },
-                { "id": 0, "name": "Another field", "shortname": "checkme", "type": "Checkbox" }
-            ]
-          },
-          { "id": "00",
-            "nameeditable": "Empty category",
-            "addfieldmenu": "Add field",
-            "canedit": true,
-            "fields": [] }
-      ],
-      "singleselect" : "select"
-  }
+    Example context (json):
+    {
+        "component": "core_nonexisting",
+        "area": "course",
+        "itemid": 0,
+        "usescategories": 1,
+        "canmovecategories": 1,
+        "canmovefields": 1,
+        "hascategories": true,
+        "hassharedcategories": true,
+        "categories": [
+            {
+                "id": "0",
+                "name": "Other fields",
+                "nameeditable": "Other fields",
+                "addfieldmenu": "Add field",
+                "canedit": true,
+                "fields": [
+                    { "id": 0, "name": "Field name", "shortname": "shortname", "type": "Text" },
+                    { "id": 0, "name": "Another field", "shortname": "checkme", "type": "Checkbox" }
+                ]
+            },
+            {
+                "id": "00",
+                "name": "Empty category",
+                "nameeditable": "Empty category",
+                "addfieldmenu": "Add field",
+                "canedit": true,
+                "fields": []
+            }
+        ]
+    }
 }}
 
 {{{alert}}}
 
-<div data-region="list-page" id="customfield_catlist" data-component="{{component}}" data-area="{{area}}" data-itemid="{{itemid}}">
-    <div class="row">
-        <div class="col align-self-end">
-            {{#usescategories}}
-            <a tabindex="0" role="button" class="btn btn-secondary float-end" data-role="addnewcategory">{{#str}}addnewcategory, core_customfield{{/str}}</a>
-            {{/usescategories}}
-        </div>
+<div class="customfield-category-list"
+    id="customfield_catlist"
+    data-region="list-page"
+    data-component="{{component}}"
+    data-area="{{area}}"
+    data-itemid="{{itemid}}"
+>
+    <div class="d-flex justify-content-end">
+        {{#usescategories}}
+        <a tabindex="0" role="button" class="btn btn-primary" data-role="addnewcategory">{{#str}}addnewcategory, core_customfield{{/str}}</a>
+        {{/usescategories}}
     </div>
 
-    {{^categories}}
-        {{{nocategories}}}
-    {{/categories}}
+    {{^hascategories}}
+    <div class="alert alert-info mt-3">{{#str}}nocategories, core_customfield{{/str}}</div>
+    {{/hascategories}}
 
-    {{#categories}}
-        {{#canedit}}<div class="categorieslist">{{/canedit}}
-        <div data-category-id="{{id}}" id="category-{{id}}" class="mt-2">
-        <div class="row justify-content-between align-items-end">
-            <div class="col-6 categoryinstance d-flex align-items-center gap-3">
-                {{#usescategories}}
-                    <h3>
-                        {{#canedit}}<span class="movecategory icon-size-3">{{> core/drag_handle}}</span>{{/canedit}}
-                        {{{nameeditable}}}
-                        {{#canedit}}
-                        <a class="icon-size-3" href="#" data-role="deletecategory" data-id="{{id}}">
-                            {{#pix}} t/delete, core, {{#str}} delete, moodle {{/str}} {{/pix}}
-                        </a>
-                        {{/canedit}}
-                    </h3>
-                    {{#toggle}}
-                        <div data-bs-toggle="tooltip" data-bs-placement="top" title="{{#str}} sharedcategoryhelptext, customfield {{/str}}">
-                            {{{.}}}
-                        </div>
-                    {{/toggle}}
-                {{/usescategories}}
-            </div>
-            <div class="col-auto text-end">
-                {{{addfieldmenu}}}
-            </div>
-        </div>
-        <div>
-            <table class="table generaltable {{#canedit}}fieldslist{{/canedit}}">
-                <thead>
-                <tr>
-                    <th scope="col" class="col-5">{{#str}} customfield, core_customfield {{/str}}</th>
-                    <th scope="col" class="col-3">{{#str}} shortname, core_customfield {{/str}}</th>
-                    <th scope="col" class="col-2">{{#str}} type, core_customfield {{/str}}</th>
-                    <th scope="col" class="col-2 text-end">{{#str}} action, core_customfield {{/str}}</th>
-                </tr>
-                </thead>
-                <tbody>
-                {{#fields}}
-                    <tr data-field-name="{{name}}" data-field-id="{{id}}"  class="field">
-                        <td class="col-5">{{#canedit}}<span class="movefield">{{> core/drag_handle}}</span>{{/canedit}}{{{name}}}</td>
-                        <td class="col-3">{{{shortname}}}</td>
-                        <td class="col-2">{{{type}}}</td>
-                        <td class="col-2 text-end">
-                            {{#canedit}}
-                            <a href="#" data-role="editfield" data-name="{{name}}" data-id="{{id}}">{{#pix}}
-                                t/edit, core, {{#str}} edit, moodle {{/str}} {{/pix}}</a>
-                            <a href="#" data-id="{{id}}" data-role="deletefield">{{#pix}}
-                                t/delete, core, {{#str}} delete, moodle {{/str}} {{/pix}}</a>
-                            {{/canedit}}
-                        </td>
-                    </tr>
-                {{/fields}}
-                {{^fields}}
-                    {{> core_customfield/nofields }}
-                {{/fields}}
-                </tbody>
-            </table>
-        </div>
-        </div>
-        {{#canedit}}</div>{{/canedit}}
-    {{/categories}}
+    {{#hascategories}}
+    <div class="categorieslist">
+        {{#categories}}
+            {{#canedit}}
+            {{> core_customfield/category}}
+            {{/canedit}}
+        {{/categories}}
+    </div>
+    {{/hascategories}}
+
+    {{#hassharedcategories}}
+    <h2 class="mt-5">{{#str}} sharedcustomfields, customfield {{/str}}</h2>
+    <div class="sharedcategorieslist">
+        {{#categories}}
+            {{^canedit}}
+            {{> core_customfield/category}}
+            {{/canedit}}
+        {{/categories}}
+    </div>
+    {{/hassharedcategories}}
 </div>
 
 {{#js}}

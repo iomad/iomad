@@ -1,3 +1,4 @@
+addpagebreak,mod_quiz
 attemptsdeleted,mod_quiz
 gradesdeleted,mod_quiz
 useroverridesdeleted,mod_quiz
@@ -5,3 +6,7 @@ groupoverridesdeleted,mod_quiz
 randomcoursecatwithsubcat,mod_quiz
 randomcoursewithsubcat,mod_quiz
 randomsystemwithsubcat,mod_quiz
+removepagebreak,mod_quiz
+selectquestionbank,mod_quiz
+gobacktoquiz,mod_quiz
+cachedef_overrides,mod_quiz

@@ -26,7 +26,7 @@ namespace core\task;
 
 use core\lock\lock;
 use core\lock\lock_factory;
-use core_shutdown_manager;
+use core\shutdown_manager;
 
 define('CORE_TASK_TASKS_FILENAME', 'db/tasks.php');
 /**
@@ -689,14 +689,6 @@ class manager {
     }
 
     /**
-     * @deprecated since Moodle 4.1 MDL-67648
-     */
-    #[\core\attribute\deprecated('\core\task\manager::get_next_adhoc_task()', since: '4.1', mdl: 'MDL-67648', final: true)]
-    public static function ensure_adhoc_task_qos(): void {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-
-    /**
      * This function will dispatch the next adhoc task in the queue. The task will be handed out
      * with an open lock - possibly on the entire cron process. Make sure you call either
      * {@link adhoc_task_failed} or {@link adhoc_task_complete} to release the lock and reschedule the task.
@@ -1120,7 +1112,7 @@ class manager {
 
         // Add \core\task\manager::fail_running_task to shutdown manager, so we can ensure running tasks fail on shutdown.
         if (!self::$registeredshutdownhandler) {
-            core_shutdown_manager::register_function('\core\task\manager::fail_running_task');
+            shutdown_manager::register_function('\core\task\manager::fail_running_task');
 
             self::$registeredshutdownhandler = true;
         }

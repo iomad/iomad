@@ -12,6 +12,7 @@ Feature: Custom profile fields should be visible and editable by those with the 
       | user                | course | role    |
       | userwithinformation | C1     | student |
     And the following config values are set as admin:
+      | enablemyhome    | 1     |
       | registerauth    | email |
     And the following "custom profile fields" exist:
       | datatype | shortname              | name                  | signup | visible |
@@ -30,9 +31,8 @@ Feature: Custom profile fields should be visible and editable by those with the 
 
   @javascript
   Scenario: Visible custom profile fields can be part of the sign up form for anonymous users.
-    Given I am on site homepage
-    And I follow "Log in"
-    When I click on "Create new account" "link"
+    Given I am on homepage
+    When I click on "Sign up" "link"
     And I expand all fieldsets
     Then I should not see "notvisible_field"
     And I should see "uservisible_field"
@@ -44,7 +44,7 @@ Feature: Custom profile fields should be visible and editable by those with the 
     Given I log in as "guest"
     And I am on site homepage
     And I follow "Log in"
-    When I click on "Create new account" "link"
+    When I click on "Sign up" "link"
     And I expand all fieldsets
     Then I should not see "notvisible_field"
     And I should see "uservisible_field"

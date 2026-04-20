@@ -29,7 +29,6 @@ use core\exception\coding_exception;
 use core\output\action_link;
 use core\output\pix_icon;
 use core\url;
-use core\moodlenet\utilities;
 use core_contentbank\contentbank;
 use core_plugin_manager;
 use dml_missing_record_exception;
@@ -425,46 +424,6 @@ class settings_navigation extends navigation_node {
             $coursenode->force_open();
         }
 
-        // MoodleNet links.
-        if ($this->page->user_is_editing()) {
-            $this->page->requires->js_call_amd('core/moodlenet/mutations', 'init');
-        }
-        $usercanshare = utilities::can_user_share($coursecontext, $USER->id, 'course');
-        $issuerid = get_config('moodlenet', 'oauthservice');
-        try {
-            $issuer = \core\oauth2\api::get_issuer($issuerid);
-            $isvalidinstance = utilities::is_valid_instance($issuer);
-            if ($usercanshare && $isvalidinstance) {
-                $this->page->requires->js_call_amd('core/moodlenet/send_resource', 'init');
-                $action = new action_link(new url(''), '', null, [
-                    'data-action' => 'sendtomoodlenet',
-                    'data-type' => 'course',
-                ]);
-                // Share course to MoodleNet link.
-                $coursenode->add(
-                    get_string('moodlenet:sharetomoodlenet', 'moodle'),
-                    $action,
-                    self::TYPE_SETTING,
-                    null,
-                    'exportcoursetomoodlenet'
-                )->set_force_into_more_menu(true);
-                // MoodleNet share progress link.
-                $url = new url('/moodlenet/shareprogress.php');
-                $coursenode->add(
-                    get_string('moodlenet:shareprogress'),
-                    $url,
-                    self::TYPE_SETTING,
-                    null,
-                    'moodlenetshareprogress'
-                )->set_force_into_more_menu(true);
-            }
-        } catch (dml_missing_record_exception $e) {
-            debugging(
-                "Invalid MoodleNet OAuth 2 service set in site administration: 'moodlenet | oauthservice'. " .
-                "This must be a valid issuer."
-            );
-        }
-
         if ($adminoptions->update) {
             // Add the course settings link.
             $url = new url('/course/edit.php', ['id' => $course->id]);
@@ -596,7 +555,7 @@ class settings_navigation extends navigation_node {
         // Questions.
         require_once($CFG->libdir . '/questionlib.php');
         $baseurl = \core_question\local\bank\question_bank_helper::get_url_for_qbank_list($course->id);
-        question_extend_settings_navigation($coursenode, $coursecontext, $baseurl)->trim_if_empty();
+        question_extend_settings_navigation($coursenode, $coursecontext, $baseurl);
 
         if ($adminoptions->update) {
             // Repository Instances.
@@ -766,6 +725,12 @@ class settings_navigation extends navigation_node {
         $modulenode->nodetype = navigation_node::NODETYPE_BRANCH;
         $modulenode->force_open();
 
+        // If the user doesn't have permission to view the full activity information, we could leave.
+        // This could happen, for example, in the restricted page.
+        if (!$this->page->cm->get_user_visible()) {
+            return $modulenode;
+        }
+
         // Settings for the module.
         if (has_capability('moodle/course:manageactivities', $this->page->cm->context)) {
             $url = new url('/course/modedit.php', ['update' => $this->page->cm->id, 'return' => 1]);
@@ -876,31 +841,6 @@ class settings_navigation extends navigation_node {
         $function = $this->page->activityname . '_extend_settings_navigation';
         if (function_exists($function)) {
             $function($this, $modulenode);
-        }
-
-        // Send activity to MoodleNet.
-        $usercanshare = utilities::can_user_share($this->context->get_course_context(), $USER->id);
-        $issuerid = get_config('moodlenet', 'oauthservice');
-        try {
-            $issuer = \core\oauth2\api::get_issuer($issuerid);
-            $isvalidinstance = utilities::is_valid_instance($issuer);
-            if ($usercanshare && $isvalidinstance) {
-                $this->page->requires->js_call_amd('core/moodlenet/send_resource', 'init');
-                $action = new action_link(new url(''), '', null, [
-                    'data-action' => 'sendtomoodlenet',
-                    'data-type' => 'activity',
-                ]);
-                $modulenode->add(
-                    get_string('moodlenet:sharetomoodlenet', 'moodle'),
-                    $action,
-                    self::TYPE_SETTING,
-                    null,
-                    'exportmoodlenet'
-                )->set_force_into_more_menu(true);
-            }
-        } catch (dml_missing_record_exception $e) {
-            debugging("Invalid MoodleNet OAuth 2 service set in site administration: 'moodlenet | oauthservice'. " .
-                "This must be a valid issuer.");
         }
 
         // Remove the module node if there are no children.
@@ -1087,7 +1027,7 @@ class settings_navigation extends navigation_node {
             // breadcrumb.
             $mainpage->display = false;
             $homepage = get_home_page();
-            if (($homepage == HOMEPAGE_MY || $homepage == HOMEPAGE_MYCOURSES)) {
+            if ($homepage == HOMEPAGE_MY || $homepage == HOMEPAGE_MYCOURSES || $homepage == HOMEPAGE_USER) {
                 $mainpage->mainnavonly = true;
             }
 
@@ -1259,9 +1199,12 @@ class settings_navigation extends navigation_node {
         // Default homepage.
         $defaulthomepageuser = (!empty($CFG->defaulthomepage) && ($CFG->defaulthomepage == HOMEPAGE_USER));
         if (isloggedin() && !isguestuser($user) && $defaulthomepageuser) {
+            require_once($CFG->dirroot . '/user/lib.php');
+            $options = user_get_default_homepage_options();
             if (
-                $currentuser && has_capability('moodle/user:editownprofile', $systemcontext) ||
-                    has_capability('moodle/user:editprofile', $usercontext)
+                !empty($options) &&
+                    ($currentuser && has_capability('moodle/user:editownprofile', $systemcontext) ||
+                        has_capability('moodle/user:editprofile', $usercontext))
             ) {
                 $url = new url('/user/defaulthomepage.php', ['id' => $user->id]);
                 $useraccount->add(get_string('defaulthomepageuser'), $url, self::TYPE_SETTING, null, 'defaulthomepageuser');
@@ -1834,7 +1777,7 @@ class settings_navigation extends navigation_node {
         // Questions.
         require_once($CFG->libdir . '/questionlib.php');
         $baseurl = \core_question\local\bank\question_bank_helper::get_url_for_qbank_list($course->id);
-        question_extend_settings_navigation($frontpage, $coursecontext, $baseurl)->trim_if_empty();
+        question_extend_settings_navigation($frontpage, $coursecontext, $baseurl);
 
         // Manage files.
         if ($adminoptions->files) {

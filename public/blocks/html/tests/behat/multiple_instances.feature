@@ -5,7 +5,10 @@ Feature: Adding and configuring multiple Text blocks
   I need to be able to create, configure and change Text blocks
 
   Background:
-    Given I log in as "admin"
+    Given the following config values are set as admin:
+      | forcelogin   | 0 |
+      | enablemyhome | 1 |
+    And I log in as "admin"
     And I am on site homepage
     When I turn editing mode on
     And I add the "Text" block

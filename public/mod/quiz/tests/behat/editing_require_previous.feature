@@ -51,7 +51,7 @@ Feature: Edit quizzes where some questions require the previous one to have been
       | TF1      | 1    | 0               |
       | TF2      | 1    | 1               |
     And I am on the "Quiz 1" "mod_quiz > Edit" page
-    Then "This question cannot be attempted until the previous question has been completed." "link" should be visible
+    Then "Question 2 cannot be attempted until the previous question 1 has been completed" "button" should be visible
 
   @javascript
   Scenario: A question can depend on a random question
@@ -61,15 +61,14 @@ Feature: Edit quizzes where some questions require the previous one to have been
     And the following "questions" exist:
       | questioncategory | qtype       | name                    | questiontext   |
       | Test questions   | truefalse   | TF1                     | First question |
-      | Test questions   | random      | Random (Test questions) | 0              |
     And quiz "Quiz 1" contains the following questions:
-      | question                | page | requireprevious |
-      | Random (Test questions) | 1    | 0               |
-      | TF1                     | 1    | 1               |
+      | question                | page | requireprevious | randomcategory |
+      | Random (Test questions) | 1    | 0               | Test questions |
+      | TF1                     | 1    | 1               |                |
     And I am on the "Quiz 1" "mod_quiz > Edit" page
-    Then "This question cannot be attempted until the previous question has been completed." "link" should be visible
+    Then "Question 2 cannot be attempted until the previous question 1 has been completed" "button" should be visible
 
-  @javascript
+  @javascript @accessibility
   Scenario: The second question can be set to depend on the first
     Given the following "activities" exist:
       | activity   | name   | intro              | course | idnumber | preferredbehaviour |
@@ -85,9 +84,10 @@ Feature: Edit quizzes where some questions require the previous one to have been
       | TF2      | 1    | 0               |
       | TF3      | 1    | 0               |
     And I am on the "Quiz 1" "mod_quiz > Edit" page
-    When I follow "No restriction on when question 2 can be attempted • Click to change"
-    Then "Question 2 cannot be attempted until the previous question 1 has been completed • Click to change" "link" should be visible
-    And "No restriction on when question 3 can be attempted • Click to change" "link" should be visible
+    When I click on "No restriction on when question 2 can be attempted • Click to change" "button"
+    Then "Question 2 cannot be attempted until the previous question 1 has been completed • Click to change" "button" should be visible
+    And "No restriction on when question 3 can be attempted • Click to change" "button" should be visible
+    And the "region-main" "region" should meet accessibility standards with "best-practice" extra tests
 
   @javascript
   Scenario: A question that did depend on the previous can be un-linked
@@ -105,9 +105,9 @@ Feature: Edit quizzes where some questions require the previous one to have been
       | TF2      | 1    | 1               |
       | TF3      | 1    | 1               |
     And I am on the "Quiz 1" "mod_quiz > Edit" page
-    When I follow "Question 3 cannot be attempted until the previous question 2 has been completed • Click to change"
-    Then "Question 2 cannot be attempted until the previous question 1 has been completed • Click to change" "link" should be visible
-    And "No restriction on when question 3 can be attempted • Click to change" "link" should be visible
+    When I click on "Question 3 cannot be attempted until the previous question 2 has been completed • Click to change" "button"
+    Then "Question 2 cannot be attempted until the previous question 1 has been completed • Click to change" "button" should be visible
+    And "No restriction on when question 3 can be attempted • Click to change" "button" should be visible
 
   @javascript
   Scenario: Question dependency cannot apply to deferred feedback quizzes so UI is hidden
@@ -118,12 +118,11 @@ Feature: Edit quizzes where some questions require the previous one to have been
       | questioncategory | qtype       | name                    | questiontext    |
       | Test questions   | truefalse   | TF1                     | First question  |
       | Test questions   | truefalse   | TF2                     | Second question |
-      | Test questions   | random      | Random (Test questions) | 0               |
     And quiz "Quiz 1" contains the following questions:
-      | question                | page | requireprevious |
-      | Random (Test questions) | 1    | 0               |
-      | TF1                     | 1    | 1               |
-      | TF2                     | 1    | 1               |
+      | question                | page | requireprevious | randomcategory |
+      | Random (Test questions) | 1    | 0               | Test questions |
+      | TF1                     | 1    | 1               |                |
+      | TF2                     | 1    | 1               |                |
     And I am on the "Quiz 1" "mod_quiz > Edit" page
     Then "be attempted" "link" in the "TF1" "list_item" should not be visible
     Then "be attempted" "link" in the "TF2" "list_item" should not be visible
@@ -232,6 +231,6 @@ Feature: Edit quizzes where some questions require the previous one to have been
       | TF3      | 1    | 1               |
     And I am on the "Quiz 1" "mod_quiz > Edit" page
     When I move "TF1" to "After Question 3" in the quiz by clicking the move icon
-    Then "Question 2 cannot be attempted until the previous question 1 has been completed • Click to change" "link" should be visible
-    And "No restriction on when question 3 can be attempted • Click to change" "link" should be visible
+    Then "Question 2 cannot be attempted until the previous question 1 has been completed • Click to change" "button" should be visible
+    And "No restriction on when question 3 can be attempted • Click to change" "button" should be visible
     And "be attempted" "link" in the "TF2" "list_item" should not be visible

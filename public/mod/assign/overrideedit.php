@@ -103,6 +103,14 @@ foreach ($keys as $key) {
     }
 }
 
+// Prepare reason editor data for existing overrides.
+if (!empty($override) && isset($override->reason)) {
+    $data->reason_editor = [
+        'text' => $override->reason,
+        'format' => $override->reasonformat ?? FORMAT_MOODLE,
+    ];
+}
+
 // True if group-based override.
 $groupmode = !empty($data->groupid) || ($action === 'addgroup' && empty($overrideid));
 
@@ -141,6 +149,13 @@ if ($mform->is_cancelled()) {
 } else if (!$userchange && $fromform = $mform->get_data()) {
     // Process the data.
     $fromform->assignid = $assigninstance->id;
+
+    // Extract reason and reasonformat from editor field.
+    if (isset($fromform->reason_editor)) {
+        $fromform->reason = $fromform->reason_editor['text'] ?? '';
+        $fromform->reasonformat = $fromform->reason_editor['format'] ?? FORMAT_MOODLE;
+        unset($fromform->reason_editor);
+    }
 
     // Replace unchanged values with null.
     foreach ($keys as $key) {

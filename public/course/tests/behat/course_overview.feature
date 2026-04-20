@@ -17,8 +17,8 @@ Feature: Users can access the course activities overview page
       | teacher1           | C1     | editingteacher |
       | student1           | C1     | student        |
     And the following "activities" exist:
-      | activity | course | section | idnumber | name                 |
-      | assign   | C1     | 1       | 1        | Test assignment name |
+      | activity | course | section | idnumber | name                 | duedate           |
+      | assign   | C1     | 1       | 1        | Test assignment name | ##tomorrow noon## |
 
   Scenario: Teacher can navigate to the course overview page
     Given I am on the "C1" "Course" page logged in as "teacher1"
@@ -109,6 +109,7 @@ Feature: Users can access the course activities overview page
       | url             | C1     | Activity 18 |
       | wiki            | C1     | Activity 19 |
       | workshop        | C1     | Activity 20 |
+      | qbank           | C1     | Activity 21 |
     Given I am on the "Course 1" "course > activities" page logged in as "teacher1"
     And I should see "Assignments" in the "assign_overview_collapsible" "region"
     And I should see "Choices" in the "choice_overview_collapsible" "region"
@@ -124,6 +125,9 @@ Feature: Users can access the course activities overview page
     And I should see "Workshops" in the "workshop_overview_collapsible" "region"
     # All resources are grouped.
     And I should see "Resources" in the "resource_overview_collapsible" "region"
+    # Qbanks and labels are not shown.
+    And I should not see "Labels" in the "course-overview-page" "region"
+    And I should not see "Question banks" in the "course-overview-page" "region"
 
   @javascript
   Scenario: The resources overview is loaded at the moment the section is expanded via Ajax
@@ -281,6 +285,17 @@ Feature: Users can access the course activities overview page
     When I am on the "Course 1" "course > activities > assign" page logged in as "teacher1"
     Then I should not see "span" in the "assign_overview_collapsible" "region"
 
+  Scenario: Section name is properly filtered and rendered
+    Given the following config values are set as admin:
+      | formatstringstriptags | 0 |
+    And I log in as "teacher1"
+    And I am on "Course 1" course homepage with editing mode on
+    And I click on "Edit settings" "link" in the "Section 1" "core_courseformat > Section actions menu"
+    And I set the field "Section name" to "<span class='filter_mathjaxloader_equation'>Announcements$$(a+b)=2$$<span class='nolink'>$$(a+b)=2$$</span></span>"
+    And I press "Save changes"
+    When I am on the "Course 1" "course > activities > assign" page
+    Then I should not see "span" in the "assign_overview_collapsible" "region"
+
   @javascript
   Scenario: Users in no group that cannot view all groups see an error on 'Separate groups' activities
     Given the following "users" exist:
@@ -338,3 +353,44 @@ Feature: Users can access the course activities overview page
     And I am on the "Course 1" "course > activities > assign" page logged in as "student1"
     And I should not see "-" in the "Test assignment name" "table_row"
     And I should see "-" in the "Not gradable" "table_row"
+
+  @javascript
+  Scenario: Hidden section name is not shown in the activity overview for students
+    Given I log in as "teacher1"
+    And I am on "Course 1" course homepage with editing mode on
+    And I hide section "1"
+    # Make stealth the activity to guarantee the students can see it.
+    And I open "Test assignment name" actions menu
+    And I choose "Availability > Make available but don't show on course page" in the open action menu
+    # Teacher should see the section name.
+    When I am on the "Course 1" "course > activities > assign" page
+    Then I should see "Section 1" in the "Test assignment name" "table_row"
+    # Student should not see the section name.
+    But I am on the "Course 1" "course > activities > assign" page logged in as "student1"
+    And I should not see "Section 1" in the "Test assignment name" "table_row"
+
+  @javascript
+  Scenario: Unavailable activities are shown or hidden in the overview based on user capability
+    # Add a date restriction to an activity, visible to students.
+    Given I am on the "Test assignment name" "assign activity editing" page logged in as teacher1
+    And I expand all fieldsets
+    And I click on "Add restriction..." "button" in the "root" "core_availability > Availability Button Area"
+    And I click on "Date" "button" in the "Add restriction..." "dialogue"
+    And I set the field "Direction" in the "1" "availability_date > Date Restriction" to "until"
+    And I press "Save and return to course"
+    # Teacher can see the activity and the link in the overview.
+    When I am on the "Course 1" "course > activities > assign" page logged in as "teacher1"
+    Then I should see "Test assignment name" in the "assign_overview_collapsible" "region"
+    And "Test assignment name" "link" should exist in the "assign_overview_collapsible" "region"
+    And I should see "Name" in the "assign_overview_collapsible" "region"
+    And I should see "Due date" in the "assign_overview_collapsible" "region"
+    And I should see "Submissions" in the "assign_overview_collapsible" "region"
+    And I should see "Actions" in the "assign_overview_collapsible" "region"
+    # Student can see the activity but not the link in the overview.
+    But I am on the "Course 1" "course > activities > assign" page logged in as "student1"
+    And I should see "Test assignment name" in the "assign_overview_collapsible" "region"
+    And "Test assignment name" "link" should not exist in the "assign_overview_collapsible" "region"
+    And I should see "Name" in the "assign_overview_collapsible" "region"
+    And I should see "Due date" in the "assign_overview_collapsible" "region"
+    And I should not see "Submission status" in the "assign_overview_collapsible" "region"
+    And I should not see "Grade" in the "assign_overview_collapsible" "region"

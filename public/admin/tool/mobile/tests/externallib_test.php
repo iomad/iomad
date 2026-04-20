@@ -102,6 +102,9 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
             'supportavailability' => $CFG->supportavailability,
             'warnings' => [],
             'showloginform' => (int) get_config('core', 'showloginform'),
+            'tool_mfa_enabled' => get_config('tool_mfa', 'enabled'),
+            'enableloginrecaptcha' => login_captcha_enabled(),
+            'enableforgotpasswordrecaptcha' => forgotpassword_captcha_enabled(),
         );
         $this->assertEquals($expected, $result);
 
@@ -192,38 +195,40 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
 
         // Test default values.
         $context = \context_system::instance();
-        $expected = array(
-            array('name' => 'fullname', 'value' => $SITE->fullname),
-            array('name' => 'shortname', 'value' => $SITE->shortname),
-            array('name' => 'summary', 'value' => $sitesummary),
-            array('name' => 'summaryformat', 'value' => $summaryformat),
-            array('name' => 'frontpage', 'value' => $CFG->frontpage),
-            array('name' => 'frontpageloggedin', 'value' => $CFG->frontpageloggedin),
-            array('name' => 'maxcategorydepth', 'value' => $CFG->maxcategorydepth),
-            array('name' => 'frontpagecourselimit', 'value' => $CFG->frontpagecourselimit),
-            array('name' => 'numsections', 'value' => course_get_format($SITE)->get_last_section_number()),
-            array('name' => 'newsitems', 'value' => $SITE->newsitems),
-            array('name' => 'commentsperpage', 'value' => $CFG->commentsperpage),
-            array('name' => 'sitepolicy', 'value' => $mysitepolicy),
-            array('name' => 'sitepolicyhandler', 'value' => ''),
-            array('name' => 'disableuserimages', 'value' => $CFG->disableuserimages),
-            array('name' => 'mygradesurl', 'value' => user_mygrades_url()->out(false)),
-            array('name' => 'tool_mobile_forcelogout', 'value' => 0),
-            array('name' => 'tool_mobile_customlangstrings', 'value' => ''),
-            array('name' => 'tool_mobile_disabledfeatures', 'value' => ''),
-            array('name' => 'tool_mobile_filetypeexclusionlist', 'value' => ''),
-            array('name' => 'tool_mobile_custommenuitems', 'value' => ''),
-            array('name' => 'tool_mobile_apppolicy', 'value' => ''),
-            array('name' => 'tool_mobile_autologinmintimebetweenreq', 'value' => 6 * MINSECS),
-            array('name' => 'tool_mobile_autologout', 'value' => get_config('tool_mobile', 'autologout')),
-            array('name' => 'tool_mobile_autologouttime', 'value' => get_config('tool_mobile', 'autologouttime')),
-            array('name' => 'calendartype', 'value' => $CFG->calendartype),
-            array('name' => 'calendar_site_timeformat', 'value' => $CFG->calendar_site_timeformat),
-            array('name' => 'calendar_startwday', 'value' => $CFG->calendar_startwday),
-            array('name' => 'calendar_adminseesall', 'value' => $CFG->calendar_adminseesall),
-            array('name' => 'calendar_lookahead', 'value' => $CFG->calendar_lookahead),
-            array('name' => 'calendar_maxevents', 'value' => $CFG->calendar_maxevents),
-        );
+        $expected = [
+            [ 'name' => 'fullname', 'value' => $SITE->fullname ],
+            [ 'name' => 'shortname', 'value' => $SITE->shortname ],
+            [ 'name' => 'summary', 'value' => $sitesummary ],
+            [ 'name' => 'summaryformat', 'value' => $summaryformat ],
+            [ 'name' => 'frontpage', 'value' => $CFG->frontpage ],
+            [ 'name' => 'frontpageloggedin', 'value' => $CFG->frontpageloggedin ],
+            [ 'name' => 'maxcategorydepth', 'value' => $CFG->maxcategorydepth ],
+            [ 'name' => 'frontpagecourselimit', 'value' => $CFG->frontpagecourselimit ],
+            [ 'name' => 'numsections', 'value' => course_get_format($SITE)->get_last_section_number() ],
+            [ 'name' => 'newsitems', 'value' => $SITE->newsitems ],
+            [ 'name' => 'commentsperpage', 'value' => $CFG->commentsperpage ],
+            [ 'name' => 'sitepolicy', 'value' => $mysitepolicy ],
+            [ 'name' => 'sitepolicyhandler', 'value' => '' ],
+            [ 'name' => 'disableuserimages', 'value' => $CFG->disableuserimages ],
+            [ 'name' => 'mygradesurl', 'value' => user_mygrades_url()->out(false) ],
+            [ 'name' => 'tool_mobile_forcelogout', 'value' => 0 ],
+            [ 'name' => 'tool_mobile_customlangstrings', 'value' => '' ],
+            [ 'name' => 'tool_mobile_disabledfeatures', 'value' => '' ],
+            [ 'name' => 'tool_mobile_filetypeexclusionlist', 'value' => '' ],
+            [ 'name' => 'tool_mobile_custommenuitems', 'value' => '' ],
+            [ 'name' => 'tool_mobile_customusermenuitems', 'value' => '' ],
+            [ 'name' => 'tool_mobile_scriptallowlist', 'value' => '' ],
+            [ 'name' => 'tool_mobile_apppolicy', 'value' => '' ],
+            [ 'name' => 'tool_mobile_autologinmintimebetweenreq', 'value' => 6 * MINSECS ],
+            [ 'name' => 'tool_mobile_autologout', 'value' => get_config('tool_mobile', 'autologout') ],
+            [ 'name' => 'tool_mobile_autologouttime', 'value' => get_config('tool_mobile', 'autologouttime') ],
+            [ 'name' => 'calendartype', 'value' => $CFG->calendartype ],
+            [ 'name' => 'calendar_site_timeformat', 'value' => $CFG->calendar_site_timeformat ],
+            [ 'name' => 'calendar_startwday', 'value' => $CFG->calendar_startwday ],
+            [ 'name' => 'calendar_adminseesall', 'value' => $CFG->calendar_adminseesall ],
+            [ 'name' => 'calendar_lookahead', 'value' => $CFG->calendar_lookahead ],
+            [ 'name' => 'calendar_maxevents', 'value' => $CFG->calendar_maxevents ],
+        ];
         $colornumbers = range(1, 10);
         foreach ($colornumbers as $number) {
             $expected[] = [
@@ -239,7 +244,9 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
         $expected[] = ['name' => 'coursegraceperiodafter', 'value' => $CFG->coursegraceperiodafter];
         $expected[] = ['name' => 'coursegraceperiodbefore', 'value' => $CFG->coursegraceperiodbefore];
 
+        $expected[] = ['name' => 'enablemyhome', 'value' => $CFG->enablemyhome ?? 1];
         $expected[] = ['name' => 'enabledashboard', 'value' => $CFG->enabledashboard];
+        $expected[] = ['name' => 'enablemycourses', 'value' => $CFG->enablemycourses ?? 1];
         $expected[] = ['name' => 'customusermenuitems', 'value' => $CFG->customusermenuitems];
         $expected[] = ['name' => 'timezone', 'value' => $CFG->timezone];
         $expected[] = ['name' => 'forcetimezone', 'value' => $CFG->forcetimezone];
@@ -674,6 +681,7 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
         // Fake the app.
         \core_useragent::instance(true, 'Mozilla/5.0 (Linux; Android 7.1.1; Moto G Play Build/NPIS26.48-43-2; wv) ' .
                 'AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/71.0.3578.99 Mobile Safari/537.36 MoodleMobile');
+        set_config('qrcodetype', api::QR_CODE_LOGIN, 'tool_mobile');
 
         $result = external::get_tokens_for_qr_login($qrloginkey, $USER->id);
         $result = external_api::clean_returnvalue(external::get_tokens_for_qr_login_returns(), $result);
@@ -713,6 +721,7 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
         // Fake the app.
         \core_useragent::instance(true, 'Mozilla/5.0 (Linux; Android 7.1.1; Moto G Play Build/NPIS26.48-43-2; wv) ' .
                 'AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/71.0.3578.99 Mobile Safari/537.36 MoodleMobile');
+        set_config('qrcodetype', api::QR_CODE_LOGIN, 'tool_mobile');
 
         $result = external::get_tokens_for_qr_login($qrloginkey, $USER->id);
         $result = external_api::clean_returnvalue(external::get_tokens_for_qr_login_returns(), $result);
@@ -738,6 +747,7 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
         $user = $this->getDataGenerator()->create_user();
         $this->setUser($user);
 
+        set_config('qrcodetype', api::QR_CODE_LOGIN, 'tool_mobile');
         $mobilesettings = get_config('tool_mobile');
         $mobilesettings->qrsameipcheck = 1;
         $qrloginkey = api::get_qrlogin_key($mobilesettings);
@@ -789,6 +799,7 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
         // Need to disable webservices to verify that's checked.
         $CFG->enablewebservices = 0;
         $CFG->enablemobilewebservice = 0;
+        set_config('qrcodetype', api::QR_CODE_LOGIN, 'tool_mobile');
 
         $this->setAdminUser();
         $this->expectException('moodle_exception');
@@ -801,6 +812,7 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
      */
     public function test_get_tokens_for_qr_login_missing_https(): void {
         global $CFG, $USER;
+        $this->resetAfterTest(true);
 
         // Fake the app.
         \core_useragent::instance(true, 'Mozilla/5.0 (Linux; Android 7.1.1; Moto G Play Build/NPIS26.48-43-2; wv) ' .
@@ -809,7 +821,7 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
         // Need to simulate a non HTTPS site here.
         $CFG->wwwroot = str_replace('https:', 'http:', $CFG->wwwroot);
 
-        $this->resetAfterTest(true);
+        set_config('qrcodetype', api::QR_CODE_LOGIN, 'tool_mobile');
         $this->setAdminUser();
 
         $this->expectException('moodle_exception');
@@ -821,7 +833,7 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
      * Test get_tokens_for_qr_login missing admin.
      */
     public function test_get_tokens_for_qr_login_missing_admin(): void {
-        global $CFG, $USER;
+        global $USER;
 
         $this->resetAfterTest(true);
         $this->setAdminUser();
@@ -829,6 +841,7 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
         // Fake the app.
         \core_useragent::instance(true, 'Mozilla/5.0 (Linux; Android 7.1.1; Moto G Play Build/NPIS26.48-43-2; wv) ' .
             'AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/71.0.3578.99 Mobile Safari/537.36 MoodleMobile');
+        set_config('qrcodetype', api::QR_CODE_LOGIN, 'tool_mobile');
 
         $this->expectException('moodle_exception');
         $this->expectExceptionMessage(get_string('autologinnotallowedtoadmins', 'tool_mobile'));
@@ -839,10 +852,11 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
      * Test get_tokens_for_qr_login missing app_request.
      */
     public function test_get_tokens_for_qr_login_missing_app_request(): void {
-        global $CFG, $USER;
+        global $USER;
 
         $this->resetAfterTest(true);
         $this->setAdminUser();
+        set_config('qrcodetype', api::QR_CODE_LOGIN, 'tool_mobile');
 
         $this->expectException('moodle_exception');
         $this->expectExceptionMessage(get_string('apprequired', 'tool_mobile'));

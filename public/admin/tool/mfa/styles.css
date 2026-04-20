@@ -1,40 +1,45 @@
 input.tool-mfa-verification-code,
 .tool-mfa-verification-code input {
-    /* Some elements must be important to override form element*/
-    font-size: 1.5em !important; /* stylelint-disable-line declaration-no-important */
     font-family: monospace;
     text-align: center;
     letter-spacing: 1.0em;
     font-weight: bold;
-}
-
-.tool-mfa-factor-choose,
-.tool-mfa-factor-choose:hover {
-    background-color: #fff;
-    border-color: #3584c9;
-    border-width: 1px;
-    width: 100%;
-    border-radius: 0.5rem;
-}
-
-.tool-mfa-factor-choose:hover,
-.tool-mfa-factor-choose:hover .tool-mfa-factor-choose-text {
-    text-decoration: underline;
-    color: #094478;
-    background-color: #cfe2f2;
-}
-
-.mfa-verify-form input[type="submit"] {
-    height: 50px;
-    font-size: 1.05rem;
-}
-
-.mfa-verify-form .invalid-feedback {
-    font-weight: 700;
+    margin-top: 0.25rem;
+    background-color: #e9ecef;
+    border-color: #6a737b;
 }
 
 .mfa-verify-form .form-group.fitem,
 .mfa-verify-form .form-group.fitem > span,
 .mfa-verify-form .form-group.fitem > span > input {
     width: 100%;
+}
+
+input.tool-mfa-verify-submit,
+.tool-mfa-verify-submit input {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+#mfalist .icon-circle .icon {
+    width: 64px;
+    height: 64px;
+}
+
+@media (max-width: 991.98px) {
+    .tool-mfa-verify-container {
+        padding-right: 16px;
+        padding-left: 16px;
+    }
+
+    .login-layout-right-content:has(.tool-mfa-verify-container) {
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .tool-mfa-verify-container .mfa-verify-form {
+        margin-right: -16px;
+        margin-left: -16px;
+    }
 }

@@ -96,8 +96,9 @@ function resource_get_post_actions() {
  */
 function resource_add_instance($data, $mform) {
     global $CFG, $DB;
-    require_once("$CFG->libdir/resourcelib.php");
+
     require_once("$CFG->dirroot/mod/resource/locallib.php");
+
     $cmid = $data->coursemodule;
     $data->timemodified = time();
 
@@ -123,7 +124,9 @@ function resource_add_instance($data, $mform) {
  */
 function resource_update_instance($data, $mform) {
     global $CFG, $DB;
-    require_once("$CFG->libdir/resourcelib.php");
+
+    require_once("$CFG->dirroot/mod/resource/locallib.php");
+
     $data->timemodified = time();
     $data->id           = $data->instance;
     $data->revision++;
@@ -621,4 +624,17 @@ function mod_resource_get_path_from_pluginfile(string $filearea, array $args): a
         'itemid' => 0,
         'filepath' => $filepath,
     ];
+}
+
+/**
+ * Sets dynamic information about a course module.
+ *
+ * @param cm_info $cm
+ */
+function mod_resource_cm_info_dynamic(cm_info $cm) {
+    // Update the navigation URL to guarantee the user will see the content even if the module
+    // is set to open in a new window or popup.
+    $cm->set_navigation_url(
+        new url($cm->get_navigation_url(), ['forceview' => 1])
+    );
 }

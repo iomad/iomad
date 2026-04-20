@@ -38,11 +38,10 @@ $string['error:oldcode'] = 'This code is too old. Please verify the time on your
 $string['error:wrongverification'] = 'Incorrect verification code.';
 $string['factorsetup'] = 'App setup';
 $string['info'] = 'Generate a verification code using an authenticator app.';
-$string['logindesc'] = 'Use the authenticator app in your mobile device to generate a code.';
-$string['loginoption'] = 'Use Authenticator application';
+$string['logindesc'] = 'To keep your account safe, we need to check that it\'s really you. Click continue to use your <strong>authenticator app</strong>.';
+$string['loginoption'] = 'Receive code via authenticator app';
 $string['loginskip'] = 'I don\'t have my device';
 $string['loginsubmit'] = 'Continue';
-$string['logintitle'] = 'Verify it\'s you by mobile app';
 $string['managefactor'] = 'Manage authenticator app';
 $string['managefactorbutton'] = 'Manage';
 $string['manageinfo'] = 'You are using \'{$a}\' to authenticate.';
@@ -83,3 +82,6 @@ $string['summarycondition'] = 'using a TOTP app';
 $string['systimeformat'] = '%l:%M:%S %P %Z';
 $string['verificationcode'] = 'Enter your 6 digit verification code';
 $string['verificationcode_help'] = 'Open your authenticator app such as Google Authenticator and look for the 6 digit code which matches this site and username';
+
+// Deprecated since Moodle 5.2.
+$string['logintitle'] = 'Verify it\'s you by mobile app';

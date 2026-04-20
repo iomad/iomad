@@ -73,7 +73,7 @@ class backup_quiz_activity_structure_step extends backup_questions_activity_stru
 
         $override = new backup_nested_element('override', ['id'], [
             'userid', 'groupid', 'timeopen', 'timeclose',
-            'timelimit', 'attempts', 'password']);
+            'timelimit', 'attempts', 'password', 'reason', 'reasonformat']);
 
         $grades = new backup_nested_element('grades');
 

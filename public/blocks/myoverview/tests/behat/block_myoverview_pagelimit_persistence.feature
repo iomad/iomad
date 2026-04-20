@@ -2,7 +2,9 @@
 Feature: The my overview block allows users to persistence of their page limits
 
   Background:
-    Given the following "users" exist:
+    Given the following config values are set as admin:
+      | enablemycourses | 1 |
+    And the following "users" exist:
       | username | firstname | lastname | email                | idnumber |
       | student1 | Student   | X        | student1@example.com | S1       |
     And the following "courses" exist:

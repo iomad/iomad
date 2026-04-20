@@ -4,6 +4,10 @@ Feature: Welcome message on classic
   As a User
   I need to see a welcome message on the first page
 
+  Background:
+    Given the following config values are set as admin:
+      | enablemyhome | 1 |
+
   Scenario: Login and be welcomed on the homepage
     Given the following config values are set as admin:
       | defaulthomepage | 0 |
@@ -24,6 +28,7 @@ Feature: Welcome message on classic
 
   Scenario: Login and be welcomed on the my courses page
     Given the following config values are set as admin:
+      | enablemycourses | 1 |
       | defaulthomepage | 3 |
     When I log in as "admin"
     Then I should see "My courses" in the "page-header" "region"

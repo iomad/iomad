@@ -33,7 +33,7 @@ if ($ADMIN->fulltree) {
     $items[] = new admin_setting_heading('filter_tex/latexheading', get_string('latexsettings', 'filter_tex'), '');
     $items[] = new admin_setting_configtextarea('filter_tex/latexpreamble', get_string('latexpreamble','filter_tex'),
                    '', "\\usepackage[latin1]{inputenc}\n\\usepackage{amsmath}\n\\usepackage{amsfonts}\n\\RequirePackage{amsmath,amssymb,latexsym}\n");
-    $items[] = new admin_setting_configtext('filter_tex/latexbackground', get_string('backgroundcolour', 'admin'), '', '#FFFFFF');
+    $items[] = new admin_setting_configcolourpicker('filter_tex/latexbackground', get_string('backgroundcolour', 'admin'), '', '#FFFFFF');
     $items[] = new admin_setting_configtext('filter_tex/density', get_string('density', 'admin'), '', '120', PARAM_INT);
 
     $default_filter_tex_pathlatex   = '';
@@ -77,13 +77,17 @@ if ($ADMIN->fulltree) {
     $items[] = new admin_setting_configexecutable('filter_tex/pathdvips', get_string('pathdvips', 'filter_tex'), '', $default_filter_tex_pathdvips);
     $items[] = new admin_setting_configexecutable('filter_tex/pathconvert', get_string('pathconvert', 'filter_tex'), '', $default_filter_tex_pathconvert);
     $items[] = new admin_setting_configexecutable('filter_tex/pathdvisvgm', get_string('pathdvisvgm', 'filter_tex'), '', $default_filter_tex_pathdvisvgm);
-    $items[] = new admin_setting_configexecutable('filter_tex/pathmimetex', get_string('pathmimetex', 'filter_tex'), get_string('pathmimetexdesc', 'filter_tex'), '');
 
-    // Even if we offer GIF, PNG and SVG formats here, in the update callback we check whether
-    // required paths actually point to executables. If they don't, we force the setting
-    // to GIF, as that's the only format mimeTeX can produce.
-    $formats = array('gif' => 'GIF', 'png' => 'PNG', 'svg' => 'SVG');
-    $items[] = new admin_setting_configselect('filter_tex/convertformat', get_string('convertformat', 'filter_tex'), get_string('configconvertformat', 'filter_tex'), 'gif', $formats);
+    // The update callback checks whether required paths actually point to executables.
+    // If they don't, we force the setting to PNG as the default fallback format.
+    $formats = ['png' => 'PNG', 'gif' => 'GIF', 'svg' => 'SVG'];
+    $items[] = new admin_setting_configselect(
+        'filter_tex/convertformat',
+        get_string('convertformat', 'filter_tex'),
+        get_string('configconvertformat', 'filter_tex'),
+        'png',
+        $formats
+    );
 
     foreach ($items as $item) {
         $item->set_updatedcallback('filter_tex_updatedcallback');

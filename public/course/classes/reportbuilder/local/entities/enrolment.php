@@ -18,19 +18,12 @@ declare(strict_types=1);
 
 namespace core_course\reportbuilder\local\entities;
 
-use context_course;
-use core_course\reportbuilder\local\formatters\enrolment as enrolment_formatter;
+use core\lang_string;
 use core_reportbuilder\local\entities\base;
-use core_reportbuilder\local\filters\date;
-use core_reportbuilder\local\filters\select;
-use core_reportbuilder\local\helpers\database;
+use core_reportbuilder\local\filters\{date, select};
 use core_reportbuilder\local\helpers\format;
-use core_reportbuilder\local\report\column;
-use core_reportbuilder\local\report\filter;
+use core_reportbuilder\local\report\{column, filter};
 use core_user\output\status_field;
-use enrol_plugin;
-use lang_string;
-use stdClass;
 
 /**
  * Course enrolment entity implementation
@@ -40,7 +33,6 @@ use stdClass;
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class enrolment extends base {
-
     /**
      * Database tables that this entity uses
      *
@@ -63,31 +55,11 @@ class enrolment extends base {
     }
 
     /**
-     * Initialise the entity
-     *
-     * @return base
-     */
-    public function initialise(): base {
-        foreach ($this->get_all_columns() as $column) {
-            $this->add_column($column);
-        }
-
-        // All the filters defined by the entity can also be used as conditions.
-        foreach ($this->get_all_filters() as $filter) {
-            $this
-                ->add_filter($filter)
-                ->add_condition($filter);
-        }
-
-        return $this;
-    }
-
-    /**
      * Returns list of all available columns
      *
      * @return column[]
      */
-    protected function get_all_columns(): array {
+    protected function get_available_columns(): array {
         $userenrolments = $this->get_table_alias('user_enrolments');
 
         // Enrolment time created.
@@ -137,10 +109,21 @@ class enrolment extends base {
             $this->get_entity_name()
         ))
             ->add_joins($this->get_joins())
-            ->set_type(column::TYPE_TEXT)
             ->add_field($this->get_status_field_sql(), 'status')
             ->set_is_sortable(true)
-            ->add_callback([enrolment_formatter::class, 'enrolment_status']);
+            ->add_callback(static function (?string $status): string {
+                if ($status === null) {
+                    return '';
+                }
+
+                $statuses = [
+                    status_field::STATUS_ACTIVE => new lang_string('participationactive', 'core_enrol'),
+                    status_field::STATUS_SUSPENDED => new lang_string('participationsuspended', 'core_enrol'),
+                    status_field::STATUS_NOT_CURRENT => new lang_string('participationnotcurrent', 'core_enrol'),
+                ];
+
+                return (string) ($statuses[(int) $status] ?? $status);
+            });
 
         return $columns;
     }
@@ -172,7 +155,7 @@ class enrolment extends base {
      *
      * @return filter[]
      */
-    protected function get_all_filters(): array {
+    protected function get_available_filters(): array {
         $userenrolments = $this->get_table_alias('user_enrolments');
 
         // Enrolment time created.
@@ -241,7 +224,11 @@ class enrolment extends base {
             $this->get_status_field_sql()
         ))
             ->add_joins($this->get_joins())
-            ->set_options(enrolment_formatter::enrolment_values());
+            ->set_options([
+                status_field::STATUS_ACTIVE => new lang_string('participationactive', 'core_enrol'),
+                status_field::STATUS_SUSPENDED => new lang_string('participationsuspended', 'core_enrol'),
+                status_field::STATUS_NOT_CURRENT => new lang_string('participationnotcurrent', 'core_enrol'),
+            ]);
 
         return $filters;
     }

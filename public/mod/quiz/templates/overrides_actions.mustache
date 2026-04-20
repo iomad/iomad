@@ -25,28 +25,30 @@
     * none
 
     Context variables required for this template:
-    * overridesnav - must alwasy be present.
+    * navigation - must always be present.
     * addoverridebutton - should only be present if the user has permission to add a new override.
 
     Example context (json):
     {
-        "overridesnav": {
-            "id": "url_select_test",
-            "action": "https://example.com/post",
-            "formid": "url_select_form",
-            "sesskey": "sesskey",
-            "label": "core/url_select",
-            "options": [{
+        "navigation": {
+            "name": "tertiarynavigation",
+            "value": "/mod/quiz/overrides.php?cmid=71&mode=group",
+            "baseid": "select-menu56789",
+            "selectedoption": "Group overrides",
+            "options": [
+                {
                     "name": "User overrides",
-                    "value": "/mod/quiz/overrides.php?cmid=71&mode=user"
+                    "value": "/mod/quiz/overrides.php?cmid=71&mode=user",
+                    "id": "select-menu-option1",
+                    "selected": false
                 },
                 {
                     "name": "Group overrides",
-                    "value": "/mod/quiz/overrides.php?cmid=71&mode=group"
+                    "value": "/mod/quiz/overrides.php?cmid=71&mode=group",
+                    "id": "select-menu-option2",
+                    "selected": true
                 }
-            ],
-            "disabled": false,
-            "title": "Some cool title"
+            ]
         },
         "addoverridebutton": {
             "id": "single_button1234",
@@ -71,11 +73,11 @@
 }}
 <div class="tertiary-navigation">
     <div class="d-flex">
-        {{#overridesnav}}
+        {{#navigation}}
             <div class="navitem">
-                {{>core/url_select}}
+                {{>core/tertiary_navigation_selector}}
             </div>
-        {{/overridesnav}}
+        {{/navigation}}
         {{#addoverridebutton}}
             <div class="navitem">
                 {{>core/single_button}}

@@ -48,7 +48,6 @@ $legacyclasses = [
     \require_login_exception::class => 'exception/require_login_exception.php',
     \require_login_session_timeout_exception::class => 'exception/require_login_session_timeout_exception.php',
     \required_capability_exception::class => 'exception/required_capability_exception.php',
-    \webservice_parameter_exception::class => 'exception/webservice_parameter_exception.php',
 
     // Cache API.
     \cache::class => [
@@ -191,7 +190,6 @@ $legacyclasses = [
     // Navigation API.
     \breadcrumb_navigation_node::class => 'navigation/breadcrumb_navigation_node.php',
     \flat_navigation::class => 'navigation/flat_navigation.php',
-    \flat_navigation_node::class => 'navigation/flat_navigation_node.php',
     \global_navigation::class => 'navigation/global_navigation.php',
     \global_navigation_for_ajax::class => 'navigation/global_navigation_for_ajax.php',
     \navbar::class => 'navigation/navbar.php',
@@ -378,4 +376,13 @@ $legacyclasses = [
         'core_courseformat',
         'output/local/content/activitychooserbutton.php',
     ],
+
+    \testing_util::class => 'test/testing_util.php',
+    \phpunit_util::class => 'test/phpunit/phpunit_util.php',
+    \phpunit_coverage_info::class => 'test/phpunit/coverage_info.php',
+    \phpunit_message_sink::class => 'test/phpunit/message_sink.php',
+    \phpunit_phpmailer_sink::class => 'test/phpunit/phpmailer_sink.php',
+    \phpunit_event_mock::class => 'test/phpunit/event_mock.php',
+    \phpunit_event_sink::class => 'test/phpunit/event_sink.php',
+    \tests_finder::class => 'test/test_finder.php',
 ];

@@ -589,7 +589,7 @@ function can_add_moduleinfo($course, $modulename, $sectionnum) {
     }
 
     if (!course_allowed_module($course, $module->name)) {
-        throw new \moodle_exception('moduledisable');
+        throw new \moodle_exception('moduledisable', 'error', '', $module->name);
     }
 
     return [$module, $context, $sectioninfo];
@@ -671,7 +671,7 @@ function update_moduleinfo($cm, $moduleinfo, $course, $mform = null) {
         if (!empty($moduleinfo->completionunlocked)) {
             $cm->completion = $moduleinfo->completion;
             $cm->completionpassgrade = $moduleinfo->completionpassgrade ?? 0;
-            if ($moduleinfo->completiongradeitemnumber === '') {
+            if (empty($moduleinfo->completionusegrade)) {
                 $cm->completiongradeitemnumber = null;
             } else {
                 $cm->completiongradeitemnumber = $moduleinfo->completiongradeitemnumber;
@@ -829,7 +829,7 @@ function update_moduleinfo($cm, $moduleinfo, $course, $mform = null) {
  * @param string $modulename module name of the lib to include
  * @throws moodle_exception if lib.php file for the module does not exist
  */
-function include_modulelib($modulename) {
+function include_modulelib($modulename): void {
     global $CFG;
     $modlib = "$CFG->dirroot/mod/$modulename/lib.php";
     if (file_exists($modlib)) {

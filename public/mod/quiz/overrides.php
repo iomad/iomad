@@ -229,6 +229,20 @@ foreach ($overrides as $override) {
                 get_string('enabled', 'quiz') : get_string('none', 'quiz');
     }
 
+    // Format reason.
+    if (isset($override->reason) && $override->reason !== '') {
+        $formattedreason = format_text(
+            $override->reason,
+            $override->reasonformat ?? FORMAT_MOODLE,
+            ['context' => $context],
+        );
+
+        if ($formattedreason !== '') {
+            $fields[] = get_string('overridereason', 'quiz');
+            $values[] = $formattedreason;
+        }
+    }
+
     // Prepare the information about who this override applies to.
     $extranamebit = $active ? '' : '*';
     $usercells = [];

@@ -27,6 +27,8 @@ require_once($CFG->libdir . '/adminlib.php');
 
 admin_externalpage_setup('sharedcustomfields');
 
+$PAGE->add_body_class('limitedwidth');
+
 /** @var \core_customfield\output\renderer $output */
 $output = $PAGE->get_renderer('core_customfield');
 $handler = \core_customfield\customfield\shared_handler::create();

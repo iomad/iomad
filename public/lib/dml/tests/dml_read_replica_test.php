@@ -51,6 +51,7 @@ final class dml_read_replica_test extends \database_driver_testcase {
      * @param bool $wantlatency
      * @param mixed $readonly
      * @param mixed $dbclass
+     * @param float|null $latency Override replica latency seconds.
      * @return read_replica_moodle_database $db
      */
     public function new_db(
@@ -60,7 +61,8 @@ final class dml_read_replica_test extends \database_driver_testcase {
             ['dbhost' => 'test_ro2', 'dbport' => 2, 'dbuser' => 'test2', 'dbpass' => 'test2'],
             ['dbhost' => 'test_ro3', 'dbport' => 3, 'dbuser' => 'test3', 'dbpass' => 'test3'],
         ],
-        $dbclass = read_replica_moodle_database::class
+        $dbclass = read_replica_moodle_database::class,
+        ?float $latency = null
     ): read_replica_moodle_database {
         $dbhost = 'test_rw';
         $dbname = 'test';
@@ -68,8 +70,9 @@ final class dml_read_replica_test extends \database_driver_testcase {
         $dbpass = 'test';
         $prefix = 'test_';
         $dboptions = ['readonly' => ['instance' => $readonly, 'exclude_tables' => ['exclude']]];
-        if ($wantlatency) {
-            $dboptions['readonly']['latency'] = self::$dbreadonlylatency;
+        $effectivelatency = $latency ?? ($wantlatency ? self::$dbreadonlylatency : null);
+        if ($effectivelatency !== null) {
+            $dboptions['readonly']['latency'] = $effectivelatency;
         }
 
         $db = new $dbclass();
@@ -371,6 +374,34 @@ final class dml_read_replica_test extends \database_driver_testcase {
         if ($skip) {
             $this->markTestSkipped("Delay too long to test write handle immediately after transaction");
         }
+    }
+
+    /**
+     * Test mark_tables_for_primary() routes reads to the writer until latency expires.
+     */
+    public function test_mark_tables_for_primary(): void {
+        $latency = 2;
+        $DB = $this->new_db(latency: $latency);
+
+        // Check reads are going to the reader.
+        $handle = $DB->get_records('table');
+        $this->assert_readonly_handle($handle);
+        $readsreplica = $DB->perf_get_reads_replica();
+        $this->assertGreaterThan(0, $readsreplica);
+
+        $DB->mark_tables_for_primary('table');
+
+        // Verify reads are now routed to the writer.
+        $handle = $DB->get_records('table');
+        $this->assertEquals('test_rw::test:test', $handle);
+        $this->assertEquals($readsreplica, $DB->perf_get_reads_replica());
+
+        sleep($latency + 1);
+
+        // Past latency, reads should be routed back to the reader.
+        $handle = $DB->get_records('table');
+        $this->assert_readonly_handle($handle);
+        $this->assertEquals($readsreplica + 1, $DB->perf_get_reads_replica());
     }
 
     /**

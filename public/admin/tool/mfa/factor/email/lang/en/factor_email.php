@@ -44,11 +44,10 @@ $string['error:parameters'] = 'Incorrect page parameters.';
 $string['error:wrongverification'] = 'Wrong code. Try again.';
 $string['event:unauthemail'] = 'Unauthorised email received';
 $string['info'] = 'You are using email {$a} to authenticate. This has been set up by your site administrator.';
-$string['logindesc'] = 'We\'ve just sent a 6-digit code to your email: {$a}';
-$string['loginoption'] = 'Have a code emailed to you';
+$string['logindesc'] = 'To keep your account safe, we need to check that it\'s really you. We\'ve sent a code to <strong>{$a}</strong>. Please enter the code below to continue.';
+$string['loginoption'] = 'Receive code via email';
 $string['loginskip'] = "I didn't receive a code";
 $string['loginsubmit'] = 'Continue';
-$string['logintitle'] = "Verify it's you by email";
 $string['managefactor'] = 'Manage email';
 $string['manageinfo'] = '\'{$a}\' is being used to authenticate. This has been set up by your administrator.';
 $string['pluginname'] = 'Email';
@@ -66,3 +65,6 @@ IP {$a->ip} with browser agent {$a->useragent}.';
 $string['unauthemail'] = 'Unauthorised email';
 $string['verificationcode'] = 'Enter verification code for confirmation';
 $string['verificationcode_help'] = 'A verification code has been sent to your email.';
+
+// Deprecated since Moodle 5.2.
+$string['logintitle'] = "Verify it's you by email";

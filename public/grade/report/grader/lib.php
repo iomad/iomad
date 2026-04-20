@@ -1297,7 +1297,7 @@ class grade_report_grader extends grade_report {
         $html = '';
 
         $fulltable = new html_table();
-        $fulltable->attributes['class'] = 'gradereport-grader-table d-none';
+        $fulltable->attributes['class'] = 'table gradereport-grader-table d-none';
         $fulltable->id = 'user-grades';
         $fulltable->caption = get_string('summarygrader', 'gradereport_grader');
         $fulltable->captionhide = true;
@@ -1318,14 +1318,6 @@ class grade_report_grader extends grade_report {
         }
         $html .= html_writer::table($fulltable);
         return $OUTPUT->container($html, 'gradeparent');
-    }
-
-    /**
-     * @deprecated since Moodle 4.2 - The row is not shown anymore - we have {@see core\output\action_menu}.
-     */
-    #[\core\attribute\deprecated('core\output\action_menu', since: '4.2', mdl: 'MDL-76147', final: true)]
-    public function get_left_icons_row($rows=array(), $colspan=1) {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
     }
 
     /**
@@ -1405,14 +1397,6 @@ class grade_report_grader extends grade_report {
     }
 
     /**
-     * @deprecated since Moodle 4.2 - The row is not shown anymore - we have {@see core\output\action_menu}.
-     */
-    #[\core\attribute\deprecated('core\output\action_menu', since: '4.2', mdl: 'MDL-76147', final: true)]
-    public function get_right_icons_row($rows=array()) {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-
-    /**
      * Builds and return the row of ranges for the right part of the grader report.
      * @param array $rows The Array of rows for the right part of the report
      * @return array Array of rows for the right part of the report
@@ -1449,14 +1433,6 @@ class grade_report_grader extends grade_report {
     }
 
     /**
-     * @deprecated since Moodle 4.4 - Call calculate_average instead.
-     */
-    #[\core\attribute\deprecated('grade_report::calculate_average()', since: '4.4', final: true)]
-    public function get_right_avg_row() {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-
-    /**
      * Given element category, create a collapsible icon and
      * course header.
      *
@@ -1485,14 +1461,6 @@ class grade_report_grader extends grade_report {
         ]);
 
         return $courseheader;
-    }
-
-    /**
-     * @deprecated since Moodle 4.2 - The row is not shown anymore - we have actions menu.
-     */
-    #[\core\attribute\deprecated('core\output\action_menu', since: '4.2', mdl: 'MDL-76147', final: true)]
-    protected function get_icons($element) {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
     }
 
     /**

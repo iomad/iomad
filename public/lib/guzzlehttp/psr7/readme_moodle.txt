@@ -1,1 +1,1 @@
-See instructions in lib/guzzlehttp/readme_moodle.md
+See instructions in public/lib/guzzlehttp/readme_moodle.md

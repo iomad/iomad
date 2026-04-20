@@ -414,3 +414,16 @@ function mod_url_core_calendar_provide_event_action(calendar_event $event,
         true
     );
 }
+
+/**
+ * Sets dynamic information about a course module.
+ *
+ * @param cm_info $cm
+ */
+function mod_url_cm_info_dynamic(cm_info $cm) {
+    // Update the navigation URL to guarantee the user will see the content even if the module
+    // is set to open in a new window or popup.
+    $cm->set_navigation_url(
+        new \core\url($cm->get_navigation_url(), ['forceview' => 1])
+    );
+}

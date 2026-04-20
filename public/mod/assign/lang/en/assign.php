@@ -79,6 +79,11 @@ $string['assignmentduesoonhtml'] = '<p>Hi {$a->firstname},</p>
 <p>The assignment <strong>{$a->assignmentname}</strong> in course {$a->coursename} is due soon.</p>
 <p><strong>Due: {$a->duedate}</strong></p>
 <p><a href="{$a->url}">Go to activity</a></p>';
+$string['assignmentduesoonofflinehtml'] = '<p>Hi {$a->firstname},</p>
+<p>The assignment <strong>{$a->assignmentname}</strong> in course {$a->coursename} is due soon.</p>
+<p>If you have already submitted your work, no further action is required.</p>
+<p><strong>Due: {$a->duedate}</strong></p>
+<p><a href="{$a->url}">Go to activity</a></p>';
 $string['assignmentduesoonsms'] = 'Your assignment {$a->assignmentname} is due on {$a->duedate}: {$a->shortlink}';
 $string['assignmentoverduehtml'] = '<p>Hi {$a->firstname},</p>
 <p><strong>{$a->assignmentname}</strong> in course {$a->coursename} was due on <strong>{$a->duedate}</strong>.</p>
@@ -345,7 +350,7 @@ $string['gradingstatus'] = 'Grading status';
 $string['gradingstudent'] = 'Grading student';
 $string['gradingsummary'] = 'Grading summary';
 $string['groupoverrides'] = 'Group overrides';
-$string['groupsnone'] = 'No groups you can access.';
+$string['groupsnone'] = 'There are no groups in this course.';
 $string['hidegrader'] = 'Hide grader identity from students';
 $string['hidegrader_help'] = 'If enabled, the identity of any user who grades an assignment submission is not shown, so students can\'t see who marked their work.
 
@@ -369,6 +374,7 @@ $string['introattachments'] = 'Additional files';
 $string['introattachments_help'] = 'Additional files for use in the assignment, such as answer templates, may be added.';
 $string['invalidgradeforscale'] = 'The grade supplied was not valid for the current scale';
 $string['invalidfloatforgrade'] = 'The grade provided could not be understood: {$a}';
+$string['invalidmarkerallocation:notenoughmarkers'] = 'There are not enough markers ({$a->markers}) to meet the required number for this assignment ({$a->requested}).';
 $string['invalidoverrideid'] = 'Invalid override id';
 $string['lastmodifiedsubmission'] = 'Last modified (submission)';
 $string['lastmodifiedgrade'] = 'Last modified (grade)';
@@ -379,9 +385,21 @@ $string['locksubmissionforstudent'] = 'Prevent any more submissions for student:
 $string['locksubmissions'] = 'Lock submissions';
 $string['manageassignfeedbackplugins'] = 'Manage assignment feedback plugins';
 $string['manageassignsubmissionplugins'] = 'Manage assignment submission plugins';
+$string['markactions'] = 'Mark actions';
+$string['markallocatedsubmissions'] = 'Mark allocated submissions';
+$string['markerallocations'] = 'Marker allocations';
 $string['marker'] = 'Marker';
+$string['markercount'] = 'Markers';
+$string['markercount_help'] = 'Number of markers for the assignment.';
 $string['markerfilter'] = 'Marker filter';
 $string['markerfilternomarker'] = 'No marker';
+$string['markernumber'] = 'Marker {$a}';
+$string['markgradeaverage'] = 'Average mark';
+$string['markgradeaverage_help'] = 'Calculates the average of all marks given.';
+$string['markgrademanual'] = 'Manual';
+$string['markgrademanual_help'] = 'No calculation; manual entry only.';
+$string['markgrademaximum'] = 'Maximum mark';
+$string['markgrademaximum_help'] = 'Uses the highest of all marks given.';
 $string['markingallocation'] = 'Use marking allocation';
 $string['markingallocation_help'] = 'If enabled together with marking workflow, markers can be allocated to particular students.';
 $string['markinganonymous'] = 'Allow partial release of grades while marking anonymously';
@@ -404,6 +422,23 @@ $string['markingworkflowstatenotmarked'] = 'Not marked';
 $string['markingworkflowstatereadyforreview'] = 'Marking completed';
 $string['markingworkflowstatereadyforrelease'] = 'Ready for release';
 $string['markingworkflowstatereleased'] = 'Released';
+$string['marknoun'] = 'Mark';
+$string['markoutof'] = 'Mark out of {$a}';
+$string['markoutof_help'] = 'Enter the mark for the student\'s submission here. You may include decimals.';
+$string['marks'] = 'Marks';
+$string['markverb'] = 'Mark';
+$string['multimarkmethod'] = 'Calculate grade';
+$string['multimarkmethod_help'] = 'How the grade will be calculated when there are multiple markers';
+$string['multimarkrounding'] = 'Rounding';
+$string['multimarkrounding_help'] = 'Whether to round up, down, naturally, or not at all when calculating an average mark';
+$string['multimarkrounding:down'] = 'Round down';
+$string['multimarkrounding:down_help'] = 'Average mark will be rounded down to the nearest whole number.';
+$string['multimarkrounding:natural'] = 'Natural rounding';
+$string['multimarkrounding:natural_help'] = 'Average mark will be rounded up or down naturally to the nearest whole number.';
+$string['multimarkrounding:none'] = 'No rounding';
+$string['multimarkrounding:none_help'] = 'Average mark will not be rounded.';
+$string['multimarkrounding:up'] = 'Round up';
+$string['multimarkrounding:up_help'] = 'Average mark will be rounded up to the nearest whole number.';
 $string['maxattempts'] = 'Allowed attempts';
 $string['maxattempts_help'] = 'The maximum number of submission attempts that can be made by a student. After this number has been reached, the submission can no longer be reopened.';
 $string['maxgrade'] = 'Maximum grade';
@@ -414,12 +449,19 @@ $string['messageprovider:assign_due_soon'] = 'Assignment due soon notification';
 $string['messageprovider:assign_overdue'] = 'Assignment overdue notification';
 $string['messageprovider:assign_notification'] = 'Assignment notifications';
 $string['modulename'] = 'Assignment';
-$string['modulename_help'] = 'The assignment activity module enables a teacher to communicate tasks, collect work and provide grades and feedback.
+$string['modulename_help'] = '###### Key features
+*  Provide instructions and requirements for the assignment
+*  Allow students to submit any kind of file or type directly into an online text editor
+*  Manage deadlines and control whether late submissions are accepted
+*  Use rubrics or marking guides to give grades and feedback
+*  Students can submit individually or in groups
 
-Students can submit any digital content (files), such as word-processed documents, spreadsheets, images, or audio and video clips. Alternatively, or in addition, the assignment may require students to type text directly into the text editor. An assignment can also be used to remind students of \'real-world\' assignments they need to complete offline, such as art work, and thus not require any digital content. Students can submit work individually or as a member of a group.
-
-When reviewing assignments, teachers can leave feedback comments and upload files, such as marked-up student submissions, documents with comments or spoken audio feedback. Assignments can be graded using a numerical or custom scale or an advanced grading method such as a rubric. Final grades are recorded in the gradebook.';
+###### Ways to use it
+*  Collect essays or coursework for feedback and grading
+*  Set group tasks where students submit one shared presentation
+*  Record and grade offline work, such as a classroom performance or field trips';
 $string['modulename_link'] = 'mod/assignment/view';
+$string['modulename_summary'] = 'Collect student submissions such as essays, reports, or projects, and provide feedback and grades.';
 $string['modulenameplural'] = 'Assignments';
 $string['moreusers'] = '{$a} more...';
 $string['multipleteams'] = 'Member of more than one group';
@@ -467,6 +509,8 @@ $string['overridedeletegroupsure'] = 'Are you sure you want to delete the overri
 $string['overridedeleteusersure'] = 'Are you sure you want to delete the override for user {$a}?';
 $string['overridegroup'] = 'Override group';
 $string['overridegroupeventname'] = '{$a->assign} - {$a->group}';
+$string['overridereason'] = 'Reason for override';
+$string['overridereason_help'] = 'Optionally record the reason for this override.';
 $string['overriderecalculatepenalty'] = 'Recalculate penalty for user(s) in the override';
 $string['overrides'] = 'Overrides';
 $string['overrideuser'] = 'Override user';
@@ -488,14 +532,17 @@ $string['previoususer'] = 'Previous user';
 $string['privacy:attemptpath'] = 'attempt {$a}';
 $string['privacy:blindmarkingidentifier'] = 'The identifier used for anonymous submissions';
 $string['privacy:gradepath'] = 'grade';
+$string['privacy:metadata:assignallocatedmarker'] = 'Stores mappings between allocated markers and student assignments';
 $string['privacy:metadata:assigndownloadasfolders'] = 'A user preference for whether multiple file submissions should be downloaded into folders';
 $string['privacy:metadata:assignfeedbackpluginsummary'] = 'Feedback data for the assignment.';
 $string['privacy:metadata:assignfilter'] = 'Filter options such as \'Submitted\', \'Not submitted\', \'Requires grading\', and \'Granted extension\'';
 $string['privacy:metadata:assigngrades'] = 'Stores user grades for the assignment';
+$string['privacy:metadata:assignmark'] = 'Stores user marks for the assignment';
 $string['privacy:metadata:assignmarkerfilter'] = 'Filter the assign summary by the assigned marker.';
 $string['privacy:metadata:assignmentid'] = 'Assignment ID';
 $string['privacy:metadata:assignmessageexplanation'] = 'Messages are sent to students through the messaging system.';
 $string['privacy:metadata:assignoverrides'] = 'Stores override information for the assignment';
+$string['privacy:metadata:assignoverrides:reason'] = 'Optional notes documenting the reason for an assignment override.';
 $string['privacy:metadata:assignperpage'] = 'Number of assignments shown per page.';
 $string['privacy:metadata:assignquickgrading'] = 'A preference as to whether quick grading is used or not.';
 $string['privacy:metadata:assignsubmissiondetail'] = 'Stores user submission information';
@@ -693,10 +740,11 @@ $string['userextensiondate'] = 'Extension granted until: {$a}';
 $string['userassignmentdefaults'] = 'User assignment defaults';
 $string['useridlistnotcached'] = 'The grade changes were NOT saved, as it was not possible to determine which submission they were for.';
 $string['useroverrides'] = 'User overrides';
+$string['usersnone'] = 'There are no users enrolled in this course or no users can access the assignment.';
 $string['usersubmissioncannotberemoved'] = 'The submission of {$a} cannot be removed.';
-$string['usersnone'] = 'No students have access to this assignment.';
 $string['userswhoneedtosubmit'] = 'Users who need to submit: {$a}';
 $string['usergrade'] = 'User grade';
+$string['usermark'] = 'User mark';
 $string['validmarkingworkflowstates'] = 'Valid marking workflow states';
 $string['viewadifferentattempt'] = 'View a different attempt';
 $string['viewbatchsetmarkingworkflowstate'] = 'View batch set marking workflow state page.';
@@ -715,6 +763,9 @@ $string['viewfull'] = 'View full';
 $string['viewsummary'] = 'View summary';
 $string['viewsubmissiongradingtable'] = 'View submission grading table.';
 $string['viewrevealidentitiesconfirm'] = 'View reveal student identities confirmation page.';
+$string['workflowcontext'] = 'Workflow context';
+$string['workflowcontext_help_grade'] = 'Apply the workflow state to the overall grade for the submission.';
+$string['workflowcontext_help_mark'] = 'Apply the workflow state to your mark, where you are an allocated marker.';
 $string['workflowfilter'] = 'Workflow filter';
 $string['xofy'] = '{$a->x} of {$a->y}';
 

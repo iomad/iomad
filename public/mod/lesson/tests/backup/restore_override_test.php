@@ -28,6 +28,7 @@ require_once($CFG->libdir . "/phpunit/classes/restore_date_testcase.php");
  * @copyright Catalyst IT
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\restore_lesson_activity_structure_step::class)]
 final class restore_override_test extends \restore_date_testcase {
 
     /**
@@ -94,5 +95,38 @@ final class restore_override_test extends \restore_date_testcase {
         $overrides = $DB->get_records('lesson_overrides', ['lessonid' => $newquiz->id]);
         // 1 user override.
         $this->assertEquals(1, count($overrides));
+    }
+
+    /**
+     * Test restore overrides with reason.
+     */
+    public function test_restore_overrides_with_reason(): void {
+        global $DB, $USER;
+
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $lessongen = $this->getDataGenerator()->get_plugin_generator('mod_lesson');
+        $lesson = $lessongen->create_instance(['course' => $course->id]);
+
+        $useroverride = (object) [
+            'lessonid' => $lesson->id,
+            'userid' => $USER->id,
+            'sortorder' => 1,
+            'available' => 100,
+            'reason' => 'This is a reason',
+            'reasonformat' => FORMAT_MOODLE,
+        ];
+        $DB->insert_record('lesson_overrides', $useroverride);
+
+        // Back up and restore.
+        $newcourseid = $this->backup_and_restore($course);
+        $newlesson = $DB->get_record('lesson', ['course' => $newcourseid]);
+        $overrides = $DB->get_records('lesson_overrides', ['lessonid' => $newlesson->id]);
+
+        $this->assertEquals(1, count($overrides));
+        $restoredoverride = reset($overrides);
+        $this->assertEquals($useroverride->reason, $restoredoverride->reason);
+        $this->assertEquals($useroverride->reasonformat, $restoredoverride->reasonformat);
     }
 }

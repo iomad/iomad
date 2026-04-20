@@ -1,27 +1,51 @@
 <?php
 
-function glossary_show_entry_entrylist($course, $cm, $glossary, $entry, $mode='', $hook='', $printicons=1, $aliases=true) {
-    global $USER, $OUTPUT;
-
+/**
+ * Displays a glossary entry as a list of entries.
+ *
+ * @param stdClass $course The course object.
+ * @param stdClass $cm The course module object.
+ * @param stdClass $glossary The glossary object.
+ * @param stdClass $entry The glossary entry object.
+ * @param string $mode The mode in which the entry is being displayed.
+ * @param string $hook
+ * @param int $printicons Whether to print editing icons.
+ * @param bool $aliases Whether to show aliases popup.
+ * @param int $conceptheadinglevel The heading level to use for rendering the concept within the heading element.
+ * @return bool
+ * @package mod_glossary
+ */
+function glossary_show_entry_entrylist(
+    $course,
+    $cm,
+    $glossary,
+    $entry,
+    $mode = '',
+    $hook = '',
+    $printicons = 1,
+    $aliases = true,
+    $conceptheadinglevel = 3,
+) {
     $return = false;
 
-    echo '<table class="glossarypost entrylist table-reboot" cellspacing="0">';
+    echo '<div class="glossarypost entrylist container">';
 
-    echo '<tr valign="top">';
-    echo '<td class="entry">';
+    echo '<div class="entry row">';
     if ($entry) {
         glossary_print_entry_approval($cm, $entry, $mode);
+        $anchortagcontents = glossary_print_entry_concept($entry, true, $conceptheadinglevel);
 
-        $anchortagcontents = glossary_print_entry_concept($entry, true);
-
-        $link = new moodle_url('/mod/glossary/showentry.php', array('courseid' => $course->id,
-                'eid' => $entry->id, 'displayformat' => 'dictionary'));
+        $link = new moodle_url('/mod/glossary/showentry.php', [
+            'courseid' => $course->id,
+            'eid' => $entry->id,
+            'displayformat' => 'dictionary',
+        ]);
         $anchor = html_writer::link($link, $anchortagcontents);
 
-        echo "<div class=\"concept\">$anchor</div> ";
-        echo '</td><td align="right" class="entrylowersection">';
+        echo html_writer::div($anchor, 'concept col');
+        echo '<div class="entrylowersection col text-end">';
         if ($printicons) {
-            glossary_print_entry_icons($course, $cm, $glossary, $entry, $mode, $hook,'print');
+            glossary_print_entry_icons($course, $cm, $glossary, $entry, $mode, $hook, 'print');
         }
         if (!empty($entry->rating)) {
             echo '<br />';
@@ -30,22 +54,40 @@ function glossary_show_entry_entrylist($course, $cm, $glossary, $entry, $mode=''
             echo '</span>';
         }
         echo '<br />';
-    } else {
-        echo '<div style="text-align:center">';
-        print_string('noentry', 'glossary');
         echo '</div>';
+    } else {
+        echo html_writer::div(get_string('noentry', 'glossary'), 'text-center');
     }
-    echo '</td></tr>';
-
-    echo "</table>";
-    echo "<hr>\n";
+    echo '</div></div>';
+    echo "<hr>";
     return $return;
 }
 
-function glossary_print_entry_entrylist($course, $cm, $glossary, $entry, $mode='', $hook='', $printicons=1) {
-    //Take out autolinking in definitions un print view
-    // TODO use <nolink> tags MDL-15555.
-    $entry->definition = '<span class="nolink">'.$entry->definition.'</span>';
+/**
+ * Display entries in the entry list glossary format for printing.
+ *
+ * @param stdClass $course The course object.
+ * @param stdClass $cm The course module object.
+ * @param stdClass $glossary The glossary object.
+ * @param stdClass $entry The glossary entry object.
+ * @param string $mode The mode in which the entry is being displayed.
+ * @param string $hook
+ * @param int $printicons Whether to print editing icons.
+ * @param int $conceptheadinglevel The heading level to use for rendering the concept within the heading element.
+ * @package mod_glossary
+ */
+function glossary_print_entry_entrylist(
+    $course,
+    $cm,
+    $glossary,
+    $entry,
+    $mode = '',
+    $hook = '',
+    $printicons = 1,
+    $conceptheadinglevel = 3
+) {
+    // Take out auto-linking in definitions in print view.
+    $entry->definition = '<span class="nolink">' . $entry->definition . '</span>';
 
     echo html_writer::start_tag('table', array('class' => 'glossarypost entrylist mod-glossary-entrylist'));
     echo html_writer::start_tag('tr');

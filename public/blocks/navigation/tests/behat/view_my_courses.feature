@@ -5,7 +5,10 @@ Feature: View my courses in navigation block
   I need my courses displayed in the navigation block
 
   Background:
-    Given the following "users" exist:
+    Given the following config values are set as admin:
+      | enablemyhome    | 1 |
+      | enablemycourses | 1 |
+    And the following "users" exist:
       | username | firstname | lastname | email |
       | student1 | Student | 1 | student1@example.com |
     And the following "categories" exist:
@@ -80,6 +83,8 @@ Feature: View my courses in navigation block
     Given the following config values are set as admin:
       | navshowmycoursecategories | 1 |
       | navshowallcourses         | 1 |
+      | forcelogin                | 0 |
+    When I am on homepage
     And I expand "Courses" node
     And I should see "cat1" in the "Navigation" "block"
     And I should see "cat2" in the "Navigation" "block"

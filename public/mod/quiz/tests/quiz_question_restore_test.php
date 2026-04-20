@@ -401,8 +401,6 @@ final class quiz_question_restore_test extends \advanced_testcase {
 
     /**
      * Test quiz duplicate for quiz question bank.
-     *
-     * @covers ::duplicate_module
      */
     public function test_quiz_duplicate_for_quiz_question_bank_questions(): void {
         $this->resetAfterTest();
@@ -616,14 +614,164 @@ final class quiz_question_restore_test extends \advanced_testcase {
             $setreference = $DB->get_record('question_set_references',
                 ['itemid' => $slot->id, 'component' => 'mod_quiz', 'questionarea' => 'slot']);
             $filterconditions = json_decode($setreference->filtercondition);
+            $tags = array_map(fn($tag) => $tag->name, \core_tag_tag::get_bulk($filterconditions->filter->qtagids->values));
+            $this->assertEquals([], array_diff($randomtags[$slot->slot], $tags));
+        }
+    }
+
+    /**
+     * Test pre 4.0 quiz restore for random question tags, where one of the tags in the random question condition is
+     * not in the backup but does already exist on the site.
+     *
+     * @covers \restore_quiz_activity_structure_step::process_quiz_question_legacy_instance
+     */
+    public function test_pre_4_quiz_restore_for_random_question_tags_with_tag_not_in_backup(): void {
+        global $DB, $USER;
+        $this->resetAfterTest();
+        $collection = \core_tag_collection::create((object) ['name' => 'question']);
+        $missingtags = \core_tag_tag::create_if_missing($collection->id, ['name' => 'second question']);
+        $missingtag = reset($missingtags);
+        $randomtags = [
+            '1' => ['first question' => null, 'one' => null, 'number one' => null],
+            '2' => ['first question' => null, 'one' => null, 'number one' => null],
+            '3' => ['one' => null, 'number one' => null, 'second question' => $missingtag->id],
+        ];
+        $backupid = 'abc';
+        $backuppath = make_backup_temp_directory($backupid);
+        get_file_packer('application/vnd.moodle.backup')
+            ->extract_to_pathname(
+                __DIR__ . "/fixtures/moodle_311_quiz_missing_tag.mbz",
+                $backuppath,
+            );
+
+        // Do the restore to new course with default settings.
+        $categoryid = $DB->get_field_sql("SELECT MIN(id) FROM {course_categories}");
+        $newcourseid = \restore_dbops::create_new_course('Test fullname', 'Test shortname', $categoryid);
+
+        $rc = new \restore_controller(
+            $backupid,
+            $newcourseid,
+            \backup::INTERACTIVE_NO,
+            \backup::MODE_GENERAL,
+            $USER->id,
+            \backup::TARGET_NEW_COURSE,
+        );
+
+        $this->assertTrue($rc->execute_precheck());
+        $rc->execute_plan();
+        $rc->destroy();
+
+        // Get the information about the resulting course and check that it is set up correctly.
+        $modinfo = get_fast_modinfo($newcourseid);
+        $quiz = array_values($modinfo->get_instances_of('quiz'))[0];
+        $quizobj = \mod_quiz\quiz_settings::create($quiz->instance);
+        $structure = \mod_quiz\structure::create_for_quiz($quizobj);
+
+        // Count the questions in quiz qbank.
+        $context = \context_module::instance(get_coursemodule_from_instance("quiz", $quizobj->get_quizid(), $newcourseid)->id);
+        $this->assertEquals(2, $this->question_count($context->id));
+
+        // Are the correct slots returned?
+        $slots = $structure->get_slots();
+        $this->assertCount(3, $slots);
+
+        // Check if the tags match with the actual restored data.
+        foreach ($slots as $slot) {
+            $setreference = $DB->get_record(
+                'question_set_references',
+                ['itemid' => $slot->id, 'component' => 'mod_quiz', 'questionarea' => 'slot'],
+            );
+            $filterconditions = json_decode($setreference->filtercondition);
+            $this->assertCount(count($randomtags[$slot->slot]), $filterconditions->filter->qtagids->values);
+            foreach ($filterconditions->filter->qtagids->values as $tagid) {
+                $name = \core_tag_tag::get($tagid, 'id, name')->name;
+                $this->assertTrue(array_key_exists($name, $randomtags[$slot->slot]));
+                // Check that tags in a filter, which were not otherwise present in the backup, were matched with the tag already
+                // on the site.
+                $id = $randomtags[$slot->slot][$name];
+                if (!is_null($id)) {
+                    $this->assertEquals($id, $tagid);
+                }
+            }
+        }
+    }
+
+    /**
+     * Test pre 4.0 quiz restore for random question tags, where one of the tags in the random question condition is
+     * not in the backup or the target site.
+     *
+     * @covers \restore_quiz_activity_structure_step::process_quiz_question_legacy_instance
+     */
+    public function test_pre_4_quiz_restore_for_random_question_tags_with_tag_not_in_backup_or_site(): void {
+        global $DB, $USER;
+        $this->resetAfterTest();
+        $randomtags = [
+            '1' => ['first question', 'one', 'number one'],
+            '2' => ['first question', 'one', 'number one'],
+            '3' => ['one', 'number one'],
+        ];
+        $backupid = 'abc';
+        $backuppath = make_backup_temp_directory($backupid);
+        get_file_packer('application/vnd.moodle.backup')
+            ->extract_to_pathname(
+                __DIR__ . "/fixtures/moodle_311_quiz_missing_tag.mbz",
+                $backuppath,
+            );
+
+        // Do the restore to new course with default settings.
+        $categoryid = $DB->get_field_sql("SELECT MIN(id) FROM {course_categories}");
+        $newcourseid = \restore_dbops::create_new_course('Test fullname', 'Test shortname', $categoryid);
+        $rc = new \restore_controller(
+            $backupid,
+            $newcourseid,
+            \backup::INTERACTIVE_NO,
+            \backup::MODE_GENERAL,
+            $USER->id,
+            \backup::TARGET_NEW_COURSE,
+        );
+
+        $this->assertTrue($rc->execute_precheck());
+        $rc->execute_plan();
+        $rc->destroy();
+
+        // Get the information about the resulting course and check that it is set up correctly.
+        $modinfo = get_fast_modinfo($newcourseid);
+        $quiz = array_values($modinfo->get_instances_of('quiz'))[0];
+        $quizobj = \mod_quiz\quiz_settings::create($quiz->instance);
+        $structure = \mod_quiz\structure::create_for_quiz($quizobj);
+
+        // Count the questions in quiz qbank.
+        $context = \context_module::instance(get_coursemodule_from_instance("quiz", $quizobj->get_quizid(), $newcourseid)->id);
+        $this->assertEquals(2, $this->question_count($context->id));
+
+        // Are the correct slots returned?
+        $slots = $structure->get_slots();
+        $this->assertCount(3, $slots);
+
+        // Check if the tags match with the actual restored data.
+        foreach ($slots as $slot) {
+            $setreference = $DB->get_record(
+                'question_set_references',
+                ['itemid' => $slot->id, 'component' => 'mod_quiz', 'questionarea' => 'slot'],
+            );
+            $filterconditions = json_decode($setreference->filtercondition);
             $tags = [];
-            foreach ($filterconditions->tags as $tagstring) {
-                $tag = explode(',', $tagstring);
-                $tags[] = $tag[1];
+            foreach ($filterconditions->filter->qtagids->values as $tagid) {
+                $tags[] = \core_tag_tag::get($tagid, 'id, name')->name;
             }
             $this->assertEquals([], array_diff($randomtags[$slot->slot], $tags));
         }
-
+        $log = $DB->get_fieldset(
+            'backup_logs',
+            'message',
+            ['backupid' => $rc->get_restoreid(), 'loglevel' => \backup::LOG_WARNING],
+        );
+        $slotid = end($slots)->id;
+        $this->assertContains(
+            "A tag matching 'second question' could not be found when restoring the random question to quiz slot "
+                . "ID {$slotid}. The tag was removed from the question's filter conditions.",
+            $log,
+        );
     }
 
     /**
@@ -765,6 +913,11 @@ final class quiz_question_restore_test extends \advanced_testcase {
     /**
      * Test pre 4.3 quiz restore for random question filter conditions.
      *
+     * This performs a high-level check that the filter condition is converted to the new structure. The precise
+     * behaviour of how the old category and tag conditions are converted are covered in
+     * {@see qbank_managecategories\category_condition_test} and
+     * {@see qbank_tagquestion\tag_condition_test} respectively.
+     *
      * @covers \restore_question_set_reference_data_trait::process_question_set_reference
      */
     public function test_pre_43_quiz_restore_for_random_question_filtercondition(): void {
@@ -810,7 +963,6 @@ final class quiz_question_restore_test extends \advanced_testcase {
             $this->assertArrayHasKey('qperpage', $filterconditions);
             $this->assertArrayHasKey('filter', $filterconditions);
             $this->assertArrayHasKey('category', $filterconditions['filter']);
-            $this->assertArrayHasKey('qtagids', $filterconditions['filter']);
             $this->assertArrayHasKey('filteroptions', $filterconditions['filter']['category']);
             $this->assertArrayHasKey('includesubcategories', $filterconditions['filter']['category']['filteroptions']);
 
@@ -819,9 +971,6 @@ final class quiz_question_restore_test extends \advanced_testcase {
 
             $this->assertArrayNotHasKey('questioncategoryid', $filterconditions);
             $this->assertArrayNotHasKey('tags', $filterconditions);
-            $expectedtags = \core_tag_tag::get_by_name_bulk(1, ['foo', 'bar']);
-            $expectedtagids = array_values(array_map(fn($expectedtag) => $expectedtag->id, $expectedtags));
-            $this->assertEquals($expectedtagids, $filterconditions['filter']['qtagids']['values']);
             $expectedcategory = $DB->get_record('question_categories', ['idnumber' => 'RAND']);
             $this->assertEquals($expectedcategory->id, $filterconditions['filter']['category']['values'][0]);
             $expectedcat = implode(',', [$expectedcategory->id, $expectedcategory->contextid]);

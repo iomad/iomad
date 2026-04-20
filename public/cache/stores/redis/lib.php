@@ -22,6 +22,7 @@ use core_cache\searchable_cache_interface;
 use core_cache\store;
 use core\clock;
 use core\di;
+use core\shutdown_manager;
 
 /**
  * Redis Cache Store
@@ -67,8 +68,8 @@ class cachestore_redis extends store implements
      */
     const TTL_EXPIRE_BATCH = 10000;
 
-    /** @var int The number of seconds to wait for a connection or response from the Redis server. */
-    const CONNECTION_TIMEOUT = 3;
+    /** @var float The number of seconds to wait for a connection or response from the Redis server. */
+    const CONNECTION_TIMEOUT = 3.0;
 
     /**
      * Name of this store.
@@ -121,11 +122,18 @@ class cachestore_redis extends store implements
 
 
     /**
-     * The number of seconds to wait for a connection or response from the Redis server.
+     * The number of seconds to wait for a connection response from the Redis server.
      *
-     * @var int
+     * @var float
      */
     protected $connectiontimeout = self::CONNECTION_TIMEOUT;
+
+    /**
+     * The number of seconds to wait for a read from the Redis server.
+     *
+     * @var float
+     */
+    protected $readtimeout = self::CONNECTION_TIMEOUT;
 
     /**
      * Bytes read or written by last call to set()/get() or set_many()/get_many().
@@ -211,7 +219,10 @@ class cachestore_redis extends store implements
             $this->compressor = (int)$configuration['compressor'];
         }
         if (array_key_exists('connectiontimeout', $configuration)) {
-            $this->connectiontimeout = (int)$configuration['connectiontimeout'];
+            $this->connectiontimeout = (float)$configuration['connectiontimeout'];
+        }
+        if (array_key_exists('readtimeout', $configuration)) {
+            $this->readtimeout = (float)$configuration['readtimeout'];
         }
         if (array_key_exists('lockwait', $configuration)) {
             $this->lockwait = (int)$configuration['lockwait'];
@@ -295,7 +306,7 @@ class cachestore_redis extends store implements
                         name: null,
                         seeds: $trimmedservers,
                         timeout: $this->connectiontimeout, // Timeout.
-                        read_timeout: $this->connectiontimeout, // Read timeout.
+                        read_timeout: $this->readtimeout, // Read timeout.
                         persistent: true,
                         auth: $password,
                         context: !empty($opts) ? $opts : null,
@@ -305,7 +316,7 @@ class cachestore_redis extends store implements
                         null,
                         $trimmedservers,
                         $this->connectiontimeout,
-                        $this->connectiontimeout,
+                        $this->readtimeout,
                         true, $password,
                         !empty($opts) ? $opts : null,
                     );
@@ -319,7 +330,7 @@ class cachestore_redis extends store implements
                         port: $port,
                         timeout: $this->connectiontimeout, // Timeout.
                         retry_interval: 100, // Retry interval.
-                        read_timeout: $this->connectiontimeout, // Read timeout.
+                        read_timeout: $this->readtimeout, // Read timeout.
                         context: $opts,
                     );
                 } else {
@@ -328,7 +339,7 @@ class cachestore_redis extends store implements
                         $this->connectiontimeout,
                         null,
                         100,
-                        $this->connectiontimeout,
+                        $this->readtimeout,
                         $opts,
                     );
                 }
@@ -689,7 +700,7 @@ class cachestore_redis extends store implements
 
             // If we haven't got it already, better register a shutdown function.
             if ($this->currentlocks === null) {
-                core_shutdown_manager::register_function([$this, 'shutdown_release_locks']);
+                shutdown_manager::register_function([$this, 'shutdown_release_locks']);
                 $this->currentlocks = [];
             }
 
@@ -736,12 +747,33 @@ class cachestore_redis extends store implements
     }
 
     /**
+     * Finds all of the keys being used by this cache store instance using a scan.
+     * This is preferred over keys to avoid blocking the server for a long time.
+     *
+     * @param string $prefix
+     * @return array of all matching keys in the hash as a numbered array.
+     */
+    protected function scan_keys($prefix = '') {
+        $return = [];
+        $iterator = null;
+        do {
+            $results = $this->redis->hScan($this->hash, $iterator, "$prefix*", 1000);
+            if ($results !== false) {
+                foreach ($results as $key => $value) {
+                    $return[] = $key;
+                }
+            }
+        } while ($iterator != 0);
+        return $return;
+    }
+
+    /**
      * Finds all of the keys being used by this cache store instance.
      *
      * @return array of all keys in the hash as a numbered array.
      */
     public function find_all() {
-        return $this->redis->hKeys($this->hash);
+        return $this->scan_keys();
     }
 
     /**
@@ -752,13 +784,7 @@ class cachestore_redis extends store implements
      * @return array List of keys that match this prefix.
      */
     public function find_by_prefix($prefix) {
-        $return = [];
-        foreach ($this->find_all() as $key) {
-            if (strpos($key, $prefix) === 0) {
-                $return[] = $key;
-            }
-        }
-        return $return;
+        return $this->scan_keys($prefix);
     }
 
     /**
@@ -896,6 +922,7 @@ class cachestore_redis extends store implements
             'serializer' => $data->serializer,
             'compressor' => $data->compressor,
             'connectiontimeout' => $data->connectiontimeout,
+            'readtimeout' => $data->readtimeout,
             'encryption' => $data->encryption,
             'cafile' => $data->cafile,
             'clustermode' => $data->clustermode,
@@ -922,6 +949,9 @@ class cachestore_redis extends store implements
         }
         if (!empty($config['connectiontimeout'])) {
             $data['connectiontimeout'] = $config['connectiontimeout'];
+        }
+        if (!empty($config['readtimeout'])) {
+            $data['readtimeout'] = $config['readtimeout'];
         }
         if (!empty($config['encryption'])) {
             $data['encryption'] = $config['encryption'];

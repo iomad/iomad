@@ -229,6 +229,19 @@ class notification_helper {
         // Get our assignment users.
         $users = $assignmentobj->list_participants(0, true, false, true);
 
+        // If it's an overdue type and there are no submission plugins, skip the assignment.
+        if ($type == self::TYPE_OVERDUE) {
+            if (!$assignmentobj->is_any_submission_plugin_enabled()) {
+                // No enabled submission plugins. Removing users.
+                return [];
+            }
+        }
+
+        // Get completion info for this module.
+        $cm = $assignmentobj->get_course_module();
+        $course = $assignmentobj->get_course();
+        $completion = new \completion_info($course);
+
         foreach ($users as $key => $user) {
             // Check if the user has submitted already.
             $submission = $assignmentobj->get_user_submission($user->id, false);
@@ -243,6 +256,19 @@ class notification_helper {
 
             // If the due date has no value, unset this user.
             if (empty($duedate)) {
+                unset($users[$key]);
+                continue;
+            }
+
+            // Don't send if the user has a grade for this assignment already.
+            if ($assignmentobj->get_grading_status($user->id) === ASSIGN_GRADING_STATUS_GRADED) {
+                unset($users[$key]);
+                continue;
+            }
+
+            // Don't send if the user has met completion conditions.
+            $completiondata = $completion->get_data($cm, false, $user->id);
+            if ($completiondata && $completiondata->completionstate != COMPLETION_INCOMPLETE) {
                 unset($users[$key]);
                 continue;
             }
@@ -326,6 +352,12 @@ class notification_helper {
             return;
         }
 
+        // Check if the module is visible to the user.
+        $cm = $assignmentobj->get_course_module();
+        if (!\core_availability\info_module::is_user_visible($cm, $userid)) {
+            return;
+        }
+
         // Check if the due date still within range.
         $assignmentobj->update_effective_access($userid);
         $duedate = $assignmentobj->get_instance($userid)->duedate;
@@ -379,9 +411,13 @@ class notification_helper {
             'url' => $url->out(false),
             'subject' => get_string('assignmentduesoonsubject', 'mod_assign', $stringparams),
             'assignmentname' => $stringparams['assignmentname'],
-            'html' => get_string('assignmentduesoonhtml', 'mod_assign', $stringparams),
             'sms' => get_string('assignmentduesoonsms', 'mod_assign', $stringparams),
         ];
+
+        // Offline assignments will have a slightly different message.
+        $messagedata['html'] = !$assignmentobj->is_any_submission_plugin_enabled()
+            ? get_string('assignmentduesoonofflinehtml', 'mod_assign', $stringparams)
+            : get_string('assignmentduesoonhtml', 'mod_assign', $stringparams);
 
         $message = new \core\message\message();
         $message->component = 'mod_assign';
@@ -425,6 +461,12 @@ class notification_helper {
         // Get the user and check they are a still a valid participant.
         $user = $assignmentobj->get_participant($userid);
         if (empty($user)) {
+            return;
+        }
+
+        // Check if the module is visible to the user.
+        $cm = $assignmentobj->get_course_module();
+        if (!\core_availability\info_module::is_user_visible($cm, $userid)) {
             return;
         }
 

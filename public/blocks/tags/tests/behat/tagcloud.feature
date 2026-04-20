@@ -5,7 +5,9 @@ Feature: Block tags displaying tag cloud
   I need to be able to use the block tags
 
   Background:
-    Given the following "users" exist:
+    Given the following config values are set as admin:
+      | enablemyhome | 1 |
+    And the following "users" exist:
       | username | firstname | lastname | email | interests |
       | teacher1 | Teacher | 1 | teacher1@example.com | Dogs, Cats |
       | student1 | Student | 1 | student1@example.com | |
@@ -21,6 +23,8 @@ Feature: Block tags displaying tag cloud
       | student1 | c1     | student        |
 
   Scenario: Add Tags block on a front page
+    Given the following config values are set as admin:
+      | forcelogin | 0 |
     When I log in as "admin"
     And I am on site homepage
     And I turn editing mode on

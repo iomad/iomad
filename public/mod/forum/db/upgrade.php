@@ -44,12 +44,6 @@ function xmldb_forum_upgrade($oldversion) {
     global $DB;
     $dbman = $DB->get_manager();
 
-    // Automatically generated Moodle v4.2.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    // Automatically generated Moodle v4.3.0 release upgrade line.
-    // Put any upgrade step following this.
-
     // Automatically generated Moodle v4.4.0 release upgrade line.
     // Put any upgrade step following this.
 
@@ -59,8 +53,24 @@ function xmldb_forum_upgrade($oldversion) {
     // Automatically generated Moodle v5.0.0 release upgrade line.
     // Put any upgrade step following this.
 
-    if ($oldversion < 2025041401) {
+    // Automatically generated Moodle v5.1.0 release upgrade line.
+    // Put any upgrade step following this.
 
+    if ($oldversion < 2025110500) {
+        // Define field showimmediately to be added to forum.
+        $table = new xmldb_table('forum');
+        $field = new xmldb_field('showimmediately', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'lockdiscussionafter');
+
+        // Conditionally launch add field showimmediately.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Forum savepoint reached.
+        upgrade_mod_savepoint(true, 2025110500, 'forum');
+    }
+
+    if ($oldversion < 2026022300) {
         // Changing precision of field name on table forum to (1333).
         $table = new xmldb_table('forum');
         $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '1333', null, XMLDB_NOTNULL, null, null, 'type');
@@ -69,7 +79,7 @@ function xmldb_forum_upgrade($oldversion) {
         $dbman->change_field_precision($table, $field);
 
         // Forum savepoint reached.
-        upgrade_mod_savepoint(true, 2025041401, 'forum');
+        upgrade_mod_savepoint(true, 2026022300, 'forum');
     }
 
     return true;

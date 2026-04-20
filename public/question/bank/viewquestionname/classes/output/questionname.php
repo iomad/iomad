@@ -16,6 +16,7 @@
 
 namespace qbank_viewquestionname\output;
 
+use core\output\action_link;
 use core\output\inplace_editable;
 use core\output\named_templatable;
 use renderable;
@@ -29,13 +30,29 @@ use renderable;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class questionname extends inplace_editable implements named_templatable, renderable {
-    public function __construct(\stdClass $question) {
+    /**
+     * Create the in-place editable based on the question data.
+     *
+     * @param \stdClass $question
+     * @param action_link|null $actionlink If provided, the question name will link to the action link's URL, with the action link's
+     *     text used as the link title.
+     * @throws \coding_exception
+     */
+    public function __construct(\stdClass $question, ?action_link $actionlink = null) {
+        global $OUTPUT;
+        $formattedname = format_string($question->name);
+        if ($actionlink) {
+            $display = $OUTPUT->action_link($actionlink->url, $formattedname, attributes: ['title' => $actionlink->text]);
+        } else {
+            $display = $formattedname;
+        }
         parent::__construct(
             'qbank_viewquestionname',
             'questionname',
             $question->id,
             question_has_capability_on($question, 'edit'),
-            format_string($question->name), $question->name,
+            $display,
+            $question->name,
             get_string('edit_question_name_hint', 'qbank_viewquestionname'),
             get_string('edit_question_name_label', 'qbank_viewquestionname', (object) [
                 'name' => $question->name,

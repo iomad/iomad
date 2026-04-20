@@ -32,20 +32,21 @@ admin_externalpage_setup('mobileappsubscription', '', null, '');
 if (!$CFG->enablemobilewebservice) {
     throw new \moodle_exception('enablewsdescription', 'webservice');
 }
-// Check is this feature is globaly disabled.
-if (!empty($CFG->disablemobileappsubscription)) {
-    throw new \moodle_exception('disabled', 'admin');
-}
 
-$subscriptiondata = \tool_mobile\api::get_subscription_information();
+$subscriptiondata = \tool_mobile\api::get_subscription_information(false, true, 5);
+
+$returnto = optional_param('returnto', '', PARAM_LOCALURL);
+if (!empty($returnto)) {
+    $returnurl = (new \moodle_url($returnto))->out(true);
+    redirect($returnurl);
+}
 
 echo $OUTPUT->header();
 
 if (empty($subscriptiondata)) {
-    echo $OUTPUT->notification(get_string('subscriptionerrorrequest', 'tool_mobile'), \core\output\notification::NOTIFY_ERROR);
-} else {
-    $templatable = new \tool_mobile\output\subscription($subscriptiondata);
-    echo $PAGE->get_renderer('tool_mobile')->render($templatable);
+    $subscriptiondata = [];
 }
+$templatable = new \tool_mobile\output\subscription($subscriptiondata);
+echo $PAGE->get_renderer('tool_mobile')->render($templatable);
 
 echo $OUTPUT->footer();

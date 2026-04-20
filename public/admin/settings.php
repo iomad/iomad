@@ -72,6 +72,7 @@ if ($data = data_submitted() and confirm_sesskey() and isset($data->action) and 
     } else {
         $errormsg = get_string('errorwithsettings', 'admin');
         $firsterror = reset($adminroot->errors);
+        $PAGE->set_focuscontrol($firsterror->id);
     }
     $settingspage = $adminroot->locate($section, true);
 }
@@ -165,10 +166,8 @@ if (empty($SITE->fullname)) {
 $PAGE->requires->js_call_amd('core_form/changechecker', 'watchFormById', ['adminsettings']);
 
 if ($settingspage->has_dependencies()) {
-    $opts = [
-        'dependencies' => $settingspage->get_dependencies_for_javascript()
-    ];
-    $PAGE->requires->js_call_amd('core/showhidesettings', 'init', [$opts]);
+    $context = ['dependencies' => json_encode($settingspage->get_dependencies_for_javascript())];
+    echo $OUTPUT->render_from_template('core_admin/settings_showhide', $context);
 }
 
 echo $OUTPUT->footer();

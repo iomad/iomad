@@ -156,16 +156,33 @@ class users extends system_report {
         if ($column = $this->get_column('user:fullnamewithpicturelink')) {
             $column
                 ->add_fields("{$entityuseralias}.suspended, {$entityuseralias}.confirmed")
-                ->add_callback(static function(string $fullname, \stdClass $row): string {
+                ->add_callback(static function (string $fullname, \stdClass $row): string {
                     if ($row->suspended) {
-                        $fullname .= ' ' . \html_writer::tag('span', get_string('suspended', 'moodle'),
-                            ['class' => 'badge text-bg-secondary ms-1']);
+                        $fullname .= ' ' . \html_writer::tag(
+                            'span',
+                            get_string('suspended', 'auth'),
+                            ['class' => 'badge text-bg-warning ms-1']
+                        );
                     }
                     if (!$row->confirmed) {
-                        $fullname .= ' ' . \html_writer::tag('span', get_string('confirmationpending', 'admin'),
-                            ['class' => 'badge text-bg-danger ms-1']);
+                        $fullname .= ' ' . \html_writer::tag(
+                            'span',
+                            get_string('confirmationpending', 'admin'),
+                            ['class' => 'badge text-bg-danger ms-1']
+                        );
                     }
                     return $fullname;
+                });
+        }
+
+        if ($column = $this->get_column('user:email')) {
+            $column
+                ->add_fields("{$entityuseralias}.suspended")
+                ->add_callback(static function (string $email, \stdClass $row): string {
+                    if ($row->suspended) {
+                        $email = \html_writer::tag('del', $email);
+                    }
+                    return $email;
                 });
         }
 

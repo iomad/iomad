@@ -5,16 +5,18 @@ Feature: Test if the login form provides the correct feedback
   I need to go on login page and see feedback on incorrect username or password.
 
   Background:
-    Given the following "users" exist:
+    Given the following config values are set as admin:
+      | enablemyhome | 1 |
+    And the following "users" exist:
       | username |
       | teacher1 |
 
   Scenario: Check invalid login message
-    Given I follow "Log in"
+    Given I am on homepage
     And I set the field "Username" to "teacher1"
     And I set the field "Password" to "incorrect"
     When I press "Log in"
-    Then I should see "Invalid login, please try again"
+    Then I should see "Unable to log in"
 
   Scenario: Test login language selector
     Given remote langimport tests are enabled
@@ -24,7 +26,7 @@ Feature: Test if the login form provides the correct feedback
       | es       |
     And the following config values are set as admin:
       | langmenu | 1 |
-    And I follow "Log in"
+    And I am on homepage
     And I open the action menu in "region-main" "region"
     # The line below contains the unicode character U+200E before and after the brackets, please be very careful editing this line.
     When I choose "Nederlands ‎(nl)‎" in the open action menu
@@ -34,41 +36,53 @@ Feature: Test if the login form provides the correct feedback
   Scenario: Set logo for loginpage
     Given I log in as "admin"
     And I navigate to "Appearance > Logos" in site administration
-    And I upload "course/tests/fixtures/image.jpg" file to "Logo" filemanager
+    And I upload "lib/tests/fixtures/1.jpg" file to "Logo" filemanager
+    And I upload "lib/tests/fixtures/2.jpg" file to "Favicon" filemanager
     And I press "Save changes"
     And I log out
-    And I follow "Log in"
-    Then "//img[@id='logoimage']" "xpath_element" should exist
+    Then "//img[@id='logoimage' and contains(@src, '/1.jpg')]" "xpath_element" should exist
+    And "//link[@rel='shortcut icon' and contains(@href, '/2.jpg')]" "xpath_element" should exist
+
+  Scenario: Default welcome section is shown when no custom instructions are set
+    Given I am on homepage
+    Then I should see "Welcome to Moodle"
+    And I should see "You're part of a global learning community"
 
   Scenario: Add a custom welcome message
     Given the following config values are set as admin:
       | auth_instructions | Lorem ipsum dolor sit amet |
-    And I follow "Log in"
+    And I am on homepage
     Then I should see "Lorem ipsum dolor sit amet"
+    And I should not see "Welcome to Moodle"
+    And I should not see "You're part of a global learning community"
 
   @javascript @accessibility
   Scenario: Show the maintenance mode message
     Given the following config values are set as admin:
       | maintenance_enabled | 1                     |
       | maintenance_message | Back online tomorrow  |
-    And I follow "Log in"
+    And I am on homepage
     Then I should see "Back online tomorrow"
     And the page should meet accessibility standards with "best-practice" extra tests
 
   Scenario: User self registration
     Given the following config values are set as admin:
       | registerauth | Email-based self-registration |
-    And I follow "Log in"
-    Then I should see "Create new account"
+    And I am on homepage
+    Then I should see "Sign up"
 
   Scenario: Set OAuth providers
     Given I log in as "admin"
+    And the "multilang" filter is "on"
+    And the "multilang" filter applies to "content and headings"
     And I navigate to "Plugins > Authentication > Manage authentication" in site administration
     And I click on "Enable" "link" in the "OAuth 2" "table_row"
     And I navigate to "Server > OAuth 2 services" in site administration
     And I press "Google"
     And I set the field "Client ID" to "1234"
     And I set the field "Client secret" to "1234"
+    And I set the field "Name" to "Google"
+    And I set the field "Name displayed on the login page" to "<span class=\"multilang\" lang=\"en\">Google</span><span class=\"multilang\" lang=\"de\">elgooG</span>"
     And I press "Save changes"
     And I press "Facebook"
     And I set the field "Client ID" to "1234"
@@ -79,35 +93,38 @@ Feature: Test if the login form provides the correct feedback
     And I set the field "Client secret" to "1234"
     And I press "Save changes"
     And I log out
-    And I follow "Log in"
-    Then I should see "Google"
-    And I should see "Facebook"
-    And I should see "Microsoft"
+    And I am on homepage
+    Then I should see "Log in with Google"
+    But I should not see "elgooG"
+    And I should see "Log in with Facebook"
+    And I should see "Log in with Microsoft"
 
   Scenario: Test the login page auto focus feature
     Given the following config values are set as admin:
       | loginpageautofocus | Enabled |
-    And I follow "Log in"
+    And I am on homepage
     Then the focused element is "Username" "field"
     And I set the field "Username" to "admin"
     And I set the field "Password" to "admin"
     And I press "Log in"
     And I log out
-    And I follow "Log in"
+    And I am on homepage
     Then the focused element is "Password" "field"
 
+  @accessibility
   Scenario: Test the login page focus after error feature
-    Given I follow "Log in"
+    Given I am on homepage
     And I set the field "Username" to "admin"
     And I set the field "Password" to "wrongpassword"
     And I press "Log in"
-    And I press the tab key
+    And I wait until the page is ready
     Then the focused element is "Username" "field"
+    And the page should meet accessibility standards with "best-practice" extra tests
 
   Scenario: Display the password visibility toggle icon
     Given the following config values are set as admin:
       | loginpasswordtoggle | 1 |
-    When I follow "Log in"
+    And I am on homepage
     Then "Toggle sensitive" "button" should be visible
     And the following config values are set as admin:
       | loginpasswordtoggle | 0 |
@@ -117,7 +134,7 @@ Feature: Test if the login form provides the correct feedback
   Scenario: Display the password visibility toggle icon for small screens only
     Given the following config values are set as admin:
       | loginpasswordtoggle | 2 |
-    When I follow "Log in"
+    And I am on homepage
     Then "Toggle sensitive" "button" should not be visible
     And I change the viewport size to "mobile"
     And "Toggle sensitive" "button" should be visible

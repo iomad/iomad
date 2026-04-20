@@ -22,6 +22,10 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->libdir . '/formslib.php');
+require_once($CFG->dirroot . '/mod/assign/feedback/file/locallib.php');
 /**
  * Set allocated marker form.
  *
@@ -32,6 +36,7 @@
 class mod_assign_batch_set_allocatedmarker_form extends moodleform {
     /**
      * Define this form - called by the parent constructor
+     * @throws moodle_exception
      */
     public function definition() {
         $mform = $this->_form;
@@ -41,7 +46,23 @@ class mod_assign_batch_set_allocatedmarker_form extends moodleform {
         $mform->addElement('static', 'userslist', get_string('selectedusers', 'assign'), $params['usershtml']);
 
         $options = $params['markers'];
-        $mform->addElement('select', 'allocatedmarker', get_string('allocatedmarker', 'assign'), $options);
+
+        $markercount = (!empty($params['markercount'])) ? $params['markercount'] : 1;
+        $markerids = array_keys($options);
+
+        // If we do not have enough markers to meet the requested number, throw an exception with a meaningful message.
+        if (count($markerids) < $markercount) {
+            throw new \core\exception\moodle_exception('invalidmarkerallocation:notenoughmarkers', 'assign', '', [
+                'markers' => count($markerids),
+                'requested' => $markercount,
+            ]);
+        }
+
+        $options = ['' => get_string('choosemarker', 'assign')] + $options;
+
+        for ($i = 1; $i <= $markercount; $i++) {
+            $mform->addElement('select', "allocatedmarker{$i}", get_string('allocatedmarker', 'assign') . ' ' . $i, $options);
+        }
 
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);

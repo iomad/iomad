@@ -79,19 +79,6 @@ $definitions = array(
         'simpledata' => true,
     ),
 
-    // Hook callbacks cache.
-    // There is a static cache in hook manager, data is fetched once per page on first hook execution.
-    // This cache needs to be invalidated during upgrades when code changes and when callbacks
-    // overrides are updated.
-    'hookcallbacks' => array(
-        'mode' => cache_store::MODE_APPLICATION,
-        'simplekeys' => true,
-        'simpledata' => true,
-        'staticacceleration' => false,
-        // WARNING: Manual cache purge may be required when overriding hook callbacks.
-        'canuselocalstore' => true,
-    ),
-
     // Cache for question definitions. This is used by the question_bank class.
     // Users probably do not need to know about this cache. They will just call
     // question_bank::load_question.
@@ -252,6 +239,9 @@ $definitions = array(
         // Executing actions in more than 10 courses usually means executing the same action on each course
         // so there is no need for caching individual course instances.
         'staticaccelerationsize' => 10,
+        'invalidationevents' => [
+            'changesincourseactionstate',
+        ],
     ],
     // Used to store data for repositories to avoid repetitive DB queries within one request.
     'repositories' => array(
@@ -600,19 +590,6 @@ $definitions = array(
         'staticacceleration' => true,
         'canuselocalstore' => true,
         'staticaccelerationsize' => 100,
-    ],
-
-    // Cache if a user has the capability to share to MoodleNet.
-    'moodlenet_usercanshare' => [
-        'mode' => cache_store::MODE_SESSION,
-        'simplekeys' => true,
-        'simpledata' => true,
-        'ttl' => 1800,
-        'invalidationevents' => [
-            'changesincoursecat',
-            'changesincategoryenrolment',
-            'changesincourse',
-        ],
     ],
 
     // A theme has been used in context to override the default theme.

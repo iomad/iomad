@@ -32,6 +32,7 @@ Feature: In an assignment, teachers can change filters in the grading app
       | assignsubmission_file_enabled       | 0                       |
       | markingworkflow                     | 1                       |
       | markingallocation                   | 1                       |
+      | markercount                         | 1                       |
 
   @javascript
   Scenario: Set filters in the grading table and see them in the grading app
@@ -40,7 +41,7 @@ Feature: In an assignment, teachers can change filters in the grading app
     And I should not see "Course 1 &amp;"
     And the "title" attribute of "a[title='Course: Course 1 &']" "css_element" should not contain "&amp;"
     And I should not see "Test assignment name &amp;"
-    And I set the field "allocatedmarker" to "Marker 1"
+    And I set the field "Marker 1" to "Marker 1"
     And I set the field "workflowstate" to "In marking"
     And I set the field "Notify student" to "0"
     And I press "Save changes"
@@ -64,7 +65,7 @@ Feature: In an assignment, teachers can change filters in the grading app
   Scenario: Set filters in the grading app and see them in the grading table
     Given I am on the "Test assignment name &" Activity page logged in as teacher1
     And I go to "Student 1" "Test assignment name &" activity advanced grading page
-    And I set the field "allocatedmarker" to "Marker 1"
+    And I set the field "Marker 1" to "Marker 1"
     And I set the field "workflowstate" to "In marking"
     And I set the field "Notify student" to "0"
     And I press "Save changes"

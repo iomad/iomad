@@ -53,7 +53,7 @@ class provider implements
      * @return collection The collection object filled out with information about this component.
      */
     public static function get_metadata(collection $collection): collection {
-        // Except for moodlenet_share_progress, these tables are really data about site configuration and not user data.
+        // Except for shortlink, these tables are really data about site configuration and not user data.
 
         // The config_log includes information about which user performed a configuration change.
         // The value and oldvalue may contain sensitive information such as accounts for service passwords..
@@ -126,22 +126,6 @@ class provider implements
             'scopehash' => 'privacy:metadata:oauth2_refresh_token:scopehash'
         ], 'privacy:metadata:oauth2_refresh_token');
 
-        // The moodlenet_share_progress includes details of an attempted share of a resource to MoodleNet.
-        $collection->add_database_table('moodlenet_share_progress', [
-            'type' => 'privacy:metadata:moodlenet_share_progress:type',
-            'courseid' => 'privacy:metadata:moodlenet_share_progress:courseid',
-            'cmid' => 'privacy:metadata:moodlenet_share_progress:cmid',
-            'userid' => 'privacy:metadata:moodlenet_share_progress:userid',
-            'timecreated' => 'privacy:metadata:moodlenet_share_progress:timecreated',
-            'resourceurl' => 'privacy:metadata:moodlenet_share_progress:resourceurl',
-            'status' => 'privacy:metadata:moodlenet_share_progress:status',
-        ], 'privacy:metadata:moodlenet_share_progress');
-
-        // This resourceurl field is an external link from MoodleNet.
-        $collection->add_external_location_link('moodlenet_share_progress', [
-            'resourceurl' => 'privacy:metadata:moodlenet_share_progress:resourceurl',
-        ], 'privacy:metadata:moodlenet_share_progress');
-
         // The shortlink table includes data that associates a user with a shortlink URL.
         $collection->add_database_table('shortlink', [
             'shortcode' => 'privacy:metadata:shortlink:shortcode',
@@ -163,15 +147,6 @@ class provider implements
     public static function get_contexts_for_userid(int $userid): contextlist {
         $contextlist = new contextlist();
 
-        // MoodleNet share progress uses the user context.
-        $sql = "SELECT ctx.id
-                  FROM {context} ctx
-                  JOIN {moodlenet_share_progress} msp ON ctx.instanceid = msp.userid
-                       AND ctx.contextlevel = :contextlevel
-                 WHERE msp.userid = :userid";
-        $params = ['userid' => $userid, 'contextlevel' => CONTEXT_USER];
-        $contextlist->add_from_sql($sql, $params);
-
         // Shortlink.
         $sql = "SELECT ctx.id
                   FROM {context} ctx
@@ -192,16 +167,6 @@ class provider implements
     public static function get_users_in_context(userlist $userlist) {
         $context = $userlist->get_context();
 
-        // MoodleNet share progress uses the user context.
-        if ($context->contextlevel == CONTEXT_USER) {
-            // Get all distinct userids from the table.
-            $sql = "SELECT DISTINCT userid
-                      FROM {moodlenet_share_progress}
-                     WHERE userid = :userid";
-            $params = ['userid' => $context->instanceid];
-            $userlist->add_from_sql('userid', $sql, $params);
-        }
-
         // Shortlink.
         if ($context->contextlevel == CONTEXT_USER) {
             // Get all distinct userids from the table.
@@ -219,16 +184,11 @@ class provider implements
      * @param approved_contextlist $contextlist The approved contexts to export information for.
      */
     public static function export_user_data(approved_contextlist $contextlist) {
-        // Except for moodlenet_share_progress and shortlink, none of the core tables should be exported.
+        // Except for shortlink, none of the core tables should be exported.
         global $DB;
 
         foreach ($contextlist as $context) {
             if ($context->contextlevel == CONTEXT_USER && $context->instanceid == $contextlist->get_user()->id) {
-                // Get the user's MoodleNet share progress data.
-                $sharedata = $DB->get_records('moodlenet_share_progress', ['userid' => $context->instanceid]);
-                $subcontext = get_string('privacy:metadata:moodlenet_share_progress', 'moodle');
-                writer::with_context($context)->export_data([$subcontext], (object) $sharedata);
-
                 // Get the user's shortlink data.
                 $shortlinkdata = $DB->get_records('shortlink', ['userid' => $context->instanceid]);
                 $subcontext = get_string('privacy:metadata:shortlink', 'moodle');
@@ -243,13 +203,8 @@ class provider implements
      * @param \context $context The specific context to delete data for.
      */
     public static function delete_data_for_all_users_in_context(\context $context) {
-        // Except for moodlenet_share_progress and shortlink, none of the data from these tables should be deleted.
+        // Except for shortlink, none of the data from these tables should be deleted.
         global $DB;
-
-        // MoodleNet share progress uses the user context.
-        if ($context->contextlevel == CONTEXT_USER) {
-            $DB->delete_records('moodlenet_share_progress', ['userid' => $context->instanceid]);
-        }
 
         // Shortlink.
         if ($context->contextlevel == CONTEXT_USER) {
@@ -263,15 +218,13 @@ class provider implements
      * @param approved_contextlist $contextlist The approved contexts and user information to delete information for.
      */
     public static function delete_data_for_user(approved_contextlist $contextlist) {
-        // Except for moodlenet_share_progress and shortlink, none of the data from these tables should be deleted.
+        // Except for shortlink, none of the data from these tables should be deleted.
         // Note: Although it may be tempting to delete the adhoc task data, do not do so.
         // The delete process is run as an adhoc task.
         global $DB;
 
         foreach ($contextlist as $context) {
             if ($context->contextlevel == CONTEXT_USER && $context->instanceid == $contextlist->get_user()->id) {
-                // MoodleNet share progress uses the user context.
-                $DB->delete_records('moodlenet_share_progress', ['userid' => $context->instanceid]);
                 // Shortlink.
                 $DB->delete_records('shortlink', ['userid' => $context->instanceid]);
             }
@@ -284,7 +237,7 @@ class provider implements
      * @param   approved_userlist       $userlist The approved context and user information to delete information for.
      */
     public static function delete_data_for_users(approved_userlist $userlist) {
-        // Except for moodlenet_share_progress and shortlink, none of the data from these tables should be deleted.
+        // Except for shortlink, none of the data from these tables should be deleted.
         // Note: Although it may be tempting to delete the adhoc task data, do not do so.
         // The delete process is run as an adhoc task.
         global $DB;
@@ -296,8 +249,6 @@ class provider implements
         }
 
         if ($context->contextlevel == CONTEXT_USER) {
-            // MoodleNet share progress uses the user context.
-            $DB->delete_records('moodlenet_share_progress', ['userid' => $context->instanceid]);
             // Shortlink.
             $DB->delete_records('shortlink', ['userid' => $context->instanceid]);
         }

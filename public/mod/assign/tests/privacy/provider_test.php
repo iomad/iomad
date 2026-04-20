@@ -210,7 +210,10 @@ final class provider_test extends provider_testcase {
                 'attemptreopenmethod' => ASSIGN_ATTEMPT_REOPEN_METHOD_MANUAL,
                 'maxattempts' => 3,
                 'assignsubmission_onlinetext_enabled' => true,
-                'assignfeedback_comments_enabled' => true
+                'assignfeedback_comments_enabled' => true,
+                'markingworkflow' => 1,
+                'markingallocation' => 1,
+                'markercount' => 2,
             ]);
 
         $context = $assign->get_context();
@@ -226,6 +229,8 @@ final class provider_test extends provider_testcase {
         $overridedata->duedate = time();
         $overridedata->allowsubmissionsfromdate = time();
         $overridedata->cutoffdate = time();
+        $overridedata->reason = 'This is a reason';
+        $overridedata->reasonformat = FORMAT_MOODLE;
         $DB->insert_record('assign_overrides', $overridedata);
 
         $grade1 = '67.00';
@@ -252,6 +257,14 @@ final class provider_test extends provider_testcase {
 
         // Give the submission a grade.
         $assign->save_grade($user->id, $data);
+
+        // Allocate the teacher as a marker on the assignment.
+        $assign->update_allocated_markers($user->id, [$teacher->id]);
+
+        // Give the submission a mark.
+        $gradeobject = $assign->get_user_grade($user->id, true);
+        $gradeobject->grader = $teacher->id;
+        $assign->update_mark($gradeobject, 99.9);
 
         /** @var \core_privacy\tests\request\content_writer $writer */
         $writer = writer::with_context($context);
@@ -284,6 +297,16 @@ final class provider_test extends provider_testcase {
                 $overrideexport->cutoffdate);
         $this->assertEquals(\core_privacy\local\request\transform::datetime($overridedata->allowsubmissionsfromdate),
                 $overrideexport->allowsubmissionsfromdate);
+
+        // Check allocated markers and marks are exported.
+        $this->assertEquals($teacher->id, $writer->get_data(['Marker allocations'])->data[0]['marker']);
+        $this->assertEquals($user->id, $writer->get_data(['Marker allocations'])->data[0]['student']);
+        $this->assertEquals($teacher->id, $writer->get_data(['Marks'])->data[0]['marker']);
+        $this->assertEquals(99.9, $writer->get_data(['Marks'])->data[0]['mark']);
+        $this->assertEquals(
+            format_text($overridedata->reason, $overridedata->reasonformat, ['context' => $context]),
+            $overrideexport->reason
+        );
     }
 
     /**
@@ -306,7 +329,10 @@ final class provider_test extends provider_testcase {
                 'attemptreopenmethod' => ASSIGN_ATTEMPT_REOPEN_METHOD_MANUAL,
                 'maxattempts' => 3,
                 'assignsubmission_onlinetext_enabled' => true,
-                'assignfeedback_comments_enabled' => true
+                'assignfeedback_comments_enabled' => true,
+                'markingworkflow' => 1,
+                'markingallocation' => 1,
+                'markercount' => 2,
             ]);
 
         $context = $assign->get_context();
@@ -366,6 +392,18 @@ final class provider_test extends provider_testcase {
         $flagdata->extensionduedate = $duedate;
         $assign->update_user_flags($flagdata);
 
+        // Allocate the teacher as a marker on the assignment for both users.
+        $assign->update_allocated_markers($user1->id, [$teacher->id]);
+        $assign->update_allocated_markers($user2->id, [$teacher->id]);
+
+        // Give the submission a mark for both users.
+        $gradeobject = $assign->get_user_grade($user1->id, true);
+        $gradeobject->grader = $teacher->id;
+        $assign->update_mark($gradeobject, 11.1);
+        $gradeobject = $assign->get_user_grade($user2->id, true);
+        $gradeobject->grader = $teacher->id;
+        $assign->update_mark($gradeobject, 88.8);
+
         /** @var \core_privacy\tests\request\content_writer $writer */
         $writer = writer::with_context($context);
         $this->assertFalse($writer->has_any_data());
@@ -393,6 +431,14 @@ final class provider_test extends provider_testcase {
                 'Feedback comments'])->commenttext);
         $this->assertStringContainsString($teachercommenttext3, $writer->get_data(['studentsubmissions', $user2->id, 'attempt 2',
                 'Feedback comments'])->commenttext);
+
+        // Check for marker allocations as this teacher.
+        $this->assertEquals($teacher->id, $writer->get_data(['Marker allocations'])->data[0]['marker']);
+        $this->assertEquals($teacher->id, $writer->get_data(['Marker allocations'])->data[1]['marker']);
+
+        // And check for marks they have given.
+        $this->assertEquals($teacher->id, $writer->get_data(['Marks'])->data[0]['marker']);
+        $this->assertEquals($teacher->id, $writer->get_data(['Marks'])->data[1]['marker']);
     }
 
     /**
@@ -415,7 +461,10 @@ final class provider_test extends provider_testcase {
                 'attemptreopenmethod' => ASSIGN_ATTEMPT_REOPEN_METHOD_MANUAL,
                 'maxattempts' => 3,
                 'assignsubmission_onlinetext_enabled' => true,
-                'assignfeedback_comments_enabled' => true
+                'assignfeedback_comments_enabled' => true,
+                'markingworkflow' => 1,
+                'markingallocation' => 1,
+                'markercount' => 2,
             ]);
 
         $context = $assign->get_context();
@@ -478,6 +527,18 @@ final class provider_test extends provider_testcase {
         // Give the submission a grade.
         $assign->save_grade($user2->id, $data);
 
+        // Allocate the teacher as a marker on the assignment for both users.
+        $assign->update_allocated_markers($user1->id, [$teacher->id]);
+        $assign->update_allocated_markers($user2->id, [$teacher->id]);
+
+        // Give the submission a mark for both users.
+        $gradeobject = $assign->get_user_grade($user1->id, true);
+        $gradeobject->grader = $teacher->id;
+        $assign->update_mark($gradeobject, 11.1);
+        $gradeobject = $assign->get_user_grade($user2->id, true);
+        $gradeobject->grader = $teacher->id;
+        $assign->update_mark($gradeobject, 88.8);
+
         // Delete all user data for this assignment.
         provider::delete_data_for_all_users_in_context($context);
 
@@ -489,6 +550,10 @@ final class provider_test extends provider_testcase {
         $records = $DB->get_records('assignsubmission_onlinetext');
         $this->assertEmpty($records);
         $records = $DB->get_records('assignfeedback_comments');
+        $this->assertEmpty($records);
+        $records = $DB->get_records('assign_mark');
+        $this->assertEmpty($records);
+        $records = $DB->get_records('assign_allocated_marker');
         $this->assertEmpty($records);
 
         // Check that overrides and the calendar events are deleted.
@@ -520,7 +585,10 @@ final class provider_test extends provider_testcase {
                 'attemptreopenmethod' => ASSIGN_ATTEMPT_REOPEN_METHOD_MANUAL,
                 'maxattempts' => 3,
                 'assignsubmission_onlinetext_enabled' => true,
-                'assignfeedback_comments_enabled' => true
+                'assignfeedback_comments_enabled' => true,
+                'markingworkflow' => 1,
+                'markingallocation' => 1,
+                'markercount' => 2,
             ]);
 
         $context = $assign->get_context();
@@ -583,6 +651,18 @@ final class provider_test extends provider_testcase {
         // Give the submission a grade.
         $assign->save_grade($user2->id, $data);
 
+        // Allocate the teacher as a marker on the assignment for both users.
+        $assign->update_allocated_markers($user1->id, [$teacher->id]);
+        $assign->update_allocated_markers($user2->id, [$teacher->id]);
+
+        // Give the submission a mark for both users.
+        $gradeobject = $assign->get_user_grade($user1->id, true);
+        $gradeobject->grader = $teacher->id;
+        $assign->update_mark($gradeobject, 11.1);
+        $gradeobject = $assign->get_user_grade($user2->id, true);
+        $gradeobject->grader = $teacher->id;
+        $assign->update_mark($gradeobject, 88.8);
+
         // Delete user 2's data.
         $approvedlist = new approved_contextlist($user2, 'mod_assign', [$context->id, $coursecontext->id]);
         provider::delete_data_for_user($approvedlist);
@@ -621,6 +701,12 @@ final class provider_test extends provider_testcase {
         $record = array_shift($records);
         // The remaining event should be for user 1.
         $this->assertEquals($user1->id, $record->userid);
+
+        // Check marks and allocated markers only exist for user1 now.
+        $records = $DB->get_records('assign_allocated_marker');
+        $this->assertCount(1, $records);
+        $records = $DB->get_records('assign_mark');
+        $this->assertCount(1, $records);
     }
 
     /**
@@ -639,7 +725,7 @@ final class provider_test extends provider_testcase {
         $user2 = $this->getDataGenerator()->create_user();
         // User 3 made a submission.
         $user3 = $this->getDataGenerator()->create_user();
-        // User 4 makes a submission and it is marked by the teacher.
+        // User 4 makes a submission and it is graded by the teacher.
         $user4 = $this->getDataGenerator()->create_user();
         // Grading and providing feedback as a teacher.
         $user5 = $this->getDataGenerator()->create_user();
@@ -718,6 +804,25 @@ final class provider_test extends provider_testcase {
         // Give the submission a grade.
         $assign2->save_grade($user6->id, $data);
 
+        // Allocate the teacher as a marker on both assignments for some of the users.
+        $assign1->update_allocated_markers($user1->id, [$user5->id]);
+        $assign1->update_allocated_markers($user2->id, [$user5->id]);
+        $assign1->update_allocated_markers($user6->id, [$user5->id]);
+        $assign2->update_allocated_markers($user1->id, [$user5->id]);
+        $assign2->update_allocated_markers($user2->id, [$user5->id]);
+        $assign2->update_allocated_markers($user6->id, [$user5->id]);
+
+        // Give the submission a mark for some users on both assignments.
+        $gradeobject = $assign1->get_user_grade($user3->id, true);
+        $gradeobject->grader = $user5->id;
+        $assign1->update_mark($gradeobject, 10);
+        $gradeobject = $assign1->get_user_grade($user4->id, true);
+        $gradeobject->grader = $user5->id;
+        $assign1->update_mark($gradeobject, 100);
+        $gradeobject = $assign2->get_user_grade($user6->id, true);
+        $gradeobject->grader = $user5->id;
+        $assign2->update_mark($gradeobject, 59);
+
         // Check data is in place.
         $data = $DB->get_records('assign_submission');
         // We should have one entry for user 3 and two entries each for user 4 and 6.
@@ -735,14 +840,20 @@ final class provider_test extends provider_testcase {
         $this->assertEquals(2, $usercounts[$user6->id]);
 
         $data = $DB->get_records('assign_grades');
-        // Two entries in assign_grades, one for each grade given.
-        $this->assertCount(2, $data);
+        // Three entries in assign_grades, for grades given and grade items created for setting marks.
+        $this->assertCount(3, $data);
 
         $data = $DB->get_records('assign_overrides');
         $this->assertCount(1, $data);
 
         $data = $DB->get_records('comments');
         $this->assertCount(1, $data);
+
+        $data = $DB->get_records('assign_allocated_marker');
+        $this->assertCount(6, $data);
+
+        $data = $DB->get_records('assign_mark');
+        $this->assertCount(3, $data);
 
         $userlist = new \core_privacy\local\request\approved_userlist($context, 'assign', [$user1->id, $user2->id]);
         provider::delete_data_for_users($userlist);
@@ -757,6 +868,14 @@ final class provider_test extends provider_testcase {
         // No change here.
         $this->assertCount(5, $data);
 
+        // Should be 4 records left - user6 on assign1, and everyone on assign2.
+        $data = $DB->get_records('assign_allocated_marker');
+        $this->assertCount(4, $data);
+
+        // Should be unchanged.
+        $data = $DB->get_records('assign_mark');
+        $this->assertCount(3, $data);
+
         $userlist = new \core_privacy\local\request\approved_userlist($context, 'assign', [$user3->id, $user5->id]);
         provider::delete_data_for_users($userlist);
 
@@ -767,5 +886,13 @@ final class provider_test extends provider_testcase {
         $data = $DB->get_records('assign_grades');
         // Grades should be unchanged.
         $this->assertCount(2, $data);
+
+        // Should be 3 left, all for assign2.
+        $data = $DB->get_records('assign_allocated_marker');
+        $this->assertCount(3, $data);
+
+        // Should be 1 left, for assign2.
+        $data = $DB->get_records('assign_mark');
+        $this->assertCount(1, $data);
     }
 }

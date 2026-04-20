@@ -107,6 +107,7 @@ class provider implements
             'maxattempts' => 'privacy:metadata:overrides:maxattempts',
             'retake' => 'privacy:metadata:overrides:retake',
             'password' => 'privacy:metadata:overrides:password',
+            'reason' => 'privacy:metadata:overrides:reason',
         ], 'privacy:metadata:overrides');
 
         $collection->add_user_preference('lesson_view', 'privacy:metadata:userpref:lessonview');
@@ -257,7 +258,7 @@ class provider implements
         $recordset = $DB->get_recordset_select('lesson_overrides', $sqluserlesson, $paramsuserlesson);
         static::recordset_loop_and_export($recordset, 'lessonid', null, function($carry, $record) {
             // We know that there is only one row per lesson, so no need to use $carry.
-            return (object) [
+            $data = (object) [
                 'available' => $record->available !== null ? transform::datetime($record->available) : null,
                 'deadline' => $record->deadline !== null ? transform::datetime($record->deadline) : null,
                 'timelimit' => $record->timelimit !== null ? format_time($record->timelimit) : null,
@@ -266,8 +267,19 @@ class provider implements
                 'retake' => $record->retake !== null ? transform::yesno($record->retake) : null,
                 'password' => $record->password,
             ];
+
+            if (!empty($record->reason)) {
+                $data->reason = $record->reason;
+                $data->reasonformat = $record->reasonformat ?? FORMAT_MOODLE;
+            }
+
+            return $data;
         }, function($lessonid, $data) use ($lessonidstocmids) {
             $context = context_module::instance($lessonidstocmids[$lessonid]);
+            if (isset($data->reason)) {
+                $data->reason = format_text($data->reason, $data->reasonformat, ['context' => $context]);
+                unset($data->reasonformat);
+            }
             writer::with_context($context)->export_related_data([], 'overrides', $data);
         });
 

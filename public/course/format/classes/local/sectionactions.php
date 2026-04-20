@@ -16,6 +16,7 @@
 
 namespace core_courseformat\local;
 
+use core_courseformat\formatactions;
 use section_info;
 use stdClass;
 use core\event\course_module_updated;
@@ -63,7 +64,10 @@ class sectionactions extends baseactions {
 
         // Now move it to the specified position.
         if ($position > 0 && $position <= $lastsection) {
-            move_section_to($this->course, $sectionrecord->section, $position, true);
+            rebuild_course_cache($this->course->id, true);
+            $modinfo = get_fast_modinfo($this->course);
+            $sectioninfo = $modinfo->get_section_info_by_id($sectionrecord->id);
+            $this->move_at($sectioninfo, $position);
             $sectionrecord->section = $position;
         }
 
@@ -229,6 +233,24 @@ class sectionactions extends baseactions {
     }
 
     /**
+     * For a given course section, marks it visible or hidden,
+     * and does the same for every activity in that section.
+     *
+     * @param section_info $sectioninfo the section to delete.
+     * @param bool $visible The new visibility
+     */
+    public function set_visibility(
+        section_info $sectioninfo,
+        bool $visible,
+    ): void {
+        if ($sectioninfo->visible == (int) $visible) {
+            return;
+        }
+
+        $this->update($sectioninfo, ['visible' => $visible]);
+    }
+
+    /**
      * Get the event to trigger when deleting a section.
      * @param section_info $sectioninfo the section to delete.
      * @return course_section_deleted the event to trigger
@@ -277,8 +299,6 @@ class sectionactions extends baseactions {
         return $result;
     }
 
-
-
     /**
      * Course section deletion, using an adhoc task for deletion of the modules it contains.
      * 1. Schedule all modules within the section for adhoc removal.
@@ -319,9 +339,11 @@ class sectionactions extends baseactions {
 
         // Move all modules to section 0.
         $modinfo = get_fast_modinfo($this->course->id);
+        $action = formatactions::cm($this->course);
+        $section0 = $modinfo->get_section_info(0);
         foreach ($modinfo->get_cms() as $cm) {
             if ($cm->sectionnum == $sectioninfo->section) {
-                moveto_module($cm, $modinfo->get_section_info(0));
+                $action->move_end_section($cm->id, $section0->id);
             }
         }
 
@@ -390,6 +412,172 @@ class sectionactions extends baseactions {
             $this->transfer_visibility_to_cms($sectioninfo, (bool) $fields['visible']);
         }
         return true;
+    }
+
+    /**
+     * Move a course section after another one.
+     *
+     * @param section_info $section the section to move
+     * @param section_info $precedingsectioninfo the section after which to move
+     * @return bool whether section was moved
+     */
+    public function move_after(section_info $section, section_info $precedingsectioninfo): bool {
+        $precedingsectionposition = $precedingsectioninfo->sectionnum;
+        $canmove = $section->id != $precedingsectioninfo->id &&
+            ($section->sectionnum != $precedingsectionposition + 1);
+        $canmove = $canmove && ($precedingsectioninfo->course == $this->course->id);
+        if (!$canmove) {
+            return false;
+        }
+        if ($section->sectionnum > $precedingsectioninfo->sectionnum) {
+            $precedingsectionposition += 1;
+        }
+        return $this->move_at($section, $precedingsectionposition);
+    }
+
+    /**
+     * Move a course section at a given position. The position will be the target position, i.e. if
+     * we move section 5 to position 2, section 5 will become section 2, and sections 2, will become
+     * the third section and so on.
+     *
+     * @param section_info $section the section to move
+     * @param int $targetposition the position to move the section to
+     * @return bool whether section was moved
+     */
+    public function move_at(section_info $section, int $targetposition): bool {
+        global $DB;
+        if (!course_get_format($this->course->id)->uses_sections()) {
+            return false;
+        }
+        if ($section->sectionnum == 0 || $targetposition == 0) {
+            return false;
+        }
+        if ($section->course != $this->course->id) {
+            return false;
+        }
+        if ($section->sectionnum == $targetposition) {
+            return false;
+        }
+        $modinfo = get_fast_modinfo($this->course->id);
+        $allsections = $modinfo->get_section_info_all();
+        if (count($allsections) <= $targetposition) {
+            return false;
+        }
+        $sectionid = $section->id;
+
+        // Get all sections for this course and re-order them (2 of them should now share the same section number).
+        $sections  = $DB->get_records_menu(
+            'course_sections',
+            ['course' => $this->course->id],
+            'section ASC, id ASC',
+            'id, section'
+        );
+        if (!isset($sections[$sectionid])) {
+            return false;
+        }
+
+        $sectionposition = $sections[$sectionid];
+        $movedsections = $this->reorder_sections($sections, $sectionposition, $targetposition);
+
+        // Update all sections. Do this in 2 steps to avoid breaking database
+        // uniqueness constraint.
+        $transaction = $DB->start_delegated_transaction();
+        foreach ($movedsections as $id => $position) {
+            if ((int) $sections[$id] !== $position) {
+                $DB->set_field('course_sections', 'section', -$position, ['id' => $id]);
+                // Invalidate the section cache by given section id.
+                \core_course\modinfo::purge_course_section_cache_by_id($this->course->id, $id);
+            }
+        }
+        foreach ($movedsections as $id => $position) {
+            if ((int) $sections[$id] !== $position) {
+                $DB->set_field('course_sections', 'section', $position, ['id' => $id]);
+                // Invalidate the section cache by given section id.
+                \core_course\modinfo::purge_course_section_cache_by_id($this->course->id, $id);
+            }
+        }
+
+        // If we move the highlighted section itself, then just highlight the destination.
+        // Adjust the higlighted section location if we move something over it either direction.
+        $marker = null;
+        if ($sectionposition == $this->course->marker) {
+            $marker = $targetposition;
+        } else if ($sectionposition > $this->course->marker && $this->course->marker >= $targetposition) {
+            $marker = $this->course->marker + 1;
+        } else if ($sectionposition < $this->course->marker && $this->course->marker <= $targetposition) {
+            $marker = $this->course->marker - 1;
+        }
+        if ($marker !== null) {
+            $this->set_marker_internal($marker);
+        }
+
+        $transaction->allow_commit();
+        rebuild_course_cache($this->course->id, true, true);
+        return true;
+    }
+
+    /**
+     * Reorder sections array by moving origin position to target position.
+     * This is a helper for move_at().
+     *
+     * @param array $sections array of sectionid=>position
+     * @param int $originposition the position to move
+     * @param int $targetposition the position to move to
+     * @return array|null reordered sections array or false on error
+     */
+    protected function reorder_sections(array $sections, int $originposition, int $targetposition): ?array {
+        if (!is_array($sections)) {
+            return null;
+        }
+
+        // We can't move section position 0.
+        if ($originposition < 1) {
+            return null;
+        }
+
+        // Locate origin section in sections array.
+        if (!$originkey = array_search($originposition, $sections)) {
+            return null; // Searched position not in sections array.
+        }
+
+        // Extract origin section.
+        $originsection = $sections[$originkey];
+        unset($sections[$originkey]);
+
+        // Find offset of target position (stupid PHP's array_splice requires offset instead of key index!).
+        $found = false;
+        $appendarray = [];
+        foreach ($sections as $id => $position) {
+            if ($found) {
+                $appendarray[$id] = $position;
+                unset($sections[$id]);
+            }
+            if ($position == $targetposition) {
+                if ($targetposition < $originposition) {
+                    $appendarray[$id] = $position;
+                    unset($sections[$id]);
+                }
+                $found = true;
+            }
+        }
+
+        // Append moved section.
+        $sections[$originkey] = $originsection;
+
+        // Append rest of array (if applicable).
+        if (!empty($appendarray)) {
+            foreach ($appendarray as $id => $position) {
+                $sections[$id] = $position;
+            }
+        }
+
+        // Renumber positions.
+        $position = 0;
+        foreach ($sections as $id => $p) {
+            $sections[$id] = $position;
+            $position++;
+        }
+        return $sections;
     }
 
     /**
@@ -466,5 +654,59 @@ class sectionactions extends baseactions {
             $fields['name'] = $delegated->preprocess_section_name($sectioninfo, $fields['name']);
         }
         return $fields;
+    }
+
+    /**
+     * Highlight a course section.
+     *
+     * @param section_info $sectioninfo the section info to set marker.
+     * @param bool $marked whether the section is highlighted.
+     */
+    public function set_marker(section_info $sectioninfo, bool $marked): void {
+        if (!$marked) {
+            $this->remove_all_markers();
+            return;
+        }
+
+        if ($this->course->marker == $sectioninfo->section) {
+            // Nothing to do because it's already marked.
+            return;
+        }
+
+        $this->set_marker_internal($sectioninfo->section);
+    }
+
+    /**
+     * Removes any marker in the course.
+     */
+    public function remove_all_markers(): void {
+        if ($this->course->marker !== 0) {
+            $this->set_marker_internal(0);
+        }
+    }
+
+    /**
+     * Set marker for the course.
+     *
+     * @param int $marker the section number to set as marker or 0 to remove any marker.
+     */
+    private function set_marker_internal(int $marker): void {
+        global $DB, $COURSE;
+
+        $DB->set_field('course', 'marker', $marker, ['id' => $this->course->id]);
+        if ($COURSE && $COURSE->id == $this->course->id) {
+            $COURSE->marker = $marker;
+        }
+
+        // Make sure the cache is reset.
+        \course_modinfo::purge_course_section_cache_by_number($this->course->id, $marker);
+        rebuild_course_cache(
+            courseid: $this->course->id,
+            clearonly: true,
+            partialrebuild: true,
+        );
+        $format = $this->get_format();
+        $cachekey = "{$this->course->id}_{$format->get_format()}";
+        \cache_helper::invalidate_by_event('changesincourseactionstate', [$cachekey]);
     }
 }

@@ -197,12 +197,74 @@ class behat_general extends behat_base {
                     $this->execute_js_on_node($iframe, "{{ELEMENT}}.name = '{$iframename}';");
                 }
                 $context->getSession()->switchToIFrame($iframename);
+                // Wait until the iframe is completely loaded and all pending operations complete.
+                $context->getSession()->wait(behat_base::get_extended_timeout(), behat_base::PAGE_READY_JS);
 
                 // If no exception we are done.
                 return true;
             },
             behat_base::get_extended_timeout()
         );
+    }
+
+    /**
+     * Wait until the specified iframe is interactable (visible, sized, and not occluded).
+     *
+     * @Given /^I wait until "(?P<iframe_name_string>(?:[^"]|\\")*)" iframe is interactable$/
+     * @Given /^I wait until "(?P<iframe_name_string>(?:[^"]|\\")*)" class iframe is interactable$/
+     * @param string $name The name or class of the iframe
+     */
+    public function wait_until_iframe_interactable(string $name): void {
+        if (!$this->running_javascript()) {
+            throw new DriverException(
+                'iFrame interactability checks are disabled in scenarios without Javascript support',
+            );
+        }
+        $this->spin(
+            function ($context) use ($name) {
+                $iframe = $context->find('iframe', $name);
+                $scrolljs = '{{ELEMENT}}.scrollIntoView({behavior: "auto", block: "center", inline: "center"});';
+                $this->execute_js_on_node($iframe, $scrolljs);
+                $this->ensure_node_is_visible($iframe);
+
+                // Check that the iframe is not occluded at its center point.
+                $iframexpath = $iframe->getXpath();
+                $js = <<<EOF
+                    (function() {
+                        const xpath = "{$iframexpath}";
+                        const el = document.evaluate(
+                            xpath,
+                            document,
+                            null,
+                            XPathResult.FIRST_ORDERED_NODE_TYPE,
+                            null
+                        ).singleNodeValue;
+                        if (!el) { return false; }
+                        const rect = el.getBoundingClientRect();
+                        if (rect.width === 0 || rect.height === 0) { return false; }
+                        const x = rect.left + rect.width / 2;
+                        const y = rect.top + rect.height / 2;
+                        const target = document.elementFromPoint(x, y);
+                        return target === el || el.contains(target);
+                    })()
+                EOF;
+
+                return (bool) $this->evaluate_script($js);
+            },
+            behat_base::get_extended_timeout()
+        );
+    }
+
+    /**
+     * Wait until the specified iframe is interactable (visible, sized, and not occluded) and switche to it.
+     *
+     * @Given /^I wait until "(?P<iframe_name_string>(?:[^"]|\\")*)" iframe is interactable and switch to it$/
+     * @Given /^I wait until "(?P<iframe_name_string>(?:[^"]|\\")*)" class iframe is interactable and switch to it$/
+     * @param string $name The name of the iframe
+     */
+    public function wait_until_iframe_interactable_and_switch_to(string $name): void {
+        $this->wait_until_iframe_interactable($name);
+        $this->switch_to_iframe($name);
     }
 
     /**
@@ -1263,7 +1325,7 @@ EOF;
         // Do setup for cron task.
         \core\cron::setup_user();
 
-        // Discard task output as not appropriate for Behat output!
+        // Capture task output, in case we need it to report an error.
         ob_start();
 
         // Run all tasks which have a scheduled runtime of before now.
@@ -1283,11 +1345,9 @@ EOF;
             // If a task was successful it will be removed.
             // If it failed then it will still exist.
             if ($DB->record_exists('task_adhoc', ['id' => $task->get_id()])) {
-                // End ouptut buffering and flush the current buffer.
-                // This should be from just the current task.
-                ob_end_flush();
-
-                throw new DriverException('An adhoc task failed', 0);
+                // Report the error, including the task output up to the failure.
+                // This includes the output of any exception or other error that occurred.
+                throw new DriverException("An adhoc task failed. mtrace() output:\n\n" . ob_get_clean());
             }
         }
         ob_end_clean();

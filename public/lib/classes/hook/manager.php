@@ -44,7 +44,8 @@ use Psr\EventDispatcher\StoppableEventInterface;
  */
 final class manager implements
     EventDispatcherInterface,
-    ListenerProviderInterface {
+    ListenerProviderInterface
+{
     /** @var ?manager the one instance of listener provider and dispatcher */
     private static $instance = null;
 
@@ -278,9 +279,13 @@ final class manager implements
      * @return object The Event that was passed, now modified by listeners.
      */
     public function dispatch(object $event): object {
-        // We can dispatch only after the lib/setup.php includes,
-        // that is right before the database connection is made,
-        // the MUC caches need to be working already.
+        // It is only safe to dispatch hooks after early setup is complete.
+        // This includes, but is not limited to:
+        // - configuring exception handlers
+        // - configuring autoloaders
+        // - configuring date/time.
+        // The database connection is not required. It is up to individual hooks to understand their context.
+        // At this time there is no way to check that setup is complete, but we can check that 'setup.php' has been included.
         if (!function_exists('setup_DB')) {
             debugging('Hooks cannot be dispatched yet', DEBUG_DEVELOPER);
             return $event;
@@ -331,13 +336,14 @@ final class manager implements
         $this->allcallbacks = [];
         $this->alldeprecations = [];
 
-        $cache = null;
         // @codeCoverageIgnoreStart
-        if (!PHPUNIT_TEST && !CACHE_DISABLE_ALL) {
-            $cache = \cache::make('core', 'hookcallbacks');
-            $callbacks = $cache->get('callbacks');
-            $deprecations = $cache->get('deprecations');
-            $overrideshash = $cache->get('overrideshash');
+        $shouldcache = $this->should_cache();
+        if ($shouldcache) {
+            $cache = $this->get_cache();
+
+            $callbacks = $cache['callbacks'] ?? null;
+            $deprecations = $cache['deprecations'] ?? null;
+            $overrideshash = $cache['overrideshash'] ?? null;
 
             $usecache = is_array($callbacks);
             $usecache = $usecache && is_array($deprecations);
@@ -367,11 +373,15 @@ final class manager implements
         // Load the callbacks and apply overrides.
         $this->load_callbacks($components);
 
-        if ($cache) {
-            $cache->set('callbacks', $this->allcallbacks);
-            $cache->set('deprecations', $this->alldeprecations);
-            $cache->set('overrideshash', $this->calculate_overrides_hash());
+        // @codeCoverageIgnoreStart
+        if ($shouldcache) {
+            $this->set_cache(
+                $this->allcallbacks,
+                $this->alldeprecations,
+                $this->calculate_overrides_hash(),
+            );
         }
+        // @codeCoverageIgnoreEnd
     }
 
     /**
@@ -585,14 +595,6 @@ final class manager implements
     }
 
     /**
-     * @deprecated in favour of get_hooks_deprecating_plugin_callback since Moodle 4.4.
-     */
-    #[\core\attribute\deprecated('get_hooks_deprecating_plugin_callback', since: '4.4', mdl: 'MDL-80099', final: true)]
-    public function is_deprecated_plugin_callback(): void {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-
-    /**
      * If the plugin callback from lib.php is deprecated by any hooks, return the hooks' classnames.
      *
      * @param string $plugincallback short callback name without the component prefix
@@ -660,5 +662,109 @@ final class manager implements
         }
 
         return $hooks;
+    }
+
+    /**
+     * Get the path to the local hook cache.
+     *
+     * @return string file path
+     */
+    protected function get_local_cache_path(): string {
+        global $CFG;
+        return $CFG->localcachedir . '/hookcallbacks.php';
+    }
+
+    /**
+     * Get the path to the shared hook cache.
+     *
+     * @return string file path
+     */
+    protected function get_shared_cache_path(): string {
+        global $CFG;
+        return $CFG->cachedir . '/hookcallbacks.php';
+    }
+
+    /**
+     * Whether we should enable caching of hook data.
+     *
+     * The cache is disabled during unit tests, when CACHE_DISABLE_ALL is set, and during upgrades.
+     *
+     * @return bool
+     */
+    protected function should_cache(): bool {
+        if (PHPUNIT_TEST) {
+            return false;
+        }
+
+        if (CACHE_DISABLE_ALL) {
+            return false;
+        }
+
+        if (\core\setup::is_upgrade_running()) {
+            // Do not use the cache during upgrade.
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Fetch and decode the hook cache.
+     *
+     * @return array|null
+     */
+    protected function get_cache(): ?array {
+        $hookcallbacklocalfile = $this->get_local_cache_path();
+        $hookcallbacksharedfile = $this->get_shared_cache_path();
+        if (!is_readable($hookcallbacklocalfile) && is_readable($hookcallbacksharedfile)) {
+            // If we don't have a local cache but do have a shared cache then clone it,
+            // for example when scaling up new front ends.
+            $tmppath = $hookcallbacklocalfile . '.' . uniqid('tmp', true);
+            copy($hookcallbacksharedfile, $tmppath);
+            rename($tmppath, $hookcallbacklocalfile);
+            clearstatcache(true, $hookcallbacklocalfile);
+        }
+        if (is_readable($hookcallbacklocalfile)) {
+            return json_decode(file_get_contents($hookcallbacklocalfile), true) ?? null;
+        }
+        return null;
+    }
+
+    /**
+     * Store all relevant data in the cache.
+     *
+     * @param array $callbacks
+     * @param array $deprecations
+     * @param string|null $hash
+     */
+    protected function set_cache(
+        array $callbacks,
+        array $deprecations,
+        ?string $hash,
+    ): void {
+        $cachedata = [
+            'callbacks' => $callbacks,
+            'deprecations' => $deprecations,
+            'overrideshash' => $hash,
+        ];
+
+        // Write to a temp file and rename it to ensure atomicity of reads.
+        // If we write directly to the cache file, another process may read it during the write and get corrupted data.
+
+        // Create the local cache first, in case the shared cache is not
+        // working then each local cache still works independently.
+        $hookcallbacklocalfile = $this->get_local_cache_path();
+        make_localcache_directory('', true);
+        $tmppath = $hookcallbacklocalfile . '.' . uniqid('tmp', true);
+        file_put_contents($tmppath, json_encode($cachedata));
+        rename($tmppath, $hookcallbacklocalfile);
+        clearstatcache(true, $hookcallbacklocalfile);
+
+        // Create the shared backup cache.
+        $hookcallbacksharedfile = $this->get_shared_cache_path();
+        $tmppath = $hookcallbacksharedfile . '.' . uniqid('tmp', true);
+        file_put_contents($tmppath, json_encode($cachedata));
+        rename($tmppath, $hookcallbacksharedfile);
+        clearstatcache(true, $hookcallbacksharedfile);
     }
 }

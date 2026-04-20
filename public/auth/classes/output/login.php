@@ -54,6 +54,8 @@ class login implements renderable, templatable {
     public $cookieshelpicon;
     /** @var string The error message, if any. */
     public $error;
+    /** @var string The error title, shown as bold heading above the error message for credential failures. */
+    public $errortitle;
     /** @var string The info message, if any. */
     public $info;
     /** @var moodle_url Forgot password URL. */
@@ -128,7 +130,7 @@ class login implements renderable, templatable {
         } else if (!empty(iomad::get_config('', 'registerauth')) &&
                    iomad::get_config('', 'registerauth') == 'email' &&
                    empty($this->instructions)) {
-            $this->instructions = get_string('loginsteps', 'core', 'signup.php');
+            $this->instructions = get_string('logindonthaveaccount');
         }
 
         // IOAMD - turn off instructions if we don't have it set.
@@ -161,12 +163,19 @@ class login implements renderable, templatable {
     }
 
     /**
-     * Set the error message.
+     * Set the error message. For the AUTH_LOGIN_FAILED case, also sets
+     * an errortitle so the template can render a bold heading above the detail text.
      *
      * @param string $error The error message.
+     * @param int $errorcode The error code from login/index.php.
      */
-    public function set_error($error) {
-        $this->error = $error;
+    public function set_error(string $error, int $errorcode = 0): void {
+        if ($errorcode === AUTH_LOGIN_FAILED) {
+            $this->errortitle = get_string('logininvalidlogintitle');
+            $this->error = get_string('logininvalidlogindetail');
+        } else {
+            $this->error = $error;
+        }
     }
 
     /**
@@ -189,10 +198,10 @@ class login implements renderable, templatable {
         $data->cansignup = $this->cansignup;
         $data->cookieshelpicon = $this->cookieshelpicon->export_for_template($output);
         $data->error = $this->error;
+        $data->errortitle = $this->errortitle;
         $data->info = $this->info;
         $data->forgotpasswordurl = $this->forgotpasswordurl->out(false);
         $data->hasidentityproviders = !empty($this->identityproviders);
-        $data->hasinstructions = !empty($this->instructions) || $this->cansignup;
         $data->identityproviders = $identityproviders;
         list($data->instructions, $data->instructionsformat) = \core_external\util::format_text($this->instructions, FORMAT_MOODLE,
             context_system::instance()->id);

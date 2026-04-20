@@ -1,5 +1,13 @@
 # mod_imscp Upgrade notes
 
+## 5.2
+
+### Removed
+
+- The `imscp_libxml_disable_entity_loader()` has been removed from `public/mod/imscp/deprecatedlib.php`.
+
+  For more information see [MDL-87425](https://tracker.moodle.org/browse/MDL-87425)
+
 ## 5.1
 
 ### Deprecated

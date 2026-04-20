@@ -35,6 +35,21 @@ redirect_if_major_upgrade_required();
 
 require_login();
 
+// Redirect if My Courses is disabled.
+if (empty($CFG->enablemycourses)) {
+    $defaultpage = get_home_page();
+    if ($defaultpage == HOMEPAGE_URL) {
+        redirect(get_default_home_page_url());
+    } else if ($defaultpage == HOMEPAGE_MY) {
+        redirect(new moodle_url('/my/'));
+    } else if ($defaultpage == HOMEPAGE_USER) {
+        // All homepage options disabled - redirect to user preferences page.
+        redirect(new moodle_url('/user/preferences.php'));
+    } else {
+        redirect(new moodle_url('/'));
+    }
+}
+
 $hassiteconfig = has_capability('moodle/site:config', context_system::instance());
 if ($hassiteconfig && moodle_needs_upgrading()) {
     redirect(new moodle_url('/admin/index.php'));
@@ -69,30 +84,6 @@ $PAGE->force_lock_all_blocks();
 // Force the add block out of the default area.
 $PAGE->theme->addblockposition  = BLOCK_ADDBLOCK_POSITION_CUSTOM;
 
-// Add course management if the user has the capabilities for it.
-$coursecat = core_course_category::user_top();
-$coursemanagemenu = [];
-// Only display the action menu if the user has courses (otherwise, the buttons will be displayed in the zero state).
-if (count(enrol_get_all_users_courses($USER->id, true)) > 0) {
-    if ($coursecat && ($category = core_course_category::get_nearest_editable_subcategory($coursecat, ['create']))) {
-        // The user has the capability to create course.
-        $coursemanagemenu['newcourseurl'] = new moodle_url('/course/edit.php', ['category' => $category->id]);
-    }
-    if ($coursecat && ($category = core_course_category::get_nearest_editable_subcategory($coursecat, ['manage']))) {
-        // The user has the capability to manage the course category.
-        $coursemanagemenu['manageurl'] = new moodle_url('/course/management.php', ['categoryid' => $category->id]);
-    }
-    if ($coursecat) {
-        $category = core_course_category::get_nearest_editable_subcategory($coursecat, ['moodle/course:request']);
-        if ($category && $category->can_request_course()) {
-            $coursemanagemenu['courserequesturl'] = new moodle_url('/course/request.php', ['categoryid' => $category->id]);
-        }
-    }
-}
-if (!empty($coursemanagemenu)) {
-    // Render the course management menu.
-    $PAGE->add_header_action($OUTPUT->render_from_template('my/dropdown', $coursemanagemenu));
-}
 
 echo $OUTPUT->header();
 

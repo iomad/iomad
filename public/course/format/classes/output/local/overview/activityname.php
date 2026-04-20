@@ -75,8 +75,9 @@ class activityname implements externable, named_templatable, renderable {
             'hidden' => empty($cm->visible),
             'stealth' => $cm->is_stealth(),
             'nogroupserror' => $this->nogroupserror,
+            'available' => overviewtable::is_cm_available($cm),
         ];
-        if ($format->uses_sections()) {
+        if ($format->uses_sections() && $section->uservisible) {
             $result->sectiontitle = $format->get_section_name($section);
         }
         return $result;

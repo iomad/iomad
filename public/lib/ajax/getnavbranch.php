@@ -117,6 +117,10 @@ try {
     // Stop buffering errors at this point
     $html = ob_get_contents();
     ob_end_clean();
+} catch (\require_login_exception $e) {
+    // Activity is restricted; no navigation branch to return.
+    ob_end_clean();
+    exit;
 } catch (Exception $e) {
     throw new coding_exception('Error: '.$e->getMessage());
 }

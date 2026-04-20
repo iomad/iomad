@@ -34,11 +34,10 @@ $string['authenticatorname'] = 'Security key name';
 $string['error'] = 'Failed to authenticate';
 $string['error:alreadyregistered'] = 'This security key secret has already been registered.';
 $string['info'] = 'Use a physical security key or fingerprint scanner.';
-$string['logindesc'] = 'Click continue to use your security key.';
-$string['loginoption'] = 'Use security key';
+$string['logindesc'] = 'To keep your account safe, we need to check that it\'s really you. Click continue to use your security key.';
+$string['loginoption'] = 'Verify via security key';
 $string['loginskip'] = 'I don\'t have my security key';
 $string['loginsubmit'] = 'Continue';
-$string['logintitle'] = 'Verify it\'s you by security key';
 $string['pluginname'] = 'Security key';
 $string['privacy:metadata'] = 'The Security key factor plugin does not store any personal data.';
 $string['register'] = 'Register security key';
@@ -68,3 +67,6 @@ $string['manageinfo'] = 'You are using \'{$a}\' to authenticate.';
 $string['userverification:discouraged'] = 'User verification should not be employed, for example to minimize user interaction';
 $string['userverification:preferred'] = 'User verification is preferred, authentication will not fail if user verification is missing';
 $string['userverification:required'] = 'User verification is required (e.g. by pin). Authentication fails if key does not have user verification';
+
+// Deprecated since Moodle 5.2.
+$string['logintitle'] = 'Verify it\'s you by security key';

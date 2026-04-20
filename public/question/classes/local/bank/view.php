@@ -327,19 +327,6 @@ class view {
     }
 
     /**
-     * @deprecated Since Moodle 4.3
-     */
-    #[\core\attribute\deprecated(
-        'create a qbank plugin and implement a filter object',
-        since: '4.3',
-        mdl: 'MDL-72321',
-        final: true
-    )]
-    protected function init_search_conditions(): void {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-
-    /**
      * Initialise list of menu actions for enabled question bank plugins.
      *
      * Menu action objects are stored in $this->menuactions, keyed by class name.
@@ -750,22 +737,23 @@ class view {
         $extracondition = '';
         if (!$showhiddenquestion) {
             // If Show hidden question option is off, then we need get the latest version that is not hidden.
-            $extracondition = ' AND v.status <> :hiddenstatus';
+            $extracondition = ' AND qv2.status <> :hiddenstatus';
             $this->sqlparams = array_merge($this->sqlparams, ['hiddenstatus' => question_version_status::QUESTION_STATUS_HIDDEN]);
         }
-        $latestversion = "qv.version = (SELECT MAX(v.version)
-                                          FROM {question_versions} v
-                                          JOIN {question_bank_entries} be
-                                            ON be.id = v.questionbankentryid
-                                         WHERE be.id = qbe.id $extracondition)";
 
         // Get higher level filter condition.
         $jointype = isset($this->pagevars['jointype']) ? (int)$this->pagevars['jointype'] : condition::JOINTYPE_DEFAULT;
         $nonecondition = ($jointype === datafilter::JOINTYPE_NONE) ? ' NOT ' : '';
         $separator = ($jointype === datafilter::JOINTYPE_ALL) ? ' AND ' : ' OR ';
         // Build the SQL.
-        $sql = ' FROM {question} q ' . implode(' ', $joins);
-        $sql .= ' WHERE q.parent = 0 AND ' . $latestversion;
+        $sql = '      FROM {question} q ' . implode(' ', $joins) .
+               ' LEFT JOIN {question_versions} qv2 ON (   qv2.questionbankentryid = qv.questionbankentryid
+                                                      AND qv2.version > qv.version' .
+                                                      $extracondition .
+                                                     ')' .
+               ' WHERE q.parent = :parent
+                   AND qv2.questionbankentryid IS NULL';
+        $this->sqlparams = array_merge(['parent' => 0], $this->sqlparams);
         if (!empty($conditions)) {
             $sql .= ' AND ' . $nonecondition . ' ( ';
             $sql .= implode($separator, $conditions);
@@ -933,56 +921,6 @@ class view {
                 $this->callback, static::class, 'qbank-table', $this->cm?->id, $this->pagevars,
                 $this->extraparams);
         echo $OUTPUT->render($filter);
-    }
-
-    /**
-     * @deprecated since Moodle 4.3 MDL-72321
-     */
-    #[\core\attribute\deprecated(
-        'question/bank/managecategories/classes/category_confition.php',
-        since: '4.3',
-        mdl: 'MDL-72321',
-        final: true
-    )]
-    protected function print_choose_category_message(): void {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-
-    /**
-     * @deprecated since Moodle 4.3 MDL-72321
-     */
-    #[\core\attribute\deprecated(
-        'question/bank/managecategories/classes/category_confition.php',
-        since: '4.3',
-        mdl: 'MDL-72321',
-        final: true
-    )]
-    protected function get_current_category($categoryandcontext) {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-
-    /**
-     * @deprecated since Moodle 4.3 MDL-72321
-     */
-    #[\core\attribute\deprecated('filtering objects', since: '4.3', mdl: 'MDL-72321', final: true)]
-    protected function display_options_form($showquestiontext): void {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-
-    /**
-     * @deprecated since Moodle 4.3 MDL-72321
-     */
-    #[\core\attribute\deprecated('filtering objects', since: '4.3', mdl: 'MDL-72321', final: true)]
-    protected function display_advanced_search_form($advancedsearch): void {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-
-    /**
-     * @deprecated since Moodle 4.3 MDL-72321
-     */
-    #[\core\attribute\deprecated('filtering objects', since: '4.3', mdl: 'MDL-72321', final: true)]
-    protected function display_showtext_checkbox($showquestiontext): void {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
     }
 
     /**
@@ -1155,22 +1093,6 @@ class view {
     }
 
     /**
-     * @deprecated since Moodle 4.3
-     */
-    #[\core\attribute\deprecated('display_questions()', since: '4.3', mdl: 'MDL-72321', final: true)]
-    public function display_top_pagnation($pagination): void {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-
-    /**
-     * @deprecated since Moodle 4.3
-     */
-    #[\core\attribute\deprecated('display_questions()', since: '4.3', mdl: 'MDL-72321', final: true)]
-    public function display_bottom_pagination($pagination, $totalnumber, $perpage, $pageurl): void {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-
-    /**
      * Display the controls at the bottom of the list of questions.
      *
      * @param \context $catcontext The context of the category being displayed.
@@ -1284,7 +1206,7 @@ class view {
         // Start of the table.
         echo \html_writer::start_tag('table', [
             'id' => 'categoryquestions',
-            'class' => 'question-bank-table table generaltable',
+            'class' => 'question-bank-table table table-hover table-striped generaltable',
             'data-defaultsort' => json_encode($this->sort),
         ]);
 
@@ -1306,22 +1228,6 @@ class view {
 
         // End of the table.
         echo \html_writer::end_tag('table');
-    }
-
-    /**
-     * @deprecated since Moodle 4.3 MDL-72321
-     */
-    #[\core\attribute\deprecated('print_table()', since: '4.3', mdl: 'MDL-72321', final: true)]
-    protected function start_table() {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-
-    /**
-     * @deprecated since Moodle 4.3 MDL-72321
-     */
-    #[\core\attribute\deprecated('print_table()', since: '4.3', mdl: 'MDL-72321', final: true)]
-    protected function end_table() {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
     }
 
     /**
@@ -1370,6 +1276,14 @@ class view {
         }
         if ($rowclasses) {
             $attributes['class'] = $rowclasses;
+            // Add firstrow class to highlighted row if it does not already have it.
+            if (str_contains($attributes['class'], 'highlight') && !str_contains($attributes['class'], 'firstrow')) {
+                $attributes['class'] .= ' firstrow';
+                // If question_text is not visible, add class onlyhighlightrow.
+                if (!isset($this->extrarows['question_text_row']) || !($this->extrarows['question_text_row']->isvisible)) {
+                    $attributes['class'] .= ' onlyhighlightrow';
+                }
+            }
         }
         echo \html_writer::start_tag('tr', $attributes);
         foreach ($this->visiblecolumns as $column) {
@@ -1377,6 +1291,10 @@ class view {
         }
         echo \html_writer::end_tag('tr');
         foreach ($this->extrarows as $row) {
+            if (str_contains($attributes['class'], 'highlight')) {
+                // Add extrarow class to highlighted row.
+                $rowclasses .= ' extrarow' . ' ' . $this->extrarows[0];
+            }
             $row->display($question, $rowclasses);
         }
     }

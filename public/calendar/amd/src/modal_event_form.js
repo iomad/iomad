@@ -34,6 +34,11 @@ import * as Repository from 'core_calendar/repository';
 const SELECTORS = {
     SAVE_BUTTON: '[data-action="save"]',
     LOADING_ICON_CONTAINER: '[data-region="loading-icon-container"]',
+    START_DATE_FIELDS: 'select[name^="timestart"]',
+    END_DATE_FIELDS: 'select[name^="timedurationuntil"]',
+    START_DATE_DATE_PICKER: '#id_timestart_calendar',
+    END_DATE_DATE_PICKER: '#id_timedurationuntil_calendar',
+    DURATION_FIELD: '#id_timedurationminutes',
 };
 
 export default class ModalEventForm extends Modal {
@@ -56,6 +61,8 @@ export default class ModalEventForm extends Modal {
         this.reloadingBody = false;
         this.reloadingTitle = false;
         this.saveButton = this.getFooter().find(SELECTORS.SAVE_BUTTON);
+        this.eventTimeDuration = 0;
+        this.lastUsedDatePickerId = null;
     }
 
     configure(modalConfig) {
@@ -232,6 +239,79 @@ export default class ModalEventForm extends Modal {
     }
 
     /**
+     * Create a date object from the fields in the form.
+     *
+     * @method getDateFromFields
+     * @param {string} selector The selector that is used to build the id of the start/end date fields.
+     * @return {Date} The date object created from the fields
+     */
+    getDateFromFields(selector) {
+        const identifier = selector.match(/"([^"]+)"/)[1];
+        const d = new Date();
+        d.setFullYear(document.getElementById(`id_${identifier}_year`).value);
+        d.setMonth(document.getElementById(`id_${identifier}_month`).value - 1);
+        d.setDate(document.getElementById(`id_${identifier}_day`).value);
+        d.setHours(document.getElementById(`id_${identifier}_hour`).value);
+        d.setMinutes(document.getElementById(`id_${identifier}_minute`).value);
+        return d;
+    }
+
+    /**
+     * Update the end time value based on the duration of the event.
+     *
+     * If the event ends in 1 hour and 15 minutes, then updating the
+     * start time will respect this duration and push the end time forward
+     * and retain the 1 hour and 15 minute duration. This behaviour matches
+     * those of Google and iOS calendars in 2026.
+     *
+     * @method updateEndTime
+     */
+    updateEndTime() {
+        const startDate = this.getDateFromFields(SELECTORS.START_DATE_FIELDS);
+        const endDate = new Date(startDate.getTime() + this.eventTimeDuration);
+        const identifier = SELECTORS.END_DATE_FIELDS.match(/"([^"]+)"/)[1];
+        document.getElementById(`id_${identifier}_year`).value = endDate.getFullYear();
+        document.getElementById(`id_${identifier}_month`).value = endDate.getMonth() + 1;
+        document.getElementById(`id_${identifier}_day`).value = endDate.getDate();
+        document.getElementById(`id_${identifier}_hour`).value = endDate.getHours();
+        document.getElementById(`id_${identifier}_minute`).value = endDate.getMinutes();
+    }
+
+    /**
+     * Calculate the duration of the event by comparing the start and end dates.
+     *
+     * @method calculateDuration
+     * @return {Number} Millisecond difference.
+     */
+    calculateDuration() {
+        const startDate = this.getDateFromFields(SELECTORS.START_DATE_FIELDS);
+        const endDate = this.getDateFromFields(SELECTORS.END_DATE_FIELDS);
+        return (endDate - startDate);
+    }
+
+    /**
+     * Register the YUI calendar events.
+     *
+     * These events need to be registered after the elements have been rendered.
+     *
+     * @method registerCalendarEvents
+     */
+    registerCalendarEvents() {
+        const calendar = M?.form?.dateselector?.calendar;
+        if (calendar) {
+            calendar.on('dateClick', () => {
+                // The YUI date pickers share the same elements.
+                // Determine which ones was last used and perform the required method.
+                if (this.lastUsedDatePickerId === SELECTORS.START_DATE_DATE_PICKER) {
+                    this.updateEndTime();
+                } else if (this.lastUsedDatePickerId === SELECTORS.END_DATE_DATE_PICKER) {
+                    this.eventTimeDuration = this.calculateDuration();
+                }
+            }, this);
+        }
+    }
+
+    /**
      * Reload the title for the modal to the appropriate value
      * depending on whether we are creating a new event or
      * editing an existing event.
@@ -314,6 +394,9 @@ export default class ModalEventForm extends Modal {
 
         this.bodyPromise.then(() => {
             this.enableButtons();
+            this.updateEndTime();
+            this.eventTimeDuration = this.calculateDuration();
+            this.registerCalendarEvents();
             return;
         })
         .catch(Notification.exception)
@@ -477,6 +560,31 @@ export default class ModalEventForm extends Modal {
             // propagation because we have already handled the event.
             e.preventDefault();
             e.stopPropagation();
+        });
+
+        this.getModal().on('change', SELECTORS.START_DATE_FIELDS, () => {
+            this.updateEndTime();
+        });
+
+        this.getModal().on('change', SELECTORS.END_DATE_FIELDS, () => {
+            this.eventTimeDuration = this.calculateDuration();
+        });
+
+        this.getModal().on('click', SELECTORS.START_DATE_DATE_PICKER, () => {
+            this.lastUsedDatePickerId = SELECTORS.START_DATE_DATE_PICKER;
+        });
+
+        this.getModal().on('click', SELECTORS.END_DATE_DATE_PICKER, () => {
+            this.lastUsedDatePickerId = SELECTORS.END_DATE_DATE_PICKER;
+        });
+
+        this.getModal().on('focusout', SELECTORS.DURATION_FIELD, (e) => {
+            const duration = parseInt(e.target.value);
+            if (isNaN(duration)) {
+                return;
+            }
+            this.eventTimeDuration = duration * 60 * 1000;
+            this.updateEndTime();
         });
     }
 }

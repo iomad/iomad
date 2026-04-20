@@ -71,7 +71,8 @@ class api {
         $context = context_user::instance($userid);
         require_capability('auth/oauth2:managelinkedlogins', $context);
 
-        return linked_login::get_records(['userid' => $userid, 'confirmtoken' => '']);
+        $logins = linked_login::get_records(['userid' => $userid, 'confirmtoken' => '']);
+        return array_values($logins);
     }
 
     /**
@@ -197,9 +198,7 @@ class api {
 
         $data->link = $confirmationurl->out(false);
         $message = get_string('confirmlinkedloginemail', 'auth_oauth2', $data);
-
-        $data->link = $confirmationurl->out();
-        $messagehtml = text_to_html(get_string('confirmlinkedloginemail', 'auth_oauth2', $data), false, false, true);
+        $messagehtml = text_to_html(get_string('confirmlinkedloginemail', 'auth_oauth2', $data), false, false);
 
         $user->mailformat = 1;  // Always send HTML version as well.
 
@@ -339,9 +338,7 @@ class api {
 
         $data->link = $confirmationurl->out(false);
         $message = get_string('confirmaccountemail', 'auth_oauth2', $data);
-
-        $data->link = $confirmationurl->out();
-        $messagehtml = text_to_html(get_string('confirmaccountemail', 'auth_oauth2', $data), false, false, true);
+        $messagehtml = text_to_html(get_string('confirmaccountemail', 'auth_oauth2', $data), false, false);
 
         $user->mailformat = 1;  // Always send HTML version as well.
 

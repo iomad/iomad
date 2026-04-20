@@ -236,13 +236,14 @@ class filetypes_util {
         }
 
         $data = [];
-
+        $allowedextensions = [];
         foreach ($descriptions as $desc => $exts) {
             sort($exts);
             $data[] = (object)[
                 'description' => $desc,
                 'extensions' => join(' ', $exts),
             ];
+            $allowedextensions = array_merge($allowedextensions, $exts);
         }
 
         core_collator::asort_objects_by_property($data, 'description', core_collator::SORT_NATURAL);
@@ -250,6 +251,7 @@ class filetypes_util {
         return (object)[
             'hasdescriptions' => !empty($data),
             'descriptions' => array_values($data),
+            'allowedextensions' => implode(' ', array_unique($allowedextensions)),
         ];
     }
 
@@ -430,13 +432,6 @@ class filetypes_util {
     }
 
     /**
-     * @deprecated since Moodle 3.10 MDL-69050 - please use {@see is_listed} instead.
-     */
-    public function is_whitelisted() {
-        throw new \coding_exception('\core_form\filetypes_util::is_whitelisted() has been removed.');
-    }
-
-    /**
      * Returns all types that are not part of the given list.
      *
      * This is similar check to the {@see self::is_listed()} but this one actually returns the extra types.
@@ -460,13 +455,6 @@ class filetypes_util {
         }
 
         return array_diff($giventypes, $listedtypes);
-    }
-
-    /**
-     * @deprecated since Moodle 3.10 MDL-69050 - please use {@see get_not_listed} instead.
-     */
-    public function get_not_whitelisted() {
-        throw new \coding_exception('\core_form\filetypes_util::get_not_whitelisted() has been removed.');
     }
 
     /**

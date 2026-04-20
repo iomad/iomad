@@ -33,7 +33,7 @@ Feature: I can edit a bigbluebutton instance
       | activity        | course      | name           | type |
       | bigbluebuttonbn | Test course | RoomRecordings | 0    |
     And the following config values are set as admin:
-      | bigbluebuttonbn_config_experimental_features | 1 |
+      | bigbluebuttonbn_config_extended_capabilities | 1 |
       | bigbluebuttonbn_meetingevents_enabled        | 1 |
     And the following "users" exist:
       | username | firstname | lastname |

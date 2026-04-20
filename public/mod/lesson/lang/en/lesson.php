@@ -257,7 +257,7 @@ $string['gradeessay'] = 'Grade essay questions ({$a->notgradedcount} not graded 
 $string['gradeis'] = 'Grade is {$a}';
 $string['gradeoptions'] = 'Grade options';
 $string['groupoverrides'] = 'Group overrides';
-$string['groupsnone'] = 'No groups you can access.';
+$string['groupsnone'] = 'There are no groups in this course.';
 $string['handlingofretakes'] = 'Grading method';
 $string['handlingofretakes_help'] = 'How the grade is calculated when students attempt the lesson more than once:
 
@@ -348,16 +348,18 @@ $string['modattempts'] = 'Allow student review';
 $string['modattempts_help'] = 'If enabled, students can navigate through the lesson again from the start.';
 $string['modattemptsnoteacher'] = 'Student review only works for students.';
 $string['modulename'] = 'Lesson';
-$string['modulename_help'] = 'The lesson activity module enables a teacher to deliver content and/or practice activities in  interesting and flexible ways. A teacher can use the lesson to create a linear set of content pages or instructional activities that offer a variety of paths or options for the learner. In either case, teachers can choose to increase engagement and ensure understanding by including a variety of questions, such as multiple choice, matching and short answer. Depending on the student\'s choice of answer and how the teacher develops the lesson, students may progress to the next page, be taken back to a previous page or redirected down a different path entirely.
+$string['modulename_help'] = '###### Key features
+* Create pages with text, images, video, and questions
+* Design lessons that are either linear or have multiple paths
+* Direct students along different paths depending on their answers
 
-A lesson may be graded, with the grade recorded in the gradebook.
-
-Lessons may be used
-
-* For self-directed learning of a new topic
-* For  scenarios or simulations/decision-making exercises
-* For differentiated revision, with different sets of revision questions depending upon answers given to initial questions';
+###### Ways to use it
+* Develop scenario-based exercises for problem solving
+* Build an interactive case study where students\' choices lead to different outcomes
+* Create a tutorial that adapts depending on correct or incorrect answers';
 $string['modulename_link'] = 'mod/lesson/view';
+$string['modulename_summary'] = 'Create branching scenarios where students follow different paths based on their answers to questions.';
+$string['modulename_tip'] = 'Map out the flow of your Lesson before building it. Planning the pages and paths ahead of time makes building your Lesson much easier.';
 $string['modulenameplural'] = 'Lessons';
 $string['move'] = 'Move page';
 $string['movedpage'] = 'Moved page';
@@ -432,6 +434,8 @@ $string['overridedeletegroupsure'] = 'Are you sure you want to delete the overri
 $string['overridedeleteusersure'] = 'Are you sure you want to delete the override for user {$a}?';
 $string['overridegroup'] = 'Override group';
 $string['overridegroupeventname'] = '{$a->lesson} - {$a->group}';
+$string['overridereason'] = 'Reason for override';
+$string['overridereason_help'] = 'Optionally record the reason for this override.';
 $string['overrides'] = 'Overrides';
 $string['overrideuser'] = 'Override user';
 $string['overrideusereventname'] = '{$a->lesson} - Override';
@@ -498,6 +502,7 @@ $string['privacy:metadata:overrides:maxattempts'] = 'The maximium number of atte
 $string['privacy:metadata:overrides:retake'] = 'Whether re-takes are allowed';
 $string['privacy:metadata:overrides:password'] = 'The password to access the lesson';
 $string['privacy:metadata:overrides'] = 'A record of overrides per lesson';
+$string['privacy:metadata:overrides:reason'] = 'Optional notes documenting the reason for a lesson override.';
 $string['privacy:metadata:userpref:lessonview'] = 'The preferred display mode when editing lessons';
 $string['privacy:path:essayresponses'] = 'Essay responses';
 $string['privacy:path:essayanswers'] = 'Essay answers';
@@ -598,7 +603,7 @@ $string['usemean'] = 'Mean grade of all attempts';
 $string['usepassword'] = 'Password protected lesson';
 $string['usepassword_help'] = 'If enabled, a password is required in order to access the lesson.';
 $string['useroverrides'] = 'User overrides';
-$string['usersnone'] = 'No students have access to this lesson';
+$string['usersnone'] = 'There are no users enrolled in this course or no users can access the lesson.';
 $string['view'] = 'View';
 $string['viewessayanswers'] = 'View essay answers';
 $string['viewgrades'] = 'View grades';

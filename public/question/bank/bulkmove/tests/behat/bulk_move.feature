@@ -133,6 +133,56 @@ Feature: Use the qbank plugin manager page for bulkmove
     And the "class" attribute of "Question 2" "table_row" should not contain "highlight"
 
   @javascript
+  Scenario: Questions with a missing type can be bulk moved to a different question bank
+    Given the following "questions" exist:
+      | questioncategory | qtype       | name       | questiontext              |
+      | Test questions   | truefalse   | Question 1 | Answer the first question |
+      | Test questions   | missingtype | Question 2 | Write something           |
+    And I am on the "Course 1" "core_question > course question bank" page logged in as teacher1
+    And I apply question bank filter "Category" with value "Test questions"
+    # Select questions to be moved.
+    And I click on "Question 1" "checkbox"
+    And I click on "Question 2" "checkbox"
+    And I click on "With selected" "button"
+    When I press "Move to"
+    # Select a different question bank to move the questions into.
+    And I open the autocomplete suggestions list in the ".search-banks" "css_element"
+    And I click on "C2 - Question bank 2" item in the autocomplete list
+    And I press "Move questions"
+    And I click on "Confirm" "button"
+    # Confirm that selected questions are moved to selected category in the different bank.
+    Then I should see "Questions successfully moved"
+    And I should see "Question 1"
+    And I should see "Question 2"
+
+  @javascript
+  Scenario: Move a question to a different bank in a specified category
+    Given the following "question categories" exist:
+      | contextlevel    | reference | name              |
+      | Activity module | qbank2    | Test questions 3b |
+    And the following "questions" exist:
+      | questioncategory | qtype       | name       | questiontext              |
+      | Test questions   | truefalse   | Question 1 | Answer the first question |
+    And I am on the "Course 1" "core_question > course question bank" page logged in as teacher1
+    And I apply question bank filter "Category" with value "Test questions"
+    And I click on "Question 1" "checkbox"
+    And I click on "With selected" "button"
+    And I click on "move" "button"
+    And I open the autocomplete suggestions list in the ".search-banks" "css_element"
+    And I click on "C2 - Question bank 2" item in the autocomplete list
+    And I open the autocomplete suggestions list in the ".search-categories" "css_element"
+    And I click on "Test questions 3b" item in the autocomplete list
+    And I click on "Move questions" "button"
+    Then I should see "Are you sure you want to move these questions?"
+    And I click on "Confirm" "button"
+    # Confirm that selected questions are moved to selected category while unselected questions are not moved.
+    Then I should see "Questions successfully moved"
+    And I should see "Test questions 3b"
+    And I should see "Question 1"
+    And I should not see "Question 2"
+    And I should not see "Question 3"
+
+  @javascript
   Scenario: Unable to bulk move questions from history page
     Given I am on the "Test quiz" "mod_quiz > question bank" page logged in as "teacher1"
     And I apply question bank filter "Category" with value "Test questions 1"
@@ -182,7 +232,7 @@ Feature: Use the qbank plugin manager page for bulkmove
     And I click on "With selected" "button"
     And I click on "move" "button"
     And the field "searchbanks" matches value "C1 - Test quiz"
-    And the field "selectcategory" matches value "Default for Test quiz"
+    And the field "selectcategory" matches value "Test questions 1 (2)"
     And I open the autocomplete suggestions list in the ".search-banks" "css_element"
     And I should see "C1 - Question bank 1" in the ".search-banks .form-autocomplete-suggestions" "css_element"
     And I should see "C2 - Question bank 2" in the ".search-banks .form-autocomplete-suggestions" "css_element"
@@ -200,7 +250,7 @@ Feature: Use the qbank plugin manager page for bulkmove
     And I click on "With selected" "button"
     And I click on "move" "button"
     And the field "searchbanks" matches value "C1 - Question bank 1"
-    And the field "selectcategory" matches value "Default for Question bank 1 (1)"
+    And the field "selectcategory" matches value "Test questions 2 (2)"
     # The moved question should be highlighted
     And the "class" attribute of "Seventh question" "table_row" should contain "highlight"
 
@@ -221,3 +271,58 @@ Feature: Use the qbank plugin manager page for bulkmove
     And I click on "move" "button"
     And I open the autocomplete suggestions list in the ".search-banks" "css_element"
     Then "New question bank" "autocomplete_suggestions" should exist
+
+  @javascript
+  Scenario: Clicking the dummy option for showing the reached limit in course does not throw an error
+    Given the following "activities" exist:
+      | activity | name                      | course | idnumber  |
+      | qbank    | Question bank Course 1 1  | C1     | qbankc101 |
+      | qbank    | Question bank Course 1 2  | C1     | qbankc102 |
+      | qbank    | Question bank Course 1 3  | C1     | qbankc103 |
+      | qbank    | Question bank Course 1 4  | C1     | qbankc104 |
+      | qbank    | Question bank Course 1 5  | C1     | qbankc105 |
+      | qbank    | Question bank Course 1 6  | C1     | qbankc106 |
+      | qbank    | Question bank Course 1 7  | C1     | qbankc107 |
+      | qbank    | Question bank Course 1 8  | C1     | qbankc108 |
+      | qbank    | Question bank Course 1 9  | C1     | qbankc109 |
+      | qbank    | Question bank Course 1 10 | C1     | qbankc110 |
+      | qbank    | Question bank Course 2 1  | C2     | qbankc201 |
+      | qbank    | Question bank Course 2 2  | C2     | qbankc202 |
+      | qbank    | Question bank Course 2 3  | C2     | qbankc203 |
+      | qbank    | Question bank Course 2 4  | C2     | qbankc204 |
+      | qbank    | Question bank Course 2 5  | C2     | qbankc205 |
+      | qbank    | Question bank Course 2 6  | C2     | qbankc206 |
+      | qbank    | Question bank Course 2 7  | C2     | qbankc207 |
+      | qbank    | Question bank Course 2 8  | C2     | qbankc208 |
+      | qbank    | Question bank Course 2 9  | C2     | qbankc209 |
+      | qbank    | Question bank Course 2 10 | C2     | qbankc210 |
+      | qbank    | Question bank Course 3 1  | C3     | qbankc301 |
+      | qbank    | Question bank Course 3 2  | C3     | qbankc302 |
+      | qbank    | Question bank Course 3 2  | C3     | qbankc303 |
+      | qbank    | Question bank Course 3 4  | C3     | qbankc304 |
+      | qbank    | Question bank Course 3 5  | C3     | qbankc305 |
+      | qbank    | Question bank Course 3 6  | C3     | qbankc306 |
+      | qbank    | Question bank Course 3 7  | C3     | qbankc307 |
+      | qbank    | Question bank Course 3 8  | C3     | qbankc308 |
+      | qbank    | Question bank Course 3 9  | C3     | qbankc309 |
+      | qbank    | Question bank Course 3 10 | C3     | qbankc310 |
+    And the following "course enrolments" exist:
+      | user     | course | role           |
+      | teacher1 | C3     | editingteacher |
+    When I am on the "C1" "Course" page logged in as "teacher1"
+    And I navigate to "Question banks" in current page administration
+    And I follow "Question bank 1"
+    And I select "Categories" from the "Question bank tertiary navigation" singleselect
+    And I follow "Test questions 5"
+    And I click on "Fifth question" "checkbox"
+    And I click on "With selected" "button"
+    And I click on "move" "button"
+    And I wait until the page is ready
+    And "Question bank" "autocomplete_selection" should exist
+    And I press the tab key
+    And I press the tab key
+    And I press the tab key
+    And I type "Question bank Course"
+    Then I click on "More than 20 results. You need to refine your search." item in the autocomplete list
+    And "More than 20 results. You need to refine your search." "autocomplete_selection" should exist
+    And I should see "You must select a question bank before you can select a category."

@@ -1,84 +1,177 @@
-$loginbackground-gradient-from: $gray-100 !default;
-$loginbackground-gradient-to: $gray-300 !default;
-$logincontainer-bg: $white !default;
-$logincontainer-padding: 3rem !default;
-$logincontainer-shadow: $box-shadow !default;
-$logindivider-margin-top: 1.5rem !default;
-$logindivider-margin-bottom: 1.5rem !default;
-$logindivider-border: $border-color !default;
-$login-identity-provider-btn-border: $border-color !default;
+$login-layout-left-bg: $primary !default;
+$login-layout-panel-bg: darken($login-layout-left-bg, 25%);
+$login-layout-panel-padding: 3rem !default;
+$login-layout-content-width: 576px !default;
+$login-layout-copy-width: 450px !default;
+$login-input-bg: $gray-100 !default;
 
-.pagelayout-login #region-main {
-    border: 0;
-    background-color: inherit;
-}
+.pagelayout-login {
+    #region-main,
+    #region-main-box {
+        border: 0;
+        background-color: transparent;
+    }
 
-.pagelayout-login #page {
-    background: $loginbackground-gradient-from;
-    @include gradient-x($loginbackground-gradient-from, $loginbackground-gradient-to, 0%, 100%);
-    div[role="main"] {
-        height: 100%;
+    #page {
+        margin: 0;
+        min-height: 100vh;
+        background-color: $white;
     }
 }
 
-.login-wrapper {
+.login-layout-left {
+    background-color: $login-layout-left-bg;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100%;
+    padding: $login-layout-panel-padding;
+}
+
+.login-layout-left-content {
+    max-width: $login-layout-copy-width;
+    text-align: center;
+    color: color-contrast($login-layout-panel-bg);
+    background-color: rgba($login-layout-panel-bg, 0.65);
+    border-radius: $border-radius;
+    padding: $spacer;
+    margin-bottom: 5rem;
+    blockquote {
+        color: inherit;
+        border-left: 5px solid color-contrast($login-layout-panel-bg);
+    }
+    a {
+        color: inherit;
+        text-decoration: underline;
+    }
+}
+
+.login-layout-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    justify-items: center;
+}
+
+.login-layout-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.login-layout-stat-value {
+    font-size: $h5-font-size;
+    line-height: 1;
+}
+
+.login-layout-right {
+    min-height: 100vh;
+    padding: $login-layout-panel-padding;
+    display: flex;
+    justify-content: center;
+}
+
+.login-layout-right-content {
+    width: 100%;
+    max-width: $login-layout-content-width;
+    margin: auto 0;
 }
 
 .login-container {
-    background-color: $logincontainer-bg;
-    padding: $logincontainer-padding;
-    box-shadow: $logincontainer-shadow;
-    margin-bottom: 2rem;
-    @include border-radius();
-    .login-languagemenu {
+    .login-form {
+        .form-control {
+            background-color: $login-input-bg;
+            box-shadow: none;
+
+            &:hover {
+                background-color: $login-input-bg;
+            }
+
+            &:focus {
+                background-color: $login-input-bg;
+                border-color: $input-focus-border-color;
+                box-shadow: $input-focus-box-shadow;
+            }
+        }
+
+        .toggle-sensitive-wrapper .toggle-sensitive-btn {
+            --bs-btn-bg: #{$login-input-bg};
+            --bs-btn-border-color: #{$input-border-color};
+            --bs-btn-hover-bg: #{$login-input-bg};
+            --bs-btn-hover-border-color: #{$input-border-color};
+            --bs-btn-active-bg: #{$login-input-bg};
+            --bs-btn-active-border-color: #{$input-border-color};
+            border-inline-start: none;
+            color: $gray-700;
+
+            &:focus,
+            &:focus-visible {
+                background-color: $login-input-bg;
+                border-color: $input-focus-border-color;
+                box-shadow: $input-focus-box-shadow;
+            }
+        }
+    }
+
+    .login-separator {
         display: flex;
-        justify-content: flex-start;
+        align-items: center;
+        gap: 0.75rem;
+        color: $gray-600;
+        font-size: $font-size-sm;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+
+        &::before,
+        &::after {
+            content: "";
+            flex: 1;
+            border-top: $border-width solid $border-color;
+        }
+    }
+
+    .login-identityprovider-btn {
+        width: 100%;
+        background-color: $white;
+        border-color: $gray-400;
+        color: $gray-600;
+
+        &:hover,
+        &:focus {
+            background-color: $gray-100;
+            border-color: $gray-500;
+        }
+    }
+
+    .login-cookiesnotice {
+        .btn-link {
+            font-size: $font-size-sm;
+            color: $gray-600;
+
+            &:hover,
+            &:focus {
+                color: $gray-700;
+            }
+        }
+    }
+
+    .login-languagemenu {
         .dropdown-menu {
             max-height: 300px;
             overflow-y: auto;
         }
     }
-    .login-logo {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 1rem;
-    }
-    .login-divider {
-        margin-top: $logindivider-margin-top;
-        margin-bottom: $logindivider-margin-bottom;
-        border-top: $border-width solid $logindivider-border;
-    }
-
-    h1.login-heading {
-        font-size: $h2-font-size;
-    }
-
-    h2.login-heading {
-        font-size: $h4-font-size;
-    }
-    .login-identityproviders {
-        .login-identityprovider-btn {
-            border: $border-width solid $login-identity-provider-btn-border;
-        }
-    }
-    .divider {
-        width: $border-width;
-        background-color: $gray-300;
-        height: $font-size-base * 2;
-    }
-    .action-menu-trigger {
-        a {
-            margin: 0.5rem 0;
-        }
-    }
 }
 
-@include media-breakpoint-up(md) {
-    .login-container {
-        width: 500px !important; /* stylelint-disable-line declaration-no-important */
+@include media-breakpoint-down(lg) {
+    .login-layout-right {
+        padding: 1.5rem 1rem;
+    }
+
+    .login-layout-right-content {
+        max-width: 100%;
+        margin: 0;
     }
 }

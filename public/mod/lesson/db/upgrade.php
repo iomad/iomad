@@ -51,12 +51,6 @@ function xmldb_lesson_upgrade($oldversion) {
     global $DB;
     $dbman = $DB->get_manager();
 
-    // Automatically generated Moodle v4.2.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    // Automatically generated Moodle v4.3.0 release upgrade line.
-    // Put any upgrade step following this.
-
     // Automatically generated Moodle v4.4.0 release upgrade line.
     // Put any upgrade step following this.
 
@@ -66,8 +60,10 @@ function xmldb_lesson_upgrade($oldversion) {
     // Automatically generated Moodle v5.0.0 release upgrade line.
     // Put any upgrade step following this.
 
-    if ($oldversion < 2025041401) {
+    // Automatically generated Moodle v5.1.0 release upgrade line.
+    // Put any upgrade step following this.
 
+    if ($oldversion < 2026022300) {
         // Changing precision of field name on table lesson to (1333).
         $table = new xmldb_table('lesson');
         $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '1333', null, XMLDB_NOTNULL, null, null, 'course');
@@ -76,7 +72,29 @@ function xmldb_lesson_upgrade($oldversion) {
         $dbman->change_field_precision($table, $field);
 
         // Lesson savepoint reached.
-        upgrade_mod_savepoint(true, 2025041401, 'lesson');
+        upgrade_mod_savepoint(true, 2026022300, 'lesson');
+    }
+
+    if ($oldversion < 2026030600) {
+        // Define field reason to be added to lesson_overrides.
+        $table = new xmldb_table('lesson_overrides');
+        $field = new xmldb_field('reason', XMLDB_TYPE_TEXT, null, null, null, null, null, 'password');
+
+        // Conditionally launch add field reason.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field reasonformat to be added to lesson_overrides.
+        $formatfield = new xmldb_field('reasonformat', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'reason');
+
+        // Conditionally launch add field reasonformat.
+        if (!$dbman->field_exists($table, $formatfield)) {
+            $dbman->add_field($table, $formatfield);
+        }
+
+        // Lesson savepoint reached.
+        upgrade_mod_savepoint(true, 2026030600, 'lesson');
     }
 
     return true;

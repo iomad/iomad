@@ -126,6 +126,7 @@ $string['cannotuninstall'] = '{$a} can not be uninstalled.';
 $string['categoryemail'] = 'Email';
 $string['cfgwwwrootslashwarning'] = '$CFG->wwwroot is defined incorrectly in the config.php file. It includes a \'/\' character at the end which must be removed.';
 $string['cfgwwwrootwarning'] = '$CFG->wwwroot is defined incorrectly in the config.php file. It should match the URL you are using to access this page.';
+$string['check_router'] = 'Router configuration';
 $string['checkupgradepending'] = 'Upgrade';
 $string['cleanup'] = 'Cleanup';
 $string['clianswerno'] = 'n';
@@ -136,7 +137,7 @@ $string['cliincorrectvalueerror'] = 'Error, incorrect value "{$a->value}" for "{
 $string['cliincorrectvalueretry'] = 'Incorrect value, please retry';
 $string['clistatusdisabled'] = 'Status: disabled';
 $string['clistatusenabled'] = 'Status: enabled';
-$string['clistatusenabledlater'] = 'status: CLI maintenance mode will be enabled on {$a}';
+$string['clistatusenabledlater'] = 'Status: Command Line Interface (CLI) maintenance mode will be enabled on {$a}';
 $string['clitypevalue'] = 'type value';
 $string['clitypevaluedefault'] = 'type value, press Enter to use default value ({$a})';
 $string['cliunknowoption'] = 'Unrecognised options:
@@ -158,8 +159,8 @@ $string['cliupgrademaintenancenotrequired'] = 'This upgrade WILL NOT result in m
 $string['cliupgrademaintenancerequired'] = 'This upgrade WILL result in maintenance mode for users.';
 $string['cliupgradenoneed'] = 'No upgrade needed for the installed version {$a}. Thanks for coming anyway!';
 $string['cliupgradepending'] = 'An upgrade is pending';
-$string['cliupgradesetlock'] = 'Upgrade has been locked to CLI execution only.';
-$string['cliupgradeunsetlock'] = 'Existing CLI execution upgrade lock has been removed.';
+$string['cliupgradesetlock'] = 'Upgrade has been locked to Command Line Interface (CLI) execution only.';
+$string['cliupgradeunsetlock'] = 'Existing Command Line Interface (CLI) execution upgrade lock has been removed.';
 $string['cliyesnoprompt'] = 'type y (means yes) or n (means no)';
 $string['close'] = 'Close';
 $string['cohort_customfield'] = 'Cohort custom fields';
@@ -231,7 +232,7 @@ Mobile app|https://example.org/app|Download our app
 $string['configcustomusermenuitems'] = 'You can configure the contents of the user menu (with the exception of the log out link, which is automatically added). Each line is separated by pipe characters and consists of 1) a string in "langstringname, componentname" form or as plain text, and 2) a URL. Dividers can be used by adding a line of one or more # characters where desired.';
 $string['configdbsessions'] = 'If enabled, this setting will use the database to store information about current sessions. Note that changing this setting now will log out all current users (including you). If you are using MySQL please make sure that \'max_allowed_packet\' in my.cnf (or my.ini) is at least 4M. Other session drivers can be configured directly in config.php, see config-dist.php for more information. This option disappears if you specify session driver in config.php file.';
 $string['configdebug'] = 'If you turn this on, then PHP\'s error_reporting will be increased so that more warnings are printed.  This is only useful for developers.';
-$string['configdebugdisplay'] = 'Set to on, the error reporting will go to the HTML page. This is practical, but breaks XHTML, JS, cookies and HTTP headers in general. Set to off, it will send the output to your server logs, allowing better debugging. The PHP setting error_log controls which log this goes to.';
+$string['configdebugdisplay'] = 'If enabled, debug messages are displayed on the HTML page. This breaks XHTML, JavaScript, cookies and HTTP headers in general. Otherwise debug messages are stored in the server logs, allowing better debugging. The PHP setting error_log controls which log this goes to.';
 $string['configdebugpageinfo'] = 'Enable if you want page information printed in page footer.';
 $string['configdebugvalidators'] = 'Enable if you want to have links to external validator servers in page footer. You may need to create new user with username <em>w3cvalidator</em>, and enable guest access. These changes may allow unauthorized access to server, do not enable on production sites!';
 $string['configdefaulthomepage'] = 'Which page should users be redirected to after logging in to the site? The setting also determines the first link in the navigation for users of Classic-based themes.';
@@ -242,6 +243,7 @@ $string['configdeleteincompleteusers'] = 'After this period, any account without
 $string['configdeleteunconfirmed'] = 'For certain authentication methods, such as email-based self-registration, users must confirm their account within a certain time. After this period, any old unconfirmed accounts are deleted.';
 $string['configdenyemailaddresses'] = 'To deny email addresses from particular domains list them here in the same way.  All other domains will be accepted. To deny subdomains add the domain with a preceding \'.\'. eg <strong>hotmail.com yahoo.co.uk .live.com</strong>';
 $string['configenableanalytics'] = 'Analytics models, such as \'Students at risk of dropping out\' or \'Upcoming activities due\', can generate predictions, send insight notifications and offer further actions such as messaging users.';
+$string['configenableasyncresets'] = 'If enabled, course resets are run as asynchronous ad-hoc tasks, preventing timeouts when resetting large courses.';
 $string['configenableblogs'] = 'This switch provides all site users with their own blog.';
 $string['configdisableuserimages'] = 'Disable the ability for users to change user profile images.';
 $string['configdisplayloginfailures'] = 'This will display information to users about previous failed logins.';
@@ -309,7 +311,7 @@ $string['configlocale'] = 'Choose a sitewide locale - this will override the for
 $string['configlockrequestcategory'] = 'If enabled, users with the capability to request new courses in the system context will not be able to select a category in the request a new course form. An alternative way of restricting users to requesting a new course in just one category is to apply the capability to request new courses in the category context.';
 $string['configloglifetime'] = 'This specifies the length of time you want to keep logs about user activity.  Logs that are older than this age are automatically deleted.  It is best to keep logs as long as possible, in case you need them, but if you have a very busy server and are experiencing performance problems, then you may want to lower the log lifetime. Values lower than 30 are not recommended because statistics may not work properly.';
 $string['configlookahead'] = 'Days to look ahead';
-$string['configmailnewline'] = 'Newline characters used in mail messages. CRLF is required according to RFC 822bis, some mail servers do automatic conversion from LF to CRLF, other mail servers do incorrect conversion from CRLF to CRCRLF, yet others reject mails with bare LF (qmail for example). Try changing this setting if you are having problems with undelivered emails or double newlines.';
+$string['configmailnewline'] = 'Sets the line-ending format for outgoing mail. While the universal email standard RFC 822bis requires Carriage Return Line Feed (CRLF), mail servers vary in how they process these characters. Some automatically fix simple Line Feed (LF) endings, while others incorrectly create double-spaced lines (CRCRLF) or reject mails with bare LF. Change this setting if you have problems with undelivered emails or double newlines.';
 $string['configmaxbytes'] = 'This specifies a maximum size for files uploaded to the site. This setting is limited by the PHP settings post_max_size and upload_max_filesize, as well as the Apache setting LimitRequestBody. In turn, maxbytes limits the range of sizes that can be chosen at course or activity level. If \'Site upload limit\' is chosen, the maximum size allowed by the server will be used.';
 $string['configmaxconsecutiveidentchars'] = 'Passwords must not have more than this number of consecutive identical characters. Use 0 to disable this check.';
 $string['configmaxeditingtime'] = 'This specifies the amount of time people have to re-edit forum postings, glossary comments etc.  Usually 30 minutes is a good value.';
@@ -340,7 +342,7 @@ $string['configpasswordpolicycheckonlogin'] = 'If enabled, user passwords will b
 It is useful to enable this setting after updating the password policy.';
 $string['configpasswordresettime'] = 'This specifies the amount of time people have to validate a password reset request before it expires. Usually 30 minutes is a good value.';
 $string['configpathtodu'] = 'Path to du. Probably something like /usr/bin/du. If you enter this, pages that display directory contents will run much faster for directories with a lot of files.';
-$string['configpathtophp'] = 'Path to PHP CLI. Probably something like /usr/bin/php. If you enter this, cron scripts can be executed from admin web interface.';
+$string['configpathtophp'] = 'Path to PHP Command Line Interface (CLI). Usually /usr/bin/php or similar. If you enter this, cron scripts can be executed from the admin web interface.';
 $string['configperfdebug'] = 'If you turn this on, performance info will be printed in the footer of the standard theme';
 $string['configprofileroles'] = 'Roles that are listed in user profiles and on the participants page.';
 $string['configprofilesforenrolledusersonly'] = 'To prevent misuse by spammers, profile descriptions of users who are not yet enrolled in any course are hidden. New users must enrol in at least one course before they can add a profile description.';
@@ -388,8 +390,8 @@ $string['configsitemaxcategorydepth'] = 'Maximum category depth';
 $string['configsitemaxcategorydepthhelp'] = 'This specifies the maximum depth of child categories expanded when displaying categories or combo list. Deeper level categories will appear as links and user can expand them with AJAX request.';
 $string['configslasharguments'] = '\'Slash arguments\' (using <em>PATH_INFO</em>) is required for SCORM packages and multiple-file resources to display correctly. If your web server doesn\'t support \'slash arguments\' and you are unable to configure it, this setting can be disabled, though it will result in things not working.<br />Note: The use of \'slash arguments\' will be required in future versions of Moodle.';
 $string['configsmtpauthtype'] = 'This sets the authentication type to use on SMTP server.';
-$string['configsmtpoauthservice'] = 'Select the OAuth 2 service that is configured to talk to the SMTP server. If the service doesn\'t exist yet, you will need to create it. Note that you need to set the SMTP Auth Type to XOAUTH2.';
-$string['configsmtphosts'] = 'Give the full name of one or more local SMTP servers that Moodle should use to send mail (eg \'mail.a.com\' or \'mail.a.com;mail.b.com\'). To specify a non-default port (i.e other than port 25), you can use the [server]:[port] syntax (eg \'mail.a.com:587\'). For secure connections, port 465 is usually used with SSL, port 587 is usually used with TLS, specify security protocol below if required. If you leave this field blank, Moodle will use the PHP default method of sending mail.';
+$string['configsmtpoauthservice'] = 'Select the OAuth 2 service that is configured to talk to the SMTP server. If the service doesn\'t exist yet, you will need to create it. Note that you need to set the SMTP auth type to XOAUTH2.';
+$string['configsmtphosts'] = 'Give the full name of one or more local SMTP servers that Moodle should use to send mail (e.g. \'mail.a.com\' or \'mail.a.com;mail.b.com\'). To specify a non-default port (i.e other than port 25), use the [server]:[port] syntax (e.g. \'mail.a.com:587\'). For secure connections, port 465 is usually used with SSL, port 587 is usually used with Transport Layer Security (TLS). Specify the security protocol below if required. If you leave this field blank, Moodle will use the PHP default method of sending mail.';
 $string['configsmtpmaxbulk'] = 'Maximum number of messages sent per SMTP session. Grouping messages may speed up the sending of emails. Values lower than 2 force creation of new SMTP session for each email.';
 $string['configsmtpsecure'] = 'If SMTP server requires secure connection, specify the correct protocol type.';
 $string['configsmtpuser'] = 'If you have specified an SMTP server above, and the server requires authentication, then enter the username and password here.';
@@ -419,7 +421,7 @@ $string['configvariables'] = 'Variables';
 $string['configverifychangedemail'] = 'Enables verification of changed email addresses using allowed and denied email domains settings. If this setting is disabled the domains are enforced only when creating new users.';
 $string['configvisiblecourses'] = 'Display courses in hidden categories normally';
 $string['configwarning'] = 'Be careful modifying these settings - strange values could cause problems.';
-$string['configyuicomboloading'] = 'This options enables combined file loading optimisation for YUI libraries. This setting should be enabled on production sites for performance reasons.';
+$string['configyuicomboloading'] = 'This option enables combined file loading optimisation for YUI libraries. It should be enabled for performance reasons.';
 $string['confirmation'] = 'Confirmation';
 $string['confirmationpending'] = 'Confirmation pending';
 $string['confirmcontextlock'] = '{$a->contextname} is currently unfrozen. Freezing it will make it read-only and prevent users from making changes. Are you sure you wish to continue?';
@@ -488,7 +490,7 @@ $string['curlsecurityallowedportsyntax'] = 'List of port numbers that cURL can c
 $string['curlsecurityblockedhosts'] = 'cURL blocked hosts list';
 $string['curlsecurityblockedhostssyntax'] = 'Put each entry on a new line. Valid entries are either full IPv4 or IPv6 addresses (such as 192.168.10.1, 0:0:0:0:0:0:0:1, ::1, fe80::) which match a single host; or CIDR notation (such as 231.54.211.0/20 or fe80::/64); or a range of IP addresses (such as 231.3.56.10-20 or fe80::1111-bbbb) where the range applies to the last group of the address; or domain names (such as localhost or example.com); or wildcard domain names (such as *.example.com or *.sub.example.com). Blank lines are not allowed.';
 $string['curlsecurityurlblocked'] = 'The URL is blocked.';
-$string['curlcache'] = 'cURL cache TTL';
+$string['curlcache'] = 'cURL cache Time-to-Live (TTL)';
 $string['curlrequired'] = 'The cURL PHP extension is now required by Moodle, in order to communicate with Moodle repositories.';
 $string['curltimeoutkbitrate'] = 'Bitrate to use when calculating cURL timeouts (Kbps)';
 $string['curltimeoutkbitrate_help'] = 'This setting is used to calculate an appropriate timeout during large cURL requests. As part of this calculation an HTTP HEAD request is made to determine the size of the content. Setting this to 0 disables this request from being made.';
@@ -579,7 +581,7 @@ $string['editstrings'] = 'Edit words or phrases';
 $string['emailchangeconfirmation'] = 'Email change confirmation';
 $string['emaildkim'] = 'DomainKeys Identified Mail (DKIM) email signing';
 $string['emaildkimselector'] = 'DKIM selector';
-$string['emaildkiminfo'] = 'If both the DKIM selector is set and a private certificate file is found which matches the email\'s "From" address domain in $CFG->dataroot/dkim/[domain]/[selector].private then the email will be signed. In most cases (for example if allowedemaildomains is empty) only a single certificate is needed in <pre>{$a->path}</pre>. For more setup details, see the documentation <a href="{$a->docs}">Mail configuration</a>.';
+$string['emaildkiminfo'] = 'If both the DKIM selector is set and a private certificate file is found which matches the email\'s "From" address domain in $CFG->dataroot/dkim/[domain]/[selector].private then the email will be signed. In most cases (for example if allowedemaildomains is empty) only a single certificate is needed in <pre>{$a->path}</pre> For more setup details, see the documentation <a href="{$a->docs}">Mail configuration</a>.';
 $string['emailfromvia'] = 'Email via information';
 $string['emailheaders'] = 'Email headers';
 $string['emailsubjectprefix'] = 'Email subject prefix text';
@@ -597,6 +599,7 @@ $string['emoticons_desc'] = 'This form defines the emoticons (or smileys) used a
 $string['emoticonsreset'] = 'Reset emoticons setting to default values';
 $string['emptysettingvalue'] = 'Empty';
 $string['enableanalytics'] = 'Analytics';
+$string['enableasyncresets'] = 'Enable asynchronous course resets';
 $string['enableblogs'] = 'Enable blogs';
 $string['enablecalendarexport'] = 'Enable calendar export';
 $string['enablecomments'] = 'Enable comments';
@@ -613,14 +616,16 @@ $string['enableglobalsearch_desc'] = 'If enabled, data will be indexed and synch
 $string['enablegravatar'] = 'Enable Gravatar';
 $string['enablegravatar_help'] = 'When enabled Moodle will attempt to fetch a user profile picture from Gravatar if the user has not uploaded an image.';
 $string['enablemobilewebservice'] = 'Enable web services for mobile devices';
+$string['enablemycourses'] = 'Enable My courses';
+$string['enablemycourses_help'] = 'If enabled, the My courses page and its navigation link are available. If disabled, users are redirected to the configured \'Start page for users\'.';
+$string['enablemyhome'] = 'Enable Home';
+$string['enablemyhome_help'] = 'If enabled, the Home page and its navigation link are available. If disabled, users are redirected to the configured \'Start page for users\'.';
 $string['enablepdfexportfont'] = 'Enable PDF fonts';
 $string['enablepdfexportfont_desc'] = 'If your site has courses in different languages which need other fonts in generated PDF files, you can provide the option to set the font in the course settings. You need to specify available fonts in $CFG->pdfexportfont in config.php.';
 $string['enableplugin'] = 'Enable {$a}';
 $string['enablerecordcache'] = 'Enable record cache';
 $string['enablerssfeeds'] = 'Enable RSS feeds';
 $string['enablesearchareas'] = 'Enable search areas';
-$string['enablesharingtomoodlenet'] = 'Enable sharing to MoodleNet (outbound)';
-$string['enablesharingtomoodlenet_desc'] = 'Enable users to share course content to a configured MoodleNet instance if they have the relevant capability.';
 $string['enablestats'] = 'Enable statistics';
 $string['enabletrusttext'] = 'Enable trusted content';
 $string['enableuserfeedback'] = 'Enable feedback about this software';
@@ -705,7 +710,7 @@ $string['gdrequired'] = 'The GD extension is now required by Moodle for image co
 $string['generalsettings'] = 'General settings';
 $string['geoipdbedition'] = 'GeoIP Database Edition';
 $string['geoipdbedition_desc'] = 'Select the edition of the GeoIP database to download. Please be aware that using the GeoIP2-City database requires a valid paid license.';
-$string['geoipfile'] = 'GeoIP City DB';
+$string['geoipfile'] = 'GeoIP City database';
 $string['geoipmaxmindaccid'] = 'MaxMind account ID';
 $string['geoipmaxmindaccid_desc'] = 'The account ID of the account created on the MaxMind API service.';
 $string['geoipmaxmindlicensekey'] = 'MaxMind license key';
@@ -834,16 +839,12 @@ $string['lockoutemailbody'] = 'Hi {$a->firstname},
 Your account with username {$a->username} on server \'{$a->sitename}\'
 was locked out after multiple invalid login attempts.
 
-To unlock the account immediately go to the following address
+To unlock the account immediately, please click the link below:
 
-{$a->link}
+<a href="{$a->link}">Unlock account</a>
 
-In most mail programs, this should appear as a blue link
-which you can just click on.  If that doesn\'t work,
-then copy and paste the address into the address
-line at the top of your web browser window.
 
-If you need help, please contact the site administrator,
+If you need help, please contact the site administrator.
 {$a->admin}';
 $string['lockoutemailsubject'] = 'Your account on {$a} was locked out';
 $string['lockouterrorunlock'] = 'Invalid account unlock information supplied.';
@@ -855,10 +856,12 @@ $string['lockrequestcategory'] = 'Prevent category selection';
 $string['log'] = 'Logs';
 $string['logguests'] = 'Log guest access';
 $string['logguests_help'] = 'This setting enables logging of actions by guest account and not logged in users. High profile sites may want to disable this logging for performance reasons. It is recommended to keep this setting enabled on production sites.';
+$string['login'] = 'Login';
 $string['logininfoinsecurelayout'] = 'Display logged-in user in secure layout';
 $string['logininfoinsecurelayout_desc'] = 'If enabled, the logged-in user\'s full name will be displayed in the navigation bar when attempting a quiz or other activity using secure layout.';
 $string['loginpageautofocus'] = 'Autofocus login page form';
 $string['loginpageautofocus_help'] = 'Enabling this option improves usability of the login page, but automatically focusing fields may be considered an accessibility issue.';
+$string['loginsettings'] = 'Login settings';
 $string['loglifetime'] = 'Keep logs for';
 $string['logo'] = 'Logo';
 $string['logo_desc'] = 'A full logo to be used as decoration by some themes (such as core themes). This image can be quite high resolution because it will be scaled down for use (and cached for performance). Logos that are wider than they are high usually give better results.';
@@ -884,6 +887,7 @@ $string['manageformatsgotosettings'] = 'Default format can be changed in {$a}';
 $string['managelang'] = 'Manage';
 $string['manageqbehaviours'] = 'Manage question behaviours';
 $string['manageqtypes'] = 'Manage question types';
+$string['marketplaceavailablenotice'] = 'Browse and download plugins on <a href="{$a}" target="_blank" rel="noopener noreferrer">Moodle Marketplace <i class="fa fa-external-link" role="img" aria-label="Opens in new window" title="Opens in new window"></i></a>.';
 $string['maturity50'] = 'Alpha';
 $string['maturity100'] = 'Beta';
 $string['maturity150'] = 'Release candidate';
@@ -925,6 +929,7 @@ $string['messagingdefaultpressenter'] = 'Use enter to send enabled by default';
 $string['messagingdeletereadnotificationsdelay'] = 'Delete read notifications';
 $string['messagingdeleteallnotificationsdelay'] = 'Delete all notifications';
 $string['messagingssettings'] = 'Messaging settings';
+$string['mimetexdeprecated'] = 'MimeTeX is no longer supported. Please update your {$a->plugin_name} settings to use LaTeX. MathJax is recommended for mathematical formula rendering.';
 $string['minpassworddigits'] = 'Digits';
 $string['minpasswordlength'] = 'Password length';
 $string['minpasswordlower'] = 'Lowercase letters';
@@ -980,9 +985,10 @@ $string['nonexistentbookmark'] = 'The bookmark you requested does not exist.';
 $string['nosupportedlogstore'] = 'No supported logstore found';
 $string['noteunneededblocks'] = 'Note: Blocks set to show will not be listed in the \'Add a block\' menu in a course if they are specified in the theme setting \'Unneeded blocks\'.';
 $string['maxtimelimit'] = 'Maximum time limit';
-$string['maxtimelimit_desc'] = 'To restrict the maximum PHP execution time that Moodle will allow without any output being displayed, enter a value in seconds here. 0 means that Moodle default restrictions are used. If you have a front-end server with its own time limit, set this value lower to receive PHP errors in logs. Does not apply to CLI scripts.';
+$string['maxtimelimit_desc'] = 'To restrict the maximum PHP execution time that Moodle will allow without any output being displayed, enter a value in seconds here. 0 means that Moodle default restrictions are used. If you have a front-end server with its own time limit, set this value lower to receive PHP errors in logs. Does not apply to Command Line Interface (CLI) scripts.';
 $string['moodlebrandedapp'] = 'Branded Moodle app';
 $string['moodlebrandedappreference'] = 'Alternatively, get a <a href="https://moodle.com/branded-app/">Branded Moodle app</a> with your own custom branding.';
+$string['moodlenetremovalwarning'] = 'The MoodleNet service will be shut down on 20 April 2026. If you wish to continue using MoodleNet on your site, install the MoodleNet plugin from the <a href="https://github.com/moodlehq/moodle-tool_moodlenet" target="_blank">Moodle HQ GitHub repository <i class="fa fa-external-link" role="img" aria-label="Opens in new window" title="Opens in new window"></i></a> and connect it to a self-hosted MoodleNet instance. Following this, the MoodleNet profile ID field will be removed; please migrate that data if you are using it for other purposes.';
 $string['noreplyaddress'] = 'No-reply address';
 $string['noreplydomain'] = 'No-reply and domain';
 $string['noreplydomaindetail'] = 'Settings for No-reply and configured domains';
@@ -1171,6 +1177,21 @@ $string['requiremodintro'] = 'Require activity description';
 $string['requiremodintro_desc'] = 'If enabled, users will be forced to enter a description for each activity.';
 $string['required'] = 'Required';
 $string['requires'] = 'Requires';
+$string['routerconfigurationset'] = 'The web server is correctly configured.';
+$string['routerconfigureddetails'] = 'The router correctly serves <a href="{$a->docs}" target="_blank">{$a->url}</a> with a {$a->expectedstatuscode} ("{$a->expectedstatuscodetitle}") response.';
+$string['routerconfiguredok'] = 'The router appears to be configured correctly.';
+$string['routerconfiguredwithissues'] = 'The router is not correctly configured.';
+$string['routerconfiguredwithissuesdetail'] = 'The router is not correctly configured. Issues were detected in {$a->count} checks.';
+$string['routerdocs'] = 'Router documentation';
+$string['routerexpectedgot'] = 'Expected {$a->expectedstatuscode} ("{$a->expectedstatuscodetitle}") and received {$a->statuscode} ("{$a->statuscodetitle}").';
+$string['routerfailapipage'] = 'An <a href="{$a->url}" target="_blank">API route</a> did not respond with the expected response.';
+$string['routerfailmissingpage'] = 'The missing page handler did not respond to the <a href="{$a->url}" target="_blank">test URL</a> correctly.';
+$string['routerfailpage'] = 'A <a href="{$a->url}" target="_blank">standard page</a> controller could not be loaded correctly. The router may not be configured properly.';
+$string['routerfailroutershim'] = 'A <a href="{$a->url}" target="_blank">routed page with path ending in ".php"</a> did not respond correctly.';
+$string['routerfailshim'] = 'A <a href="{$a->url}" target="_blank">shimmed page</a> did not respond correctly.';
+$string['routernotconfigured'] = 'The router is not configured.';
+$string['routernotconfigureddetail'] = 'The router is not configured correctly. For details of how to configure it, see the documentation <a href="{$a->docs}">Configuring the router</a>.';
+$string['routernotconfigureddetailwithurl'] = 'The following URL did not return the expected status code: <a href="{$a->url}" target="_blank">{$a->url}</a>.';
 $string['purgecaches'] = 'Purge all caches';
 $string['purgecachesconfirm'] = 'Moodle can cache themes, JavaScript, language strings, filtered text, RSS feeds and other pieces of calculated data. Purging caches will delete data from the server and force browsers to re-fetch data, so you can be sure you are seeing the most up-to-date values produced by the current code. There is no danger in purging caches, but your site may appear slower for a while until the server and clients calculate new information and cache it.';
 $string['purgecachesfinished'] = 'All caches were purged.';
@@ -1297,9 +1318,9 @@ $string['setupsearchengine'] = 'Setup search engine';
 $string['showcommentscount'] = 'Show comments count';
 $string['showdetails'] = 'Show details';
 $string['showuseridentity'] = 'Show user identity';
-$string['showuseridentity_desc'] = 'When selecting or searching for users, and when displaying lists of users, these fields may be shown in addition to their full name. The fields are only shown to users who have the moodle/site:viewuseridentity capability; by default, teachers and managers. (This option makes most sense if you choose one or two fields that are mandatory at your institution.)
+$string['showuseridentity_desc'] = 'When selecting or searching for users, and when displaying lists of users, these fields may be shown in addition to full names. Fields are only shown to users who have the moodle/site:viewuseridentity capability; by default, teachers and managers. This setting makes most sense if you choose one or two fields that are mandatory at your institution.
 
-Fields marked * are custom user profile fields. You can select these fields, but there are currently some screens on which they will not appear.';
+Fields marked * are custom user profile fields (of type \'text\', with a character limit of 255). These fields are currently not shown on all screens.';
 $string['simplexmlrequired'] = 'The SimpleXML PHP extension is now required by Moodle.';
 $string['sitemenubar'] = 'Site navigation';
 $string['sitemailcharset'] = 'Character set';
@@ -1308,7 +1329,7 @@ $string['sitemaintenancetitle'] = '{$a} under maintenance';
 $string['sitemaintenancemode'] = 'Maintenance mode';
 $string['sitemaintenanceoff'] = 'Maintenance mode has been disabled and the site is running normally again';
 $string['sitemaintenanceon'] = 'Your site is currently in maintenance mode (only admins can log in or use the site).';
-$string['sitemaintenanceoncli'] = 'Your site is currently in CLI maintenance mode, no web access is allowed.';
+$string['sitemaintenanceoncli'] = 'Your site is currently in Command Line Interface (CLI) maintenance mode. No web access is allowed.';
 $string['sitemaintenancewarning'] = 'Your site is currently in maintenance mode (only admins can log in).  To return this site to normal operation, <a href="maintenance.php">disable maintenance mode</a>.';
 $string['sitemaintenancewarning2'] = 'Your site is currently in maintenance mode (only admins can log in).  To return this site to normal operation, <a href="{$a}">disable maintenance mode</a>.';
 $string['sitenameintitle'] = 'Include site name in page title';
@@ -1329,7 +1350,7 @@ $string['slasharguments'] = 'Use slash arguments';
 $string['slashargumentswarning'] = 'It is recommended that the use of slash arguments is enabled. In future it will be required. For more details, see the documentation <a href="https://docs.moodle.org/en/admin/environment/slasharguments">Using slash arguments</a>.';
 $string['smallscreensonly'] = 'Small screens only';
 $string['smtp'] = 'SMTP';
-$string['smtpauthtype'] = 'SMTP Auth Type';
+$string['smtpauthtype'] = 'SMTP auth type';
 $string['smtpdetail'] = 'Simple Mail Transfer Protocol (SMTP) settings for sending email.';
 $string['smtphosts'] = 'SMTP hosts';
 $string['smtpmaxbulk'] = 'SMTP session limit';
@@ -1496,7 +1517,7 @@ $string['timezoneisforcedto'] = 'Force all users to use';
 $string['timezonenotforced'] = 'Users can choose their own timezone';
 $string['timezonephpdefault'] = 'Default PHP timezone ({$a})';
 $string['timezoneserver'] = 'Server timezone ({$a})';
-$string['tlswarning'] = 'No PHP/cURL extension with TLSv1.2 support has been detected. Some services may not work. It is strongly recommended to upgrade your TLS libraries.';
+$string['tlswarning'] = 'No PHP/cURL extension with Transport Layer Security (TLS) 1.2 support has been detected. Some services may not work. It is strongly recommended to upgrade your TLS libraries.';
 $string['tokenduration'] = 'User created token duration';
 $string['tokenduration_desc'] = 'Length of time for which a web services token created by a user (for example via the mobile app) is valid.';
 $string['tokenizerrecommended'] = 'Installing the optional PHP Tokenizer extension is recommended -- it improves Moodle Networking functionality.';

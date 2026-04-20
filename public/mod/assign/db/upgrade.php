@@ -30,35 +30,7 @@
 function xmldb_assign_upgrade($oldversion) {
     global $DB;
 
-    // Automatically generated Moodle v4.2.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    // Automatically generated Moodle v4.3.0 release upgrade line.
-    // Put any upgrade step following this.
-
     $dbman = $DB->get_manager(); // Loads ddl manager and xmldb classes.
-
-    if ($oldversion < 2023103000) {
-        // Define field activity to be added to assign.
-        $table = new xmldb_table('assign');
-        $field = new xmldb_field(
-            'markinganonymous',
-            XMLDB_TYPE_INTEGER,
-            '2',
-            null,
-            XMLDB_NOTNULL,
-            null,
-            '0',
-            'markingallocation'
-        );
-        // Conditionally launch add field activity.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Assign savepoint reached.
-        upgrade_mod_savepoint(true, 2023103000, 'assign');
-    }
 
     // Automatically generated Moodle v4.4.0 release upgrade line.
     // Put any upgrade step following this.
@@ -144,8 +116,10 @@ function xmldb_assign_upgrade($oldversion) {
     // Automatically generated Moodle v5.0.0 release upgrade line.
     // Put any upgrade step following this.
 
-    if ($oldversion < 2025041401) {
+    // Automatically generated Moodle v5.1.0 release upgrade line.
+    // Put any upgrade step following this.
 
+    if ($oldversion < 2026022300) {
         // Changing precision of field name on table assign to (1333).
         $table = new xmldb_table('assign');
         $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '1333', null, XMLDB_NOTNULL, null, null, 'course');
@@ -154,7 +128,115 @@ function xmldb_assign_upgrade($oldversion) {
         $dbman->change_field_precision($table, $field);
 
         // Assign savepoint reached.
-        upgrade_mod_savepoint(true, 2025041401, 'assign');
+        upgrade_mod_savepoint(true, 2026022300, 'assign');
+    }
+
+    if ($oldversion < 2026030900) {
+        // Define field markercount to be added to assign.
+        $table = new xmldb_table('assign');
+        $field = new xmldb_field('markercount', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '1', 'markingallocation');
+        // Conditionally launch add field markercount.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field multimarkmethod to be added to assign.
+        $field = new xmldb_field('multimarkmethod', XMLDB_TYPE_CHAR, '10', null, null, null, null, 'markercount');
+        // Conditionally launch add field multimarkmethod.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define table assign_mark to be created.
+        $table = new xmldb_table('assign_mark');
+
+        // Adding fields to table assign_mark.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null, null);
+        $table->add_field('assignment', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'id');
+        $table->add_field('gradeid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'assignment');
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'gradeid');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'timecreated');
+        $table->add_field('marker', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'timemodified');
+        $table->add_field('mark', XMLDB_TYPE_NUMBER, '10, 5', null, null, null, null, 'marker');
+        $table->add_field('workflowstate', XMLDB_TYPE_CHAR, '20', null, null, null, null, 'mark');
+
+        // Adding keys to table assign_grades_mark.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('assignment', XMLDB_KEY_FOREIGN, ['assignment'], 'assign', ['id']);
+        $table->add_key('gradeid', XMLDB_KEY_FOREIGN, ['gradeid'], 'assign_grades', ['id']);
+        $table->add_key('marker', XMLDB_KEY_FOREIGN, ['marker'], 'user', ['id']);
+
+        // Conditionally launch create table for assign_mark.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Define table assign_allocated_marker to be created.
+        $table = new xmldb_table('assign_allocated_marker');
+
+        // Adding fields to table assign_allocated_marker.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null, null);
+        $table->add_field('student', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'id');
+        $table->add_field('assignment', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'student');
+        $table->add_field('marker', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'assignment');
+
+        // Adding keys to table assign_allocated_marker.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('student', XMLDB_KEY_FOREIGN, ['student'], 'user', ['id']);
+        $table->add_key('assignment', XMLDB_KEY_FOREIGN, ['assignment'], 'assign', ['id']);
+        $table->add_key('marker', XMLDB_KEY_FOREIGN, ['marker'], 'user', ['id']);
+
+        // Conditionally launch create table for assign_allocated_marker.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Define field allocatedmarker to be dropped from assign_user_flags.
+        $table = new xmldb_table('assign_user_flags');
+        $field = new xmldb_field('allocatedmarker');
+
+        // Populate assign_allocated_marker before the allocatedmarker field is dropped.
+        if ($dbman->field_exists($table, $field)) {
+            $DB->execute(
+                "INSERT INTO {assign_allocated_marker} (assignment, student, marker)
+                      SELECT assignment, userid, allocatedmarker
+                        FROM {assign_user_flags}"
+            );
+            $dbman->drop_field($table, $field);
+        }
+
+        // Define field multimarkrounding to be added to assign.
+        $table = new xmldb_table('assign');
+        $field = new xmldb_field('multimarkrounding', XMLDB_TYPE_INTEGER, '2', null, null, null, null, 'multimarkmethod');
+        // Conditionally launch add field multimarkrounding.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Assign savepoint reached.
+        upgrade_mod_savepoint(true, 2026030900, 'assign');
+    }
+
+    if ($oldversion < 2026031300) {
+        // Define field reason to be added to assign_overrides.
+        $table = new xmldb_table('assign_overrides');
+        $field = new xmldb_field('reason', XMLDB_TYPE_TEXT, null, null, null, null, null, 'timelimit');
+
+        // Conditionally launch add field reason.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field reasonformat to be added to assign_overrides.
+        $formatfield = new xmldb_field('reasonformat', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'reason');
+
+        // Conditionally launch add field reasonformat.
+        if (!$dbman->field_exists($table, $formatfield)) {
+            $dbman->add_field($table, $formatfield);
+        }
+
+        // Assign savepoint reached.
+        upgrade_mod_savepoint(true, 2026031300, 'assign');
     }
 
     return true;

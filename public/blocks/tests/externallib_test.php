@@ -477,8 +477,11 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
      * Test user get default dashboard blocks for my courses page.
      */
     public function test_get_dashboard_blocks_my_courses(): void {
-        global $PAGE, $DB;
+        global $CFG, $PAGE, $DB;
         $this->resetAfterTest(true);
+
+        // Ensure My courses is enabled for this test.
+        $CFG->enablemycourses = 1;
 
         $user = $this->getDataGenerator()->create_user();
         $PAGE->set_url('/my/index.php');    // Need this because some internal API calls require the $PAGE url to be set.
@@ -520,6 +523,28 @@ final class externallib_test extends \core_external\tests\externallib_testcase {
 
         // Check that we received the blocks in the expected order.
         $this->assertEquals(array_values($alldefaultblocksordered), $returnedblocks);
+    }
+
+    /**
+     * Test that requesting My courses blocks when enablemycourses is disabled throws an exception.
+     *
+     * @covers \core_block_external::get_dashboard_blocks
+     */
+    public function test_get_dashboard_blocks_my_courses_disabled(): void {
+        global $CFG, $PAGE;
+        $this->resetAfterTest(true);
+
+        $user = $this->getDataGenerator()->create_user();
+        $PAGE->set_url('/my/index.php');
+
+        $this->setUser($user);
+
+        // Disable My courses.
+        $CFG->enablemycourses = 0;
+
+        $this->expectException('moodle_exception');
+        $this->expectExceptionMessage(get_string('error:mycoursesisdisabled', 'my'));
+        core_block_external::get_dashboard_blocks($user->id, false, MY_PAGE_COURSES);
     }
 
     /**

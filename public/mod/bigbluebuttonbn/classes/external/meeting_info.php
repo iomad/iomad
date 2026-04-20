@@ -128,6 +128,7 @@ class meeting_info extends external_api {
                 'participantplural' => new external_value(PARAM_BOOL, 'Several participants ?', VALUE_OPTIONAL),
                 'canjoin' => new external_value(PARAM_BOOL, 'Can join'),
                 'ismoderator' => new external_value(PARAM_BOOL, 'Is moderator'),
+                'usermustwaittojoin' => new external_value(PARAM_BOOL, 'User must wait to join', VALUE_OPTIONAL),
                 'presentations' => new external_multiple_structure(
                     new external_single_structure([
                         'url' => new external_value(PARAM_URL, 'presentation URL'),

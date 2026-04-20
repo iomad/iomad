@@ -55,6 +55,8 @@ const loadState = async(reactive) => {
     const stateData = {
         page: {
             contextid: rootElement.dataset.contextid,
+            courseid: rootElement.dataset.courseid,
+            cmid: rootElement.dataset.cmid,
             showdescriptions: document.querySelector(SELECTORS.SHOWDESCRIPTIONS_TOGGLE).checked,
         },
         categories: [],
@@ -208,6 +210,12 @@ class CategoryManager extends Reactive {
         });
         // Show the form.
         modalForm.show();
+    }
+
+    updateCategoryName(categoryId, newName) {
+        categorymanager.stateManager.setReadOnly(false);
+        categorymanager.stateManager.processUpdate('categories', 'put', {id: categoryId, name: newName});
+        categorymanager.stateManager.setReadOnly(true);
     }
 }
 

@@ -19,6 +19,7 @@
  * @module      core_customfield/repository/toggle_shared
  * @copyright   2025 David Carrillo <davidmc@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @deprecated  since Moodle 5.1 - please use core_customfield/repository instead.
  */
 
 import Ajax from 'core/ajax';

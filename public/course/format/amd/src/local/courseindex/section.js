@@ -90,19 +90,30 @@ export default class Component extends DndSection {
         // Drag and drop is only available for components compatible course formats.
         if (this.reactive.isEditing && this.reactive.supportComponents && document.querySelector(this.selectors.DND_ALLOWED)) {
             // Init the inner dragable element passing the full section as affected region.
-            const titleitem = new SectionTitle({
-                ...this,
-                element: sectionItem,
-                fullregion: this.element,
-            });
+            const titleitem = this._newSectionTitle(sectionItem);
             this.configDragDrop(titleitem);
         }
         // Check if the current url is the section url.
         const section = state.section.get(this.id);
-        if (window.location.href == section.sectionurl.replace(/&amp;/g, "&")) {
+        // Sections urls may be null.
+        if (window.location.href == section?.sectionurl?.replace(/&amp;/g, "&")) {
             this.reactive.dispatch('setPageItem', 'section', this.id);
             sectionItem.scrollIntoView();
         }
+    }
+
+    /**
+     * Create a new SectionTitle object.
+     *
+     * @param {Element} sectionItem the SectionTitle's element
+     * @return {SectionTitle} the new object
+     */
+    _newSectionTitle(sectionItem) {
+        return new SectionTitle({
+            ...this,
+            element: sectionItem,
+            fullregion: this.element,
+        });
     }
 
     /**

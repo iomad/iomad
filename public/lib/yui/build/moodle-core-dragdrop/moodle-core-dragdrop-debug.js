@@ -183,6 +183,7 @@ Y.extend(DRAGDROP, Y.Base, {
         var dragelement = Y.Node.create('<span></span>')
             .addClass(classname)
             .setAttribute('title', title)
+            .setAttribute('aria-label', title)
             .setAttribute('tabIndex', 0)
             .setAttribute('data-draggroups', this.groups)
             .setAttribute('role', 'button');
@@ -429,7 +430,7 @@ Y.extend(DRAGDROP, Y.Base, {
 
         // Build the list of drop targets.
         var droplist = Y.Node.create('<ul></ul>');
-        droplist.addClass('dragdrop-keyboard-drag');
+        droplist.addClass('dragdrop-keyboard-drag ps-2');
         var listitem, listlink, listitemtext;
 
         // Search for possible drop targets.
@@ -479,6 +480,7 @@ Y.extend(DRAGDROP, Y.Base, {
                 }
                 listlink.setContent(listitemtext);
 
+                listlink.setAttribute('class', 'aalink d-inline-block mw-100 text-truncate');
                 // Add a data attribute so we can get the real drop target.
                 listlink.setAttribute('data-drop-target', node.get('id'));
                 // Allow tabbing to the link.

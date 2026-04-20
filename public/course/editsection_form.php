@@ -22,6 +22,7 @@ class editsection_form extends moodleform {
         $mform  = $this->_form;
         $course = $this->_customdata['course'];
         $sectioninfo = $this->_customdata['cs'];
+        $returnurl = $this->_customdata['returnurl'];
 
         $mform->addElement('header', 'generalhdr', get_string('general'));
 
@@ -41,14 +42,21 @@ class editsection_form extends moodleform {
 
         /// Prepare course and the editor
 
-        $mform->addElement('editor', 'summary_editor', get_string('description'), null, $this->_customdata['editoroptions']);
-        $mform->setType('summary_editor', PARAM_RAW);
+        if (!$sectioninfo->is_delegated()) {
+            $mform->addElement('editor', 'summary_editor', get_string('description'), null, $this->_customdata['editoroptions']);
+            $mform->setType('summary_editor', PARAM_RAW);
+        }
 
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
 
         $mform->addElement('hidden', 'course', 0);
         $mform->setType('course', PARAM_INT);
+
+        if ($returnurl) {
+            $mform->addElement('hidden', 'returnurl', $returnurl);
+            $mform->setType('returnurl', PARAM_LOCALURL);
+        }
 
         // additional fields that course format has defined
         $courseformat = course_get_format($course);
@@ -125,8 +133,17 @@ class editsection_form extends moodleform {
             if ($data->name === false) {
                 $data->name = '';
             }
-            $data = file_postupdate_standard_editor($data, 'summary', $editoroptions,
-                    $editoroptions['context'], 'course', 'section', $data->id);
+            if (property_exists($data, 'summary_editor')) {
+                $data = file_postupdate_standard_editor(
+                    $data,
+                    'summary',
+                    $editoroptions,
+                    $editoroptions['context'],
+                    'course',
+                    'section',
+                    $data->id,
+                );
+            }
             $course = $this->_customdata['course'];
             foreach (course_get_format($course)->section_format_options() as $option => $unused) {
                 // fix issue with unset checkboxes not being returned at all

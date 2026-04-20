@@ -141,6 +141,9 @@ final class editlib_test extends \advanced_testcase {
         $user = $this->getDataGenerator()->create_user();
         $this->setUser($user);
 
+        // Enable My Courses so HOMEPAGE_MYCOURSES is a valid option.
+        set_config('enablemycourses', 1);
+
         if ($extraoptions) {
             // Pretend we have hook callbacks adding extra allowed options.
             $testcallback = function(\core_user\hook\extend_default_homepage $hook) use ($extraoptions) {

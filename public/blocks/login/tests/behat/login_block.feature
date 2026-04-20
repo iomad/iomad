@@ -11,6 +11,9 @@ Feature: Login from a block
     And the following "blocks" exist:
       | blockname | contextlevel | reference | pagetypepattern | defaultregion |
       | login     | System       | 1         | site-index      | side-pre      |
+    And the following config values are set as admin:
+      | forcelogin   | 0 |
+      | enablemyhome | 1 |
 
   Scenario: Login block visible to non-logged in users
     When I am on homepage

@@ -16,6 +16,9 @@
 
 namespace mod_quiz\local;
 
+use context_course;
+use core_group\hook\after_group_membership_added;
+use core_group\hook\after_group_membership_removed;
 use mod_quiz\event\group_override_created;
 use mod_quiz\event\group_override_deleted;
 use mod_quiz\event\group_override_updated;
@@ -91,7 +94,14 @@ class override_manager {
             return isset($formdata->$key) && !is_null($formdata->$key);
         }, self::OVERRIDEABLE_QUIZ_SETTINGS);
 
-        if (!in_array(true, $keysthatareset)) {
+        $hasoverridevalues = in_array(true, $keysthatareset, true);
+
+        // If updating, we can also just update the reason.
+        if (!empty($formdata->id) && (property_exists($formdata, 'reason') || property_exists($formdata, 'reasonformat'))) {
+            $hasoverridevalues = true;
+        }
+
+        if (!$hasoverridevalues) {
             $errors['general'][] = new \lang_string('nooverridedata', 'quiz');
         }
 
@@ -221,6 +231,14 @@ class override_manager {
         // Remove values that are the same as currently in the quiz.
         $settings = $this->clear_unused_values($settings);
 
+        // Pass through the optional reason fields unchanged.
+        if (array_key_exists('reason', $formdata)) {
+            $settings['reason'] = $formdata['reason'];
+        }
+        if (array_key_exists('reasonformat', $formdata) && $formdata['reasonformat'] !== null) {
+            $settings['reasonformat'] = $formdata['reasonformat'];
+        }
+
         // Add the user / group back as applicable.
         $userorgroupdata = array_intersect_key($formdata, array_flip(['userid', 'groupid', 'quiz', 'id']));
 
@@ -260,8 +278,12 @@ class override_manager {
         $groupid = $datatoset['groupid'] ?? null;
 
         // Clear the cache.
-        $cache = new override_cache($this->quiz->id);
-        $cache->clear_for($userid, $groupid);
+        if (!empty($userid)) {
+            quiz_overrides_cache_manager::purge_for_user($this->quiz->id, $userid);
+        }
+        if (!empty($groupid)) {
+            quiz_overrides_cache_manager::purge_for_group($this->quiz->id, $groupid);
+        }
 
         // Trigger moodle events.
         if (empty($formdata['id'])) {
@@ -293,7 +315,7 @@ class override_manager {
      */
     public function delete_all_overrides(bool $shouldlog = true): void {
         global $DB;
-        $overrides = $DB->get_records('quiz_overrides', ['quiz' => $this->quiz->id], '', 'id,userid,groupid');
+        $overrides = $DB->get_records('quiz_overrides', ['quiz' => $this->quiz->id], '', 'id,quiz,userid,groupid');
         $this->delete_overrides($overrides, $shouldlog);
     }
 
@@ -313,7 +335,7 @@ class override_manager {
         // Filter for those overrides user can access.
         [$sql, $params] = self::get_override_in_sql($this->quiz->id, $ids);
         $records = array_filter(
-            $DB->get_records_select('quiz_overrides', $sql, $params, '', 'id,userid,groupid'),
+            $DB->get_records_select('quiz_overrides', $sql, $params, '', 'id,quiz,userid,groupid'),
             fn(\stdClass $override) => $this->can_view_override(
                 $override,
                 $quizsettings->get_course(),
@@ -362,6 +384,14 @@ class override_manager {
                 throw new \coding_exception("All overrides must specify an ID");
             }
 
+            if (empty($override->quiz)) {
+                throw new \coding_exception("All overrides must specify a quiz ID");
+            }
+
+            if ($override->quiz != $this->quiz->id) {
+                throw new \coding_exception("All overrides must belong to the quiz linked to this manager");
+            }
+
             // Sanity check that user xor group is specified.
             // User or group is required to clear the cache.
             self::ensure_userid_xor_groupid_set($override->userid ?? null, $override->groupid ?? null);
@@ -376,14 +406,12 @@ class override_manager {
         [$sql, $params] = self::get_override_in_sql($this->quiz->id, array_column($overrides, 'id'));
         $DB->delete_records_select('quiz_overrides', $sql, $params);
 
-        $cache = new override_cache($this->quiz->id);
-
         // Perform other cleanup.
+        quiz_overrides_cache_manager::purge_for_overrides($overrides);
         foreach ($overrides as $override) {
             $userid = $override->userid ?? null;
             $groupid = $override->groupid ?? null;
 
-            $cache->clear_for($userid, $groupid);
             $this->delete_override_events($userid, $groupid);
 
             if ($shouldlog) {
@@ -597,6 +625,57 @@ class override_manager {
     }
 
     /**
+     * Computes the effective overridden open/close times for a user for a given quiz.
+     *
+     * @param int $quizid The quiz ID.
+     * @param int $userid The user ID.
+     * @return array Array with optional keys 'timeopen' and 'timeclose'.
+     */
+    public static function get_effective_open_close_times(int $quizid, int $userid): array {
+        $overrides = quiz_overrides_cache_manager::get_overrides($quizid, $userid);
+
+        if (empty($overrides)) {
+            return [];
+        }
+
+        // Get user override (there should be at most one per user per quiz).
+        $useroverride = array_filter($overrides, fn($o): bool => !empty($o->userid));
+        $useroverride = reset($useroverride);
+
+        $timeopen = empty($useroverride) ? null : $useroverride->timeopen;
+        $timeclose = empty($useroverride) ? null : $useroverride->timeclose;
+
+        // If either value is still null, check group overrides.
+        if ($timeopen === null || $timeclose === null) {
+            $groupoverrides = array_filter($overrides, fn($o): bool => !empty($o->groupid));
+            if (!empty($groupoverrides)) {
+                $opens = array_filter(array_column($groupoverrides, 'timeopen'), fn($t): bool => $t !== null);
+                $closes = array_filter(array_column($groupoverrides, 'timeclose'), fn($t): bool => $t !== null);
+
+                // Get the earliest open time.
+                if ($timeopen === null && count($opens)) {
+                    $timeopen = min($opens);
+                }
+
+                // Get the latest close time, unless any are 0 which takes precedence.
+                if ($timeclose === null && count($closes)) {
+                    $timeclose = in_array(0, $closes) ? 0 : max($closes);
+                }
+            }
+        }
+
+        $result = [];
+        if ($timeopen !== null) {
+            $result['timeopen'] = $timeopen;
+        }
+        if ($timeclose !== null) {
+            $result['timeclose'] = $timeclose;
+        }
+
+        return $result;
+    }
+
+    /**
      * Deletes orphaned group overrides in a given course.
      * Note - permissions are not checked and events are not logged for performance reasons.
      *
@@ -620,11 +699,31 @@ class override_manager {
 
         $DB->delete_records_list('quiz_overrides', 'id', array_keys($records));
 
-        // Purge cache for each record.
-        foreach ($records as $record) {
-            $cache = new override_cache($record->quiz);
-            $cache->clear_for_group($record->groupid);
+        // Clear the cache for all users in the course for each quiz that had an orphaned group override.
+        $quizids = array_unique(array_column($records, 'quiz'));
+        $userids = array_keys(get_enrolled_users(context_course::instance($courseid), '', 0, 'u.id'));
+        foreach ($quizids as $quizid) {
+            quiz_overrides_cache_manager::purge_for_users($quizid, $userids);
         }
-        return array_unique(array_column($records, 'quiz'));
+
+        return $quizids;
+    }
+
+    /**
+     * Hook callback to clear relevant cache entries when a user is added to a group.
+     *
+     * @param after_group_membership_added $hook
+     */
+    public static function after_group_membership_added(after_group_membership_added $hook): void {
+        quiz_overrides_cache_manager::purge_for_group_members($hook->groupinstance->id, $hook->userids);
+    }
+
+    /**
+     * Hook callback to clear relevant cache entries when a user is removed from a group.
+     *
+     * @param after_group_membership_removed $hook
+     */
+    public static function after_group_membership_removed(after_group_membership_removed $hook): void {
+        quiz_overrides_cache_manager::purge_for_group_members($hook->groupinstance->id, $hook->userids);
     }
 }

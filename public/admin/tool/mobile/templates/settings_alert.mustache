@@ -1,0 +1,90 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tool_mobile/settings_alert
+
+    Subscription-related alert notification for the Mobile tool.
+
+    The purpose of this template is to render an alert with an
+    optional action button (for example, to register the site or
+    complete subscription details).
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * title Optional heading text (lang_string or string).
+    * icon Optional short label for the icon (for example "rocket", "lightbulb", "bullseye").
+    * message A cleaned string (use clean_text()) to display under the title.
+    * buttonstr Text for the optional primary action button.
+    * buttonurl URL for the optional primary action button.
+    * extrabuttonclasses Additional classes for the button element.
+    * reloadcache Optional object with:
+      * text Helper text displayed in the footer.
+      * url Link used to refresh or reload the subscription/cache information.
+
+    Example context (json):
+    {
+        "title": "Upgrade to Premium to remove all limits",
+        "icon": "rocket",
+        "message": "Some features are available with limits on the Free plan.",
+        "buttonstr": "Learn more",
+        "buttonurl": "https://apps.moodle.com",
+        "extrabuttonclasses": "",
+        "reloadcache": {
+            "text": "Plan last checked 10 days ago.",
+            "url": "https://example.com/admin/tool/mobile/subscription.php?returnto=..."
+        }
+    }
+}}
+<div class="card border-0 tool_mobile-settings-alert">
+<div class="card-body bg-primary bg-opacity-10 border rounded{{#reloadcache}}-top{{/reloadcache}} {{^reloadcache}}mb-4{{/reloadcache}}">
+    <div class="d-flex justify-content-between align-items-center text-primary">
+        <div>
+        {{#title}}
+            <div class="mb-2 mt-1 d-flex alert-heading">
+                {{#icon}}
+                    <span class="icon">{{icon}}</span>
+                {{/icon}}
+                <h3 class="h6 mb-0 fw-bold">
+                    <span class="align-middle">{{.}}</span>
+                </h3>
+            </div>
+        {{/title}}
+        <div class="ms-4">
+        {{{ message }}}
+        </div>
+        </div>
+        {{#buttonurl}}
+        <div>
+            <a href="{{buttonurl}}"
+            class="btn fw-light btn-primary text-white {{extrabuttonclasses}}">{{buttonstr}}</a>
+        </div>
+        {{/buttonurl}}
+    </div>
+</div>
+{{#reloadcache}}
+<div class="card-footer border border-top-0 text-muted small">
+    {{reloadcache.text}}
+    <a href="{{reloadcache.url}}">{{#pix}}i/reload, core{{/pix}}{{#str}} refreshplanstatus, tool_mobile {{/str}}</a>
+</div>
+{{/reloadcache}}
+</div>
+

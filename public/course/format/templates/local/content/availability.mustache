@@ -34,13 +34,16 @@
 {{/excerpt}}
 {{#excerpt}}
     {{< core/showmore }}
+        {{$defaultstatus}}
+            {{^showrestrictionsexpanded}} collapsed {{/showrestrictionsexpanded}}
+        {{/defaultstatus}}
         {{$collapsedcontent}}
             {{#pix}}t/unlock, core{{/pix}} <span class="availability-excerpt"> {{{excerpt}}} ... </span>
         {{/collapsedcontent}}
         {{$expandedcontent}}
             {{#pix}}t/unlock, core{{/pix}} {{{text}}}
         {{/expandedcontent}}
-        {{$buttonextraclasses}}fw-bold{{/buttonextraclasses}}
+        {{$buttonextraclasses}}fw-bold {{#showrestrictionsexpanded}} d-none {{/showrestrictionsexpanded}}{{/buttonextraclasses}}
         {{$collapsedextraclasses}}text-truncate pe-2 {{#editing}}mt-2{{/editing}}{{/collapsedextraclasses}}
         {{$expandedextraclasses}}
             {{^editing}}py-2{{/editing}}

@@ -168,6 +168,10 @@ use core\output\html_writer;
  *      Calculated on request
  * @property-read string $content Content to display on main (view) page - calculated on request
  * @property-read url|null $url URL to link to for this module, or null if it doesn't have a view page - calculated on request
+ * @property-read url|null $navigationurl URL to access from course navigation, or null if it doesn't have it.
+ *     By default, this is the same as $url but it can be set separately by module if needed. For instance, when the module
+ *     opens in a new window, $navigationurl will force the module view page, instead of the URL that opens in a new window.
+ *     Calculated on request.
  * @property-read string $extraclasses Extra CSS classes to add to html output for this activity on main page
  *      C'alculated on request
  * @property-read string $onclick Content of HTML on-click attribute already escaped - calculated on request
@@ -182,27 +186,27 @@ use core\output\html_writer;
  */
 class cm_info implements IteratorAggregate {
     /**
-     * State: Only basic data from modinfo cache is available.
+     * @var int State: Only basic data from modinfo cache is available.
      */
     private const STATE_BASIC = 0;
 
     /**
-     * State: In the process of building dynamic data (to avoid recursive calls to obtain_dynamic_data())
+     * @var int State: In the process of building dynamic data (to avoid recursive calls to obtain_dynamic_data())
      */
     private const STATE_BUILDING_DYNAMIC = 1;
 
     /**
-     * State: Dynamic data is available too.
+     * @var int State: Dynamic data is available too.
      */
     private const STATE_DYNAMIC = 2;
 
     /**
-     * State: In the process of building view data (to avoid recursive calls to obtain_view_data())
+     * @var int State: In the process of building view data (to avoid recursive calls to obtain_view_data())
      */
     private const STATE_BUILDING_VIEW = 3;
 
     /**
-     * State: View data (for course page) is available.
+     * @var int State: View data (for course page) is available.
      */
     private const STATE_VIEW = 4;
 
@@ -457,6 +461,16 @@ class cm_info implements IteratorAggregate {
     private $url;
 
     /**
+     * @var url|null The navigation URL for this course module, if any.
+     */
+    private $navigationurl;
+
+    /**
+     * @var bool True if the navigation URL was modified, false otherwise.
+     */
+    private $navigationurlmodified;
+
+    /**
      * @var string
      */
     private $content;
@@ -534,6 +548,7 @@ class cm_info implements IteratorAggregate {
      */
     private static $standardproperties = [
         'url' => 'get_url',
+        'navigationurl' => 'get_navigation_url',
         'content' => 'get_content',
         'extraclasses' => 'get_extra_classes',
         'onclick' => 'get_on_click',
@@ -725,6 +740,44 @@ class cm_info implements IteratorAggregate {
     public function get_url() {
         $this->obtain_dynamic_data();
         return $this->url;
+    }
+
+    /**
+     * Get the navigation URL for this course module.
+     * This method retrieves the navigation URL for the course module
+     *
+     * @return url|null The navigation URL for this course module, or null if navigationurl is not available.
+     */
+    public function get_navigation_url(): ?url {
+        $this->obtain_dynamic_data();
+
+        // If the navigation URL was not modified, return the URL.
+        if (!$this->navigationurlmodified) {
+            return $this->url;
+        }
+
+        return $this->navigationurl;
+    }
+
+    /**
+     * Sets the navigation URL for this course module.
+     *
+     * @param url|null $navigationurl The navigation URL to set, or null to unset it.
+     */
+    public function set_navigation_url(?url $navigationurl): void {
+        $this->check_not_view_only();
+        $this->navigationurl = $navigationurl;
+        $this->navigationurlmodified = true;
+    }
+
+    /**
+     * Resets the navigation URL for this course module.
+     * After calling this method, the navigation URL will be the same as the URL returned by get_url().
+     */
+    public function reset_navigation_url(): void {
+        $this->check_not_view_only();
+        $this->navigationurl = null;
+        $this->navigationurlmodified = false;
     }
 
     /**
@@ -970,7 +1023,7 @@ class cm_info implements IteratorAggregate {
      * Returns a localised human-readable name of the module type.
      *
      * @param bool $plural If true, the function returns the plural form of the name.
-     * @return ?lang_string
+     * @return lang_string|null
      */
     public function get_module_type_name($plural = false) {
         $modnames = get_module_types_names($plural);
@@ -1145,7 +1198,7 @@ class cm_info implements IteratorAggregate {
     /**
      * Returns the section delegated by this module, if any.
      *
-     * @return ?section_info
+     * @return section_info|null
      */
     public function get_delegated_section_info(): ?section_info {
         $delegatedsections = $this->modinfo->get_sections_delegated_by_cm();
@@ -1412,8 +1465,8 @@ class cm_info implements IteratorAggregate {
         if (!$cm) {
             return null;
         }
-        // If it is already a cm_info object, just return it.
-        if ($cm instanceof cm_info) {
+        // If it is already a cm_info object with the right user, just return it.
+        if (($cm instanceof cm_info) && ($cm->get_modinfo()->userid == $userid)) {
             return $cm;
         }
         // Otherwise load modinfo.

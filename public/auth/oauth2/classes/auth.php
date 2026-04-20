@@ -34,9 +34,11 @@ use stdClass;
 use core\oauth2\issuer;
 use core\oauth2\client;
 
+global $CFG;
 require_once($CFG->libdir.'/authlib.php');
 require_once($CFG->dirroot.'/user/lib.php');
 require_once($CFG->dirroot.'/user/profile/lib.php');
+require_once($CFG->dirroot.'/login/lib.php');
 
 /**
  * Plugin for oauth2 authentication.
@@ -175,12 +177,12 @@ class auth extends \auth_plugin_base {
     public function loginpage_idp_list($wantsurl) {
         $providers = \core\oauth2\api::get_all_issuers(true);
         $result = [];
-        if (empty($wantsurl)) {
-            $wantsurl = '/';
-        }
         foreach ($providers as $idp) {
             if ($idp->is_available_for_login()) {
-                $params = ['id' => $idp->get('id'), 'wantsurl' => $wantsurl, 'sesskey' => sesskey()];
+                $params = ['id' => $idp->get('id'), 'sesskey' => sesskey()];
+                if (!empty($wantsurl)) {
+                    $params['wantsurl'] = $wantsurl;
+                }
                 $url = new moodle_url('/auth/oauth2/login.php', $params);
                 $icon = $idp->get('image');
                 $result[] = ['url' => $url, 'iconurl' => $icon, 'name' => $idp->get_display_name()];
@@ -465,18 +467,31 @@ class auth extends \auth_plugin_base {
             $mappeduser = get_complete_user_data('id', $linkedlogin->get('userid'));
 
             if ($mappeduser && $mappeduser->suspended) {
-                $failurereason = AUTH_LOGIN_SUSPENDED;
-                $event = \core\event\user_login_failed::create([
-                    'userid' => $mappeduser->id,
-                    'other' => [
-                        'username' => $userinfo['username'],
-                        'reason' => $failurereason
-                    ]
-                ]);
-                $event->trigger();
-                $SESSION->loginerrormsg = get_string('invalidlogin');
-                $client->log_out();
-                redirect(new moodle_url('/login/index.php'));
+                // Check if there's another user with the same email that is not suspended.
+                $moodleuser = \core_user::get_user_by_email($userinfo['email'], '*', null, IGNORE_MULTIPLE);
+                if ($moodleuser->id == $mappeduser->id) {
+                    $failurereason = AUTH_LOGIN_SUSPENDED;
+                    $event = \core\event\user_login_failed::create([
+                        'userid' => $mappeduser->id,
+                        'other' => [
+                            'username' => $userinfo['username'],
+                            'reason' => $failurereason,
+                        ],
+                    ]);
+                    $event->trigger();
+                    $SESSION->loginerrormsg = get_string('invalidlogin');
+                    $client->log_out();
+                    redirect(new moodle_url('/login/index.php'));
+                } else if ($moodleuser && !$moodleuser->suspended) {
+                    // Update the OAuth2 linked login to point to the active user account.
+                    $linkedlogin->set('userid', $moodleuser->id);
+                    $linkedlogin->set('timemodified', time());
+                    $linkedlogin->update();
+
+                    // Update user fields and continue with login.
+                    $userinfo = $this->update_user($userinfo, $moodleuser);
+                    $userwasmapped = true;
+                }
             } else if ($mappeduser && ($mappeduser->confirmed || !$issuer->get('requireconfirmation'))) {
                 // Update user fields.
                 $userinfo = $this->update_user($userinfo, $mappeduser);
@@ -506,7 +521,6 @@ class auth extends \auth_plugin_base {
             redirect(new moodle_url('/login/index.php'));
         }
 
-
         if (!$issuer->is_valid_login_domain($oauthemail)) {
             // Trigger login failed event.
             $failurereason = AUTH_LOGIN_UNAUTHORISED;
@@ -522,8 +536,24 @@ class auth extends \auth_plugin_base {
 
         if (!$userwasmapped) {
             // No defined mapping - we need to see if there is an existing account with the same email.
+            $moodleuser = \core_user::get_user_by_email($userinfo['email'], '*', null, IGNORE_MULTIPLE);
 
-            $moodleuser = \core_user::get_user_by_email($userinfo['email']);
+            // Ensure we don't link a login for a suspended user.
+            if (!empty($moodleuser) && $moodleuser->suspended) {
+                $failurereason = AUTH_LOGIN_SUSPENDED;
+                $event = \core\event\user_login_failed::create([
+                    'userid' => $moodleuser->id,
+                    'other' => [
+                        'username' => $userinfo['email'],
+                        'reason' => $failurereason,
+                    ],
+                ]);
+                $event->trigger();
+                $SESSION->loginerrormsg = get_string('invalidlogin');
+                $client->log_out();
+                redirect(new moodle_url('/login/index.php'));
+            }
+
             if (!empty($moodleuser)) {
                 if ($issuer->get('requireconfirmation')) {
                     $PAGE->set_url('/auth/oauth2/confirm-link-login.php');
@@ -620,7 +650,11 @@ class auth extends \auth_plugin_base {
 
         complete_user_login($user, $this->get_extrauserinfo());
         $this->update_picture($user);
-        redirect($redirecturl);
+
+        if (empty($redirecturl)) {
+            $redirecturl = core_login_get_return_url();
+        }
+        redirect(new moodle_url($redirecturl));
     }
 
     /**

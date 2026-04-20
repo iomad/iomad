@@ -38,6 +38,7 @@ use context;
 use cm_info;
 use user_picture;
 use moodle_url;
+use core_user;
 
 /**
  * Entity factory to create the forum entities.
@@ -104,7 +105,8 @@ class entity {
             $record->displaywordcount,
             $record->lockdiscussionafter,
             $record->duedate,
-            $record->cutoffdate
+            $record->cutoffdate,
+            $record->showimmediately
         );
     }
 
@@ -169,6 +171,7 @@ class entity {
      * @return author_entity
      */
     public function get_author_from_stdclass(stdClass $record): author_entity {
+        $initials = core_user::get_initials($record);
         return new author_entity(
             $record->id,
             $record->picture,
@@ -181,7 +184,8 @@ class entity {
             $record->firstnamephonetic,
             $record->lastnamephonetic,
             $record->alternatename,
-            $record->imagealt
+            $record->imagealt,
+            $initials,
         );
     }
 

@@ -161,11 +161,28 @@ table.question-bank-table {
     }
 
     & > tbody > tr.r1 {
-        background-color: $table-accent-bg;
+        background-color: $table-striped-bg;
     }
 
-    & > tbody > tr.highlight {
-        border: $border-width solid $info;
+
+    &.generaltable > tbody > tr.highlight.firstrow td {
+        border-top: map-get($border-widths, 3) solid $info;
+    }
+
+    & > tbody > tr.highlight.firstrow {
+        border-right: map-get($border-widths, 2) solid $info;
+        border-left: map-get($border-widths, 2) solid $info;
+    }
+
+    &.generaltable > tbody > tr.highlight.extrarow td,
+    &.generaltable > tbody > tr.highlight.firstrow.onlyhighlightrow td {
+        border-bottom: map-get($border-widths, 2) solid $info;
+    }
+
+    & > tbody > tr.highlight.extrarow {
+        border-top: 0;
+        border-right: map-get($border-widths, 2) solid $info;
+        border-left: map-get($border-widths, 2) solid $info;
     }
 
     .checkbox input[type="checkbox"] {
@@ -330,9 +347,9 @@ body.path-question-type {
 }
 .que .outcome,
 .que .comment {
-    color: shift-color($warning, $alert-color-scale - 9%);
+    color: shift-color($warning, $alert-color-scale);
     border-color: shift-color($warning, $alert-border-scale);
-    @include gradient-bg(shift-color($warning, $alert-bg-scale));
+    @include gradient-bg(shift-color($warning, $alert-bg-scale - 5%));
     // Darken link colour inside comments for better colour contrast against regular text.
     a {
         color: darken($link-color, 30%);
@@ -342,7 +359,7 @@ body.path-question-type {
 .que .formulation {
     color: shift-color($info, $alert-color-scale + 40%);
     border-color: shift-color($info, $alert-border-scale);
-    @include gradient-bg(shift-color($info, $alert-bg-scale));
+    @include gradient-bg(shift-color($info, $alert-bg-scale - 10%));
 }
 
 .que.multichoice .answer div.r0 .icon.fa-check,

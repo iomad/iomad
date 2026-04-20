@@ -1,5 +1,68 @@
 # core_course (subsystem) Upgrade notes
 
+## 5.2
+
+### Added
+
+- The external function `core_course_get_course_contents` now includes the `candisplay` property for each returned module. If this is false, the module should not be displayed on the course page (for example, for question banks).
+
+  For more information see [MDL-85405](https://tracker.moodle.org/browse/MDL-85405)
+- Add a new invalidation event for course action state so we can purge the courseactionsinstances cache when needed.
+
+  For more information see [MDL-86862](https://tracker.moodle.org/browse/MDL-86862)
+- Two optional new strings, `modulename_summary` and `modulename_tip`, have been added to modules and will be displayed in the activity chooser interface when defined.
+
+  For more information see [MDL-87117](https://tracker.moodle.org/browse/MDL-87117)
+- Add new routes for course module, so we can predict what would be the next page to show when using course linear navigation. The route url will be like course/cms/<cmid>/next. If there is not next page, this will return a 404 error.
+
+  For more information see [MDL-87467](https://tracker.moodle.org/browse/MDL-87467)
+- New 'restricted' parameter has been added to course_section_view() function to define whether the section was restricted for the user or not.
+
+  For more information see [MDL-87679](https://tracker.moodle.org/browse/MDL-87679)
+- The `cm_info` class now includes `get_navigation_url()`, `set_navigation_url(?url $url)`, and `reset_navigation_url()` methods, allowing activities to explicitly define, override, or suppress their navigation URL. This customisation can be managed within the `cm_info_dynamic callback`. By setting the navigation URL to null, a module can be effectively excluded from the linear navigation flow, such as the automatic "Previous" and "Next" routing URLs. In cases where no override is specified, `get_navigation_url()` will return the default `$cm->url` by fallback.
+
+  For more information see [MDL-87984](https://tracker.moodle.org/browse/MDL-87984)
+- A new protected hidesettings property has been added to pagelib  to force the page to hide the settings menu. Use set_hide_settings()  and get_hide_setting() to fully hide the settings menu.
+
+  For more information see [MDL-88214](https://tracker.moodle.org/browse/MDL-88214)
+
+### Changed
+
+- The description field is no longer available on the edit form for delegated sections like mod_subsection.
+
+  For more information see [MDL-87279](https://tracker.moodle.org/browse/MDL-87279)
+
+### Deprecated
+
+- Deprecates moveto_module (core_course) in favor of cmactions::move_before or cmactions::move_end_section (core_courseformat\local\cmactions).
+
+  For more information see [MDL-86854](https://tracker.moodle.org/browse/MDL-86854)
+- The following methods have been deprecated and should no longer be used: - `course_delete_module` - `course_module_flag_for_async_deletion` Please consider using the equivalent methods, delete and delete_async, in `core_courseformat\local\cmactions` instead.
+
+  For more information see [MDL-86856](https://tracker.moodle.org/browse/MDL-86856)
+- Deprecates set_coursemodule_groupmode in favor of core_courseformat\cmactions::set_groupmode
+
+  For more information see [MDL-86857](https://tracker.moodle.org/browse/MDL-86857)
+- The duplicate_module has been deprecated in favor of core_courseformat\cmactions::duplicate
+
+  For more information see [MDL-86858](https://tracker.moodle.org/browse/MDL-86858)
+- The `course_set_marker` function has been deprecated and should no longer be used. Please consider using the equivalent methods, `set_marker` or `remove_all_markers`, in `core_courseformat\local\sectionactions` instead.
+
+  For more information see [MDL-86860](https://tracker.moodle.org/browse/MDL-86860)
+
+### Removed
+
+- - The `\core_course_bulk_activity_completion_renderer::edit_default_completion()` has been removed from `public/course/classes/output/bulk_activity_completion_renderer.php`.
+  - The `\core_course\reportbuilder\local\formatters\enrolment::enrolment_name()` has been removed from `public/course/classes/reportbuilder/local/formatters/enrolment.php`.
+
+  For more information see [MDL-87425](https://tracker.moodle.org/browse/MDL-87425)
+- The `replaceSectionActionItem()` has been removed from `public/course/amd/src/actions.js`.
+
+  For more information see [MDL-87426](https://tracker.moodle.org/browse/MDL-87426)
+- - The `\core_courseformat\output\section_renderer\core_course_renderer::course_category_tree_category()` has removed in `public/course/renderer.php`.
+
+  For more information see [MDL-87427](https://tracker.moodle.org/browse/MDL-87427)
+
 ## 5.1
 
 ### Added

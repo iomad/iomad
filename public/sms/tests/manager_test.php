@@ -465,6 +465,7 @@ final class manager_test extends \advanced_testcase {
         $this->assertCount(1, $adhoctask);
 
         // Now lets run the task and check if SMS is sent.
+        $this->expectOutputRegex('/SMS send status: gateway_sent/');
         $this->run_all_adhoc_tasks();
 
         $message = $manager->get_message(['id' => $message->id]);
@@ -550,5 +551,42 @@ final class manager_test extends \advanced_testcase {
         $messages = iterator_to_array($result);
         $this->assertCount(1, $messages);
         array_walk($messages, fn ($message) => $this->assertInstanceOf(message::class, $message));
+    }
+
+    /**
+     * Test async message is resent when gateway is not available.
+     */
+    public function test_resend_when_gateway_not_available(): void {
+        $this->resetAfterTest();
+
+        $manager = \core\di::get(\core_sms\manager::class);
+
+        $message = $manager->send(
+            recipientnumber: '+447123456789',
+            content: 'Hello, world!',
+            component: 'core',
+            messagetype: 'test',
+            recipientuserid: null,
+            async: true,
+        );
+
+        $messagedbrecords = $manager->get_messages();
+        $messages = iterator_to_array($messagedbrecords);
+        $this->assertCount(1, $messages);
+
+        $adhoctask = \core\task\manager::get_adhoc_tasks(send_sms_task::class);
+        $this->assertCount(1, $adhoctask);
+
+        try {
+            $this->expectOutputRegex('/SMS failed status: gateway_not_available - task will retry/');
+            $this->run_all_adhoc_tasks();
+            $this->fail('Exception expected');
+        } catch (\moodle_exception $e) {
+            $message = $manager->get_message(['id' => $message->id]);
+            $this->assertEquals(message_status::GATEWAY_NOT_AVAILABLE, $message->status);
+
+            $adhoctask = \core\task\manager::get_adhoc_tasks(send_sms_task::class);
+            $this->assertCount(1, $adhoctask);
+        }
     }
 }

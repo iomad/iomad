@@ -61,7 +61,7 @@
 
     <fieldset>
         <legend class="visually-hidden">{{#str}}presets, mod_data{{/str}}</legend>
-        <table id="presets-list" class="table generaltable">
+        <table id="presets-list" class="table generaltable table-striped table-hover">
             <thead>
             <tr>
                 <th class="ps-4 border-top-0" scope="col" style="width: 3%">
@@ -96,19 +96,14 @@
             </tbody>
         </table>
     </fieldset>
-
-    {{< core/sticky_footer }}
-        {{$ stickycontent }}
-            <input
-                type="submit"
-                name="selectpreset"
-                data-action="selectpreset"
-                value="{{#str}}usepreset, mod_data{{/str}}"
-                class="btn btn-secondary"
-                disabled
-            >
-        {{/ stickycontent }}
-    {{/ core/sticky_footer }}
+    <input
+            type="submit"
+            name="selectpreset"
+            data-action="selectpreset"
+            value="{{#str}}usepreset, mod_data{{/str}}"
+            class="btn btn-secondary"
+            disabled
+    >
 </form>
 
 {{#js}}

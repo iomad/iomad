@@ -145,14 +145,6 @@ class renderer extends \plugin_renderer_base {
     }
 
     /**
-     * @deprecated since Moodle 4.4
-     */
-    #[\core\attribute\deprecated(null, reason: 'It is no longer used', since: '4.4', mdl: 'MDL-79920', final: true)]
-    public function setup_factor(): void {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-
-    /**
      * Show a table displaying a users active factors.
      *
      * @param string|null $filterfactor The factor name to filter on.
@@ -176,7 +168,7 @@ class renderer extends \plugin_renderer_base {
 
         $table = new \html_table();
         $table->id = 'active_factors';
-        $table->attributes['class'] = 'generaltable table table-bordered';
+        $table->attributes['class'] = 'generaltable table table-bordered table-hover';
         $table->head  = [
             $headers->devicename,
             $headers->added,
@@ -350,7 +342,7 @@ class renderer extends \plugin_renderer_base {
         $table = new \html_table();
         $table->head = $displaynames;
         $table->align = $colclasses;
-        $table->attributes['class'] = 'generaltable table table-bordered w-auto';
+        $table->attributes['class'] = 'generaltable table table-bordered w-auto table-hover';
         $table->attributes['style'] = 'width: auto; min-width: 50%; margin-bottom: 0;';
 
         // Manually handle Total users and MFA users.
@@ -472,7 +464,7 @@ class renderer extends \plugin_renderer_base {
 
         $table = new \html_table();
 
-        $table->attributes['class'] = 'generaltable table table-bordered w-auto';
+        $table->attributes['class'] = 'generaltable table table-bordered w-auto table-hover';
         $table->attributes['style'] = 'width: auto; min-width: 50%';
 
         $table->head = [
@@ -533,7 +525,7 @@ class renderer extends \plugin_renderer_base {
         }
 
         $table = new \html_table();
-        $table->attributes['class'] = 'generaltable table table-bordered w-auto';
+        $table->attributes['class'] = 'generaltable table table-bordered w-auto table-hover';
         $table->attributes['style'] = 'width: auto; min-width: 50%';
         $table->head = [
             'userid' => get_string('userid', 'grades'),
@@ -690,7 +682,6 @@ class renderer extends \plugin_renderer_base {
             if ($loginfactor->name != $factor->name) {
                 $additionalfactor = [
                         'name' => $loginfactor->name,
-                        'icon' => $loginfactor->get_icon(),
                         'loginoption' => get_string('loginoption', 'factor_' . $loginfactor->name),
                 ];
                 // We mark the factor as disabled if it is locked.
@@ -737,9 +728,8 @@ class renderer extends \plugin_renderer_base {
         }
 
         $context = [
-                'logintitle' => get_string('logintitle', 'factor_'.$factor->name),
+                'logintitle' => get_string('logintitle', 'tool_mfa'),
                 'logindesc' => $factor->get_login_desc(),
-                'factoricon' => $factor->get_icon(),
                 'form' => $form->render(),
                 'hasadditionalfactors' => $hasadditionalfactors,
                 'additionalfactors' => $alladitionalfactors,

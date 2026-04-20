@@ -26,6 +26,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 // Raw SCSS setting.
+$string['aigeneratedimage'] = 'AI-generated image';
 $string['choosereadme'] = 'Classic is a highly-customisable theme, based on Boost, with an alternative navigation layout. This theme is intended to be used directly, or as a parent theme when creating or updating custom themes to utilise Bootstrap 4.';
 $string['configtitle'] = 'Classic';
 $string['navbardark'] = 'Use a dark style navbar';

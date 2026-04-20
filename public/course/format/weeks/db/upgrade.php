@@ -31,12 +31,6 @@
 function xmldb_format_weeks_upgrade($oldversion) {
     global $CFG, $DB;
 
-    // Automatically generated Moodle v4.2.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    // Automatically generated Moodle v4.3.0 release upgrade line.
-    // Put any upgrade step following this.
-
     // Automatically generated Moodle v4.4.0 release upgrade line.
     // Put any upgrade step following this.
 
@@ -59,6 +53,9 @@ function xmldb_format_weeks_upgrade($oldversion) {
 
         upgrade_plugin_savepoint(true, 2025052600, 'format', 'weeks');
     }
+
+    // Automatically generated Moodle v5.1.0 release upgrade line.
+    // Put any upgrade step following this.
 
     return true;
 }

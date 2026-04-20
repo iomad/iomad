@@ -226,5 +226,16 @@ $capabilities = [
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => []
     ],
+
+    // Customise the displayed question numbers in the quiz structure.
+    'mod/quiz:customisequestionnumbers' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => [
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW,
+        ],
+        'clonepermissionsfrom' => 'mod/quiz:manage',
+    ],
 ];
 

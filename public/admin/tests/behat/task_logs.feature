@@ -48,3 +48,22 @@ Feature: View task logs report and use its filters
       | operator     | shouldornotsee |
       | Less than    | should not see |
       | Greater than | should see     |
+
+  @javascript
+  Scenario Outline: Filter task logs by database reads/writes
+    Given I log in as "admin"
+    And I change window size to "large"
+    And I navigate to "Server > Tasks > Task logs" in site administration
+    When I click on "Filters" "button"
+    And I set the following fields in the "<filtername>" "core_reportbuilder > Filter" to these values:
+      | <filtername> operator | <operator> |
+      | <filtername> value    | 500        |
+    And I click on "Apply" "button" in the "[data-region='report-filters']" "css_element"
+    Then I should see "Filters applied"
+    And I <shouldornotsee> "Nothing to display"
+    Examples:
+      | filtername      | operator     | shouldornotsee |
+      | Database reads  | Less than    | should not see |
+      | Database reads  | Greater than | should see     |
+      | Database writes | Less than    | should not see |
+      | Database writes | Greater than | should see     |

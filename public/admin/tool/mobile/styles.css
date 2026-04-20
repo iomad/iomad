@@ -30,3 +30,27 @@
 #page-admin-tool-mobile-subscription progress {
     width: 100%;
 }
+
+.tool_mobile-settings-alert a:not(.btn) {
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.tool_mobile-settings-alert a:not(.btn):hover {
+    text-decoration: underline;
+}
+
+.tool_mobile-settings-alert img.icon {
+    width: 20px;
+    height: 20px;
+    margin-bottom: .5rem;
+}
+#page-admin-setting-premiumfeatures .alert-heading h3,
+#page-admin-setting-mobileappearance .alert-heading h3,
+#page-admin-setting-mobileauthentication .alert-heading h3,
+#page-admin-setting-mobilefeatures .alert-heading h3 {
+    margin-bottom: .75rem;
+    line-height: 1.2rem;
+    border-bottom: 0 solid transparent;
+    font-size: 1rem;
+}

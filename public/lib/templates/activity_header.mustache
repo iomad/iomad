@@ -71,15 +71,11 @@
     <h2>{{{title}}}</h2>
 {{/title}}
 <div class="activity-header" data-for="page-activity-header">{{!
-    }}{{#completion}}
-        <span class="visually-hidden">{{#str}} overallaggregation, completion {{/str}}</span>
+    }}
+    {{#completion}}
         {{{completion}}}
     {{/completion}}
-    {{#description}}
-        <div class="activity-description" id="intro">
-            {{{description}}}
-        </div>
-    {{/description}}{{!
+    {{!
 }}</div>
 {{#additional_items}}
     <nav aria-label="{{#str}} additionalcustomnav, core {{/str}}">

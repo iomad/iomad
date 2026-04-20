@@ -19,12 +19,10 @@ declare(strict_types=1);
 namespace core_reportbuilder;
 
 use coding_exception;
+use core_reportbuilder\local\entities\base as entity_base;
 use core_reportbuilder\local\helpers\report;
-use core_reportbuilder\local\models\column as column_model;
-use core_reportbuilder\local\models\filter as filter_model;
-use core_reportbuilder\local\report\base;
-use core_reportbuilder\local\report\column;
-use core_reportbuilder\local\report\filter;
+use core_reportbuilder\local\models\{column as column_model, filter as filter_model};
+use core_reportbuilder\local\report\{base, column, filter};
 
 /**
  * Class datasource
@@ -34,7 +32,6 @@ use core_reportbuilder\local\report\filter;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class datasource extends base {
-
     /** @var float[] $elementsmodified Track the time elements of specific reports have been added, updated, removed */
     private static $elementsmodified = [];
 
@@ -61,8 +58,10 @@ abstract class datasource extends base {
         $columnidentifiers = $this->get_default_columns();
 
         $defaultcolumnsorting = $this->get_default_column_sorting();
-        $defaultcolumnsortinginvalid = array_diff_key($defaultcolumnsorting,
-            array_fill_keys($columnidentifiers, 1));
+        $defaultcolumnsortinginvalid = array_diff_key(
+            $defaultcolumnsorting,
+            array_fill_keys($columnidentifiers, 1),
+        );
 
         if (count($defaultcolumnsortinginvalid) > 0) {
             throw new coding_exception('Invalid column name', array_key_first($defaultcolumnsortinginvalid));
@@ -123,8 +122,9 @@ abstract class datasource extends base {
 
         $this->activecolumns = ['builttime' => microtime(true), 'values' => []];
 
-        $activecolumns = column_model::get_records(['reportid' => $reportid], 'columnorder');
-        foreach ($activecolumns as $index => $column) {
+        $columnindex = 0;
+        $columns = column_model::get_records(['reportid' => $reportid], 'columnorder');
+        foreach ($columns as $column) {
             $instance = $this->get_column($column->get('uniqueidentifier'));
 
             // Ensure the column is still present and available.
@@ -138,7 +138,7 @@ abstract class datasource extends base {
 
                 // We should clone the report column to ensure if it's added twice to a report, each operates independently.
                 $this->activecolumns['values'][] = clone $instance
-                    ->set_index($index)
+                    ->set_index($columnindex++)
                     ->set_persistent($column)
                     ->set_aggregation($columnaggregation, $instance->get_aggregation_options($columnaggregation));
             }
@@ -208,20 +208,24 @@ abstract class datasource extends base {
      *
      * Wildcard matching is supported with '*' in both $include and $exclude, e.g. ['customfield*']
      *
-     * @param string $entityname
+     * @param string|entity_base $entityname
      * @param string[] $include Include only these conditions, if omitted then include all
      * @param string[] $exclude Exclude these conditions, if omitted then exclude none
      * @throws coding_exception If both $include and $exclude are non-empty
      */
-    final protected function add_conditions_from_entity(string $entityname, array $include = [], array $exclude = []): void {
+    final protected function add_conditions_from_entity(
+        string|entity_base $entityname,
+        array $include = [],
+        array $exclude = [],
+    ): void {
         if (!empty($include) && !empty($exclude)) {
             throw new coding_exception('Cannot specify conditions to include and exclude simultaneously');
         }
 
-        $entity = $this->get_entity($entityname);
+        $entity = $this->normalise_entity($entityname);
 
         // Retrieve filtered conditions from entity, respecting given $include/$exclude parameters.
-        $conditions = array_filter($entity->get_conditions(), function(filter $condition) use ($include, $exclude): bool {
+        $conditions = array_filter($entity->get_conditions(), function (filter $condition) use ($include, $exclude): bool {
             if (!empty($include)) {
                 return $this->report_element_search($condition->get_name(), $include);
             }
@@ -313,13 +317,13 @@ abstract class datasource extends base {
     /**
      * Adds all columns/filters/conditions from the given entity to the report at once
      *
-     * @param string $entityname
+     * @param string|entity_base $entityname
      * @param string[] $limitcolumns Include only these columns
      * @param string[] $limitfilters Include only these filters
      * @param string[] $limitconditions Include only these conditions
      */
     final protected function add_all_from_entity(
-        string $entityname,
+        string|entity_base $entityname,
         array $limitcolumns = [],
         array $limitfilters = [],
         array $limitconditions = [],
@@ -332,15 +336,12 @@ abstract class datasource extends base {
     /**
      * Adds all columns/filters/conditions from all the entities added to the report at once
      *
-     * @param string[] $entitynames If specified, then only these entity elements are added (otherwise all)
+     * @param string[]|entity_base[] $entitynames Limit to only these entity elements, in the order that they are specified
      */
     final protected function add_all_from_entities(array $entitynames = []): void {
-        foreach ($this->get_entities() as $entity) {
-            $entityname = $entity->get_entity_name();
-            if (!empty($entitynames) && array_search($entityname, $entitynames) === false) {
-                continue;
-            }
-            $this->add_all_from_entity($entityname);
+        $entities = empty($entitynames) ? $this->get_entities() : $entitynames;
+        foreach ($entities as $entity) {
+            $this->add_all_from_entity($entity);
         }
     }
 

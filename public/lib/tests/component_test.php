@@ -17,6 +17,7 @@
 namespace core;
 
 use core\exception\coding_exception;
+use core\output\requirements\page_requirements_manager;
 use core\tests\fake_plugins_test_trait;
 use DirectoryIterator;
 use ReflectionClass;
@@ -29,9 +30,8 @@ use ReflectionProperty;
  * @category   test
  * @copyright  2013 Petr Skoda {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- *
- * @covers \core\component
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(component::class)]
 final class component_test extends \advanced_testcase {
     use fake_plugins_test_trait;
 
@@ -47,7 +47,7 @@ final class component_test extends \advanced_testcase {
      * this is defined here to annoy devs that try to add more without any thinking,
      * always verify that it does not collide with any existing add-on modules and subplugins!!!
      */
-    const SUBSYSTEMCOUNT = 80;
+    private const SUBSYSTEMCOUNT = 80;
 
     public function test_get_core_subsystems(): void {
         global $CFG;
@@ -243,11 +243,10 @@ final class component_test extends \advanced_testcase {
     /**
      * Test that the get_plugin_list_with_file() function returns the correct list of plugins.
      *
-     * @covers \core\component::is_valid_plugin_name
-     * @dataProvider is_valid_plugin_name_provider
      * @param array $arguments
      * @param bool $expected
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('is_valid_plugin_name_provider')]
     public function test_is_valid_plugin_name(array $arguments, bool $expected): void {
         $this->assertEquals($expected, component::is_valid_plugin_name(...$arguments));
     }
@@ -341,10 +340,10 @@ final class component_test extends \advanced_testcase {
     /**
      * Test \core_component::normalize_component function.
      *
-     * @dataProvider normalise_component_provider
      * @param array $expected
      * @param string $args
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('normalise_component_provider')]
     public function test_normalize_component(array $expected, string $args): void {
         $this->assertSame(
             $expected,
@@ -355,10 +354,10 @@ final class component_test extends \advanced_testcase {
     /**
      * Test the deprecated normalize_component function.
      *
-     * @dataProvider normalise_component_provider
      * @param array $expected
      * @param string $args
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('normalise_component_provider')]
     public function test_deprecated_normalize_component(array $expected, string $args): void {
         $this->assertSame(
             $expected,
@@ -435,11 +434,10 @@ final class component_test extends \advanced_testcase {
     /**
      * Unit tests for get_component_from_classname.
      *
-     * @dataProvider get_component_from_classname_provider
      * @param string $classname The class name to test
      * @param string|null $expected The expected component
-     * @covers \core\component::get_component_from_classname
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('get_component_from_classname_provider')]
     public function test_get_component_from_classname(
         string $classname,
         string|null $expected,
@@ -623,10 +621,10 @@ final class component_test extends \advanced_testcase {
     /**
      * Test that the get_component_classes_in_namespace() function returns classes in the correct namespace.
      *
-     * @dataProvider get_component_classes_in_namespace_provider
      * @param array $methodargs
      * @param string $expectedclassnameformat
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('get_component_classes_in_namespace_provider')]
     public function test_get_component_classes_in_namespace_provider(
         array $methodargs,
         string $expectedclassnameformat,
@@ -809,13 +807,13 @@ final class component_test extends \advanced_testcase {
     /**
      * Test the classloader.
      *
-     * @dataProvider classloader_provider
      * @param array $psr0 The PSR-0 namespaces to be used in the test.
      * @param array $psr4 The PSR-4 namespaces to be used in the test.
      * @param string $classname The name of the class to attempt to load.
      * @param string $includedfiles The file expected to be loaded.
-     * @runInSeparateProcess
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('classloader_provider')]
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
     public function test_classloader($psr0, $psr4, $classname, $includedfiles): void {
         $psr0namespaces = new ReflectionProperty(component::class, 'psr0namespaces');
         $psr0namespaces->setValue(null, $psr0);
@@ -1000,13 +998,13 @@ final class component_test extends \advanced_testcase {
     /**
      * Test the PSR classloader.
      *
-     * @dataProvider psr_classloader_provider
      * @param array $psr0 The PSR-0 namespaces to be used in the test.
      * @param array $psr4 The PSR-4 namespaces to be used in the test.
      * @param string $classname The name of the class to attempt to load.
      * @param string|bool $file The expected file corresponding to the class or false for nonexistant.
-     * @runInSeparateProcess
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('psr_classloader_provider')]
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
     public function test_psr_classloader($psr0, $psr4, $classname, $file): void {
         return;
         $psr0namespaces = new ReflectionProperty(component::class, 'psr0namespaces');
@@ -1067,13 +1065,13 @@ final class component_test extends \advanced_testcase {
     /**
      * Test the PSR classloader.
      *
-     * @dataProvider get_class_file_provider
      * @param string $classname the name of the class.
      * @param string $prefix The namespace prefix used to identify the base directory of the source files.
      * @param string $path The relative path to the base directory of the source files.
      * @param string[] $separators The characters that should be used for separating.
      * @param string|bool $result The expected result to be returned from get_class_file.
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('get_class_file_provider')]
     public function test_get_class_file($classname, $prefix, $path, $separators, $result): void {
         $component = new ReflectionClass(component::class);
         $psrclassloader = $component->getMethod('get_class_file');
@@ -1111,10 +1109,10 @@ final class component_test extends \advanced_testcase {
     /**
      * Test the get_component_names() method.
      *
-     * @dataProvider get_component_names_provider
      * @param bool $includecore Whether to include core in the list.
      * @param bool $coreexpected Whether core is expected to be in the list.
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('get_component_names_provider')]
     public function test_get_component_names(
         bool $includecore,
         bool $coreexpected,
@@ -1219,7 +1217,6 @@ final class component_test extends \advanced_testcase {
                 $this->assertNull($attributes->component, $message);
             }
 
-
             // Now check for the rest of attributes.
             $this->assertIsBool($attributes->allowedlevel2, $message);
             $this->assertIsBool($attributes->allowedspread, $message);
@@ -1243,8 +1240,6 @@ final class component_test extends \advanced_testcase {
 
     /*
      * Tests the getter for the db directory summary hash.
-     *
-     * @covers \core\component::get_all_directory_hashes
      */
     public function test_get_db_directories_hash(): void {
         $initial = component::get_all_component_hash();
@@ -1313,11 +1308,11 @@ final class component_test extends \advanced_testcase {
     /**
      * Summary of test_composer_files
      *
-     * @dataProvider core_thirdparty_libs_with_composer_provider
      * @param string $name
      * @param string $fullpath
      * @param string $relativepath
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('core_thirdparty_libs_with_composer_provider')]
     public function test_composer_files(
         string $name,
         string $fullpath,
@@ -1373,15 +1368,6 @@ final class component_test extends \advanced_testcase {
                             "Moodle PSR-4 namespace missing entry for library {$name}: {$namespace} => {$relativenamespacepath}",
                         );
                     }
-                }
-            }
-
-            // Check that the composer autoload files are present.
-            if (array_key_exists('files', $composer['autoload'])) {
-                // The Moodle composer file autoloads are a simple string[].
-                $autoloadnamefiles = $rc->getProperty('composerautoloadfiles')->getValue(null);
-                foreach ($composer['autoload']['files'] as $file) {
-                    $this->assertContains(trim($relativepath, '/\\') . "/{$file}", $autoloadnamefiles);
                 }
             }
         }
@@ -1501,10 +1487,10 @@ final class component_test extends \advanced_testcase {
     /**
      * Ensure that invalid JSON in the subplugins.json file warns appropriately.
      *
-     * @dataProvider invalid_subplugins_json_provider
      * @param string[] $expectedwarnings Errors to expect in the exception message
      * @param array[] $json The contents of the subplugins.json file
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('invalid_subplugins_json_provider')]
     public function test_fetch_subtypes_json_invalid_values(
         array $expectedwarnings,
         array $json,
@@ -1639,10 +1625,8 @@ final class component_test extends \advanced_testcase {
 
     /**
      * Test various methods when a deprecated plugin type is introduced.
-     *
-     * @runInSeparateProcess
-     * @return void
      */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
     public function test_core_component_deprecated_plugintype(): void {
         $this->resetAfterTest();
 
@@ -1704,8 +1688,10 @@ final class component_test extends \advanced_testcase {
         $this->assertEquals('fake_fullfeatured', component::get_component_from_classname(\fake_fullfeatured\example::class));
 
         // Class autoloading of deprecated plugins is permitted, to facilitate plugin migration code.
-        $this->assertArrayHasKey('fake_fullfeatured\dummy',
-            component::get_component_classes_in_namespace('fake_fullfeatured'));
+        $this->assertArrayHasKey(
+            'fake_fullfeatured\dummy',
+            component::get_component_classes_in_namespace('fake_fullfeatured')
+        );
         $this->assertTrue(class_exists(\fake_fullfeatured\dummy::class));
     }
 
@@ -1752,17 +1738,17 @@ final class component_test extends \advanced_testcase {
         $this->assertNull(component::get_component_from_classname(\fake_fullfeatured\example::class));
 
         // Class autoloading of deleted plugins is not supported.
-        $this->assertArrayNotHasKey('fake_fullfeatured\dummy',
-            component::get_component_classes_in_namespace('fake_fullfeatured'));
+        $this->assertArrayNotHasKey(
+            'fake_fullfeatured\dummy',
+            component::get_component_classes_in_namespace('fake_fullfeatured')
+        );
         $this->assertFalse(class_exists(fake_fullfeatured\dummy::class));
     }
 
     /**
      * Test various core_component APIs when dealing with deprecated subplugins.
-     *
-     * @runInSeparateProcess
-     * @return void
      */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
     public function test_core_component_deprecated_subplugintype(): void {
         $this->resetAfterTest();
 
@@ -1780,10 +1766,8 @@ final class component_test extends \advanced_testcase {
 
     /**
      * Verify that a plugin which supports subplugins cannot be deprecated.
-     *
-     * @runInSeparateProcess
-     * @return void
      */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
     public function test_core_component_deprecated_subplugintype_supporting_subplugins(): void {
         $this->resetAfterTest();
 
@@ -1809,10 +1793,8 @@ final class component_test extends \advanced_testcase {
 
     /**
      * Verify that a plugin which supports subplugins cannot be deleted.
-     *
-     * @runInSeparateProcess
-     * @return void
      */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
     public function test_core_component_deleted_subplugintype_supporting_subplugins(): void {
         $this->resetAfterTest();
 
@@ -1838,8 +1820,6 @@ final class component_test extends \advanced_testcase {
 
     /**
      * Helper asserting the returns for various core_component APIs when dealing with deprecated and deleted subplugins.
-     *
-     * @return void
      */
     protected function assert_deprecation_apis_subplugins(): void {
         // Deprecation-specific methods.
@@ -1949,10 +1929,14 @@ final class component_test extends \advanced_testcase {
         $this->assertFalse(component::has_monologo_icon('fulldeletedsubtype', 'demo'));
 
         $this->assertEquals('fake_fullfeatured', component::get_component_from_classname(\fake_fullfeatured\example::class));
-        $this->assertEquals('fullsubtype_example',
-            component::get_component_from_classname(\fullsubtype_example\example::class));
-        $this->assertEquals('fulldeprecatedsubtype_test',
-            component::get_component_from_classname(\fulldeprecatedsubtype_test\example::class));
+        $this->assertEquals(
+            'fullsubtype_example',
+            component::get_component_from_classname(\fullsubtype_example\example::class)
+        );
+        $this->assertEquals(
+            'fulldeprecatedsubtype_test',
+            component::get_component_from_classname(\fulldeprecatedsubtype_test\example::class)
+        );
         $this->assertNull(component::get_component_from_classname(\fulldeletedsubtype_demo\example::class));
 
         // Deprecated and deleted plugins included in the following.
@@ -1961,17 +1945,53 @@ final class component_test extends \advanced_testcase {
         $this->assertEquals('fake_fullfeatured', component::get_subtype_parent('fulldeletedsubtype'));
 
         // Class autoloading of deprecated plugins is permitted, to facilitate plugin migration code, but not for deleted plugins.
-        $this->assertArrayHasKey('fake_fullfeatured\dummy',
-            component::get_component_classes_in_namespace('fake_fullfeatured'));
-        $this->assertArrayHasKey('fullsubtype_example\dummy',
-            component::get_component_classes_in_namespace('fullsubtype_example'));
-        $this->assertArrayHasKey('fulldeprecatedsubtype_test\dummy',
-            component::get_component_classes_in_namespace('fulldeprecatedsubtype_test'));
+        $this->assertArrayHasKey(
+            'fake_fullfeatured\dummy',
+            component::get_component_classes_in_namespace('fake_fullfeatured')
+        );
+        $this->assertArrayHasKey(
+            'fullsubtype_example\dummy',
+            component::get_component_classes_in_namespace('fullsubtype_example')
+        );
+        $this->assertArrayHasKey(
+            'fulldeprecatedsubtype_test\dummy',
+            component::get_component_classes_in_namespace('fulldeprecatedsubtype_test')
+        );
         $this->assertEquals([], component::get_component_classes_in_namespace('fulldeletedsubtype_demo'));
 
         $this->assertTrue(class_exists(\fake_fullfeatured\dummy::class));
         $this->assertTrue(class_exists(\fullsubtype_example\dummy::class));
         $this->assertTrue(class_exists(\fulldeprecatedsubtype_test\dummy::class));
         $this->assertFalse(class_exists(\fulldeletedsubtype_demo\dummy::class));
+    }
+
+    /**
+     * Ensure that get_path() returns absolute paths using the correct directory separator.
+     *
+     * @covers \core\component::get_path
+     */
+    public function test_get_path(): void {
+        global $CFG;
+
+        // Get plugin paths used in the cache created from get_path.
+        $absolutepaths = \core\component::get_all_plugin_types();
+        $pluginpath = reset($absolutepaths);
+
+        // Ensure that the path contains $CFG->dirroot ('var/www/site/public'), which contains the
+        // correct directory separator.
+        $this->assertTrue(str_contains($pluginpath, $CFG->dirroot));
+
+        // Ensure js_module does not throw. It will call find_module which uses the cached path and
+        // checks it contains $CFG->dirroot.
+        $exception = false;
+        try {
+            $manager = new \page_requirements_manager();
+            $manager->js_module('mod_assign');
+        } catch (coding_exception $e) {
+            if ($e->getMessage() === 'Missing YUI3 module details.') {
+                $exception = true;
+            }
+        }
+        $this->assertFalse($exception);
     }
 }

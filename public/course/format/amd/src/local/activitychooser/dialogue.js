@@ -22,9 +22,11 @@
  */
 
 // import {addIconToContainer} from 'core/loadingicon';
+import $ from 'jquery';
 import {debounce} from 'core/utils';
+import CustomEvents from 'core/custom_interaction_events';
 import DialogueDom from 'core_courseformat/local/activitychooser/dialoguedom';
-import {end, arrowLeft, arrowRight, home, enter, space} from 'core/key_codes';
+import {enter, space} from 'core/key_codes';
 import Exporter from 'core_courseformat/local/activitychooser/exporter';
 import {getFirst} from 'core/normalise';
 import {getString} from 'core/str';
@@ -35,6 +37,7 @@ import * as Repository from 'core_courseformat/local/activitychooser/repository'
 import selectors from 'core_courseformat/local/activitychooser/selectors';
 import * as Templates from 'core/templates';
 const getPlugin = pluginName => import(pluginName);
+import emitDeprecation from 'core/deprecated';
 
 /**
  * Display the activity chooser modal.
@@ -109,10 +112,11 @@ export async function displayActivityChooserModal(
  * @param {Object} footerData Our base footer object.
  */
 export const displayChooser = (modalPromise, sectionModules, partialFavourite, footerData) => {
-    window.console.warn(
-        'The displayChooser function is deprecated. ' +
-        'Please displayActivityChooserModal instead.'
-    );
+    emitDeprecation('core_courseformat/local/activitychooser/dialogue::displayChooser', {
+        replacement: 'core_courseformat/local/activitychooser/dialogue::displayActivityChooserModal',
+        since: '5.1',
+        mdl: 'MDL-85533',
+    });
 
     // Register event listeners.
     modalPromise.then(modal => {
@@ -440,11 +444,44 @@ class ActivityChooserDialogue {
      */
     setupKeyboardAccessibility() {
         const mainElement = getFirst(this.modal.getModal());
+        const $mainElement = $(mainElement);
 
         mainElement.tabIndex = -1;
 
-        mainElement.addEventListener('keydown', (e) => {
-            const currentOption = this.dialogueDom.getClosestChooserOption(e.target);
+        // Set up custom interaction events for RTL-aware keyboard navigation.
+        CustomEvents.define($mainElement, [
+            CustomEvents.events.next,
+            CustomEvents.events.previous,
+            CustomEvents.events.home,
+            CustomEvents.events.end,
+        ]);
+
+        // Map of keyboard events to their corresponding focus methods.
+        const bindings = [
+            {event: CustomEvents.events.next, method: 'focusNextChooserOption'},
+            {event: CustomEvents.events.previous, method: 'focusPreviousChooserOption'},
+            {event: CustomEvents.events.home, method: 'focusFirstChooserOption'},
+            {event: CustomEvents.events.end, method: 'focusLastChooserOption'},
+        ];
+
+        // Handle focus move (automatically handles RTL).
+        const handleFocusMove = (method) => (e, data) => {
+            const currentOption = this.dialogueDom.getClosestChooserOption(data.originalEvent.target);
+            if (currentOption !== null) {
+                data.originalEvent.preventDefault();
+                this.dialogueDom[method](currentOption);
+            }
+        };
+
+        bindings.forEach(({event, method}) => {
+            $mainElement.on(event, handleFocusMove(method));
+        });
+
+        // Handle space and enter keys for selection.
+        mainElement.addEventListener("keydown", (e) => {
+            const currentOption = this.dialogueDom.getClosestChooserOption(
+                e.target
+            );
             if (currentOption === null) {
                 return;
             }
@@ -464,22 +501,6 @@ class ActivityChooserDialogue {
             if (e.keyCode === enter) {
                 e.preventDefault();
                 this.submitAddSelectedModule(currentOption);
-            }
-            if (e.keyCode === arrowRight) {
-                e.preventDefault();
-                this.dialogueDom.focusNextChooserOption(currentOption);
-            }
-            if (e.keyCode === arrowLeft) {
-                e.preventDefault();
-                this.dialogueDom.focusPreviousChooserOption(currentOption);
-            }
-            if (e.keyCode === home) {
-                e.preventDefault();
-                this.dialogueDom.focusFirstChooserOption(currentOption);
-            }
-            if (e.keyCode === end) {
-                e.preventDefault();
-                this.dialogueDom.focusLastChooserOption(currentOption);
             }
         });
     }
@@ -516,8 +537,9 @@ class ActivityChooserDialogue {
         const searchResults = [];
         this.mappedModules.forEach((activity) => {
             const activityName = activity.title.toLowerCase();
+            const activitySummary = activity.summary.toLowerCase();
             const activityDesc = activity.help.toLowerCase();
-            if (activityName.includes(searchTerm) || activityDesc.includes(searchTerm)) {
+            if (activityName.includes(searchTerm) || activitySummary.includes(searchTerm) || activityDesc.includes(searchTerm)) {
                 searchResults.push(activity);
             }
         });

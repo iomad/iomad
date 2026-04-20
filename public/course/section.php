@@ -96,9 +96,11 @@ if (!$sectioninfo->uservisible) {
     // Check if coursesection has conditions affecting availability and if
     // so, output availability info.
     if ($sectioninfo->visible && $sectioninfo->availableinfo) {
-        $sectionname = get_section_name($course, $sectioninfo);
-        $message = get_string('notavailablecourse', '', $sectionname);
-        redirect(course_get_url($course), $message, null, \core\output\notification::NOTIFY_ERROR);
+        $url = \core\router\util::get_path_for_callable(
+            [\core_course\route\controller\restricted_section::class, 'restricted_section_page'],
+            ['section' => $sectioninfo->id],
+        );
+        redirect($url, '', null);
     } else {
         // Note: We actually already know they don't have this capability
         // or uservisible would have been true; this is just to get the
@@ -204,6 +206,10 @@ if ($PAGE->user_is_editing()) {
     // Display a warning if asynchronous backups are pending for this course.
     if (async_helper::is_async_pending($course->id, 'course', 'backup')) {
         echo $OUTPUT->notification(get_string('pendingasyncedit', 'backup'), 'warning');
+    }
+
+    if (\core_course\task\reset_course::get_taskid_for_course($course->id)) {
+        echo $OUTPUT->notification(get_string('resetinprogressedit', 'course'), 'warning');
     }
 
     // Allow drag and drop in the course index.

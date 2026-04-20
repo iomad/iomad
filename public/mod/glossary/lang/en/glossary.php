@@ -57,6 +57,7 @@ $string['attachment_help'] = 'You can optionally attach one or more files to a g
 $string['author'] = 'author';
 $string['authorview'] = 'Browse by Author';
 $string['back'] = 'Back';
+$string['bynameondate'] = 'by {$a->name} - {$a->date}';
 $string['cachedef_concepts'] = 'Concept linking';
 $string['cantinsertcat'] = 'Can\'t insert category';
 $string['cantinsertrec'] = 'Can\'t insert record';
@@ -233,6 +234,7 @@ $string['indicator:socialbreadthdef_help'] = 'The participant has reached this p
 $string['indicator:socialbreadthdef_link'] = 'Learning_analytics_indicators#Social_breadth';
 $string['isglobal'] = 'Is this glossary global?';
 $string['isglobal_help'] = 'A global glossary has entries which are linked to from throughout the site, rather than only in the course that the glossary is in. Only administrators can set a glossary as global.';
+$string['lastedited'] = '(Last edited: {$a})';
 $string['letter'] = 'letter';
 $string['linkcategory'] = 'Automatically link this category';
 $string['linkcategory_help'] = 'If glossary auto-linking has been enabled and this setting is enabled, the category name will be automatically linked wherever it appears throughout the rest of the course. When a participant follows a category name link, they will be taken to the "Browse by category" page of the glossary.';
@@ -241,22 +243,17 @@ $string['mainglossary'] = 'Main glossary';
 $string['maxtimehaspassed'] = 'Sorry, but the maximum time for editing this comment ({$a}) has passed!';
 $string['myentries'] = 'My entries';
 $string['modulename'] = 'Glossary';
-$string['modulename_help'] = 'The glossary activity module enables participants to create and maintain a list of definitions, like a dictionary, or to collect and organise resources or information.
+$string['modulename_help'] = '###### Key features
+* Create entries with text, images, video, and other embedded media
+* Browse entries alphabetically, by category, or by author
+* Allow students to create, comment on, and rate entries
 
-A teacher can allow files to be attached to glossary entries. Attached images are displayed in the entry. Entries can be searched or browsed alphabetically or by category, date or author. Entries can be approved by default or require approval by a teacher before they are viewable by everyone.
-
-If the glossary auto-linking filter is enabled, entries will be automatically linked where the concept words and/or phrases appear within the course.
-
-A teacher can allow comments on entries. Entries can also be rated by teachers or students (peer evaluation). Ratings can be aggregated to form a final grade which is recorded in the gradebook.
-
-Glossaries have many uses, such as
-
-* A collaborative bank of key terms
-* A ‘getting to know you’ space where new students add their name and personal details
-* A ‘handy tips’ resource of best practice in a practical subject
-* A sharing area of useful videos, images or sound files
-* A revision resource of facts to remember';
+###### Ways to use it
+* Build a collection of key concepts for a course
+* Collect vocabulary words and definitions in a language class
+* Develop a collaborative glossary of technical terms';
 $string['modulename_link'] = 'mod/glossary/view';
+$string['modulename_summary'] = 'Create a list of terms and definitions, like a dictionary, for students to browse or contribute to.';
 $string['modulenameplural'] = 'Glossaries';
 $string['newentries'] = 'New glossary entries';
 $string['newglossary'] = 'New glossary';

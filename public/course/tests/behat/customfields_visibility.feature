@@ -5,10 +5,12 @@ Feature: The visibility of fields control where they are displayed
   I can change the visibility of the fields
 
   Background:
-    Given the following "custom field categories" exist:
+    Given the following config values are set as admin:
+      | enablemyhome | 1 |
+    And the following "custom field categories" exist:
       | name              | component   | area   | itemid |
       | Category for test | core_course | course | 0      |
-    Given the following "users" exist:
+    And the following "users" exist:
       | username | firstname | lastname | email                |
       | teacher1 | Teacher   | 1        | teacher1@example.com |
       | student1 | Student   | 1        | student@example.com  |
@@ -22,7 +24,7 @@ Feature: The visibility of fields control where they are displayed
   Scenario: Display course custom fields on homepage
     When I log in as "admin"
     And I navigate to "Courses > Default settings > Course custom fields" in site administration
-    And I click on "Add a new custom field" "link"
+    And I click on "Add field" "link"
     And I click on "Short text" "link"
     And I set the following fields to these values:
       | Name       | Test field |
@@ -42,7 +44,7 @@ Feature: The visibility of fields control where they are displayed
   Scenario: Do not display course custom fields on homepage
     When I log in as "admin"
     And I navigate to "Courses > Default settings > Course custom fields" in site administration
-    And I click on "Add a new custom field" "link"
+    And I click on "Add field" "link"
     And I click on "Short text" "link"
     And I set the following fields to these values:
       | Name       | Test field  |
@@ -62,7 +64,7 @@ Feature: The visibility of fields control where they are displayed
   Scenario: Display course custom fields on homepage only to course editors
     When I log in as "admin"
     And I navigate to "Courses > Default settings > Course custom fields" in site administration
-    And I click on "Add a new custom field" "link"
+    And I click on "Add field" "link"
     And I click on "Short text" "link"
     And I set the following fields to these values:
       | Name       | Test field     |

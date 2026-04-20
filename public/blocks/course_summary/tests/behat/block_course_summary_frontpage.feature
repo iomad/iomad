@@ -5,7 +5,9 @@ Feature: Course summary block used on the frontpage
   I can use the course summary block on the frontpage
 
   Background:
-    Given I log in as "admin"
+    Given the following config values are set as admin:
+      | enablemyhome | 1 |
+    And I log in as "admin"
     And I enable "course_summary" "block" plugin
     And the following "blocks" exist:
       | blockname      | contextlevel | reference | pagetypepattern | defaultregion |
@@ -19,6 +21,8 @@ Feature: Course summary block used on the frontpage
     # The course summary block a default front page block, so no need to add it.
 
   Scenario: Guest can view site summary
+    Given the following config values are set as admin:
+      | forcelogin | 0 |
     When I am on site homepage
     Then "Course/site summary" "block" should exist
     And I should not see "Course summary" in the "Course/site summary" "block"

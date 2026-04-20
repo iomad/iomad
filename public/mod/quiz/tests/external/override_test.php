@@ -216,4 +216,265 @@ final class override_test extends \core_external\tests\externallib_testcase {
         $this->assertNotEmpty($result['ids']);
         $this->assertContains($id, $result['ids']);
     }
+
+    /**
+     * Provides values to test_save_reason_overrides
+     *
+     * @return array
+     */
+    public static function save_reason_overrides_provider(): array {
+        return [
+            'create with reason' => [
+                'data' => [
+                    'reason' => 'This is a reason',
+                    'reasonformat' => FORMAT_HTML,
+                    'timeopen' => 999,
+                ],
+                'expectedreason' => 'This is a reason',
+                'expectedformat' => FORMAT_HTML,
+            ],
+            'create with reason no format' => [
+                'data' => [
+                    'reason' => 'This is a reason',
+                    'timeopen' => 999,
+                ],
+                'expectedreason' => 'This is a reason',
+                'expectedformat' => FORMAT_MOODLE,
+            ],
+            'create with reason and different format' => [
+                'data' => [
+                    'reason' => 'This is a reason',
+                    'reasonformat' => FORMAT_MOODLE,
+                    'timeopen' => 999,
+                ],
+                'expectedreason' => 'This is a reason',
+                'expectedformat' => FORMAT_MOODLE,
+            ],
+            'create with reason and null format' => [
+                'data' => [
+                    'reason' => 'This is a reason',
+                    'reasonformat' => null,
+                    'timeopen' => 999,
+                ],
+                'expectedreason' => 'This is a reason',
+                'expectedformat' => FORMAT_MOODLE,
+            ],
+            'create with reason only (fail)' => [
+                'data' => [
+                    'reason' => 'This is a reason',
+                ],
+                'expectedreason' => null,
+                'expectedformat' => FORMAT_HTML,
+                'expectedexception' => \invalid_parameter_exception::class,
+            ],
+            'create with format only' => [
+                'data' => [
+                    'reasonformat' => FORMAT_MOODLE,
+                ],
+                'expectedreason' => null,
+                'expectedformat' => FORMAT_MOODLE,
+                'expectedexception' => \invalid_parameter_exception::class,
+            ],
+            'create with null reason' => [
+                'data' => [
+                    'reason' => null,
+                ],
+                'expectedreason' => null,
+                'expectedformat' => FORMAT_HTML,
+                'expectedexception' => \invalid_parameter_exception::class,
+            ],
+            'create with no reason or format' => [
+                'data' => [],
+                'expectedreason' => null,
+                'expectedformat' => FORMAT_HTML,
+                'expectedexception' => \invalid_parameter_exception::class,
+            ],
+        ];
+    }
+
+    /**
+     * Tests save_overrides with reason
+     *
+     * @dataProvider save_reason_overrides_provider
+     * @param array $data
+     * @param string|null $expectedreason
+     * @param int|string|null $expectedformat
+     * @param string|null $expectedexception
+     */
+    public function test_save_reason_overrides(
+        array $data,
+        ?string $expectedreason,
+        int|string|null $expectedformat,
+        ?string $expectedexception = null
+    ): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $quiz = $this->create_quiz();
+        $user = $this->getDataGenerator()->create_user();
+
+        $data = array_merge($data, ['userid' => $user->id]);
+
+        $payload = [
+            'quizid' => $quiz->id,
+            'overrides' => [
+                $data,
+            ],
+        ];
+
+        if ($expectedexception) {
+            $this->expectException($expectedexception);
+        }
+
+        $result = save_overrides::execute($payload);
+
+        if ($expectedexception) {
+            return;
+        }
+
+        $this->assertNotEmpty($result['ids']);
+        $this->assertCount(1, $result['ids']);
+        $overrideid = reset($result['ids']);
+
+        $override = $DB->get_record('quiz_overrides', ['id' => $overrideid]);
+        $this->assertEquals($expectedreason, $override->reason);
+        $this->assertEquals($expectedformat, $override->reasonformat);
+    }
+
+    /**
+     * Provides values to test_update_reason_overrides
+     *
+     * @return array
+     */
+    public static function update_reason_overrides_provider(): array {
+        return [
+            'update reason' => [
+                'initialreason' => 'Initial reason',
+                'initialformat' => FORMAT_HTML,
+                'data' => [
+                    'reason' => 'Updated reason',
+                    'reasonformat' => FORMAT_HTML,
+                ],
+                'expectedreason' => 'Updated reason',
+                'expectedformat' => FORMAT_HTML,
+            ],
+            'update reason format' => [
+                'initialreason' => 'Initial reason',
+                'initialformat' => FORMAT_HTML,
+                'data' => [
+                    'reason' => 'Initial reason',
+                    'reasonformat' => FORMAT_MOODLE,
+                ],
+                'expectedreason' => 'Initial reason',
+                'expectedformat' => FORMAT_MOODLE,
+            ],
+            'update reason only' => [
+                'initialreason' => 'Initial reason',
+                'initialformat' => FORMAT_HTML,
+                'data' => [
+                    'reason' => 'Updated reason',
+                ],
+                'expectedreason' => 'Updated reason',
+                'expectedformat' => FORMAT_HTML,
+            ],
+            'update format only' => [
+                'initialreason' => 'Initial reason',
+                'initialformat' => FORMAT_HTML,
+                'data' => [
+                    'reasonformat' => FORMAT_MOODLE,
+                ],
+                'expectedreason' => 'Initial reason',
+                'expectedformat' => FORMAT_MOODLE,
+            ],
+            'update reason to null' => [
+                'initialreason' => 'Initial reason',
+                'initialformat' => FORMAT_HTML,
+                'data' => [
+                    'reason' => null,
+                ],
+                'expectedreason' => null,
+                'expectedformat' => FORMAT_HTML,
+            ],
+            'update format to null' => [
+                'initialreason' => 'Initial reason',
+                'initialformat' => FORMAT_HTML,
+                'data' => [
+                    'reasonformat' => null,
+                ],
+                'expectedreason' => null,
+                'expectedformat' => null,
+                'expectedexception' => \invalid_parameter_exception::class,
+            ],
+            'update no changes' => [
+                'initialreason' => 'Initial reason',
+                'initialformat' => FORMAT_HTML,
+                'data' => [],
+                'expectedreason' => null,
+                'expectedformat' => null,
+                'expectedexception' => \invalid_parameter_exception::class,
+            ],
+        ];
+    }
+
+    /**
+     * Tests update_overrides with reason
+     *
+     * @dataProvider update_reason_overrides_provider
+     * @param string|null $initialreason
+     * @param int|string|null $initialformat
+     * @param array $data
+     * @param string|null $expectedreason
+     * @param int|string|null $expectedformat
+     * @param string|null $expectedexception
+     */
+    public function test_update_reason_overrides(
+        ?string $initialreason,
+        int|string|null $initialformat,
+        array $data,
+        ?string $expectedreason,
+        int|string|null $expectedformat,
+        ?string $expectedexception = null
+    ): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $quiz = $this->create_quiz();
+        $user = $this->getDataGenerator()->create_user();
+
+        // Create initial override.
+        $overrideid = $DB->insert_record('quiz_overrides', [
+            'quiz' => $quiz->id,
+            'userid' => $user->id,
+            'reason' => $initialreason,
+            'reasonformat' => $initialformat,
+        ]);
+
+        $data['id'] = $overrideid;
+        $data['userid'] = $user->id;
+
+        $payload = [
+            'quizid' => $quiz->id,
+            'overrides' => [
+                $data,
+            ],
+        ];
+
+        if ($expectedexception) {
+            $this->expectException($expectedexception);
+        }
+
+        save_overrides::execute($payload);
+
+        if ($expectedexception) {
+            return;
+        }
+
+        $override = $DB->get_record('quiz_overrides', ['id' => $overrideid]);
+        $this->assertEquals($expectedreason, $override->reason);
+        $this->assertEquals($expectedformat, $override->reasonformat);
+    }
 }

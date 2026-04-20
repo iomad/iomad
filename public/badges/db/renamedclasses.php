@@ -33,5 +33,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $renamedclasses = [
-    'core_badges_observer' => 'core_badges\\event\\observer',
+        'core_badges_observer' => 'core_badges\\event\\observer',
+        'badge_award_selector_base' => 'core_badges\\award_selector_base',
+        'badge_existing_users_selector' => 'core_badges\\existing_award_selector',
+        'badge_potential_users_selector' => 'core_badges\\potential_award_selector',
 ];

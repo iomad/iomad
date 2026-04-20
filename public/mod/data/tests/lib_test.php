@@ -24,6 +24,7 @@
  */
 namespace mod_data;
 
+use core_courseformat\formatactions;
 use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
@@ -1158,7 +1159,7 @@ final class lib_test extends \advanced_testcase {
         $field1 = $datagenerator->create_field($fieldrecord, $data1);
         $data2 = $this->getDataGenerator()->create_module('data', array('course' => $course2->id));
         $field2 = $datagenerator->create_field($fieldrecord, $data2);
-        set_coursemodule_groupmode($data2->cmid, SEPARATEGROUPS);
+        formatactions::cm($course1->id)->set_groupmode($data2->cmid, SEPARATEGROUPS);
 
         $record11 = $datagenerator->create_entry($data1, [$field1->field->id => 'value11'],
                 0, ['Cats', 'Dogs']);
@@ -1295,7 +1296,8 @@ final class lib_test extends \advanced_testcase {
         $event = $this->create_action_event($course->id, $data->id, DATA_EVENT_TYPE_OPEN);
 
         // Set sections 0 as hidden.
-        set_section_visible($course->id, 0, 0);
+        $sectioninfo = get_fast_modinfo($course->id)->get_section_info(0);
+        formatactions::section($course->id)->set_visibility($sectioninfo, false);
 
         // Now, log out.
         $CFG->forcelogin = true; // We don't want to be logged in as guest, as guest users might still have some capabilities.

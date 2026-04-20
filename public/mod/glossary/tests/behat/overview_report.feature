@@ -67,10 +67,10 @@ Feature: Testing overview integration in mod_glossary
     When I am on the "Course 1" "course > activities > glossary" page logged in as "student1"
     And I should not see "Actions" in the "glossary_overview_collapsible" "region"
     Then the following should exist in the "Table listing all Glossary activities" table:
-      | Name                             | Comments | Total entries | My entries |
-      | Glossary without defaultapproval | 0        | 2             | 3          |
-      | Glossary without entries         | -        | 0             | 0          |
-      | Glossary with comments           | 2        | 1             | 1          |
+      | Name                             | Total entries | My entries | Comments |
+      | Glossary without defaultapproval | 2             | 3          | 0        |
+      | Glossary without entries         | 0             | 0          | -        |
+      | Glossary with comments           | 1             | 1          | 2        |
 
   Scenario: The glossary overview report should generate log events
     Given I am on the "Course 1" "course > activities > glossary" page logged in as "teacher1"
@@ -80,14 +80,3 @@ Feature: Testing overview integration in mod_glossary
     And I click on "Get these logs" "button"
     Then I should see "Course activities overview page viewed"
     And I should see "viewed the instance list for the module 'glossary'"
-
-  Scenario: The glossary index redirect to the activities overview
-    Given the following "activity" exists:
-      | activity    | glossary             |
-      | course      | Acceptance test site |
-      | name        | Home glossary        |
-    And I log in as "admin"
-    When I visit "/mod/glossary/index.php?id=1"
-    Then the following should exist in the "Table listing all Glossary activities" table:
-      | Name          | Entries | Actions |
-      | Home glossary | 0       | View    |

@@ -45,7 +45,8 @@ class primary extends view {
         $showhomenode = empty($this->page->theme->removedprimarynavitems) ||
             !in_array('home', $this->page->theme->removedprimarynavitems);
         // We do not need to change the text for the home/dashboard depending on the set homepage.
-        if ($showhomenode) {
+        $sitehome = null;
+        if ($showhomenode && !empty($CFG->enablemyhome)) {
             $sitehome = $this->add(get_string('home'), new \moodle_url('/'), self::TYPE_SYSTEM,
                 null, 'home', new \pix_icon('i/home', ''));
         }
@@ -53,7 +54,7 @@ class primary extends view {
             $homepage = get_home_page();
             if ($homepage == HOMEPAGE_MY || $homepage == HOMEPAGE_MYCOURSES) {
                 // We need to stop automatic redirection.
-                if ($showhomenode) {
+                if ($sitehome) {
                     $sitehome->action->param('redirect', '0');
                 }
             }
@@ -67,8 +68,9 @@ class primary extends view {
             }
 
             // Add the mycourses link.
-            $showcoursesnode = empty($this->page->theme->removedprimarynavitems) ||
-                !in_array('courses', $this->page->theme->removedprimarynavitems);
+            $showcoursesnode = !empty($CFG->enablemycourses) &&
+                (empty($this->page->theme->removedprimarynavitems) ||
+                !in_array('courses', $this->page->theme->removedprimarynavitems));
             if ($showcoursesnode) {
                 $this->add(get_string('mycourses'), new \moodle_url('/my/courses.php'), self::TYPE_ROOTNODE, null, 'mycourses');
             }

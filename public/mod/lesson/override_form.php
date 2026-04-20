@@ -230,6 +230,16 @@ class lesson_override_form extends moodleform {
         $mform->addHelpButton('retake', 'retakesallowed', 'lesson');
         $mform->setDefault('retake', $this->lesson->retake);
 
+        // Reason for override.
+        $editoroptions = [
+            'maxfiles' => 0,
+            'noclean' => false,
+            'context' => $this->context,
+        ];
+        $mform->addElement('editor', 'reason_editor', get_string('overridereason', 'lesson'), null, $editoroptions);
+        $mform->setType('reason_editor', PARAM_RAW);
+        $mform->addHelpButton('reason_editor', 'overridereason', 'lesson');
+
         // Submit buttons.
         $mform->addElement('submit', 'resetbutton',
                 get_string('reverttodefaults', 'lesson'));

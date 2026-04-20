@@ -1,4 +1,4 @@
-@customfield @customfield_select @javascript
+@core_customfield @customfield_select @javascript
 Feature: Managers can manage course custom fields select
   In order to have additional data on the course
   As a manager
@@ -12,7 +12,7 @@ Feature: Managers can manage course custom fields select
     And I navigate to "Courses > Default settings > Course custom fields" in site administration
 
   Scenario: Create a custom course select field
-    When I click on "Add a new custom field" "link"
+    When I click on "Add field" "link"
     And I click on "Dropdown menu" "link"
     And I set the following fields to these values:
       | Name       | Test field |
@@ -27,7 +27,7 @@ Feature: Managers can manage course custom fields select
     And I log out
 
   Scenario: Edit a custom course select field
-    When I click on "Add a new custom field" "link"
+    When I click on "Add field" "link"
     And I click on "Dropdown menu" "link"
     And I set the following fields to these values:
       | Name       | Test field |
@@ -38,16 +38,15 @@ Feature: Managers can manage course custom fields select
     b
     """
     And I click on "Save changes" "button" in the "Adding a new Dropdown menu" "dialogue"
-    And I click on "Edit" "link" in the "Test field" "table_row"
+    And I choose the "Edit" item in the "Actions" action menu of the "Test field" "table_row"
     And I set the following fields to these values:
       | Name | Edited field |
     And I click on "Save changes" "button" in the "Updating Test field" "dialogue"
     Then I should see "Edited field"
     And I should not see "Test field"
-    And I log out
 
   Scenario: Delete a custom course select field
-    When I click on "Add a new custom field" "link"
+    When I click on "Add field" "link"
     And I click on "Dropdown menu" "link"
     And I set the following fields to these values:
       | Name       | Test field |
@@ -58,13 +57,12 @@ Feature: Managers can manage course custom fields select
     b
     """
     And I click on "Save changes" "button" in the "Adding a new Dropdown menu" "dialogue"
-    And I click on "Delete" "link" in the "Test field" "table_row"
+    And I choose the "Delete" item in the "Actions" action menu of the "Test field" "table_row"
     And I click on "Yes" "button" in the "Confirm" "dialogue"
     Then I should not see "Test field"
-    And I log out
 
   Scenario: Validation of custom course select field configuration
-    When I click on "Add a new custom field" "link"
+    When I click on "Add field" "link"
     And I click on "Dropdown menu" "link"
     And I set the following fields to these values:
       | Name       | Test field |

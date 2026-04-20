@@ -17,6 +17,7 @@
 namespace mod_quiz\external;
 
 use core_external\external_api;
+use core_external\external_format_value;
 use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
@@ -85,6 +86,8 @@ class get_overrides extends external_api {
             'timelimit' => new external_value(PARAM_INT, 'Override time limit value', VALUE_DEFAULT, null),
             'attempts' => new external_value(PARAM_INT, 'Override attempts value', VALUE_DEFAULT, null),
             'password' => new external_value(PARAM_TEXT, 'Override password', VALUE_DEFAULT, null),
+            'reason' => new external_value(PARAM_RAW, 'Override reason', VALUE_DEFAULT, null),
+            'reasonformat' => new external_format_value('reason', VALUE_DEFAULT, null),
         ]);
 
         return new external_single_structure([

@@ -100,7 +100,6 @@ class provider implements
             'firstnamephonetic' => 'privacy:metadata:firstnamephonetic',
             'middlename' => 'privacy:metadata:middlename',
             'alternatename' => 'privacy:metadata:alternatename',
-            'moodlenetprofile' => 'privacy:metadata:moodlenetprofile'
         ];
 
         $passwordhistory = [

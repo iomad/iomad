@@ -101,14 +101,14 @@ final class nofactivities_test extends advanced_testcase {
 
         // Delete some assign module.
         $cm = get_coursemodule_from_instance('assign', $assign1->id);
-        course_delete_module($cm->id);
+        \core_courseformat\formatactions::cm($course1->id)->delete((int)$cm->id);
         $providers[0]->recalculate((int)$course1->id);
         $course1customfield = $DB->get_field('customfield_data', 'decvalue', ['instanceid' => $course1->id]);
         // Module is marked as deleted.
         $this->assertEquals(3.0000, $course1customfield);
 
         // Now, run the course module deletion adhoc task.
-        \phpunit_util::run_all_adhoc_tasks();
+        \core\test\phpunit\phpunit_util::run_all_adhoc_tasks();
         $providers[0]->recalculate((int)$course1->id);
         $course1customfield = $DB->get_field('customfield_data', 'decvalue', ['instanceid' => $course1->id]);
         $this->assertEquals(3.0000, $course1customfield);
@@ -184,8 +184,8 @@ final class nofactivities_test extends advanced_testcase {
         $this->assertSame('2', $data->export_value());
 
         // Delete both modules, recalculate.
-        course_delete_module($assign1->cmid);
-        course_delete_module($assign2->cmid);
+        \core_courseformat\formatactions::cm($course1->id)->delete($assign1->cmid);
+        \core_courseformat\formatactions::cm($course1->id)->delete($assign2->cmid);
         (new \customfield_number\task\cron())->execute();
         // Field1 (displaywhenzero='0') has the value zero.
         $data = $getdata($field1);

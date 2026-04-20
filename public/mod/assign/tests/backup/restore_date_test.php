@@ -127,6 +127,9 @@ final class restore_date_test extends \restore_date_testcase {
             'timelimit' => DAYSECS,
             'submissionattachments' => 1,
             'gradepenalty' => 1,
+            'markercount' => 5,
+            'multimarkmethod' => 'average',
+            'multimarkrounding' => 0,
         ];
         $assign = $this->getDataGenerator()->create_module('assign', $record);
 

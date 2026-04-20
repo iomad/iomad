@@ -187,25 +187,11 @@ final class external_test extends \core_external\tests\externallib_testcase {
         $item->update();
 
         if ($startattempt or $finishattempt) {
-            // Now, do one attempt.
-            $quba = \question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
-            $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
-
-            $timenow = time();
-            $attempt = quiz_create_attempt($quizobj, 1, false, $timenow, false, $this->student->id);
-            quiz_start_new_attempt($quizobj, $quba, $attempt, 1, $timenow);
-            quiz_attempt_save_started($quizobj, $quba, $attempt);
-            $attemptobj = quiz_attempt::create($attempt->id);
-
+            [$attempt, $attemptobj, $quba] = $this->create_quiz_attempt_object(quizobj: $quizobj, started: true);
             if ($finishattempt) {
-                // Process some responses from the student.
-                $tosubmit = [1 => ['answer' => '3.14']];
-                $attemptobj->process_submitted_actions(time(), false, $tosubmit);
-
-                // Finish the attempt.
-                $attemptobj->process_submit(time(), false);
-                $attemptobj->process_grade_submission(time());
+                $this->answer_attempt(attemptobj: $attemptobj, finish: true);
             }
+
             return [$quiz, $context, $quizobj, $attempt, $attemptobj, $quba];
         } else {
             return [$quiz, $context, $quizobj];
@@ -240,6 +226,11 @@ final class external_test extends \core_external\tests\externallib_testcase {
                 break;
             }
         }
+
+        // Clear static cache and call get_fast_modinfo() again so that in the following cache should not be rebuilt.
+        \course_modinfo::clear_instance_cache();
+        get_fast_modinfo($record->course);
+
         $enrol->enrol_user($instance2, $this->student->id, $this->studentrole->id);
 
         self::setUser($this->student);
@@ -481,13 +472,7 @@ final class external_test extends \core_external\tests\externallib_testcase {
         $this->assertCount(0, $result['attempts']);
 
         // Start a new attempt, but not finish it.
-        $timenow = time();
-        $attempt = quiz_create_attempt($quizobj, 2, false, $timenow, false, $this->student->id);
-        $quba = \question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
-        $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
-
-        quiz_start_new_attempt($quizobj, $quba, $attempt, 1, $timenow);
-        quiz_attempt_save_started($quizobj, $quba, $attempt);
+        $this->create_quiz_attempt_object(quizobj: $quizobj, started: true);
 
         // Test filters. All attempts.
         $this->resetDebugging();
@@ -661,14 +646,7 @@ final class external_test extends \core_external\tests\externallib_testcase {
         // Create a quiz.
         [$quiz, , $quizobj, , ] = $this->create_quiz_with_questions();
         // Create an attempt but do not start it.
-        // Now, do one attempt.
-        $quba = \question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
-        $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
-
-        $timenow = time();
-        $attempt = quiz_create_attempt($quizobj, 1, false, $timenow, false, $this->student->id);
-        quiz_start_new_attempt($quizobj, $quba, $attempt, 1, $timenow);
-        quiz_attempt_save_not_started($quba, $attempt);
+        $this->create_quiz_attempt_object(quizobj: $quizobj, started: false);
 
         $this->setUser($this->student);
         $result = mod_quiz_external::get_user_attempts($quiz->id, $this->student->id, 'all');
@@ -722,13 +700,7 @@ final class external_test extends \core_external\tests\externallib_testcase {
         $this->assertCount(0, $result['attempts']);
 
         // Start a new attempt, but not finish it.
-        $timenow = time();
-        $attempt = quiz_create_attempt($quizobj, 2, false, $timenow, false, $this->student->id);
-        $quba = \question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
-        $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
-
-        quiz_start_new_attempt($quizobj, $quba, $attempt, 1, $timenow);
-        quiz_attempt_save_started($quizobj, $quba, $attempt);
+        $this->create_quiz_attempt_object(quizobj: $quizobj, started: true);
 
         // Test filters. All attempts.
         $result = mod_quiz_external::get_user_quiz_attempts($quiz->id, 0, 'all', false);
@@ -763,6 +735,146 @@ final class external_test extends \core_external\tests\externallib_testcase {
         } catch (\invalid_parameter_exception $e) {
             $this->assertEquals('invalidparameter', $e->errorcode);
         }
+    }
+
+    /**
+     * Test get_user_quiz_attempts respects review options
+     * @todo MDL-88101: RunInSeparateProcess is needed because quiz_has_feedback has a static cache that isn't cleared.
+     *
+     * @covers \mod_quiz_external::get_user_quiz_attempts
+     */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function test_get_user_quiz_attempts_respects_review_options(): void {
+        global $DB;
+
+        $reviewoptions = [
+            'marksduring' => 0,
+            'marksimmediately' => 0,
+            'marksopen' => 0,
+            'marksclosed' => 0,
+            'specificfeedbackduring' => 0,
+            'specificfeedbackimmediately' => 0,
+            'specificfeedbackopen' => 0,
+            'specificfeedbackclosed' => 0,
+            'generalfeedbackduring' => 0,
+            'generalfeedbackimmediately' => 0,
+            'generalfeedbackopen' => 0,
+            'generalfeedbackclosed' => 0,
+            'rightanswerduring' => 0,
+            'rightanswerimmediately' => 0,
+            'rightansweropen' => 0,
+            'rightanswerclosed' => 0,
+        ];
+        $overallfeedbacks = [
+            [
+                'mingrade' => '0',
+                'maxgrade' => '30%',
+                'feedbacktext' => '<p>0-30 feedback</p>',
+                'feedbacktextformat' => FORMAT_HTML,
+            ],
+            [
+                'mingrade' => '30%',
+                'maxgrade' => '70%',
+                'feedbacktext' => '<p>30-70 feedback</p>',
+                'feedbacktextformat' => FORMAT_HTML,
+            ],
+            [
+                'mingrade' => '70%',
+                'maxgrade' => '100%',
+                'feedbacktext' => '<p>70-100 feedback</p>',
+                'feedbacktextformat' => FORMAT_HTML,
+            ],
+        ];
+
+        [$quiz, , $quizobj, $attempt1, $attemptobj1] = $this->create_quiz_with_questions(
+            true,
+            false,
+            'deferredfeedback',
+            false,
+            [
+                ...$reviewoptions,
+                'overallfeedbacks' => $overallfeedbacks,
+            ]
+        );
+
+        // Finish the attempt with no correct answers.
+        $this->answer_attempt(attemptobj: $attemptobj1, finish: true, answers: [1 => ['answer' => '1']]);
+
+        // Now add a new attempt with 1 correct answer.
+        [$attempt2, $attemptobj2] = $this->create_quiz_attempt_object(quizobj: $quizobj, started: true);
+        $this->answer_attempt(attemptobj: $attemptobj2, finish: true, answers: [1 => ['answer' => '3.14']]);
+
+        $quiz->timeclose = time() - 1;
+        $DB->update_record('quiz', $quiz);
+
+        // Test as student.
+        $this->setUser($this->student);
+        $result = mod_quiz_external::get_user_quiz_attempts($quiz->id);
+        $result = external_api::clean_returnvalue(mod_quiz_external::get_user_quiz_attempts_returns(), $result);
+
+        $this->assertCount(2, $result['attempts']);
+        $this->assertEquals($attempt1->id, $result['attempts'][0]['id']);
+        $this->assertNull($result['attempts'][0]['sumgrades']);
+        $this->assertArrayHasKey('feedback', $result['attempts'][0]);
+        $this->assertEquals($result['attempts'][0]['feedback']['feedbacktext'], '<p>0-30 feedback</p>');
+        $this->assertEquals($attempt2->id, $result['attempts'][1]['id']);
+        $this->assertNull($result['attempts'][1]['sumgrades']);
+        $this->assertArrayHasKey('feedback', $result['attempts'][1]);
+        $this->assertEquals($result['attempts'][1]['feedback']['feedbacktext'], '<p>30-70 feedback</p>');
+
+        // Test as teacher.
+        $this->setUser($this->teacher);
+        $result = mod_quiz_external::get_user_quiz_attempts($quiz->id, $this->student->id);
+        $result = external_api::clean_returnvalue(mod_quiz_external::get_user_quiz_attempts_returns(), $result);
+
+        $this->assertCount(2, $result['attempts']);
+        $this->assertEquals($attempt1->id, $result['attempts'][0]['id']);
+        $this->assertNotNull($result['attempts'][0]['sumgrades']);
+        $this->assertEquals(0.0, $result['attempts'][0]['sumgrades']);
+        $this->assertArrayHasKey('feedback', $result['attempts'][0]);
+        $this->assertEquals($result['attempts'][0]['feedback']['feedbacktext'], '<p>0-30 feedback</p>');
+        $this->assertEquals($attempt2->id, $result['attempts'][1]['id']);
+        $this->assertNotNull($result['attempts'][1]['sumgrades']);
+        $this->assertEquals(1.0, $result['attempts'][1]['sumgrades']);
+        $this->assertArrayHasKey('feedback', $result['attempts'][1]);
+        $this->assertEquals($result['attempts'][1]['feedback']['feedbacktext'], '<p>30-70 feedback</p>');
+
+        // Now test that the feedback is not returned if the review options are configured to not show it.
+        [$quiz2, , , $attempt, ] = $this->create_quiz_with_questions(
+            true,
+            true,
+            'deferredfeedback',
+            false,
+            [
+                ...$reviewoptions,
+                'overallfeedbackimmediately' => 0,
+                'overallfeedbackopen' => 0,
+                'overallfeedbackclosed' => 0,
+                'overallfeedbacks' => $overallfeedbacks,
+            ]
+        );
+
+        // Test as student.
+        $this->setUser($this->student);
+        $result = mod_quiz_external::get_user_quiz_attempts($quiz2->id);
+        $result = external_api::clean_returnvalue(mod_quiz_external::get_user_quiz_attempts_returns(), $result);
+
+        $this->assertCount(1, $result['attempts']);
+        $this->assertEquals($attempt->id, $result['attempts'][0]['id']);
+        $this->assertNull($result['attempts'][0]['sumgrades']);
+        $this->assertArrayNotHasKey('feedback', $result['attempts'][0]);
+
+        // Test as teacher.
+        $this->setUser($this->teacher);
+        $result = mod_quiz_external::get_user_quiz_attempts($quiz2->id, $this->student->id);
+        $result = external_api::clean_returnvalue(mod_quiz_external::get_user_quiz_attempts_returns(), $result);
+
+        $this->assertCount(1, $result['attempts']);
+        $this->assertEquals($attempt->id, $result['attempts'][0]['id']);
+        $this->assertNotNull($result['attempts'][0]['sumgrades']);
+        $this->assertEquals(1.0, $result['attempts'][0]['sumgrades']);
+        $this->assertArrayHasKey('feedback', $result['attempts'][0]);
+        $this->assertEquals($result['attempts'][0]['feedback']['feedbacktext'], '<p>30-70 feedback</p>');
     }
 
     /**
@@ -879,14 +991,7 @@ final class external_test extends \core_external\tests\externallib_testcase {
         // Create a quiz.
         [$quiz, , $quizobj, , ] = $this->create_quiz_with_questions();
         // Create an attempt but do not start it.
-        // Now, do one attempt.
-        $quba = \question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
-        $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
-
-        $timenow = time();
-        $attempt = quiz_create_attempt($quizobj, 1, false, $timenow, false, $this->student->id);
-        quiz_start_new_attempt($quizobj, $quba, $attempt, 1, $timenow);
-        quiz_attempt_save_not_started($quba, $attempt);
+        [$attempt, ] = $this->create_quiz_attempt_object(quizobj: $quizobj, started: false);
 
         $this->setUser($this->student);
         $result = mod_quiz_external::get_user_quiz_attempts($quiz->id, $this->student->id, 'all');
@@ -975,19 +1080,9 @@ final class external_test extends \core_external\tests\externallib_testcase {
         $this->assertFalse($result['hasgrade']);
         $this->assertTrue(!isset($result['grade']));
 
-        // Start the attempt.
-        $timenow = time();
-        $attempt = quiz_create_attempt($quizapiobj1, 1, false, $timenow, false, $this->student->id);
-        quiz_start_new_attempt($quizapiobj1, $quba1, $attempt, 1, $timenow);
-        quiz_attempt_save_started($quizapiobj1, $quba1, $attempt);
-
-        // Process some responses from the student.
-        $attemptobj = quiz_attempt::create($attempt->id);
-        $attemptobj->process_submitted_actions($timenow, false, [1 => ['answer' => '3.14']]);
-
-        // Finish the attempt.
-        $attemptobj->process_submit($timenow, false);
-        $attemptobj->process_grade_submission($timenow);
+        // Add an attempt and finish it.
+        [, $attemptobj, ] = $this->create_quiz_attempt_object(quizobj: $quizapiobj1, started: true);
+        $this->answer_attempt(attemptobj: $attemptobj, finish: true);
 
         $result = mod_quiz_external::get_user_best_grade($quizapi1->id);
         $result = external_api::clean_returnvalue(mod_quiz_external::get_user_best_grade_returns(), $result);
@@ -1038,19 +1133,9 @@ final class external_test extends \core_external\tests\externallib_testcase {
         $this->assertFalse($result['hasgrade']);
         $this->assertTrue(!isset($result['grade']));
 
-        // Start the attempt.
-        $timenow = time();
-        $attempt = quiz_create_attempt($quizapiobj2, 1, false, $timenow, false, $this->student->id);
-        quiz_start_new_attempt($quizapiobj2, $quba2, $attempt, 1, $timenow);
-        quiz_attempt_save_started($quizapiobj2, $quba2, $attempt);
-
-        // Process some responses from the student.
-        $attemptobj = quiz_attempt::create($attempt->id);
-        $attemptobj->process_submitted_actions($timenow, false, [1 => ['answer' => '3.14']]);
-
-        // Finish the attempt.
-        $attemptobj->process_submit($timenow, false);
-        $attemptobj->process_grade_submission($timenow);
+        // Add an attempt in the quiz 2 and finish it.
+        [, $attemptobj, ] = $this->create_quiz_attempt_object(quizobj: $quizapiobj2, started: true);
+        $this->answer_attempt(attemptobj: $attemptobj, finish: true);
 
         $result = mod_quiz_external::get_user_best_grade($quizapi2->id);
         $result = external_api::clean_returnvalue(mod_quiz_external::get_user_best_grade_returns(), $result);
@@ -1071,13 +1156,56 @@ final class external_test extends \core_external\tests\externallib_testcase {
         // End the testing for quizapi2 that do not allow the student to view the grade.
 
     }
+
+    /**
+     * Test get_user_best_grade respects review options
+     *
+     * @covers \mod_quiz_external::get_user_best_grade
+     */
+    public function test_get_user_best_grade_respects_review_options(): void {
+        global $DB;
+
+        [$quiz] = $this->create_quiz_with_questions(
+            true,
+            true,
+            'deferredfeedback',
+            false,
+            [
+                'marksduring' => 0,
+                'marksimmediately' => 0,
+                'marksopen' => 0,
+                'marksclosed' => 0,
+                'overallfeedbackduring' => 0,
+                'overallfeedbackimmediately' => 0,
+                'overallfeedbackopen' => 0,
+                'overallfeedbackclosed' => 0,
+            ]
+        );
+
+        $quiz->timeclose = time() - 1;
+        $DB->update_record('quiz', $quiz);
+
+        // Test as student.
+        $this->setUser($this->student);
+        $result = mod_quiz_external::get_user_best_grade($quiz->id);
+        $result = external_api::clean_returnvalue(mod_quiz_external::get_user_best_grade_returns(), $result);
+
+        $this->assertFalse($result['hasgrade']);
+
+        // Test as teacher.
+        $this->setUser($this->teacher);
+        $result = mod_quiz_external::get_user_best_grade($quiz->id, $this->student->id);
+        $result = external_api::clean_returnvalue(mod_quiz_external::get_user_best_grade_returns(), $result);
+
+        $this->assertTrue($result['hasgrade']);
+        $this->assertNotNull($result['grade']);
+    }
+
     /**
      * Test get_combined_review_options.
      * This is a basic test, this is already tested in display_options_testcase.
      */
     public function test_get_combined_review_options(): void {
-        global $DB;
-
         // Create a new quiz with attempts.
         $quizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_quiz');
         $data = ['course' => $this->course->id,
@@ -1099,14 +1227,8 @@ final class external_test extends \core_external\tests\externallib_testcase {
         $item->gradepass = 80;
         $item->update();
 
-        // Start the passing attempt.
-        $quba = \question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
-        $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
-
-        $timenow = time();
-        $attempt = quiz_create_attempt($quizobj, 1, false, $timenow, false, $this->student->id);
-        quiz_start_new_attempt($quizobj, $quba, $attempt, 1, $timenow);
-        quiz_attempt_save_started($quizobj, $quba, $attempt);
+        // Start an attempt.
+        [, $attemptobj, ] = $this->create_quiz_attempt_object(quizobj: $quizobj, started: true);
 
         $this->setUser($this->student);
 
@@ -1135,9 +1257,7 @@ final class external_test extends \core_external\tests\externallib_testcase {
         $this->assertEquals($expected, $result);
 
         // Now, finish the attempt.
-        $attemptobj = quiz_attempt::create($attempt->id);
-        $attemptobj->process_submit($timenow, false);
-        $attemptobj->process_grade_submission($timenow);
+        $this->answer_attempt(attemptobj: $attemptobj, finish: true);
 
         $expected = [
             "someoptions" => [
@@ -1163,12 +1283,7 @@ final class external_test extends \core_external\tests\externallib_testcase {
         $this->assertEquals($expected, $result);
 
         // Start a new attempt, but not finish it.
-        $timenow = time();
-        $attempt = quiz_create_attempt($quizobj, 2, false, $timenow, false, $this->student->id);
-        $quba = \question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
-        $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
-        quiz_start_new_attempt($quizobj, $quba, $attempt, 1, $timenow);
-        quiz_attempt_save_started($quizobj, $quba, $attempt);
+        $this->create_quiz_attempt_object(quizobj: $quizobj, started: true);
 
         $expected = [
             "someoptions" => [
@@ -1498,7 +1613,6 @@ final class external_test extends \core_external\tests\externallib_testcase {
     public function test_get_attempt_data(): void {
         global $DB;
 
-        $timenow = time();
         // Create a new quiz with one attempt started.
         [$quiz, , $quizobj, $attempt] = $this->create_quiz_with_questions(true);
         /** @var structure $structure */
@@ -1578,13 +1692,7 @@ final class external_test extends \core_external\tests\externallib_testcase {
         quiz_repaginate_questions($quiz->id, $quiz->questionsperpage);
 
         // Start with new attempt with the new layout.
-        $quba = \question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
-        $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
-
-        $timenow = time();
-        $attempt = quiz_create_attempt($quizobj, 2, false, $timenow, false, $this->student->id);
-        quiz_start_new_attempt($quizobj, $quba, $attempt, 1, $timenow);
-        quiz_attempt_save_started($quizobj, $quba, $attempt);
+        [$attempt, ] = $this->create_quiz_attempt_object(quizobj: $quizobj, started: true);
 
         // We receive two questions per page.
         $result = mod_quiz_external::get_attempt_data($attempt->id, 0);
@@ -1922,15 +2030,10 @@ final class external_test extends \core_external\tests\externallib_testcase {
         }
 
         // Start new attempt.
-        $quba = \question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
-        $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
-
-        $timenow = time();
-        $attempt = quiz_create_attempt($quizobj, 2, false, $timenow, false, $this->student->id);
-        quiz_start_new_attempt($quizobj, $quba, $attempt, 2, $timenow);
-        quiz_attempt_save_started($quizobj, $quba, $attempt);
+        [$attempt, ] = $this->create_quiz_attempt_object(quizobj: $quizobj, started: true);
 
         // Force grace period, attempt going to overdue.
+        $timenow = time();
         $quiz->timeclose = $timenow - 10;
         $quiz->graceperiod = 60;
         $quiz->overduehandling = 'graceperiod';
@@ -1948,23 +2051,14 @@ final class external_test extends \core_external\tests\externallib_testcase {
         $DB->update_record('quiz', $quiz);
 
         $timenow = time();
-        $quba = \question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
-        $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
-        $attempt = quiz_create_attempt($quizobj, 3, 2, $timenow - 10, false, $this->student->id);
-        quiz_start_new_attempt($quizobj, $quba, $attempt, 2, $timenow - 10);
-        quiz_attempt_save_started($quizobj, $quba, $attempt);
+        [$attempt, ] = $this->create_quiz_attempt_object(quizobj: $quizobj, started: true, time: $timenow - 10);
 
         $result = mod_quiz_external::process_attempt($attempt->id, []);
         $result = external_api::clean_returnvalue(mod_quiz_external::process_attempt_returns(), $result);
         $this->assertEquals(quiz_attempt::OVERDUE, $result['state']);
 
         // New attempt.
-        $timenow = time();
-        $quba = \question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
-        $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
-        $attempt = quiz_create_attempt($quizobj, 4, 3, $timenow, false, $this->student->id);
-        quiz_start_new_attempt($quizobj, $quba, $attempt, 3, $timenow);
-        quiz_attempt_save_started($quizobj, $quba, $attempt);
+        [$attempt, ] = $this->create_quiz_attempt_object(quizobj: $quizobj, started: true);
 
         // Force abandon.
         $quiz->timeclose = $timenow - HOURSECS;
@@ -2441,24 +2535,8 @@ final class external_test extends \core_external\tests\externallib_testcase {
         $DB->update_record('quiz', $quiz);
 
         // Now, do one attempt.
-        $quba = \question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
-        $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
-
-        $timenow = time();
-        $attempt = quiz_create_attempt($quizobj, 1, false, $timenow, false, $this->student->id);
-        quiz_start_new_attempt($quizobj, $quba, $attempt, 1, $timenow);
-        quiz_attempt_save_started($quizobj, $quba, $attempt);
-
-        // Process some responses from the student.
-        $attemptobj = quiz_attempt::create($attempt->id);
-        $tosubmit = [1 => ['answer' => '3.14']];
-        $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
-
-        // Finish the attempt.
-        $attemptobj = quiz_attempt::create($attempt->id);
-        $this->assertTrue($attemptobj->has_response_to_at_least_one_graded_question());
-        $attemptobj->process_submit($timenow, false);
-        $attemptobj->process_grade_submission($timenow);
+        [$attempt, $attemptobj, ] = $this->create_quiz_attempt_object(quizobj: $quizobj, started: true);
+        $this->answer_attempt(attemptobj: $attemptobj, finish: true);
 
         // Can we start a new attempt? We shall not!
         $result = mod_quiz_external::get_attempt_access_information($quiz->id, $attempt->id);
@@ -2573,7 +2651,7 @@ final class external_test extends \core_external\tests\externallib_testcase {
     public function test_sequential_navigation_view_attempt(): void {
         // Test user with full capabilities.
         $quiz = $this->prepare_sequential_quiz();
-        $attemptobj = $this->create_quiz_attempt_object($quiz);
+        [, $attemptobj, ] = $this->create_quiz_attempt_object($quiz);
         $this->setUser($this->student);
         // Check out of sequence access for view.
         $this->assertNotEmpty(mod_quiz_external::view_attempt($attemptobj->get_attemptid(), 0, []));
@@ -2591,7 +2669,7 @@ final class external_test extends \core_external\tests\externallib_testcase {
     public function test_sequential_navigation_attempt_summary(): void {
         // Test user with full capabilities.
         $quiz = $this->prepare_sequential_quiz();
-        $attemptobj = $this->create_quiz_attempt_object($quiz);
+        [, $attemptobj, ] = $this->create_quiz_attempt_object($quiz);
         $this->setUser($this->student);
         // Check that we do not return content from other questions except than the ones currently viewed.
         $result = mod_quiz_external::get_attempt_summary($attemptobj->get_attemptid());
@@ -2609,7 +2687,7 @@ final class external_test extends \core_external\tests\externallib_testcase {
     public function test_sequential_navigation_get_attempt_data(): void {
         // Test user with full capabilities.
         $quiz = $this->prepare_sequential_quiz();
-        $attemptobj = $this->create_quiz_attempt_object($quiz);
+        [, $attemptobj, ] = $this->create_quiz_attempt_object($quiz);
         $this->setUser($this->student);
         // Test invalid instance id.
         try {
@@ -2685,28 +2763,59 @@ final class external_test extends \core_external\tests\externallib_testcase {
      * @param quiz_settings $quizobj
      * @param int|null $userid
      * @param bool|null $ispreview
-     * @return quiz_attempt
+     * @param bool|null $started Whether the attempt should be created as started or not.
+     * @param int|null $time Timestamp to use as start time for the attempt.
+     * @return array Array containing the attempt record, attempt object and QUBA.
      * @throws moodle_exception
      */
     private function create_quiz_attempt_object(
         quiz_settings $quizobj,
         ?int $userid = null,
-        ?bool $ispreview = false
-    ): quiz_attempt {
-        global $USER;
+        ?bool $ispreview = false,
+        ?bool $started = true,
+        ?int $time = null,
+    ): array {
+        $time = $time ?? time();
+        $userid = $userid ?? $this->student->id;
 
-        $timenow = time();
         // Now, do one attempt.
         $quba = \question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
         $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
-        $attemptnumber = 1;
-        if (!empty($USER->id)) {
-            $attemptnumber = count(quiz_get_user_attempts($quizobj->get_quizid(), $USER->id)) + 1;
+        $attemptnumber = count(quiz_get_user_attempts($quizobj->get_quizid(), $userid, 'all')) + 1;
+        $attempt = quiz_create_attempt($quizobj, $attemptnumber, false, $time, $ispreview, $userid);
+        quiz_start_new_attempt($quizobj, $quba, $attempt, $attemptnumber, $time);
+
+        if ($started) {
+            quiz_attempt_save_started($quizobj, $quba, $attempt);
+        } else {
+            quiz_attempt_save_not_started($quba, $attempt);
         }
-        $attempt = quiz_create_attempt($quizobj, $attemptnumber, false, $timenow, $ispreview, $userid ?? $this->student->id);
-        quiz_start_new_attempt($quizobj, $quba, $attempt, $attemptnumber, $timenow);
-        quiz_attempt_save_started($quizobj, $quba, $attempt);
+
         $attemptobj = quiz_attempt::create($attempt->id);
-        return $attemptobj;
+        return [$attempt, $attemptobj, $quba];
+    }
+
+    /**
+     * Add answers to an attempt, and optionally finish it.
+     *
+     * @param quiz_attempt $attemptobj The attempt object to answer.
+     * @param array|null $answers The answers to submit.
+     * @param bool|null $finish Whether to finish the attempt or not.
+     * @param int|null $time Timestamp to use as answer/finish time.
+     */
+    private function answer_attempt(
+        quiz_attempt $attemptobj,
+        ?array $answers = [1 => ['answer' => '3.14']],
+        ?bool $finish = false,
+        ?int $time = null,
+    ): void {
+        $time = $time ?? time();
+
+        $attemptobj->process_submitted_actions($time, false, $answers);
+
+        if ($finish) {
+            $attemptobj->process_submit($time, false);
+            $attemptobj->process_grade_submission($time);
+        }
     }
 }

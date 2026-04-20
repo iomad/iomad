@@ -16,10 +16,13 @@
 
 namespace mod_glossary\output;
 
+use core\output\html_writer;
+use moodle_url;
 use plugin_renderer_base;
+use stdClass;
 
 /**
- * Class actionbar - Display the action bar
+ * Glossary renderer class.
  *
  * @package   mod_glossary
  * @copyright 2021 Peter Dias
@@ -37,5 +40,51 @@ class renderer extends plugin_renderer_base {
         $context = $actionmenu->export_for_template($this);
 
         return $this->render_from_template('mod_glossary/standard_action_menu', $context);
+    }
+
+    /**
+     * Render the glossary entry header.
+     *
+     * @param stdClass $entry The glossary entry object
+     * @param string $mode The display mode
+     * @param int $headinglevel The heading level that the concept should be rendered in.
+     * @param stdClass|null $user The user object, if rendering the author picture.
+     * @param int|null $courseid The course id, if rendering the author picture.
+     * @param bool $showlastedited Whether to show the last edited date.
+     * @return string
+     */
+    public function concept_entry_header(
+        stdClass $entry,
+        string $mode,
+        int $headinglevel,
+        ?stdClass $user = null,
+        ?int $courseid = null,
+        bool $showlastedited = false,
+    ): string {
+        $contextdata = (object)[
+            'concept' => glossary_print_entry_concept($entry, true, $headinglevel),
+            'entryapproval' => glossary_get_entry_approval($entry, $mode),
+        ];
+
+        if ($user) {
+            $contextdata->authorpicture = $this->output->user_picture($user, [
+                'link' => false,
+            ]);
+
+            $fullname = fullname($user);
+            $userurl = new moodle_url('/user/view.php', [
+                'id' => $user->id,
+                'course' => $courseid,
+            ]);
+            $authordate = (object)[
+                'name' => html_writer::link($userurl, $fullname),
+                'date' => userdate($entry->timemodified),
+            ];
+            $contextdata->authordate = get_string('bynameondate', 'glossary', $authordate);
+        } else if ($showlastedited) {
+            $contextdata->lastedited = get_string('lastedited', 'glossary', userdate($entry->timemodified));
+        }
+
+        return $this->render_from_template('mod_glossary/concept_entry_header', $contextdata);
     }
 }

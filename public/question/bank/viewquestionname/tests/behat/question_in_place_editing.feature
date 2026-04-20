@@ -40,3 +40,25 @@ Feature: Use the qbank view page to edit question title using in place edit feat
     And I press "Apply filters"
     And I should see "First question"
     And "Edit question name" "field" should not exist
+
+  Scenario: Question title links to the first question action
+    Given I am on the "Test quiz" "mod_quiz > question bank" page logged in as "teacher1"
+    And I set the field "Filter type" to "Category"
+    And I set the field "Category" to "Test questions"
+    And I press "Apply filters"
+    When I follow "First question"
+    Then I should see "First question"
+    And I should see "Close preview"
+
+  Scenario: Question title links to the first question action the user has permission to use
+    Given the following "role capability" exists:
+      | role                    | editingteacher |
+      | moodle/question:usemine | prevent        |
+      | moodle/question:useall  | prevent        |
+    Given I am on the "Test quiz" "mod_quiz > question bank" page logged in as "teacher1"
+    And I set the field "Filter type" to "Category"
+    And I set the field "Category" to "Test questions"
+    And I press "Apply filters"
+    When I follow "First question"
+    Then I should see "Editing a True/False question"
+    And I should not see "Close preview"

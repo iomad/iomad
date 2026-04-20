@@ -25,9 +25,6 @@
  */
 namespace mod_resource;
 
-defined('MOODLE_INTERNAL') || die();
-
-
 /**
  * Unit tests for mod_resource lib
  *
@@ -38,7 +35,6 @@ defined('MOODLE_INTERNAL') || die();
  * @since      Moodle 3.0
  */
 final class lib_test extends \advanced_testcase {
-
     /**
      * Prepares things before this test case is initialised
      * @return void
@@ -261,6 +257,29 @@ final class lib_test extends \advanced_testcase {
         $this->assertInstanceOf('moodle_url', $actionevent2->get_url());
         $this->assertEquals(1, $actionevent2->get_item_count());
         $this->assertTrue($actionevent2->is_actionable());
+    }
+
+    /**
+     * Test that mod_resource_cm_info_dynamic overrides the navigation URL.
+     *
+     * @covers ::mod_resource_cm_info_dynamic
+     */
+    public function test_cm_info_dynamic(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Create the activity.
+        $course = $this->getDataGenerator()->create_course();
+        $module = $this->getDataGenerator()->create_module('resource', ['course' => $course->id]);
+        $cminfo = \cm_info::create(get_coursemodule_from_instance('resource', $module->id));
+
+        $navigationurl = $cminfo->get_navigation_url();
+        $this->assertInstanceOf(\core\url::class, $navigationurl);
+
+        $this->assertNotEquals(
+            $cminfo->get_url(),
+            $navigationurl,
+        );
     }
 
     /**

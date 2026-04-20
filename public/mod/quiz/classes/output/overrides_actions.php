@@ -20,7 +20,7 @@ use moodle_url;
 use renderable;
 use renderer_base;
 use templatable;
-use url_select;
+use core\output\select_menu;
 
 /**
  * Render overrides action in the quiz secondary navigation
@@ -98,8 +98,17 @@ class overrides_actions implements renderable, templatable {
             $groupoverridesurl->out(false) => get_string('groupoverrides', 'quiz')
         ];
 
-        $overridesnav = new url_select($menu, $PAGE->url->out(false), null, 'quizoverrides');
-        $templatecontext['overridesnav'] = $overridesnav->export_for_template($output);
+        $overridesnav = new select_menu(
+            'quizoverrides',
+            $menu,
+            $PAGE->url->out(false),
+        );
+        $overridesnav->set_label(
+            get_string('overrides', 'quiz'),
+            ['class' => 'visually-hidden']
+        );
+
+        $templatecontext['navigation'] = $overridesnav->export_for_template($output);
 
         // Build the add button - but only if the user can edit.
         if ($this->canedit) {

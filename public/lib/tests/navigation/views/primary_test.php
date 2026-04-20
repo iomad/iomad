@@ -41,6 +41,9 @@ final class primary_test extends \advanced_testcase {
         global $PAGE;
         $PAGE->set_url("/");
         $this->resetAfterTest();
+        set_config('enablemyhome', 0);
+        set_config('enabledashboard', 1);
+        set_config('enablemycourses', 1);
         if ($usertype == 'admin') {
             $this->setAdminUser();
         } else if ($usertype == 'guest') {
@@ -61,9 +64,9 @@ final class primary_test extends \advanced_testcase {
      */
     public static function setting_initialise_provider(): array {
         return [
-            'Testing as a guest user' => ['guest', ['home', 'calendar']],
-            'Testing as an admin' => ['admin', ['home', 'myhome', 'mycourses', 'siteadminnode']],
-            'Testing as a regular user' => ['user', ['home', 'myhome', 'mycourses']]
+            'Testing as a guest user' => ['guest', ['calendar']],
+            'Testing as an admin' => ['admin', ['myhome', 'mycourses', 'siteadminnode']],
+            'Testing as a regular user' => ['user', ['myhome', 'mycourses']],
         ];
     }
 

@@ -6,7 +6,9 @@ Feature: Confirm that we can open multiple browser tabs
 
   @javascript @_switch_window
   Scenario: Open multiple browser tabs
-    Given the following "courses" exist:
+    Given the following config values are set as admin:
+      | enablemycourses | 1 |
+    And the following "courses" exist:
       | fullname | shortname |
       | Course 1 | C1        |
       | Course 2 | C2        |

@@ -73,3 +73,43 @@ Feature: Reset course
     And I should not see "Student 1"
     And I am on the "Test assignment name" "assign activity" page
     And I should see "0" in the "Submitted" "table_row"
+
+  @javascript
+  Scenario: Reset courses asynchronously
+    Given the following config values are set as admin:
+      | enableasyncresets | 1 |
+    And I am on the "Course 1" "reset" page logged in as "teacher1"
+    And I click on "Reset course" "button"
+    And I click on "Reset course" "button" in the "Reset course?" "dialogue"
+    And I should see "This course is being reset. You do not need to stay on this page."
+    # Check the course has not been reset yet.
+    And I am on the "Course 1" "enrolled users" page
+    And I should see "Teacher 1"
+    And I should see "Student 1"
+    And I am on the "Test assignment name" "assign activity" page
+    And I should see "1" in the "Submitted" "table_row"
+    And I am on "Course 1" course homepage with editing mode on
+    And I should see "There is a pending reset requested for this course. Please do not edit the course until this is complete."
+    # Run the asynchronous reset.
+    When I run all adhoc tasks
+    # Check the course has been reset.
+    And I am on the "Course 1" "enrolled users" page
+    Then I should see "Teacher 1"
+    And I should not see "Student 1"
+    And I am on the "Test assignment name" "assign activity" page
+    And I should see "0" in the "Submitted" "table_row"
+
+  @javascript
+  Scenario: Synchronous reset times out on large courses
+    # Force the reset to time out.
+    Given the time is frozen at "20 seconds"
+    And I am on the "Course 1" "reset" page logged in as "teacher1"
+    And I click on "Reset course" "button"
+    And I click on "Reset course" "button" in the "Reset course?" "dialogue"
+    And I should see "Resetting course C1 may take a long time."
+    # Check the course has not been reset.
+    And I navigate to course participants
+    And I should see "Teacher 1"
+    And I should see "Student 1"
+    And I am on the "Test assignment name" "assign activity" page
+    And I should see "1" in the "Submitted" "table_row"

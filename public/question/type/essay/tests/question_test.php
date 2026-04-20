@@ -26,11 +26,12 @@ require_once($CFG->dirroot . '/question/engine/tests/helpers.php');
 
 
 /**
- * Unit tests for the matching question definition class.
+ * Unit tests for the essay question definition class.
  *
- * @package qtype_essay
- * @copyright  2009 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   qtype_essay
+ * @copyright 2009 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @covers    \qtype_essay_question
  */
 final class question_test extends \advanced_testcase {
     public function test_get_question_summary(): void {
@@ -97,6 +98,58 @@ final class question_test extends \advanced_testcase {
             'Text input is optional, unlimited attachments required, ten uploaded'  =>
                 [0, -1, '', 10, 'Attachments: 0 (1 bytes), 1 (1 bytes), 2 (1 bytes), 3 (1 bytes), 4 (1 bytes), ' .
                     '5 (1 bytes), 6 (1 bytes), 7 (1 bytes), 8 (1 bytes), 9 (1 bytes)']
+        ];
+    }
+
+    /**
+     * Test un_summarise_response().
+     *
+     * @dataProvider un_summarise_response_provider
+     * @param string $responseformat
+     * @param string $summary
+     * @param array $expected
+     */
+    public function test_un_summarise_response(string $responseformat, string $summary, array $expected): void {
+        $this->resetAfterTest();
+
+        $essay = \test_question_maker::make_an_essay_question();
+        $essay->start_attempt(new question_attempt_step(), 1);
+
+        $essay->responseformat = $responseformat;
+
+        $this->assertEquals($expected, $essay->un_summarise_response($summary));
+    }
+
+    /**
+     * Data provider for test_un_summarise_response().
+     *
+     * Covers multiple response formats, empty responses,
+     * case sensitivity, unicode text, and HTML content.
+     *
+     * @return array
+     */
+    public static function un_summarise_response_provider(): array {
+        return [
+            'empty summary returns empty array' => [
+                'plain',
+                '',
+                [],
+            ],
+            'plain format returns plain text' => [
+                'plain',
+                'Hello Moodle',
+                ['answer' => 'Hello Moodle', 'answerformat' => FORMAT_PLAIN],
+            ],
+            'editor format converts to HTML' => [
+                'editor',
+                'Hello Moodle',
+                ['answer' => text_to_html('Hello Moodle'), 'answerformat' => FORMAT_HTML],
+            ],
+            'plain format preserves HTML tags literally' => [
+                'plain',
+                '<b>bold</b>',
+                ['answer' => '<b>bold</b>', 'answerformat' => FORMAT_PLAIN],
+            ],
         ];
     }
 
@@ -349,6 +402,21 @@ final class question_test extends \advanced_testcase {
     }
 
     /**
+     * Test that a less-than symbol attached to a word ('<1.') in plain text
+     * is handled correctly and doesn't trigger HTML validation errors.
+     */
+    public function test_get_validation_error_plain_text_with_html_chars(): void {
+        $question = \test_question_maker::make_an_essay_question();
+        $question->responseformat = 'plain';
+        $question->responserequired = 1;
+        $question->minwordlimit = 2;
+        $question->maxwordlimit = 2;
+
+        $response = ['answer' => 'x <1.', 'answerformat' => FORMAT_PLAIN];
+        $this->assertEquals('', $question->get_validation_error($response));
+    }
+
+    /**
      * Data provider for get_validation_error test.
      *
      * @return array the test cases.
@@ -381,6 +449,31 @@ final class question_test extends \advanced_testcase {
         $question->maxwordlimit = $maxwordlimit;
 
         $response = ['answer' => 'One two three four five six seven eight nine ten eleven twelve thirteen fourteen.'];
+        $this->assertEquals($expected, $question->get_word_count_message_for_review($response));
+    }
+
+    /**
+     * Test word count calculation when input contains less-than symbols.
+     *
+     * Verifies that words with leading less-than symbols (like '<1.' or '<adjacent')
+     * are counted correctly and don't affect word boundary detection.
+     */
+    public function test_get_word_count_message_for_review_plain_text_with_html_chars(): void {
+        $question = \test_question_maker::make_an_essay_question();
+        $question->responseformat = 'plain';
+        $question->responserequired = 1;
+        $question->minwordlimit = 2;
+        $question->maxwordlimit = 2;
+
+        $expected = 'Word count: 2';
+        $response = ['answer' => 'x <1.', 'answerformat' => FORMAT_PLAIN];
+        $this->assertEquals($expected, $question->get_word_count_message_for_review($response));
+
+        $expected = 'Word count: 8, more than the limit of 2 words.';
+        $response = [
+            'answer' => 'What about an <adjacent to the following word?',
+            'answerformat' => FORMAT_PLAIN,
+        ];
         $this->assertEquals($expected, $question->get_word_count_message_for_review($response));
     }
 

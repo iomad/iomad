@@ -723,7 +723,7 @@ class manager {
             // If debugging, take a snapshot of session at close and compare on shutdown to detect any accidental mutations.
             if (debugging()) {
                 self::$sessionatclose = (array) $_SESSION['SESSION'];
-                \core_shutdown_manager::register_function('\core\session\manager::check_mutated_closed_session');
+                \core\shutdown_manager::register_function('\core\session\manager::check_mutated_closed_session');
             }
 
             if (!$requireslock || !self::$requireslockdebug) {
@@ -1210,9 +1210,16 @@ class manager {
      * @param string $component The string component for the message to show on failure.
      * @param int $frequency The update frequency in seconds.
      * @param int $timeout The timeout of each request in seconds.
-     * @throws \coding_exception IF the frequency is longer than the session lifetime.
+     * @param \moodle_url|string|null $redirect A URL to redirect to if connection is lost.
+     * @throws \coding_exception If the frequency is longer than the session lifetime.
      */
-    public static function keepalive($identifier = 'sessionerroruser', $component = 'error', $frequency = null, $timeout = 0) {
+    public static function keepalive(
+        $identifier = 'sessionerroruser',
+        $component = 'error',
+        $frequency = null,
+        $timeout = 0,
+        $redirect = null
+    ) {
         global $CFG, $PAGE;
 
         if ($frequency) {
@@ -1225,11 +1232,16 @@ class manager {
             $frequency = $CFG->sessiontimeout / 10;
         }
 
+        if ($redirect instanceof \moodle_url) {
+            $redirect = $redirect->out();
+        }
+
         $PAGE->requires->js_call_amd('core/network', 'keepalive', array(
                 $frequency,
                 $timeout,
                 $identifier,
-                $component
+                $component,
+                $redirect,
             ));
     }
 

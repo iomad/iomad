@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace core_course\customfield;
+
+use core_customfield\field_controller;
+
 /**
  * Course handler for custom fields
  *
@@ -21,27 +25,7 @@
  * @copyright 2018 David Matamoros <davidmc@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-namespace core_course\customfield;
-
-defined('MOODLE_INTERNAL') || die;
-
-use core_customfield\field_controller;
-
-/**
- * Course handler for custom fields
- *
- * @package core_course
- * @copyright 2018 David Matamoros <davidmc@moodle.com>
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
 class course_handler extends \core_customfield\handler {
-
-    /**
-     * @var course_handler
-     */
-    static protected $singleton;
-
     /**
      * @var \context
      */
@@ -53,30 +37,6 @@ class course_handler extends \core_customfield\handler {
     const VISIBLETOTEACHERS = 1;
     /** @var int Field is not displayed in the course listing */
     const NOTVISIBLE = 0;
-
-    /**
-     * Returns a singleton
-     *
-     * @param int $itemid
-     * @return \core_course\customfield\course_handler
-     */
-    public static function create(int $itemid = 0): \core_customfield\handler {
-        if (static::$singleton === null) {
-            self::$singleton = new static(0);
-        }
-        return self::$singleton;
-    }
-
-    /**
-     * Run reset code after unit tests to reset the singleton usage.
-     */
-    public static function reset_caches(): void {
-        if (!PHPUNIT_TEST) {
-            throw new \coding_exception('This feature is only intended for use in unit tests');
-        }
-
-        static::$singleton = null;
-    }
 
     /**
      * The current user can configure custom fields on this component.

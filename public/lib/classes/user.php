@@ -156,7 +156,14 @@ class user {
             $mnethostid = $CFG->mnet_localhost_id;
         }
 
-        return $DB->get_record('user', ['email' => $email, 'mnethostid' => $mnethostid], $fields, $strictness);
+        // Build SQL query to prioritise active users.
+        $sql = "SELECT $fields
+                  FROM {user}
+                 WHERE email = :email AND mnethostid = :mnethostid
+              ORDER BY suspended ASC, timecreated DESC";
+        $params = ['email' => $email, 'mnethostid' => $mnethostid];
+        // Return the first user matching the query criteria.
+        return $DB->get_record_sql($sql, $params, $strictness);
     }
 
     /**
@@ -1150,12 +1157,17 @@ class user {
             'permissioncallback' => [static::class, 'is_current_user'],
         ];
 
-        $choices = [HOMEPAGE_SITE];
-        if (!empty($CFG->enabledashboard)) {
+        // Build available homepage choices inline.
+        $choices = [];
+        if (!isset($CFG->enablemyhome) || $CFG->enablemyhome) {
+            $choices[] = HOMEPAGE_SITE;
+        }
+        if (!isset($CFG->enabledashboard) || $CFG->enabledashboard) {
             $choices[] = HOMEPAGE_MY;
         }
-        $choices[] = HOMEPAGE_MYCOURSES;
-
+        if (!isset($CFG->enablemycourses) || $CFG->enablemycourses) {
+            $choices[] = HOMEPAGE_MYCOURSES;
+        }
         // Allow hook callbacks to extend options.
         $hook = new \core_user\hook\extend_default_homepage(true);
         \core\di::get(\core\hook\manager::class)->dispatch($hook);

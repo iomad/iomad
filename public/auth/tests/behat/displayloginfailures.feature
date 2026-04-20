@@ -15,11 +15,10 @@ Feature: Test the 'showlogfailures' feature works.
   Scenario: Check that 'displayloginfailures' works without javascript for teachers.
     # Simulate a log in failure for the teacher.
     Given I am on homepage
-    And I click on "Log in" "link" in the ".logininfo" "css_element"
     And I set the field "Username" to "teacher1"
     And I set the field "Password" to "wrongpass"
     And I press "Log in"
-    And I should see "Invalid login, please try again"
+    And I should see "Unable to log in"
     # Now, log in with the correct credentials.
     When I set the field "Username" to "teacher1"
     And I set the field "Password" to "teacher1"
@@ -36,11 +35,10 @@ Feature: Test the 'showlogfailures' feature works.
   Scenario: Check that 'displayloginfailures' works without javascript for admins.
     # Simulate a log in failure for the teacher.
     Given I am on homepage
-    And I click on "Log in" "link" in the ".logininfo" "css_element"
     And I set the field "Username" to "admin"
     And I set the field "Password" to "wrongpass"
     And I press "Log in"
-    And I should see "Invalid login, please try again"
+    And I should see "Unable to log in"
     # Now, log in with the correct credentials.
     When I set the field "Username" to "admin"
     And I set the field "Password" to "admin"

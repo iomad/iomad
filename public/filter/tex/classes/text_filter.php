@@ -24,15 +24,11 @@ use core_useragent;
 use stdClass;
 
 /**
- * Moodle - Filter for converting TeX expressions to cached gif images
+ * Moodle - Filter for converting TeX expressions to cached images
  *
  * This Moodle text filter converts TeX expressions delimited
- * by either $$...$$ or by <tex...>...</tex> tags to gif images using
- * mimetex.cgi obtained from http: *www.forkosh.com/mimetex.html authored by
- * John Forkosh john@forkosh.com.  Several binaries of this areincluded with
- * this distribution.
- * Note that there may be patent restrictions on the production of gif images
- * in Canada and some parts of Western Europe and Japan until July 2004.
+ * by either $$...$$ or by <tex...>...</tex> tags to PNG, GIF, or SVG images using
+ * LaTeX tools (latex, dvips, convert/dvisvgm).
  *
  * @package    filter_tex
  * @subpackage tex
@@ -185,7 +181,7 @@ class text_filter extends \core_filters\text_filter {
         }
 
         // Build the output.
-        $anchorcontents = "<img class=\"texrender\" $title alt=\"$alt\" src=\"";
+        $anchorcontents = "<img class=\"texrender rounded-0\" $title alt=\"$alt\" src=\"";
         if ($CFG->slasharguments) {
             // Use this method if possible for better client-side caching.
             $anchorcontents .= "$CFG->wwwroot/filter/tex/pix.php/$imagefile";

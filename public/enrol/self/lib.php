@@ -83,17 +83,20 @@ class enrol_self_plugin extends enrol_plugin {
     public function get_instance_name($instance) {
         global $DB;
 
-        if (empty($instance->name)) {
-            if (!empty($instance->roleid) and $role = $DB->get_record('role', array('id'=>$instance->roleid))) {
-                $role = ' (' . role_get_name($role, context_course::instance($instance->courseid, IGNORE_MISSING)) . ')';
-            } else {
-                $role = '';
-            }
-            $enrol = $this->get_name();
-            return get_string('pluginname', 'enrol_'.$enrol) . $role;
-        } else {
-            return format_string($instance->name);
+        if (!empty($instance->name)) {
+            return format_string($instance->name, true, ['context' => context_course::instance($instance->courseid)]);
         }
+
+        $enrolname = get_string('pluginname', 'enrol_' . $this->get_name());
+        if (!empty($instance->roleid)) {
+            $role = $DB->get_record('role', ['id' => $instance->roleid]);
+            if ($role) {
+                $rolename = role_get_name($role, context_course::instance($instance->courseid, IGNORE_MISSING));
+                return get_string('enroledas', 'enrol_self', ['enrol' => $enrolname, 'role' => $rolename]);
+            }
+        }
+
+        return $enrolname;
     }
 
     public function roles_protected() {
@@ -1196,14 +1199,6 @@ class enrol_self_plugin extends enrol_plugin {
             }
         }
         return $roles;
-    }
-
-    /**
-     * @deprecated since Moodle 4.4
-     */
-    #[\core\attribute\deprecated('enrol_plugin::get_welcome_message_contact', since: '4.4', mdl: 'MDL-4188', final: true)]
-    public function get_welcome_email_contact() {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
     }
 
     /**

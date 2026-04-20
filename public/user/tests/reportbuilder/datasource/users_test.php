@@ -109,7 +109,6 @@ final class users_test extends core_reportbuilder_testcase {
         $generator->create_column(['reportid' => $report->get('id'), 'uniqueidentifier' => 'user:suspended']);
         $generator->create_column(['reportid' => $report->get('id'), 'uniqueidentifier' => 'user:confirmed']);
         $generator->create_column(['reportid' => $report->get('id'), 'uniqueidentifier' => 'user:auth']);
-        $generator->create_column(['reportid' => $report->get('id'), 'uniqueidentifier' => 'user:moodlenetprofile']);
         $generator->create_column(['reportid' => $report->get('id'), 'uniqueidentifier' => 'user:timecreated']);
         $generator->create_column(['reportid' => $report->get('id'), 'uniqueidentifier' => 'user:timemodified']);
         $generator->create_column(['reportid' => $report->get('id'), 'uniqueidentifier' => 'user:lastip']);
@@ -171,7 +170,6 @@ final class users_test extends core_reportbuilder_testcase {
             $suspended,
             $confirmed,
             $auth,
-            $moodlenetprofile,
             $timecreated,
             $timemodified,
             $lastip,
@@ -206,7 +204,6 @@ final class users_test extends core_reportbuilder_testcase {
         $this->assertEquals('No', $suspended);
         $this->assertEquals('Yes', $confirmed);
         $this->assertEquals('Manual accounts', $auth);
-        $this->assertEquals($user->moodlenetprofile, $moodlenetprofile);
         $this->assertNotEmpty($timecreated);
         $this->assertNotEmpty($timemodified);
         $this->assertEquals('0.0.0.0', $lastip);
@@ -458,14 +455,6 @@ final class users_test extends core_reportbuilder_testcase {
                 'user:department_operator' => text::IS_EQUAL_TO,
                 'user:department_value' => 'Office',
             ], false],
-            'Filter moodlenetprofile' => ['user:moodlenetprofile', [
-                'user:moodlenetprofile_operator' => text::IS_EQUAL_TO,
-                'user:moodlenetprofile_value' => '@zoe1@example.com',
-            ], true],
-            'Filter moodlenetprofile (no match)' => ['user:moodlenetprofile', [
-                'user:moodlenetprofile_operator' => text::IS_EQUAL_TO,
-                'user:moodlenetprofile_value' => '@alfie1@example.com',
-            ], false],
             'Filter suspended' => ['user:suspended', [
                 'user:suspended_operator' => boolean_select::NOT_CHECKED,
             ], true],
@@ -580,7 +569,6 @@ final class users_test extends core_reportbuilder_testcase {
             'timezone' => 'Europe/Barcelona',
             'theme' => 'boost',
             'description' => 'Hello there',
-            'moodlenetprofile' => '@zoe1@example.com',
             'interests' => ['Horses'],
             'lastip' => '0.0.0.0',
         ]);

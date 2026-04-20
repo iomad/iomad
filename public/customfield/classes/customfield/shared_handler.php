@@ -20,7 +20,6 @@ namespace core_customfield\customfield;
 
 use core\context;
 use core\context\system;
-use core\exception\coding_exception;
 use core\url;
 use core_customfield\field_controller;
 
@@ -32,35 +31,6 @@ use core_customfield\field_controller;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class shared_handler extends \core_customfield\handler {
-    /**
-     * @var shared_handler|null
-     */
-    protected static ?shared_handler $singleton = null;
-
-    /**
-     * Returns a singleton
-     *
-     * @param int $itemid
-     * @return self
-     */
-    public static function create(int $itemid = 0): self {
-        if (static::$singleton === null) {
-            self::$singleton = new static($itemid);
-        }
-        return self::$singleton;
-    }
-
-    /**
-     * Run reset code after unit tests to reset the singleton usage.
-     */
-    public static function reset_caches(): void {
-        if (!PHPUNIT_TEST) {
-            throw new coding_exception('This feature is only intended for use in unit tests');
-        }
-
-        static::$singleton = null;
-    }
-
     /**
      * The current user can configure custom fields on this component.
      *

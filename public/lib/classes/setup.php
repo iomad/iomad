@@ -38,25 +38,13 @@ class setup {
             throw new moodle_exception('wwwrootslash', 'error');
         }
 
-        if (!$this->can_wwwroot_end_in_public() && $this->does_wwwroot_end_in_public()) {
+        if ($this->does_wwwroot_end_in_public()) {
             // The wwwroot should not end in /public as this may suggest a misconfiguration.
             // There may be legitimate sites out there that currently do this but it is not recommended.
-            // Where a site _does_ need to do this, then they can set the $CFG->wwwrootendsinpublic var to true.
             throw new moodle_exception('wwwrootpublic', 'error');
         }
 
         return true;
-    }
-
-    /**
-     * Whether the wwwroot is allowed to end in public.
-     *
-     * @return bool
-     */
-    protected function can_wwwroot_end_in_public(): bool {
-        global $CFG;
-
-        return property_exists($CFG, 'wwwrootendsinpublic') && $CFG->wwwrootendsinpublic;
     }
 
     /**
@@ -79,5 +67,45 @@ class setup {
         global $CFG;
 
         return str_ends_with($CFG->wwwroot, '/');
+    }
+
+    /**
+     * Check whether an upgrade is currently running.
+     *
+     * @return bool
+     */
+    public static function is_upgrade_running(): bool {
+        global $CFG;
+
+        return !empty($CFG->upgraderunning);
+    }
+
+    /**
+     * Ensure that an upgrade is not running, emitting an exception if it is.
+     *
+     * @throws moodle_exception
+     * @return bool false if no upgrade is running
+     */
+    public static function ensure_upgrade_is_not_running(): bool {
+        if (self::is_upgrade_running()) {
+            throw new moodle_exception('cannotexecduringupgrade');
+        }
+
+        return false;
+    }
+
+    /**
+     * Warn if an upgrade is currently running.
+     *
+     * @return bool true if an upgrade is running, false if no upgrade is running
+     */
+    public static function warn_if_upgrade_is_running(): bool {
+        if (self::is_upgrade_running()) {
+            debugging(get_string('cannotexecduringupgrade', 'error'), DEBUG_DEVELOPER);
+
+            return true;
+        }
+
+        return false;
     }
 }

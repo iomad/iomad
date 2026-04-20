@@ -5,10 +5,12 @@ Feature: Fields locked control who is able to edit it
   I can change the visibility of the fields
 
   Background:
-    Given the following "custom field categories" exist:
+    Given the following config values are set as admin:
+      | enablemyhome | 1 |
+    And the following "custom field categories" exist:
       | name              | component   | area   | itemid |
       | Category for test | core_course | course | 0      |
-    Given the following "users" exist:
+    And the following "users" exist:
       | username | firstname | lastname | email                |
       | teacher1 | Teacher   | 1        | teacher1@example.com |
       | student1 | Student   | 1        | student@example.com  |
@@ -22,14 +24,14 @@ Feature: Fields locked control who is able to edit it
   Scenario: Editing locked and not locked custom fields
     When I log in as "admin"
     And I navigate to "Courses > Default settings > Course custom fields" in site administration
-    And I click on "Add a new custom field" "link"
+    And I click on "Add field" "link"
     And I click on "Short text" "link"
     And I set the following fields to these values:
       | Name       | Test field1 |
       | Short name | testfield1  |
       | Locked     | No          |
     And I click on "Save changes" "button" in the "Adding a new Short text" "dialogue"
-    And I click on "Add a new custom field" "link"
+    And I click on "Add field" "link"
     And I click on "Short text" "link"
     And I set the following fields to these values:
       | Name       | Test field2 |

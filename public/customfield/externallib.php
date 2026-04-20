@@ -114,12 +114,17 @@ class core_customfield_external extends external_api {
                 'area' => new external_value(PARAM_ALPHANUMEXT, 'area'),
                 'itemid' => new external_value(PARAM_INT, 'itemid'),
                 'usescategories' => new external_value(PARAM_BOOL, 'view has categories'),
+                'hascategories' => new external_value(PARAM_BOOL, 'has categories'),
+                'hassharedcategories' => new external_value(PARAM_BOOL, 'has shared categories'),
                 'categories' => new external_multiple_structure(
                     new external_single_structure(
                         array(
                             'id' => new external_value(PARAM_INT, 'id'),
+                            'name' => new external_value(PARAM_TEXT, 'name'),
                             'nameeditable' => new external_value(PARAM_RAW, 'inplace editable name'),
                             'addfieldmenu' => new external_value(PARAM_RAW, 'addfieldmenu'),
+                            'actionsmenu' => new external_value(PARAM_RAW, 'actionsmenu'),
+                            'movetitle' => new external_value(PARAM_TEXT, 'movetitle'),
                             'canedit' => new external_value(PARAM_BOOL, 'can edit'),
                             'fields' => new external_multiple_structure(
                                 new external_single_structure(
@@ -128,13 +133,18 @@ class core_customfield_external extends external_api {
                                         'shortname' => new external_value(PARAM_NOTAGS, 'shortname'),
                                         'type' => new external_value(PARAM_NOTAGS, 'type'),
                                         'id' => new external_value(PARAM_INT, 'id'),
+                                        'actionsmenu' => new external_value(PARAM_RAW, 'actionsmenu'),
+                                        'movetitle' => new external_value(PARAM_TEXT, 'movetitle'),
                                     )
                                 )
                             , '', VALUE_OPTIONAL),
                             'toggle' => new external_value(PARAM_RAW, 'toggle', VALUE_OPTIONAL),
+                            'extraclasses' => new external_value(PARAM_TEXT, 'extra classes', VALUE_OPTIONAL),
                         )
                     )
                 ),
+                'canmovefields' => new external_value(PARAM_BOOL, 'Whether fields can be moved', VALUE_DEFAULT, false),
+                'canmovecategories' => new external_value(PARAM_BOOL, 'Whether categories can be moved', VALUE_DEFAULT, false),
             )
         );
     }

@@ -325,8 +325,10 @@ M.form_dndupload.init = function(Y, options) {
             this.hide_drop_target();
 
             var files = e._event.dataTransfer.files;
+            const items = e._event.dataTransfer.items;
+            let options;
             if (this.filemanager) {
-                var options = {
+                options = {
                     files: files,
                     options: this.options,
                     repositoryid: this.repositoryid,
@@ -346,9 +348,6 @@ M.form_dndupload.init = function(Y, options) {
                     callbackClearProgress: Y.bind('clear_progress', this),
                     callbackStartProgress: Y.bind('startProgress', this),
                 };
-                this.show_progress();
-                var uploader = new dnduploader(options);
-                uploader.start_upload();
             } else {
                 if (files.length >= 1) {
                     options = {
@@ -371,11 +370,24 @@ M.form_dndupload.init = function(Y, options) {
                         callbackClearProgress: Y.bind('clear_progress', this),
                         callbackStartProgress: Y.bind('startProgress', this),
                     };
-                    this.show_progress();
-                    uploader = new dnduploader(options);
-                    uploader.start_upload();
                 }
             }
+            let uploader = new dnduploader(options);
+            for (let i = 0; i < items.length; i++) {
+                let entry = items[i].webkitGetAsEntry();
+                if (!entry) {
+                    continue;
+                }
+                if (entry.isDirectory && entry.name) {
+                    uploader.print_msg(
+                        M.util.get_string('upload_error_folders_not_supported', 'repository_upload', entry.name),
+                        'error',
+                        'uploaderrorfoldersnotsupported');
+                    return false;
+                }
+            }
+            this.show_progress();
+            uploader.start_upload();
 
             return false;
         },
@@ -652,15 +664,23 @@ M.form_dndupload.init = function(Y, options) {
         },
 
         /**
-         * Display a message in a popup
-         * @param string msg - the message to display
-         * @param string type - 'error' or 'info'
+         * Display a message in a popup dialog.
+         *
+         * @param {string} msg - The message text to display.
+         * @param {string} type - The message type, 'error' or 'info'.
+         * @param {string} errorCode - The associated error code (optional).
          */
-        print_msg: function(msg, type) {
+        print_msg: function(msg, type, errorCode) {
             var header = M.util.get_string('error', 'moodle');
             if (type != 'error') {
-                type = 'info'; // one of only two types excepted
+                type = 'info'; // One of only two types excepted.
                 header = M.util.get_string('info', 'moodle');
+            }
+            if (errorCode === 'invalidfiletypewithaccepted') {
+                header = M.util.get_string('invalidfiletypetitle', 'repository');
+            }
+            if (errorCode === 'uploaderrorfoldersnotsupported') {
+                header = M.util.get_string('upload_error_folders_not_supported_title', 'repository_upload');
             }
             if (!this.msg_dlg) {
                 this.msg_dlg_node = Y.Node.create(M.core_filepicker.templates.message);
@@ -934,7 +954,7 @@ M.form_dndupload.init = function(Y, options) {
         notifyUploadCompleted: function() {
             require(['core_form/events'], function(FormEvent) {
                 const elementId = this.filemanagerhelper ? this.filemanagerhelper.filemanager.get('id') : this.options.containerid;
-                FormEvent.triggerUploadCompleted(elementId);
+                FormEvent.notifyUploadCompleted(elementId);
             }.bind(this));
          },
 
@@ -944,7 +964,7 @@ M.form_dndupload.init = function(Y, options) {
         notifyUploadStarted: function() {
             require(['core_form/events'], function(FormEvent) {
                 const elementId = this.filemanagerhelper ? this.filemanagerhelper.filemanager.get('id') : this.options.containerid;
-                FormEvent.triggerUploadStarted(elementId);
+                FormEvent.notifyUploadStarted(elementId);
             }.bind(this));
         },
 
@@ -1051,8 +1071,10 @@ M.form_dndupload.init = function(Y, options) {
                         var result = JSON.parse(xhr.responseText);
                         if (result) {
                             if (result.error) {
-                                self.print_msg(result.error, 'error'); // TODO add filename?
+                                self.print_msg(result.error, 'error', result.errorcode);
                                 self.uploadfinished();
+                                // Don't do anything else after reporting the error.
+                                return;
                             } else {
                                 // Only update the filepicker if there were no errors
                                 if (result.event == 'fileexists') {

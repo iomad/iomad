@@ -387,14 +387,6 @@ class action_menu implements renderable, templatable {
     }
 
     /**
-     * @deprecated since Moodle 4.0, use action_menu::set_menu_left().
-     */
-    #[\core\attribute\deprecated('action_menu::set_menu_left', since: '4.0', mdl: 'MDL-72466', final: true)]
-    public function set_alignment(): void {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-
-    /**
      * Returns a string to describe the alignment.
      *
      * @param int $align One of action_menu::TL, action_menu::TR, action_menu::BL, action_menu::BR.
@@ -424,14 +416,6 @@ class action_menu implements renderable, templatable {
     }
 
     /**
-     * @deprecated since Moodle 4.3, use set_boundary() method instead.
-     */
-    #[\core\attribute\deprecated('action_menu::set_boundary', since: '4.3', mdl: 'MDL-77375', final: true)]
-    public function set_constraint(): void {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-
-    /**
      * Set the overflow constraint boundary of the dropdown menu.
      * @see https://getbootstrap.com/docs/4.6/components/dropdowns/#options The 'boundary' option in the Bootstrap documentation
      *
@@ -445,14 +429,6 @@ class action_menu implements renderable, templatable {
         }
 
         $this->triggerattributes['data-boundary'] = $boundary;
-    }
-
-    /**
-     * @deprecated since Moodle 3.2, use a list of action_icon instead.
-     */
-    #[\core\attribute\deprecated('Use a list of action_icons instead', since: '3.2', mdl: 'MDL-55904', final: true)]
-    public function do_not_enhance() {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
     }
 
     /**

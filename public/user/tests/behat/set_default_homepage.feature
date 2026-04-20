@@ -5,7 +5,9 @@ Feature: Set the site home page and dashboard as the default home page
   I need to choose which page I want and set it as my home page
 
   Background:
-    Given the following "courses" exist:
+    Given the following config values are set as admin:
+      | enablemycourses | 1 |
+    And the following "courses" exist:
       | fullname | shortname | category | groupmode |
       | Course 1 | C1 | 0 | 1 |
     And the following "users" exist:
@@ -14,6 +16,8 @@ Feature: Set the site home page and dashboard as the default home page
     And the following "course enrolments" exist:
       | user     | course | role           |
       | user1    | C1     | student        |
+    And the following config values are set as admin:
+      | enablemyhome | 1 |
 
   Scenario: Admin sets the site page and then the dashboard as the default home page
     # This functionality does not work without the administration block.

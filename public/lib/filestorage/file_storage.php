@@ -1076,10 +1076,6 @@ class file_storage {
         $newrecord->id = $DB->insert_record('files', $newrecord);
 
         if ($newrecord->filename !== '.') {
-            if (defined('PHPUNIT_TEST') && PHPUNIT_TEST) {
-                return;
-            }
-
             // The $fileinstance is needed for the legacy callback.
             $fileinstance = $this->get_file_instance($newrecord);
             // Dispatch the new Hook implementation immediately after the legacy callback.
@@ -1915,32 +1911,6 @@ class file_storage {
      */
     public function supports_xsendfile() {
         return $this->filesystem->supports_xsendfile();
-    }
-
-    /**
-     * Content exists
-     *
-     * @param string $contenthash
-     * @return bool
-     * @deprecated since 3.3
-     */
-    public function content_exists($contenthash) {
-        debugging('The content_exists function has been deprecated and should no longer be used.', DEBUG_DEVELOPER);
-
-        return false;
-    }
-
-    /**
-     * Tries to recover missing content of file from trash.
-     *
-     * @param stored_file $file stored_file instance
-     * @return bool success
-     * @deprecated since 3.3
-     */
-    public function try_content_recovery($file) {
-        debugging('The try_content_recovery function has been deprecated and should no longer be used.', DEBUG_DEVELOPER);
-
-        return false;
     }
 
     /**

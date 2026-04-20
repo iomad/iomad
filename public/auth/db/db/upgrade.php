@@ -28,12 +28,6 @@
  * @return bool result
  */
 function xmldb_auth_db_upgrade($oldversion) {
-    // Automatically generated Moodle v4.2.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    // Automatically generated Moodle v4.3.0 release upgrade line.
-    // Put any upgrade step following this.
-
     // Automatically generated Moodle v4.4.0 release upgrade line.
     // Put any upgrade step following this.
 
@@ -42,6 +36,16 @@ function xmldb_auth_db_upgrade($oldversion) {
 
     // Automatically generated Moodle v5.0.0 release upgrade line.
     // Put any upgrade step following this.
+
+    // Automatically generated Moodle v5.1.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    if ($oldversion < 2026040700) {
+        // Remove the sybasequoting setting since all queries now use parameterized statements.
+        unset_config('sybasequoting', 'auth_db');
+
+        upgrade_plugin_savepoint(true, 2026040700, 'auth', 'db');
+    }
 
     return true;
 }

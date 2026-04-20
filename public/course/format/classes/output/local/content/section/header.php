@@ -62,8 +62,8 @@ class header implements named_templatable, renderable {
     /**
      * Export this data so it can be used as the context for a mustache template.
      *
-     * @param renderer_base $output typically, the renderer that's calling this function
-     * @return array data context for a mustache template
+     * @param \renderer_base $output typically, the renderer that's calling this function
+     * @return stdClass data context for a mustache template
      */
     public function export_for_template(\renderer_base $output): stdClass {
 
@@ -84,7 +84,7 @@ class header implements named_templatable, renderable {
         } else {
             if (is_null($format->get_sectionid()) || $format->get_sectionid() != $section->id) {
                 // All sections are displayed.
-                if (!$data->editing) {
+                if (!$data->editing && $section->uservisible) {
                     $data->title = $output->section_title($section, $course);
                 } else {
                     $data->title = $output->section_title_without_link($section, $course);
@@ -97,7 +97,7 @@ class header implements named_templatable, renderable {
         }
 
         $coursedisplay = $format->get_course_display();
-        $data->headerdisplaymultipage = ($coursedisplay == COURSE_DISPLAY_MULTIPAGE);
+        $data->headerdisplaymultipage = ($coursedisplay == COURSE_DISPLAY_MULTIPAGE && !$section->is_delegated());
 
         if ($section->section > $format->get_last_section_number()) {
             // Stealth sections (orphaned) has special title.

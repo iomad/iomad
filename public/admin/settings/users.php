@@ -212,7 +212,6 @@ if ($hassiteconfig || has_any_capability($capabilities, $systemcontext)) { // Sp
                              'email' => new lang_string('email'),
                              'city' => new lang_string('city'),
                              'country' => new lang_string('country'),
-                             'moodlenetprofile' => new lang_string('moodlenetprofile', 'user'),
                              'timezone' => new lang_string('timezone'),
                              'firstaccess' => new lang_string('firstaccess'),
                              'lastaccess' => new lang_string('lastaccess'),

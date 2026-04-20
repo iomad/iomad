@@ -399,50 +399,60 @@ class completion_info {
     /**
      * Get course completion criteria
      *
-     * @param int $criteriatype Specific criteria type to return (optional)
+     * @param int|null $criteriatype Specific criteria type to return (optional)
+     * @return array
      */
-    public function get_criteria($criteriatype = null) {
-
-        // Fill cache if empty
+    public function get_criteria(?int $criteriatype = null): array {
+        // Fill cache if empty.
         if (!is_array($this->criteria)) {
             global $DB;
 
-            $params = array(
-                'course'    => $this->course->id
-            );
+            $params = ['course' => $this->course->id];
 
-            // Load criteria from database
-            $records = (array)$DB->get_records('course_completion_criteria', $params);
+            // Load criteria from database.
+            $records = $DB->get_records('course_completion_criteria', $params);
 
-            // Order records so activities are in the same order as they appear on the course view page.
-            if ($records) {
-                $activitiesorder = array_keys(get_fast_modinfo($this->course)->get_cms());
-                usort($records, function ($a, $b) use ($activitiesorder) {
-                    $aidx = ($a->criteriatype == COMPLETION_CRITERIA_TYPE_ACTIVITY) ?
-                        array_search($a->moduleinstance, $activitiesorder) : false;
-                    $bidx = ($b->criteriatype == COMPLETION_CRITERIA_TYPE_ACTIVITY) ?
-                        array_search($b->moduleinstance, $activitiesorder) : false;
-                    if ($aidx === false || $bidx === false || $aidx == $bidx) {
-                        return 0;
-                    }
-                    return ($aidx < $bidx) ? -1 : 1;
-                });
+            if (empty($records)) {
+                return [];
             }
 
-            // Build array of criteria objects
-            $this->criteria = array();
+            // Order records so activities are in the same order as they appear on the course view page.
+            $activitiesorder = array_keys(get_fast_modinfo($this->course)->get_cms());
+
+            // Remove disabled modules.
+            foreach ($records as $key => $record) {
+                if ($record->criteriatype == COMPLETION_CRITERIA_TYPE_ACTIVITY) {
+                    if (!in_array($record->moduleinstance, $activitiesorder)) {
+                        unset($records[$key]);
+                    }
+                }
+            }
+
+            usort($records, function ($a, $b) use ($activitiesorder) {
+                $aidx = ($a->criteriatype == COMPLETION_CRITERIA_TYPE_ACTIVITY) ?
+                    array_search($a->moduleinstance, $activitiesorder) : false;
+                $bidx = ($b->criteriatype == COMPLETION_CRITERIA_TYPE_ACTIVITY) ?
+                    array_search($b->moduleinstance, $activitiesorder) : false;
+                if ($aidx === false || $bidx === false || $aidx == $bidx) {
+                    return 0;
+                }
+                return ($aidx < $bidx) ? -1 : 1;
+            });
+
+            // Build array of criteria objects.
+            $this->criteria = [];
             foreach ($records as $record) {
                 $this->criteria[$record->id] = completion_criteria::factory((array)$record);
             }
         }
 
-        // If after all criteria
+        // If after all criteria.
         if ($criteriatype === null) {
             return $this->criteria;
         }
 
-        // If we are only after a specific criteria type
-        $criteria = array();
+        // If we are only after a specific criteria type.
+        $criteria = [];
         foreach ($this->criteria as $criterion) {
 
             if ($criterion->criteriatype != $criteriatype) {
@@ -478,17 +488,23 @@ class completion_info {
 
     /**
      * Clear old course completion criteria
+     *
+     * @param bool $removetypecriteria Also remove course type criteria from other courses that refer to the current course
      */
-    public function clear_criteria() {
+    public function clear_criteria(bool $removetypecriteria = true): void {
         global $DB;
 
+        $select = 'course = :course';
+        $params = ['course' => $this->course->id];
+
         // Remove completion criteria records for the course itself, and any records that refer to the course.
-        $select = 'course = :course OR (criteriatype = :type AND courseinstance = :courseinstance)';
-        $params = [
-            'course' => $this->course_id,
-            'type' => COMPLETION_CRITERIA_TYPE_COURSE,
-            'courseinstance' => $this->course_id,
-        ];
+        if ($removetypecriteria) {
+            $select .= ' OR (criteriatype = :type AND courseinstance = :courseinstance)';
+            $params = array_merge($params, [
+                'type' => COMPLETION_CRITERIA_TYPE_COURSE,
+                'courseinstance' => $this->course_id,
+            ]);
+        }
 
         $DB->delete_records_select('course_completion_criteria', $select, $params);
         $DB->delete_records('course_completion_aggr_methd', array('course' => $this->course_id));
@@ -558,7 +574,15 @@ class completion_info {
      */
     public function update_state($cm, $possibleresult=COMPLETION_UNKNOWN, $userid=0,
             $override = false, $isbulkupdate = false) {
-        global $USER;
+        global $DB, $USER;
+
+        // Do nothing if the mod plugin type is disabled.
+        $manager = \core_plugin_manager::resolve_plugininfo_class('mod');
+        $modname = !empty($cm->modname) ? $cm->modname : $DB->get_field('modules', 'name', ['id' => $cm->module]);
+        $enabled = $manager::get_enabled_plugin($modname);
+        if (!$enabled) {
+            return;
+        }
 
         // Do nothing if completion is not enabled for that activity
         if (!$this->is_enabled($cm)) {
@@ -1331,6 +1355,44 @@ class completion_info {
     }
 
     /**
+     * Return a list of activities that are visible on the course page and have completion enabled.
+     *
+     * This includes activities that the user can see on the course page (visible or restricted),
+     * but only those with completion tracking enabled. Activities hidden from
+     * the user, located in hidden sections or restricted by group/grouping are excluded.
+     *
+     * @param int $userid User id
+     * @return array Array of user visible activities with completion enabled.
+     */
+    public function get_user_activities_with_completion($userid): array {
+        $visible = [];
+        $activities = $this->get_activities();
+
+        foreach ($activities as $cm) {
+            // Step 1: Exclude activities hidden from the user on the course page.
+            if (!$cm->is_visible_on_course_page()) {
+                continue;
+            }
+
+            // Step 2: Check if the user is excluded by group or grouping style restrictions.
+            $info = new \core_availability\info_module($cm);
+
+            $users = [$userid => (object)['id' => $userid]];
+            $users = $info->filter_user_list($users);
+
+            if (empty($users)) {
+                // The user was removed from the list, meaning user list restrictions apply.
+                // This is where group and grouping restrictions exclude the user.
+                continue;
+            }
+
+            // If we reach here, count this activity for completion details and percentage.
+            $visible[$cm->id] = 1;
+        }
+        return $visible;
+    }
+
+    /**
      * Checks to see if the userid supplied has a tracked role in
      * this course
      *
@@ -1632,9 +1694,10 @@ class completion_info {
      * Return the number of modules completed by a user in one specific course.
      *
      * @param int $userid The User ID.
+     * @param array $moduleids The course modules to check.
      * @return int Total number of modules completed by a user
      */
-    public function count_modules_completed(int $userid): int {
+    public function count_modules_completed(int $userid, array $moduleids = []): int {
         global $DB;
 
         $sql = "SELECT COUNT(1)
@@ -1642,9 +1705,16 @@ class completion_info {
                   JOIN {course_modules_completion} cmc ON cm.id = cmc.coursemoduleid
                  WHERE cm.course = :courseid
                        AND cmc.userid = :userid
+                       AND cm.visible = 1
                        AND (cmc.completionstate = " . COMPLETION_COMPLETE . "
                         OR cmc.completionstate = " . COMPLETION_COMPLETE_PASS . ")";
         $params = ['courseid' => $this->course_id, 'userid' => $userid];
+
+        if (!empty($moduleids)) {
+            [$insql, $inparams] = $DB->get_in_or_equal($moduleids, SQL_PARAMS_NAMED);
+            $sql.= " AND cm.id $insql";
+            $params = array_merge($params, $inparams);
+        }
 
         return $DB->count_records_sql($sql, $params);
     }

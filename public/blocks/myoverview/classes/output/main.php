@@ -427,6 +427,37 @@ class main implements renderable, templatable {
             $newcourseurl = new \moodle_url('/course/edit.php', ['category' => $category->id]);
         }
 
+        $courseactionurls = [];
+        if ($coursecat) {
+            $categorytomanage = \core_course_category::get_nearest_editable_subcategory($coursecat, ['manage']);
+            if ($categorytomanage) {
+                $courseactionurls[] = [
+                    'url' => new \moodle_url('/course/management.php', ['categoryid' => $categorytomanage->id]),
+                    'label' => get_string('managecourses'),
+                    'class' => 'btn btn-outline-primary',
+                ];
+            }
+            if (!empty($newcourseurl)) {
+                $courseactionurls[] = [
+                    'url' => $newcourseurl,
+                    'label' => get_string('createcourse', 'block_myoverview'),
+                    'class' => 'btn btn-primary',
+                ];
+            }
+            $categorytorequest = \core_course_category::get_nearest_editable_subcategory(
+                $coursecat,
+                ['moodle/course:request'],
+            );
+            if ($categorytorequest && $categorytorequest->can_request_course()) {
+                $courseactionurls[] = [
+                    'url' => new \moodle_url('/course/request.php', ['categoryid' => $categorytorequest->id]),
+                    'label' => get_string('requestcourse'),
+                    'class' => 'btn btn-primary',
+                ];
+            }
+        }
+        $hascourseactions = !empty($courseactionurls);
+
         $customfieldvalues = $this->get_customfield_values_for_export();
         $selectedcustomfield = '';
         if ($this->grouping == BLOCK_MYOVERVIEW_GROUPING_CUSTOMFIELD) {
@@ -453,16 +484,28 @@ class main implements renderable, templatable {
         $preferences = $this->get_preferences_as_booleans();
         $availablelayouts = $this->get_formatted_available_layouts_for_export();
         $sort = '';
-        if ($this->sort == BLOCK_MYOVERVIEW_SORTING_SHORTNAME) {
-            $sort = 'shortname';
-        } else {
-            $sort = $this->sort == BLOCK_MYOVERVIEW_SORTING_TITLE ? 'fullname' : 'ul.timeaccess desc';
+
+        switch ($this->sort) {
+            case BLOCK_MYOVERVIEW_SORTING_SHORTNAME:
+                $sort = 'shortname';
+                break;
+            case BLOCK_MYOVERVIEW_SORTING_LASTACCESSED:
+                $sort = 'ul.timeaccess desc';
+                break;
+            case BLOCK_MYOVERVIEW_SORTING_STARTDATE:
+                $sort = 'startdate';
+                break;
+            case BLOCK_MYOVERVIEW_SORTING_TITLE:
+            default:
+                $sort = 'fullname';
         }
 
         $defaultvariables = [
             'totalcoursecount' => count(enrol_get_all_users_courses($USER->id, true)),
             'nocoursesimg' => $nocoursesurl,
             'newcourseurl' => $newcourseurl,
+            'courseactionurls' => $courseactionurls,
+            'hascourseactions' => $hascourseactions,
             'grouping' => $this->grouping,
             'sort' => $sort,
             // If the user preference display option is not available, default to first available layout.

@@ -18,6 +18,10 @@ namespace mod_quiz;
 
 use coding_exception;
 use context_module;
+use core\context;
+use core\context\module;
+use core\exception\invalid_parameter_exception;
+use core\exception\moodle_exception;
 use core\output\inplace_editable;
 use core_question\local\bank\version_options;
 use mod_quiz\event\quiz_grade_item_created;
@@ -26,6 +30,7 @@ use mod_quiz\event\quiz_grade_item_updated;
 use mod_quiz\event\slot_grade_item_updated;
 use mod_quiz\event\slot_mark_updated;
 use mod_quiz\event\slot_version_updated;
+use mod_quiz\local\structure\slot_random;
 use mod_quiz\question\bank\qbank_helper;
 use mod_quiz\question\qubaids_for_quiz;
 use stdClass;
@@ -175,16 +180,9 @@ class structure {
      * @return bool
      */
     public function can_display_number_be_customised(int $slotnumber): bool {
-        return $this->is_real_question($slotnumber) && !quiz_has_attempts($this->quizobj->get_quizid());
-    }
-
-    /**
-     * @deprecated since 4.2. $slot->displayednumber is no longer used. If you need this,
-     *      use isset(...->displaynumber), but this method was not used.
-     */
-    #[\core\attribute\deprecated('isset(...->displaynumber)()', since: '4.2', mdl: 'MDL-77656', final: true)]
-    public function is_display_number_customised(int $slotid): bool {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
+        return $this->is_real_question($slotnumber)
+            && !quiz_has_attempts($this->quizobj->get_quizid())
+            && has_capability('mod/quiz:customisequestionnumbers', $this->quizobj->get_context());
     }
 
     /**
@@ -196,7 +194,7 @@ class structure {
      */
     public function make_slot_display_number_in_place_editable(int $slotid, \context $context): \core\output\inplace_editable {
         $slot = $this->get_slot_by_id($slotid);
-        $editable = has_capability('mod/quiz:manage', $context);
+        $editable = has_capability('mod/quiz:manage', $context) && $this->can_display_number_be_customised($slot->slot);
 
         // Get the current value.
         $value = $slot->displaynumber ?? $slot->defaultnumber;
@@ -267,7 +265,7 @@ class structure {
             return false;
         }
 
-        if (in_array($this->get_question_type_for_slot($slotnumber), ['random', 'missingtype'])) {
+        if ($this->slotsinorder[$slotnumber]->random || $this->get_question_type_for_slot($slotnumber) === 'missingtype') {
             return \question_engine::can_questions_finish_during_the_attempt(
                     $this->quizobj->get_quiz()->preferredbehaviour);
         }
@@ -1060,17 +1058,26 @@ class structure {
             return;
         }
         $maxslot = $DB->get_field_sql('SELECT MAX(slot) FROM {quiz_slots} WHERE quizid = ?', [$this->get_quizid()]);
+        $contextid = $this->get_context()->id;
 
         $trans = $DB->start_delegated_transaction();
         // Delete the reference if it is a question.
-        $questionreference = $DB->get_record('question_references',
-                ['component' => 'mod_quiz', 'questionarea' => 'slot', 'itemid' => $slot->id]);
+        $questionreference = $DB->get_record('question_references', [
+            'usingcontextid' => $contextid,
+            'component' => 'mod_quiz',
+            'questionarea' => 'slot',
+            'itemid' => $slot->id,
+        ]);
         if ($questionreference) {
             $DB->delete_records('question_references', ['id' => $questionreference->id]);
         }
         // Delete the set reference if it is a random question.
-        $questionsetreference = $DB->get_record('question_set_references',
-                ['component' => 'mod_quiz', 'questionarea' => 'slot', 'itemid' => $slot->id]);
+        $questionsetreference = $DB->get_record('question_set_references', [
+            'usingcontextid' => $contextid,
+            'component' => 'mod_quiz',
+            'questionarea' => 'slot',
+            'itemid' => $slot->id,
+        ]);
         if ($questionsetreference) {
             $DB->delete_records('question_set_references',
                 ['id' => $questionsetreference->id, 'component' => 'mod_quiz', 'questionarea' => 'slot']);
@@ -1096,7 +1103,9 @@ class structure {
 
         $this->refresh_page_numbers_and_update_db();
 
-        $trans->allow_commit();
+        // Safely extract reference IDs if available.
+        $questionreferenceid = $questionreference->id ?? null;
+        $questionsetreferenceid = $questionsetreference->id ?? null;
 
         // Log slot deleted event.
         $event = \mod_quiz\event\slot_deleted::create([
@@ -1105,9 +1114,22 @@ class structure {
             'other' => [
                 'quizid' => $this->get_quizid(),
                 'slotnumber' => $slotnumber,
-            ]
+                'questionreferenceid' => $questionreferenceid,
+                'questionsetreferenceid' => $questionsetreferenceid,
+            ],
         ]);
+        $event->add_record_snapshot('quiz_slots', $slot);
+
+        // Add snapshots for question and random question references when available.
+        if ($questionreference) {
+            $event->add_record_snapshot('question_references', $questionreference);
+        }
+        if ($questionsetreference) {
+            $event->add_record_snapshot('question_set_references', $questionsetreference);
+        }
+
         $event->trigger();
+        $trans->allow_commit();
     }
 
     /**
@@ -1662,35 +1684,64 @@ class structure {
      * @param array $filtercondition the filter condition. Must contain at least a category filter.
      */
     public function add_random_questions(int $addonpage, int $number, array $filtercondition): void {
+        $category = $this->validate_filter_condition($filtercondition);
+        for ($i = 0; $i < $number; $i++) {
+            $randomslotdata = (object)[
+                'quizid' => $this->get_quizid(),
+                'usingcontextid' => module::instance($this->get_cmid())->id,
+                'questionscontextid' => $category->contextid,
+                'maxmark' => 1,
+            ];
+            $randomslot = new slot_random($randomslotdata);
+            $randomslot->set_quiz($this->get_quiz());
+            $randomslot->set_filter_condition(json_encode($filtercondition));
+            $randomslot->insert($addonpage);
+        }
+    }
+
+    /**
+     * Update an existing random question.
+     *
+     * @param int $slotid
+     * @param array $filtercondition
+     */
+    public function update_random_question(int $slotid, array $filtercondition): void {
+        $category = $this->validate_filter_condition($filtercondition);
+        $slot = $this->get_slot_by_id($slotid);
+        $slot->questionscontextid = $category->contextid;
+        $randomslot = new slot_random($slot);
+        $randomslot->set_quiz($this->get_quiz());
+        $randomslot->update_filtercondition($filtercondition);
+    }
+
+    /**
+     * Validate a given filter condition array. Specifically check for
+     * the prescence of a category and the relevant permission to use
+     * the category. Returns the category.
+     *
+     * @param array $filtercondition
+     * @return stdClass The row from the question_categories table.
+     * @throws invalid_parameter_exception When the filter condition is
+     *                                     missing a category.
+     * @throws moodle_exception When the specified category doesn't exist.
+     */
+    private function validate_filter_condition(array $filtercondition): stdClass {
         global $DB;
 
         if (!isset($filtercondition['filter']['category'])) {
-            throw new \invalid_parameter_exception('$filtercondition must contain at least a category filter.');
+            throw new invalid_parameter_exception('$filtercondition must contain at least a category filter.');
         }
         $categoryid = $filtercondition['filter']['category']['values'][0];
 
         $category = $DB->get_record('question_categories', ['id' => $categoryid]);
         if (!$category) {
-            new \moodle_exception('invalidcategoryid');
+            throw new moodle_exception('invalidcategoryid');
         }
 
-        $catcontext = \context::instance_by_id($category->contextid);
+        $catcontext = context::instance_by_id($category->contextid);
         require_capability('moodle/question:useall', $catcontext);
 
-        // Create the selected number of random questions.
-        for ($i = 0; $i < $number; $i++) {
-            // Slot data.
-            $randomslotdata = new stdClass();
-            $randomslotdata->quizid = $this->get_quizid();
-            $randomslotdata->usingcontextid = context_module::instance($this->get_cmid())->id;
-            $randomslotdata->questionscontextid = $category->contextid;
-            $randomslotdata->maxmark = 1;
-
-            $randomslot = new \mod_quiz\local\structure\slot_random($randomslotdata);
-            $randomslot->set_quiz($this->get_quiz());
-            $randomslot->set_filter_condition(json_encode($filtercondition));
-            $randomslot->insert($addonpage);
-        }
+        return $category;
     }
 
     /**
@@ -1738,7 +1789,7 @@ class structure {
         // Find the random slots.
         $allslots = $this->get_slots();
         foreach ($allslots as $key => $slot) {
-            if ($slot->qtype != 'random') {
+            if (!$slot->random) {
                 unset($allslots[$key]);
             }
         }

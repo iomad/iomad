@@ -688,11 +688,11 @@ M.core_filepicker.init = function(Y, options) {
                         }
                         // error checking
                         if (data && data.error) {
-                            if (data.errorcode === 'invalidfiletype') {
+                            if (data.errorcode === 'invalidfiletypewithaccepted') {
                                 // File type errors are not really errors, so report them less scarily.
                                 Y.use('moodle-core-notification-alert', function() {
                                     return new M.core.alert({
-                                        title: M.util.get_string('error', 'moodle'),
+                                        title: M.util.get_string('invalidfiletypetitle', 'repository'),
                                         message: data.error,
                                     });
                                 });
@@ -1892,7 +1892,75 @@ M.core_filepicker.init = function(Y, options) {
                 node.all('label').set('for', node.one('input,select').generateID());
             });
             content.one('form').set('id', id);
-            content.one('.fp-file input').set('name', 'repo_upload_file');
+            // Define element IDs.
+            const ids = {
+                restrictionsSpan: 'fp-restrictions-span-' + client_id,
+                filetypesDescriptions: 'form-filetypes-descriptions-' + client_id,
+                filetypesDescriptionsIntro: 'filetypes-descriptions-intro-' + client_id,
+            };
+
+            /**
+             * Sets unique IDs for file type restriction and description elements within the file picker or file manager wrapper.
+             *
+             * @param {Y.Node} wrapper - The YUI Node wrapper element to search within (e.g., filepicker or filemanager wrapper).
+             * @param {Object} ids - An object containing the IDs to assign to relevant elements.
+             *   - restrictionsSpan: ID for the restrictions span element.
+             *   - filetypesDescriptions: ID for the file types descriptions element.
+             *   - filetypesDescriptionsIntro: ID for the file types descriptions intro element.
+             */
+            function setFileTypeIds(wrapper, ids) {
+                if (!wrapper) {
+                    return {
+                        hasRestrictionSpan: false,
+                        hasFiletypesDescriptions: false,
+                        hasFiletypesDescriptionsIntro: false,
+                    };
+                }
+                const parent = wrapper.get('parentNode');
+                const restrictionSpan = wrapper.one('.fp-restrictions span');
+                if (restrictionSpan) {
+                    restrictionSpan.set('id', ids.restrictionsSpan);
+                }
+                const filetypesDescriptions = parent.one('.form-filetypes-descriptions');
+                if (filetypesDescriptions) {
+                    filetypesDescriptions.set('id', ids.filetypesDescriptions);
+                }
+                const filetypesDescriptionsIntro = parent.one('.filetypes-descriptions-intro');
+                if (filetypesDescriptionsIntro) {
+                    filetypesDescriptionsIntro.set('id', ids.filetypesDescriptionsIntro);
+                }
+                return {
+                    hasRestrictionSpan: !!restrictionSpan,
+                    hasFiletypesDescriptions: !!filetypesDescriptions,
+                    hasFiletypesDescriptionsIntro: !!filetypesDescriptionsIntro,
+                };
+            }
+
+            const filepickerIdsSet = setFileTypeIds(Y.one('#filepicker-wrapper-' + client_id), ids);
+            const filemanagerIdsSet = setFileTypeIds(Y.one('#filemanager-' + client_id), ids);
+
+            let idsToDescribe = '';
+            // Set value of aria-describedby.
+            if (filepickerIdsSet.hasRestrictionSpan || filemanagerIdsSet.hasRestrictionSpan) {
+                idsToDescribe += ids.restrictionsSpan;
+            }
+            if (filepickerIdsSet.hasFiletypesDescriptionsIntro || filemanagerIdsSet.hasFiletypesDescriptionsIntro) {
+                if (idsToDescribe.length > 0) {
+                    idsToDescribe += ' ';
+                }
+                idsToDescribe += ids.filetypesDescriptionsIntro;
+            }
+            if (filepickerIdsSet.hasFiletypesDescriptions || filemanagerIdsSet.hasFiletypesDescriptions) {
+                if (idsToDescribe.length > 0) {
+                    idsToDescribe += ' ';
+                }
+                idsToDescribe += ids.filetypesDescriptions;
+            }
+
+            content
+                .one('.fp-file input')
+                .set('name', 'repo_upload_file')
+                .set('aria-describedby', idsToDescribe);
             if (data.upload.label && content.one('.fp-file label')) {
                 content.one('.fp-file label').setContent(data.upload.label);
             }
@@ -2171,13 +2239,20 @@ M.core_filepicker.init = function(Y, options) {
         show_recent_repository: function() {
             this.hide_header();
             this.viewbar_set_enabled(false);
-            var repository_id = this.get_preference('recentrepository');
+            var repositoryid = this.get_preference('recentrepository');
+            // If no user preference for a selected repository exists then default to the first repo on the list.
+            if (!repositoryid) {
+                var repokeys = Object.keys(this.options.repositories);
+                if (repokeys.length) {
+                    repositoryid = repokeys[0];
+                }
+            }
             this.viewmode = this.get_preference('recentviewmode');
             if (this.viewmode != 2 && this.viewmode != 3) {
                 this.viewmode = 1;
             }
-            if (this.options.repositories[repository_id]) {
-                this.list({'repo_id':repository_id});
+            if (this.options.repositories[repositoryid]) {
+                this.list({'repo_id': repositoryid});
             }
         },
         get_preference: function (name) {

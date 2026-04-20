@@ -44,6 +44,7 @@ final class sync_members_test extends \lti_advantage_testcase {
     protected function verify_user_profile_image(int $userid, bool $match = true): void {
         global $CFG;
         $user = \core_user::get_user($userid);
+        $this->setUser($user);
         $usercontext = \context_user::instance($user->id);
         $expected = $CFG->wwwroot . '/pluginfile.php/' . $usercontext->id . '/user/icon/boost/f2?rev='. $user->picture;
 
@@ -634,7 +635,7 @@ final class sync_members_test extends \lti_advantage_testcase {
 
         // Delete the activity being shared by resource2, leaving resource 2 disabled as a result.
         $modcontext = \context::instance_by_id($resource2->contextid);
-        course_delete_module($modcontext->instanceid);
+        \core_courseformat\formatactions::cm($course->id)->delete($modcontext->instanceid);
 
         // Only the enabled resource 3 should sync members.
         $task = $this->get_mock_task_with_users(self::get_mock_members_with_ids(range(1, 1)));

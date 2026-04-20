@@ -140,7 +140,7 @@ Y.extend(DIALOGUE, Y.Panel, {
         }
 
         this.setStdModContent(Y.WidgetStdMod.HEADER,
-            '<h5 id="' + this.get('id') + '-wrap-header-text">' + this.get('headerContent') + '</h5>',
+            '<h5 id="' + this.get('id') + '-wrap-header-text" class="text-truncate">' + this.get('headerContent') + '</h5>',
             Y.WidgetStdMod.REPLACE);
 
         // Initialise the element cache.
@@ -502,24 +502,6 @@ Y.extend(DIALOGUE, Y.Panel, {
 
         return DIALOGUE.superclass.hide.call(this, arguments);
     },
-    /**
-     * Setup key delegation to keep tabbing within the open dialogue.
-     *
-     * @method keyDelegation
-     */
-    keyDelegation: function() {
-        var bb = this.get('boundingBox');
-        bb.delegate('key', function(e) {
-            var target = e.target;
-            var direction = 'forward';
-            if (e.shiftKey) {
-                direction = 'backward';
-            }
-            if (this.trapFocus(target, direction)) {
-                e.preventDefault();
-            }
-        }, 'down:9', CAN_RECEIVE_FOCUS_SELECTOR, this);
-    },
 
     /**
      * Trap the tab focus within the open modal.
@@ -658,22 +640,6 @@ Y.extend(DIALOGUE, Y.Panel, {
          */
         notificationBase: {
 
-        },
-
-        /**
-         * Whether to display the dialogue modally and with a
-         * lightbox style.
-         *
-         * @attribute lightbox
-         * @type Boolean
-         * @default true
-         * @deprecated Since Moodle 2.7. Please use modal instead.
-         */
-        lightbox: {
-            lazyAdd: false,
-            setter: function(value) {
-                this.set('modal', value);
-            }
         },
 
         /**
