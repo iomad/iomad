@@ -25,6 +25,7 @@
 
 namespace block_iomad_learningpath\output;
 
+use context_system;
 use renderable;
 use renderer_base;
 use templatable;
@@ -72,10 +73,12 @@ class manage_page implements renderable, templatable {
      * @param renderer_base $output
      */
     protected function munge_paths(renderer_base $output) {
+        $systemcontext = context_system::instance();
+
         $fs = get_file_storage();
         foreach ($this->paths as $path) {
             $thumb = false;
-            $files = $fs->get_area_files($this->context->id, 'block_iomad_learningpath', 'thumbnail', $path->id);
+            $files = $fs->get_area_files($systemcontext->id, 'block_iomad_learningpath', 'thumbnail', $path->id);
             $extensions = [
                 'gif',
                 'jpe',
