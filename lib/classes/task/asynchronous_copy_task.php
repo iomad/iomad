@@ -27,12 +27,15 @@ namespace core\task;
 
 use async_helper;
 use cache_helper;
+use context_course;
+use iomad;
 
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
 require_once($CFG->dirroot . '/backup/moodle2/backup_plan_builder.class.php');
+require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
 
 /**
  * Adhoc task that performs asynchronous course copies.
@@ -53,11 +56,22 @@ class asynchronous_copy_task extends adhoc_task {
 
         $backupid = $this->get_custom_data()->backupid;
         $restoreid = $this->get_custom_data()->restoreid;
-        $backuprecord = $DB->get_record('backup_controllers', array('backupid' => $backupid), 'id, itemid', MUST_EXIST);
-        $restorerecord = $DB->get_record('backup_controllers', array('backupid' => $restoreid), 'id, itemid', MUST_EXIST);
+        $backuprecord = $DB->get_record('backup_controllers', array('backupid' => $backupid), 'id, itemid, userid', MUST_EXIST);
+        $restorerecord = $DB->get_record('backup_controllers', array('backupid' => $restoreid), 'id, itemid, userid', MUST_EXIST);
 
         // IOMAD
         $companyid = $this->get_custom_data()->companyid;
+        $owncourse = $this->get_custom_data()->owncourse;
+
+        // Do we need to temporarily give the user the manager role on that course?
+        $tempassigned = false;
+        if ($owncourse) {
+            if ($managerrole = $DB->get_record('role', ['shortname' => 'manager'])) {
+                $backupcourseid = $backuprecord->itemid;
+                role_assign($managerrole->id, $backuprecord->userid, context_course::instance($backupcourseid));
+                $tempassigned = true;
+            }
+        }
 
         // First backup the course.
         mtrace('Course copy: Processing asynchronous course copy for course id: ' . $backuprecord->itemid);
@@ -66,6 +80,11 @@ class asynchronous_copy_task extends adhoc_task {
         } catch (\backup_dbops_exception $e) {
             mtrace('Course copy: Can not load backup controller for copy, marking job as failed');
             delete_course($restorerecord->itemid, false); // Clean up partially created destination course.
+
+            // IOMAD - Unassign the temporary role.
+            if ($tempassigned) {
+                role_unassign($managerrole->id, $backuprecord->userid, context_course::instance($backupcourseid)->id);
+            }
             return; // Return early as we can't continue.
         }
 
@@ -106,6 +125,11 @@ class asynchronous_copy_task extends adhoc_task {
             $bc->set_status(\backup::STATUS_FINISHED_ERR);
             delete_course($restorerecord->itemid, false); // Clean up partially created destination course.
             $bc->destroy();
+
+            // IOMAD - Unassign the temporary role.
+            if ($tempassigned) {
+                role_unassign($managerrole->id, $backuprecord->userid, context_course::instance($backupcourseid)->id);
+            }
             return; // Return early as we can't continue.
 
         }
@@ -114,6 +138,11 @@ class asynchronous_copy_task extends adhoc_task {
         $backupbasepath = $backupplan->get_basepath();
         $file = $results['backup_destination'];
         $file->extract_to_pathname(get_file_packer('application/vnd.moodle.backup'), $backupbasepath);
+
+        // IOMAD - Unassign the temporary role.
+        if ($tempassigned) {
+            role_unassign($managerrole->id, $backuprecord->userid, context_course::instance($backuprecord->itemid)->id);
+        }
         // Start the restore process.
         $rc->set_progress(new \core\progress\db_updater($restorerecord->id, 'backup_controllers', 'progress'));
         $rc->prepare_copy();
@@ -128,11 +157,16 @@ class asynchronous_copy_task extends adhoc_task {
         $shortname = $plan->get_setting('course_shortname');
         $shortname->set_value($copyinfo->shortname);
 
+        // IOMAD - Assign a role to restore the course.
+        $restorecourseid = $restorerecord->itemid;
+        if ($tempassigned) {
+            role_assign($managerrole->id, $restorerecord->userid, context_course::instance($restorecourseid));
+        }
+
         // Do some preflight checks on the restore.
         $rc->execute_precheck();
         $status = $rc->get_status();
         $execution = $rc->get_execution();
-
         // Check that the restore is in the correct status and
         // that is set for asynchronous execution.
         if ($status == \backup::STATUS_AWAITING && $execution == \backup::EXECUTION_DELAYED) {
@@ -151,6 +185,11 @@ class asynchronous_copy_task extends adhoc_task {
                 fulldelete($backupbasepath);
             }
             $rc->destroy();
+
+            // IOMAD - Unassign the temporary role.
+            if ($tempassigned) {
+                role_unassign($managerrole->id, $restorerecord->userid, context_course::instance($restorecourseid)->id);
+            }
             return; // Return early as we can't continue.
 
         }
@@ -174,6 +213,11 @@ class asynchronous_copy_task extends adhoc_task {
             if (empty($enrol) || empty($instance)) {
                 mtrace('Course copy: Could not enrol users in course.');;
                 delete_course($restorerecord->itemid, false);
+
+                // IOMAD - Unassign the temporary role.
+                if ($tempassigned) {
+                    role_unassign($managerrole->id, $restorerecord->userid, context_course::instance($restorecourseid)->id);
+                }
                 return;
             }
 
@@ -197,7 +241,11 @@ class asynchronous_copy_task extends adhoc_task {
         // IOMAD
         if (!empty($companyid)) {
             $company = new \company($companyid);
-            $company->add_course($course, 0, true);
+            $own = false;
+            if (!empty($owncourse)) {
+                $own = $owncourse;
+            }
+            $company->add_course($course, 0, $own);
         }
 
         // Send message to user if enabled.
@@ -219,6 +267,11 @@ class asynchronous_copy_task extends adhoc_task {
 
         rebuild_course_cache($restorerecord->itemid, true);
         cache_helper::purge_by_event('changesincourse');
+
+        // IOMAD - Unassign the temporary role.
+        if ($tempassigned) {
+            role_unassign($managerrole->id, $restorerecord->userid, context_course::instance($restorecourseid)->id);
+        }
 
         $duration = time() - $started;
         mtrace('Course copy: Copy completed in: ' . $duration . ' seconds');

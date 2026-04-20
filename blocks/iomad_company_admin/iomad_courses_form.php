@@ -286,11 +286,18 @@ if (!empty($showid) &&
 // Clone courses.
 if (!empty($cloneid) &&
    iomad::has_capability('block/iomad_company_admin:createcourse', $companycontext)) {
-    if ((!$clonecourse = $DB->get_record('course', ['id' => $cloneid])) ||
-         ! $DB->get_record('company_created_courses', ['companyid' => $companyid, 'courseid' => $cloneid])) {
+
+    // Sanity checking.
+    if (!$clonecourse = $DB->get_record('course', ['id' => $cloneid])) {
         throw new moodle_exception('invalidcourse');
     }
-    if (!$clonecourse = $DB->get_record('course', ['id' => $cloneid])) {
+
+    // Is this a company owned course?
+    $owncourse = $DB->record_exists('company_created_courses', ['companyid' => $companyid, 'courseid' => $cloneid]);
+
+    // Check permissions.
+    $anycourse = iomad::has_capability('block/iomad_company_admin:company_add', $companycontext);
+    if (!$anycourse && !$owncourse) {
         throw new moodle_exception('invalidcourse');
     }
 
@@ -298,13 +305,31 @@ if (!empty($cloneid) &&
     $cloneparams = $params;
     $cloneparams['cloneid'] = $cloneid;
     $cloneurl = new moodle_url('/blocks/iomad_company_admin/iomad_courses_form.php', $cloneparams);
-    $cloneform = new course_copy_form($cloneurl, ['course' => $clonecourse]);
+    $cloneform = new course_copy_form($cloneurl, ['course' => $clonecourse, 'anycourse' => $anycourse]);
+    $cloneform->set_data(['owncourse' => $owncourse]);
 
     // Do we do the actual work?
     if ($clonedata = $cloneform->get_data()) {
         // Process the form and create the copy task.
         $copydata = \copy_helper::process_formdata($clonedata);
+
+        // Do we need to temporarily give the user the manager role on that course?
+        $tempassigned = false;
+        if (!$anycourse && $owncourse) {
+            if ($managerrole = $DB->get_record('role', ['shortname' => 'manager'])) {
+                role_assign($managerrole->id, $USER->id, context_course::instance($cloneid));
+                $tempassigned = true;
+            }
+        }
+
+        // Do the work.
         \copy_helper::create_copy($copydata);
+
+        // Remove any tempoaray role assignment.
+        if ($tempassigned) {
+            role_unassign($managerrole->id, $USER->id, context_course::instance($cloneid)->id);
+
+        }
         redirect($linkurl, get_string('successfulcopy', 'backup'), null, notification::NOTIFY_SUCCESS);
     } else if ($cloneform->is_cancelled()) {
         redirect($linkurl);
@@ -426,6 +451,7 @@ if (!empty($fieldcourseids)) {
 $selectsql = "ic.id,
               c.id AS courseid,
               c.fullname AS coursename,
+              c.shortname,
               ic.licensed,
               ic.shared,
               ic.validlength,
