@@ -156,8 +156,7 @@ if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $com
 
     // Get the licenses.
     $licenses = $DB->get_records(
-        '
-        local_iomad_company_licenses',
+        'local_iomad_company_licenses',
         [
             'companyid' => $companyid,
             ],
