@@ -69,7 +69,6 @@ $buttons = html_writer::tag(
 );
 $PAGE->set_button($buttons);
 
-
 // Log this page view.
 dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
@@ -78,7 +77,7 @@ $companypaths = new companypaths($companyid, $systemcontext);
 $paths = $companypaths->get_paths();
 
 // Get renderer for page (and pass data).
-$managepage = new manage_page($systemcontext, $paths);
+$managepage = new manage_page($companycontext, $paths);
 
 echo $OUTPUT->header();
 
