@@ -146,9 +146,10 @@ class potential_course extends company_base {
                                                        SQL_PARAMS_NAMED,
                                                        'pcids');
             $userfilter = " AND u.id NOT IN (
-                             SELECT userid FROM {local_iomad_company_users}
-                             WHERE managertype = 1
-                             AND companyid {$pcids}";
+                                SELECT userid FROM {local_iomad_company_users}
+                                WHERE managertype = 1
+                                AND companyid {$insql}
+                            )";
             $params = $params + $inparams;
         }
 
