@@ -131,6 +131,9 @@ class iomad_courses_table extends table_sql {
             ]
         );
 
+        $coursereturn .= html_writer::empty_tag('br') .
+                         format_string("(" . $row->shortname . ")", true, 1);
+
         if ($row->visible == 0) {
             $coursereturn .= html_writer::end_tag('span');
         }

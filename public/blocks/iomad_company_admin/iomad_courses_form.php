@@ -303,6 +303,7 @@ if (!empty($fieldcourseids)) {
 $selectsql = "ic.id,
               c.id AS courseid,
               c.fullname AS coursename,
+              c.shortname,
               ic.licensed,
               ic.shared,
               ic.validlength,
