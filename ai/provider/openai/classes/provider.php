@@ -187,7 +187,7 @@ class provider extends \core_ai\provider {
                 "aiprovider_openai/action_{$actionname}_model",
                 new \lang_string("action:{$actionname}:model", 'aiprovider_openai'),
                 new \lang_string("action:{$actionname}:model_desc", 'aiprovider_openai'),
-                'dall-e-3',
+                'gpt-image-1.5',
                 PARAM_TEXT,
             );
             // Add API endpoint.
