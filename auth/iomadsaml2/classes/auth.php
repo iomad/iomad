@@ -1043,7 +1043,7 @@ class auth extends \auth_plugin_base {
         $update = false;
 
         foreach ($allkeys as $key) {
-            if (preg_match('/^field_updatelocal_(.+)$/', $key, $match)) {
+            if (preg_match("/^field_updatelocal_(.+){$this->postfix}$/", $key, $match)) {
                 $field = $match[1];
                 if (!empty($mapconfig->{'field_map_'.$field})) {
                     $attr = $mapconfig->{'field_map_'.$field};
