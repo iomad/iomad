@@ -808,7 +808,7 @@ class current_user_course_selector extends company_course_selector_base {
                     unset($coursearray[$courseid]);
                 }
             }
-            $this->process_shortname($availablecourses);
+            $this->process_shortname($coursearray);
             $this->process_hidden_courses($coursearray);
 
             return array($groupname => $coursearray);
