@@ -101,6 +101,8 @@ class company_user {
 
         if (!empty($data->username)) {
             $user->username = $data->username;
+        } else if (!empty($data->id)) {
+            $user->username = $DB->get_record('user', ['id' => $data->id])->username;
         } else {
             $user->username = self::generate_username($user->email, $data->use_email_as_username);
             $user->username = clean_param($user->username, PARAM_USERNAME);

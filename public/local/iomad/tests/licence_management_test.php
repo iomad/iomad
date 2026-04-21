@@ -58,6 +58,20 @@ final class licence_management_test extends advanced_testcase {
     }
 
     /*
+    * TODO: Test to delete licence
+    */
+    public function test_delete_licence(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $this->markTestIncomplete();
+
+        // Create licence
+
+        // ...
+    }
+
+    /*
     * TODO: Test to create users and allocate licences
     */
     public function test_allocate_licence_to_user(): void {
