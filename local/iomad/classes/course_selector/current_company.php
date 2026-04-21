@@ -158,6 +158,7 @@ class current_company extends company_base {
                             $DB->get_records_sql($fields . $partialsharedsql . $order, $params);
 
         // Have any of the courses got enrollments?
+        $this->process_shortname($availablecourses);
         $this->process_enrollments($availablecourses);
         $this->process_hidden_courses($availablecourses);
 

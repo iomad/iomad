@@ -169,6 +169,7 @@ class potential_user extends company_base {
                             $DB->get_records_sql($fields . $partialsharedsql . $order, $params);
 
         // Mark any hidden courses.
+        $this->process_shortname($availablecourses);
         $this->process_hidden_courses($availablecourses);
 
         // Return any search information.

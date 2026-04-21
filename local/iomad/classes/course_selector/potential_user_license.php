@@ -121,6 +121,7 @@ class potential_user_license extends company_base {
         $availablecourses = $DB->get_records_sql($distinctfields . $sql . $order, $params);
 
         // Mark hidden courses.
+        $this->process_shortname($availablecourses);
         $this->process_hidden_courses($availablecourses);
 
         // Add any search text info.
