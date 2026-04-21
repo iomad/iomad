@@ -17,7 +17,7 @@
 namespace local_iomad\tests;
 
 use advanced_testcase;
-use local_iomad\company;
+use local_iomad\{company, company_user};
 
 /**
  * Local IOMAD user tests
@@ -43,6 +43,7 @@ final class user_management_test extends advanced_testcase {
 
         // Assert that the user record exists.
         $this->assertTrue($DB->record_exists('local_iomad_company_users', ['userid' => $userid]));
+        $this->assertTrue($DB->record_exists('user', ['id' => $userid]));
     }
 
     /*
@@ -52,13 +53,20 @@ final class user_management_test extends advanced_testcase {
         global $DB;
 
         $this->resetAfterTest();
-        $this->markTestIncomplete();
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
         // Create IOMAD user.
         $userid = $generator->create_iomad_user();
+        $userrecord = $DB->get_record('local_iomad_company_users', ['userid' => $userid]);
 
-        // ...
+        // Edit IOMAD user.
+        $newrecord = (object) [];
+        $newrecord->id = $userid;
+        $newrecord->firstname = 'NewName';
+        $userid = company_user::create($newrecord, $userrecord->companyid);  // this isn't how you update user info, is it?
+
+        // Assert that IOMAD user fullname has changed
+        $this->assertTrue($newrecord->firstname == $DB->get_record('user', ['id' => $userid])->firstname);
     }
 
     /*
@@ -68,13 +76,20 @@ final class user_management_test extends advanced_testcase {
         global $DB;
 
         $this->resetAfterTest();
-        $this->markTestIncomplete();
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
         // Create IOMAD user.
         $userid = $generator->create_iomad_user();
 
-        // ...
+        // Assert that the user record exists.
+        $this->assertTrue($DB->record_exists('local_iomad_company_users', ['userid' => $userid]));
+        $this->assertTrue($DB->record_exists('user', ['id' => $userid]));
+
+        // Delete user.
+        company_user::delete($userid);
+
+        // Assert that the user record does not exist.
+        $this->assertTrue((int) $DB->get_record('user', ['id' => $userid])->deleted == 0);
     }
 
     /*

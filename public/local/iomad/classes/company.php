@@ -470,9 +470,18 @@ class company {
 
         if (!$companyrec = $DB->get_record('local_iomad_companies', ['id' => $companyid])) {
             // Company doesn't exist.
+            if ($verbose) { mtrace("skipping company with id {$companyid}: Company doesn't exist"); }
             return;
         }
 
+        // Check adequate permissions
+        $companycontext = context_company::instance($companyid);
+        if (!iomad::has_capability('block/iomad_company_admin:company_delete', $companycontext)) {
+            if ($verbose) { mtrace("skipping company with id {$companyid}: Inadequate permissions"); }
+            return;
+        }
+
+        // Begin deletion
         if ($verbose) { mtrace("deleting company $companyrec->name"); }
 
         // Delete the certificates.
@@ -1450,6 +1459,86 @@ class company {
         }
 
         return true;
+    }
+
+
+    /**
+     * TODO: Creates an IOMAD course
+     *
+     * @param integer $companyid
+     * @param integer $courseid
+     * @param bool $destroy
+     * @return bool
+     */
+    public static function create_course($data, $company, $editoroptions = null) : ?stdClass {
+        global $DB, $USER;
+
+        // Try and create the course.
+        if (!$course = create_course($data, $editoroptions)) {
+            $this->verbose("Error inserting a new course in the database!");
+            if (!$this->get('ignore_errors')) {
+                die();
+            }
+        }
+
+        // If licensed course, turn off all enrolments apart from license enrolment as
+        // default  Moving this to a separate page.
+        if ($data->selfenrol == 0 ) {
+            // Self or manual.
+            if ($instances = $DB->get_records('enrol', ['courseid' => $course->id])) {
+                foreach ($instances as $instance) {
+                    $updateinstance = (array) $instance;
+                    if ($instance->enrol == 'self' ||
+                        $instance->enrol == 'manual') {
+                        $updateinstance['status'] = 0;
+                    } else {
+                        $updateinstance['status'] = 1;
+                    }
+                    $DB->update_record('enrol', $updateinstance);
+                }
+            }
+        } else if ($data->selfenrol == 1 ) {
+            // Manual only.
+            if ($instances = $DB->get_records('enrol', ['courseid' => $course->id])) {
+                foreach ($instances as $instance) {
+                    $updateinstance = (array) $instance;
+                    if ($instance->enrol == 'manual') {
+                        $updateinstance['status'] = 0;
+                    } else {
+                        $updateinstance['status'] = 1;
+                    }
+                    $DB->update_record('enrol', $updateinstance);
+                }
+            }
+        } else if ($data->selfenrol == 2 ) {
+            // License only.
+            if ($instances = $DB->get_records('enrol', ['courseid' => $course->id])) {
+                foreach ($instances as $instance) {
+                    $updateinstance = (array) $instance;
+                    if ($instance->enrol == 'license') {
+                        $updateinstance['status'] = 0;
+                    } else {
+                        $updateinstance['status'] = 1;
+                    }
+                    $DB->update_record('enrol', $updateinstance);
+                }
+            }
+        }
+
+        // Assign the course to the company.
+        // Check if we are a company manager.
+        if ($data->selfenrol != 2 &&
+            $DB->get_record('local_iomad_company_users', ['companyid' => $company->id,
+                                            'userid' => $USER->id,
+                                            'managertype' => 1])) {
+            $company->add_course($course, 0, true);
+        } else if ($data->selfenrol == 2) {
+            $company->add_course($course, 0, false, true);
+        } else {
+            $company->add_course($course);
+        }
+
+        return $course;
     }
 
     /**

@@ -32,13 +32,66 @@ final class course_management_test extends advanced_testcase {
     /*
     * TODO: Test to create course
     */
-    public function test_edit_department(): void {
+    public function test_create_course(): void {
+
+        $this->resetAfterTest();
+        $this->markTestIncomplete();
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
+
+        // Create company.
+        $company = $generator->create_company();
+
+        // Create IOMAD course.
+        $data = (object) [];
+        company::create_course($data, $company);
+    }
+
+    /*
+    * TODO: Test to edit course
+    */
+    public function test_edit_course(): void {
 
         $this->resetAfterTest();
         $this->markTestIncomplete();
 
         // Create IOMAD course.
         // ...
+    }
+
+    /*
+    * TODO: Test to assign course to company
+    */
+    public function test_assign_course_to_company(): void {
+
+        $this->resetAfterTest();
+        $this->markTestIncomplete();
+
+        // Create non-IOMAD course.
+        $company->add_course();
+    }
+
+    /*
+    * TODO: Test to unassign course from company
+    */
+    public function test_unassign_course_from_company(): void {
+
+        $this->resetAfterTest();
+        $this->markTestIncomplete();
+
+        // Create IOMAD course.
+        company::remove_course();
+    }
+
+    /*
+    * TODO: Test to delete course
+    */
+    public function test_delete_course(): void {
+
+        $this->resetAfterTest();
+        $this->markTestIncomplete();
+
+        // Create IOMAD course.
+        company::delete_course();
     }
 
     /*

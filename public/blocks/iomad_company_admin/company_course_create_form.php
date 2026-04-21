@@ -98,70 +98,8 @@ if ($mform->is_cancelled()) {
     // Turn on restricted modules.
     $mergeddata->restrictmodules = 1;
 
-    // Try and create the course.
-    if (!$course = create_course($mergeddata, $editoroptions)) {
-        $this->verbose("Error inserting a new course in the database!");
-        if (!$this->get('ignore_errors')) {
-            die();
-        }
-    }
-
-    // If licensed course, turn off all enrolments apart from license enrolment as
-    // default  Moving this to a separate page.
-    if ($data->selfenrol == 0 ) {
-        // Self or manual.
-        if ($instances = $DB->get_records('enrol', ['courseid' => $course->id])) {
-            foreach ($instances as $instance) {
-                $updateinstance = (array) $instance;
-                if ($instance->enrol == 'self' ||
-                    $instance->enrol == 'manual') {
-                    $updateinstance['status'] = 0;
-                } else {
-                    $updateinstance['status'] = 1;
-                }
-                $DB->update_record('enrol', $updateinstance);
-            }
-        }
-    } else if ($data->selfenrol == 1 ) {
-        // Manual only.
-        if ($instances = $DB->get_records('enrol', ['courseid' => $course->id])) {
-            foreach ($instances as $instance) {
-                $updateinstance = (array) $instance;
-                if ($instance->enrol == 'manual') {
-                    $updateinstance['status'] = 0;
-                } else {
-                    $updateinstance['status'] = 1;
-                }
-                $DB->update_record('enrol', $updateinstance);
-            }
-        }
-    } else if ($data->selfenrol == 2 ) {
-        // License only.
-        if ($instances = $DB->get_records('enrol', ['courseid' => $course->id])) {
-            foreach ($instances as $instance) {
-                $updateinstance = (array) $instance;
-                if ($instance->enrol == 'license') {
-                    $updateinstance['status'] = 0;
-                } else {
-                    $updateinstance['status'] = 1;
-                }
-                $DB->update_record('enrol', $updateinstance);
-            }
-        }
-    }
-
-    // Assign the course to the company.
-    // Check if we are a company manager.
-    if ($data->selfenrol != 2 &&
-        $DB->get_record('local_iomad_company_users', ['companyid' => $companyid,
-                                          'userid' => $USER->id,
-                                          'managertype' => 1])) {
-        $company->add_course($course, 0, true);
-    } else if ($data->selfenrol == 2) {
-        $company->add_course($course, 0, false, true);
-    } else {
-        $company->add_course($course);
-    }
+    // Create the course
+    $course = company::create_course($mergeddata, $company, $editoroptions);
 
     // Where are we going after this?
     if (isset($data->submitandviewbutton)) {

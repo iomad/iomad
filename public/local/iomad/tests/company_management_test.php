@@ -109,13 +109,16 @@ final class company_management_test extends advanced_testcase {
     }
 
     /*
-    * TODO: Test to delete company
+    * Test to delete company
     */
     public function test_delete_company(): void {
         global $DB;
 
         $this->resetAfterTest();
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
+
+        // Only users with correct permissions can delete companies (or else get 'Error: Call to a member function has_courses() on null' for line 561 of company.php)
+        $this->setAdminUser();
 
         // Create company.
         $company = $generator->create_company();
