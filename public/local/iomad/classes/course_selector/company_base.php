@@ -70,7 +70,7 @@ abstract class company_base extends base {
 
 
     /** @var array required fields */
-    protected $requiredfields = ['id', 'fullname', 'sortorder'];
+    protected $requiredfields = ['id', 'fullname', 'sortorder', 'shortname'];
 
     /**
      * Constructor function
@@ -135,7 +135,7 @@ abstract class company_base extends base {
                 $context = context_course::instance($id);
                 if (count_enrolled_users($context) > 0) {
                     $courselist[$id]->hasenrollments = true;
-                    $courselist[$id]->fullname = $course->fullname . "(" . $strhasenrollments .")";
+                    $courselist[$id]->fullname = $course->fullname . " (" . $strhasenrollments .")";
                     $this->hasenrollments = true;
                 }
             }
@@ -146,7 +146,7 @@ abstract class company_base extends base {
                 if ($companygroup = company::get_company_group($this->companyid, $id)) {
                     if ($DB->get_records('groups_members', ['groupid' => $companygroup->id])) {
                         $courselist[$id]->hasenrollments = true;
-                        $courselist[$id]->fullname = $course->fullname . "(" . $strsharedhasenrollments .")";
+                        $courselist[$id]->fullname = $course->fullname . " (" . $strsharedhasenrollments .")";
                         $this->hasenrollments = true;
                     }
                 }
@@ -170,7 +170,7 @@ abstract class company_base extends base {
                 $courseid = $DB->get_field('local_iomad_company_license_users', 'courseid', ['id' => $id]);
             }
             if ($DB->get_record('course', ['id' => $courseid, 'visible' => 0])) {
-                $allcourses[$id]->fullname = $course->fullname . "(" . get_string('hidden', 'badges') . ")";
+                $allcourses[$id]->fullname = $course->fullname . " (" . get_string('hidden', 'badges') . ")";
             }
         }
     }
@@ -197,6 +197,20 @@ abstract class company_base extends base {
                                       'courseid' => $course->id])) {
                 $licensecourses[$id]->fullname = $course->fullname . '*';
             }
+        }
+    }
+
+    /**
+     * Add the shortname to the fullname.
+     *
+     * @param array $allcourses
+     * @param boolean $licenserecord
+     * @return void
+     */
+    protected function process_shortname(&$allcourses) {
+
+        foreach ($allcourses as $id => $course) {
+            $allcourses[$id]->fullname = $course->fullname . " (" . $course->shortname . ")";
         }
     }
 }

@@ -145,6 +145,7 @@ class potential_subdepartment extends company_base {
         }
 
         // Have any of the courses got enrollments?
+        $this->process_shortname($availablecourses);
         $this->process_enrollments($sanitisedcourses);
         $this->process_hidden_courses($availablecourses);
 

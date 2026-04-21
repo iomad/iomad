@@ -90,6 +90,7 @@ class current_user extends company_base {
                                             $params);
 
         // Deal with hidden courses.
+        $this->process_shortname($availablecourses);
         $this->process_hidden_courses($coursearray);
 
         return [$groupname => $coursearray];

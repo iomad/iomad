@@ -164,6 +164,8 @@ class all_department extends company_base {
         $globalcourses = $DB->get_records_sql($fields . $globalcoursesql . $order, $params);
 
         // Deal with hidden courses.
+        $this->process_shortname($availablecourses);
+        $this->process_shortname($globalcourses);
         $this->process_hidden_courses($availablecourses);
         $this->process_hidden_courses($globalcourses);
 

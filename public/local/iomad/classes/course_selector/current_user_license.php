@@ -92,6 +92,7 @@ class current_user_license extends company_base {
         // Get the available courses.
         $availablecourses = $DB->get_records_sql($fields . $sql . $order, $params);
 
+        $this->process_shortname($availablecourses);
         $this->process_license_allocations($availablecourses, $this->user->id);
         $this->process_hidden_courses($availablecourses, true);
 
