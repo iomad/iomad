@@ -33,7 +33,7 @@ abstract class company_course_selector_base extends course_selector_base {
     protected $companycontext;
 
     //overridden to include the sortorder field
-    protected $requiredfields = array('id', 'fullname', 'sortorder');
+    protected $requiredfields = array('id', 'fullname', 'sortorder', 'shortname');
 
     public function __construct($name, $options) {
         $this->companyid  = $options['companyid'];
@@ -63,7 +63,7 @@ abstract class company_course_selector_base extends course_selector_base {
                 $context = context_course::instance($id);
                 if (count_enrolled_users($context) > 0) {
                     $courselist[ $id ]->hasenrollments = true;
-                    $courselist[ $id ]->fullname = $course->fullname . "(" . $strhasenrollments .")";
+                    $courselist[ $id ]->fullname = $course->fullname . " (" . $strhasenrollments .")";
                     $this->hasenrollments = true;
                 }
             }
@@ -74,7 +74,7 @@ abstract class company_course_selector_base extends course_selector_base {
                 if ($companygroup = company::get_company_group($this->companyid, $id)) {
                     if ($DB->get_records('groups_members', array('groupid' => $companygroup->id))) {
                         $courselist[ $id ]->hasenrollments = true;
-                        $courselist[ $id ]->fullname = $course->fullname . "(" . $strsharedhasenrollments .")";
+                        $courselist[ $id ]->fullname = $course->fullname . " (" . $strsharedhasenrollments .")";
                         $this->hasenrollments = true;
                     }
                 }
@@ -91,7 +91,7 @@ abstract class company_course_selector_base extends course_selector_base {
                 $courseid = $DB->get_field('companylicense_users', 'licensecourseid', ['id' => $id]);
             }
             if ($DB->get_record('course', ['id' => $courseid, 'visible' => 0])) {
-                $allcourses[$id]->fullname = $course->fullname . "(" . get_string('hidden', 'badges') . ")";
+                $allcourses[$id]->fullname = $course->fullname . " (" . get_string('hidden', 'badges') . ")";
             }
         }
     }
@@ -110,6 +110,13 @@ abstract class company_course_selector_base extends course_selector_base {
                                                               'licensecourseid' => $course->id))) {
                 $licensecourses[$id]->fullname = $course->fullname . '*';
             }
+        }
+    }
+
+    protected function process_shortname(&$allcourses) {
+
+        foreach ($allcourses as $id => $course) {
+            $allcourses[$id]->fullname = $course->fullname . " (" . $course->shortname . ")";
         }
     }
 }
@@ -249,6 +256,7 @@ class current_company_course_selector extends company_course_selector_base {
         }
 
         // Have any of the courses got enrollments?
+        $this->process_shortname($availablecourses);
         $this->process_enrollments($availablecourses);
         $this->process_hidden_courses($availablecourses);
 
@@ -380,6 +388,7 @@ class all_department_course_selector extends company_course_selector_base {
         if (empty($availablecourses) && empty($globalcourses)) {
             return array();
         }
+        $this->process_shortname($availablecourses);
         $this->process_hidden_courses($availablecourses);
 
         // Set up empty return.
@@ -546,6 +555,7 @@ class potential_company_course_selector extends company_course_selector_base {
         }
 
         // Have any of the courses got enrollments?
+        $this->process_shortname($availablecourses);
         $this->process_enrollments($availablecourses);
         $this->process_hidden_courses($availablecourses);
 
@@ -669,6 +679,7 @@ class potential_subdepartment_course_selector extends company_course_selector_ba
         }
 
         // Have any of the courses got enrollments?
+        $this->process_shortname($availablecourses);
         $this->process_enrollments($sanitisedcourses);
         $this->process_hidden_courses($availablecourses);
 
@@ -716,6 +727,7 @@ class any_course_selector extends company_course_selector_base {
         if (empty($availablecourses)) {
             return array();
         }
+        $this->process_shortname($availablecourses);
         $this->process_hidden_courses($availablecourses);
 
         if ($search) {
@@ -796,6 +808,7 @@ class current_user_course_selector extends company_course_selector_base {
                     unset($coursearray[$courseid]);
                 }
             }
+            $this->process_shortname($availablecourses);
             $this->process_hidden_courses($coursearray);
 
             return array($groupname => $coursearray);
@@ -953,6 +966,7 @@ class potential_user_course_selector extends company_course_selector_base {
         if (empty($availablecourses)) {
             return array();
         }
+        $this->process_shortname($availablecourses);
         $this->process_hidden_courses($availablecourses);
 
         if ($search) {
@@ -1013,7 +1027,7 @@ class current_user_license_course_selector extends company_course_selector_base 
         $params['userid'] = $this->user->id;
         $params['licenseid'] = $this->licenseid;
 
-        $fields      = 'SELECT clu.id, c.fullname ';
+        $fields      = 'SELECT clu.id, ' . $this->required_fields_sql('c');
         $countfields = 'SELECT COUNT(clu.id)';
 
         $sql = " FROM {course} c,
@@ -1038,6 +1052,7 @@ class current_user_license_course_selector extends company_course_selector_base 
         if (empty($availablecourses)) {
             return array();
         }
+        $this->process_shortname($availablecourses);
         $this->process_license_allocations($availablecourses, $this->user->id);
         $this->process_hidden_courses($availablecourses, true);
 
@@ -1242,6 +1257,7 @@ class potential_user_license_course_selector extends company_course_selector_bas
         if (empty($availablecourses)) {
             return array();
         }
+        $this->process_shortname($availablecourses);
         $this->process_hidden_courses($availablecourses);
 
         if ($search) {
