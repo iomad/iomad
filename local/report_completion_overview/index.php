@@ -331,11 +331,11 @@ if (empty($courses)) {
                                      ORDER BY lit.coursename", $coursesearchparams);
 }
 
-// Start defining expire courses.
-$expirecourses = $courses;
-
 // Get courses where we don't show the grade.
 $gradelesscourses = $DB->get_records_sql("SELECT courseid FROM {iomad_courses} WHERE hasgrade = 0");
+
+// Get courses which could expire.
+$expirecourses = $DB->get_records_select('iomad_courses', 'validlength > 0', [], 'courseid', 'courseid');
 
 // Setup the user search form.
 $searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
@@ -638,22 +638,32 @@ if (!$bycourse) {
                                                     WHERE userid = :userid
                                                     AND courseid = :courseid
                                                     AND companyid = :companyid
-                                                    AND timeexpires > :time
+                                                    AND timecompleted > 0
+                                                    AND (
+                                                        timeexpires > :time
+                                                        OR timeexpires IS NULL
+                                                    )
                                                     ORDER BY id DESC",
                                                    ['userid' => $userid,
                                                    'courseid' => $courseid,
                                                    'companyid' => $company->id,
                                                    'time' => time()], 0, 1)) {
                     $indaterec = reset($indate);
-                    $comprecord->indate = $indaterec->timeexpires;
+                    if (!empty($indaterec->timeexpires)) {
+                        $comprecord->indate = $indaterec->timeexpires;
+                        $comprecord->timeexpires = $indaterec->timeexpires;
+                    } else {
+                        $comprecord->indate = $indaterec->timecompleted;
+                    }
                     $comprecord->lastcompleted = $indaterec->timecompleted;
-                    $comprecord->timeexpires = $indaterec->timeexpires;
                     // Do we have an out-date record?
                 } else if ($outdate = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
                                                             WHERE userid = :userid
                                                             AND courseid = :courseid
                                                             AND companyid = :companyid
                                                             AND timecompleted > 0
+                                                            AND timeexpires > 0
+                                                            AND timeexpires < :time
                                                             ORDER BY id DESC",
                                                            ['userid' => $userid,
                                                             'courseid' => $courseid,
@@ -704,7 +714,11 @@ if (!$bycourse) {
                                                     WHERE userid = :userid
                                                     AND courseid = :courseid
                                                     AND companyid = :companyid
-                                                    AND timecompleted > :time
+                                                    AND timecompleted > 0
+                                                    AND (
+                                                        timeexpires > :time
+                                                        OR timeexpires IS NULL
+                                                    )
                                                     ORDER BY id DESC",
                                                    ['userid' => $userid,
                                                    'courseid' => $courseid,
@@ -720,10 +734,13 @@ if (!$bycourse) {
                                                             AND courseid = :courseid
                                                             AND companyid = :companyid
                                                             AND timecompleted > 0
+                                                            AND timeexpires > 0
+                                                            AND timeexpires < :time
                                                             ORDER BY id DESC",
                                                            ['userid' => $userid,
                                                             'companyid' => $company->id,
-                                                            'courseid' => $courseid], 0, 1)) {
+                                                            'courseid' => $courseid,
+                                                            'time' => time()], 0, 1)) {
                     $comprecord->outdate = true;
                     $outdaterec = reset($outdate);
                     $comprecord->lastcompleted = $outdaterec->timecompleted;
@@ -866,10 +883,17 @@ if (!$bycourse) {
             // Make the extra info.
             if (!$showfulldetails) {
                 if (empty($coursesummary['timeexpired'])) {
-                    $rowtext = get_string(
-                        'coursesummary_partial',
-                        'local_report_completion_overview',
-                        (object) $coursesummary);
+                    if (empty($usercourse->indate)) {
+                        $rowtext = get_string(
+                            'coursesummary_partial',
+                            'local_report_completion_overview',
+                            (object) $coursesummary);
+                    } else {
+                        $rowtext = get_string(
+                            'coursesummary_partial_noexpire',
+                            'local_report_completion_overview',
+                            (object) $coursesummary);
+                    }
                 } else {
                     if ($usercourse->timeexpired > $runtime) {
                         $rowtext = get_string(
@@ -892,7 +916,8 @@ if (!$bycourse) {
                             'local_report_completion_overview',
                             (object) $coursesummary);
                     } else {
-                        if ($usercourse->timeexpired > $runtime) {
+                        if ($usercourse->timeexpired > $runtime ||
+                            (empty($usercourse->timeexpires) && !empty($usercourse->timecompleted))) {
                             $rowtext = get_string(
                                 'coursesummary_extra_indate',
                                 'local_report_completion_overview',
@@ -906,10 +931,19 @@ if (!$bycourse) {
                     }
                 } else if (empty($expirecourses[$usercourse->courseid]) &&
                            empty($gradelesscourses[$usercourse->courseid])) {
-                    $rowtext = get_string(
-                        'coursesummary_noexpiry',
-                        'local_report_completion_overview',
-                        (object) $coursesummary);
+                    if (empty($usercourse->indate)) {
+                        $rowtext = get_string(
+                            'coursesummary_noexpiry',
+                            'local_report_completion_overview',
+                            (object) $coursesummary
+                        );
+                    } else {
+                        $rowtext = get_string(
+                            'coursesummary_noexpire',
+                            'local_report_completion_overview',
+                            (object) $coursesummary
+                        );
+                    }
                 } else if (!empty($expirecourses[$usercourse->courseid]) &&
                            !empty($gradelesscourses[$usercourse->courseid])) {
                     $rowtext = get_string(
@@ -931,14 +965,14 @@ if (!$bycourse) {
             } else {
                 $warningduration = get_config('local_report_completion_overview', 'warningduration' . "_$companyid");
             }
-            if (empty($expirecourses[$usercourse->courseid])) {
+            if (empty($courses[$usercourse->courseid])) {
                 $rowclass = "ignored";
                 $statustext = "";
             } else {
                 if (empty($usercourse->timeenrolled)) {
                     $rowclass = "notenrolled";
                     if ($usercourse->indate) {
-                        if ($usercourse->indate > $runtime) {
+                        if ($usercourse->indate > $runtime || empty($usercourse->timeexpires)) {
                             $rowclass .= "-indate";
                         } else {
                             $rowclass .= "-expiring";
@@ -951,7 +985,7 @@ if (!$bycourse) {
                 if (!empty($usercourse->timeenrolled) && empty($usercourse->timecompleted)) {
                     $rowclass = "notcompleted";
                     if ($usercourse->indate) {
-                        if ($usercourse->indate > $runtime) {
+                        if ($usercourse->indate > $runtime || empty($usercourse->timeexpires)) {
                             $rowclass .= "-indate";
                         } else {
                             $rowclass .= "-expiring";
