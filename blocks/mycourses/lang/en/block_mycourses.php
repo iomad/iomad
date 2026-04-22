@@ -57,6 +57,7 @@ $string['notenrolledstatus'] = 'Not enrolled';
 $string['notstartedheader'] = 'Courses not started';
 $string['notstartedstatus'] = 'Not started';
 $string['pluginname'] = 'My Courses';
+$string['previousstatus'] = 'Previously completed {$a}';
 $string['privacy:metadata'] = 'The My Courses block only shows data stored in other locations.';
 $string['result'] = 'Result - {$a}';
 $string['showsummarydesc'] = 'Show the course summary in the listing';
