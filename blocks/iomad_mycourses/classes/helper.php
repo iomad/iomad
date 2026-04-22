@@ -389,6 +389,7 @@ class helper {
             $timecompleted = get_string('never');
             $timeexpires = '';
             $statusstring = get_string('notenrolledstatus', 'block_iomad_mycourses');
+            $timeprevious = '';
             if ($latestrecord = $DB->get_record_sql(
                 "SELECT a.*
                  FROM {local_iomad_tracks} a
@@ -439,6 +440,29 @@ class helper {
                     $timeexpires = userdate($latestrecord->timeexpires, $CFG->iomad_date_format);
                     $statusstring = get_string('expiredstatus', 'block_iomad_mycourses', $timeexpires);
                 }
+
+                // If the status is incomplete - do we have a previous record?
+                if ($status == 'notcompleted') {
+                    if ($prevcomps = $DB->get_records_select(
+                        'local_iomad_tracks',
+                        'userid = :userid
+                     AND courseid = :courseid
+                     AND companyid = :companyid
+                     AND timecompleted > 0',
+                        [
+                            'userid' => $USER->id,
+                            'courseid' => $mandatorycourse->id,
+                            'companyid' => $companyid,
+                        ],
+                        'timecompleted DESC',
+                        '*',
+                        0,
+                        1
+                    )) {
+                        $prevcomp = $prevcomps[array_key_first($prevcomps)];
+                        $timeprevious = userdate($prevcomp->timecompleted, $CFG->iomad_date_format);
+                    }
+                }
             }
 
             // Add the rest of the metadata.
@@ -454,6 +478,7 @@ class helper {
             $mandatorycourse->timeexpires = $timeexpires;
             $mandatorycourse->status = $status;
             $mandatorycourse->statusstring = $statusstring;
+            $mandatorycourse->timeprevious = $timeprevious;
             $imageurl = course_summary_exporter::get_course_image($mandatorycourse);
             if (empty($imageurl)) {
                 $imageurl = $OUTPUT->get_generated_image_for_id($mandatorycourse->id);
