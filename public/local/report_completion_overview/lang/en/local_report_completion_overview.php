@@ -51,6 +51,11 @@ Expires: {$a->timeexpires}
 Grade: {$a->finalscore}
 Last completed: {$a->lastcompleted}
 Expired: {$a->timeexpired}';
+$string['coursesummary_noexpire'] = 'Enroled: {$a->enrolled}
+Started: {$a->timestarted}
+Completed: {$a->timecompleted}
+Grade: {$a->finalscore}
+Last completed: {$a->lastcompleted}';
 $string['coursesummary_noexpiry'] = 'Enrolled: {$a->enrolled}
 Started: {$a->timestarted}
 Completed: {$a->timecompleted}
@@ -74,6 +79,8 @@ $string['coursesummary_partial_extra_outdate'] = 'Completed: {$a->timecompleted}
 Expires: {$a->timeexpires}
 Last completed: {$a->lastcompleted}
 Expired: {$a->timeexpired}';
+$string['coursesummary_partial_noexpire'] = 'Completed: {$a->timecompleted}
+Last completed: {$a->lastcompleted}';
 $string['expired'] = 'Expired';
 $string['expiring'] = 'Due';
 $string['hideenrolledonly'] = 'Highlight available';
