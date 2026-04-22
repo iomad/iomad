@@ -3081,8 +3081,8 @@ class company {
         // Can we manage it?
         if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
             return true;
-        } else if (!iomad::has_capability('block/iomad_company_admin:edit_departments', $companycontext)) {
-            return false;
+        } else if (iomad::has_capability('block/iomad_company_admin:edit_departments', $companycontext)) {
+            return true;
         } else {
             $company = new company($departmentrec->company);
             // Get the list of departments at and below the user assignment.
@@ -3094,10 +3094,12 @@ class company {
             if (isset($subhierarchytree[$departmentid])) {
                 // Current department is a child of the users assignment.
                 return true;
-            } else {
-                return false;
             }
+
+            // Blanket return false.
+            return false;
         }
+
         // We shouldn't get this far, return a default no.
         return false;
     }
@@ -4418,9 +4420,7 @@ class company {
         if (!empty($errors)) {
             // We only want to be notified of this once as sometimes this gets run multiple times.
             if (empty($SESSION->autoenrolonuser) || $SESSION->autoenrolonuser != $user->id) {
-                $notify = new notification(get_string('autoenrolmentfailed', 'block_iomad_company_admin', $errors),
-                                           notification::NOTIFY_WARNING);
-                echo $OUTPUT->render($notify);
+                notification::warning(get_string('autoenrolmentfailed', 'block_iomad_company_admin', $errors));
                 $SESSION->autoenrolonuser = $user->id;
             }
         }
