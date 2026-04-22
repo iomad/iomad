@@ -727,10 +727,14 @@ if (!$bycourse) {
                                                    'courseid' => $courseid,
                                                    'companyid' => $company->id,
                                                    'time' => time()], 0, 1)) {
-                    $comprecord->indate = $indaterec->timeexpires;
                     $indaterec = reset($indate);
+                    if (!empty($indaterec->timeexpires)) {
+                        $comprecord->indate = $indaterec->timeexpires;
+                        $comprecord->timeexpires = $indaterec->timeexpires;
+                    } else {
+                        $comprecord->indate = $indaterec->timecompleted;
+                    }
                     $comprecord->lastcompleted = $indaterec->timecompleted;
-                    $comprecord->timeexpires = $indaterec->timeexpires;
                     // Do we have an out-date record?
                 } else if ($outdate = $DB->get_records_sql("SELECT * FROM {local_iomad_tracks}
                                                             WHERE userid = :userid
@@ -1113,10 +1117,17 @@ if (!$bycourse) {
             // Make the extra info.
             if (!$showfulldetails) {
                 if (empty($coursesummary['timeexpired'])) {
-                    $rowtext = get_string(
-                        'coursesummary_partial',
-                        'local_report_completion_overview',
-                        (object) $coursesummary);
+                    if (empty($usercourse->indate)) {
+                        $rowtext = get_string(
+                            'coursesummary_partial',
+                            'local_report_completion_overview',
+                            (object) $coursesummary);
+                    } else {
+                        $rowtext = get_string(
+                            'coursesummary_partial_noexpire',
+                            'local_report_completion_overview',
+                            (object) $coursesummary);
+                    }
                 } else {
                     if ($usercourse->timeexpired > $runtime) {
                         $rowtext = get_string(
@@ -1139,7 +1150,8 @@ if (!$bycourse) {
                             'local_report_completion_overview',
                             (object) $coursesummary);
                     } else {
-                        if ($usercourse->timeexpired > $runtime) {
+                        if ($usercourse->timeexpired > $runtime ||
+                            (empty($usercourse->timeexpires) && !empty($usercourse->timecompleted))) {
                             $rowtext = get_string(
                                 'coursesummary_extra_indate',
                                 'local_report_completion_overview',
@@ -1153,10 +1165,19 @@ if (!$bycourse) {
                     }
                 } else if (empty($expirecourses[$usercourse->courseid]) &&
                            empty($gradelesscourses[$usercourse->courseid])) {
-                    $rowtext = get_string(
-                        'coursesummary_noexpiry',
-                        'local_report_completion_overview',
-                        (object) $coursesummary);
+                    if (empty($usercourse->indate)) {
+                        $rowtext = get_string(
+                            'coursesummary_noexpiry',
+                            'local_report_completion_overview',
+                            (object) $coursesummary
+                        );
+                    } else {
+                        $rowtext = get_string(
+                            'coursesummary_noexpire',
+                            'local_report_completion_overview',
+                            (object) $coursesummary
+                        );
+                    }
                 } else if (!empty($expirecourses[$usercourse->courseid]) &&
                            !empty($gradelesscourses[$usercourse->courseid])) {
                     $rowtext = get_string(
@@ -1173,7 +1194,7 @@ if (!$bycourse) {
             }
 
             // Set up the cell classes.
-            if (empty($expirecourses[$usercourse->courseid])) {
+            if (empty($courses[$usercourse->courseid])) {
                 $rowclass = "ignored";
                 $statustext = "";
             } else {
@@ -1193,7 +1214,7 @@ if (!$bycourse) {
                 if (!empty($usercourse->timeenrolled) && empty($usercourse->timecompleted)) {
                     $rowclass = "notcompleted";
                     if ($usercourse->indate) {
-                        if ($usercourse->indate > $runtime) {
+                        if ($usercourse->indate > $runtime || empty($usercourse->timeexpires)) {
                             $rowclass .= "-indate";
                         } else {
                             $rowclass .= "-expiring";
