@@ -17,7 +17,8 @@
 namespace local_iomad\tests;
 
 use advanced_testcase;
-use local_iomad\{company, company_user};
+use local_iomad\company_user;
+use local_iomad\custom_context\context_company;
 
 /**
  * Local IOMAD user tests
@@ -48,6 +49,7 @@ final class user_management_test extends advanced_testcase {
 
     /*
     * TODO: Test to edit user
+    * BAD TEST: Works, but the function it uses to edit users is only used in testing
     */
     public function test_edit_user(): void {
         global $DB;
@@ -55,22 +57,25 @@ final class user_management_test extends advanced_testcase {
         $this->resetAfterTest();
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
+        // Must be a user (or else get 'dml_missing_record_exception: Invalid user')
+        $this->setAdminUser();
+
         // Create IOMAD user.
         $userid = $generator->create_iomad_user();
-        $userrecord = $DB->get_record('local_iomad_company_users', ['userid' => $userid]);
+        $this->assertTrue($DB->record_exists('user', ['id' => $userid, 'deleted' => 0]));
 
         // Edit IOMAD user.
         $newrecord = (object) [];
         $newrecord->id = $userid;
         $newrecord->firstname = 'NewName';
-        $userid = company_user::create($newrecord, $userrecord->companyid);  // this isn't how you update user info, is it?
+        $userid = company_user::edit($newrecord);
 
         // Assert that IOMAD user fullname has changed
         $this->assertTrue($newrecord->firstname == $DB->get_record('user', ['id' => $userid])->firstname);
     }
 
     /*
-    * TODO: Test to delete user
+    * Test to delete user
     */
     public function test_delete_user(): void {
         global $DB;
@@ -93,17 +98,27 @@ final class user_management_test extends advanced_testcase {
     }
 
     /*
-    * TODO: Test to create users and assign roles
+    * Test to assign user roles
     */
     public function test_assign_user_company_roles(): void {
+        global $DB;
 
         $this->resetAfterTest();
-        $this->markTestIncomplete();
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
+
+        // Create company.
+        $company = $generator->create_company();
+        $companycontext = context_company::instance($company->id);
 
         // Create IOMAD user.
-        $userid = $generator->create_iomad_user();
+        $userid = $generator->create_iomad_user(companyid: $company->id);
 
-        // ...
+        // Assign IOMAD user role.
+        $roleid = $DB->get_record('role', ['shortname' => 'companycourseeditor'])->id;
+        role_assign($roleid, $userid, $companycontext);
+
+        // Assert that IOMAD user has role.
+        $this->assertTrue($DB->record_exists('role_assignments', ['roleid' => $roleid, 'contextid' => $companycontext->id, 'userid' => $userid]));
     }
 
     /*
@@ -113,10 +128,17 @@ final class user_management_test extends advanced_testcase {
 
         $this->resetAfterTest();
         $this->markTestIncomplete();
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
         // Create IOMAD user.
         $userid = $generator->create_iomad_user();
 
-        // ...
+        // Assign IOMAD user to department.
+
+
+        // Assign IOMAD user role.
+
+
+        // Assert that IOMAD user has role.
     }
 }

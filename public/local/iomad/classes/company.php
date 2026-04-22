@@ -1468,7 +1468,7 @@ class company {
      * @param integer $companyid
      * @param integer $courseid
      * @param bool $destroy
-     * @return bool
+     * @return ?stdclass
      */
     public static function create_course($data, $company, $editoroptions = null) : ?stdClass {
         global $DB, $USER;

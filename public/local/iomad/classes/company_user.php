@@ -41,6 +41,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__.'/../../../enrol/locallib.php');
 require_once($CFG->dirroot.'/user/lib.php');
+//require_once($CFG->dirroot.'/user/editlib.php');
 
 /**
  * Local IOMAD company user class definition
@@ -302,7 +303,108 @@ class company_user {
             $SESSION->currenteditingcompany = $currenteditingcompany;
         }
 
+        // Set description format
+        //$descriptionformat = isset($user->descriptionformat) ? $user->descriptionformat : FORMAT_MARKDOWN;
+        //$DB->set_field('user', 'descriptionformat', $descriptionformat, ['id' => $user->id]);
+
         return $user->id;
+    }
+
+    /**
+     * TODO: Edit a user from a tenant
+     * public/blocks/iomad_company_admin/editadvanced.php
+     * Currently only used in testing
+     *
+     * @param object $userdata
+     * @return int
+     */
+    public static function edit(object $userdata): int {
+        global $DB, $CFG;
+
+        // Get old user.
+        $userid = $userdata->id;
+        if (!$userold = $DB->get_record('user', ['id' => $userid])) {
+            return throw new \moodle_exception('invaliduserid');
+        }
+        $usernew = $userdata;
+
+        // Get existing user details.
+        $usercontext = \context_user::instance($userid);
+        $editoroptions = [
+            'maxfiles' => EDITOR_UNLIMITED_FILES,
+            'maxbytes' => $CFG->maxbytes,
+            'trusttext' => false,
+            'forcehttps' => false,
+            'context' => $usercontext,
+        ];
+
+        $userold = file_prepare_standard_editor($userold,
+                                                'description',
+                                                $editoroptions,
+                                                $usercontext,
+                                                'user',
+                                                'profile',
+                                                0);
+
+        // Get new user
+        $usernew = [];
+        foreach ((array) $userold as $key => $value) {
+            $usernew[$key] = isset($userdata->$key) ? $userdata->$key : $value;
+        }
+        $usernew = (object) $usernew;
+
+        // Trim first and lastnames.
+        $usernew->firstname = isset($usernew->firstname) ? trim($usernew->firstname) : $userold->firstname;
+        $usernew->lastname = isset($usernew->lastname) ? trim($usernew->lastname) : $userold->lastname;
+
+        if (empty($usernew->auth)) {
+            // User editing self.
+            $authplugin = get_auth_plugin($userold->auth);
+            unset($usernew->auth); // Can not change/remove.
+        } else {
+            $authplugin = get_auth_plugin($usernew->auth);
+        }
+
+        $usernew->username = isset ($usernew->username) ? clean_param($usernew->username, PARAM_USERNAME) : $userold->username;
+        $usernew->timemodified = time();
+
+        // Get new user
+        $usernew = file_postupdate_standard_editor($usernew,
+                                                   'description',
+                                                   $editoroptions,
+                                                   $usercontext,
+                                                   'user_profile',
+                                                   $userid);
+
+        // Get authentication method.
+        if (empty($usernew->auth)) {
+            // User editing self.
+            $authplugin = get_auth_plugin($userold->auth);
+            unset($usernew->auth); // Can not change/remove.
+        } else {
+            $authplugin = get_auth_plugin($usernew->auth);
+        }
+
+        $DB->update_record('user', $usernew);
+        // Pass a true $userold here.
+        if (! $authplugin->user_update($userold, $usernew)) {
+            // Auth update failed, rollback for moodle.
+            $DB->update_record('user', $userold);
+            throw new moodle_exception('cannotupdateuseronexauth', '', '', $userold->auth);
+        }
+
+        // Set new password if specified.
+        if (!empty($userdata->newpassword)) {
+            if ($authplugin->can_change_password()) {
+                if (!$authplugin->user_update_password($userdata, $userdata->newpassword)) {
+                    throw new moodle_exception('cannotupdatepasswordonextauth', '', '', $userdata->auth);
+                } else {
+                    emailtemplate::send('password_update', ['user' => $userdata]);
+                }
+            }
+        }
+
+        return $userid;
     }
 
     /**
