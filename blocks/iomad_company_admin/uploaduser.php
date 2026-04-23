@@ -1135,10 +1135,33 @@ if (!empty($cancelled)) {
                         }
                     }
 
-                    company_user::enrol($user, [$ccache[$shortname]->id], $companyid , $roleid);
+                    // Get some details.
                     $coursecontext = context_course::instance($ccache[$shortname]->id);
                     $courserec = $DB->get_record('course', ['id' => $ccache[$shortname]->id]);
-                    emailtemplate::send('user_added_to_course', ['course' => $courserec, 'user' => $user, 'due' => $duedate]);
+
+                    // Are they already enrolled within this tenant?
+                    if (!is_enrolled($coursecontext, $user->id) ||
+                        !$DB->record_exists(
+                            'local_iomad_tracks',
+                            [
+                                'userid' => $user->id,
+                                'courseid' => $courserec->id,
+                                'companyid' => $companyid,
+                                'coursecleared' => 0,
+                            ]
+                        )
+                    ) {
+                        // Enrol them.
+                        company_user::enrol($user, [$ccache[$shortname]->id], $companyid , $roleid);
+                        emailtemplate::send(
+                            'user_added_to_course',
+                            [
+                                'course' => $courserec,
+                                'user' => $user,
+                                'due' => $duedate,
+                            ]
+                        );
+                    }
 
                     // Find group to add to.
                     if (!empty($user->{'group'.$i})) {
