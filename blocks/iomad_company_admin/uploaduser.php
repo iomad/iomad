@@ -1280,10 +1280,31 @@ if (!empty($cancelled)) {
                     }
                     $courseids[] = $currentcourse;
                 }
-                company_user::enrol($user, $courseids, $companyid);
                 foreach ($courseids as $courseid) {
-                    $emailcourse = $DB->get_record('course', ['id' => $courseid]);
-                    emailtemplate::send('user_added_to_course', ['course' => $emailcourse, 'user' => $user, 'due' => $duedate]);
+                    // Are they already enrolled within this tenant?
+                    if (!is_enrolled($coursecontext, $user->id) ||
+                        !$DB->record_exists(
+                            'local_iomad_tracks',
+                            [
+                                'userid' => $user->id,
+                                'courseid' => $courserec->id,
+                                'companyid' => $companyid,
+                                'coursecleared' => 0,
+                            ]
+                        )
+                    ) {
+                        // Enrol them.
+                        company_user::enrol($user, $courseid, $companyid);
+                        $emailcourse = $DB->get_record('course', ['id' => $courseid]);
+                        emailtemplate::send(
+                            'user_added_to_course',
+                            [
+                                'course' => $emailcourse,
+                                'user' => $user,
+                                'due' => $duedate,
+                            ]
+                        );
+                    }
                 }
             }
 
