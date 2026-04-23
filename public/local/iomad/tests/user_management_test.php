@@ -17,7 +17,7 @@
 namespace local_iomad\tests;
 
 use advanced_testcase;
-use local_iomad\company_user;
+use local_iomad\{company, company_user};
 use local_iomad\custom_context\context_company;
 
 /**
@@ -122,23 +122,32 @@ final class user_management_test extends advanced_testcase {
     }
 
     /*
-    * TODO: Test to add users to department and assign roles
+    * Test to add users to department and assign roles
     */
-    public function test_assign_user_department_rolls(): void {
+    public function test_assign_user_department_roles(): void {
+        global $DB;
 
         $this->resetAfterTest();
-        $this->markTestIncomplete();
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
+        // Create company.
+        $company = $generator->create_company();
+        $companycontext = context_company::instance($company->id);
+
         // Create IOMAD user.
-        $userid = $generator->create_iomad_user();
+        $userid = $generator->create_iomad_user(companyid: $company->id);
 
-        // Assign IOMAD user to department.
-
+        // Create department.
+        $departmentrecord = (object) [];
+        $departmentrecord->companyid = $company->id;
+        $departmentid = $generator->create_department($departmentrecord);
 
         // Assign IOMAD user role.
-
+        $roleid = 2; // User = 0; Company manager = 1; Department training manager = 2; Course educator = 3; Company report only = 4
+        company::upsert_company_user($userid, $company->id, $departmentid, $roleid);
 
         // Assert that IOMAD user has role.
+        //$this->assertTrue($DB->record_exists('role_assignments', array('roleid' => $roleid, 'contextid' => $companycontext->id, 'userid' => $userid)));
+        $this->assertTrue($DB->record_exists('local_iomad_company_users', array('managertype' => $roleid, 'companyid' => $company->id, 'userid' => $userid)));
     }
 }

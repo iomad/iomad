@@ -33,6 +33,8 @@ class local_iomad_generator extends component_generator_base {
     protected $usercounter = 0;
     /** @var int number of departments created since last reset */
     protected $departmentcounter = 0;
+    /** @var int number of courses created since last reset */
+    protected $coursecounter = 0;
 
     /** @var array list of company names */
     public $companynames = [
@@ -84,6 +86,7 @@ class local_iomad_generator extends component_generator_base {
         $this->companycounter = 0;
         $this->usercounter = 0;
         $this->departmentcounter = 0;
+        $this->coursecounter = 0;
     }
 
     /** @var array list of country codes */
@@ -118,11 +121,11 @@ class local_iomad_generator extends component_generator_base {
 
     /**
      * Create a test company
-     * @param stdClass $record
-     * @return stdClass company record
+     * @param stdClass|array $record
+     * @return stdClass $company
      */
     public function create_company($record = []): company {
-        $record = (object) $record;
+        $record = is_array($record) ? (object) $record : $record;
 
         $this->companycounter++;
         $i = $this->companycounter;
@@ -147,7 +150,7 @@ class local_iomad_generator extends component_generator_base {
             $record->shortname = 'testcorp_' . $i;
         }
 
-        // Optional fields.
+        // TODO: Generate data for optional fields.
 
         // Create the company.
         $company = company::create_company($record);
@@ -157,11 +160,12 @@ class local_iomad_generator extends component_generator_base {
 
     /**
      * Create a test user via IOMAD
-     * @param stdClass $record
-     * @return stdClass department record
+     * @param stdClass|array $record
+     * @param ?int $companyid
+     * @return int $userid
      */
     public function create_iomad_user($record = [], ?int $companyid = null): int {
-        $record = (object) $record;
+        $record = is_array($record) ? (object) $record : $record;
 
         $this->usercounter++;
         $i = $this->usercounter;
@@ -194,7 +198,7 @@ class local_iomad_generator extends component_generator_base {
             $record->preference_auth_forcepasswordchange = false;
         }
 
-        // Optional fields: ???.
+        // TODO: Generate data for optional fields.
 
         // Create the user.
         $userid = company_user::create($record, $companyid);
@@ -204,13 +208,13 @@ class local_iomad_generator extends component_generator_base {
 
     /**
      * Create a test department
-     * @param stdClass $record
-     * @return stdClass department record
+     * @param stdClass|array $record
+     * @return bool|int $departmentid
      */
     public function create_department($record = []): bool|int {
         global $DB;
 
-        $record = (object) $record;
+        $record = is_array($record) ? (object) $record : $record;
 
         $this->departmentcounter++;
         $i = $this->departmentcounter;
@@ -242,9 +246,7 @@ class local_iomad_generator extends component_generator_base {
             }
         }
 
-        // Optional fields: parentid.
-
-        //
+        // TODO: Generate data for optional fields.
 
         // Create the department.
         $departmentid = company::create_department($record->id ?? null,
@@ -254,6 +256,49 @@ class local_iomad_generator extends component_generator_base {
                                                 returnid: true);
 
         return $departmentid;
+    }
+
+    /**
+     * Create a test course
+     * @param stdClass|array $record
+     * @return ?stdClass $courseid
+     */
+    public function create_course($record = []): ?stdClass {
+        global $DB, $CFG;
+
+        $record = is_array($record) ? (object) $record : $record;
+
+        $this->coursecounter++;
+        $i = $this->coursecounter;
+
+        // Required fields: category, fullname, shortname, selfenrol.
+        if (empty($record->companyid)) {
+            // Create company.
+            $company = self::create_company();
+        } else {
+            $company = new company($record->companyid);
+        }
+        $companyrec = $DB->get_record('local_iomad_companies', ['id' => $company->id]);
+
+        if (!isset($categoryid)) {
+            if (!empty($company->coursecategoryid)) {
+                $categoryid = $companyrec->coursecategoryid;
+            } else {
+                $categoryid = $CFG->defaultrequestcategory;
+            }
+        }
+
+        $selfenrol = !empty($record->selfenrol) ? $record->selfenrol : 0; // By default, users can enrol themselves onto a course
+
+        // TODO: Generate data for optional fields.
+
+        // Create the course.
+        $coursedata = (object) [];
+        $coursedata->category = $categoryid;
+        $coursedata->selfenrol = $selfenrol;
+        $course = company::create_course($coursedata, $company);
+
+        return $course;
     }
 
 }

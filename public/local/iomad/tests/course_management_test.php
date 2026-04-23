@@ -30,12 +30,12 @@ use local_iomad\company;
 final class course_management_test extends advanced_testcase {
 
     /*
-    * TODO: Test to create course
+    * Test to create course
     */
     public function test_create_course(): void {
+        global $DB;
 
         $this->resetAfterTest();
-        $this->markTestIncomplete();
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
         // Create company.
@@ -43,9 +43,12 @@ final class course_management_test extends advanced_testcase {
 
         // Create IOMAD course.
         $coursedata = (object) [];
-        company::create_course($coursedata, $company);
+        $coursedata->companyid = $company->id;
+        $course = $generator->create_course($coursedata);
 
         // Assert that course exists and is in company.
+        $this->assertTrue($DB->record_exists('course', ['id' => $course->id]));
+        $this->assertTrue($DB->record_exists('local_iomad_company_courses', ['courseid' => $course->id, 'companyid' => $company->id]));
     }
 
     /*
@@ -62,33 +65,43 @@ final class course_management_test extends advanced_testcase {
 
         // Create IOMAD course.
         $coursedata = (object) [];
-        company::create_course($coursedata, $company);
+        $coursedata->companyid = $company->id;
+        $course = $generator->create_course($coursedata);
+
+        // Edit course.
+
+        // Assert that course has been edited.
     }
 
     /*
-    * TODO: Test to assign course to company
+    * Test to assign course to company
     */
     public function test_assign_course_to_company(): void {
+        global $DB;
 
         $this->resetAfterTest();
-        $this->markTestIncomplete();
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
+        // Create company.
+        $company = $generator->create_company();
+
         // Create non-IOMAD course.
+        $course = $this->getDataGenerator()->create_course();
 
         // Assign non-IOMAD course to company.
-        $company->add_course();
+        $company->add_course($course);
 
         // Assert that course is in company.
+        $this->assertTrue($DB->record_exists('local_iomad_company_courses', ['courseid' => $course->id, 'companyid' => $company->id]));
     }
 
     /*
-    * TODO: Test to unassign course from company
+    * Test to unassign course from company
     */
     public function test_unassign_course_from_company(): void {
+        global $DB;
 
         $this->resetAfterTest();
-        $this->markTestIncomplete();
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
         // Create company.
@@ -96,21 +109,26 @@ final class course_management_test extends advanced_testcase {
 
         // Create IOMAD course.
         $coursedata = (object) [];
-        $course = company::create_course($coursedata, $company);
+        $coursedata->companyid = $company->id;
+        $course = $generator->create_course($coursedata);
+
+        // Assert that course is in company.
+        $this->assertTrue($DB->record_exists('local_iomad_company_courses', ['courseid' => $course->id, 'companyid' => $company->id]));
 
         // Remove IOMAD course from company.
         company::remove_course($course, $company->id);
 
         // Assert that course is not in company.
+        $this->assertFalse($DB->record_exists('local_iomad_company_courses', ['courseid' => $course->id, 'companyid' => $company->id]));
     }
 
     /*
-    * TODO: Test to delete course
+    * Test to delete course
     */
     public function test_delete_course(): void {
+        global $DB;
 
         $this->resetAfterTest();
-        $this->markTestIncomplete();
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
         // Create company.
@@ -118,12 +136,19 @@ final class course_management_test extends advanced_testcase {
 
         // Create IOMAD course.
         $coursedata = (object) [];
-        $course = company::create_course($coursedata, $company);
+        $coursedata->companyid = $company->id;
+        $course = $generator->create_course($coursedata);
+
+        // Assert that course exists.
+        $this->assertTrue($DB->record_exists('course', ['id' => $course->id]));
+        $this->assertTrue($DB->record_exists('local_iomad_company_courses', ['courseid' => $course->id, 'companyid' => $company->id]));
 
         // Delete IOMAD course.
-        company::delete_course($company->id, $course->id);
+        company::delete_course($company->id, $course->id, showfeedback: false);
 
         // Assert that course does not exist.
+        $this->assertFalse($DB->record_exists('course', ['id' => $course->id]));
+        $this->assertFalse($DB->record_exists('local_iomad_company_courses', ['courseid' => $course->id, 'companyid' => $company->id]));
     }
 
     /*
@@ -139,12 +164,15 @@ final class course_management_test extends advanced_testcase {
         // Create company.
         $departmentid = $generator->create_department();
         $department = $DB->record_exists('local_iomad_company_departments', ['id' => $departmentid]);
+        $companyid = $department->companyid;
 
         // Create IOMAD course.
-        //$courseid = $generator->create_course();
+        $coursedata = (object) [];
+        $coursedata->companyid = $companyid;
+        $course = $generator->create_course($coursedata);
 
         // Create IOMAD user.
-        $userid = $generator->create_iomad_user(companyid: $department['companyid']);
+        $userid = $generator->create_iomad_user(companyid: $companyid);
 
         // Enrol IOMAD user onto course.
         //company::???;
@@ -162,6 +190,10 @@ final class course_management_test extends advanced_testcase {
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
         // Create IOMAD course.
+        $coursedata = (object) [];
+        $coursedata->companyid = $company->id;
+        $course = $generator->create_course($coursedata);
+
         // ...
     }
 }

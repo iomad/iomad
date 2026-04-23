@@ -249,8 +249,8 @@ class company_managers_form extends moodleform {
     /**
      * Process the form
      *
-     * @param array $departmentid
-     * @param array $roletype
+     * @param int $departmentid
+     * @param int $roletype
      * @return void
      */
     public function process($departmentid, $roletype) {

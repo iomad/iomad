@@ -1461,13 +1461,12 @@ class company {
         return true;
     }
 
-
     /**
      * TODO: Creates an IOMAD course
      *
-     * @param integer $companyid
-     * @param integer $courseid
-     * @param bool $destroy
+     * @param stdClass $data
+     * @param company $companyid
+     * @param ?array $editoroptions
      * @return ?stdclass
      */
     public static function create_course($data, $company, $editoroptions = null) : ?stdClass {
