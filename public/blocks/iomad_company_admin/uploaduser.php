@@ -1282,6 +1282,7 @@ if (!empty($cancelled)) {
                 }
                 foreach ($courseids as $courseid) {
                     // Are they already enrolled within this tenant?
+                    $coursecontext = context_course::instance($courseid);
                     if (!is_enrolled($coursecontext, $user->id) ||
                         !$DB->record_exists(
                             'local_iomad_tracks',
