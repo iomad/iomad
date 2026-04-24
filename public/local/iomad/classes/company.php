@@ -42,6 +42,8 @@ use block_iomad_company_admin\event\{
     user_license_assigned,
     user_license_unassigned,
     user_license_used,
+    classroom_created,
+    classroom_updated,
 };
 use cache_helper;
 use context_course;
@@ -1462,7 +1464,7 @@ class company {
     }
 
     /**
-     * TODO: Creates an IOMAD course
+     * Creates an IOMAD course
      *
      * @param stdClass $data
      * @param company $companyid
@@ -6831,6 +6833,111 @@ class company {
         // Delete any company pages which match this event object id.
         $DB->delete_records('local_iomad_company_pages', ['pageid' => $event->objectid]);
         return true;
+    }
+
+    /**
+     * Creates a teaching location.
+     *
+     * @param iomadcustompage_deleted $event
+     * @return bool true on success.
+     */
+    public static function create_teaching_location($data): int {
+        global $CFG, $DB, $USER;
+        $returnmessage = "";
+
+        // Deal with default data.
+        $data->userid = $USER->id;
+        $companycontext = context_company::instance($data->companyid);
+
+        // Is this a virtual or real location?
+        if (empty($data->isvirtual)) {
+            $data->isvirtual = 0;
+        } else {
+            if (empty($data->address)) {
+                $data->address = "";
+            }
+            if (empty($data->city)) {
+                $data->city = "";
+            }
+            if (empty($data->postcode)) {
+                $data->postcode = "";
+            }
+            if (empty($data->capacity)) {
+                $data->capacity = 0;
+            }
+        }
+
+        // Is this private or public?
+        if (!empty($data->ispublic)) {
+            $data->ispublic = 1;
+        } else {
+            $data->ispublic = 0;
+        }
+
+        // We don't want the description.
+        $data->description = "";
+
+        // Initialise description editor if it doesn't exist.
+        if (isset($data->description_editor) && empty($data->description_editor['format'])) {
+            $data->description_editor['format'] = 0;
+        } else if (!isset($data->description_editor)) {
+            $data->description_editor = [];
+            $data->description_editor['format'] = 0;
+            $data->description_editor['text'] = '';
+        }
+        $data->descriptionformat = $data->description_editor['format'];
+
+        // Update or create the new record.
+        if (empty($data->id)) {
+            $data->id = $DB->insert_record('local_iomad_training_locations', $data);
+            $returnmessage = get_string('classroomaddedok', 'block_iomad_company_admin');
+            $event = classroom_created::create([
+                'context' => $companycontext,
+                'userid' => $USER->id,
+                'objectid' => $data->id,
+            ]);
+        } else {
+            $DB->update_record('local_iomad_training_locations', $data);
+            $returnmessage = get_string('classroomupdatedok', 'block_iomad_company_admin');
+            $event = classroom_updated::create([
+                'context' => $companycontext,
+                'userid' => $USER->id,
+                'objectid' => $data->id,
+            ]);
+        }
+
+        // Fire the event.
+        $event->trigger();
+
+        // Save the files used in the summary editor and store.
+        $editoroptions = [
+            'context' => $companycontext,
+            'maxfiles' => EDITOR_UNLIMITED_FILES,
+            'maxbytes' => $CFG->maxbytes,
+            'trusttext' => false,
+            'noclean' => true,
+            'subdirs' => file_area_contains_subdirs($companycontext, 'classroom', 'description', 0),
+            ];
+
+        $editordata = file_postupdate_standard_editor(
+            $data,
+            'description',
+            $editoroptions,
+            $companycontext,
+            'block_iomad_company_admin',
+            'classroom_description',
+            0
+        );
+        if (empty($editordata->descriptionformat)) {
+            $editordata->descriptionformat = $data->descriptionformat ?? 0;
+        }
+
+        $DB->set_field('local_iomad_training_locations', 'description', $editordata->description, ['id' => $data->id]);
+        $DB->set_field('local_iomad_training_locations', 'descriptionformat', $editordata->descriptionformat, ['id' => $data->id]);
+
+        notification::success($returnmessage);
+
+        return $data->id;
     }
 
     /**

@@ -165,91 +165,11 @@ class classroom_edit_form extends dynamic_form {
      * @return array
      */
     public function process_dynamic_submission(): array {
-        global $CFG, $DB, $USER;
-
         // Get the info from the form.
         $data = $this->get_data();
-        $returnmessage = "";
 
-        // Deal with default data.
-        $data->userid = $USER->id;
-        $companycontext = context_company::instance($data->companyid);
-
-        // Is this a virtual or real location?
-        if (empty($data->isvirtual)) {
-            $data->isvirtual = 0;
-        } else {
-            if (empty($data->address)) {
-                $data->address = "";
-            }
-            if (empty($data->city)) {
-                $data->city = "";
-            }
-            if (empty($data->postcode)) {
-                $data->postcode = "";
-            }
-            if (empty($data->capacity)) {
-                $data->capacity = 0;
-            }
-        }
-
-        // Is this private or public?
-        if (!empty($data->ispublic)) {
-            $data->ispublic = 1;
-        } else {
-            $data->ispublic = 0;
-        }
-
-        // We don't want the description.
-        $data->description = "";
-        $data->descriptionformat = $data->description_editor['format'];
-
-        // Update or create the new record.
-        if (empty($data->id)) {
-            $data->id = $DB->insert_record('local_iomad_training_locations', $data);
-            $returnmessage = get_string('classroomaddedok', 'block_iomad_company_admin');
-            $event = classroom_created::create([
-                'context' => $companycontext,
-                'userid' => $USER->id,
-                'objectid' => $data->id,
-            ]);
-        } else {
-            $DB->update_record('local_iomad_training_locations', $data);
-            $returnmessage = get_string('classroomupdatedok', 'block_iomad_company_admin');
-            $event = classroom_updated::create([
-                'context' => $companycontext,
-                'userid' => $USER->id,
-                'objectid' => $data->id,
-            ]);
-        }
-
-        // Fire the event.
-        $event->trigger();
-
-        // Save the files used in the summary editor and store.
-        $editoroptions = [
-            'context' => $companycontext,
-            'maxfiles' => EDITOR_UNLIMITED_FILES,
-            'maxbytes' => $CFG->maxbytes,
-            'trusttext' => false,
-            'noclean' => true,
-            'subdirs' => file_area_contains_subdirs($companycontext, 'classroom', 'description', 0),
-            ];
-
-        $editordata = file_postupdate_standard_editor(
-            $data,
-            'description',
-            $editoroptions,
-            $companycontext,
-            'block_iomad_company_admin',
-            'classroom_description',
-            0
-        );
-
-        $DB->set_field('local_iomad_training_locations', 'description', $editordata->description, ['id' => $data->id]);
-        $DB->set_field('local_iomad_training_locations', 'descriptionformat', $editordata->descriptionformat, ['id' => $data->id]);
-
-        notification::success($returnmessage);
+        // Create the Teaching location.
+        company::create_teaching_location($data);
 
         // Return stuff to the JS.
         return [
