@@ -677,6 +677,9 @@ if (!$bycourse) {
                     $comprecord->lastcompleted = $outdaterec->timecompleted;
                     $comprecord->timeexpired = $outdaterec->timeexpires;
                 }
+                if ($comprecord->timecompleted == $comprecord->lastcompleted) {
+                    $comprecord->lastcompleted = false;
+                }
                 $usercourses[$courseid] = $comprecord;
             } else {
                 $usercourses[$courseid] = (object) ['coursename' => format_string($allcompanycourses[$courseid]),
@@ -837,22 +840,22 @@ if (!$bycourse) {
         foreach ($user->coursedetails as $usercourse) {
             $coursesummary = [];
             if (empty($usercourse->timeenrolled)) {
-                $coursesummary['enrolled'] = get_string('never');
+                $coursesummary['enrolled'] = '';
             } else {
                 $coursesummary['enrolled'] = userdate($usercourse->timeenrolled, get_config('local_iomad', 'date_format'));
             }
             if (empty($usercourse->timestarted)) {
-                $coursesummary['timestarted'] = get_string('never');
+                $coursesummary['timestarted'] = '';
             } else {
                 $coursesummary['timestarted'] = userdate($usercourse->timestarted, get_config('local_iomad', 'date_format'));
             }
             if (empty($usercourse->timecompleted)) {
-                $coursesummary['timecompleted'] = get_string('never');
+                $coursesummary['timecompleted'] = '';
             } else {
                 $coursesummary['timecompleted'] = userdate($usercourse->timecompleted, get_config('local_iomad', 'date_format'));
             }
             if (empty($usercourse->lastcompleted)) {
-                $coursesummary['lastcompleted'] = get_string('never');
+                $coursesummary['lastcompleted'] = '';
             } else {
                 $coursesummary['lastcompleted'] = userdate($usercourse->lastcompleted, get_config('local_iomad', 'date_format'));
             }
@@ -919,7 +922,7 @@ if (!$bycourse) {
                     }
                 } else if (empty($expirecourses[$usercourse->courseid]) &&
                            empty($gradelesscourses[$usercourse->courseid])) {
-                    if (empty($usercourse->indate)) {
+                    if (empty($usercourse->lastcompleted)) {
                         $rowtext = get_string(
                             'coursesummary_noexpiry',
                             'local_report_completion_overview',
@@ -948,11 +951,7 @@ if (!$bycourse) {
             }
 
             // Set up the cell classes.
-            if (empty(get_config('local_report_completion_overview', 'warningduration' . "_$companyid"))) {
-                $warningduration = get_config('local_report_completion_overview', 'warningduration');
-            } else {
-                $warningduration = get_config('local_report_completion_overview', 'warningduration' . "_$companyid");
-            }
+            $warningduration = iomad::get_config('local_report_completion_overview', 'warningduration');
             if (empty($courses[$usercourse->courseid])) {
                 $rowclass = "ignored";
                 $statustext = "";
@@ -960,7 +959,8 @@ if (!$bycourse) {
                 if (empty($usercourse->timeenrolled)) {
                     $rowclass = "notenrolled";
                     if ($usercourse->indate) {
-                        if ($usercourse->indate > $runtime || empty($usercourse->timeexpires)) {
+                        if ($usercourse->indate > $runtime + $warningduration ||
+                            empty($usercourse->timeexpires)) {
                             $rowclass .= "-indate";
                         } else {
                             $rowclass .= "-expiring";
@@ -973,7 +973,8 @@ if (!$bycourse) {
                 if (!empty($usercourse->timeenrolled) && empty($usercourse->timecompleted)) {
                     $rowclass = "notcompleted";
                     if ($usercourse->indate) {
-                        if ($usercourse->indate > $runtime || empty($usercourse->timeexpires)) {
+                        if ($usercourse->indate > $runtime + $warningduration ||
+                            empty($usercourse->timeexpires)) {
                             $rowclass .= "-indate";
                         } else {
                             $rowclass .= "-expiring";
@@ -1083,22 +1084,22 @@ if (!$bycourse) {
         foreach ($course->userdetails as $usercourse) {
             $coursesummary = [];
             if (empty($usercourse->timeenrolled)) {
-                $coursesummary['enrolled'] = get_string('never');
+                $coursesummary['enrolled'] = '';
             } else {
                 $coursesummary['enrolled'] = userdate($usercourse->timeenrolled, get_config('local_iomad', 'date_format'));
             }
             if (empty($usercourse->timestarted)) {
-                $coursesummary['timestarted'] = get_string('never');
+                $coursesummary['timestarted'] = '';
             } else {
                 $coursesummary['timestarted'] = userdate($usercourse->timestarted, get_config('local_iomad', 'date_format'));
             }
             if (empty($usercourse->timecompleted)) {
-                $coursesummary['timecompleted'] = get_string('never');
+                $coursesummary['timecompleted'] = '';
             } else {
                 $coursesummary['timecompleted'] = userdate($usercourse->timecompleted, get_config('local_iomad', 'date_format'));
             }
             if (empty($usercourse->lastcompleted)) {
-                $coursesummary['lastcompleted'] = get_string('never');
+                $coursesummary['lastcompleted'] = '';
             } else {
                 $coursesummary['lastcompleted'] = userdate($usercourse->lastcompleted, get_config('local_iomad', 'date_format'));
             }
@@ -1201,7 +1202,7 @@ if (!$bycourse) {
                 if (empty($usercourse->timeenrolled)) {
                     $rowclass = "notenrolled";
                     if ($usercourse->indate) {
-                        if ($usercourse->indate > $runtime) {
+                        if ($usercourse->indate > $runtime + $warningduration) {
                             $rowclass .= "-indate";
                         } else {
                             $rowclass .= "-expiring";
@@ -1214,7 +1215,8 @@ if (!$bycourse) {
                 if (!empty($usercourse->timeenrolled) && empty($usercourse->timecompleted)) {
                     $rowclass = "notcompleted";
                     if ($usercourse->indate) {
-                        if ($usercourse->indate > $runtime || empty($usercourse->timeexpires)) {
+                        if ($usercourse->indate > $runtime + $warningduration ||
+                            empty($usercourse->timeexpires)) {
                             $rowclass .= "-indate";
                         } else {
                             $rowclass .= "-expiring";
