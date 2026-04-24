@@ -17,7 +17,7 @@
 namespace local_iomad\tests;
 
 use advanced_testcase;
-use local_iomad\company;
+use local_iomad\{company, company_user};
 
 /**
  * Local IOMAD course tests
@@ -68,7 +68,7 @@ final class course_management_test extends advanced_testcase {
         $coursedata->companyid = $company->id;
         $course = $generator->create_course($coursedata);
 
-        // Edit course.
+        // Edit course in Manage IOMAD Course settings.
 
         // Assert that course has been edited.
     }
@@ -152,48 +152,66 @@ final class course_management_test extends advanced_testcase {
     }
 
     /*
-    * TODO: Test to enrol/unenrol users onto a course
+    * Test to enrol/unenrol users onto a course
     */
     public function test_enrol_users_onto_course(): void {
         global $DB;
 
         $this->resetAfterTest();
-        $this->markTestIncomplete();
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
         // Create company.
-        $departmentid = $generator->create_department();
-        $department = $DB->record_exists('local_iomad_company_departments', ['id' => $departmentid]);
-        $companyid = $department->companyid;
+        $company = $generator->create_company();
+        $companyid = $company->id;
 
         // Create IOMAD course.
         $coursedata = (object) [];
         $coursedata->companyid = $companyid;
         $course = $generator->create_course($coursedata);
+        $courseid = $course->id;
 
         // Create IOMAD user.
         $userid = $generator->create_iomad_user(companyid: $companyid);
 
-        // Enrol IOMAD user onto course.
-        //company::???;
+        // Enrol IOMAD user on the course. (cf. company_course_users_form.php).
+        company_user::enrol($userid, [$courseid], $companyid);
 
-        // Assert that user is enrolled on course
+        // Assert that user is enrolled on course.
+        $this->assertTrue($DB->record_exists_sql("SELECT *
+                 FROM {user_enrolments} ue
+                 JOIN {enrol} e ON (ue.enrolid = e.id AND e.status = 0)
+                 WHERE e.courseid = :courseid
+                 AND ue.userid = :userid",
+                [
+                    'courseid' => $courseid,
+                    'userid' => $userid,
+                ]));
+
+        // Assert that there is a record of the enrolment in the IOMAD track.
+        $this->assertTrue($DB->record_exists('local_iomad_tracks', ['userid' => $userid, 'courseid' => $courseid]));
     }
 
     /*
-    * TODO: Test to create teaching location
+    * Test to create teaching location
     */
     public function test_create_teaching_location(): void {
+        global $DB;
 
         $this->resetAfterTest();
-        $this->markTestIncomplete();
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
-        // Create IOMAD course.
-        $coursedata = (object) [];
-        $coursedata->companyid = $company->id;
-        $course = $generator->create_course($coursedata);
+        // Create company.
+        $company = $generator->create_company();
+        $companyid = $company->id;
 
-        // ...
+        // Create teaching location.
+        $locationrecord = (object) [];
+        $locationrecord->name = "Location name";
+        $locationrecord->companyid = $companyid;
+        $locationrecord->capacity = rand(1,100);
+        $locationid = company::create_teaching_location($locationrecord);
+
+        // Assert that record exists.
+        $this->assertTrue($DB->record_exists('local_iomad_training_locations', ['id' => $locationid]));
     }
 }
