@@ -384,9 +384,9 @@ class helper {
         foreach ($mandatorycourses as $mandatorycourse) {
             // Set some defaults.
             $status = "notenrolled";
-            $timeenrolled = get_string('never');
-            $timestarted = get_string('never');
-            $timecompleted = get_string('never');
+            $timeenrolled = '';
+            $timestarted = '';
+            $timecompleted = '';
             $timeexpires = '';
             $statusstring = get_string('notenrolledstatus', 'block_iomad_mycourses');
             $timeprevious = '';
