@@ -1335,7 +1335,7 @@ class company {
             'companyidforjoin' => $this->id,
         ];
 
-        $sql = "SELECT DISTINCT u.id, u.id AS mid
+        $sql = "SELECT DISTINCT u.id, u.id AS mid, u.firstname, u.lastname
                 FROM {company_users} cu
                 INNER JOIN {user} u ON (cu.userid = u.id)
                 WHERE u.deleted = 0
