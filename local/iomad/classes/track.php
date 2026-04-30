@@ -350,7 +350,7 @@ class track {
 
                     // Set up the course completed email task to run after this.
                     $emailtask = new sendcompletionemailtask();
-                    $emailtask->queue_task($userid, $courseid, $companyid, $trackid);
+                    $emailtask->queue_task($userid, $courseid, $trackrec->companyid, $trackid);
                 }
             } else {
                 // For some reason we don't already have a record.
