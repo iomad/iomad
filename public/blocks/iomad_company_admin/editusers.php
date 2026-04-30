@@ -321,7 +321,7 @@ if (empty($showall)) {
                           WHERE managertype = 1 AND
                           companyid {$insql}
                         )";
-        $sqlparams = $sqlparams + $insql;
+        $sqlparams = $sqlparams + $inparams;
     } else {
         $companysql = " AND c.id = :companyid";
     }
