@@ -283,7 +283,7 @@ class observer {
 
                     // Get the ID of the certificate save task as we need to make sure it's completed.
                     $emailtask = new \local_iomad_track\task\sendcompletionemailtask();
-                    $emailtask->queue_task($userid, $courseid, $companyid, $trackid);
+                    $emailtask->queue_task($userid, $courseid, $trackrec->companyid, $trackid);
                 }
             } else {
                 // For some reason we don't already have a record.
