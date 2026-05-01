@@ -105,6 +105,16 @@ class user_table extends table_sql {
     }
 
     /**
+     * Get the email address from the row data
+     *
+     * @param object $row
+     * @return string
+     */
+    public function col_email($row) {
+        return clean_param($row->email, PARAM_EMAIL);
+    }
+
+    /**
      * Generate the display of the user's license allocated timestamp
      * @param object $user the table row being output.
      * @return string HTML content to go inside the td.
@@ -636,9 +646,8 @@ class user_table extends table_sql {
             return s($row->$column);
         }
 
-        if (strpos($column, '_') === false ) {
-            return null;
-        } else {
+        // Is this something we care about?
+        if (strpos($column, '_') !== false ) {
             list($type, $criteriaid) = explode('_', $column);
             if ($type == "criteria" && !empty($row->timecompleted)) {
                 return userdate($row->timecompleted, get_config('local_iomad', 'date_format'));
@@ -649,62 +658,69 @@ class user_table extends table_sql {
                                                                                        'criteriaid' => $criteriaid])) {
                         if (!empty($critrecord->timecompleted)) {
                             return userdate($critrecord->timecompleted, get_config('local_iomad', 'date_format'));
-                        } else {
-                            return null;
                         }
-                    } else {
-                        return null;
                     }
                 } else if ($type == 'grade') {
-                    if ($DB->record_exists('local_iomad_courses', ['courseid' => $row->courseid, 'hasgrade' => 0])) {
-                        return null;
-                    }
-                    // Get the criteria record.
-                    $critrecord = $DB->get_record('course_completion_criteria', ['id' => $criteriaid]);
+                    // Do we show the grade?
+                    if (!$DB->record_exists('local_iomad_courses', ['courseid' => $row->courseid, 'hasgrade' => 0])) {
+                        // Get the criteria record.
+                        $critrecord = $DB->get_record('course_completion_criteria', ['id' => $criteriaid]);
 
-                    // If it's the course grade then return that.
-                    if (empty($critrecord->module)) {
-                        if (!empty($row->timeenrolled) && $row->finalscore > 0) {
-                            return format_string(round($row->finalscore, get_config('local_iomad', 'report_grade_places')) . "%");
+                        // If it's the course grade then return that.
+                        if (empty($critrecord->module)) {
+                            if (!empty($row->timeenrolled) && $row->finalscore > 0) {
+                                return format_string(
+                                    round(
+                                        $row->finalscore,
+                                        get_config('local_iomad', 'report_grade_places')
+                                    ) . "%"
+                                );
+                            }
                         } else {
-                            return null;
-                        }
-                    }
+                            // Get the module info.
+                            $modinfo = get_coursemodule_from_id('', $critrecord->moduleinstance);
 
-                    $modinfo = get_coursemodule_from_id('', $critrecord->moduleinstance);
-                    $gradestring = "";
-                    if ($gradeinfo = $DB->get_record_sql(
-                        "SELECT gg.* FROM {grade_grades} gg
-                         JOIN {grade_items} gi ON (gg.itemid = gi.id)
-                         JOIN {course_modules} cm ON (
-                             gi.courseid = cm.course
-                             AND gi.iteminstance = cm.instance
-                         )
-                         JOIN {modules} m ON (
-                             m.id = cm.module
-                             AND m.name = gi.itemmodule
-                         )
-                         WHERE gg.userid = :userid
-                         AND gi.courseid = :courseid
-                         AND cm.id = :moduleid",
-                        ['userid' => $row->userid,
-                         'courseid' => $row->courseid,
-                         'moduleid' => $modinfo->id])) {
-                        if (!empty($gradeinfo->finalgrade) && $gradeinfo->finalgrade != 0) {
-                            $gradestring = format_string(
-                                round(
-                                    $gradeinfo->finalgrade,
-                                    get_config('local_iomad', 'report_grade_places')
-                                ) . "%"
-                            );
+                            // Set the default grade value.
+                            $gradestring = "";
+
+                            // Do we have a grade?
+                            if ($gradeinfo = $DB->get_record_sql(
+                                "SELECT gg.* FROM {grade_grades} gg
+                                JOIN {grade_items} gi ON (gg.itemid = gi.id)
+                                JOIN {course_modules} cm ON (
+                                    gi.courseid = cm.course
+                                    AND gi.iteminstance = cm.instance
+                                )
+                                JOIN {modules} m ON (
+                                    m.id = cm.module
+                                    AND m.name = gi.itemmodule
+                                )
+                                WHERE gg.userid = :userid
+                                AND gi.courseid = :courseid
+                                AND cm.id = :moduleid",
+                                ['userid' => $row->userid,
+                                'courseid' => $row->courseid,
+                                'moduleid' => $modinfo->id])) {
+                                if (!empty($gradeinfo->finalgrade) && $gradeinfo->finalgrade != 0) {
+                                    $gradestring = format_string(
+                                        round(
+                                            $gradeinfo->finalgrade,
+                                            get_config('local_iomad', 'report_grade_places')
+                                        ) . "%"
+                                    );
+                                }
+                            }
+
+                            // Return whatever we have.
+                            return $gradestring;
                         }
                     }
-                    return $gradestring;
-                } else {
-                    return null;
                 }
             }
         }
+
+        // Default - return nothing.
+        return '';
     }
 
     /**
