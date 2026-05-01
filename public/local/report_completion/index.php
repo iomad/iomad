@@ -784,13 +784,19 @@ if (empty($courseid)) {
         // Set up the additional columns.
         if (!empty($coursecompletioncrits)) {
             foreach ($coursecompletioncrits as $completioncrit) {
-                $modinfo = get_coursemodule_from_id('', $completioncrit->moduleinstance);
-
-                $completionheaders[$completioncrit->id] = format_string($completioncrit->get_title() . " " . $modinfo->name);
-                $gradeheaders[$completioncrit->id] = format_string(get_string('grade', 'iomadcertificate') . " " . $modinfo->name);
-                $completioncolumns[$completioncrit->id] = "criteria_" . $completioncrit->id;
-                $gradecolumns[$completioncrit->id] = "grade_" . $completioncrit->id;
-                $completionids[] = $completioncrit->id;
+                if ($modinfo = get_coursemodule_from_id('', $completioncrit->moduleinstance)) {
+                    $completionheaders[$completioncrit->id] = format_string(
+                        $completioncrit->get_title() . " " .
+                        $modinfo->name
+                    );
+                    $gradeheaders[$completioncrit->id] = format_string(
+                        get_string('grade', 'iomadcertificate') . " " .
+                        $modinfo->name
+                    );
+                    $completioncolumns[$completioncrit->id] = "criteria_" . $completioncrit->id;
+                    $gradecolumns[$completioncrit->id] = "grade_" . $completioncrit->id;
+                    $completionids[] = $completioncrit->id;
+                }
             }
         }
     }
