@@ -128,10 +128,10 @@ class iomad {
     /**
      * Check to see if a user is associated to a company.
      *
-     * @param object $user
+     * @param null|object $user
      * @return bool|integer
      */
-    public static function is_company_user(object $user): bool|int {
+    public static function is_company_user(?object $user): bool|int {
         global $DB, $SESSION, $USER;
 
         if (empty($user->id) && empty($SESSION->currenteditingcompany)) {
