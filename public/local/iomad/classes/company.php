@@ -467,27 +467,41 @@ class company {
         return $company;
     }
 
-    public static function delete_company($companyid, $verbose = false) : void {
+    /**
+     * Delete company
+     *
+     * @param int $companyid
+     * @param bool $verbose
+     */
+    public static function delete_company($companyid, $verbose = false): void {
         global $DB;
 
         if (!$companyrec = $DB->get_record('local_iomad_companies', ['id' => $companyid])) {
             // Company doesn't exist.
-            if ($verbose) { mtrace("skipping company with id {$companyid}: Company doesn't exist"); }
+            if ($verbose) {
+                mtrace("skipping company with id {$companyid}: Company doesn't exist");
+            }
             return;
         }
 
-        // Check adequate permissions
+        // Check adequate permissions.
         $companycontext = context_company::instance($companyid);
         if (!iomad::has_capability('block/iomad_company_admin:company_delete', $companycontext)) {
-            if ($verbose) { mtrace("skipping company with id {$companyid}: Inadequate permissions"); }
+            if ($verbose) {
+                mtrace("skipping company with id {$companyid}: Inadequate permissions");
+            }
             return;
         }
 
-        // Begin deletion
-        if ($verbose) { mtrace("deleting company $companyrec->name"); }
+        // Begin deletion.
+        if ($verbose) {
+            mtrace("deleting company $companyrec->name");
+        }
 
         // Delete the certificates.
-        if ($verbose) { mtrace("deleting all stored certificates"); }
+        if ($verbose) {
+            mtrace("deleting all stored certificates");
+        }
         $tracrecs = $DB->get_records_sql("SELECT DISTINCT lit.id
                                           FROM {local_iomad_tracks} lit
                                           JOIN {local_iomad_track_certs} litc
@@ -499,16 +513,22 @@ class company {
             track::delete_entry($tracrec->id, true);
         }
 
-        if ($verbose) { mtrace("dealing with all completion reports"); }
+        if ($verbose) {
+            mtrace("dealing with all completion reports");
+        }
         $DB->delete_records('local_iomad_tracks', ['companyid' => $companyrec->id]);
 
-        if ($verbose) { mtrace("dealing with all license allocation reports"); }
+        if ($verbose) {
+            mtrace("dealing with all license allocation reports");
+        }
         $licenses = $DB->get_records('local_iomad_company_licenses', ['companyid' => $companyrec->id]);
         foreach ($licenses as $license) {
             $DB->delete_records('local_report_user_license_allocations', ['licenseid' => $license->id]);
         }
 
-        if ($verbose) { mtrace("dealing with all licenses"); }
+        if ($verbose) {
+            mtrace("dealing with all licenses");
+        }
         $companylicenses = $DB->get_records('local_iomad_company_licenses', ['companyid' => $companyrec->id]);
         foreach ($companylicenses as $companylicense) {
             $DB->delete_records('local_iomad_company_license_users', ['licenseid' => $companylicense->id]);
@@ -516,24 +536,32 @@ class company {
             $DB->delete_records('local_iomad_company_licenses', ['id' => $companylicense->id]);
         }
 
-        if ($verbose) { mtrace("dealing with frameworks and templates"); }
+        if ($verbose) {
+            mtrace("dealing with frameworks and templates");
+        }
         $DB->delete_records('local_iomad_company_comp_frameworks', ['companyid' => $companyrec->id]);
         $DB->delete_records('local_iomad_company_shared_frameworks', ['companyid' => $companyrec->id]);
         $DB->delete_records('local_iomad_company_comp_templates', ['companyid' => $companyrec->id]);
         $DB->delete_records('local_iomad_company_shared_templates', ['companyid' => $companyrec->id]);
 
-        if ($verbose) { mtrace("dealing with roles"); }
+        if ($verbose) {
+            mtrace("dealing with roles");
+        }
         $DB->delete_records('local_iomad_company_role_restrictions', ['companyid' => $companyrec->id]);
         $DB->delete_records('local_iomad_company_role_templates_ass', ['companyid' => $companyrec->id]);
 
-        if ($verbose) { mtrace("dealing with email templates"); }
+        if ($verbose) {
+            mtrace("dealing with email templates");
+        }
         $companytemplates = $DB->get_records('local_iomad_email_templates', ['companyid' => $companyrec->id]);
         $DB->delete_records('local_iomad_email_templates', ['companyid' => $companyrec->id]);
         foreach ($companytemplates as $companytemplate) {
             $DB->delete_records('local_iomad_email_template_strings', ['templateid' => $companytemplate->id]);
         }
 
-        if ($verbose) { mtrace("dealing with users"); }
+        if ($verbose) {
+            mtrace("dealing with users");
+        }
         $users = $DB->get_records_sql("SELECT DISTINCT userid
                                        FROM {local_iomad_company_users}
                                        WHERE companyid = :companyid",
@@ -545,7 +573,9 @@ class company {
         // Blanket deletion.
         $DB->delete_records('local_iomad_company_users', ['companyid' => $companyrec->id]);
 
-        if ($verbose) { mtrace("dealing with courses"); }
+        if ($verbose) {
+            mtrace("dealing with courses");
+        }
         $DB->delete_records('local_iomad_company_course_groups', ['companyid' => $companyrec->id]);
         $DB->delete_records('local_iomad_company_course_options', ['companyid' => $companyrec->id]);
 
@@ -558,7 +588,9 @@ class company {
                                                 AND cc.companyid = :companyid",
                                                ['companyid' => $companyrec->id]);
         foreach ($companycourses as $companycourse) {
-            if ($verbose) { mtrace("deleting course ID $companycourse->courseid"); }
+            if ($verbose) {
+                mtrace("deleting course ID $companycourse->courseid");
+            }
             delete_course($companycourse->courseid, false);
         }
         $DB->delete_records('local_iomad_company_courses', ['companyid' => $companyrec->id]);
@@ -566,18 +598,24 @@ class company {
         $DB->delete_records('local_iomad_company_shared_courses', ['companyid' => $companyrec->id]);
 
         // Deal with company course category.
-        if ($verbose) { mtrace("deleting company course category"); }
+        if ($verbose) {
+            mtrace("deleting company course category");
+        }
         if ($DB->get_record('course_categories', ['id' => $companyrec->coursecategoryid])) {
             $category = \core_course_category::get($companyrec->coursecategoryid);
             if (!$category->has_courses() && !$category->has_children()) {
                 $category->delete_full();
             } else {
-                if ($verbose) { mtrace("Could not do this as not empty"); }
+                if ($verbose) {
+                    mtrace("Could not do this as not empty");
+                }
             }
         }
 
         // Deal with company profile fields.
-        if ($verbose) { mtrace("deleting company profile field category"); }
+        if ($verbose) {
+            mtrace("deleting company profile field category");
+        }
         $profilefields = $DB->get_records('user_info_field', ['categoryid' => $companyrec->profilecategoryid]);
         foreach ($profilefields as $profilefield) {
             $DB->delete_records('user_info_data', ['fieldid' => $profilefield->id]);
@@ -585,10 +623,14 @@ class company {
         }
         $DB->delete_records('user_info_category', ['id' => $companyrec->profilecategoryid]);
 
-        if ($verbose) { mtrace("dealing with departments"); }
+        if ($verbose) {
+            mtrace("dealing with departments");
+        }
         $DB->delete_records('local_iomad_company_departments', ['companyid' => $companyrec->id]);
 
-        if ($verbose) { mtrace("dealing with the company"); }
+        if ($verbose) {
+            mtrace("dealing with the company");
+        }
         if (!empty($companyrec->parentid)) {
             $DB->set_field('local_iomad_companies', 'parentid', $companyrec->parentid, ['parentid' => $companyrec->id]);
         } else {
@@ -597,7 +639,9 @@ class company {
         $DB->delete_records('local_iomad_company_departments', ['companyid' => $companyrec->id]);
         $DB->delete_records('local_iomad_companies', ['id' => $companyrec->id]);
 
-        if ($verbose) { mtrace("clearing up any config"); }
+        if ($verbose) {
+            mtrace("clearing up any config");
+        }
         $DB->delete_records_select(
             'config',
             $DB->sql_like('name', ":name"),
@@ -1471,7 +1515,7 @@ class company {
      * @param ?array $editoroptions
      * @return ?stdclass
      */
-    public static function create_course($data, $company, $editoroptions = null) : ?stdClass {
+    public static function create_course($data, $company, $editoroptions = null): ?stdClass {
         global $DB, $USER;
 
         // Try and create the course.
@@ -6766,7 +6810,7 @@ class company {
 
         $parentid = $event->other['parentid'];
 
-        if (empty($parentid) || !$licenserecord = $DB->get_record('local_iomad_company_licenses', ['id' => $parentid])) {
+        if (empty($parentid) || !$DB->record_exists('local_iomad_company_licenses', ['id' => $parentid])) {
             return true;
         }
         $DB->delete_records('local_iomad_company_license_courses', ['licenseid' => $event->other['licenseid']]);
@@ -6938,6 +6982,202 @@ class company {
         notification::success($returnmessage);
 
         return $data->id;
+    }
+
+    /**
+     * Creates/updates a licence. TODO: Currently only used in testing, needs to be applied to the company form.
+     *
+     * @param object $data
+     * @return int
+     */
+    public static function create_license($data): int {
+        // Via blocks/iomad_company_admin/classes/forms/company_license_form.php
+        global $DB, $USER;
+
+        // Deal with default data.
+        $licenseid = $data->licenseid ?? null;
+        if (!empty($licenseid) &&
+            $currlicensedata = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid])) {
+            $data = (object) array_merge((array) $currlicensedata, (array) $data);
+        }
+
+        // Set some defaults.
+        if (empty($data->instant)) {
+            $data->instant = 0;
+        }
+        $new = false;
+        $licensedata = [];
+
+        // Sanitise the data.
+        $licensedata['name'] = trim($data->name);
+        $licensedata['reference'] = trim($data->reference);
+        if (empty($data->program)) {
+            $licensedata['program'] = 0;
+            $licensedata['allocation'] = $data->allocation;
+        } else {
+            $licensedata['program'] = $data->program;
+            $licensedata['allocation'] = $data->allocation * count($data->licensecourses);
+        }
+        $licensedata['humanallocation'] = $data->allocation;
+        $licensedata['instant'] = $data->instant;
+        $licensedata['expirydate'] = $data->expirydate;
+        $licensedata['startdate'] = $data->startdate;
+
+        if (empty($data->languages)) {
+            $data->languages = [];
+        }
+
+        if (empty($data->parentid)) {
+            $data->parentid = 0;
+            $licensedata['companyid'] = $data->companyid;
+        } else {
+            $licensedata['companyid'] = $data->designatedcompany;
+        }
+        $licensedata['parentid'] = $data->parentid;
+        $licensedata['validlength'] = $data->validlength;
+        $licensedata['type'] = $data->type;
+
+        if (empty($data->cutoffdate)) {
+            $licensedata['cutoffdate'] = 0;
+        } else {
+            $licensedata['cutoffdate'] = $data->cutoffdate;
+        }
+
+        if (empty($data->clearonexpire)) {
+            $licensedata['clearonexpire'] = 0;
+        } else {
+            $licensedata['clearonexpire'] = $data->clearonexpire;
+        }
+
+        // Is this a department manager?
+        if ($DB->record_exists(
+            'local_iomad_company_users',
+            [
+                'companyid' => $data->companyid,
+                'userid' => $USER->id,
+                'managertype' => 2,
+            ])) {
+
+            // Get their main department.
+            $company = new self($data->companyid);
+            $userlevels = $company->get_userlevel($user);
+            $licensedata['departmentid'] = key($userlevels);
+        }
+
+        // Update/create the license.
+        if (!empty($licenseid) &&
+            $currlicensedata = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid])) {
+            // Already in the table update it.
+            $new = false;
+            $licensedata['id'] = $currlicensedata->id;
+            $licensedata['used'] = $currlicensedata->used;
+            $DB->update_record('local_iomad_company_licenses', $licensedata);
+        } else {
+            // New license being created.
+            $new = true;
+            $licensedata['used'] = 0;
+            $licenseid = $DB->insert_record('local_iomad_company_licenses', $licensedata);
+        }
+
+        // Deal with course allocations if there are any.
+        // Capture them for checking.
+        $oldcourses = $DB->get_records('local_iomad_company_license_courses', ['licenseid' => $licenseid], null, 'courseid');
+
+        // Clear down all of them initially.
+        $DB->delete_records('local_iomad_company_license_courses', ['licenseid' => $licenseid]);
+        if (!empty($data->licensecourses)) {
+            // Add the course license allocations.
+            foreach ($data->licensecourses as $selectedcourse) {
+                $DB->insert_record(
+                    'local_iomad_company_license_courses',
+                    ['licenseid' => $licenseid, 'courseid' => $selectedcourse]
+                );
+            }
+        }
+
+        // Create an event to deal with an parent license allocations.
+        $companycontext = context_company::instance($data->companyid);
+        $eventother = ['licenseid' => $licenseid,
+                       'parentid' => $data->parentid];
+
+        if ($new) {
+            $event = company_license_created::create([
+                'context' => $companycontext,
+                'userid' => $USER->id,
+                'objectid' => $licenseid,
+                'other' => $eventother,
+            ]);
+            $returnmessage = get_string('licensecreatedok', 'block_iomad_company_admin');
+        } else {
+            $eventother['oldcourses'] = json_encode($oldcourses);
+            if ($currlicensedata->program != $data->program) {
+                $eventother['programchange'] = true;
+            }
+            if ($currlicensedata->startdate != $data->startdate) {
+                $eventother['oldstartdate'] = $currlicensedata->startdate;
+            }
+            if ($currlicensedata->type != $data->type) {
+                $eventother['educatorchange'] = true;
+            }
+            $event = company_license_updated::create([
+                'context' => $companycontext,
+                'userid' => $USER->id,
+                'objectid' => $licenseid,
+                'other' => $eventother,
+            ]);
+            $returnmessage = get_string('licenseupdatedok', 'block_iomad_company_admin');
+        }
+
+        // Fire the event and redirect.
+        $event->trigger();
+        notification::success($returnmessage);
+
+        return $licenseid;
+    }
+
+    /**
+     * Allocate license to user. TODO: Currently only used in testing, needs to be applied to the company form.
+     *
+     * @param integer $licenseid
+     * @param integer $userid
+     * @param integer $due
+     * @return void
+     */
+    public static function allocate_license($licenseid, $userid, $due = 0): void {
+        // Via blocks/iomad_company_admin/company_user_create_form.php
+        global $DB;
+
+        // Get data
+        $licensedata = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid]);
+        $courseids = $DB->get_records_sql('SELECT c.courseid
+                                             FROM {local_iomad_company_license_courses} c
+                                             WHERE licenseid = ?',
+                                            [$licenseid]);
+
+        foreach ($courseids as $licensecourse) {
+            // Add the license record.
+            $courseid = $licensecourse->courseid;
+            $issuedate = time();
+            $DB->insert_record('local_iomad_company_license_users',
+                                ['userid' => $userid,
+                                'licenseid' => $licenseid,
+                                'issuedate' => $issuedate,
+                                'courseid' => $courseid]);
+
+            // Create an event.
+            $eventother = [
+                'licenseid' => $licenseid,
+                'issuedate' => $issuedate,
+                'duedate' => $due,
+            ];
+            $event = \block_iomad_company_admin\event\user_license_assigned::create( ['context' => context_course::instance($courseid),
+                'objectid' => $licenseid,
+                'courseid' => $courseid,
+                'userid' => $userid,
+                'other' => $eventother,
+            ]);
+            $event->trigger();
+        }
     }
 
     /**

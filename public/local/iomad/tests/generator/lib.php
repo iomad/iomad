@@ -164,7 +164,7 @@ class local_iomad_generator extends component_generator_base {
      * @param ?int $companyid
      * @return int $userid
      */
-    public function create_iomad_user($record = [], ?int $companyid = null): int {
+    public function create_iomad_user($record = [], $companyid = null): int {
         $record = is_array($record) ? (object) $record : $record;
 
         $this->usercounter++;
@@ -299,6 +299,28 @@ class local_iomad_generator extends component_generator_base {
         $course = company::create_course($coursedata, $company);
 
         return $course;
+    }
+
+    /**
+     * Create a test licence
+     *
+     * @param object $record
+     * @return int $licenseid
+     */
+    public static function create_license($record = []): int {
+        $record = (object) $record;
+
+        $record->name = $record->name ?? 'TestLicence';
+        $record->reference = $record->reference ?? 'testlicence';
+        $record->allocation = $record->allocation ?? 1;
+        $record->startdate = $record->startdate ?? time() + 5000;
+        $record->expirydate = $record->expirydate ?? $record->startdate + 5000;
+        $record->companyid = $record->companyid ?? null;
+        $record->validlength = $record->validlength ?? 5;
+        $record->type = $record->type ?? 0; // (0-4) standard, reusable, educator, educatorreusable, blanket
+        $licenseid = company::create_license($record);
+
+        return $licenseid;
     }
 
 }

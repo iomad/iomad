@@ -98,6 +98,8 @@ if ($mform->is_cancelled()) {
     redirect($dashboardurl);
     die;
 } else if ((!empty($submitbutton) || !empty($submitandback)) && $data = $mform->get_data()) {
+    $data = (object) $data;
+
     // Trim first and lastnames.
     $data->firstname = trim($data->firstname);
     $data->lastname = trim($data->lastname);
@@ -192,7 +194,7 @@ if ($mform->is_cancelled()) {
     if (!empty($licenseid)) {
         $licenserecord = (array) $DB->get_record('local_iomad_company_licenses',  ['id' => $licenseid]);
 
-        // Is this ia program license?
+        // Is this a program license?
         if (!empty($licenserecord['program'])) {
             // Yes, so the courses are not passed automatically from the form.
             $data->licensecourses = $DB->get_records_sql_menu(
