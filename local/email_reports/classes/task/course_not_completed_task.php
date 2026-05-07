@@ -143,12 +143,12 @@ class course_not_completed_task extends \core\task\scheduled_task {
                          WHERE userid = :userid
                          AND courseid = :courseid
                          AND templatename = :templatename
-                         AND modifiedtime > :timestarted",
+                         AND modifiedtime > :timeenrolled",
                         [
                             'userid' => $compuser->userid,
                             'courseid' => $compuser->courseid,
                             'templatename' => 'completion_warn_user',
-                            'timestarted' => $compuser->timestarted,
+                            'timeenrolled' => $compuser->timeenrolled,
                         ]
                     );
 
@@ -180,7 +180,7 @@ class course_not_completed_task extends \core\task\scheduled_task {
                     }
                 }
             }
-            
+
             // If repeatperiod = 99 (always), no checks needed - proceed to send
             mtrace("Sending completion warning email to $user->email");
             EmailTemplate::send('completion_warn_user', array('course' => $course, 'user' => $user, 'company' => $companyobj));
@@ -199,7 +199,7 @@ class course_not_completed_task extends \core\task\scheduled_task {
                                                      array('userid' => $compuser->userid,
                                                            'courseid' => $compuser->courseid,
                                                            'templatename' => $templateinfo->name,
-                                                           'timesent' => $compuser->timestarted));
+                                                           'timesent' => $compuser->timeenrolled));
                 if ($sentcount >= $templateinfo->repeatvalue) {
                     $compuser->completedstop = 1;
                     $compuser->modifiedtime = $runtime;

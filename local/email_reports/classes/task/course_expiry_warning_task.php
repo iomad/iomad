@@ -147,12 +147,12 @@ class course_expiry_warning_task extends \core\task\scheduled_task {
                              WHERE userid = :userid
                              AND courseid = :courseid
                              AND templatename = :templatename
-                             AND modifiedtime > :timestarted",
+                             AND modifiedtime > :timeenrolled",
                             [
                                 'userid' => $compuser->userid,
                                 'courseid' => $compuser->courseid,
                                 'templatename' => 'expiry_warn_user',
-                                'timestarted' => $compuser->timestarted,
+                                'timeenrolled' => $compuser->timeenrolled,
                             ]
                         );
 
@@ -227,7 +227,7 @@ class course_expiry_warning_task extends \core\task\scheduled_task {
             $expiretime = 24 * 60 * 60 * $completionexpirecourse->expireafter;
             $userlist = $DB->get_records_sql("SELECT lit.* FROM
                                               {local_iomad_track} lit
-                                              JOIN {user_enrolments} ue ON (lit.userid = ue.userid AND lit.timestarted = ue.timestart)
+                                              JOIN {user_enrolments} ue ON (lit.userid = ue.userid AND lit.timeenrolled = ue.timestart)
                                               JOIN {enrol} e ON (lit.courseid = e.courseid AND ue.enrolid = e.id)
                                               JOIN {course} co ON (lit.courseid = co.id AND e.courseid = co.id)
                                               WHERE co.visible = 1
