@@ -2191,11 +2191,11 @@ class iomad {
     /**
      * IOMAD version
      * @param string $capability
-     * @param context $context
+     * @param bool|context $context
      * @param int $companyid (optional) check for different company (and right to access same).
      * @return bool
      */
-    public static function has_capability(string $capability, context $context, int $companyid = 0): bool {
+    public static function has_capability(string $capability, bool|context $context, int $companyid = 0): bool {
         global $USER, $DB;
 
         // If original version says no then it's no.
@@ -2238,7 +2238,7 @@ class iomad {
      * @param int $companyid (optional) check for different company (and right to access same).
      * @throws required_capability_exception
      */
-    public static function require_capability(string $capability, context $context, int $companyid = 0) {
+    public static function require_capability(string $capability, bool|context $context, int $companyid = 0) {
         if (!self::has_capability($capability, $context, $companyid)) {
             throw new required_capability_exception($context, $capability, 'nopermissions', 'local_iomad');
         }

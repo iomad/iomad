@@ -38,13 +38,17 @@ final class licence_management_test extends advanced_testcase {
         $this->resetAfterTest();
         $this->markTestIncomplete();
 
-        // Create licence
+        // Create licence.
+        $licenserecord = (object) [];
+        $licenserecord->companyid = $companyid;
+        $licenseid = $generator->create_license($licenserecord);
 
-        // ...
+        // Assert that licence exists.
+        $this->assertTrue($DB->record_exists('local_iomad_company_licenses', ['id' => $licenseid]));
     }
 
     /*
-    * TODO: Test to edit licence
+    * Test to edit licence
     */
     public function test_edit_licence(): void {
         global $DB;
@@ -52,35 +56,87 @@ final class licence_management_test extends advanced_testcase {
         $this->resetAfterTest();
         $this->markTestIncomplete();
 
-        // Create licence
+        // Create licence.
+        $licenserecord = (object) [];
+        $licenserecord->companyid = $companyid;
+        $licenserecord->name = 'original_license_name';
+        $licenseid = $generator->create_license($licenserecord);
 
-        // ...
+        // Assert that licence exists.
+        $this->assertTrue($DB->record_exists('local_iomad_company_licenses', ['id' => $licenseid, 'name' => $licenserecord->name]));
+
+        // Edit licence.
+        $licenserecord->licenseid = $licenseid;
+        $licenserecord->name = 'license_name_changed';
+        $licenseid = company::create_license($licenserecord);
+
+        // Assert that licence exists.
+        $this->assertTrue($DB->record_exists('local_iomad_company_licenses', ['id' => $licenseid, 'name' => $licenserecord->name]));
     }
 
     /*
-    * TODO: Test to delete licence
+    * Test to delete licence
     */
     public function test_delete_licence(): void {
         global $DB;
 
         $this->resetAfterTest();
-        $this->markTestIncomplete();
+        $this->setAdminUser();
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
-        // Create licence
+        // Create licence.
+        $licenserecord = (object) [];
+        $licenserecord->companyid = $companyid;
+        $licenseid = $generator->create_license($licenserecord);
 
-        // ...
+        // Assert that licence has been created.
+        $this->assertTrue($DB->record_exists('local_iomad_company_licenses', ['id' => $licenseid]));
+
+        // Delete licence.
+        \block_iomad_company_admin\external\delete_license::execute($companyid, $licenseid);
+
+        // Assert that licence has been deleted.
+        $this->assertFalse($DB->record_exists('local_iomad_company_licenses', ['id' => $licenseid]));
     }
 
     /*
     * TODO: Test to create users and allocate licences
     */
     public function test_allocate_licence_to_user(): void {
+        global $DB;
 
         $this->resetAfterTest();
-        $this->markTestIncomplete();
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
-        // Create licence
+        // Create company.
+        $company = $generator->create_company();
+        $companyid = $company->id;
 
-        // ...
+        // Create course.
+        $courserecord = (object) [];
+        $courserecord->companyid = $companyid;
+        $course = $generator->create_course($courserecord);
+        $courseid = $course->id;
+
+        // Create licence.
+        $licenserecord = (object) [];
+        $licenserecord->companyid = $companyid;
+        $licenserecord->licensecourses = array($courseid);
+        $licenseid = $generator->create_license($licenserecord);
+
+        // Create user.
+        $userid = $generator->create_iomad_user(companyid: $companyid);
+
+        // Allocate licence.
+        company::allocate_license($licenseid, $userid);
+
+        // Assert that licence has been allocated.
+        //$this->assertTrue($DB->record_exists('local_iomad_company_licenses', ['id' => $licenseid, 'used' => 1]));
+        $this->assertTrue($DB->record_exists('local_iomad_company_license_courses', ['licenseid' => $licenseid, 'courseid' => $courseid]));
+        $this->assertTrue($DB->record_exists('local_iomad_company_license_users', [
+                                'userid' => $userid,
+                                'courseid' => $courseid,
+                                'licenseid' => $licenseid
+                            ]));
     }
 }

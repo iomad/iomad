@@ -68,9 +68,17 @@ final class course_management_test extends advanced_testcase {
         $coursedata->companyid = $company->id;
         $course = $generator->create_course($coursedata);
 
+        // Assert that course exists and is in company.
+        $this->assertTrue($DB->record_exists('course', ['id' => $course->id]));
+        $this->assertTrue($DB->record_exists('local_iomad_company_courses', ['courseid' => $course->id, 'companyid' => $company->id]));
+
         // Edit course in Manage IOMAD Course settings.
+        $newcoursename = 'Course - Renamed';
+        //company::update_course_settings(...);
 
         // Assert that course has been edited.
+        $this->assertTrue($DB->record_exists('course', ['id' => $course->id, 'fullname' => $newcoursename]));
+        //$this->assertTrue(...course settings have changed...);
     }
 
     /*
