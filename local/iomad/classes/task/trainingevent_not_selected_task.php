@@ -115,12 +115,12 @@ class trainingevent_not_selected_task extends scheduled_task {
                                  WHERE userid = :userid
                                  AND courseid = :courseid
                                  AND templatename = :templatename
-                                 AND modifiedtime > :timestarted",
+                                 AND modifiedtime > :timeenrolled",
                                 [
                                     'userid' => $compuser->userid,
                                     'courseid' => $compuser->courseid,
                                     'templatename' => 'trainingevent_not_selected',
-                                    'timestarted' => $compuser->timestarted,
+                                    'timeenrolled' => $compuser->timeenrolled,
                                 ]
                             );
 
