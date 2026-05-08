@@ -21,6 +21,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['clearonselfunenrol'] = 'Clear user on self unenrol';
+$string['clearonselfunenrol_help'] = 'Enabling this option will cause the users course interactions to be reset as well as they enrolment removed when they choose the Unenrol me from this course option for Self enrolment instances.';
 $string['pluginname'] = 'IOMAD Settings';
 $string['privacy:metadata'] = 'The Local IOMAD settings plugin only shows data stored in other locations.';
 $string['customtext2'] = 'Custom Text 2';
