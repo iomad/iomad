@@ -270,6 +270,9 @@ class iomad_company_admin {
 
         // Set the list of general auth options we support.
         $authoptions = [
+            'forcelogin',
+            'forceloginforprofiles',
+            'forceloginforprofileimage',
             'registerauth',
             'authloginviaemail',
             'guestloginbutton',
@@ -532,6 +535,9 @@ class iomad_company_admin {
 
         // Set the list of general auth options we support.
         $authoptions = [
+            'forcelogin',
+            'forceloginforprofiles',
+            'forceloginforprofileimage',
             'registerauth',
             'authloginviaemail',
             'guestloginbutton',

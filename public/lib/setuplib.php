@@ -586,6 +586,9 @@ function initialise_cfg() {
 
             // Set the wwwroot to the company one using the same protocol.
             $CFG->wwwroot  = $company->get_wwwroot();
+            $CFG->forcelogin = iomad::get_config('', 'forcelogin', $company->id);
+            $CFG->forceloginforprofiles = iomad::get_config('', 'forceloginforprofiles', $company->id);
+            $CFG->forceloginforprofileimage = iomad::get_config('', 'forceloginforprofileimage', $company->id);
 
             // Do we have session set up?
             if (empty($SESSION->currenteditingcompany)) {
