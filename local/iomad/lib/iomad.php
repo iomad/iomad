@@ -2299,7 +2299,7 @@ class iomad {
      * @param int $companyid
      * @return bool|object|string
      */
-    public static function get_config($plugin, $name = null) {
+    public static function get_config($plugin, $name = null, $companyid = 0) {
 
         // Did we get passed an item?
         if (empty($name)) {
@@ -2308,7 +2308,9 @@ class iomad {
         }
 
         // Get my companyid.
-        $companyid = self::get_my_companyid(context_system::instance(), false);
+        if (empty($companyid)) {
+            $companyid = self::get_my_companyid(context_system::instance(), false);
+        }
         if ($companyid > 0) {
             $companyname = $name . "_" . $companyid;
         } else {
@@ -2317,7 +2319,8 @@ class iomad {
         }
 
         // Is there a company value?
-        if ($value = get_config($plugin, $companyname)) {
+        $value = get_config($plugin, $companyname);
+        if ($value !== false) {
             return $value;
         } else {
             // Use the site setting.
