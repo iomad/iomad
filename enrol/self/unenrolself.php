@@ -22,6 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company_user, iomad};
+
 require('../../config.php');
 
 $enrolid = required_param('enrolid', PARAM_INT);
@@ -49,6 +51,11 @@ $PAGE->set_title($plugin->get_instance_name($instance));
 
 if ($confirm and confirm_sesskey()) {
     $plugin->unenrol_user($instance, $USER->id);
+
+    // IOMAD.
+    if (iomad::get_config('local_iomad', 'clearonselfunenrol')) {
+        company_user::delete_user_course($USER->id, $course->id, 'autodelete');
+    }
 
     \core\notification::success(get_string('youunenrolledfromcourse', 'enrol', format_string($course->fullname, true,
         ["context" => $context])));
