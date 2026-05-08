@@ -54,6 +54,31 @@ class company_auth_options_form extends moodleform {
 
         $mform->addElement('html', html_writer::tag('h2', get_string('authentication', 'admin')));
 
+        // Site force login options.
+        $mform->addElement(
+            'advcheckbox',
+            'forcelogin',
+            get_string('forcelogin', 'admin'),
+            get_string('configforcelogin', 'admin')
+        );
+        $mform->setDefault('forcelogin', $CFG->forcelogin);
+
+        $mform->addElement(
+            'advcheckbox',
+            'forceloginforprofiles',
+            get_string('forceloginforprofiles', 'admin'),
+            get_string('configforceloginforprofiles', 'admin')
+        );
+        $mform->setDefault('forceloginforprofiles', $CFG->forceloginforprofiles);
+
+        $mform->addElement(
+            'advcheckbox',
+            'forceloginforprofileimage',
+            get_string('forceloginforprofileimage', 'admin'),
+            get_string('forceloginforprofileimage_help', 'admin')
+        );
+        $mform->setDefault('forceloginforprofileimage', $CFG->forceloginforprofileimage);
+
         // Get the list of available self signup authentication plugins.
         $availableauths = [];
         $availableauths[''] = get_string('disable');

@@ -2329,7 +2329,8 @@ class iomad {
         }
 
         // Is there a company value?
-        if ($value = get_config($plugin, $companyname)) {
+        $value = get_config($plugin, $companyname);
+        if ($value !== false) {
             return $value;
         } else {
             // Use the site setting.
