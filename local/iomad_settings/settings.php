@@ -53,6 +53,11 @@ if ($hassiteconfig) {
                                                 get_string('iomad_use_mandatory_courses_help', 'local_iomad_settings'),
                                                 0));
 
+    $settings->add(new admin_setting_configcheckbox('local_iomad/clearonselfunenrol',
+                                                get_string('clearonselfunenrol', 'local_iomad_settings'),
+                                                get_string('clearonselfunenrol_help', 'local_iomad_settings'),
+                                                0));
+
     $institutionsync = [get_string('no'),
                         get_string('companyshortname', 'block_iomad_company_admin'),
                         get_string('companyname', 'block_iomad_company_admin')];

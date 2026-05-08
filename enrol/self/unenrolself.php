@@ -23,6 +23,7 @@
  */
 
 require('../../config.php');
+require_once($CFG->dirroot . '/local/iomad/lib/user.php');
 
 $enrolid = required_param('enrolid', PARAM_INT);
 $confirm = optional_param('confirm', 0, PARAM_BOOL);
@@ -49,6 +50,11 @@ $PAGE->set_title($plugin->get_instance_name($instance));
 
 if ($confirm and confirm_sesskey()) {
     $plugin->unenrol_user($instance, $USER->id);
+
+    // IOMAD.
+    if (iomad::get_config('local_iomad', 'clearonselfunenrol')) {
+        company_user::delete_user_course($USER->id, $course->id, 'autodelete');
+    }
 
     \core\notification::success(get_string('youunenrolledfromcourse', 'enrol', format_string($course->fullname, true,
         ["context" => $context])));
