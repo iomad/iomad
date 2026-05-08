@@ -2064,9 +2064,41 @@ class company {
         }
 
         if ($CFG->commerce_enable_external && !empty($CFG->commerce_externalshop_url)) {
-            // Fire off the payload to the external site.
-            $user = $DB->get_record('user', ['id' => $userid]);
-            iomad_commerce::delete_user($user->username, $this->id);
+            // Sanity check - We only want to delete the remote user if this user is no longer in a company
+            // or the current company is the only one using to the remote shop URL.
+            $candelete = true;
+            if ($othercompanies = $DB->get_records_sql(
+                "SELECT DISTINCT companyid
+                 FROM {company_users}
+                 WHERE userid = :userid",
+                ['userid' => $userid]
+            )) {
+                $myshopurl = iomad::get_config('', 'commerce_externalshop_url');
+                foreach ($othercompanies as $othercompany) {
+                    // Skip if its the same companyid - shouldn't happen, just in case.
+                    if ($othercompany->companyid == $this->id) {
+                        continue;
+                    }
+                    // Get that company's shop URL.
+                    $companyshopurl = iomad::get_config(
+                        '',
+                        'commerce_externalshop_url',
+                        $othercompany->companyid
+                    );
+                    // Does it match the current company?
+                    if ($companyshopurl == $myshopurl) {
+                        // We can't delete the remote user.
+                        $candelete = false;
+                    }
+                }
+            }
+
+            // Can we do the thing?
+            if ($candelete) {
+                // Fire off the payload to the external site.
+                $user = $DB->get_record('user', ['id' => $userid]);
+                iomad_commerce::delete_user($user->username, $this->id);
+            }
         }
 
         // Deal with the company theme.
