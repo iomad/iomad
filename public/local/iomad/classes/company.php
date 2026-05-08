@@ -2479,7 +2479,7 @@ class company {
             $candelete = true;
             if ($othercompanies = $DB->get_records_sql(
                 "SELECT DISTINCT companyid
-                 FROM {company_users}
+                 FROM {local_iomad_company_users}
                  WHERE userid = :userid",
                 ['userid' => $userid]
             )) {
