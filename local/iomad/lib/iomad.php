@@ -2320,11 +2320,11 @@ class iomad {
 
         // Is there a company value?
         $value = get_config($plugin, $companyname);
-        if ($value !== false) {
-            return $value;
-        } else {
+        if ($value === false || $value == '') {
             // Use the site setting.
             return get_config($plugin, $name);
+        } else {
+            return $value;
         }
     }
 }
