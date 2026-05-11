@@ -56,7 +56,7 @@ use core\event\{
     user_enrolment_created,
     user_deleted,
 };
-use core\output\notification;
+use core\notification;
 use local_iomadcustompage\event\iomadcustompage_deleted;
 use mod_questionnaire\responsetype\boolean;
 
