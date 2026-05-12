@@ -360,6 +360,18 @@ class track {
                 // Set the company id.
                 if (!empty($event->companyid)) {
                     $companyid = $event->companyid;
+                } else if ($company = company::by_userid($userid)) {
+                    // Try by userid.
+                    $companyid = $company->id;
+                } else if ($companycourserecs = $DB->get_records(
+                    'local_iomad_company_courses',
+                    ['courseid' => $courseid]
+                    )) {
+                    // Does the course belong to any company?
+                    if ($count($companycourserecs == 1)) {
+                        $companycourserec = array_pop($companycourserecs);
+                        $companyid = $companycourserec->companyid;
+                    }
                 }
 
                 // Get the course record.
