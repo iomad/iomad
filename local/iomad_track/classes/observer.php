@@ -185,6 +185,7 @@ class observer {
      */
     public static function course_completed($event) {
         global $DB;
+error_log("in course completed event handler");
 
         // Get the relevant event date (course_completed event).
         $data = $event->get_data();
@@ -291,8 +292,30 @@ class observer {
                 $companyid = 0;
                 $companyname = "";
                 if (!empty($event->companyid)) {
+error_log("Using the event companyid $event->companyid");
                     $companyid = $event->companyid;
                 }
+
+                // If we don't have a company ID yet - then we need to try and find one.
+                if (empty($companyid)) {
+error_log("Trying to find a companyid");
+                    // Try by the user id.
+                    if ($company = company::by_userid($userid)) {
+                        $companyid = $company->id;
+error_log("got one from the user id - $companyid");
+                    } else if ($companycourserecs = $DB->get_records('company_course', ['courseid' => $courseid])) {
+error_log("Trying from the courseid");
+                        // Does the course belong to any company?
+                        if ($count($companycourserecs == 1)) {
+                            $companycourserec = array_pop($companycourserecs);
+                            $companyid = $companycourserec->companyid;
+error_log("got one from the courseid - $companyid");
+                        }
+                    }
+                }
+error_log("Proceding with companyid $companyid");
+
+                // Get the rest of the info.
                 $userrec = $DB->get_record('user', array('id' => $userid));
                 $courserec = $DB->get_record('course', array('id' => $courseid));
                 $licenseid = 0;
