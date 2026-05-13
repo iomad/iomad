@@ -78,7 +78,7 @@ function mycourses_get_my_completion($sort = 'coursefullname', $dir = 'ASC') {
     $myusedcourses = array();
     foreach ($myinprogress as $id => $inprogress) {
         if (!empty($myinprogress->courseid)) {
-            $myinprogress[$id]->coursefullname = format_string($inprogress->coursefullname, true, ['context' => context_course::instance($inprogress->courseid)]);
+            $myinprogress[$id]->coursefullname = format_string($inprogress->coursefullname, true, ['context' => context_system::instance()]);
         }
         $myusedcourses[$inprogress->courseid] = $inprogress->courseid;
         if (empty($inprogress->hasgrade)) {
@@ -115,11 +115,11 @@ function mycourses_get_my_completion($sort = 'coursefullname', $dir = 'ASC') {
                                                         $inprogresssql",
                                                         array('enrol' => 'self'));
         foreach ($companyselfenrolcourses as $companyselfenrolcourse) {
-            $companyselfenrolcourse->coursefullname = format_string($companyselfenrolcourse->coursefullname, true, ['context' => context_course::instance($companyselfenrolcourse->courseid)]);
+            $companyselfenrolcourse->coursefullname = format_string($companyselfenrolcourse->coursefullname, true, ['context' => context_system::instance()]);
             $myavailablecourses[$companyselfenrolcourse->coursefullname] = $companyselfenrolcourse;
         }
         foreach ($sharedselfenrolcourses as $sharedselfenrolcourse) {
-            $sharedselfenrolcourse->coursefullname = format_string($sharedselfenrolcourse->coursefullname, true, ['context' => context_course::instance($sharedselfenrolcourse->courseid)]);
+            $sharedselfenrolcourse->coursefullname = format_string($sharedselfenrolcourse->coursefullname, true, ['context' => context_system::instance()]);
             $myavailablecourses[$sharedselfenrolcourse->coursefullname] = $sharedselfenrolcourse;
         }
         // Check if there are any courses from 'blanket' licenses.
@@ -141,13 +141,13 @@ function mycourses_get_my_completion($sort = 'coursefullname', $dir = 'ASC') {
                 }
             }
             foreach ($blanketcourses as $blanketcourse) {
-                $blanketcourse->fullname = format_string($blanketcourse->coursefullname, true, ['context' => context_course::instance($blanketcourse->courseid)]);
+                $blanketcourse->fullname = format_string($blanketcourse->coursefullname, true, ['context' => context_system::instance()]);
                 $myavailablecourses[$blanketcourse->coursefullname] = $blanketcourse;
             }
         }
     }
     foreach($mynotstartedlicense as $licensedcourse) {
-        $licensedcourse->coursefullname = format_string($licensedcourse->coursefullname, true, ['context' => context_course::instance($licensedcourse->courseid)]);
+        $licensedcourse->coursefullname = format_string($licensedcourse->coursefullname, true, ['context' => context_system::instance()]);
         $myavailablecourses[$licensedcourse->coursefullname] = $licensedcourse;
     }
 
@@ -189,7 +189,7 @@ function mycourses_get_my_archive($sort = 'coursefullname', $dir = 'ASC') {
     // Deal with completed course scores and links for certificates.
     foreach ($myarchive as $id => $archive) {
         if (!empty($archive->courseid)) {
-            $myarchive[$id]->coursefullname = format_string($archive->coursefullname, true, ['context' => context_course::instance($archive->courseid)]);
+            $myarchive[$id]->coursefullname = format_string($archive->coursefullname, true, ['context' => context_system::instance()]);
         }
         // Deal with the iomadcertificate info.
         $myarchive[$id]->certificates = [];
