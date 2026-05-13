@@ -25,7 +25,6 @@
 
 namespace block_iomad_mycourses;
 
-use context_course;
 use context_system;
 use context_user;
 use core_course\external\course_summary_exporter;
@@ -111,7 +110,7 @@ class helper {
             if (!empty($inprogress->realcourseid)) {
                 $inprogress->coursefullname = format_string($inprogress->coursefullname,
                                                             true,
-                                                            ['context' => context_course::instance($inprogress->courseid)]);
+                                                            ['context' => context_system::instance()]);
             }
 
             // Deal with empty grades.
@@ -203,7 +202,7 @@ class helper {
         foreach ($mynotstartedlicense as $licensedcourse) {
             $licensedcourse->coursefullname = format_string($licensedcourse->coursefullname,
                                                             true,
-                                                            ['context' => context_course::instance($licensedcourse->courseid)]);
+                                                            ['context' => context_system::instance()]);
             if (get_config('local_iomad', 'use_mandatory_courses') &&
                 !empty($licensedcourse->mandatory)) {
                 $mymandatorycourses[$licensedcourse->coursefullname] = $licensedcourse;
@@ -241,7 +240,7 @@ class helper {
             $companyselfenrolcourse->coursefullname = format_string(
                 $companyselfenrolcourse->coursefullname,
                 true,
-                ['context' => context_course::instance($companyselfenrolcourse->courseid)]
+                ['context' => context_system::instance()]
             );
 
             // Deal with any mandatory course options.
@@ -282,7 +281,7 @@ class helper {
             $sharedselfenrolcourse->coursefullname = format_string(
                 $sharedselfenrolcourse->coursefullname,
                 true,
-                ['context' => context_course::instance($sharedselfenrolcourse->courseid)]
+                ['context' => context_system::instance()]
             );
 
             // Deal with any mandatory courses.
@@ -332,7 +331,7 @@ class helper {
                 foreach ($licensecourses as $licensecourse) {
                     $licensecourse->fullname = format_string($licensecourse->coursefullname,
                                                              true,
-                                                             ['context' => context_course::instance($licensecourse->courseid)]);
+                                                             ['context' => context_system::instance()]);
                     // Deal with any mandatory courses.
                     if (get_config('local_iomad', 'use_mandatory_courses') &&
                         !empty($licensecourse->mandatory)) {
@@ -470,7 +469,10 @@ class helper {
                 $CFG->wwwroot . '/course/view.php',
                 ['id' => $mandatorycourse->id]
             );
-            $mandatorycourse->coursefullname = format_string($mandatorycourse->fullname);
+            $mandatorycourse->coursefullname = format_string(
+                $mandatorycourse->fullname,
+                true,
+                ['context' => context_system::instance()]);
             $mandatorycourse->courseurl = $courseurl->out(false);
             $mandatorycourse->timeenrolled = $timeenrolled;
             $mandatorycourse->timestarted = $timestarted;
@@ -552,7 +554,7 @@ class helper {
             if (!empty($archive->realcourseid)) {
                 $myarchive[$id]->coursefullname = format_string($archive->coursefullname,
                                                                 true,
-                                                                ['context' => context_course::instance($archive->courseid)]);
+                                                                ['context' => context_system::instance()]);
             }
 
             // Deal with the iomadcertificate info.
