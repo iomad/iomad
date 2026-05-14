@@ -79,6 +79,14 @@ class company_auth_options_form extends moodleform {
         );
         $mform->setDefault('forceloginforprofileimage', $CFG->forceloginforprofileimage);
 
+        $mform->addElement(
+            'advcheckbox',
+            'autologinguests',
+            get_string('autologinguests', 'admin'),
+            get_string('configautologinguests', 'admin')
+        );
+        $mform->setDefault('autologinguests', $CFG->autologinguests);
+
         // Get the list of available self signup authentication plugins.
         $availableauths = [];
         $availableauths[''] = get_string('disable');
