@@ -580,6 +580,7 @@ function initialise_cfg() {
             $CFG->forcelogin = iomad::get_config('', 'forcelogin', $company->id);
             $CFG->forceloginforprofiles = iomad::get_config('', 'forceloginforprofiles', $company->id);
             $CFG->forceloginforprofileimage = iomad::get_config('', 'forceloginforprofileimage', $company->id);
+            $CFG->autologinguests = iomad::get_config('', 'autologinguests', $company->id);
 
             // Do we have session set up?
             if (empty($SESSION->currenteditingcompany)) {
