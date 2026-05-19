@@ -93,6 +93,7 @@ if ($deleteid && confirm_sesskey() && $confirm == md5($deleteid)) {
 }
 
 // Process the form.
+$noticestring = '';
 if ($mform->is_cancelled()) {
     redirect($dashboardurl);
 
