@@ -87,13 +87,11 @@ if ($deleteid && confirm_sesskey() && $confirm == md5($deleteid)) {
 }
 
 // Process the form.
+$noticestring = '';
 if ($mform->is_cancelled()) {
     redirect($dashboardurl);
 
 } else if ($data = $mform->get_data()) {
-    // Set default message.
-    $noticestring = '';
-
     // Are we creating a department?
     if (!empty($data->create) ) {
         redirect(new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/company_department_create_form.php',

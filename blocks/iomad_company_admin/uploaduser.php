@@ -234,6 +234,12 @@ if (empty($iid)) {
                                             $formdata->encoding,
                                             $formdata->delimiter_name,
                                             'validate_user_upload_columns');
+
+        $csvloaderror = $cir->get_error();
+        if (!is_null($csvloaderror)) {
+            throw new moodle_exception('csvloaderror', 'error', $returnurl, $csvloaderror);
+        }
+
         if (!$columns = $cir->get_columns()) {
             throw new moodle_exception('cannotreadtmpfile', 'error', $returnurl);
         }
@@ -359,7 +365,7 @@ if (!empty($cancelled)) {
         $updatepasswords = (!empty($formdata->uupasswordold)  && $optype != UU_ADDNEW && $optype != UU_ADDINC);
         $allowrenames = (!empty($formdata->uuallowrenames) && $optype != UU_ADDNEW && $optype != UU_ADDINC);
         $allowdeletes = (!empty($formdata->uuallowdeletes) && $optype != UU_ADDNEW && $optype != UU_ADDINC);
-        $updatetype = isset($formdata->uuupdatetype) ? $formdata->uuupdatetype : 0;
+        $updatetype = !empty($formdata->uuupdatetype) ? $formdata->uuupdatetype : 0;
         $bulk = $formdata->uubulk;
         $noemailduplicates = $formdata->uunoemailduplicates;
 
@@ -428,6 +434,7 @@ if (!empty($cancelled)) {
             $errornum = 1;
             $passeddepartment = false;
             $defaultdepartment = 0;
+            $newdepartments = [];
 
             $upt->track('line', $linenum);
 
@@ -441,12 +448,15 @@ if (!empty($cancelled)) {
             foreach ($line as $key => $value) {
                 if ($value !== '') {
                     $key = $columns[$key];
-                    $user->$key = $value;
-                    // Did we get oassed a deparment value?
-                    if (strpos($key, 'department') !== false) {
+
+                    // Did we get passed a department value?
+                    if (preg_match('/^department\d*$/', trim($key))) {
                         if (!empty($value)) {
+                            $newdepartments[] = $value;
                             $passeddepartment = true;
                         }
+                    } else {
+                        $user->$key = $value;
                     }
                     if (in_array($key, $upt->columns)) {
                         $upt->track($key, $value);
@@ -727,6 +737,7 @@ if (!empty($cancelled)) {
             }
 
             if ($existinguser) {
+                $userupdated = false;
                 $user->id = $existinguser->id;
 
                 if (is_siteadmin($user->id)) {
@@ -747,7 +758,7 @@ if (!empty($cancelled)) {
                     continue;
                 }
 
-                if (!empty($updatetype)) {
+                if ($updatetype != 0) {
                     $existinguser->timemodified = time();
                     if (empty($existinguser->timecreated)) {
                         if (empty($existinguser->firstaccess)) {
@@ -900,48 +911,116 @@ if (!empty($cancelled)) {
                             set_user_preference('auth_forcepasswordchange', 1, $existinguser->id);
                         }
                     }
-                    $upt->track('status', $struserupdated);
-                    $usersupdated++;
+
+                    // Only increment the counter if it's not already been incremented.
+                    if (!$userupdated) {
+                        $upt->track('status', $struserupdated);
+                        $usersupdated++;
+                        $userupdated = true;
+                    }
+
                     // Save custom profile fields data from csv file.
                     profile_save_data($existinguser);
 
                     user_updated::create_from_userid($existinguser->id)->trigger();
+                }
 
-                    // Is the company department valid?
-                    if ($passeddepartment && !empty($existinguser->department)) {
+                // Deal with department assignments.
+                if ($passeddepartment) {
+                    $departmentinvalid = false;
+
+                    // Remove user's existing department assignments.
+                    if ($updatetype == 1 || $updatetype == 2) {
+                        $existinguserdeps = $DB->get_records('company_users', ['userid' => $existinguser->id,
+                                                                               'companyid' => $company->id]);
+                        foreach ($existinguserdeps as $existinguserdep) {
+                            // Don't remove users from the top-level department.
+                            if ($existinguserdep->id == 0) {
+                                continue;
+                            }
+
+                            // Make sure the uploader can manage this department.
+                            if ($DB->record_exists('department', ['company' => $company->id,
+                                                                  'id' => $existinguserdep->departmentid])
+                                    && company::can_manage_department($existinguserdep->departmentid)) {
+                                // Don't remove users from departments they're about to be added to.
+                                if (in_array($existinguserdep->id, $newdepartments)) {
+                                    continue;
+                                }
+
+                                // Delete records in company_users for this department id with this user.
+                                $DB->delete_records('company_users', ['userid' => $existinguser->id,
+                                                                      'companyid' => $company->id,
+                                                                      'departmentid' => $existinguserdep->departmentid]);
+                            }
+                        }
+                    }
+
+                    // Assign user to new departments.
+                    foreach ($newdepartments as $newdepartment) {
+                        if (empty($newdepartment)) {
+                            continue;
+                        }
+
+                        // Is the company department valid?
                         if (!$department = $DB->get_record('department', ['company' => $company->id,
-                                                                          'shortname' => $existinguser->department])) {
-                            $upt->track('department', get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
-                            $upt->track('status', $strusernotaddederror, 'error');
-                            $line[] = get_string('invaliddepartment', 'block_iomad_company_admin');
-                            $errornum++;
-                            $userserrors++;
-                            $erroredusers[] = $line;
-                            continue;
+                                                                        'shortname' => $newdepartment])) {
+                            $departmentinvalid = true;
+                            break;
                         }
-                        // Make sure the user can manage this department.
+
+                        // Make sure the uploader can manage this department.
                         if (!company::can_manage_department($department->id)) {
-                            $upt->track('department', get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
-                            $upt->track('status', $strusernotaddederror, 'error');
-                            $line[] = get_string('invaliddepartment', 'block_iomad_company_admin');
-                            $errornum++;
-                            $userserrors++;
-                            $erroredusers[] = $line;
+                            $departmentinvalid = true;
+                            break;
+                        }
+
+                        // Don't need to add users to top-level department.
+                        if ($department->id == 0) {
                             continue;
                         }
 
-                        if ($userdep = $DB->get_record('company_users', ['userid' => $existinguser->id,
-                                                                         'companyid' => $company->id])) {
+                        // Check whether the user is already in a department in the company.
+                        if ($DB->record_exists('company_users', ['userid' => $existinguser->id, 'companyid' => $company->id])) {
+                            // Create new record.
+                            $userdep = (object) [];
+                            $userdep->userid = $existinguser->id;
                             $userdep->departmentid = $department->id;
-                            $DB->update_record('company_users', $userdep);
+                            $userdep->companyid = $company->id;
+
+                            // If the record already exists, skip.
+                            if ($DB->record_exists('company_users', ['userid' => $userdep->userid,
+                                                                     'departmentid' => $userdep->departmentid,
+                                                                     'companyid' => $userdep->companyid])) {
+                                continue;
+                            }
+
+                            // Insert new record.
+                            $DB->insert_record('company_users', $userdep);
                         } else {
                             // Add the user to the company.
                             $company->assign_user_to_company($existinguser->id, $department->id);
                         }
+
+                        // Only increment the counter if it's not already been incremented.
+                        if (!$userupdated) {
+                            $upt->track('status', $struserupdated);
+                            $usersupdated++;
+                            $userupdated = true;
+                        }
+                    }
+                    if ($departmentinvalid) {
+                        $upt->track('department', get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
+                        $upt->track('status', $strusernotaddederror, 'error');
+                        $line[] = get_string('invaliddepartment', 'block_iomad_company_admin');
+                        $errornum++;
+                        $userserrors++;
+                        $erroredusers[] = $line;
+                        continue;
                     }
                 }
             } else {
-                // Save the user to the database.
+                // Create new user record.
                 $user->confirmed = 1;
                 $user->timemodified = time();
                 $user->timecreated = time();
@@ -1018,42 +1097,55 @@ if (!empty($cancelled)) {
                     $user->companyid = $companyid;
                 }
 
-                // Is the company department valid?
-                if (!empty($user->department)) {
-                    if (!$department = $DB->get_record('department', ['company' => $company->id,
-                                                                      'shortname' => $user->department])) {
-                        $upt->track('department', get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
-                        $upt->track('status', $strusernotaddederror, 'error');
-                        $line[] = get_string('invaliddepartment', 'block_iomad_company_admin');
-                        $errornum++;
-                        $userserrors++;
-                        $erroredusers[] = $line;
-                        continue;
-                    }
+                // Validate department assignments.
+                if ($passeddepartment) {
+                    $departmentinvalid = false;
+                    $validdepartments = [];
 
-                    // Make sure the user can manage this department.
-                    if (!company::can_manage_department($department->id)) {
-                        $upt->track('department', get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
-                        $upt->track('status', $strusernotaddederror, 'error');
-                        $line[] = get_string('invaliddepartment', 'block_iomad_company_admin');
-                        $errornum++;
-                        $userserrors++;
-                        $erroredusers[] = $line;
-                        continue;
+                    // Is the company department valid?
+                    if (!empty($newdepartments)) {
+                        foreach ($newdepartments as $newdepartment) {
+                            if (empty($newdepartment)) {
+                                continue;
+                            }
+
+                            // Is the company department valid?
+                            if (!$department = $DB->get_record('department', ['company' => $company->id,
+                                                                            'shortname' => $newdepartment])) {
+                                $departmentinvalid = true;
+                                break;
+                            }
+
+                            // Make sure the uploader can manage this department.
+                            if (!company::can_manage_department($department->id)) {
+                                $departmentinvalid = true;
+                                break;
+                            }
+
+                            // Don't need to add users to top-level department.
+                            if ($department->id == 0) {
+                                continue;
+                            }
+
+                            // Mark department as valid.
+                            $validdepartments[] = $department->id;
+                        }
+                    } else {
+                        // Is the company department valid?
+                        if (!$department = $DB->get_record('department', ['company' => $company->id,
+                                                                        'id' => $formdata->deptid])) {
+                            $departmentinvalid = true;
+                        } else {
+                            // Make sure the uploader can manage this department.
+                            if (!company::can_manage_department($department->id)) {
+                                $departmentinvalid = true;
+
+                                // Add department to valid list.
+                                $validdepartments[] = $department->id;
+                            }
+                        }
                     }
-                } else {
-                    if (!$department = $DB->get_record('department', ['company' => $company->id,
-                                                                      'id' => $formdata->deptid])) {
-                        $upt->track('department', get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
-                        $upt->track('status', $strusernotaddederror, 'error');
-                        $line[] = get_string('invaliddepartment', 'block_iomad_company_admin');
-                        $errornum++;
-                        $userserrors++;
-                        $erroredusers[] = $line;
-                        continue;
-                    }
-                    // Make sure the user can manage this department.
-                    if (!company::can_manage_department($department->id)) {
+                    if ($departmentinvalid) {
                         $upt->track('department', get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
                         $upt->track('status', $strusernotaddederror, 'error');
                         $line[] = get_string('invaliddepartment', 'block_iomad_company_admin');
@@ -1063,7 +1155,8 @@ if (!empty($cancelled)) {
                         continue;
                     }
                 }
-                $user->departmentid = $department->id;
+
+                // Deal with password.
                 if (!empty($user->password)) {
                     $user->newpassword = $user->password;
                 } else {
@@ -1086,11 +1179,34 @@ if (!empty($cancelled)) {
                 // Save the profile information.
                 profile_save_data($user);
 
-                // Are we being passed company departments?
-                if ($passeddepartment) {
-                    // Stash the default in case we need to remove them from it later.
-                    $defaultdepartmentid = $department->id;
+                // Add user to department(s).
+                if (!empty($validdepartments)) {
+                    foreach($validdepartments as $validdepartment) {
+                        // Check whether the user is already in a department in the company.
+                        if ($DB->record_exists('company_users', ['userid' => $user->id, 'companyid' => $companyid])) {
+                            // Create new record.
+                            $userdep = (object) [];
+                            $userdep->userid = $user->id;
+                            $userdep->departmentid = $validdepartment;
+                            $userdep->companyid = $companyid;
+
+                            // If the record already exists, skip.
+                            if ($DB->record_exists('company_users', ['userid' => $userdep->userid,
+                                                                     'departmentid' => $userdep->departmentid,
+                                                                     'companyid' => $userdep->companyid])) {
+                                continue;
+                            }
+
+                            // Insert new record.
+                            $DB->insert_record('company_users', $userdep);
+                        } else {
+                            // Add the user to the company.
+                            $company->assign_user_to_company($user->id, $validdepartment);
+                        }
+                    }
                 }
+
+                // Track info.
                 $info = ': ' . $user->username .' (ID = ' . $user->id . ')';
                 $upt->track('status', $struseradded);
                 $upt->track('id', $user->id, 'normal', false);
@@ -1216,55 +1332,6 @@ if (!empty($cancelled)) {
                             $upt->track('enrolments', get_string('addedtogroupnot', '', s($gname)), 'error');
                             continue;
                         }
-                    }
-
-                    // Do we have a department passed?
-                    if (preg_match('/^department\d+$/', $column)) {
-                        $i = substr($column, 10);
-
-                        if (empty($user->{'department'.$i})) {
-                            continue;
-                        }
-                        $shortname = $user->{'department'.$i};
-                        if (!$department = $DB->get_record('department', ['company' => $company->id,
-                                                                          'shortname' => $shortname])) {
-                            $upt->track('department'.$i, get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
-                            $upt->track('status', $strusernotaddederror, 'error');
-                            $line[] = get_string('invaliddepartment', 'block_iomad_company_admin');
-                            $errornum++;
-                            $userserrors++;
-                            $erroredusers[] = $line;
-                            continue;
-                        }
-                        // Make sure the user can manage this department.
-                        if (!company::can_manage_department($department->id)) {
-                            $upt->track('department'.$i, get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
-                            $upt->track('status', $strusernotaddederror, 'error');
-                            $line[] = get_string('invaliddepartment', 'block_iomad_company_admin');
-                            $errornum++;
-                            $userserrors++;
-                            $erroredusers[] = $line;
-                            continue;
-                        }
-
-                        // Since we got a valid department, remove the user from any default one.  Typically top-level.
-                        if ($department->id != $defaultdepartmentid &&
-                            !empty($defaultdepartmentid)) {
-
-                            // Remove the user from the default department.
-                            $DB->delete_records('company_users', ['userid' => $user->id,
-                                                                  'companyid' => $company->id,
-                                                                  'departmentid' => $defaultdepartmentid]);
-
-                            // Only want to do this once.
-                            $defaultdepartmentid = 0;
-                        } else {
-                            // Default is the first we were passed.  No longer required.
-                            $defaultdepartmentid = 0;
-                        }
-
-                        // Add the user to this department.
-                        $company->assign_user_to_company($user->id, $department->id);
                     }
                 }
             }
