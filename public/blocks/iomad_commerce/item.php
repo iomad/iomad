@@ -139,7 +139,7 @@ if ($item) {
                         'form_url' => $licenseformurl->out(),
                         'item_id' => $itemid,
                         'msg_txt' => $msg,
-                        'howmany_txt' => get_string('howmanylicenses', 'block_iomad_commerce'),
+                        'howmany_txt' => get_string('howmanylicences', 'block_iomad_commerce'),
                         'buynow_txt' => get_string('buynow', 'block_iomad_commerce'),
                         'noerror_style' => 'display: none;',
                     ];
