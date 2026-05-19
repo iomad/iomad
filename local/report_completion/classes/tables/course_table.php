@@ -148,7 +148,7 @@ class course_table extends table_sql {
                                                            SQL_PARAMS_NAMED,
                                                            'pcids');
                 $companyuserfilter =
-                "AND cu.userid NOT IN (
+                " AND cu.userid NOT IN (
                      SELECT userid FROM {local_iomad_company_users}
                      WHERE managertype = 1
                      AND companyid {$insql}
