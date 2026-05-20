@@ -146,7 +146,7 @@ if ($resetbutton) {
 // Are we deleting something?
 if (!empty($delete) && confirm_sesskey()) {
     iomad::require_capability('block/iomad_company_admin:company_delete', $context);
-    $deleteform = new company_delete_form($baseurl, $delete);
+    $deleteform = new company_delete_form($linkurl, $delete);
     if (!$deleteform->is_cancelled()) {
         // If we got something back from the form - do the action.
         if ($deletedata = $deleteform->get_data()) {
@@ -161,6 +161,11 @@ if (!empty($delete) && confirm_sesskey()) {
             $event->trigger();
 
             notification::success(get_string('companydeletescheduled', 'block_iomad_company_admin'));
+
+            // Do we have the deleted company selected?
+            if ($SESSION->currenteditingcompany == $delete) {
+                unset($SESSION->currenteditingcompany);
+            }
         } else {
             // Display the delete form.
             echo $OUTPUT->header();
