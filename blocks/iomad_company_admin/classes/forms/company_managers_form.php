@@ -147,7 +147,7 @@ class company_managers_form extends moodleform {
      * @return void
      */
     public function definition_after_data() {
-        global $output;
+        global $CFG, $output;
 
         // Set up the form.
         $mform =& $this->_form;
