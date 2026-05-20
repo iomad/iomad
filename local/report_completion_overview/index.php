@@ -218,7 +218,7 @@ if ($parentslist = $company->get_parent_companies_recursive()) {
     $companysql = " AND u.id NOT IN (
                     SELECT userid FROM {local_iomad_company_users}
                     WHERE managertype = 1
-                    AND companyid IN {$insql})";
+                    AND companyid {$insql})";
 }
 
 // Deal with where we are on the department tree.
