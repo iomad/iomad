@@ -81,7 +81,7 @@ dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 // Delete any valid departments.
 if ($moveid && confirm_sesskey() && $confirm == md5($moveid)) {
     $movefullname = required_param('movefullname', PARAM_MULTILANG);
-    $moveshortname = required_param('movefullname', PARAM_MULTILANG);
+    $moveshortname = required_param('moveshortname', PARAM_MULTILANG);
     $moveparent = required_param('moveparent', PARAM_INT);
     company::create_department($moveid,
                                $companyid,
