@@ -134,7 +134,7 @@ class company_delete_form extends dynamic_form {
      * @return array
      */
     public function process_dynamic_submission(): array {
-        global $DB, $USER;
+        global $DB, $SESSION, $USER;
 
         // Get the info from the form.
         $data = $this->get_data();
@@ -150,13 +150,18 @@ class company_delete_form extends dynamic_form {
 
         // Generate an event to actually do the work.
         $eventother = ['companyid' => $data->companyid];
-            $event = company_deleted::create([
-                'context' => $companycontext,
-                'objectid' => $data->companyid,
-                'userid' => $USER->id,
-                'other' => $eventother,
-            ]);
-            $event->trigger();
+        $event = company_deleted::create([
+            'context' => $companycontext,
+            'objectid' => $data->companyid,
+            'userid' => $USER->id,
+            'other' => $eventother,
+        ]);
+        $event->trigger();
+
+        // Do we have the deleted company selected?
+        if ($SESSION->currenteditingcompany == $data->companyid) {
+            unset($SESSION->currenteditingcompany);
+        }
 
         // Return stuff to the JS.
         return [
