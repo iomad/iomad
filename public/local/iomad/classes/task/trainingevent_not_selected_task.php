@@ -58,6 +58,14 @@ class trainingevent_not_selected_task extends scheduled_task {
         $courses = [];
         $dayofweek = date('w', $runtime) + 1;
 
+        // Set the string time for the repeat periods.
+        $periods = [
+            1 => " day",
+            2 => " week",
+            3 => " fortnight",
+            4 => " month",
+        ];
+
         mtrace("Running email report training event not selected task at ".date('d M Y h:i:s', $runtime));
 
         // Get all of the upcoming training event courses.
@@ -70,7 +78,10 @@ class trainingevent_not_selected_task extends scheduled_task {
                                          ['time' => $runtime]);
         foreach ($courses as $course) {
             // Get all of the users on the course who are not already signed up for an event or waiting list.
-            $users = $DB->get_records_sql("SELECT DISTINCT concat(u.id, concat('-', lit.companyid)) AS rowid,u.*,lit.companyid
+            $users = $DB->get_records_sql("SELECT DISTINCT concat(u.id, concat('-', lit.companyid)) AS rowid,
+                                                  u.*,
+                                                  lit.companyid,
+                                                  lit.timeenrolled
                                            FROM {user} u
                                            JOIN {user_enrolments} ue ON (ue.userid = u.id)
                                            JOIN {enrol} e ON (ue.enrolid = e.id AND e.status = 0)
@@ -117,10 +128,10 @@ class trainingevent_not_selected_task extends scheduled_task {
                                  AND templatename = :templatename
                                  AND modifiedtime > :timeenrolled",
                                 [
-                                    'userid' => $compuser->userid,
-                                    'courseid' => $compuser->courseid,
+                                    'userid' => $user->id,
+                                    'courseid' => $course->id,
                                     'templatename' => 'trainingevent_not_selected',
-                                    'timeenrolled' => $compuser->timeenrolled,
+                                    'timeenrolled' => $user->timeenrolled,
                                 ]
                             );
 
@@ -143,8 +154,8 @@ class trainingevent_not_selected_task extends scheduled_task {
                             if ($DB->record_exists(
                                 'local_iomad_emails',
                                 [
-                                    'userid' => $compuser->userid,
-                                    'courseid' => $compuser->courseid,
+                                    'userid' => $user->id,
+                                    'courseid' => $course->id,
                                     'templatename' => 'trainingevent_not_selected',
                                 ])) {
                                 // Email already sent so skip it.
