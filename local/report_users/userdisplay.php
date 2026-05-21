@@ -312,8 +312,8 @@ if (!empty($data)) {
                 $senttime = strtotime($value['year'] . "-" . $value['month'] . "-" . $value['day']);
 
                 if ($testtime != $senttime && confirm_sesskey()) {
-                    $DB->set_field('local_iomad_track', 'timestarted', $senttime, ['id' => $key]);
-                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $key]);
+                    $DB->set_field('local_iomad_tracks', 'timestarted', $senttime, ['id' => $key]);
+                    $DB->set_field('local_iomad_tracks', 'modifiedtime', time(), ['id' => $key]);
                 }
             }
         }
