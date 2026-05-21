@@ -304,6 +304,10 @@ if (!empty($data)) {
         }
         if (!empty($data->timestarted)) {
             foreach ($data->timestarted as $key => $value) {
+                // Check for null values.
+                if (empty($data->origtimestarted[$key])) {
+                    $data->origtimestarted[$key] = 0;
+                }
                 $testtime = strtotime("0:00", $data->origtimestarted[$key]);
                 $senttime = strtotime($value['year'] . "-" . $value['month'] . "-" . $value['day']);
 
@@ -316,6 +320,10 @@ if (!empty($data)) {
         if (!empty($data->timecompleted)) {
             foreach ($data->timecompleted as $key => $value) {
                 if ($trackrec = $DB->get_record('local_iomad_tracks', ['id' => $key])) {
+                    // Check for null values.
+                    if (empty($data->origtimecompleted[$key])) {
+                        $data->origtimecompleted[$key] = 0;
+                    }
                     $testtime = strtotime("0:00", $data->origtimecompleted[$key]);
                     $senttime = strtotime($value['year'] . "-" . $value['month'] . "-" . $value['day']);
 
