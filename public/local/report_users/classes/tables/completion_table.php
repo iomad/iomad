@@ -126,7 +126,7 @@ class completion_table extends table_sql {
         } else {
             $element = $output->render_datetime_element('timestarted['.$row->id.']',
                                                         'timestarted' . $row->id,
-                                                        $row->timeenrolled);
+                                                        $row->timestarted);
             return $element;
         }
     }
