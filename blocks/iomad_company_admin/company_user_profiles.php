@@ -89,9 +89,8 @@ switch ($action) {
         $confirm = optional_param('confirm', 0, PARAM_BOOL);
 
         $datacount = $DB->count_records('user_info_data', ['fieldid' => $id]);
-        if (data_submitted() &&
-            ($confirm && confirm_sesskey()) ||
-            $datacount === 0) {
+        if (data_submitted() && confirm_sesskey() &&
+            ($confirm || $datacount === 0)) {
             profile_delete_field($id);
             redirect($redirect, get_string('eventuserinfofielddeleted'), null, notification::NOTIFY_SUCCESS);
         }
@@ -361,9 +360,29 @@ function profile_field_icons($field) {
 
     // Delete!
     $deleteurl = new moodle_url('/blocks/iomad_company_admin/company_user_profiles.php', ['id' => $field->id,
-                                                                                          'action' => 'deletefield']);
-    $editstr .= html_writer::tag(
-        'a',
+                                                                                          'action' => 'deletefield',
+                                                                                          'sesskey' => sesskey()]);
+    $deleteform = html_writer::start_tag('form', [
+        'method' => 'post',
+        'action' => $deleteurl->out_omit_querystring(),
+        'style' => 'display:inline;'
+    ]);
+    $deleteform .= html_writer::empty_tag('input', [
+        'type' => 'hidden',
+        'name' => 'id',
+        'value' => $field->id
+    ]);
+    $deleteform .= html_writer::empty_tag('input', [
+        'type' => 'hidden',
+        'name' => 'action',
+        'value' => 'deletefield'
+    ]);
+    $deleteform .= html_writer::empty_tag('input', [
+        'type' => 'hidden',
+        'name' => 'sesskey',
+        'value' => sesskey()
+    ]);
+    $deleteform .= html_writer::tag('button',
         html_writer::tag(
             'i',
             '',
@@ -375,10 +394,13 @@ function profile_field_icons($field) {
             ]
         ),
         [
+            'type' => 'submit',
             'title' => $strdelete,
-            'href' => $deleteurl,
+            'style' => 'background:none;border:none;padding:0;cursor:pointer;color:inherit;',
         ]
     );
+    $deleteform .= html_writer::end_tag('form');
+    $editstr .= $deleteform;
 
     // Move up!
      $upurl = new moodle_url('/blocks/iomad_company_admin/company_user_profiles.php', ['id' => $field->id,
