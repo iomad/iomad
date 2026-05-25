@@ -45,19 +45,22 @@ final class course_management_test extends advanced_testcase {
         $coursedata = (object) [];
         $coursedata->companyid = $company->id;
         $course = $generator->create_course($coursedata);
+        $courseid = $course->id;
 
         // Assert that course exists and is in company.
-        $this->assertTrue($DB->record_exists('course', ['id' => $course->id]));
-        $this->assertTrue($DB->record_exists('local_iomad_company_courses', ['courseid' => $course->id, 'companyid' => $company->id]));
+        $this->assertTrue($DB->record_exists('course', ['id' => $courseid]));
+        $this->assertTrue($DB->record_exists('local_iomad_courses', ['courseid' => $courseid]));
+        $this->assertTrue($DB->record_exists('local_iomad_company_courses', ['courseid' => $courseid, 'companyid' => $company->id]));
     }
 
     /*
-    * TODO: Test to edit course
+    * Test to edit course
+    * BAD TEST: Function 'company::update_course_settings(...)' not always used for updating IOMAD course settings.
     */
     public function test_edit_course(): void {
+        global $DB, $USER;
 
         $this->resetAfterTest();
-        $this->markTestIncomplete();
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
 
         // Create company.
@@ -67,18 +70,19 @@ final class course_management_test extends advanced_testcase {
         $coursedata = (object) [];
         $coursedata->companyid = $company->id;
         $course = $generator->create_course($coursedata);
+        $courseid = $course->id;
 
-        // Assert that course exists and is in company.
-        $this->assertTrue($DB->record_exists('course', ['id' => $course->id]));
-        $this->assertTrue($DB->record_exists('local_iomad_company_courses', ['courseid' => $course->id, 'companyid' => $company->id]));
+        // Assert that the course has standard values.
+        $this->assertTrue($DB->record_exists('local_iomad_courses', ['courseid' => $courseid, 'licensed' => 0]));
 
         // Edit course in Manage IOMAD Course settings.
-        $newcoursename = 'Course - Renamed';
-        //company::update_course_settings(...);
+        $courserecord = (object) [];
+        $courserecord->courseid = $courseid;
+        $courserecord->licensed = 1;
+        company::update_course_settings($courserecord);
 
         // Assert that course has been edited.
-        $this->assertTrue($DB->record_exists('course', ['id' => $course->id, 'fullname' => $newcoursename]));
-        //$this->assertTrue(...course settings have changed...);
+        $this->assertTrue($DB->record_exists('local_iomad_courses', ['courseid' => $courseid, 'licensed' => 1]));
     }
 
     /*

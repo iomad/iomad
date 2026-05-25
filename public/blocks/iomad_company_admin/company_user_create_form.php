@@ -175,9 +175,10 @@ if ($mform->is_cancelled()) {
     }
     company::upsert_company_user($userid, $companyid, $departmentid, $managertype, $educator, false, true);
 
+    $userdata = $DB->get_record('user',  ['id' => $userid]);
+
     // Enrol the user on any selected courses.
     if (!empty($data->currentcourses)) {
-        $userdata = $DB->get_record('user',  ['id' => $userid]);
         company_user::enrol($userdata, $data->currentcourses, $companyid, 0, 0, $data->due);
 
         // Send them the enrolment email template.
@@ -197,54 +198,13 @@ if ($mform->is_cancelled()) {
         // Is this a program license?
         if (!empty($licenserecord['program'])) {
             // Yes, so the courses are not passed automatically from the form.
-            $data->licensecourses = $DB->get_records_sql_menu(
-                "SELECT c.id, clc.courseid
-                 FROM {local_iomad_company_license_courses} clc
-                 JOIN {course} c ON (
-                     clc.courseid = c.id
-                     AND clc.licenseid = :licenseid
-                 )",
-                ['licenseid' => $licenserecord['id']]);
+            $data->licensecourses = null;
         }
 
-        // Process the license courses.
-        if (!empty($data->licensecourses)) {
-            $userdata = $DB->get_record('user',  ['id' => $userid]);
-            $count = $licenserecord['used'];
-            $numberoflicenses = $licenserecord['allocation'];
-            foreach ($data->licensecourses as $licensecourse) {
-                // Check if there are enough available licenses for this.
-                if ($count >= $numberoflicenses) {
-                    // Set the used amount and redirect to the form with an error.
-                    $licenserecord['used'] = $count;
-                    $DB->update_record('local_iomad_company_licenses', $licenserecord);
-                    redirect(new moodle_url("/blocks/iomad_company_admin/company_license_users_form.php",
-                                              ['licenseid' => $licenseid, 'error' => 1]));
-                }
-
-                // Add the license record.
-                $issuedate = time();
-                $DB->insert_record('local_iomad_company_license_users',
-                                   ['userid' => $userdata->id,
-                                    'licenseid' => $licenseid,
-                                    'issuedate' => $issuedate,
-                                    'courseid' => $licensecourse]);
-
-                // Create an event.
-                $eventother = [
-                    'licenseid' => $licenseid,
-                    'issuedate' => $issuedate,
-                    'duedate' => $data->due,
-                ];
-                $event = user_license_assigned::create( ['context' => context_course::instance($licensecourse),
-                    'objectid' => $licenseid,
-                    'courseid' => $licensecourse,
-                    'userid' => $userdata->id,
-                    'other' => $eventother,
-                ]);
-                $event->trigger();
-                $count++;
-            }
+        // Assign the license courses.
+        if (!company::allocate_license($licenseid, $userid, $data->due, $data->licensecourses)) {
+            redirect(new moodle_url("/blocks/iomad_company_admin/company_license_users_form.php",
+                        ['licenseid' => $licenseid, 'error' => 1]));
         }
     }
 
