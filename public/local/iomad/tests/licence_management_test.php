@@ -49,6 +49,7 @@ final class licence_management_test extends advanced_testcase {
 
     /*
     * Test to edit licence
+    * BAD TEST: Functions only used in testing.
     */
     public function test_edit_licence(): void {
         global $DB;
@@ -100,7 +101,7 @@ final class licence_management_test extends advanced_testcase {
     }
 
     /*
-    * TODO: Test to create users and allocate licences
+    * Test to create users and allocate licences.
     */
     public function test_allocate_licence_to_user(): void {
         global $DB;
@@ -131,7 +132,6 @@ final class licence_management_test extends advanced_testcase {
         company::allocate_license($licenseid, $userid);
 
         // Assert that licence has been allocated.
-        //$this->assertTrue($DB->record_exists('local_iomad_company_licenses', ['id' => $licenseid, 'used' => 1]));
         $this->assertTrue($DB->record_exists('local_iomad_company_license_courses', ['licenseid' => $licenseid, 'courseid' => $courseid]));
         $this->assertTrue($DB->record_exists('local_iomad_company_license_users', [
                                 'userid' => $userid,

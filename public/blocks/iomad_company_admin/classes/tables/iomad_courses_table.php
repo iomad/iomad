@@ -75,7 +75,7 @@ class iomad_courses_table extends table_sql {
 
         if ($row->visible == 0) {
             $return = html_writer::start_tag('span', ['class' => 'dimmed_text']);
-        } else if ($row->visible == 1) {
+        } else {
             $return = "";
         }
 
@@ -119,7 +119,7 @@ class iomad_courses_table extends table_sql {
 
         if ($row->visible == 0) {
             $coursereturn = html_writer::start_tag('span', ['class' => 'dimmed_text']);
-        } else if ($row->visible == 1) {
+        } else {
             $coursereturn = "";
         }
 
@@ -167,7 +167,7 @@ class iomad_courses_table extends table_sql {
         // Apply styling if the course is hidden.
         if ($row->visible == 0) {
             $licenseselectoutput = html_writer::start_tag('span', ['class' => 'dimmed_text']);
-        } else if ($row->visible == 1) {
+        } else {
             $licenseselectoutput = "";
         }
 
@@ -218,7 +218,7 @@ class iomad_courses_table extends table_sql {
         }
 
         if (!empty($USER->editing) &&
-        iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext)) {
+           iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext)) {
 
             $editable = new courses_autoenrol_editable($company,
                                                        $companycontext,
@@ -252,7 +252,7 @@ class iomad_courses_table extends table_sql {
         }
 
         if (!empty($USER->editing) &&
-        iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext)) {
+           iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext)) {
 
             $editable = new courses_mandatory_editable($company,
                                                        $companycontext,
@@ -281,8 +281,8 @@ class iomad_courses_table extends table_sql {
                                 '2' => get_string('closed', 'block_iomad_company_admin')];
 
         if (!empty($USER->editing) &&
-        iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext) &&
-        !$DB->record_exists('local_iomad_company_created_courses', ['courseid' => $row->courseid])) {
+           iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext) &&
+              !$DB->record_exists('local_iomad_company_created_courses', ['courseid' => $row->courseid])) {
 
             $editable = new courses_shared_editable($company,
                                                     $companycontext,
@@ -321,8 +321,8 @@ class iomad_courses_table extends table_sql {
         }
 
         if (!empty($USER->editing) &&
-        (( $canbemanaged || $companycreatedcourse) ||
-            iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext))) {
+           (( $canbemanaged || $companycreatedcourse) ||
+              iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext))) {
             $editable = new courses_validlength_editable($company,
                                                          $companycontext,
                                                          $row,
@@ -399,8 +399,8 @@ class iomad_courses_table extends table_sql {
         }
 
         if (!empty($USER->editing) &&
-        (( $canbemanaged || $companycreatedcourse) ||
-            iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext))) {
+           (( $canbemanaged || $companycreatedcourse) ||
+              iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext))) {
             $editable = new enrolment_expireafter_editable($company,
                                                            $companycontext,
                                                            $row,
@@ -477,8 +477,8 @@ class iomad_courses_table extends table_sql {
         }
 
         if (!empty($USER->editing) &&
-        (( $canbemanaged || $companycreatedcourse) ||
-            iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext))) {
+           (( $canbemanaged || $companycreatedcourse) ||
+              iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext))) {
             $editable = new courses_warnexpire_editable($company,
                                                         $companycontext,
                                                         $row,
@@ -555,8 +555,8 @@ class iomad_courses_table extends table_sql {
         }
 
         if (!empty($USER->editing) &&
-        (( $canbemanaged || $companycreatedcourse) ||
-            iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext))) {
+           (( $canbemanaged || $companycreatedcourse) ||
+              iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext))) {
             $editable = new courses_warnnotstarted_editable($company,
                                                             $companycontext,
                                                             $row,
@@ -633,8 +633,8 @@ class iomad_courses_table extends table_sql {
         }
 
         if (!empty($USER->editing) &&
-        (( $canbemanaged || $companycreatedcourse) ||
-            iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext))) {
+          (( $canbemanaged || $companycreatedcourse) ||
+              iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext))) {
             $editable = new courses_warncompletion_editable($company,
                                                             $companycontext,
                                                             $row,
@@ -714,8 +714,8 @@ class iomad_courses_table extends table_sql {
         }
 
         if (!empty($USER->editing) &&
-        (( $canbemanaged || $companycreatedcourse) ||
-            iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext))) {
+         (( $canbemanaged || $companycreatedcourse) ||
+              iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext))) {
             $editable = new courses_notifyperiod_editable($company,
                                                           $companycontext,
                                                           $row,
@@ -795,8 +795,8 @@ class iomad_courses_table extends table_sql {
         }
 
         if (!empty($USER->editing) &&
-        (( $canbemanaged || $companycreatedcourse) ||
-            iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext))) {
+           (( $canbemanaged || $companycreatedcourse) ||
+              iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext))) {
             $editable = new courses_hasgrade_editable($company,
                                                       $companycontext,
                                                       $row,

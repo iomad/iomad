@@ -34,7 +34,8 @@ use block_iomad_company_admin\event\{
     user_license_assigned,
     user_license_unassigned
 };
-use core\event\user_updated;use local_iomad\{company, iomad};
+use core\event\user_updated;
+use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
 defined('MOODLE_INTERNAL') || die();
@@ -1608,33 +1609,13 @@ It could very slow or timeout. The function is designed to search some specific 
         require_capability('block/iomad_company_admin:managecourses', $context);
 
         $succeeded = true;
-
-        // Deal with the list of users.
+        // Deal with the list of courses.
         foreach ($params['courses'] as $courserecord) {
             if (empty($courserecord['courseid'])) {
                 $succeeded = false;
                 continue;
             }
-            if (!$currentrecord = $DB->get_record('local_iomad_courses', ['courseid' => $courserecord['courseid']])) {
-                $succeeded = false;
-            } else {
-                // Replace the record with the new one.
-                $courserecord['id'] = $currentrecord->id;
-                if (!$DB->update_record('local_iomad_courses', $courserecord)) {
-                    $succeeded = false;
-                }
-
-                // Fire an event for this.
-                $eventother = ['iomadcourse' => $currentrecord];
-                $event = company_course_updated::create([
-                    'context' => context_system::instance(),
-                    'objectid' => $currentrecord->id,
-                    'userid' => $USER->id,
-                    'other' => $eventother,
-                ]);
-                $event->trigger();
-
-            }
+            $succeeded = company::update_course_settings($courserecord);
         }
 
         return $succeeded;

@@ -48,8 +48,8 @@ final class user_management_test extends advanced_testcase {
     }
 
     /*
-    * TODO: Test to edit user
-    * BAD TEST: Works, but the function it uses to edit users is only used in testing
+    * Test to edit user
+    * BAD TEST: Functions only used in testing.
     */
     public function test_edit_user(): void {
         global $DB;
@@ -147,7 +147,6 @@ final class user_management_test extends advanced_testcase {
         company::upsert_company_user($userid, $company->id, $departmentid, $roleid);
 
         // Assert that IOMAD user has role.
-        //$this->assertTrue($DB->record_exists('role_assignments', array('roleid' => $roleid, 'contextid' => $companycontext->id, 'userid' => $userid)));
         $this->assertTrue($DB->record_exists('local_iomad_company_users', array('managertype' => $roleid, 'companyid' => $company->id, 'userid' => $userid)));
     }
 }

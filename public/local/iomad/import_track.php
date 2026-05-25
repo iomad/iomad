@@ -357,7 +357,7 @@ if (!empty($fileimport)) {
 
             // Deal with any erroring users.
             if (!empty($erroredusers)) {
-                echo get_string('erroredusers', 'block_iomad_company_admin');
+                echo get_string('erroredrecords', 'block_iomad_company_admin');
                 $erroredtable = new html_table();
                 foreach ($erroredusers as $erroreduser) {
                     $erroredtable->data[] = $erroreduser;

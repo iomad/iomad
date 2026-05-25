@@ -398,16 +398,14 @@ if (iomad::has_capability('block/iomad_company_admin:company_add', $companyconte
                       $OUTPUT->help_icon('shared', 'block_iomad_company_admin');
     $tablecolumns[] = 'shared';
 }
-// If not editing, show course visibility. Otherwise use the actions column.
-if (empty($USER->editing)) {
-    $tableheaders[] = get_string('coursevisibility');
-    $tablecolumns[] = 'coursevisibility';
-}
 
 // Can we manage the courses or just see them?
 if ($canedit) {
-    // Do we show the action columns?
-    if (!empty($USER->editing)) {
+    // If not editing, show course visibility. Otherwise use the actions column.
+    if (empty($USER->editing)) {
+        $tableheaders[] = get_string('coursevisibility');
+        $tablecolumns[] = 'coursevisibility';
+    } else {
         $tableheaders[] = '';
         $tablecolumns[] = 'actions';
     }

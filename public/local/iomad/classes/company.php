@@ -44,6 +44,7 @@ use block_iomad_company_admin\event\{
     user_license_used,
     classroom_created,
     classroom_updated,
+    company_course_updated,
 };
 use cache_helper;
 use context_course;
@@ -5658,6 +5659,41 @@ class company {
     }
 
     /**
+     * Update company course settings. Currently only used in testing.
+     * Used in block_iomad_company_admin_external::update_courses(...);
+     * TODO: Also include in blocks/iomad_company_admin/iomad_courses_form.php
+     *
+     * @param object $courserecord
+     * @return boolean success
+     */
+    public static function update_course_settings($courserecord) : bool {
+        global $DB, $USER;
+
+        $successful = true;
+        if (!$currentrecord = $DB->get_record('local_iomad_courses', ['courseid' => $courserecord->courseid])) {
+            $successful = false;
+        } else {
+            // Replace the record with the new one.
+            $courserecord->id = $currentrecord->id;
+            if (!$DB->update_record('local_iomad_courses', $courserecord)) {
+                $successful = false;
+            }
+
+            // Fire an event for this.
+            $eventother = ['iomadcourse' => $currentrecord];
+            $event = company_course_updated::create([
+                'context' => context_system::instance(),
+                'objectid' => $currentrecord->id,
+                'userid' => $USER->id,
+                'other' => $eventother,
+            ]);
+            $event->trigger();
+        }
+
+        return $successful;
+    }
+
+    /**
      * Signup event handler for 'user_created'
      * For specified authentication types (only), try and add this user
      * to a company using various logic.
@@ -7141,43 +7177,64 @@ class company {
      * @param integer $licenseid
      * @param integer $userid
      * @param integer $due
-     * @return void
+     * @return bool
      */
-    public static function allocate_license($licenseid, $userid, $due = 0): void {
-        // Via blocks/iomad_company_admin/company_user_create_form.php
+    public static function allocate_license($licenseid, $userid, $due = 0, $courseids = null): bool {
         global $DB;
 
         // Get data
         $licensedata = $DB->get_record('local_iomad_company_licenses', ['id' => $licenseid]);
-        $courseids = $DB->get_records_sql('SELECT c.courseid
-                                             FROM {local_iomad_company_license_courses} c
-                                             WHERE licenseid = ?',
-                                            [$licenseid]);
 
-        foreach ($courseids as $licensecourse) {
-            // Add the license record.
-            $courseid = $licensecourse->courseid;
-            $issuedate = time();
-            $DB->insert_record('local_iomad_company_license_users',
-                                ['userid' => $userid,
-                                'licenseid' => $licenseid,
-                                'issuedate' => $issuedate,
-                                'courseid' => $courseid]);
-
-            // Create an event.
-            $eventother = [
-                'licenseid' => $licenseid,
-                'issuedate' => $issuedate,
-                'duedate' => $due,
-            ];
-            $event = \block_iomad_company_admin\event\user_license_assigned::create( ['context' => context_course::instance($courseid),
-                'objectid' => $licenseid,
-                'courseid' => $courseid,
-                'userid' => $userid,
-                'other' => $eventother,
-            ]);
-            $event->trigger();
+        // If no course ids have been passed, must collect them.
+        if (empty($courseids)) {
+            $courseids = $DB->get_records_sql_menu(
+                "SELECT c.id, clc.courseid
+                 FROM {local_iomad_company_license_courses} clc
+                 JOIN {course} c ON (
+                     clc.courseid = c.id
+                     AND clc.licenseid = :licenseid
+                 )",
+                ['licenseid' => $licenseid]);
         }
+
+        // Process the license courses.
+        if (!empty($courseids)) {  // May still be empty event after collecting the IDs.
+            $count = $licensedata->used;
+            $numberoflicenses = $licensedata->allocation;
+            foreach ($courseids as $courseid) {
+                // Check if there are enough available licenses for this.
+                if ($count >= $numberoflicenses) {
+                    // Set the used amount and redirect to the form with an error.
+                    $licensedata->used = $count;
+                    $DB->update_record('local_iomad_company_licenses', $licensedata);
+                    return false;
+                }
+
+                // Add the license record.
+                $issuedate = time();
+                $DB->insert_record('local_iomad_company_license_users',
+                                    ['userid' => $userid,
+                                    'licenseid' => $licenseid,
+                                    'issuedate' => $issuedate,
+                                    'courseid' => $courseid]);
+
+                // Create an event.
+                $eventother = [
+                    'licenseid' => $licenseid,
+                    'issuedate' => $issuedate,
+                    'duedate' => $due,
+                ];
+                $event = \block_iomad_company_admin\event\user_license_assigned::create( ['context' => context_course::instance($courseid),
+                    'objectid' => $licenseid,
+                    'courseid' => $courseid,
+                    'userid' => $userid,
+                    'other' => $eventother,
+                ]);
+                $event->trigger();
+            }
+        }
+
+        return true;
     }
 
     /**

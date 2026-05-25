@@ -390,6 +390,7 @@ $string['enrolled'] = 'Users are enrolled onto course by a manager';
 $string['enrolunenrollusers'] = 'Enrol/unenrol users';
 $string['enroluser'] = 'User enrolments';
 $string['erroredcompanies'] = '<h2>These companies were not added</h2>';
+$string['erroredrecords'] = '<h2>These records were not added</h2>';
 $string['erroredusers'] = '<h2>These users were not added</h2>';
 $string['expireafter'] = 'Enrolment expires after (days)';
 $string['expireafter_help'] = 'This is the value in days after which the users enrolment is removed once they have completed the course.  If this is set to 0, then the user will not be unenrolled (unless you have set the valid length value which will be used instead).  For licensed courses, the user is removed from the course after whichever is earliest, time after completion or license enrolment length.';
