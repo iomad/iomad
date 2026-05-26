@@ -87,7 +87,7 @@ if ($mform->is_cancelled()) {
 
     // Merge data with course defaults.
     $companyrec = $DB->get_record('local_iomad_companies', ['id' => $companyid]);
-    if (!empty($company->coursecategoryid)) {
+    if (!empty($companyrec->coursecategoryid)) {
         $data->category = $companyrec->coursecategoryid;
     } else {
         $data->category = $CFG->defaultrequestcategory;
