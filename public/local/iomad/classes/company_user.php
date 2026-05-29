@@ -1257,7 +1257,8 @@ class company_user {
         // Get the progress.
         if (!empty($timecompleted)) {
             $progress = 100;
-        } elseif (empty($timestarted)) {
+	} elseif (empty($timestarted) ||
+           !$DB->record_exists('course', ['id' => $courseid])) {
             $progress = null;
         } else {
             if ($DB->get_record_sql(
