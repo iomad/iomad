@@ -149,7 +149,7 @@ function xmldb_block_iomad_company_admin_upgrade($oldversion) {
 
         // Get all of the company course categories including children.
         $allcompanycategories = [];
-        $companyroots = $DB->get_records('local_iomad_companies', [], 'category', 'category');
+        $companyroots = $DB->get_records('local_iomad_companies', [], 'coursecategoryid', 'coursecategoryid');
         foreach ($companyroots as $companyroot) {
             $allcompanycategories[$companyroot->category] = $companyroot->category;
             $children = $DB->get_records_sql(
