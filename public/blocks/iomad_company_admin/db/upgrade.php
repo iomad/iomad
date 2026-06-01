@@ -177,14 +177,14 @@ function xmldb_block_iomad_company_admin_upgrade($oldversion) {
                 if ($company = $DB->get_record('local_iomad_companies', ['id' => $companycourse->companyid])) {
                     // We have both things - check if it doesn't match.
                     mtrace("Checking if course category id " . $course->category .
-                           " is the same as company category id $company->category");
-                    if ($course->category != $company->category) {
+                           " is the same as company category id $company->coursecategoryid");
+                    if ($course->category != $company->coursecategoryid) {
                         // Get all of the company's categories.
                         $mycompanycategories = $DB->get_records_sql(
                             "SELECT DISTINCT id
                             FROM {course_categories}
                             WHERE " . $DB->sql_like('path', ':companycategorysearch'),
-                            ['companycategorysearch' => '/' . $company->category . '%']);
+                            ['companycategorysearch' => '/' . $company->coursecategoryid . '%']);
 
                         // Does the company category exist?
                         if (empty($mycompanycategories)) {
@@ -203,9 +203,9 @@ function xmldb_block_iomad_company_admin_upgrade($oldversion) {
                         }
 
                         mtrace("Changing course ID $course->id category from " . $course->category .
-                               " to $company->category");
+                               " to $company->coursecategoryid");
                         // None of those things, so change it to the company's category.
-                        $DB->set_field('course', 'category', $company->category, ['id' => $course->id]);
+                        $DB->set_field('course', 'category', $company->coursecategoryid, ['id' => $course->id]);
                     }
                 }
             }
