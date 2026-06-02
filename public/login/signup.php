@@ -48,7 +48,7 @@ if (empty($SESSION->company)) {
     if (!empty($wantedcompanyid)) {
         $wantedcompanyshort = required_param('code', PARAM_CLEAN);
         if (!$SESSION->company = $DB->get_record('local_iomad_companies', ['id' => $wantedcompanyid, 'shortname' => $wantedcompanyshort])) {
-             throw new moodle_exception(get_string('unknown_company', 'local_iomad_signup'));
+             throw new moodle_exception(get_string('unknown_company', 'local_iomad'));
          }
     } else {
         $wantedcompanyshort = '';
@@ -101,13 +101,13 @@ if (empty($SESSION->wantsurl)) {
 
 // Check if the company being passed is valid.
 if (!empty($wantedcompanyid) &&!$company = $DB->get_record('local_iomad_companies', array('id'=> $wantedcompanyid, 'shortname'=>$wantedcompanyshort))) {
-    throw new moodle_exception(get_string('unknown_company', 'local_iomad_signup'));
+    throw new moodle_exception(get_string('unknown_company', 'local_iomad'));
 }
 // Check if the company can have more users?.
 if (!empty($wantedcompanyid) && $company->maxusers > 0) {
     $currentusers = $DB->count_records('local_iomad_company_users', array('companyid' => $wantedcompanyid));
     if ($currentusers >= $company->maxusers) {
-        throw new moodle_exception(get_string('maxuserswarning', 'local_iomad_signup', $company->maxusers));
+        throw new moodle_exception(get_string('maxuserswarning', 'local_iomad', $company->maxusers));
     }
 }
 if (!empty($wantedcompanyid)) {

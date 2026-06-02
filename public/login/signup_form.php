@@ -48,7 +48,7 @@ class login_signup_form extends moodleform implements renderable, templatable {
 
         // Iomad
         if (get_config('local_iomad', 'signup_useemail')) {
-            $mform->addElement('html', get_string('emailasusernamehelp', 'local_iomad_signup'));
+            $mform->addElement('html', get_string('emailasusernamehelp', 'local_iomad'));
 
             $mform->addElement('text', 'email', get_string('email'), 'maxlength="100" size="25"');
             $mform->setType('email', PARAM_RAW_TRIMMED);
