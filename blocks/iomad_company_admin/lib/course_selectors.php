@@ -96,8 +96,12 @@ abstract class company_course_selector_base extends course_selector_base {
         }
     }
 
-    // -- MODIFICATION INEMA --
-    // Préfixe chaque entrée du tableau avec [shortname] pour distinguer les cours homonymes entre campus.
+    /**
+     * Prefix each course fullname with [shortname] to disambiguate courses
+     * sharing the same fullname across different companies (multi-company context).
+     *
+     * @param array $courselist list of course objects passed by reference
+     */
     protected function prefix_shortname(&$courselist) {
         foreach ($courselist as $id => $course) {
             if (!empty($course->shortname)) {
@@ -105,7 +109,6 @@ abstract class company_course_selector_base extends course_selector_base {
             }
         }
     }
-    // -- FIN MODIFICATION INEMA --
 
     protected function process_license_allocations(&$licensecourses, $userid) {
         global $CFG, $DB;
@@ -262,9 +265,8 @@ class current_company_course_selector extends company_course_selector_base {
         // Have any of the courses got enrollments?
         $this->process_enrollments($availablecourses);
         $this->process_hidden_courses($availablecourses);
-        // -- MODIFICATION INEMA -- préfixe [shortname] pour distinguer les cours homonymes
+        // Prefix course names with [shortname] to disambiguate in multi-company context.
         $this->prefix_shortname($availablecourses);
-        // -- FIN MODIFICATION INEMA --
 
         // Set up empty return.
         $coursearray = array();
@@ -562,9 +564,8 @@ class potential_company_course_selector extends company_course_selector_base {
         // Have any of the courses got enrollments?
         $this->process_enrollments($availablecourses);
         $this->process_hidden_courses($availablecourses);
-        // -- MODIFICATION INEMA -- préfixe [shortname] pour distinguer les cours homonymes
+        // Prefix course names with [shortname] to disambiguate in multi-company context.
         $this->prefix_shortname($availablecourses);
-        // -- FIN MODIFICATION INEMA --
 
         if ($search) {
             $groupname = get_string('potcoursesmatching', 'block_iomad_company_admin', $search);
