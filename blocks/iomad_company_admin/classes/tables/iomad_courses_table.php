@@ -121,9 +121,9 @@ class iomad_courses_table extends table_sql {
             $coursereturn = "";
         }
 
-        // -- MODIFICATION INEMA -- affiche [shortname] devant le nom pour distinguer les cours homonymes
+        // Prefix course name with [shortname] to disambiguate courses sharing the same
+        // fullname across different companies (multi-company context).
         $displayname = (!empty($row->courseshortname) ? '[' . $row->courseshortname . '] ' : '') . format_string($row->coursename, true, 1);
-        // -- FIN MODIFICATION INEMA --
         $coursereturn .= html_writer::tag(
             'a',
             $displayname,
