@@ -68,7 +68,7 @@ if (isloggedin() && !isguestuser() && !empty($SESSION->wantsurl)) {
 
 // Check if the company being passed is valid.
 if (!empty($wantedcompanyid) && !$company = $DB->get_record('local_iomad_companies', array('id'=> $wantedcompanyid, 'shortname'=>$wantedcompanyshort))) {
-    throw new moodle_exception(get_string('unknown_company', 'local_iomad_signup'));
+    throw new moodle_exception(get_string('unknown_company', 'local_iomad'));
 } else if (!empty($wantedcompanyid)) {
     // Set the page theme.
     $SESSION->currenteditingcompany = $company->id;
