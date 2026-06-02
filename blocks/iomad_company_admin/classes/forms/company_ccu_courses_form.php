@@ -76,9 +76,8 @@ class company_ccu_courses_form extends company_moodleform {
         $this->departmentid = $departmentid;
         $this->selectedcourses = $selectedcourses;
 
-        // -- MODIFICATION INEMA --
-        // Remplacement de get_menu_courses() pour afficher [shortname] fullname
-        // afin de distinguer les cours homonymes entre campus.
+        // Build course list displaying [shortname] fullname to disambiguate courses
+        // sharing the same fullname across different companies (multi-company context).
         $sql = "SELECT c.id, c.shortname, c.fullname
                   FROM {course} c
                   JOIN {company_course} cc ON cc.courseid = c.id
@@ -93,7 +92,6 @@ class company_ccu_courses_form extends company_moodleform {
         foreach ($records as $course) {
             $this->companycourses[$course->id] = '[' . $course->shortname . '] ' . $course->fullname;
         }
-        // -- FIN MODIFICATION INEMA --
 
         unset($this->companycourses[0]);
         if (!empty($this->companycourses) && count($this->companycourses) > 1) {
