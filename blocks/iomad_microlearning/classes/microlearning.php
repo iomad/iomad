@@ -34,8 +34,11 @@ use block_iomad_microlearning\event\{
     thread_updated,
     thread_schedule_updated,
 };
+use company;
 use context_system;
+use EmailTemplate;
 use html_writer;
+use moodle_url;
 
 /**
  * IOMAD microlearning block class definition
