@@ -1449,7 +1449,6 @@ class microlearning {
                     if ($nugget = $DB->get_record('block_iomad_microlearning_nuggets', ['id' => $reminder1user->nuggetid])) {
                         $company = new company($reminder1user->companyid);
                         // Fix the payload.
-                        $nugget->name = format_text($nugget->name);
                         $nugget->url = new moodle_url
                         ($company->get_wwwroot() . '/blocks/iomad_microlearning/land.php',
                         [
@@ -1504,7 +1503,6 @@ class microlearning {
                         $company = new company($reminder2user->companyid);
 
                         // Fix the payload.
-                        $nugget->name = format_text($nugget->name);
                         $nugget->url = new moodle_url(
                             $company->get_wwwroot() . '/blocks/iomad_microlearning/land.php',
                             [
