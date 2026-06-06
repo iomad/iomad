@@ -31,6 +31,7 @@ use block_iomad_microlearning\event\{
     nugget_moved,
     thread_deleted,
     thread_created,
+    thread_updated,
     thread_schedule_updated,
 };
 use context_system;
