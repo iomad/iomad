@@ -322,20 +322,37 @@ if (!empty($params['showchild']) && !empty($params['name'])) {
 // Sort out the resulting list so we only have the distinct values.
 $companyrecords = array_unique($companyrecords);
 
+// Default to an impossible condition so no companies are shown if no valid records exist.
 $companylist = " 1 = 2 ";
 $companyparams = [];
 if (!empty($companyrecords)) {
+    // Build SQL IN clause for all matched company records from the search.
     [$insql, $companyparams] = $DB->get_in_or_equal($companyrecords,
                                                     SQL_PARAMS_NAMED,
                                                     'cids');
     $companylist = "id {$insql} ";
+    // For company managers (users without 'company_add' capability), restrict the visible companies
+    // to only those they have access to (their own company and child companies).
     if (!iomad::has_capability('block/iomad_company_admin:company_add', $context)) {
+        // Get the list of companies this user is allowed to manage.
         $mycompanylist = company::get_companies_select(true);
-        [$insql, $inparams] = $DB->get_in_or_equal($companyrecords,
-                                                   SQL_PARAMS_NAMED,
-                                                   'mycids');
-        $companylist .= "AND id {$insql}";
-        $companyparams = $companyparams + $inparams;
+
+        // Filter the search results to only include companies the manager has access to.
+        // This ensures managers can only see their company and child companies, not all companies.
+        $filteredcompanies = array_intersect($companyrecords, array_keys($mycompanylist));
+        if (!empty($filteredcompanies)) {
+            // Build SQL condition with the filtered company IDs accessible to this manager.
+            [$insql, $inparams] = $DB->get_in_or_equal($filteredcompanies,
+                                                       SQL_PARAMS_NAMED,
+                                                       'mycids');
+            $companylist = "id {$insql}";
+            $companyparams = $inparams;
+        } else {
+            // If no companies match both the search criteria and the manager's access rights,
+            // set an impossible condition (1 = 2) to return no results.
+            $companylist = " 1 = 2 ";
+            $companyparams = [];
+        }
     }
 }
 
@@ -401,7 +418,7 @@ if ($companies) {
         $linkparams['sesskey'] = sesskey();
         $companycontext = context_company::instance($company->id);
         $strmanage = get_string('managecompany', 'block_iomad_company_admin');
-        [$pinsql, $pinparams] = $DB->get_in_or_equal($companies,
+        [$pinsql, $pinparams] = $DB->get_in_or_equal(array_keys($companies),
                                                      SQL_PARAMS_NAMED,
                                                      'pcids');
         $pinparams['companyid'] = $company->id;
