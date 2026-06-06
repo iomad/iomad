@@ -35,7 +35,7 @@ require_once(__DIR__ .'/profiledefinelib.php');
 require_once(__DIR__ .'/lib.php');
 
 $action   = optional_param('action', '', PARAM_ALPHA);
-$companyid = optional_param('companyid', 0, PARAM_INTEGER);
+$companyid = optional_param('companyid', 0, PARAM_INT);
 
 // Set some defaults.
 $redirect = new moodle_url($CFG->wwwroot.'/blocks/iomad_company_admin/company_user_profiles.php');
@@ -88,18 +88,17 @@ switch ($action) {
         break;
     case 'deletefield':
         $id      = required_param('id', PARAM_INT);
-        $confirm = optional_param('confirm', 0, PARAM_BOOL);
+        $confirm = optional_param('confirm', null, PARAM_ALPHANUM);
 
         $datacount = $DB->count_records('user_info_data', ['fieldid' => $id]);
-        if (data_submitted() &&
-            ($confirm && confirm_sesskey()) ||
-            $datacount === 0) {
+        if ($confirm = md5($id) &&
+            confirm_sesskey()) {
             profile_delete_field($id);
             redirect($redirect, get_string('eventuserinfofielddeleted'), null, notification::NOTIFY_SUCCESS);
         }
 
         // Ask for confirmation.
-        $optionsyes = ['id' => $id, 'confirm' => 1, 'action' => 'deletefield', 'sesskey' => sesskey()];
+        $optionsyes = ['id' => $id, 'confirm' => md5($id), 'action' => 'deletefield', 'sesskey' => sesskey()];
         $strheading = get_string('profiledeletefield', 'admin');
         $PAGE->navbar->add($strheading);
         echo $OUTPUT->header();
