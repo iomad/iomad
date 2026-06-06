@@ -173,7 +173,7 @@ if ($mform_signup->is_cancelled()) {
     if (empty($SESSION->company) && !empty($CFG->local_iomad_signup_company)) {
         if ($defaultcompany = $DB->get_record('company', array('id' => $CFG->local_iomad_signup_company))) {
             $SESSION->company = $defaultcompany;
-            $SESSION->currenteditingcompany = $defaultcompany;
+            $SESSION->currenteditingcompany = $defaultcompany->id;
         }
     }
 
