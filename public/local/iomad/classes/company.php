@@ -5349,7 +5349,7 @@ class company {
 
             // Check if we have a company id from the URL or SESSION.
             $companyid = iomad::get_my_companyid($context, false);
-            if (!empty($companyid)) {
+            if (!empty($companyid) && $companyid > 0) {
                 $company = new company($companyid);
                 $found = true;
             }
