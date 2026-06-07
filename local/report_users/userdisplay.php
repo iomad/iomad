@@ -496,8 +496,7 @@ if ($validonly) {
 // Only show entries tied to my current company.
 $companysql = " AND lit.companyid = :mycompanyid";
 $sqlparams['mycompanyid'] = $companyid;
-$wheresql = " lit.userid = :userid $companysql
-              AND lit.courseid $validsql";
+$wheresql = " lit.userid = :userid $companysql $validsql";
 
 // Set up the headers for the form.
 $headers = [get_string('course', 'local_report_completion'),
