@@ -97,14 +97,14 @@ class restrict_email_template extends external_api {
         // What are we dealing with?
         if ($type == 'c') {
             iomad::require_capability('local/iomad:email_list', $context);
-            $tablename = "email_template";
-            $tablenamestrings = "email_template_strings";
+            $tablename = "local_iomad_email_templates";
+            $tablenamestrings = "local_iomad_email_template_strings";
             $tablekey = "companyid";
             $stringkey = "templateid";
         } else if ($type == 't') {
             iomad::require_capability('local/iomad:email_templateset_list', $context);
-            $tablename = "email_templateset_templates";
-            $tablenamestrings = "email_templateset_template_strings";
+            $tablename = "local_iomad_email_templateset_templates";
+            $tablenamestrings = "local_iomad_email_templateset_template_strings";
             $tablekey = "templateset";
             $stringkey = "templatesetid";
         }
