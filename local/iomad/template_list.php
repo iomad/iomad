@@ -155,13 +155,13 @@ if ($ajaxtemplate) {
 
     // What are we dealing with?
     if ($type == 'c') {
-        $tablename = "email_template";
-        $tablenamestrings = "email_template_strings";
+        $tablename = "local_iomad_email_templates";
+        $tablenamestrings = "local_iomad_email_template_strings";
         $tablekey = "companyid";
         $stringkey = "templateid";
     } else if ($type == 't') {
-        $tablename = "email_templateset_templates";
-        $tablenamestrings = "email_templateset_template_strings";
+        $tablename = "local_iomad_email_templateset_templates";
+        $tablenamestrings = "local_iomad_email_templateset_template_strings";
         $tablekey = "templateset";
         $stringkey = "templatesetid";
     }
