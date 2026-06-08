@@ -756,11 +756,13 @@ class microlearning {
         // Do we have a schedule type?
         if (!empty($scheduletype)) {
             if ($scheduletype == 1) {
-                // We want midnight from this morning.
-                $starttime = strtotime('today midnight');
+                $date = new \DateTime("today midnight", \core_date::get_user_timezone_object($user));
+                $starttime = $date->getTimestamp();
             } else {
-                // We want midnight for the morning of the day of the next scheduled time.
-                $starttime = strtotime('midnight', self::get_next_scheduled($threadid));
+                $nextscheduled = self::get_next_scheduled($threadid);
+                $date = new \DateTime("@" . $nextscheduled, \core_date::get_user_timezone_object($user));
+                $date->setTime(0, 0, 0);
+                $starttime = $date->getTimestamp();
             }
         }
 
@@ -769,8 +771,8 @@ class microlearning {
         if (empty($threadinfo->halt_until_fulfilled)) {
             $scheduleinfo = self::get_schedules($threadinfo, $nuggets, $starttime);
         } else {
-            // We want midnight last night.
-            $starttime = time() - (time() % 86400);
+            $date = new \DateTime("today midnight", \core_date::get_user_timezone_object($user));
+            $starttime = $date->getTimestamp();
             $scheduleinfo = self::get_schedules($threadinfo, $nuggets, $starttime);
         }
 
