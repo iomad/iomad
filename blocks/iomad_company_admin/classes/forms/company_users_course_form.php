@@ -253,6 +253,7 @@ class company_users_course_form extends moodleform {
     public function process() {
 
         $this->create_course_selectors();
+        $data = $this->get_data();
 
         // Process incoming enrolments.
         if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
@@ -263,16 +264,9 @@ class company_users_course_form extends moodleform {
                     $allow = true;
 
                     if ($allow) {
-                        $due = optional_param_array('due', [], PARAM_INT);
-                        if (!empty($due)) {
-                            $duedate = strtotime(
-                                $due['year'] . '-' .
-                                $due['month'] . '-' .
-                                $due['day'] . ' ' .
-                                $due['hour'] . ':' .
-                                $due['minute']);
-                        } else {
-                            $duedate = 0;
+                        $duedate = 0;
+                        if (!empty($data) && !empty($data->due)) {
+                            $duedate = $data->due;
                         }
                         company_user::enrol($this->user, [$addcourse->id], $this->selectedcompany, false, false, $duedate);
                         EmailTemplate::send(
