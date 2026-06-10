@@ -158,7 +158,7 @@ if (!empty($fileimport)) {
                             if (!$userrec = $DB->get_record('user', array('username' => $value))) {
                                 $upt->track('status', get_string('missingfield', 'error', 'username'), 'error');
                                 $upt->track('username', $errorstr, 'error');
-                                $line[] = get_string('missingfield', 'error', 'username');
+                                $line[] = get_string('missingfield', 'error', 'username');  // Wrong error: this shouldn't be a 'missing field' error, but a 'user not found' error
                                 $userserrors++;
                                 $errornum++;
                                 $erroredusers[] = $line;
@@ -171,7 +171,7 @@ if (!empty($fileimport)) {
                             if (!$userrec = $DB->get_record('user', array('id' => $value))) {
                                 $upt->track('status', get_string('missingfield', 'error', 'userid'), 'error');
                                 $upt->track('username', $errorstr, 'error');
-                                $line[] = get_string('missingfield', 'error', 'userid');
+                                $line[] = get_string('missingfield', 'error', 'userid');  // Wrong error: this shouldn't be a 'missing field' error, but a 'user not found' error
                                 $userserrors++;
                                 $errornum++;
                                 $erroredusers[] = $line;
@@ -183,7 +183,7 @@ if (!empty($fileimport)) {
                             if (!$courserec = $DB->get_record('course', array('shortname' => $value))) {
                                 $upt->track('status', get_string('missingfield', 'error', 'coursename'), 'error');
                                 $upt->track('course', $errorstr, 'error');
-                                $line[] = get_string('missingfield', 'error', 'coursename');
+                                $line[] = get_string('missingfield', 'error', 'coursename');  // Wrong error: this shouldn't be a 'missing field' error, but a 'course not found' error
                                 $userserrors++;
                                 $errornum++;
                                 $erroredusers[] = $line;
@@ -196,7 +196,7 @@ if (!empty($fileimport)) {
                             if (!$courserec = $DB->get_record('course', array('idnumber' => $value))) {
                                 $upt->track('status', get_string('missingfield', 'error', 'coursename'), 'error');
                                 $upt->track('course', $errorstr, 'error');
-                                $line[] = get_string('missingfield', 'error', 'coursename');
+                                $line[] = get_string('missingfield', 'error', 'coursename');  // Wrong error: this shouldn't be a 'missing field' error, but a 'course not found' error
                                 $userserrors++;
                                 $errornum++;
                                 $erroredusers[] = $line;
@@ -209,7 +209,7 @@ if (!empty($fileimport)) {
                             if (!$courserec = $DB->get_record('course', array('id' => $value))) {
                                 $upt->track('status', get_string('missingfield', 'error', 'courseid'), 'error');
                                 $upt->track('course', $errorstr, 'error');
-                                $line[] = get_string('missingfield', 'error', 'courseid');
+                                $line[] = get_string('missingfield', 'error', 'courseid');  // Wrong error: this shouldn't be a 'missing field' error, but a 'course not found' error
                                 $userserrors++;
                                 $errornum++;
                                 $erroredusers[] = $line;
@@ -250,7 +250,7 @@ if (!empty($fileimport)) {
                     if (!$usercompany = $DB->get_record('company', array('id' => $completionrec->companyid))) {
                         $upt->track('status', get_string('missingfield', 'error', 'companyid'), 'error');
                         $upt->track('company', $errorstr, 'error');
-                        $line[] = get_string('missingfield', 'error', 'companyid');
+                        $line[] = get_string('missingfield', 'error', 'companyid');  // Wrong error: this shouldn't be a 'missing field' error, but a 'company not found' error
                         $userserrors++;
                         $errornum++;
                         $erroredusers[] = $line;
@@ -266,7 +266,7 @@ if (!empty($fileimport)) {
                     if (empty($departments)) {
                         $upt->track('status', get_string('missingfield', 'error', 'departmentid'), 'error');
                         $upt->track('department', $errorstr, 'error');
-                        $line[] = get_string('missingfield', 'error', 'departmentid');
+                        $line[] = get_string('missingfield', 'error', 'departmentid');  // Wrong error: this shouldn't be a 'missing field' error, but a 'department not found' error
                         $userserrors++;
                         $errornum++;
                         $erroredusers[] = $line;
