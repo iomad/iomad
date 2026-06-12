@@ -335,13 +335,8 @@ class company_course_users_form extends moodleform {
 
                 // Set the due timestamp.
                 $duedate = 0;
-                $due = optional_param_array('due', [], PARAM_INT);
-                if (!empty($due)) {
-                    $duedate = strtotime($due['year'] . '-' .
-                        $due['month'] . '-' .
-                        $due['day'] . ' ' .
-                        $due['hour'] . ':' .
-                        $due['minute']);
+                if (!empty($data->due)) {
+                    $duedate = $data->due;
                 }
 
                 // Are we handling a lot of users/courses?
