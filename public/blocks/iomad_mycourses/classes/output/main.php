@@ -130,6 +130,12 @@ class main implements renderable, templatable {
             $viewinginprogress = true;
         }
 
+        // If the user has no in-progress courses, show the "Available courses" tab
+        // instead of an empty "Courses in progress" tab.
+        if ($tab == 'inprogress' && empty($myinprogress) && !empty($myavailable)) {
+            $tab = 'available';
+        }
+
         // Set the default for no courses.
         $nocoursesurl = $output->image_url('courses', 'block_iomad_mycourses')->out();
 
