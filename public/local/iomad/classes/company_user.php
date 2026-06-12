@@ -651,6 +651,7 @@ class company_user {
                             'courseid' => $courseid,
                             'context' => context_course::instance($courseid),
                             'relateduserid' => $user->id,
+                            'companyid' => $companyid,
                             'other' => ['enrol' => 'manual'],
                         ]
                     );
