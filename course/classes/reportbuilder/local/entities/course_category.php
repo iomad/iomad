@@ -148,8 +148,16 @@ class course_category extends base {
             ->set_type(column::TYPE_TEXT)
             ->add_fields("{$tablealias}.name, {$tablealias}.id")
             ->add_callback(static function(?string $name, stdClass $category): string {
-                return empty($category->id) ? '' :
-                    core_course_category::get($category->id, MUST_EXIST, true)->get_nested_name(false);
+                // IOMAD.
+                if (empty($category->id)) {
+                    return "";
+                }
+                $catobj = core_course_category::get($category->id, MUST_EXIST, true);
+                if (empty($catobj)) {
+                    return "";
+                } else {
+                    return $catobj->get_nested_name(false);
+                }
             })
             ->set_disabled_aggregation(['groupconcat', 'groupconcatdistinct'])
             ->set_is_sortable(true);
