@@ -115,7 +115,7 @@ if (array_key_exists('q', $_GET)) {
 $searchwhere = '';
 if (isset($SESSION->shopsearch)) {
     $searchkey = $SESSION->shopsearch;
-    echo html_write::tag('li', get_string('filtered_by_search', 'block_iomad_commerce', '<em>' . $searchkey . '</em>'));
+    echo html_writer::tag('li', get_string('filtered_by_search', 'block_iomad_commerce', '<em>' . $searchkey . '</em>'));
 
     $searchwhere = ' AND
         (' . $DB->sql_like("c.fullname", ":searchkey1") . '
