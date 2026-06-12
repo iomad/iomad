@@ -147,8 +147,16 @@ class course_category extends base {
             ->add_joins($this->get_joins())
             ->add_fields("{$tablealias}.name, {$tablealias}.id")
             ->add_callback(static function(?string $name, stdClass $category): string {
-                return empty($category->id) ? '' :
-                    core_course_category::get($category->id, MUST_EXIST, true)->get_nested_name(false);
+                // IOMAD.
+                if (empty($category->id)) {
+                    return "";
+                }
+                $catobj = core_course_category::get($category->id, MUST_EXIST, true);
+                if (empty($catobj)) {
+                    return "";
+                } else {
+                    return $catobj->get_nested_name(false);
+                }
             })
             ->set_disabled_aggregation([
                 groupconcat::get_class_name(),
