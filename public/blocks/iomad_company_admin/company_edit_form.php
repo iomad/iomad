@@ -457,8 +457,10 @@ if ($mform->is_cancelled()) {
             // Redirect message.
             $redirectmessage = get_string('companysavedok', 'block_iomad_company_admin');
 
-            // Is the current user in the company?
-            if (company_user::is_company_user()) {
+            // Only reload if the current user is editing their own company, not a child company they manage.
+            if (company_user::is_company_user() &&
+                isset($USER->company->id) &&
+                $USER->company->id == $companyid) {
                 company_user::reload_company();
             }
         }
