@@ -31,10 +31,14 @@ use block_iomad_microlearning\event\{
     nugget_moved,
     thread_deleted,
     thread_created,
+    thread_updated,
     thread_schedule_updated,
 };
+use company;
 use context_system;
+use EmailTemplate;
 use html_writer;
+use moodle_url;
 
 /**
  * IOMAD microlearning block class definition
@@ -1440,7 +1444,6 @@ class microlearning {
                     if ($nugget = $DB->get_record('microlearning_nugget', ['id' => $reminder1user->nuggetid])) {
                         $company = new company($reminder1user->companyid);
                         // Fix the payload.
-                        $nugget->name = format_text($nugget->name);
                         $nugget->url = new moodle_url
                         ($company->get_wwwroot() . '/blocks/iomad_microlearning/land.php',
                         [
@@ -1495,7 +1498,6 @@ class microlearning {
                         $company = new company($reminder2user->companyid);
 
                         // Fix the payload.
-                        $nugget->name = format_text($nugget->name);
                         $nugget->url = new moodle_url(
                             $company->get_wwwroot() . '/blocks/iomad_microlearning/land.php',
                             [
