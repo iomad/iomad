@@ -566,7 +566,7 @@ class helper {
                         $certobj = (object) [];
                         $certobj->certificateurl = moodle_url::make_file_url('/pluginfile.php', '/' .
                                                                              context_user::instance($USER->id)->id .
-                                                                             '/local_iomad_track/issue/' .
+                                                                             '/local_iomad/certificate_issue/' .
                                                                              $traccertrec->trackid .
                                                                              '/' .
                                                                              $traccertrec->filename);
