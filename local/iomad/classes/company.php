@@ -5050,11 +5050,14 @@ class company {
         $user = $DB->get_record('user', ['id' => $userid]);
 
         // Get all of the companies the user is tied to.
-        $usercompanies = $DB->get_records_sql("SELECT DISTINCT c.*
-                                               FROM {local_iomad_companies} c
-                                               JOIN {local_iomad_company_users} cu ON (c.id = cu.companyid)
-                                               WHERE cu.userid = :userid",
-                                              ['userid' => $userid]);
+        if (!$usercompanies = $DB->get_records_sql(
+            "SELECT DISTINCT c.*
+             FROM {local_iomad_companies} c
+             JOIN {local_iomad_company_users} cu ON (c.id = cu.companyid)
+             WHERE cu.userid = :userid",
+            ['userid' => $userid])) {
+            return is_site_admin();
+        }
 
         foreach ($usercompanies as $usercompany) {
             $company = new company($usercompany->id);
