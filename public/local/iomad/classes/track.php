@@ -27,18 +27,17 @@ namespace local_iomad;
 
 use context_system;
 use context_user;
+use local_iomad\certificates\{
+    iomad_iomadcertificate,
+    iomad_customcert,
+    iomad_certificatebeautiful,
+    iomad_coursecertificate,
+    iomad_simplecertificate
+};
 use local_iomad\custom_context\context_company;
 use local_iomad\task\{savecertificatetask, sendcompletionemailtask};
 use core\exception\moodle_exception;
 use ZipArchive;
-
-defined('MOODLE_INTERNAL') || die();
-if (!defined('CERTIFICATE')) {
-    define('CERTIFICATE', 'iomadcertificate');
-}
-
-require_once($CFG->dirroot . '/mod/' . CERTIFICATE . '/lib.php');
-require_once($CFG->dirroot . '/mod/' . CERTIFICATE . '/locallib.php');
 
 /**
  * IOMAD track class - used to record information to the IOMAD reports tables.
@@ -55,42 +54,32 @@ class track {
      * @param int courseid
      * @return array of certificate modules
      */
-    private static function get_certificatemods($courseid) {
+    private static function get_certificates($courseid) {
         global $DB;
 
-        $mods = $DB->get_records(CERTIFICATE, ['course' => $courseid]);
+        // This is the current list of certificate modules which we have handlers for.
+        $supportedcerts = [
+            'iomadcertificate',
+            'customcert',
+            'certificatebeautiful',
+            'coursecertificate',
+            'simplecertificate',
+        ];
 
-        return $mods;
-    }
+        // Generate the SQL to include supported certificate types.
+        [$insql, $inparams] = $DB->get_in_or_equal($supportedcerts,
+                                                   SQL_PARAMS_NAMED,
+                                                   'certificate');
+        $inparams['courseid'] = $courseid;
 
-    /**
-     * Create a new certificate using certificate module template
-     * @param object $certificate certificate instance
-     * @param object $user completing user
-     * @param object $cm course module (in completing course)
-     * @param object $course completing course
-     * @param object $certissue certificate issue instance
-     * @return string pdf content
-     */
-    private static function create_certificate($certificate, $user, $cm, $course, $certissue) {
-        global $CFG;
-
-        // Load the PDF library.
-        require_once("$CFG->libdir/pdflib.php");
-
-        // Some name changes (as used in cert template).
-        $certuser = $user;
-        $certificatename = CERTIFICATE;
-        $$certificatename = $certificate;
-        $certrecord = $certissue;
-
-        // Load certificate template (magically creates $pdf variable. Grrrrrr).
-        // Assumes a whole bunch of stuff exists without being explicitly required (double grrrrr).
-        $typefield = CERTIFICATE . 'type';
-        require("$CFG->dirroot/mod/" . CERTIFICATE . "/type/{$certificate->$typefield}/certificate.php");
-
-        // Create the certificate content. 'S' means return as string.
-        return $pdf->Output('', 'S');
+        // Get all of the course modules for this course for supported certificates.
+        return $DB->get_records_sql(
+            "SELECT cm.*, m.name AS modulename
+             FROM {course_modules} cm
+             JOIN {modules} m ON (cm.module = m.id)
+             WHERE cm.course = :courseid
+             AND m.name {$insql}",
+            $inparams);
     }
 
     /**
@@ -168,7 +157,7 @@ class track {
         $context = context_user::instance($userid);
 
         // Get the certificate activities in the given course.
-        if (!$certificates = self::get_certificatemods($courseid)) {
+        if (!$certificates = self::get_certificates($courseid)) {
             return false;
         }
 
@@ -182,9 +171,11 @@ class track {
         foreach ($certificates as $certificate) {
 
             // Get the course module.
-            $cm = get_coursemodule_from_instance(CERTIFICATE, $certificate->id, $courseid);
             $modinfo = get_fast_modinfo($course, $userid);
-            $cm = $modinfo->get_cm($cm->id);
+            $cm = $modinfo->get_cm($certificate->id);
+
+            // Set the class we are using for this certificate.
+            $certclass = '\\local_iomad\\certificates\\iomad_' . $certificate->modulename;
 
             // Uservisible determines if the user would have been able to access the certificate.
             // If they can't see it (e.g. did not meet its completion requirements) then skip.
@@ -192,12 +183,17 @@ class track {
                 continue;
             }
 
-            // Find certificate issue record or create it (in cert lib.php).
-            $certissuefunction = CERTIFICATE . '_get_issue';
-            $certissue = $certissuefunction($course, $user, $certificate, $cm);
+            // Get the certificate record.
+            $certrec = $certclass::get_certrecord($certificate->instance);
+
+            // Find certificate issue record or create it.
+            $certissue = $certclass::get_certissue($course, $user, $certrec, $cm);
 
             // Potentially fix the issue date.
             if (!empty($trackinfo->timecompleted)) {
+                if ($certificate->modulename == 'coursecertificate') {
+                    $certissue->coursecompletiondate = userdate($trackinfo->timecompleted, get_string('strftimedatefullshort'));
+                }
                 $certissue->timecreated = $trackinfo->timecompleted;
             }
 
@@ -205,14 +201,14 @@ class track {
             $certissue->trackid = $trackid;
 
             // Generate correct filename (same as certificate mod's view.php does).
-            $certname = rtrim($certificate->name, '.');
+            $certname = rtrim($certrec->name, '.');
             $filename = clean_filename(format_string($certname) . ".pdf");
 
             // Create the certificate content (always create new so it's up to date).
-            $content = self::create_certificate($certificate, $user, $cm, $course, $certissue);
+            $content = $certclass::create_certificate($certrec, $user, $cm, $course, $certissue);
 
             // Store the certificate.
-            self::store_certificate($context->id, $filename, $trackid, $certificate, $content);
+            self::store_certificate($context->id, $filename, $trackid, $certrec, $content);
 
             // Record all of above in local_iomad_track db table.
             self::save_certificate($trackid, $filename);
