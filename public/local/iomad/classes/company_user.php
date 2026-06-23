@@ -1258,7 +1258,7 @@ class company_user {
         // Get the progress.
         if (!empty($timecompleted)) {
             $progress = 100;
-	} elseif (empty($timestarted) ||
+        } else if (empty($timestarted) ||
            !$DB->record_exists('course', ['id' => $courseid])) {
             $progress = null;
         } else {
@@ -1582,14 +1582,14 @@ class company_user {
                 }
 
                 // Remove choices.
-                if ($choices = $DB->get_records('choice', ['course' => $courseid])){
+                if ($choices = $DB->get_records('choice', ['course' => $courseid])) {
                     foreach ($choices as $choice) {
                         $DB->delete_records('choice_answers', ['choiceid' => $choice->id, 'userid' => $userid]);
                     }
                 }
 
                 // Remove traininevent registrations.
-                if ($trainigevents = $DB->get_records('trainingevent', ['course' => $courseid])){
+                if ($trainigevents = $DB->get_records('trainingevent', ['course' => $courseid])) {
                     foreach ($trainigevents as $trainigevent) {
                         $DB->delete_records(
                             'trainingevent_user',

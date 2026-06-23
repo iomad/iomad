@@ -195,7 +195,7 @@ class provider implements
             writer::with_context($context)->export_data([get_string('licenseusers', 'block_iomad_company_admin')], $licensesout);
         }
 
-        // Get the tracking table entreies
+        // Get the tracking table entries.
         if ($tracks = $DB->get_records('local_iomad_tracks', ['userid' => $user->id])) {
             $trackout = (object) [];
             $trackout->tracks = [];
@@ -222,9 +222,8 @@ class provider implements
                 $trackout->tracks[$track->id] = $track;
                 if ($certinfos = $DB->get_records('local_iomad_track_certs', ['trackid' => $track->id])) {
                     foreach ($certinfos as $certinfo) {
-                        // Export the track info
+                        // Export the track info.
                         $trackout->certs[$cert->id] = $certinfo;
-                        //writer::with_context($context)->export_data([], $certinfo);
                     }
                 }
             }
@@ -292,8 +291,8 @@ class provider implements
                             'itemid' => $cert->trackid,
                             'filename' => $cert->filename,
                         ])) {
-                        $filedir1 = substr($file->contenthash,0,2);
-                        $filedir2 = substr($file->contenthash,2,2);
+                        $filedir1 = substr($file->contenthash, 0, 2);
+                        $filedir2 = substr($file->contenthash, 2, 2);
                         $filepath = $CFG->dataroot . '/filedir/' .
                                     $filedir1 . '/' . $filedir2 .
                                     '/' . $file->contenthash;
@@ -327,7 +326,7 @@ class provider implements
                    'senderid' => $user->id,
                    'email' => '%' . $user->email . '%'];
         if ($emails = $DB->get_records_sql($emailsql, $params)) {
-            foreach ($emails as $email){
+            foreach ($emails as $email) {
                 $DB->delete_records('local_iomad_emails', ['id' => $email->id]);
             }
         }
@@ -366,8 +365,8 @@ class provider implements
                             'itemid' => $cert->trackid,
                             'filename' => $cert->filename,
                         ])) {
-                        $filedir1 = substr($file->contenthash,0,2);
-                        $filedir2 = substr($file->contenthash,2,2);
+                        $filedir1 = substr($file->contenthash, 0, 2);
+                        $filedir2 = substr($file->contenthash, 2, 2);
                         $filepath = $CFG->dataroot . '/filedir/' .
                                     $filedir1 . '/' . $filedir2 .
                                     '/' . $file->contenthash;
@@ -401,7 +400,7 @@ class provider implements
                    'senderid' => $user->id,
                    'email' => '%' . $user->email . '%'];
         if ($emails = $DB->get_records_sql($emailsql, $params)) {
-            foreach ($emails as $email){
+            foreach ($emails as $email) {
                 $DB->delete_records('local_iomad_emails', ['id' => $email->id]);
             }
         }
@@ -496,8 +495,8 @@ class provider implements
                             'itemid' => $cert->trackid,
                             'filename' => $cert->filename,
                         ])) {
-                        $filedir1 = substr($file->contenthash,0,2);
-                        $filedir2 = substr($file->contenthash,2,2);
+                        $filedir1 = substr($file->contenthash, 0, 2);
+                        $filedir2 = substr($file->contenthash, 2, 2);
                         $filepath = $CFG->dataroot . '/filedir/' .
                                     $filedir1 . '/' . $filedir2 .
                                     '/' . $file->contenthash;
@@ -533,7 +532,7 @@ class provider implements
                     'senderid' => $user->id,
                     'email' => '%' . $user->email . '%'];
             if ($emails = $DB->get_records_sql($emailsql, $params)) {
-                foreach ($emails as $email){
+                foreach ($emails as $email) {
                     $DB->delete_records('local_iomad_emails', ['id' => $email->id]);
                 }
             }
