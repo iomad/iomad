@@ -74,14 +74,14 @@ $string['emailothers'] = 'Email Others';
 $string['emailothers_help'] = 'Enter the email addresses here, separated by a comma, of those who should be alerted with an email whenever students receive a certificate.';
 $string['emailstudenttext'] = 'Attached is your certificate for {$a->course}.';
 $string['emailteachermail'] = '
-{$a->student} has received their certificate: \'{$a->certificate}\'
+{$a->student} has received their certificate: \'{$a->iomadcertificate}\'
 for {$a->course}.
 
 You can review the certificate here:
 
     {$a->url}';
 $string['emailteachermailhtml'] = '
-{$a->student} has received their certificate: \'<i>{$a->certificate}</i>\'
+{$a->student} has received their certificate: \'<i>{$a->iomadcertificate}</i>\'
 for {$a->course}.
 
 You can review the certificate here:
