@@ -97,8 +97,10 @@ function local_iomad_pluginfile($course, $birecordorcm, $context, $filearea, $ar
     $itemid = array_shift($args);
     $filename = array_pop($args);
     $filepath = $args ? '/'.implode('/', $args).'/' : '/';
-    if (!$file = $fs->get_file($context->id, 'local_iomad', 'certificate_issue', $itemid, $filepath, $filename) ||
-        $file->is_directory()) {
+    if (!$file = $fs->get_file($context->id, 'local_iomad', 'certificate_issue', $itemid, $filepath, $filename)) {
+        send_file_not_found();
+    }
+    if ($file->is_directory()) {
         send_file_not_found();
     }
 
@@ -108,13 +110,13 @@ function local_iomad_pluginfile($course, $birecordorcm, $context, $filearea, $ar
 }
 
  /**
- * Hook called by user_process_profile_callbacks function
- *
- * @param object $user
- * @param object $course
- * @param object $usercontext
- * @return void
- */
+  * Hook called by user_process_profile_callbacks function
+  *
+  * @param object $user
+  * @param object $course
+  * @param object $usercontext
+  * @return void
+  */
 function local_iomad_control_view_profile($user, $course, $usercontext) {
     if (company::check_can_manage($user->id)) {
         return core_user::VIEWPROFILE_FORCE_ALLOW;

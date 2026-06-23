@@ -302,7 +302,7 @@ class user_table extends table_sql {
                         $certurl = moodle_url::make_file_url(
                             '/pluginfile.php',
                             '/' . $usercontext->id .
-                            '/local_iomad_track/issue/' . $traccertrec->trackid .
+                            '/local_iomad/certificate_issue/' . $traccertrec->trackid .
                             '/' . $traccertrec->filename);
                         $returntext .= html_writer::start_tag(
                             'a',
