@@ -65,7 +65,14 @@ function trainingevent_add_instance($trainingevent) {
 
     $trainingevent->name = get_trainingevent_name($trainingevent);
     $trainingevent->timemodified = time();
+
+    // Deal with the Additional info HTML field.
+    $trainingevent->additionalinfo = '';
+    if (!empty($trainingevent->requireadditionalinfo)) {
+        $trainingevent->additionalinfo = $trainingevent->additionalinfo_editor['text'];
+    }
     $trainingevent->id = $DB->insert_record("trainingevent", $trainingevent);
+
     grade_update('mod/trainingevent',
                  $trainingevent->course,
                  'mod',
@@ -110,6 +117,12 @@ function trainingevent_update_instance($trainingevent) {
 
     if (empty($trainingevent->requirenotes)) {
         $trainingevent->requirenotes = 0;
+    }
+
+    // Deal with the Additional info HTML field.
+    $trainingevent->additionalinfo = '';
+    if (!empty($trainingevent->requireadditionalinfo)) {
+        $trainingevent->additionalinfo = $trainingevent->additionalinfo_editor['text'];
     }
 
     grade_update('mod/trainingevent',
@@ -514,6 +527,9 @@ function trainingevent_user_attending($event) {
     // Set the location time.
     $location->time = userdate($trainingevent->startdatetime, get_config('local_iomad', 'date_format') . " %I:%M%p");
 
+    // Add any additional information.
+    $location->additionalinfo = $trainingevent->additionalinfo;
+
     // Is it only onto the waiting list?
     if ($sendemails &&
         !empty($event->other['waitlisted'])) {
@@ -664,6 +680,9 @@ function trainingevent_user_removed($event) {
 
     // Set the company.
     $company = new company($event->companyid);
+
+    // Add any additional information.
+    $location->additionalinfo = $trainingevent->additionalinfo;
 
     // Send an email as long as it hasn't already started.
     if ($trainingevent->startdatetime > $event->timecreated) {
@@ -833,6 +852,10 @@ function trainingevent_attendance_changed($event) {
     // Add the time to the location object.
     $location->time = userdate($trainingevent->startdatetime, get_config('local_iomad', 'date_format') . " %I:%M%p");
     $chosenlocation->time = userdate($chosenevent->startdatetime, get_config('local_iomad', 'date_format') . " %I:%M%p");
+
+    // Add any additional information.
+    $chosenlocation->additionalinfo = $chosenevent->additionalinfo;
+    $location->additionalinfo = $trainingevent->additionalinfo;
 
     // Get the course teachers using using groups if required.
     $usergroups = groups_get_user_groups($course->id, $user->id);
