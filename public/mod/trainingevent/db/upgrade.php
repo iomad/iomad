@@ -42,6 +42,8 @@ function xmldb_trainingevent_upgrade($oldversion) {
     $result = true;
     $dbman = $DB->get_manager();
 
+    // Only Moodle 4.1 on upgrades are required - 2022112800.
+
     if ($oldversion < 2024030100) {
 
         // Define field setreminder to be added to trainingevent.
@@ -211,6 +213,21 @@ function xmldb_trainingevent_upgrade($oldversion) {
 
         // Trainingevent savepoint reached.
         upgrade_mod_savepoint(true, 2026022800, 'trainingevent');
+    }
+
+    if ($oldversion < 2026062400) {
+
+        // Define field additionalinfo to be added to trainingevent.
+        $table = new xmldb_table('trainingevent');
+        $field = new xmldb_field('additionalinfo', XMLDB_TYPE_TEXT, null, null, null, null, null, 'booking_notes_default');
+
+        // Conditionally launch add field additionalinfo.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Trainingevent savepoint reached.
+        upgrade_mod_savepoint(true, 2026062400, 'trainingevent');
     }
 
     return $result;

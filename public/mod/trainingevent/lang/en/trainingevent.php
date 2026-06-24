@@ -24,6 +24,8 @@
  */
 
 $string['action'] = 'Action';
+$string['additionalinfo'] = 'Email additional information';
+$string['additionalinfo_help'] = 'This text will be added to the Training event email templates using the shortcode {Classroom_Additionalinfo} ';
 $string['alertteachers'] = 'Alert teachers by email';
 $string['alertteachers_help'] = 'If this option is checked, an email will also be sent to the teachers if a user is added or removed to the training event.';
 $string['alreadybookedondates'] = 'You are already booked for an event on these dates';
@@ -100,6 +102,8 @@ $string['request'] = 'Request approval to attend';
 $string['request_successful'] = 'You have requested approval to attend';
 $string['requestagain'] = 'Re-request approval to attend';
 $string['requestagain_success'] = 'You have re-request approval to attend';
+$string['requireadditionalinfo'] = 'Add extra info to emails';
+$string['requireadditionalinfo_help'] = 'If this option is selected, then extra information can be added to any emails.';
 $string['requirenotes'] = 'Allow extra booking notes';
 $string['requirenotes_help'] = 'If this option is selected then users will be able to add additional information to their booking. This can be viewed on the attendees pages and is included in the downloads.';
 $string['resetattending'] = 'Clear Attendees';
