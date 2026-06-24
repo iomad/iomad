@@ -109,7 +109,7 @@ class EmailVars {
                         'Course_FullName', 'Course_ShortName', 'CourseURL', 'Course_ReportText',
             // ClassRoom fields.
                         'Classroom_Name', 'Classroom_Address', 'Classroom_Postcode', 'Classroom_City',
-                        'Classroom_Country', 'Classroom_Capacity', 'Classroom_Summary', 'Classroom_Time',
+                        'Classroom_Country', 'Classroom_Capacity', 'Classroom_Summary', 'Classroom_Time', 'Classroom_Additionalinfo',
             // Site fields.
                         'Site_FullName', 'Site_ShortName', 'Site_Summary',
             // Company fields.
