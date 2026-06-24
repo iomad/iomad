@@ -42,147 +42,7 @@ function xmldb_trainingevent_upgrade($oldversion) {
     $result = true;
     $dbman = $DB->get_manager();
 
-    if ($oldversion < 2011111701) {
-
-        // Define table trainingevent_users to be created.
-        $table = new xmldb_table('trainingevent_users');
-
-        // Adding fields to table trainingevent_users.
-        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('userid', XMLDB_TYPE_INTEGER, '20', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null);
-        $table->add_field('trainingeventid', XMLDB_TYPE_INTEGER, '20', XMLDB_UNSIGNED, null, null, null);
-
-        // Adding keys to table trainingevent_users.
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
-
-        // Conditionally launch create table for trainingevent_users.
-        if (!$dbman->table_exists($table)) {
-            $dbman->create_table($table);
-        }
-
-        // Label savepoint reached.
-        upgrade_mod_savepoint(true, 2011111701, 'trainingevent');
-    }
-
-    if ($oldversion < 2014012301) {
-
-        // Define field approvaltype to be added to trainingevent.
-        $table = new xmldb_table('trainingevent');
-        $field = new xmldb_field('approvaltype', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'classroomid');
-
-        // Conditionally launch add field approvaltype.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Trainingevent savepoint reached.
-        upgrade_mod_savepoint(true, 2014012301, 'trainingevent');
-    }
-
-    if ($oldversion < 2020091600) {
-
-        // Define field approvaltype to be added to trainingevent.
-        $table = new xmldb_table('trainingevent');
-        $field = new xmldb_field('coursecapacity', XMLDB_TYPE_INTEGER, '10');
-
-        // Conditionally launch add field approvaltype.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Trainingevent savepoint reached.
-        upgrade_mod_savepoint(true, 2020091600, 'trainingevent');
-    }
-
-    if ($oldversion < 2020092100) {
-
-        // Define field id to be added to trainingevent_users.
-        $table = new xmldb_table('trainingevent_users');
-        $field = new xmldb_field('waitlisted', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, 0, null);
-
-        // Conditionally launch add field id.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Trainingevent savepoint reached.
-        upgrade_mod_savepoint(true, 2020092100, 'trainingevent');
-    }
-
-    if ($oldversion < 2020111800) {
-
-        // Define field coursecapacity to be added to trainingevent as it was missing for xmldb install.
-        $table = new xmldb_table('trainingevent');
-        $field = new xmldb_field('coursecapacity', XMLDB_TYPE_INTEGER, '10');
-
-        // Conditionally launch add field coursecapacity.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Define field waitlisted to be added to trainingevent_users as it was missing for xmldb install.
-        $table = new xmldb_table('trainingevent_users');
-        $field = new xmldb_field('waitlisted', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, 0, null);
-
-        // Conditionally launch add field waitlisted.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Define field haswaitinglist to be added to trainingevent.
-        $table = new xmldb_table('trainingevent');
-        $field = new xmldb_field('haswaitinglist', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'approvaltype');
-
-        // Conditionally launch add field haswaitinglist.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Trainingevent savepoint reached.
-        upgrade_mod_savepoint(true, 2020111800, 'trainingevent');
-    }
-
-    if ($oldversion < 2022032400) {
-
-        // Define field sendreminder to be added to trainingevent.
-        $table = new xmldb_table('trainingevent');
-        $field = new xmldb_field('sendreminder', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'coursecapacity');
-
-        // Conditionally launch add field sendreminder.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Define field emailteachers to be added to trainingevent.
-        $table = new xmldb_table('trainingevent');
-        $field = new xmldb_field('emailteachers', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'sendreminder');
-
-        // Conditionally launch add field emailteachers.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Define field lockdays to be added to trainingevent.
-        $table = new xmldb_table('trainingevent');
-        $field = new xmldb_field('lockdays', XMLDB_TYPE_INTEGER, '5', null, XMLDB_NOTNULL, null, '0', 'emailteachers');
-
-        // Conditionally launch add field lockdays.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Define field exclusive to be added to trainingevent.
-        $table = new xmldb_table('trainingevent');
-        $field = new xmldb_field('isexclusive', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'lockdays');
-
-        // Conditionally launch add field exclusive.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Trainingevent savepoint reached.
-        upgrade_mod_savepoint(true, 2022032400, 'trainingevent');
-    }
+    // Only Moodle 4.1 on upgrades are required - 2022112800.
 
     if ($oldversion < 2024030100) {
 
@@ -313,6 +173,21 @@ function xmldb_trainingevent_upgrade($oldversion) {
                 }
             }
         }
+    }
+
+    if ($oldversion < 2026062400) {
+
+        // Define field additionalinfo to be added to trainingevent.
+        $table = new xmldb_table('trainingevent');
+        $field = new xmldb_field('additionalinfo', XMLDB_TYPE_TEXT, null, null, null, null, null, 'booking_notes_default');
+
+        // Conditionally launch add field additionalinfo.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Trainingevent savepoint reached.
+        upgrade_mod_savepoint(true, 2026062400, 'trainingevent');
     }
 
     return $result;
