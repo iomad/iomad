@@ -164,6 +164,21 @@ class mod_trainingevent_mod_form extends moodleform_mod {
 
         $mform->setDefault('requirenotes', $config->requirenotes);
 
+        // Bits for additional info.
+        $mform->addElement('checkbox',
+                           'requireadditionalinfo',
+                           get_string('requireadditionalinfo', 'mod_trainingevent'),
+                           get_string('requireadditionalinfo_help', 'mod_trainingevent'));
+        $mform->addElement(
+            'editor',
+            'additionalinfo_editor',
+            get_string('additionalinfo', 'mod_trainingevent'),
+            null,
+            ['enable_filemanagement' => false]
+        );
+        $mform->addHelpButton('additionalinfo_editor', 'additionalinfo', 'mod_trainingevent');
+        $mform->hideIf('additionalinfo_editor', 'requireadditionalinfo');
+
         $this->standard_grading_coursemodule_elements();
         $this->standard_coursemodule_elements();
 
@@ -216,5 +231,25 @@ class mod_trainingevent_mod_form extends moodleform_mod {
             }
         }
         return $errors;
+    }
+
+    /**
+     * Prepares the form before data are set
+     *
+     * Additional wysiwyg editor are prepared here, the introeditor is prepared automatically by core.
+     * Grade items are set here because the core modedit supports single grade item only.
+     *
+     * @param array $data to be set
+     * @return void
+     */
+    public function data_preprocessing(&$data) {
+        if ($this->current->instance) {
+            $data['additionalinfo_editor']['text'] = $data['additionalinfo'];
+            $data['additionalinfo_editor']['format'] = 1;
+
+            if (!empty($data['additionalinfo'])) {
+                $data['requireadditionalinfo'] = true;
+            }
+        }
     }
 }
