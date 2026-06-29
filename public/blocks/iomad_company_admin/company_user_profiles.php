@@ -30,6 +30,7 @@ use local_iomad\custom_context\context_company;
 
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
+require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->dirroot.'/user/profile/lib.php');
 require_once(__DIR__ .'/profiledefinelib.php');
 require_once(__DIR__ .'/lib.php');
