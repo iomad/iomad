@@ -34,6 +34,7 @@ use context_system;
 use context_course;
 use core_course_list_element;
 use local_iomad\company;
+use local_iomad\iomad;
 use moodle_url;
 
 /**
