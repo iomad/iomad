@@ -336,11 +336,12 @@ if (empty($courses)) {
 
 // Get courses where we don't show the grade.
 $gradelesscourses = $DB->get_records_sql(
-    "SELECT lit.courseid
+    "SELECT lic.courseid
      FROM {local_iomad_courses} lic
      LEFT JOIN {local_iomad_company_course_options} licco ON (
          lic.courseid = licco.courseid
-         AND licco:companyid = :companyid
+         AND licco.companyid = :companyid
+     )
      WHERE (
          lic.hasgrade = 0
          AND licco.hasgrade IS NULL
@@ -355,6 +356,7 @@ $expirecourses = $DB->get_records_sql(
      LEFT JOIN {local_iomad_company_course_options} licco ON (
          lic.courseid = licco.courseid
          AND licco.companyid = :companyid
+     )
      WHERE (
          lic.validlength > 0
          AND licco.validlength IS NULL
