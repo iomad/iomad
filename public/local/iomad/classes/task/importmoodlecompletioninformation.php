@@ -64,14 +64,6 @@ class importmoodlecompletioninformation extends adhoc_task {
             $userid = $comprec->userid;
             $courseid = $comprec->course;
 
-            // Does this course have a valid length?
-            $offset = 0;
-            if ($iomadrec = $DB->get_record('local_iomad_courses', ['courseid' => $courseid])) {
-                if ($iomadrec->validlength > 0) {
-                    $offset = $iomadrec->validlength * 24 * 60 * 60;
-                }
-            }
-
             // Get the enrolment record as sometime the completion record isn't fully formed after a completion reset.
             if (!$enrolrec = $DB->get_record_sql("SELECT ue.* FROM {user_enrolments} ue
                                                   JOIN {enrol} e ON (ue.enrolid = e.id)
@@ -139,6 +131,14 @@ class importmoodlecompletioninformation extends adhoc_task {
                 foreach ($mycompanies as $mycompanyid => $dump) {
                     // Get the rest of the data.
                     $usercompany = new company($mycompanyid);
+
+                    // Does this course have a valid length?
+                    $offset = 0;
+                    $iomadrec = $usercompany->get_iomad_course_options($courseid);
+                    if ($iomadrec->validlength > 0) {
+                        $offset = $iomadrec->validlength * 24 * 60 * 60;
+                    }
+
                     $companyrec = $DB->get_record('local_iomad_companies', ['id' => $usercompany->id]);
                     $courserec = $DB->get_record('course', ['id' => $courseid]);
                     if ($DB->get_record('local_iomad_courses', ['courseid' => $courseid, 'licensed' => 1])) {
@@ -237,6 +237,14 @@ class importmoodlecompletioninformation extends adhoc_task {
                     if ($broken) {
                         // Update the completion record.
                         $DB->update_record('course_completions', $comprec);
+                    }
+
+                    // Does this course have a valid length?
+                    $offset = 0;
+                    $usercompany = new company($current->companyid);
+                    $iomadrec = $usercompany->get_iomad_course_options($courseid);
+                    if ($iomadrec->validlength > 0) {
+                        $offset = $iomadrec->validlength * 24 * 60 * 60;
                     }
 
                     // Deal with completion valid length.

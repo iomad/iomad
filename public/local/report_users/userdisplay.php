@@ -515,23 +515,47 @@ $columns = ['coursename',
 
 // Do we show the time expires column?
 if (empty($USER->editing) &&
-    $DB->get_records_sql("SELECT lit.id FROM {local_iomad_courses} ic
-                          JOIN {local_iomad_tracks} lit
-                          ON ic.courseid = lit.courseid
-                          WHERE ic.validlength > 0
-                          AND lit.userid = :userid",
-                         ['userid' => $userid])) {
+    $DB->record_exists_sql(
+        "SELECT lic.id
+         FROM {local_iomad_courses} lic
+         JOIN {local_iomad_tracks} lit ON lic.courseid = lit.courseid
+         LEFT JOIN {local_iomad_company_course_options} licco ON
+         (
+             lic.courseid = licco.courseid
+             AND lit.courseid = licco.courseid
+             AND lit.companyid = licco.companyid
+         )
+         WHERE lit.companyid = :companyid
+         AND lit.userid = :userid
+         AND (
+             lic.validlength > 0
+             OR licco.validlength > 0
+         )",
+    ['userid' => $userid,
+     'companyid' => $companyid])) {
     $columns[] = 'timeexpires';
     $headers[] = get_string('timeexpires', 'local_report_completion');
 }
 
 // Do we show the grade column?
-if ($DB->get_records_sql("SELECT lit.id FROM {local_iomad_courses} ic
-                          JOIN {local_iomad_tracks} lit
-                          ON ic.courseid = lit.courseid
-                          WHERE ic.hasgrade = 1
-                          AND lit.userid = :userid",
-                         ['userid' => $userid])) {
+if ($DB->record_exists_sql(
+    "SELECT lic.id
+     FROM {local_iomad_courses} lic
+     JOIN {local_iomad_tracks} lit ON lic.courseid = lit.courseid
+     LEFT JOIN {local_iomad_company_course_options} licco ON
+     (
+         lic.courseid = licco.courseid
+         AND lit.courseid = licco.courseid
+         AND lit.companyid = licco.companyid
+     )
+     WHERE lit.companyid = :companyid
+     AND lit.userid = :userid
+     AND (
+         lic.hasgrade = 1
+         OR licco.hasgrade = 1
+     )",
+    ['userid' => $userid,
+     'companyid' => $companyid])) {
     $columns[] = 'finalscore';
     $headers[] = get_string('grade', 'iomadcertificate');
 }

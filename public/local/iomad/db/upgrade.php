@@ -3134,5 +3134,74 @@ function xmldb_local_iomad_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026022300, 'local', 'iomad');
     }
 
+    if ($oldversion < 2026062500) {
+
+        // Define field validlength to be added to local_iomad_company_course_options.
+        $table = new xmldb_table('local_iomad_company_course_options');
+        $field = new xmldb_field('validlength', XMLDB_TYPE_INTEGER, '20', null, null, null, null, 'mandatory');
+
+        // Conditionally launch add field validlength.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field warnexpire to be added to local_iomad_company_course_options.
+        $table = new xmldb_table('local_iomad_company_course_options');
+        $field = new xmldb_field('warnexpire', XMLDB_TYPE_INTEGER, '20', null, null, null, null, 'validlength');
+
+        // Conditionally launch add field warnexpire.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field warncompletion to be added to local_iomad_company_course_options.
+        $table = new xmldb_table('local_iomad_company_course_options');
+        $field = new xmldb_field('warncompletion', XMLDB_TYPE_INTEGER, '20', null, null, null, null, 'warnexpire');
+
+        // Conditionally launch add field warncompletion.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field notifyperiod to be added to local_iomad_company_course_options.
+        $table = new xmldb_table('local_iomad_company_course_options');
+        $field = new xmldb_field('notifyperiod', XMLDB_TYPE_INTEGER, '20', null, null, null, null, 'warncompletion');
+
+        // Conditionally launch add field notifyperiod.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field expireafter to be added to local_iomad_company_course_options.
+        $table = new xmldb_table('local_iomad_company_course_options');
+        $field = new xmldb_field('expireafter', XMLDB_TYPE_INTEGER, '20', null, null, null, null, 'notifyperiod');
+
+        // Conditionally launch add field expireafter.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field warnnotstarted to be added to local_iomad_company_course_options.
+        $table = new xmldb_table('local_iomad_company_course_options');
+        $field = new xmldb_field('warnnotstarted', XMLDB_TYPE_INTEGER, '20', null, null, null, null, 'expireafter');
+
+        // Conditionally launch add field warnnotstarted.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field hasgrade to be added to local_iomad_company_course_options.
+        $table = new xmldb_table('local_iomad_company_course_options');
+        $field = new xmldb_field('hasgrade', XMLDB_TYPE_INTEGER, '1', null, null, null, null, 'warnnotstarted');
+
+        // Conditionally launch add field hasgrade.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2026062500, 'local', 'iomad');
+    }
+
     return $result;
 }

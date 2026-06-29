@@ -70,7 +70,7 @@ class helper {
                              c.summary AS coursesummary,
                              c.visible,
                              c.id AS realcourseid,
-                             ic.hasgrade,
+                             COALESCE(cca.hasgrade, ic.hasgrade) AS hasgrade,
                              lit.timestarted,
                              lit.modifiedtime,
                              cca.mandatory

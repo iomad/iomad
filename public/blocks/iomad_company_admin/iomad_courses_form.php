@@ -145,6 +145,7 @@ if ($canedit && $PAGE->user_allowed_editing()) {
 // Add the modal forms.
 $PAGE->requires->js_call_amd('block_iomad_company_admin/copy_course', 'init');
 $PAGE->requires->js_call_amd('block_iomad_company_admin/delete_course', 'init');
+$PAGE->requires->js_call_amd('block_iomad_company_admin/reset_iomad_course', 'init');
 
 // Log this page view.
 dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
@@ -259,10 +260,27 @@ if ($companyid == '-2') {
     $companyid = 0;
 }
 
+// Set up the SQL for the table.
 $companysql = " 1 = 1";
 $searchsql = "";
-$autoselect = "";
+$selectsql = "ic.id,
+              c.id AS courseid,
+              c.fullname AS coursename,
+              c.shortname,
+              ic.licensed,
+              ic.shared,
+              ic.validlength,
+              ic.warnexpire,
+              ic.warncompletion,
+              ic.notifyperiod,
+              ic.expireafter,
+              ic.warnnotstarted,
+              ic.hasgrade,
+              c.visible,
+              '$companyid' AS companyid";
 $autofrom = "";
+
+// Get any company specific stuff.
 if (!empty($companyid)) {
     if ($companyid == "-1") {
         $companysql = " c.id NOT IN (SELECT courseid FROM {local_iomad_company_courses}) ";
@@ -271,9 +289,26 @@ if (!empty($companyid)) {
                           SELECT courseid FROM {local_iomad_company_courses}
                           WHERE companyid = :companyid)
                          OR ic.shared = 1) ";
-        $autoselect = ", cca.autoenrol AS autoenrol, cca.mandatory AS mandatory";
+        $selectsql = "ic.id,
+              c.id AS courseid,
+              c.fullname AS coursename,
+              c.shortname,
+              ic.licensed,
+              ic.shared,
+              COALESCE(cca.validlength, ic.validlength) AS validlength,
+              COALESCE(cca.warnexpire, ic.warnexpire) AS warnexpire,
+              COALESCE(cca.warncompletion, ic.warncompletion) AS warncompletion,
+              COALESCE(cca.notifyperiod, ic.notifyperiod) AS notifyperiod,
+              COALESCE(cca.expireafter, ic.expireafter) AS expireafter,
+              COALESCE(cca.warnnotstarted, ic.warnnotstarted) AS warnnotstarted,
+              COALESCE(cca.hasgrade, ic.hasgrade) AS hasgrade,
+              c.visible,
+              '$companyid' AS companyid,
+              cca.autoenrol AS autoenrol,
+              cca.mandatory AS mandatory";
         $autofrom = " LEFT JOIN {local_iomad_company_course_options} cca ON (
                           ic.courseid = cca.courseid
+                          AND c.id = cca.courseid
                           AND cca.companyid = :autocompanyid
                       )";
         $params['autocompanyid'] = $companyid;
@@ -299,23 +334,7 @@ if (!empty($fieldcourseids)) {
     $params = $params + $inparams;
 }
 
-// Set up the SQL for the table.
-$selectsql = "ic.id,
-              c.id AS courseid,
-              c.fullname AS coursename,
-              c.shortname,
-              ic.licensed,
-              ic.shared,
-              ic.validlength,
-              ic.warnexpire,
-              ic.warncompletion,
-              ic.notifyperiod,
-              ic.expireafter,
-              ic.warnnotstarted,
-              ic.hasgrade,
-              c.visible,
-              '$companyid' AS companyid
-              $autoselect";
+// Set up the rest of the SQL.
 $fromsql = "{local_iomad_courses} ic JOIN {course} c ON (ic.courseid = c.id) $autofrom ";
 $wheresql = "$companysql $searchsql";
 $sqlparams = $params;

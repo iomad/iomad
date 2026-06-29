@@ -66,45 +66,105 @@ class trainingevent_not_selected_task extends scheduled_task {
             4 => " month",
         ];
 
-        mtrace("Running email report training event not selected task at ".date('d M Y h:i:s', $runtime));
+        mtrace("Running email report training event not selected task at " . date('d M Y h:i:s', $runtime));
 
-        // Get all of the upcoming training event courses.
-        $courses = $DB->get_records_sql("SELECT DISTINCT c.*,ic.warnnotstarted, ic.notifyperiod FROM {trainingevent} t
-                                         JOIN {course} c ON (t.course = c.id)
-                                         JOIN {local_iomad_courses} ic ON (t.course = ic.courseid AND c.id = ic.courseid)
-                                         WHERE ic.warnnotstarted > 0
-                                         AND c.visible = 1
-                                         AND t.startdatetime > :time",
-                                         ['time' => $runtime]);
-        foreach ($courses as $course) {
-            // Get all of the users on the course who are not already signed up for an event or waiting list.
-            $users = $DB->get_records_sql("SELECT DISTINCT concat(u.id, concat('-', lit.companyid)) AS rowid,
-                                                  u.*,
-                                                  lit.companyid,
-                                                  lit.timeenrolled
-                                           FROM {user} u
-                                           JOIN {user_enrolments} ue ON (ue.userid = u.id)
-                                           JOIN {enrol} e ON (ue.enrolid = e.id AND e.status = 0)
-                                           JOIN {local_iomad_tracks} lit
-                                             ON (e.courseid = lit.courseid
-                                                 AND ue.userid = lit.userid
-                                                 AND ue.timestart = lit.timeenrolled)
-                                           WHERE e.courseid = :courseid
-                                           AND ue.timestart < :warntime
-                                           AND u.id NOT IN (
-                                             SELECT tu.userid FROM {trainingevent_users} tu
-                                             JOIN {trainingevent} t ON (tu.trainingeventid = t.id AND t.course = e.courseid)
-                                           )",
-                                          ['courseid' => $course->id,
-                                           'warntime' => $runtime - $course->warnnotstarted * 24 * 60 * 60]);
-            foreach ($users as $user) {
-                // Get the user's company.
-                if ($company = new company($user->companyid)) {
+        // Get all of the companies which have this template enabled.
+        $enabledcompanies = $DB->get_records_sql(
+            "SELECT DISTINCT companyid
+             FROM {local_iomad_email_templates}
+             WHERE name = :templatename
+             AND disabled = 0",
+            ['templatename' => 'completion_warn_user']);
+
+        // Process them.
+        foreach ($enabledcompanies as $enabledcompany) {
+
+            // Validate the company.
+            if (!$DB->record_exists(
+                'local_iomad_companies',
+                [
+                    'id' => $enabledcompany->companyid,
+                    'suspended' => 0,
+                ])) {
+                continue;
+            }
+
+            // Create the company object.
+            $company = new company($enabledcompany->companyid);
+
+            // Get all of the upcoming training event courses.
+            $courses = $DB->get_records_sql(
+                "SELECT co.*,
+                        COALESCE(cco.notifyperiod, ic.notifyperiod) AS notifyperiod,
+                        COALESCE(cco.warnnotstarted, ic.warnnotstarted) AS warnnotstarted
+                 FROM {local_iomad_courses} ic
+                 JOIN {course} co ON (ic.courseid = co.id)
+                 JOIN {trainingevent} t ON (ic.courseid = t.course AND co.id = t.course)
+                 LEFT JOIN {local_iomad_company_course_options} cco ON (
+                     ic.courseid = cco.courseid
+                     AND co.id = cco.courseid
+                     AND t.course = cco.courseid
+                     AND cco.companyid = :companyid
+                 )
+                 WHERE co.visible = 1
+                 AND t.startdatetime > :runtime
+                 AND (
+                     ic.warnnotstarted > 0
+                     OR cco.warnnotstarted > 0
+                 )",
+                [
+                    'companyid' => $company->id,
+                    'runtime' => $runtime,
+                ]);
+
+            foreach ($courses as $course) {
+                $checktime = $runtime - $course->warnnotstarted * 24 * 60 * 60;
+
+                // Get all of the users on the course who are not already signed up for an event or waiting list.
+                $users = $DB->get_records_sql(
+                    "SELECT DISTINCT concat(u.id, concat('-', lit.companyid)) AS rowid,
+                            u.*,
+                            lit.companyid,
+                            lit.timeenrolled
+                    FROM {user} u
+                    JOIN {user_enrolments} ue ON (ue.userid = u.id)
+                    JOIN {enrol} e ON (ue.enrolid = e.id AND e.status = 0)
+                    JOIN {local_iomad_tracks} lit
+                      ON (
+                          e.courseid = lit.courseid
+                      AND ue.userid = lit.userid
+                      AND ue.timestart = lit.timeenrolled
+                      )
+                    WHERE e.courseid = :courseid
+                      AND lit.companyid = :companyid
+                      AND ue.timestart < :warntime
+                      AND u.id NOT IN (
+                          SELECT tu.userid
+                            FROM {trainingevent_users} tu
+                            JOIN {trainingevent} t
+                              ON (
+                                    tu.trainingeventid = t.id
+                                AND t.course = e.courseid
+                              )
+                      )",
+                    [
+                     'courseid' => $course->id,
+                     'companyid' => $company->id,
+                     'warntime' => $runtime - $checktime,
+                    ]);
+
+                // Process the users.
+                foreach ($users as $user) {
 
                     // Get the company template info.
                     // Check against per company template repeat instead.
-                    if ($templateinfo = $DB->get_record('local_iomad_email_templates', ['companyid' => $company->id,
-                                                                           'name' => 'trainingevent_not_selected'])) {
+                    if ($templateinfo = $DB->get_record(
+                        'local_iomad_email_templates',
+                        [
+                            'companyid' => $company->id,
+                            'name' => 'trainingevent_not_selected',
+                        ])) {
+
                         // Check if its the correct day, if not continue.
                         if (!empty($templateinfo->repeatday) &&
                             $templateinfo->repeatday != 99 &&
@@ -113,8 +173,7 @@ class trainingevent_not_selected_task extends scheduled_task {
                         }
 
                         // Only check for previous emails if repeat is enabled and not never or always.
-                        if (
-                            !empty($templateinfo->repeatperiod) &&
+                        if (!empty($templateinfo->repeatperiod) &&
                             $templateinfo->repeatperiod != 0 &&
                             $templateinfo->repeatperiod != 99
                         ) {
@@ -171,7 +230,6 @@ class trainingevent_not_selected_task extends scheduled_task {
                                                                        'company' => $company]);
                 }
             }
-
         }
 
         mtrace("email reporting training event not selected completed at " . date('d M Y h:i:s', time()));

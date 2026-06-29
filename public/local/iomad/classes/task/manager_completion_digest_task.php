@@ -61,10 +61,18 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
 
         // Deal with manager completion digests.
         // Get the companies from the list of users in the temp table.
-        $companies = $DB->get_records_sql("SELECT id FROM {local_iomad_companies}
-                                           WHERE managerdigestday = :dayofweek
-                                           AND managernotify in (2,3)",
-                                          ['dayofweek' => $dayofweek]);
+        $companies = $DB->get_records_sql(
+            "SELECT c.id
+             FROM {local_iomad_companies} c
+             JOIN {local_iomad_email_templates} et ON (c.id = et.companyid)
+             WHERE c.managerdigestday = :dayofweek
+             AND et.disabled = 0
+             AND et.name = :templatename
+             AND c.managernotify in (2,3)",
+            ['dayofweek' => $dayofweek,
+             'templatename' => 'expiring_digest_manager']);
+
+        // Process them.
         foreach ($companies as $company) {
 
             // Deal with parent companies as we only want manager of this company.
@@ -181,18 +189,7 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
                     $datestring = userdate($manageruser->timecompleted, get_config('local_iomad', 'date_format')) . "\n";
                     $foundusers = true;
                     // Get the user's departments.
-                    $userdepartments = $DB->get_records_sql(
-                        "SELECT DISTINCT d.name
-                         FROM {local_iomad_company_departments} d
-                         JOIN {local_iomad_company_users} cu ON (
-                             d.id = cu.departmentid
-                             AND d.companyid = cu.companyid
-                         )
-                         WHERE cu.userid = :userid
-                         AND cu.companyid = :companyid",
-                        ['userid' => $manageruser->userid,
-                         'companyid' => $company->id]);
-                    $userdepartmentstext = implode(',<br>', array_keys($userdepartments));
+                    $userdepartmentstext = company_user::get_department_name($manageruser->userid, $company->id, ',<br>');
 
                     $summary .= html_writer::start_tag('tr') .
                                 html_writer::tag('td', $manageruser->firstname) .

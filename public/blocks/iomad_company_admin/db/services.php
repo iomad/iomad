@@ -319,4 +319,12 @@ $functions = [
         'ajax' => true,
         'capabilities' => 'block/iomad_company_admin:edit_licenses,block/iomad_company_admin:edit_my_licenses',
     ],
+
+    'block_iomad_company_admin_reset_course_value' => [
+        'classname' => block_iomad_company_admin\external\reset_course_value::class,
+        'description' => 'Reset tenant specific course value to default',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'block/iomad_company_admin:managecourses',
+    ],
 ];

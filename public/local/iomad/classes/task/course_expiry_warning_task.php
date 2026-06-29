@@ -59,237 +59,331 @@ class course_expiry_warning_task extends scheduled_task {
         $runtime = time();
         $dayofweek = date('w', $runtime) + 1;
 
+        // Set the string time for the repeat periods.
+        $periods = [
+            1 => " day",
+            2 => " week",
+            3 => " fortnight",
+            4 => " month",
+        ];
+
         mtrace("Running email report course expiry warning task at ".date('d M Y h:i:s', $runtime));
 
-        // Getting courses which have expiry settings.
-        $expirycourses = $DB->get_records_sql("SELECT * FROM {local_iomad_courses}
-                                               WHERE validlength > 0");
+        // Get all of the companies which have this template enabled.
+        $enabledcompanies = $DB->get_records_sql(
+            "SELECT DISTINCT companyid
+             FROM {local_iomad_email_templates}
+             WHERE name = :templatename
+             AND disabled = 0
+             AND companyid = 771",
+            ['templatename' => 'completion_warn_user']);
 
-        // Deal with users.
-        foreach ($expirycourses as $expirycourse) {
+        // Process them.
+        foreach ($enabledcompanies as $enabledcompany) {
 
-            mtrace("Dealing with course id $expirycourse->courseid");
-            $targettime = $expirycourse->warnexpire * 86400;
-            $expiredsql = "SELECT lit.*, c.name AS companyname, u.firstname,u.lastname,u.username,u.email,u.lang
-                           FROM {local_iomad_tracks} lit
-                           JOIN {local_iomad_companies} c ON (lit.companyid = c.id)
-                           JOIN {user} u ON (lit.userid = u.id)
-                           JOIN {course} co ON (lit.courseid = co.id)
-                           WHERE co.visible = 1
-                           AND co.id = :expirycourseid
-                           AND lit.timeexpires > 0
-                           AND lit.timeexpires - :targettime < :runtime
-                           AND u.deleted = 0
-                           AND u.suspended = 0
-                           AND lit.expiredstop = 0
-                           AND lit.id IN (
-                               SELECT max(id)
-                               FROM {local_iomad_tracks}
-                               WHERE courseid = co.id
-                               AND companyid = c.id
-                           GROUP BY userid,courseid)";
+            // Validate the company.
+            if (!$DB->record_exists(
+                'local_iomad_companies',
+                [
+                    'id' => $enabledcompany->companyid,
+                    'suspended' => 0,
+                ])) {
+                continue;
+            }
 
-            // Email all of the users.
-            mtrace("getting expired users");
-            $allusers = $DB->get_records_sql($expiredsql, ['expirycourseid' => $expirycourse->courseid,
-                                                           'targettime' => $targettime,
-                                                           'runtime' => $runtime]);
+            // Create the company object.
+            $company = new company($enabledcompany->companyid);
 
-            // Process all of the users.
-            foreach ($allusers as $compuser) {
-                mtrace("Dealing with user id $compuser->userid");
+            // Get any list of courses which have a value set.
+            $expirycourses = $DB->get_records_sql(
+                "SELECT ic.id,
+                        ic.courseid,
+                        ic.licensed,
+                        ic.shared,
+                        COALESCE(cco.validlength, ic.validlength) AS validlength,
+                        COALESCE(cco.warnexpire, ic.warnexpire) AS warnexpire,
+                        COALESCE(cco.warncompletion, ic.warncompletion) AS warncompletion,
+                        COALESCE(cco.notifyperiod, ic.notifyperiod) AS notifyperiod,
+                        COALESCE(cco.expireafter, ic.expireafter) AS expireafter,
+                        COALESCE(cco.warnnotstarted, ic.warnnotstarted) AS warnnotstarted,
+                        COALESCE(cco.hasgrade, ic.hasgrade) AS hasgrade
+                 FROM {local_iomad_courses} ic
+                 JOIN {course} co ON (ic.courseid = co.id)
+                 LEFT JOIN {local_iomad_company_course_options} cco ON (
+                     ic.courseid = cco.courseid
+                     AND co.id = cco.courseid
+                     AND cco.companyid = :companyid
+                 )
+                 WHERE co.visible = 1
+                 AND (
+                     ic.validlength > 0
+                     OR cco.validlength > 0
+                 )",
+                ['companyid' => $company->id]);
 
-                // Do some sanity checking.
-                if (!$user = $DB->get_record('user', ['id' => $compuser->userid])) {
-                    continue;
-                }
-                if (!$course = $DB->get_record('course', ['id' => $compuser->courseid])) {
-                    continue;
-                }
-                if (!$company = $DB->get_record('local_iomad_companies', ['id' => $compuser->companyid])) {
-                    continue;
-                }
+            // Deal with users.
+            foreach ($expirycourses as $expirycourse) {
+                $targettime = $expirycourse->warnexpire * 86400;
 
-                // Deal with parent companies as we only want users in this company.
-                $companyobj = new company($company->id);
-                if ($parentslist = $companyobj->get_parent_companies_recursive()) {
-                    [$insql, $inparams] = $DB->get_in_or_equal(array_keys($parentslist),
-                                                               SQL_PARAMS_NAMED,
-                                                               'pids');
-                    $inparams['userid'] = $compuser->userid;
+                // Get all the users for this company.
+                $allusers = $DB->get_records_sql(
+                    "SELECT lit.*
+                     FROM {local_iomad_tracks} lit
+                     JOIN {user} u ON (lit.userid = u.id)
+                     JOIN {course} co ON (lit.courseid = co.id)
+                     WHERE co.visible = 1
+                     AND co.id = :expirycourseid
+                     AND lit.companyid = :companyid
+                     AND lit.timeexpires > 0
+                     AND lit.timeexpires - :targettime < :runtime
+                     AND u.deleted = 0
+                     AND u.suspended = 0
+                     AND lit.expiredstop = 0
+                     AND lit.id IN (
+                         SELECT max(id)
+                         FROM {local_iomad_tracks}
+                         WHERE courseid = co.id
+                         AND companyid = lit.companyid
+                         GROUP BY userid,courseid
+                     )",
+                     ['expirycourseid' => $expirycourse->courseid,
+                      'companyid' => $company->id,
+                      'targettime' => $targettime,
+                      'runtime' => $runtime]);
 
-                    // Is this a parent company manager?
-                    if ($DB->get_records_sql("SELECT userid FROM {local_iomad_company_users}
-                                              WHERE managertype = 1
-                                              AND companyid {$insql}
-                                              AND userid = :userid",
-                                             $inparams)) {
-                        continue;
-                    }
-                }
+                // Process all of the users.
+                foreach ($allusers as $compuser) {
+                    mtrace("Dealing with user id $compuser->userid");
 
-                // Expire the user from the course.
-                mtrace("Expiring $user->id from course id $course->id as a student");
-                $event = user_course_expired::create([
-                    'context' => context_course::instance($course->id),
-                    'courseid' => $course->id,
-                    'objectid' => $course->id,
-                    'companyid' => $company->id,
-                    'userid' => $user->id,
-                ]);
-                $event->trigger();
-                $compuser->coursecleared = true;
+                    // Deal with parent companies as we only want users in this company.
+                    if ($parentslist = $company->get_parent_companies_recursive()) {
+                        [$insql, $inparams] = $DB->get_in_or_equal(array_keys($parentslist),
+                                                                   SQL_PARAMS_NAMED,
+                                                                   'pids');
+                        $inparams['userid'] = $compuser->userid;
 
-                // Set the local record object to match.
-                $compuser->coursecleared = 1;
-
-                // Get the company template info.
-                // Check against per company template repeat instead.
-                if ($templateinfo = $DB->get_record('local_iomad_email_templates', ['companyid' => $company->id,
-                                                                       'name' => 'expiry_warn_user'])) {
-
-                    // Check if its the correct day, if not continue.
-                    if (!empty($templateinfo->repeatday) &&
-                        $templateinfo->repeatday != 99 &&
-                        $templateinfo->repeatday != $dayofweek - 1) {
-                        continue;
-                    }
-
-                    // Only check for previous emails if repeat is enabled and not never or always.
-                    if (
-                        !empty($templateinfo->repeatperiod) &&
-                        $templateinfo->repeatperiod != 0 &&
-                        $templateinfo->repeatperiod != 99
-                    ) {
-                        // For specific periods (1=daily, 2=weekly, 3=fortnightly, 4=monthly)
-                        // check if user has already received emails during this enrollment.
-                        $lastemail = $DB->get_record_sql(
-                            "SELECT MAX(sent) AS lastsent
-                             FROM {local_iomad_emails}
-                             WHERE userid = :userid
-                             AND courseid = :courseid
-                             AND templatename = :templatename
-                             AND modifiedtime > :timeenrolled",
-                            [
-                                'userid' => $compuser->userid,
-                                'courseid' => $compuser->courseid,
-                                'templatename' => 'expiry_warn_user',
-                                'timeenrolled' => $compuser->timeenrolled,
-                            ]
-                        );
-
-                        // Calculate next allowed send time based on last email sent time.
-                        if ($lastemail && $lastemail->lastsent) {
-                            $nextallowedtime = strtotime("+ 1" . $periods[$templateinfo->repeatperiod], $lastemail->lastsent);
-
-                            // Compare dates only (ignore time component) since cron runs once per day
-                            // this prevents issues where email was sent at 0:00:30 but cron runs at 0:00:00.
-                            $nextalloweddate = strtotime('midnight', $nextallowedtime);
-                            $currentdate = strtotime('midnight', $runtime);
-
-                            // Check if enough time has passed since last email.
-                            if ($currentdate < $nextalloweddate) {
-                                continue;
-                            }
-                        }
-                    } else if ($templateinfo->repeatperiod == 0) {
-                        // Template never repeats so check if it's already been sent.
-                        if ($DB->record_exists(
-                            'local_iomad_emails',
-                            [
-                                'userid' => $compuser->userid,
-                                'courseid' => $compuser->courseid,
-                                'templatename' => 'expiry_warn_user',
-                            ])) {
-                            // Email already sent so skip it.
+                        // Is this a parent company manager?
+                        if ($DB->get_records_sql(
+                            "SELECT userid
+                             FROM {local_iomad_company_users}
+                             WHERE managertype = 1
+                             AND companyid {$insql}
+                             AND userid = :userid",
+                            $inparams)) {
                             continue;
                         }
                     }
-                }
 
-                // Passed all checks, send the email.
-                mtrace("Sending expiry warning email to $user->email");
-                emailtemplate::send('expiry_warn_user', ['course' => $course, 'user' => $user, 'company' => $companyobj]);
+                    // Expire the user from the course.
+                    mtrace("Expiring $user->id from course id $course->id as a student");
+                    $event = user_course_expired::create([
+                        'context' => context_course::instance($course->id),
+                        'courseid' => $course->id,
+                        'objectid' => $course->id,
+                        'companyid' => $company->id,
+                        'userid' => $user->id,
+                    ]);
+                    $event->trigger();
 
-                // Send the supervisor email too.
-                mtrace("Sending supervisor warning email for $user->email");
-                company::send_supervisor_expiry_warning_email($user, $course);
+                    // Set the local record object to match.
+                    $compuser->coursecleared = true;
 
-                // Do we have a value for the template repeat?
-                if (!empty($templateinfo->repeatvalue)) {
-                    $sentcount = $DB->count_records_sql("SELECT count(id) FROM {local_iomad_emails}
-                                                         WHERE userid =:userid
-                                                         AND courseid = :courseid
-                                                         AND templatename = :templatename
-                                                         AND modifiedtime > :timesent",
-                                                         ['userid' => $compuser->userid,
-                                                          'courseid' => $compuser->courseid,
-                                                          'templatename' => $templateinfo->name,
-                                                          'timesent' => $compuser->timecompleted]);
-                    if ($sentcount >= $templateinfo->repeatvalue) {
+                    // Get the company template info.
+                    // Check against per company template repeat instead.
+                    if ($templateinfo = $DB->get_record(
+                        'local_iomad_email_templates',
+                        [
+                            'companyid' => $company->id,
+                            'name' => 'expiry_warn_user',
+                        ])) {
+
+                        // Check if its the correct day, if not continue.
+                        if (!empty($templateinfo->repeatday) &&
+                            $templateinfo->repeatday != 99 &&
+                            $templateinfo->repeatday != $dayofweek - 1) {
+                            continue;
+                        }
+
+                        // Only check for previous emails if repeat is enabled and not never or always.
+                        if (!empty($templateinfo->repeatperiod) &&
+                            $templateinfo->repeatperiod != 0 &&
+                            $templateinfo->repeatperiod != 99) {
+                            // For specific periods (1=daily, 2=weekly, 3=fortnightly, 4=monthly)
+                            // check if user has already received emails during this enrollment.
+                            $lastemail = $DB->get_record_sql(
+                                "SELECT MAX(sent) AS lastsent
+                                 FROM {local_iomad_emails}
+                                 WHERE userid = :userid
+                                 AND courseid = :courseid
+                                 AND templatename = :templatename
+                                 AND modifiedtime > :timeenrolled",
+                                [
+                                    'userid' => $compuser->userid,
+                                    'courseid' => $compuser->courseid,
+                                    'templatename' => 'expiry_warn_user',
+                                    'timeenrolled' => $compuser->timeenrolled,
+                                ]
+                            );
+
+                            // Calculate next allowed send time based on last email sent time.
+                            if ($lastemail && $lastemail->lastsent) {
+                                $nextallowedtime = strtotime("+ 1" . $periods[$templateinfo->repeatperiod], $lastemail->lastsent);
+
+                                // Compare dates only (ignore time component) since cron runs once per day
+                                // this prevents issues where email was sent at 0:00:30 but cron runs at 0:00:00.
+                                $nextalloweddate = strtotime('midnight', $nextallowedtime);
+                                $currentdate = strtotime('midnight', $runtime);
+
+                                // Check if enough time has passed since last email.
+                                if ($currentdate < $nextalloweddate) {
+                                    continue;
+                                }
+                            }
+                        } else if ($templateinfo->repeatperiod == 0) {
+                            // Template never repeats so check if it's already been sent.
+                            if ($DB->record_exists(
+                                'local_iomad_emails',
+                                [
+                                    'userid' => $compuser->userid,
+                                    'courseid' => $compuser->courseid,
+                                    'templatename' => 'expiry_warn_user',
+                                ])) {
+                                // Email already sent so skip it.
+                                continue;
+                            }
+                        }
+                    }
+
+                    // Passed all checks, send the email.
+                    mtrace("Sending expiry warning email to $user->email");
+                    emailtemplate::send('expiry_warn_user', ['course' => $course, 'user' => $user, 'company' => $company]);
+
+                    // Send the supervisor email too.
+                    if (!$templateinfo->disablesupervisor) {
+                        mtrace("Sending supervisor warning email for $user->email");
+                        company::send_supervisor_expiry_warning_email($user, $course);
+                    }
+
+                    // Do we have a value for the template repeat?
+                    if (!empty($templateinfo->repeatvalue)) {
+                        $sentcount = $DB->count_records_sql(
+                            "SELECT count(id)
+                             FROM {local_iomad_emails}
+                             WHERE userid =:userid
+                             AND courseid = :courseid
+                             AND templatename = :templatename
+                             AND modifiedtime > :timesent",
+                            ['userid' => $compuser->userid,
+                             'courseid' => $compuser->courseid,
+                             'templatename' => $templateinfo->name,
+                             'timesent' => $compuser->timecompleted]);
+                        if ($sentcount >= $templateinfo->repeatvalue) {
+                            $compuser->expiredstop = 1;
+                            $compuser->modifiedtime = $runtime;
+                            $DB->update_record('local_iomad_tracks', $compuser);
+                        }
+                    }
+                    if (empty($templateinfo->repeatperiod)) {
+                        // Set to never so mark it to stop.
                         $compuser->expiredstop = 1;
                         $compuser->modifiedtime = $runtime;
                         $DB->update_record('local_iomad_tracks', $compuser);
                     }
                 }
-                if (empty($templateinfo->repeatperiod)) {
-                    // Set to never so mark it to stop.
-                    $compuser->expiredstop = 1;
-                    $compuser->modifiedtime = $runtime;
-                    $DB->update_record('local_iomad_tracks', $compuser);
-                }
             }
         }
 
-        // Deal with users who have passed the expired threshold.
-        mtrace("getting expiry courses");
-        $completionexpirycourses = $DB->get_records_sql("SELECT * FROM {local_iomad_courses}
-                                                         WHERE expireafter > 0");
-        foreach ($completionexpirycourses as $completionexpirecourse) {
-            // Get all of the users who have a time completed time > this time.
-            $expiretime = 24 * 60 * 60 * $completionexpirecourse->expireafter;
-            $userlist = $DB->get_records_sql(
-                "SELECT lit.*
-                 FROM {local_iomad_tracks} lit
-                 JOIN {user_enrolments} ue ON (
-                     lit.userid = ue.userid
-                     AND lit.timeenrolled = ue.timestart
-                 )
-                 JOIN {enrol} e ON (
-                     lit.courseid = e.courseid
-                     AND ue.enrolid = e.id
-                 )
-                 JOIN {course} co ON (
-                     lit.courseid = co.id
-                     AND e.courseid = co.id
+        mtrace("Getting expiry courses");
+
+        // Get all of the active tenants.
+        $enabledcompanies = $DB->get_records(
+            'local_iomad_companies',
+            [
+                'suspended' => 0,
+            ]);
+
+        // Process them.
+        foreach ($enabledcompanies as $enabledcompany) {
+
+            // Create the company object.
+            $company = new company($enabledcompany->id);
+
+            // Deal with users who have passed the expired threshold.
+            $completionexpirycourses = $DB->get_records_sql(
+                "SELECT ic.id,
+                        ic.courseid,
+                        ic.licensed,
+                        ic.shared,
+                        COALESCE(cco.validlength, ic.validlength) AS validlength,
+                        COALESCE(cco.warnexpire, ic.warnexpire) AS warnexpire,
+                        COALESCE(cco.warncompletion, ic.warncompletion) AS warncompletion,
+                        COALESCE(cco.notifyperiod, ic.notifyperiod) AS notifyperiod,
+                        COALESCE(cco.expireafter, ic.expireafter) AS expireafter,
+                        COALESCE(cco.warnnotstarted, ic.warnnotstarted) AS warnnotstarted,
+                        COALESCE(cco.hasgrade, ic.hasgrade) AS hasgrade
+                 FROM {local_iomad_courses} ic
+                 JOIN {course} co ON (ic.courseid = co.id)
+                 LEFT JOIN {local_iomad_company_course_options} cco ON (
+                     ic.courseid = cco.courseid
+                     AND co.id = cco.courseid
+                     AND cco.companyid = :companyid
                  )
                  WHERE co.visible = 1
-                 AND lit.courseid = :courseid
-                 AND lit.timecompleted + :expiretime < :runtime",
-                ['courseid' => $completionexpirecourse->courseid,
-                 'expiretime' => $expiretime,
-                 'runtime' => $runtime]);
+                 AND (
+                     ic.expireafter > 0
+                     OR cco.expireafter > 0
+                 )",
+                ['companyid' => $company->id]);
 
-            // Cycle through any found users.
-            foreach ($userlist as $founduser) {
-                if (!$DB->get_records('local_iomad_tracks', ['userid' => $founduser->userid,
-                                                            'courseid' => $founduser->courseid,
-                                                            'timecompleted' => null])) {
-                    // Expire the user from the course.
-                    mtrace("expiring user $founduser->userid from course $founduser->courseid");
-                    $event = user_course_expired::create(
-                        [
-                            'context' => context_course::instance($founduser->courseid),
-                            'courseid' => $founduser->courseid,
-                            'objectid' => $founduser->courseid,
-                            'userid' => $founduser->userid,
-                        ]
-                    );
-                    $event->trigger();
+            foreach ($completionexpirycourses as $completionexpirecourse) {
+                $expiretime = 24 * 60 * 60 * $completionexpirecourse->expireafter;
+
+                // Get all of the users who have a time completed time > this time.
+                $userlist = $DB->get_records_sql(
+                    "SELECT lit.*
+                     FROM {local_iomad_tracks} lit
+                     JOIN {user_enrolments} ue ON (
+                         lit.userid = ue.userid
+                         AND lit.timeenrolled = ue.timestart
+                     )
+                     JOIN {enrol} e ON (
+                         lit.courseid = e.courseid
+                         AND ue.enrolid = e.id
+                     )
+                     JOIN {course} co ON (
+                         lit.courseid = co.id
+                         AND e.courseid = co.id
+                     )
+                     WHERE co.visible = 1
+                     AND lit.courseid = :courseid
+                     AND lit.companyid = :companyid
+                     AND lit.timecompleted + :expiretime < :runtime",
+                    ['courseid' => $completionexpirecourse->courseid,
+                    'companyid' => $company->id,
+                    'expiretime' => $expiretime,
+                    'runtime' => $runtime]);
+
+                // Cycle through any found users.
+                foreach ($userlist as $founduser) {
+                    if (!$DB->get_records('local_iomad_tracks', ['userid' => $founduser->userid,
+                                                                'courseid' => $founduser->courseid,
+                                                                'timecompleted' => null])) {
+                        // Expire the user from the course.
+                        mtrace("Expiring user $founduser->userid from course $founduser->courseid");
+                        $event = user_course_expired::create(
+                            [
+                                'context' => context_course::instance($founduser->courseid),
+                                'courseid' => $founduser->courseid,
+                                'objectid' => $founduser->courseid,
+                                'userid' => $founduser->userid,
+                            ]
+                        );
+                        $event->trigger();
+                    }
                 }
             }
         }
 
-        mtrace("email reporting course expiry warning task completed at " . date('d M Y h:i:s', time()));
+        mtrace("Email reporting course expiry warning task completed at " . date('d M Y h:i:s', time()));
     }
 }

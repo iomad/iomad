@@ -33,7 +33,7 @@ use completion_info;
 use context_system;
 use context_course;
 use core_course_list_element;
-
+use local_iomad\company;
 use moodle_url;
 
 /**
@@ -74,6 +74,12 @@ class inprogress_view implements renderable, templatable {
         $inprogressview = [];
         $totalcount = 0;
         $completed = 0;
+
+        // Get my company id.
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        if ($companyid > 0) {
+            $company = new company($companyid);
+        }
 
         // Deal with all the passed courses.
         foreach ($this->myinprogress as $inprogress) {
@@ -133,7 +139,12 @@ class inprogress_view implements renderable, templatable {
                 $showgrade = true;
 
                 // Do we show the grade?
-                if ($DB->get_record('local_iomad_courses', ['courseid' => $course->id, 'hasgrade' => 0])) {
+                if ($companyid > 0) {
+                    $companycourseoptions = $company->get_iomad_course_options($course->id);
+                    if (empty($companycourseoptions->hasgrade)) {
+                        $showgrade = false;
+                    }
+                } else if ($DB->get_record('local_iomad_courses', ['courseid' => $course->id, 'hasgrade' => 0])) {
                     $showgrade = false;
                 }
 

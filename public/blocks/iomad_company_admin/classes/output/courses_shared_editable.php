@@ -126,7 +126,26 @@ class courses_shared_editable extends inplace_editable {
         // Check permissions.
         iomad::require_capability('block/iomad_company_admin:managecourses', $companycontext);
 
-        if (!$courserec = $DB->get_record('local_iomad_courses', ['courseid' => $courseid])) {
+        if (!$courserec = $DB->get_record_sql(
+            "SELECT ic.id,
+                    ic.courseid,
+                    ic.licensed,
+                    ic.shared,
+                    COALESCE(cco.validlength, ic.validlength) AS validlength,
+                    COALESCE(cco.warnexpire, ic.warnexpire) AS warnexpire,
+                    COALESCE(cco.warncompletion, ic.warncompletion) AS warncompletion,
+                    COALESCE(cco.notifyperiod, ic.notifyperiod) AS notifyperiod,
+                    COALESCE(cco.expireafter, ic.expireafter) AS expireafter,
+                    COALESCE(cco.warnnotstarted, ic.warnnotstarted) AS warnnotstarted,
+                    COALESCE(cco.hasgrade, ic.hasgrade) AS hasgrade
+             FROM {local_iomad_courses} ic
+             LEFT JOIN {local_iomad_company_course_options} cco ON (
+                 ic.courseid = cco.courseid
+             )
+             WHERE ic.courseid = :courseid
+             AND cco.companyid = :companyid",
+            ['companyid' => $company->id,
+             'courseid' => $courseid])) {
             throw new coding_exception('Course is not under IOMAD control');
         }
 

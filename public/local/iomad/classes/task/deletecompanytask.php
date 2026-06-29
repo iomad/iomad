@@ -140,6 +140,7 @@ class deletecompanytask extends adhoc_task {
             delete_course($companycourse->courseid, false);
         }
         $DB->delete_records('local_iomad_company_courses', ['companyid' => $companyrec->id]);
+        $DB->delete_records('local_iomad_company_course_options', ['companyid' => $companyrec->id]);
         $DB->delete_records('local_iomad_company_created_courses', ['companyid' => $companyrec->id]);
         $DB->delete_records('local_iomad_company_shared_courses', ['companyid' => $companyrec->id]);
 
