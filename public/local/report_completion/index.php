@@ -422,14 +422,29 @@ if (!empty($data)) {
                     if ($testtime != $senttime && confirm_sesskey()) {
                         $DB->set_field('local_iomad_tracks', 'timecompleted', $senttime, ['id' => $key]);
                         $DB->set_field('local_iomad_tracks', 'modifiedtime', time(), ['id' => $key]);
-                        if ($iomadcourseinfo = $DB->get_record('local_iomad_courses', ['courseid' => $trackrec->courseid])) {
-                            if (!empty($iomadcourseinfo->validlength)) {
-                                $DB->set_field(
-                                    'local_iomad_tracks',
-                                    'timeexpires',
-                                    $senttime + ($iomadcourseinfo->validlength * 24 * 60 * 60),
-                                    ['id' => $key]);
-                            }
+                        if ($iomadcourseinfo = $DB->get_record_sql(
+                            "SELECT ic.id,
+                                    ic.courseid,
+                                    ic.licensed,
+                                    ic.shared,
+                                    COALESCE(cco.validlength, ic.validlength) AS validlength
+                             FROM {local_iomad_courses} ic
+                             LEFT JOIN {local_iomad_company_course_options} cco ON (
+                                 ic.courseid = cco.courseid
+                                 AND cco.companyid = :companyid
+                             )
+                             WHERE ic.courseid = :courseid
+                             AND (
+                                 ic.validlength > 0
+                                 OR cco.validlength > 0
+                             )",
+                            ['companyid' => $company->id,
+                             'courseid' => $trackrec->courseid])) {
+                            $DB->set_field(
+                                'local_iomad_tracks',
+                                'timeexpires',
+                                $senttime + ($iomadcourseinfo->validlength * 24 * 60 * 60),
+                                ['id' => $key]);
                         }
 
                         // Re-generate the certificate.
@@ -999,40 +1014,82 @@ if (empty($courseid)) {
 
     // Does this course have an expiry time?
     if (($courseid == 1 &&
-        $DB->get_records_sql(
-            "SELECT id FROM {local_iomad_courses}
-             WHERE courseid IN (
-                 SELECT courseid
-                 FROM {local_iomad_tracks}
-                 WHERE companyid = :companyid
+         $DB->record_exists_sql(
+            "SELECT lic.id
+             FROM {local_iomad_courses} lic
+             JOIN {local_iomad_tracks} lit ON lic.courseid = lit.courseid
+             LEFT JOIN {local_iomad_company_course_options} licco ON
+             (
+                 lic.courseid = licco.courseid
+                 AND lit.courseid = licco.courseid
+                 AND lit.companyid = licco.companyid
              )
-             AND expireafter != 0",
+             WHERE lit.companyid = :companyid
+             AND (
+                 (
+                     lic.validlength > 0
+                     AND licco.validlength IS NULL
+                 ) OR licco.validlength > 0
+             )",
             ['companyid' => $company->id])) ||
-        $DB->get_record_sql(
-            "SELECT id FROM {local_iomad_courses}
-             WHERE courseid = :courseid
-              AND validlength > 0",
-            ['courseid' => $courseid])) {
+        $DB->record_exists_sql(
+            "SELECT lic.id
+             FROM {local_iomad_courses} lic
+             LEFT JOIN {local_iomad_company_course_options} licco ON
+             (
+                 lic.courseid = licco.courseid
+                AND licco.companyid = :companyid
+             )
+             WHERE lic.courseid = :courseid
+             AND (
+                 (
+                     lic.validlength > 0
+                     AND licco.validlength IS NULL
+                 ) OR licco.validlength > 0
+             )",
+            ['courseid' => $courseid,
+             'companyid' => $companyid])) {
         $columns[] = 'timeexpires';
         $headers[] = get_string('timeexpires', 'local_report_completion');
     }
 
     // Does this course have an visible grade?
     if (($courseid == 1 &&
-         $DB->get_records_sql(
-            "SELECT id FROM {local_iomad_courses}
-             WHERE courseid IN (
-                 SELECT courseid
-                 FROM {local_iomad_tracks}
-                 WHERE companyid = :companyid
+         $DB->record_exists_sql(
+            "SELECT lic.id
+             FROM {local_iomad_courses} lic
+             JOIN {local_iomad_tracks} lit ON lic.courseid = lit.courseid
+             LEFT JOIN {local_iomad_company_course_options} licco ON
+             (
+                 lic.courseid = licco.courseid
+                 AND lit.courseid = licco.courseid
+                 AND lit.companyid = licco.companyid
              )
-             AND hasgrade = 1",
+             WHERE lit.companyid = :companyid
+             AND (
+                 (
+                     lic.hasgrade = 1
+                     AND licco.hasgrade IS NULL
+                 ) OR licco.hasgrade = 1
+             )",
             ['companyid' => $company->id])) ||
-        $DB->get_record_sql(
-            "SELECT id FROM {local_iomad_courses}
-             WHERE courseid = :courseid
-             AND hasgrade = 1",
-            ['courseid' => $courseid])) {
+        $DB->record_exists_sql(
+            "SELECT lic.id
+             FROM {local_iomad_courses} lic
+             LEFT JOIN {local_iomad_company_course_options} licco ON
+             (
+                 lic.courseid = licco.courseid
+                AND licco.companyid = :companyid
+             )
+             WHERE lic.courseid = :courseid
+             AND (
+                 (
+                     lic.hasgrade = 1
+                     AND licco.hasgrade IS NULL
+                 ) OR licco.hasgrade = 1
+             )",
+            ['courseid' => $courseid,
+             'companyid' => $companyid])) {
         $columns[] = 'finalscore';
         $headers[] = get_string('grade', 'iomadcertificate');
     }

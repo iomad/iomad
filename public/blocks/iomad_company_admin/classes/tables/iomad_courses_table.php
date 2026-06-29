@@ -328,7 +328,46 @@ class iomad_courses_table extends table_sql {
                                                          $row,
                                                          $row->validlength);
 
-            return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
+            // Do we show the reset button?
+            $resetout = "";
+            if (!empty($row->shared) &&
+                $efaultrec = $DB->get_record(
+                    'local_iomad_courses',
+                    [
+                        'courseid' => $row->courseid,
+                    ])) {
+
+                // Is the tenant value different from the default one?
+                if (!empty($row->validlength) &&
+                    $efaultrec->validlength != $row->validlength) {
+                    $resetout = '&nbsp' .
+                        html_writer::tag(
+                            'a',
+                            html_writer::tag(
+                                'i',
+                                '',
+                                [
+                                    'class' => 'icon fa fa-clock-rotate-left fa-fw ',
+                                    'title' => get_string('resetcourse'),
+                                    'role' => 'img',
+                                    'aria-label' => get_string('resetcourse'),
+                                ]
+                            ),
+                            [
+                                'data-action' => 'reset-companycompanycourse',
+                                'data-courseid' => $row->courseid,
+                                'data-companyid' => $company->id,
+                                'data-fieldname' => 'validlength',
+                                'role' => 'button',
+                                'href' => '#',
+                            ]
+                        );
+                }
+            }
+            return $OUTPUT->render_from_template(
+                'core/inplace_editable',
+                $editable->export_for_template($OUTPUT)
+                ) . $resetout;
 
         } else if ($row->visible == 0) {
             return html_writer::tag('span',  $row->validlength, ['class' => 'dimmed_text']);
@@ -367,8 +406,47 @@ class iomad_courses_table extends table_sql {
                                                            $row,
                                                            $row->expireafter);
 
-            return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
+            // Do we show the reset button?
+            $resetout = "";
+            if (!empty($row->shared) &&
+                $efaultrec = $DB->get_record(
+                    'local_iomad_courses',
+                    [
+                        'courseid' => $row->courseid,
+                    ])) {
 
+                // Is the tenant value different from the default one?
+                if (!empty($row->expireafter) &&
+                    $efaultrec->expireafter != $row->expireafter) {
+                    $resetout = '&nbsp' .
+                        html_writer::tag(
+                            'a',
+                            html_writer::tag(
+                                'i',
+                                '',
+                                [
+                                    'class' => 'icon fa fa-clock-rotate-left fa-fw ',
+                                    'title' => get_string('resetcourse'),
+                                    'role' => 'img',
+                                    'aria-label' => get_string('resetcourse'),
+                                ]
+                            ),
+                            [
+                                'data-action' => 'reset-companycompanycourse',
+                                'data-courseid' => $row->courseid,
+                                'data-companyid' => $company->id,
+                                'data-fieldname' => 'expireafter',
+                                'role' => 'button',
+                                'href' => '#',
+                            ]
+                        );
+                }
+            }
+
+            return $OUTPUT->render_from_template(
+                'core/inplace_editable',
+                $editable->export_for_template($OUTPUT)
+                ) . $resetout;
         } else if ($row->visible == 0) {
             return html_writer::tag('span',  $row->expireafter, ['class' => 'dimmed_text']);
         } else if ($row->visible == 1) {
@@ -406,8 +484,47 @@ class iomad_courses_table extends table_sql {
                                                         $row,
                                                         $row->warnexpire);
 
-            return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
+            // Do we show the reset button?
+            $resetout = "";
+            if (!empty($row->shared) &&
+                $defaultrec = $DB->get_record(
+                    'local_iomad_courses',
+                    [
+                        'courseid' => $row->courseid,
+                    ])) {
 
+                // Is the tenant value different from the default one?
+                if (!is_null($row->warnexpire) &&
+                    $defaultrec->warnexpire != $row->warnexpire) {
+                    $resetout = '&nbsp' .
+                        html_writer::tag(
+                            'a',
+                            html_writer::tag(
+                                'i',
+                                '',
+                                [
+                                    'class' => 'icon fa fa-clock-rotate-left fa-fw ',
+                                    'title' => get_string('resetcourse'),
+                                    'role' => 'img',
+                                    'aria-label' => get_string('resetcourse'),
+                                ]
+                            ),
+                            [
+                                'data-action' => 'reset-companycompanycourse',
+                                'data-courseid' => $row->courseid,
+                                'data-companyid' => $company->id,
+                                'data-fieldname' => 'warnexpire',
+                                'role' => 'button',
+                                'href' => '#',
+                            ]
+                        );
+                }
+            }
+
+            return $OUTPUT->render_from_template(
+                'core/inplace_editable',
+                $editable->export_for_template($OUTPUT)
+                ) . $resetout;
         } else if ($row->visible == 0) {
             return html_writer::tag('span',  $row->warnexpire, ['class' => 'dimmed_text']);
         } else if ($row->visible == 1) {
@@ -445,8 +562,47 @@ class iomad_courses_table extends table_sql {
                                                             $row,
                                                             $row->warnnotstarted);
 
-            return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
+            // Do we show the reset button?
+            $resetout = "";
+            if (!empty($row->shared) &&
+                $defaultrec = $DB->get_record(
+                    'local_iomad_courses',
+                    [
+                        'courseid' => $row->courseid,
+                    ])) {
 
+                // Is the tenant value different from the default one?
+                if (!is_null($row->warnnotstarted) &&
+                    $defaultrec->warnnotstarted != $row->warnnotstarted) {
+                    $resetout = '&nbsp' .
+                        html_writer::tag(
+                            'a',
+                            html_writer::tag(
+                                'i',
+                                '',
+                                [
+                                    'class' => 'icon fa fa-clock-rotate-left fa-fw ',
+                                    'title' => get_string('resetcourse'),
+                                    'role' => 'img',
+                                    'aria-label' => get_string('resetcourse'),
+                                ]
+                            ),
+                            [
+                                'data-action' => 'reset-companycompanycourse',
+                                'data-courseid' => $row->courseid,
+                                'data-companyid' => $company->id,
+                                'data-fieldname' => 'warnnotstarted',
+                                'role' => 'button',
+                                'href' => '#',
+                            ]
+                        );
+                }
+            }
+
+            return $OUTPUT->render_from_template(
+                'core/inplace_editable',
+                $editable->export_for_template($OUTPUT)
+                ) . $resetout;
         } else if ($row->visible == 0) {
             return html_writer::tag('span',  $row->warnnotstarted, ['class' => 'dimmed_text']);
         } else if ($row->visible == 1) {
@@ -484,7 +640,46 @@ class iomad_courses_table extends table_sql {
                                                             $row,
                                                             $row->warncompletion);
 
-            return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
+            // Do we show the reset button?
+            $resetout = "";
+            if (!empty($row->shared) &&
+                $defaultrec = $DB->get_record(
+                    'local_iomad_courses',
+                    [
+                        'courseid' => $row->courseid,
+                    ])) {
+
+                // Is the tenant value different from the default one?
+                if (!is_null($row->warncompletion) &&
+                    $defaultrec->warncompletion != $row->warncompletion) {
+                    $resetout = '&nbsp' .
+                        html_writer::tag(
+                            'a',
+                            html_writer::tag(
+                                'i',
+                                '',
+                                [
+                                    'class' => 'icon fa fa-clock-rotate-left fa-fw ',
+                                    'title' => get_string('resetcourse'),
+                                    'role' => 'img',
+                                    'aria-label' => get_string('resetcourse'),
+                                ]
+                            ),
+                            [
+                                'data-action' => 'reset-companycompanycourse',
+                                'data-courseid' => $row->courseid,
+                                'data-companyid' => $company->id,
+                                'data-fieldname' => 'warncompletion',
+                                'role' => 'button',
+                                'href' => '#',
+                            ]
+                        );
+                }
+            }
+            return $OUTPUT->render_from_template(
+                'core/inplace_editable',
+                $editable->export_for_template($OUTPUT)
+                ) . $resetout;
 
         } else if ($row->visible == 0) {
 
@@ -526,7 +721,46 @@ class iomad_courses_table extends table_sql {
                                                           $row,
                                                           $row->notifyperiod);
 
-            return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
+            // Do we show the reset button?
+            $resetout = "";
+            if (!empty($row->shared) &&
+                $defaultrec = $DB->get_record(
+                    'local_iomad_courses',
+                    [
+                        'courseid' => $row->courseid,
+                    ])) {
+
+                // Is the tenant value different from the default one?
+                if (!is_null($row->notifyperiod) &&
+                    $defaultrec->notifyperiod != $row->notifyperiod) {
+                    $resetout = '&nbsp' .
+                        html_writer::tag(
+                            'a',
+                            html_writer::tag(
+                                'i',
+                                '',
+                                [
+                                    'class' => 'icon fa fa-clock-rotate-left fa-fw ',
+                                    'title' => get_string('resetcourse'),
+                                    'role' => 'img',
+                                    'aria-label' => get_string('resetcourse'),
+                                ]
+                            ),
+                            [
+                                'data-action' => 'reset-companycompanycourse',
+                                'data-courseid' => $row->courseid,
+                                'data-companyid' => $company->id,
+                                'data-fieldname' => 'notifyperiod',
+                                'role' => 'button',
+                                'href' => '#',
+                            ]
+                        );
+                }
+            }
+            return $OUTPUT->render_from_template(
+                'core/inplace_editable',
+                $editable->export_for_template($OUTPUT)
+                ) . $resetout;
 
         } else if ($row->visible == 0) {
 
@@ -568,7 +802,46 @@ class iomad_courses_table extends table_sql {
                                                       $row,
                                                       $row->hasgrade);
 
-            return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
+            // Do we show the reset button?
+            $resetout = "";
+            if (!empty($row->shared) &&
+                $defaultrec = $DB->get_record(
+                    'local_iomad_courses',
+                    [
+                        'courseid' => $row->courseid,
+                    ])) {
+
+                // Is the tenant value different from the default one?
+                if (!is_null($row->hasgrade) &&
+                    $defaultrec->hasgrade != $row->hasgrade) {
+                    $resetout = '&nbsp' .
+                        html_writer::tag(
+                            'a',
+                            html_writer::tag(
+                                'i',
+                                '',
+                                [
+                                    'class' => 'icon fa fa-clock-rotate-left fa-fw ',
+                                    'title' => get_string('resetcourse'),
+                                    'role' => 'img',
+                                    'aria-label' => get_string('resetcourse'),
+                                ]
+                            ),
+                            [
+                                'data-action' => 'reset-companycompanycourse',
+                                'data-courseid' => $row->courseid,
+                                'data-companyid' => $company->id,
+                                'data-fieldname' => 'hasgrade',
+                                'role' => 'button',
+                                'href' => '#',
+                            ]
+                        );
+                }
+            }
+            return $OUTPUT->render_from_template(
+                'core/inplace_editable',
+                $editable->export_for_template($OUTPUT)
+                ) . $resetout;
 
         } else {
 

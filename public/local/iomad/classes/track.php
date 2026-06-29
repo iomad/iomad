@@ -249,10 +249,25 @@ class track {
 
         // Does this course have a valid length?
         $offset = 0;
-        if ($iomadrec = $DB->get_record('local_iomad_courses', ['courseid' => $courseid])) {
-            if ($iomadrec->validlength > 0) {
-                $offset = $iomadrec->validlength * 24 * 60 * 60;
-            }
+        if ($iomadrec = $DB->get_record_sql(
+            "SELECT ic.id,
+                    ic.courseid,
+                    ic.licensed,
+                    ic.shared,
+                    COALESCE(cco.validlength, ic.validlength) AS validlength
+             FROM {local_iomad_courses} ic
+             LEFT JOIN {local_iomad_company_course_options} cco ON (
+                 ic.courseid = cco.courseid
+             )
+             WHERE ic.courseid = :courseid
+             AND cco.companyid = :companyid
+             AND (
+                 ic.validlength > 0
+                 OR cco.validlength > 0
+             )",
+            ['companyid' => $companyid,
+             'courseid' => $courseid])) {
+            $offset = $iomadrec->validlength * 24 * 60 * 60;
         }
 
         // Get the enrolment record as sometimes the completion record isn't fully formed after a completion reset.
@@ -928,10 +943,28 @@ class track {
 
         // Set some variables.
         $courseid = $event->objectid;
+        $companyid = $event->companyid;
         $original = $event->other['iomadcourse'];
 
         // Check if the validlength has changed.
-        if ($current = $DB->get_record('local_iomad_courses', ['courseid' => $courseid])) {
+        if ($current = $DB->get_record_sql(
+            "SELECT ic.id,
+                    ic.courseid,
+                    ic.licensed,
+                    ic.shared,
+                    COALESCE(cco.validlength, ic.validlength) AS validlength
+             FROM {local_iomad_courses} ic
+             LEFT JOIN {local_iomad_company_course_options} cco ON (
+                 ic.courseid = cco.courseid
+             )
+             WHERE ic.courseid = :courseid
+             AND cco.companyid = :companyid
+             AND (
+                 ic.validlength > 0
+                 OR cco.validlength > 0
+             )",
+            ['companyid' => $companyid,
+             'courseid' => $courseid])) {
             if ($current->validlength != $original['validlength']) {
                 $offset = $current->validlength * 24 * 60 * 60;
 
@@ -941,6 +974,7 @@ class track {
                               WHERE courseid = :courseid
                               AND timecompleted > 0",
                              ['offset' => $offset,
+                              'companyid' => $companyid,
                               'courseid' => $courseid]);
             }
         }

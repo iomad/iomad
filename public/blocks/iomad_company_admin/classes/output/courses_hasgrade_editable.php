@@ -124,12 +124,16 @@ class courses_hasgrade_editable extends inplace_editable {
         // Check permissions.
         iomad::require_capability('block/iomad_company_admin:managecourses', $companycontext);
 
-        if (!$courserec = $DB->get_record('local_iomad_courses', ['courseid' => $courseid])) {
+        // Is this an IOMAD course?
+        if (!$DB->record_exists('local_iomad_courses', ['courseid' => $courseid])) {
             throw new coding_exception('Course is not under IOMAD control');
         }
 
+        // Get the course options.
+        $courserec = $company->get_iomad_course_options($courseid);
+
         // Process changes.
-        $DB->set_field('local_iomad_courses', 'hasgrade', $hasgrade, ['courseid' => $courseid]);
+        $company->set_iomad_course_options($courserec, 'hasgrade', $hasgrade);
 
         // Fire an event for this.
         $eventother = ['iomadcourse' => (array) $courserec];
