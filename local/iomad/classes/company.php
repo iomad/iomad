@@ -371,6 +371,85 @@ class company {
     }
 
     /**
+     * Get the company specific course settings if there are any
+     *
+     * @param int $courseid
+     * @return object
+     */
+    public function get_iomad_course_options(int $courseid): object {
+        global $DB;
+
+        return $DB->get_record_sql(
+            "SELECT ic.id,
+                    ic.courseid,
+                    ic.licensed,
+                    ic.shared,
+                    COALESCE(cco.validlength, ic.validlength) AS validlength,
+                    COALESCE(cco.warnexpire, ic.warnexpire) AS warnexpire,
+                    COALESCE(cco.warncompletion, ic.warncompletion) AS warncompletion,
+                    COALESCE(cco.notifyperiod, ic.notifyperiod) AS notifyperiod,
+                    COALESCE(cco.expireafter, ic.expireafter) AS expireafter,
+                    COALESCE(cco.warnnotstarted, ic.warnnotstarted) AS warnnotstarted,
+                    COALESCE(cco.hasgrade, ic.hasgrade) AS hasgrade
+             FROM {local_iomad_courses} ic
+             LEFT JOIN {local_iomad_company_course_options} cco ON (
+                 ic.courseid = cco.courseid
+                 AND cco.companyid = :companyid
+             )
+             WHERE ic.courseid = :courseid",
+            ['companyid' => $this->id,
+             'courseid' => $courseid]);
+    }
+
+    /**
+     * Set the company specific course setting for a given option
+     *
+     * @param object $courserec
+     * @param string $optionname
+     * @param integer|null $optionvalue
+     * @return void
+     */
+    public function set_iomad_course_options(object $courserec, string $optionname, ?int $optionvalue) {
+        global $DB;
+
+        // Is this a dedicated course?
+        if (empty($courserec->shared) &&
+            !($optionname == 'mandatory' ||
+             $optionname == 'autoenrol')) {
+            // Yes, just change the default.
+            $DB->set_field(
+                'local_iomad_courses',
+                $optionname,
+                $optionvalue,
+                ['courseid' => $courserec->courseid]
+            );
+        } else {
+            // Do we already have a company specific record for this course?
+            if ($companyrec = $DB->get_record(
+                'local_iomad_company_course_options',
+                [
+                    'companyid' => $this->id,
+                    'courseid' => $courserec->courseid,
+                ])) {
+                    // Yes - update that.
+                    $DB->set_field(
+                        'local_iomad_company_course_options',
+                        $optionname,
+                        $optionvalue,
+                        ['id' => $companyrec->id]);
+            } else {
+                // No - create it.
+                $companyrec = (object) [
+                    'companyid' => $this->id,
+                    'courseid' => $courserec->courseid,
+                    $optionname => $optionvalue,
+                ];
+                $DB->insert_record('local_iomad_company_course_options', $companyrec);
+            }
+        }
+    }
+
+    /**
      * Gets the record set of all companies
      *
      * @param int $page

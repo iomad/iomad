@@ -335,10 +335,31 @@ if (empty($courses)) {
 }
 
 // Get courses where we don't show the grade.
-$gradelesscourses = $DB->get_records_sql("SELECT courseid FROM {local_iomad_courses} WHERE hasgrade = 0");
+$gradelesscourses = $DB->get_records_sql(
+    "SELECT lit.courseid
+     FROM {local_iomad_courses} lic
+     LEFT JOIN {local_iomad_company_course_options} licco ON (
+         lic.courseid = licco.courseid
+         AND licco:companyid = :companyid
+     WHERE (
+         lic.hasgrade = 0
+         AND licco.hasgrade IS NULL
+         )
+     OR licco.hasgrade = 0",
+     ['companyid' => $companyid]);
 
 // Get courses which could expire.
-$expirecourses = $DB->get_records_select('local_iomad_courses', 'validlength > 0', [], 'courseid', 'courseid');
+$expirecourses = $DB->get_records_sql(
+    "SELECT lic.courseid
+     FROM {local_iomad_courses} lic
+     LEFT JOIN {local_iomad_company_course_options} licco ON (
+         lic.courseid = licco.courseid
+         AND licco.companyid = :companyid
+     WHERE (
+         lic.validlength > 0
+         AND licco.validlength IS NULL
+     ) OR licco.validlength > 0",
+     ['companyid' => $companyid]);
 
 // Setup the user search form.
 $searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);

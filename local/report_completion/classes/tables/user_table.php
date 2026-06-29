@@ -234,7 +234,23 @@ class user_table extends table_sql {
     public function col_finalscore($row) {
         global $DB, $USER;
 
-        if ($DB->get_record('local_iomad_courses', ['courseid' => $row->courseid, 'hasgrade' => 1])) {
+        if ($DB->record_exists_sql(
+            "SELECT lic.id
+             FROM {local_iomad_courses} lic
+             LEFT JOIN {local_iomad_company_course_options} licco ON
+             (
+                 lic.courseid = licco.courseid
+                 AND licco.companyid = :companyid
+             )
+             WHERE lic.courseid = :courseid
+             AND (
+                 (
+                     lic.hasgrade = 1
+                     AND licco.hasgrade IS NULL
+                 ) OR licco.hasgrade = 1
+             )",
+            ['courseid' => $row->courseid,
+             'companyid' => $row->companyid])) {
             if ($this->is_downloading() || empty($USER->editing)) {
                 if (!empty($row->finalscore) && !empty($row->timeenrolled)) {
                     return round($row->finalscore, get_config('local_iomad', 'report_grade_places'))."%";
@@ -662,7 +678,21 @@ class user_table extends table_sql {
                     }
                 } else if ($type == 'grade') {
                     // Do we show the grade?
-                    if (!$DB->record_exists('local_iomad_courses', ['courseid' => $row->courseid, 'hasgrade' => 0])) {
+                    if (!$DB->record_exists_sql(
+                        "SELECT lic.id
+                         FROM {local_iomad_courses} lic
+                         LEFT JOIN {local_iomad_company_course_options} licco ON
+                         (
+                             lic.courseid = licco.courseid
+                         )
+                         WHERE lic.courseid = :courseid
+                         AND licco.companyid = :companyid
+                         AND (
+                             lit.hasgrade = 0
+                             OR licco.hasgrade = 0
+                         )",
+                        ['courseid' => $row->courseid,
+                        'companyid' => $row->companyid])) {
                         // Get the criteria record.
                         $critrecord = $DB->get_record('course_completion_criteria', ['id' => $criteriaid]);
 

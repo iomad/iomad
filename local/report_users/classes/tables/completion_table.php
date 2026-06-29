@@ -179,7 +179,29 @@ class completion_table extends table_sql {
         global $CFG, $DB, $USER;
 
         if (!$DB->record_exists('local_iomad_courses', ['courseid' => $row->courseid]) ||
-            $DB->record_exists('local_iomad_courses', ['courseid' => $row->courseid, 'hasgrade' => 1])) {
+            $DB->record_exists_sql(
+                "SELECT lic.id
+                 FROM {local_iomad_courses} lic
+                 JOIN {local_iomad_tracks} lit ON lic.courseid = lit.courseid
+                 LEFT JOIN {local_iomad_company_course_options} licco ON
+                 (
+                     lic.courseid = licco.courseid
+                     AND lit.courseid = licco.courseid
+                     AND lit.companyid = licco.companyid
+                 )
+                 WHERE lit.companyid = :companyid
+                 AND lit.userid = :userid
+                 AND lit.courseid = :courseid
+                 AND (
+                     (
+                         lic.hasgrade = 1
+                         AND licco.hasgrade IS NULL
+                     ) OR licco.hasgrade = 1
+                 )",
+                ['userid' => $row->userid,
+                 'courseid' => $row->courseid,
+                 'companyid' => $row->companyid])) {
+
             if ($this->is_downloading() || empty($USER->editing)) {
                 if (!empty($row->finalscore) && !empty($row->timeenrolled)) {
                     return round($row->finalscore, get_config('local_iomad', 'report_grade_places'))."%";

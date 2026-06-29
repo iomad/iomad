@@ -1593,8 +1593,8 @@ It could very slow or timeout. The function is designed to search some specific 
      * block_iomad_company_admin_update_courses
      *
      * Implement update_courses
-     * @param $comapnyid
-     * @return array of department records.
+     * @param array courses
+     * @return bool
      */
     public static function update_courses($courses) {
         global $CFG, $DB, $USER;
@@ -1673,8 +1673,8 @@ It could very slow or timeout. The function is designed to search some specific 
      * block_iomad_company_admin_get_course_info
      *
      * Implement get_departments
-     * @param $comapnyid
-     * @return array of department records.
+     * @param array courseids
+     * @return array of course settings records.
      */
     public static function get_course_info($courseids = []) {
         global $CFG, $DB;
