@@ -5135,7 +5135,7 @@ class company {
              JOIN {local_iomad_company_users} cu ON (c.id = cu.companyid)
              WHERE cu.userid = :userid",
             ['userid' => $userid])) {
-            return is_site_admin();
+            return is_siteadmin();
         }
 
         foreach ($usercompanies as $usercompany) {
