@@ -83,19 +83,29 @@ class condition extends \core_availability\condition {
      * @return boolean
      */
     public function is_available($not, \core_availability\info $info, $grabthelot, $userid) {
-        global $DB;
+        global $CFG, $DB, $SESSION;
 
-        $course = $info->get_course();
-        $context = \context_course::instance($course->id);
+        // Set default to no.
         $allow = false;
 
-        // Get all companys the user belongs to.
-        $companies = $DB->get_records_sql("SELECT DISTINCT companyid
-                                           FROM {local_iomad_company_users}
-                                           WHERE userid = :userid",
-                                          ['userid' => $userid]);
+        // Is this allowed?
         if ($this->companyid) {
-            $allow = array_key_exists($this->companyid, $companies);
+            if (!empty($CFG->foundcompanyid) &&
+                $this->companyid == $CFG->foundcompanyid) {
+                $allow = true;
+            } else if (!empty($SESSION->wantedcompanyid) &&
+                $this->companyid == $SESSION->wantedcompanyid) {
+                $allow = true;
+            } else {
+                // Get all companys the user belongs to.
+                $companies = $DB->get_records_sql(
+                    "SELECT DISTINCT companyid
+                    FROM {local_iomad_company_users}
+                    WHERE userid = :userid",
+                    ['userid' => $userid]);
+
+                    $allow = array_key_exists($this->companyid, $companies);
+            }
         } else {
             // No specific company. Allow if they belong to any company at all.
             $allow = $companies ? true : false;
