@@ -5014,11 +5014,13 @@ class company {
         $user = $DB->get_record('user', ['id' => $userid]);
 
         // Get all of the companies the user is tied to.
-        $usercompanies = $DB->get_records_sql("SELECT DISTINCT c.*
+        if (!$usercompanies = $DB->get_records_sql("SELECT DISTINCT c.*
                                                FROM {company} c
                                                JOIN {company_users} cu ON (c.id = cu.companyid)
                                                WHERE cu.userid = :userid",
-                                              ['userid' => $userid]);
+                                              ['userid' => $userid])) {
+            return is_siteadmin(); // If the user isn't part of any companies, they must be a Site administrator.
+        }
 
         foreach ($usercompanies as $usercompany) {
             $company = new company($usercompany->id);

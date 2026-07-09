@@ -211,7 +211,8 @@ abstract class base implements \IteratorAggregate {
         $event->data['anonymous'] = (int)(bool)$event->data['anonymous'];
 
         // IOMAD
-        if (!empty($SESSION->currenteditingcompany)) {
+        if (empty($event->data['companyid']) &&
+            !empty($SESSION->currenteditingcompany)) {
             $event->data['companyid'] = $SESSION->currenteditingcompany;
         }
 
