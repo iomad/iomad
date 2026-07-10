@@ -143,51 +143,65 @@ if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $com
         }
     }
 } else {
-    // Get only the licenses the user can use.
-    $userlevel = $company->get_userlevel($USER);
-    $userhierarchylevel = key($userlevel);
+    $sqlparams = ['companyid' => $companyid, 'expirydate' => time()];
 
-    // Check if the user can see all of the licenses despite this.
+    // Check if the user can see all of the licenses.
     if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext)) {
-        $alllicenses = true;
+        $departmentsql = "";
     } else {
-        $alllicenses = false;;
+        // Get only the licenses the user can use.
+        $userlevels = $company->get_userlevel($USER);
+        $userhierarchylevel = key($userlevels);
+
+        // Get the list of possible departments.
+        $subhierarchieslist = [];
+        foreach (array_keys($userlevels) as $userlevelid) {
+            $subhierarchieslist = $subhierarchieslist + company::get_all_subdepartments($userlevelid);
+        }
+
+        // Generate the SQL.
+        [$insql, $inparams] = $DB->get_in_or_equal(array_keys($subhierarchieslist),
+                                                              SQL_PARAMS_NAMED,
+                                                              'deptids');
+        $sqlparams = $sqlparams + $inparams;
+        $departmentsql = "AND (
+             departmentid IS NULL
+             OR departmentid {$insql}
+         )";
     }
 
     // Get the licenses.
-    $licenses = $DB->get_records(
-        'local_iomad_company_licenses',
-        [
-            'companyid' => $companyid,
-            ],
-        'expirydate DESC',
-        'id,name,startdate,expirydate');
+    $licenses = $DB->get_records_sql(
+        "SELECT id,name,startdate,expirydate
+         FROM {local_iomad_company_licenses}
+         WHERE companyid = :companyid
+         AND expirydate > :expirydate
+         {$departmentsql}
+         ORDER BY expirydate DESC",
+        $sqlparams);
 
     // Process them.
     foreach ($licenses as $license) {
-        // Are we showing expired licenses?
-        if ($alllicenses || $license->expirydate > time()) {
-            // Is the license available yet?
-            if ($license->startdate > time()) {
-                $licenselist[$license->id] = format_string(
-                    $license->name . " (" .
-                    get_string(
-                        'licensevalidfrom',
-                        'block_iomad_company_admin',
-                        userdate($license->startdate),
-                        get_config('local_iomad', 'date_format')
-                    ) . ")");
-                if ($licenseid == $license->id) {
-                    // If its the current selected license - add that info to the page.
-                    $availablewarning = get_string(
-                        'licensevalidfromwarning',
-                        'block_iomad_company_admin',
-                        userdate($license->startdate, get_config('local_iomad', 'date_format')));
-                }
-            } else {
-                // Just show the license.
-                $licenselist[$license->id] = format_string($license->name);
+        // Is the license available yet?
+        if ($license->startdate > time()) {
+            $licenselist[$license->id] = format_string(
+                $license->name . " (" .
+                get_string(
+                    'licensevalidfrom',
+                    'block_iomad_company_admin',
+                    userdate($license->startdate),
+                    get_config('local_iomad', 'date_format')
+                ) . ")");
+            if ($licenseid == $license->id) {
+                // If its the current selected license - add that info to the page.
+                $availablewarning = get_string(
+                    'licensevalidfromwarning',
+                    'block_iomad_company_admin',
+                    userdate($license->startdate, get_config('local_iomad', 'date_format')));
             }
+        } else {
+            // Just show the license.
+            $licenselist[$license->id] = format_string($license->name);
         }
     }
 }

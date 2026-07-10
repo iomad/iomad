@@ -2639,10 +2639,11 @@ It could very slow or timeout. The function is designed to search some specific 
                                                            'cids');
                 $inparams['userid'] = $enrolment['userid'];
                 if (!$usercompanies = $DB->get_records_sql(
-                    "SELECT companyid
-                     FROM {company_user}
+                    "SELECT DISTINCT companyid, managertype
+                     FROM {local_iomad_company_users}
                      WHERE userid = :userid
-                     AND companyid {$insql}",
+                     AND companyid {$insql}
+                     ORDER BY id",
                     $inparams)) {
                     // We can't work out where to put them.
                     continue;
@@ -2709,6 +2710,15 @@ It could very slow or timeout. The function is designed to search some specific 
                     'companyid' => $company->id,
                     'instant' => true,
                 ];
+
+                // Is this a department manager?
+                if (!empty($companydetails->managertype) &&
+                    $companydetails->managertype == 2) {
+
+                    // Get their main department.
+                    $userlevels = $company->get_userlevel($user);
+                    $licenserec['departmentid'] = key($userlevels);
+                }
                 $licenseid = $DB->insert_record('local_iomad_company_licenses', $licenserec);
                 $DB->insert_record(
                     'local_iomad_company_license_courses',
@@ -2729,15 +2739,18 @@ It could very slow or timeout. The function is designed to search some specific 
                 ]);
                 $event->trigger();
 
-                if ($enrolment['quantity'] == 1) {
+                if ($enrolment['quantity'] == 1 &&
+                    empty($companydetails->managertype)) {
                     // Allocate the license to the user.
-                    $recordarray = ['courseid' => $enrolment['courseid'],
-                                         'userid' => $user->id,
-                                         'licenseid' => $licenseid,
-                                         'issuedate' => $runtime,
-                                         'isusing' => 0];
-
+                    $recordarray = [
+                        'courseid' => $enrolment['courseid'],
+                        'userid' => $user->id,
+                        'licenseid' => $licenseid,
+                        'issuedate' => $runtime,
+                        'isusing' => 0,
+                    ];
                     $recordarray['id'] = $DB->insert_record('local_iomad_company_license_users', $recordarray);
+
                     // Fire that event.
                     $eventother = [
                         'licenseid' => $licenseid,

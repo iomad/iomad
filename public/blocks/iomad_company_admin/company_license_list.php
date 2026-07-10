@@ -176,6 +176,7 @@ $showcompanies = false;
 $gotchildren = false;
 $childsql = "";
 $sqlparams = [];
+$departmentsql = "";
 
 // Are we dealing with child companies?
 if (iomad::has_capability('block/iomad_company_admin:company_add_child', $companycontext) &&
@@ -200,6 +201,28 @@ if ($childcompanies = $company->get_child_companies_recursive()) {
     $gotchildren = true;
 }
 
+// Check if the user can see all of the licenses.
+if (!iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext)) {
+    // Get only the licenses the user can see.
+    $userlevels = $company->get_userlevel($USER);
+
+    // Get the list of possible departments.
+    $subhierarchieslist = [];
+    foreach (array_keys($userlevels) as $userlevelid) {
+        $subhierarchieslist = $subhierarchieslist + company::get_all_subdepartments($userlevelid);
+    }
+
+    // Generate the SQL.
+    [$insql, $inparams] = $DB->get_in_or_equal(array_keys($subhierarchieslist),
+                                                          SQL_PARAMS_NAMED,
+                                                          'deptids');
+    $sqlparams = $sqlparams + $inparams;
+    $departmentsql = "AND (
+            cl.departmentid IS NULL
+            OR cl.departmentid {$insql}
+        )";
+}
+
 // Set the table SQL.
 $sqlparams['companyid'] = $companyid;
 $sqlparams['time'] = time();
@@ -207,7 +230,7 @@ $table->set_sql(
     "cl.*, c.name AS companyname",
     "{local_iomad_company_licenses} cl
     JOIN {local_iomad_companies} c ON (cl.companyid = c.id)",
-    "(cl.companyid = :companyid $childsql) $expiredsql",
+    "(cl.companyid = :companyid $childsql) $expiredsql $departmentsql",
     $sqlparams);
 
 $table->define_baseurl($baseurl);
