@@ -182,6 +182,14 @@ class processor {
             $companylicense->instant = $item->instant;
             $companylicense->startdate = $runtime;
             $companylicense->companyid = $company->id;
+            $companylicense->departmentid = null;
+
+            // Is this a department manager?
+            if ($DB->record_exists('local_iomad_company_users', ['companyid' => $companyid, 'managertype' => 2])) {
+                // Get their main department.
+                $userlevels = $company->get_userlevel($USER);
+                $companylicense->departmentid = key($userlevels);
+            }
 
             // Deal with license shelf life.
             $companylicense->expirydate = (!empty($item->single_purchase_shelflife)) ?

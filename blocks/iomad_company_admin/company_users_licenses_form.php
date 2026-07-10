@@ -85,6 +85,99 @@ if ($coursesform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL))
     redirect(new moodle_url($CFG->wwwroot .'/blocks/iomad_company_admin/index.php'));
 }
 
+// Process and reload the form.
+$coursesform->process();
+$coursesform = new company_users_licenses_form($PAGE->url, $companycontext, $companyid, $departmentid, $userid, $licenseid);
+
+// Display the license selector.
+$availablewarning = "";
+$licenselist = [];
+$sqlparams = [
+    'companyid' => $companyid,
+    'time' => time(),
+];
+if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext)) {
+    $departmentsql = "";
+} else {
+    // Get only the licenses the user can use.
+    $userlevels = $company->get_userlevel($USER);
+
+    // Get the list of possible departments.
+    $subhierarchieslist = [];
+    foreach (array_keys($userlevels) as $userlevelid) {
+        $subhierarchieslist = $subhierarchieslist + company::get_all_subdepartments($userlevelid);
+    }
+
+    // Generate the SQL.
+    [$insql, $inparams] = $DB->get_in_or_equal(array_keys($subhierarchieslist),
+                                                          SQL_PARAMS_NAMED,
+                                                          'deptids');
+    $sqlparams = $sqlparams + $inparams;
+    $departmentsql = "AND (
+            departmentid IS NULL
+            OR departmentid {$insql}
+        )";
+}
+
+// Is this an educator?
+$educatorsql = "";
+if (!empty($userid) &&
+    !$DB->record_exists(
+        'local_iomad_company_users',
+        [
+            'userid' => $userid,
+            'educator' => 1,
+            'companyid' => $companyid,
+        ])) {
+    $educatorsql = "AND type IN (0,1,4)";
+}
+
+// Get the licenses.
+$licenses = $DB->get_records_select(
+    'local_iomad_company_licenses',
+    "companyid = :companyid
+    AND expirydate > :time
+    $educatorsql
+    $departmentsql",
+    $sqlparams,
+    'expirydate DESC',
+    'id,type,name,startdate,expirydate'
+);
+
+foreach ($licenses as $license) {
+    // Process for not yet available licenses.
+    if ($license->startdate > time()) {
+        // License isn't available yet.
+        $licenselist[$license->id] = format_string(
+            $license->name . " (" .
+                get_string(
+                    'licensevalidfrom',
+                    'block_iomad_company_admin',
+                    userdate($license->startdate, get_config('local_iomad', 'date_format'))
+                ) . ")"
+        );
+        // If this is the currently selected license - add a warning.
+        if ($licenseid == $license->id) {
+            $availablewarning = get_string(
+                'licensevalidfromwarning',
+                'block_iomad_company_admin',
+                userdate($license->startdate, get_config('local_iomad', 'date_format'))
+            );
+        }
+    } else {
+        $licenselist[$license->id] = format_string($license->name);
+    }
+
+    // Process for educator types.
+    if (!empty($license->type) &&
+        ($license->type == 2 || $license->type == 3)) {
+        $licenselist[$license->id] = format_string(
+            $licenselist[$license->id] . " (" .
+            get_string('educator', 'block_iomad_company_admin') . ")"
+        );
+    }
+}
+
 // Display the page.
 echo $OUTPUT->header();
 
@@ -101,151 +194,6 @@ if (!company::check_valid_user($companyid, $userid, $departmentid)) {
 // Check the license is valid for this company.
 if (!empty($licenseid) && !company::check_valid_company_license($companyid, $licenseid)) {
     throw new moodle_exception('invalidcompanylicense', 'block_iomad_company_admin');
-}
-
-// Process and reload the form.
-$coursesform->process();
-$coursesform = new company_users_licenses_form($PAGE->url, $companycontext, $companyid, $departmentid, $userid, $licenseid);
-
-// Display the license selector.
-$availablewarning = "";
-$licenselist = [];
-if (iomad::has_capability('block/iomad_company_admin:unallocate_licenses', $companycontext)) {
-    $parentlevel = company::get_company_parentnode($companyid);
-    $userhierarchylevel = $parentlevel->id;
-    // Get all the licenses.
-    // Are we an educator?
-    if (
-        !empty($userid) &&
-        $DB->get_records('local_iomad_company_users', ['userid' => $userid, 'educator' => 1])
-    ) {
-        $licenses = $DB->get_records_select(
-            'local_iomad_company_licenses',
-            "companyid = :companyid
-             AND expirydate > :time",
-            ['companyid' => $companyid,
-             'time' => time()],
-            'expirydate DESC',
-            'id,type,name,startdate,expirydate');
-    } else {
-        $licenses = $DB->get_records_select(
-            'local_iomad_company_licenses',
-            "companyid = :companyid
-             AND type IN (0,1,4)
-             AND expirydate > :time",
-            ['companyid' => $companyid,
-             'time' => time()],
-            'expirydate DESC',
-            'id,type,name,startdate,expirydate'
-        );
-    }
-    foreach ($licenses as $license) {
-        // Has the license expire?
-        if ($license->expirydate < time()) {
-            $licenselist[$license->id] = format_string(
-                $license->name . " (" .
-                    get_string(
-                        'licenseexpired',
-                        'block_iomad_company_admin',
-                        userdate($license->expirydate, get_config('local_iomad', 'date_format'))
-                    ) . ")"
-            );
-        } else if ($license->startdate > time()) {
-            // License isn't available yet.
-            $licenselist[$license->id] = format_string(
-                $license->name . " (" .
-                    get_string(
-                        'licensevalidfrom',
-                        'block_iomad_company_admin',
-                        userdate($license->startdate, get_config('local_iomad', 'date_format'))
-                    ) . ")"
-            );
-            // If this is the currently selected license - add a warning.
-            if ($licenseid == $license->id) {
-                $availablewarning = get_string(
-                    'licensevalidfromwarning',
-                    'block_iomad_company_admin',
-                    userdate($license->startdate, get_config('local_iomad', 'date_format'))
-                );
-            }
-        } else {
-            $licenselist[$license->id] = format_string($license->name);
-        }
-        if (!empty($license->type) &&
-            ($license->type == 2 || $license->type == 3)) {
-            $licenselist[$license->id] = format_string(
-                $licenselist[$license->id] . " (" .
-                    get_string('educator', 'block_iomad_company_admin') . ")"
-            );
-        }
-    }
-} else {
-    $userlevel = $company->get_userlevel($USER);
-    $userhierarchylevel = key($userlevel);
-
-    // Is this an educator user?
-    $educator = false;
-    if (!empty($userid) &&
-        $DB->get_record('local_iomad_company_users', ['userid' => $userid, 'educator' => 1])) {
-        $educator = true;
-    }
-    // Get the licenses.
-    $licenses = company::get_recursive_departments_licenses($userhierarchylevel);
-
-    // Process them.
-    foreach ($licenses as $deptlicenseid) {
-        // Get the license record.
-        if ($license = $DB->get_records(
-            'local_iomad_company_licenses',
-            ['id' => $deptlicenseid->licenseid, 'companyid' => $companyid],
-            null,
-            'id,name,startdate,expirydate')) {
-
-            // Conditionally strip out educator licenses.
-            if (!$educator &&
-                !empty($license->type) &&
-                ($license->type == 2 || $licensetype == 3)) {
-                continue;
-            }
-
-            // Check the license status.
-            if ($license[$deptlicenseid->licenseid]->expirydate > time()) {
-                // Is the license available yet?
-                if (!empty($license->startdate) && $license->startdate > time()) {
-                    $licenselist[$license->id] = format_string(
-                        $license->name . " (" .
-                            get_string(
-                                'licensevalidfrom',
-                                'block_iomad_company_admin',
-                                userdate($license->startdate, get_config('local_iomad', 'date_format'))
-                            ) . ")"
-                    );
-
-                    // If this is the currently selected license - add a warning.
-                    if ($licenseid == $license->id) {
-                        $availablewarning = get_string(
-                            'licensevalidfromwarning',
-                            'block_iomad_company_admin',
-                            userdate($license->startdate, get_config('local_iomad', 'date_format'))
-                        );
-                    }
-                } else {
-                    $licenselist[$license[$deptlicenseid->licenseid]->id] = format_string(
-                        $license[$deptlicenseid->licenseid]->name
-                        );
-                }
-            }
-
-            // Tag any educator licenses.
-            if (!empty($license->type) &&
-                ($license->type == 2 || $license->type == 3)) {
-                $licenselist[$license->id] = format_string(
-                    $licenselist[$license->id] . " (" .
-                        get_string('educator', 'block_iomad_company_admin') . ")"
-                );
-            }
-        }
-    }
 }
 
 // Do we have any licenses?
@@ -274,6 +222,5 @@ if (count($licenses) == 0) {
     // Display the form.
     echo $coursesform->display();
 }
-
 
 echo $OUTPUT->footer();

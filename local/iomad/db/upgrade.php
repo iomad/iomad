@@ -3203,5 +3203,33 @@ function xmldb_local_iomad_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026062500, 'local', 'iomad');
     }
 
+    if ($oldversion < 2026071000) {
+
+        // Define field departmentid to be added to local_iomad_company_licenses.
+        $table = new xmldb_table('local_iomad_company_licenses');
+        $field = new xmldb_field('departmentid', XMLDB_TYPE_INTEGER, '20', null, null, null, null, 'companyid');
+
+        // Conditionally launch add field departmentid.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define key fk_departmentid (foreign) to be added to local_iomad_company_licenses.
+        $table = new xmldb_table('local_iomad_company_licenses');
+        $key = new xmldb_key(
+            'fk_departmentid',
+            XMLDB_KEY_FOREIGN,
+            ['departmentid'],
+            'local_iomad_company_departments',
+            ['id']
+        );
+
+        // Launch add key fk_departmentid.
+        $dbman->add_key($table, $key);
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2026071000, 'local', 'iomad');
+    }
+
     return $result;
 }
