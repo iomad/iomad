@@ -71,7 +71,12 @@ class report_options_form extends dynamic_form {
         $showpercentageoptions = [get_string("hidepercentageusers", 'block_iomad_company_admin'),
                                   get_string("showpercentageusers", 'block_iomad_company_admin'),
                                   get_string("showpercentagecourseusers", 'block_iomad_company_admin')];
-        $mform->addElement('select', 'showpercentage', "User calculation", $showpercentageoptions);
+        $mform->addElement(
+            'select',
+            'showpercentage',
+            get_string('usercalculation', 'local_report_completion'),
+            $showpercentageoptions
+        );
         $mform->addElement('html', html_writer::end_tag('div'));
 
         $mform->addElement('html', html_writer::start_tag('div', ['class' => 'iomad_report_options_form_element']));
