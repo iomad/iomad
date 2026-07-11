@@ -1244,6 +1244,11 @@ if (empty($courseid)) {
     if (!$table->is_downloading()) {
         echo $output->header();
 
+        // Display the page heading.
+        echo html_writer::start_tag('div', ['class' => 'iomad_report_heading_wraper']);
+        echo html_writer::tag('span', $heading, ['class' => 'iomad_report_heading']);
+        echo html_writer::end_tag('div');
+
         // Display the search form and department picker.
         if (!empty($companyid)) {
             if (empty($table->is_downloading())) {
