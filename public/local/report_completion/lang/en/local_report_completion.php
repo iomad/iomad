@@ -102,6 +102,7 @@ $string['trackedcount'] = 'Number of tracked resources/activities: ';
 $string['unused'] = 'Inactive';
 $string['used'] = 'Active';
 $string['user_options'] = 'User options';
+$string['usercalculation'] = 'User calculation';
 $string['userlink'] = 'Display users';
 $string['userrecordnotfound'] = 'The user record was not found';
 $string['usersummary'] = 'Course summary';
