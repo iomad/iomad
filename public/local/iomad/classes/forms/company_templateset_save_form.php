@@ -98,7 +98,7 @@ class company_templateset_save_form extends moodleform {
 
         // Check if the name is already in use.
         if ($DB->get_record_select(
-            'email_templateset',
+            'local_iomad_email_templatesets',
             $DB->sql_compare_text('templatesetname') .
             " = " .
             $DB->sql_compare_text(':templatesetname'),
