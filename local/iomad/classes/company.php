@@ -752,7 +752,7 @@ class company {
         } else {
             $templates = $DB->get_records_sql_menu(
                 "SELECT crt.id, crt.name
-                 FROM {company_role_templates} crt
+                 FROM {local_iomad_company_role_templates} crt
                  JOIN {local_iomad_company_role_templates_ass} crta
                  ON (crt.id = crta.templateid)
                  WHERE crta.companyid = :companyid
