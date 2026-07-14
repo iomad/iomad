@@ -16,6 +16,9 @@
 
 namespace tool_mfa\plugininfo;
 
+// IOMAD
+require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+
 use moodle_url;
 use stdClass;
 use local_iomad\iomad;
@@ -72,20 +75,8 @@ class factor extends \core\plugininfo\base {
      * @throws \dml_exception
      */
     public static function sort_factors_by_order(array $unsorted): array {
-        global $CFG;
-
-        // IOMAD
-        
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if ($companyid > 0 &&
-            get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
-            $postfix = "_$companyid";
-        } else {
-            $postfix = "";
-        }
-
         $sorted = [];
-        $orderarray = explode(',', get_config('tool_mfa', 'factor_order' . $postfix));
+        $orderarray = explode(',', iomad::get_config('tool_mfa', 'factor_order'));
 
         foreach ($orderarray as $order => $factorname) {
             foreach ($unsorted as $key => $factor) {
@@ -345,13 +336,10 @@ class factor extends \core\plugininfo\base {
      * @private
      */
     public function uninstall_cleanup() {
-        global $DB, $CFG;
+        global $DB;
 
-        // IOMAD
-        
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if ($companyid > 0 &&
-            get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
+        if (!empty($companyid)) {
             $postfix = "_$companyid";
         } else {
             $postfix = "";
@@ -360,7 +348,7 @@ class factor extends \core\plugininfo\base {
         $DB->delete_records('tool_mfa', ['factor' => $this->name]);
         $DB->delete_records('tool_mfa_secrets', ['factor' => $this->name]);
 
-        $order = explode(',', get_config('tool_mfa', 'factor_order' . $postfix));
+        $order = explode(',', iomad::get_config('tool_mfa', 'factor_order'));
         if (in_array($this->name, $order)) {
             $order = array_diff($order, [$this->name]);
             \tool_mfa\manager::set_factor_config(['factor_order' . $postfix => implode(',', $order)], 'tool_mfa');

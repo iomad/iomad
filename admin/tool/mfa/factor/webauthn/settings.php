@@ -42,8 +42,7 @@ if ($ADMIN->fulltree) {
         new lang_string('settings:enablefactor', 'tool_mfa'),
         new lang_string('settings:enablefactor_help', 'tool_mfa'), 0);
     $enabled->set_updatedcallback(function() {
-        global $postfix;
-        \tool_mfa\manager::do_factor_action('webauthn', get_config('factor_webauthn', 'enabled' . $postfix) ? 'enable' : 'disable');
+        \tool_mfa\manager::do_factor_action('webauthn', iomad::get_config('factor_webauthn', 'enabled') ? 'enable' : 'disable');
     });
     $settings->add($enabled);
 

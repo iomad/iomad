@@ -35,7 +35,6 @@ require_capability('moodle/site:config', context_system::instance());
 $returnurl = get_local_referer(false);
 
 // IOMAD
-
 $companyid = iomad::get_my_companyid(context_system::instance(), false);
 if ($companyid > 0) {
     $postfix = "_$companyid";

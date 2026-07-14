@@ -58,16 +58,6 @@ abstract class object_factor_base implements object_factor {
     public function __construct($name) {
         global $DB, $USER, $CFG;
 
-        // IOMAD
-        
-        $this->companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if ($this->companyid > 0 &&
-            get_config('tool_mfa', 'enabled'. "_" . $this->companyid) !== false) {
-            $this->postfix = "_" . $this->companyid;
-        } else {
-            $this->postfix = "";
-        }
-
         $this->name = $name;
 
         // Setup secret manager.
@@ -81,7 +71,10 @@ abstract class object_factor_base implements object_factor {
      * @return void
      */
     public function load_locked_state(): void {
-        global $DB, $USER;
+        global $CFG, $DB, $USER;
+
+        // IOMAD
+        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
 
         // Check if lockcounter column exists (incase upgrade hasnt run yet).
         // Only 'input factors' are lockable.
@@ -96,7 +89,7 @@ abstract class object_factor_base implements object_factor {
                 }
 
                 // Now lock this factor if over the counter.
-                $lockthreshold = get_config('tool_mfa', 'lockout' . $this->postfix);
+                $lockthreshold = iomad::get_config('tool_mfa', 'lockout');
                 if ($this->lockcounter >= $lockthreshold) {
                     $this->set_state(\tool_mfa\plugininfo\factor::STATE_LOCKED);
                 }
@@ -116,13 +109,13 @@ abstract class object_factor_base implements object_factor {
      * @throws \dml_exception
      */
     public function is_enabled(): bool {
+        global $CFG;
+
+        // IOMAD
+        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+
         // Have to be explicit here - so not using $this value without checking.
-        if ($this->companyid > 0) {
-            $postfix = "_" . $this->companyid;
-        } else {
-            $postfix = $this->postfix = "";
-        }
-        $status = get_config('factor_'.$this->name, 'enabled' . $postfix);
+        $status = iomad::get_config('factor_'.$this->name, 'enabled');
         if ($status == 1) {
             return true;
         }
@@ -138,11 +131,12 @@ abstract class object_factor_base implements object_factor {
      * @throws \dml_exception
      */
     public function get_weight(): int {
-        $weightcompany = get_config('factor_'.$this->name, 'weight' . $this->postfix);
-        if ($weightcompany !== false) {
-            return (int) $weightcompany;
-        }
-        $weight = get_config('factor_'.$this->name, 'weight');
+        global $CFG;
+
+        // IOMAD
+        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+
+        $weight = iomad::get_config('factor_'.$this->name, 'weight');
         if ($weight) {
             return (int) $weight;
         }
@@ -659,7 +653,10 @@ abstract class object_factor_base implements object_factor {
      * @return void
      */
     public function increment_lock_counter(): void {
-        global $DB, $USER;
+        global $CFG, $DB, $USER;
+
+        // IOMAD
+        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
 
         // First make sure the state is loaded.
         $this->load_locked_state();
@@ -674,7 +671,7 @@ abstract class object_factor_base implements object_factor {
         $DB->set_field('tool_mfa', 'lockcounter', $this->lockcounter, ['userid' => $USER->id, 'factor' => $this->name]);
 
         // Now lock this factor if over the counter.
-        $lockthreshold = get_config('tool_mfa', 'lockout' . $this->postfix);
+        $lockthreshold = iomad::get_config('tool_mfa', 'lockout');
         if ($this->lockcounter >= $lockthreshold) {
             $this->set_state(\tool_mfa\plugininfo\factor::STATE_LOCKED);
         }
@@ -686,7 +683,12 @@ abstract class object_factor_base implements object_factor {
      * @return int the number of attempts at this factor remaining.
      */
     public function get_remaining_attempts(): int {
-        $lockthreshold = get_config('tool_mfa', 'lockout' . $this->postfix);
+        global $CFG;
+
+        // IOMAD
+        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+
+        $lockthreshold = iomad::get_config('tool_mfa', 'lockout');
         if ($this->lockcounter === -1) {
             // If upgrade.php hasnt been run yet, just return 10.
             return $lockthreshold;
