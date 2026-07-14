@@ -56,16 +56,7 @@ class factor extends object_factor_base {
         $this->rpid = (new \moodle_url($CFG->wwwroot))->get_host();
         $this->webauthn = new WebAuthn($SITE->fullname, $this->rpid);
 
-        // IOMAD
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if ($companyid > 0 &&
-            get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
-            $this->postfix = "_$companyid";
-        } else {
-            $this->postfix = "";
-        }
-
-        $this->userverification = get_config('factor_webauthn', 'userverification' . $this->postfix);
+        $this->userverification = iomad::get_config('factor_webauthn', 'userverification');
     }
 
     /**
@@ -212,7 +203,7 @@ class factor extends object_factor_base {
             $ids[] = base64_decode($registration->credentialId);
         }
 
-        $types = explode(',', get_config('factor_webauthn', 'authenticatortypes' . $this->postfix));
+        $types = explode(',', iomad::get_config('factor_webauthn', 'authenticatortypes'));
         $getargs =
             $this->webauthn->getGetArgs($ids, 20, in_array('usb', $types), in_array('nfc', $types), in_array('ble', $types),
                 in_array('hybrid', $types), in_array('internal', $types), $this->userverification);
@@ -324,7 +315,7 @@ class factor extends object_factor_base {
         // Cross-platform: true if type internal is not allowed,
         // false if only internal is allowed,
         // null if internal and cross-platform is allowed.
-        $types = explode(',', get_config('factor_webauthn', 'authenticatortypes' . $this->postfix));
+        $types = explode(',', iomad::get_config('factor_webauthn', 'authenticatortypes'));
         $crossplatformattachment = null;
         if ((in_array('usb', $types) || in_array('nfc', $types) || in_array('ble', $types) || in_array('hybrid', $types)) &&
             !in_array('internal', $types)) {

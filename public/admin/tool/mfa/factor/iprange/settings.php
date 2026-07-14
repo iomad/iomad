@@ -27,38 +27,31 @@ use local_iomad\iomad;
 
 defined('MOODLE_INTERNAL') || die();
 
-global $OUTPUT;
-
-global $CFG;
-
 // IOMAD
+$postfix = iomad::get_company_postfix();
 
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
-$postfix = "";
-if ($companyid > 0) {
-    $postfix = "_$companyid";
-}
+global $OUTPUT;
 
 if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_heading('factor_iprange/description', '',
         new lang_string('settings:description', 'factor_iprange')));
     $settings->add(new admin_setting_heading('factor_iprange/settings', new lang_string('settings', 'moodle'), ''));
 
-    $enabled = new admin_setting_configcheckbox('factor_iprange/enabled',
+    $enabled = new admin_setting_configcheckbox('factor_iprange/enabled' . $postfix,
         new lang_string('settings:enablefactor', 'tool_mfa'),
         new lang_string('settings:enablefactor_help', 'tool_mfa'), 0);
     $enabled->set_updatedcallback(function () {
-        \tool_mfa\manager::do_factor_action('iprange', get_config('factor_iprange', 'enabled') ? 'enable' : 'disable');
+        \tool_mfa\manager::do_factor_action('iprange', iomad::get_config('factor_iprange', 'enabled') ? 'enable' : 'disable');
     });
     $settings->add($enabled);
 
-    $settings->add(new admin_setting_configtext('factor_iprange/weight',
+    $settings->add(new admin_setting_configtext('factor_iprange/weight' . $postfix,
         new lang_string('settings:weight', 'tool_mfa'),
         new lang_string('settings:weight_help', 'tool_mfa'), 100, PARAM_INT));
 
 
     // Current IP validation against list for description.
-    $allowedips = get_config('factor_iprange', 'safeips');
+    $allowedips = iomad::get_config('factor_iprange', 'safeips');
     if (trim($allowedips) == '') {
         $message = 'allowedipsempty';
         $type = 'notifyerror';
@@ -71,7 +64,7 @@ if ($ADMIN->fulltree) {
     };
     $info = $OUTPUT->notification(get_string($message, 'factor_iprange', ['ip' => getremoteaddr()]), $type);
 
-    $settings->add(new admin_setting_configiplist('factor_iprange/safeips',
+    $settings->add(new admin_setting_configiplist('factor_iprange/safeips' . $postfix,
         new lang_string('settings:safeips', 'factor_iprange'),
         new lang_string('settings:safeips_help', 'factor_iprange',
                 ['info' => $info, 'syntax' => get_string('ipblockersyntax', 'admin')]), '', PARAM_TEXT));

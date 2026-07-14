@@ -14,30 +14,23 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace core_badges\local\backpack\ob\v2p1;
-
-use core_badges\local\backpack\ob\v2p0\recipient_exporter as recipient_exporter_v2p0;
-
 /**
- * Class that represents recipient to be exported to a backpack.
+ * Hooks register for SMS factor.
  *
- * @package    core_badges
- * @copyright  2025 Sara Arjona <sara@moodle.com>
+ * @package    factor_sms
+ * @copyright  2024 Safat Shahin <safat.shahin@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class recipient_exporter extends recipient_exporter_v2p0 {
-}
 
-$sesskey = optional_param('sesskey', false, PARAM_TEXT);
-require_sesskey();
+defined('MOODLE_INTERNAL') || die();
 
-// Remove session phone number.
-unset($SESSION->tool_mfa_sms_number);
-// Clean temp secrets code.
-$secretmanager = new \tool_mfa\local\secret_manager('sms');
-$secretmanager->cleanup_temp_secrets();
-
-redirect(new \moodle_url('/admin/tool/mfa/action.php', [
-    'action' => 'setup',
-    'factor' => 'sms',
-]));
+$callbacks = [
+    [
+        'hook' => \core_sms\hook\before_gateway_deleted::class,
+        'callback' => \factor_sms\hook_listener::class . '::check_gateway_usage_in_mfa',
+    ],
+    [
+        'hook' => \core_sms\hook\before_gateway_disabled::class,
+        'callback' => \factor_sms\hook_listener::class . '::check_gateway_usage_in_mfa',
+    ],
+];

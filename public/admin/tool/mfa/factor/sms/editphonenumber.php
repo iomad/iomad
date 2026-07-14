@@ -14,18 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace core_badges\local\backpack\ob\v2p1;
-
-use core_badges\local\backpack\ob\v2p0\recipient_exporter as recipient_exporter_v2p0;
-
 /**
- * Class that represents recipient to be exported to a backpack.
+ * Edit phonenumber redirect
  *
- * @package    core_badges
- * @copyright  2025 Sara Arjona <sara@moodle.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package     factor_sms
+ * @copyright   2023 Raquel Ortega <raquel.ortega@moodle.com>
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class recipient_exporter extends recipient_exporter_v2p0 {
+
+require_once(__DIR__ . '/../../../../../config.php');
+
+require_login(null, false);
+if (isguestuser()) {
+    throw new require_login_exception('error:isguestuser', 'tool_mfa');
 }
 
 $sesskey = optional_param('sesskey', false, PARAM_TEXT);

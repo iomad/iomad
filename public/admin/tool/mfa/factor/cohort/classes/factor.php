@@ -19,6 +19,7 @@ namespace factor_cohort;
 defined('MOODLE_INTERNAL') || die();
 require_once(__DIR__ . '/../../../../../../cohort/lib.php');
 
+use local_iomad\iomad;
 use stdClass;
 use tool_mfa\local\factor\object_factor_base;
 
@@ -77,7 +78,8 @@ class factor extends object_factor_base {
      */
     public function get_state(): string {
         global $USER;
-        $cohortstring = get_config('factor_cohort', 'cohorts' . $this->postfix);
+
+        $cohortstring = iomad::get_config('factor_cohort', 'cohorts');
         // Nothing selected, everyone passes.
         if (empty($cohortstring)) {
             return \tool_mfa\plugininfo\factor::STATE_PASS;
@@ -122,7 +124,8 @@ class factor extends object_factor_base {
      * {@inheritDoc}
      */
     public function get_summary_condition(): string {
-        $selectedcohorts = get_config('factor_cohort', 'cohorts' . $this->postfix);
+
+        $selectedcohorts = iomad::get_config('factor_cohort', 'cohorts');
         if (empty($selectedcohorts)) {
             return get_string('summarycondition', 'factor_cohort', get_string('none'));
         }

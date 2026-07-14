@@ -28,28 +28,23 @@ use local_iomad\iomad;
 defined('MOODLE_INTERNAL') || die();
 global $CFG;
 
-// IOMAD
-
-$postfix = "";
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
-if ($companyid > 0) {
-    $postfix = "_$companyid";
-}
+// IOMAD.
+$postfix = iomad::get_company_postfix();
 
 if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_heading('factor_admin/description', '',
         new lang_string('settings:description', 'factor_admin')));
     $settings->add(new admin_setting_heading('factor_admin/settings', new lang_string('settings', 'moodle'), ''));
 
-    $enabled = new admin_setting_configcheckbox('factor_admin/enabled',
+    $enabled = new admin_setting_configcheckbox('factor_admin/enabled' . $postfix,
         new lang_string('settings:enablefactor', 'tool_mfa'),
         new lang_string('settings:enablefactor_help', 'tool_mfa'), 0);
     $enabled->set_updatedcallback(function () {
-        \tool_mfa\manager::do_factor_action('admin', get_config('factor_admin', 'enabled') ? 'enable' : 'disable');
+        \tool_mfa\manager::do_factor_action('admin', iomad::get_config('factor_admin', 'enabled') ? 'enable' : 'disable');
     });
     $settings->add($enabled);
 
-    $settings->add(new admin_setting_configtext('factor_admin/weight',
+    $settings->add(new admin_setting_configtext('factor_admin/weight' . $postfix,
         new lang_string('settings:weight', 'tool_mfa'),
         new lang_string('settings:weight_help', 'factor_admin'), 100, PARAM_INT));
 }
