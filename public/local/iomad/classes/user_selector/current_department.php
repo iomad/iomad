@@ -123,7 +123,7 @@ class current_department extends company_base {
             $othermanagersql = " AND cu.userid NOT IN (
                                      SELECT userid FROM {local_iomad_company_users}
                                      WHERE managertype = 1
-                                     AND companyid IN {$insql}
+                                     AND companyid {$insql}
                                  )";
             $params = $params + $inparams;
         }
