@@ -41,8 +41,7 @@ if ($ADMIN->fulltree) {
         new lang_string('settings:enablefactor', 'tool_mfa'),
         new lang_string('settings:enablefactor_help', 'tool_mfa'), 0);
     $enabled->set_updatedcallback(function () {
-        global $postfix;
-        \tool_mfa\manager::do_factor_action('grace', get_config('factor_grace', 'enabled' . $postfix) ? 'enable' : 'disable');
+        \tool_mfa\manager::do_factor_action('grace', iomad::get_config('factor_grace', 'enabled') ? 'enable' : 'disable');
     });
     $settings->add($enabled);
 

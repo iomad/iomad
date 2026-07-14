@@ -37,18 +37,11 @@ class factor_email_renderer extends plugin_renderer_base {
         global $DB, $USER, $CFG;;
 
         // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid) &&
-            get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
-            $postfix = "_$companyid";
-        } else {
-            $postfix = "";
-        }
+        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
 
         $instance = $DB->get_record('tool_mfa', ['id' => $instanceid]);
         $site = get_site();
-        $validity = get_config('factor_email', 'duration' . $postfix);
+        $validity = iomad::get_config('factor_email', 'duration');
         $authurl = new \moodle_url('/admin/tool/mfa/factor/email/email.php',
             ['instance' => $instance->id, 'pass' => 1, 'secret' => $instance->secret]);
         $authurlstring = \html_writer::link($authurl, get_string('email:link', 'factor_email'));

@@ -61,16 +61,9 @@ class factor extends object_factor_base {
         $this->webauthn = new WebAuthn($SITE->fullname, $this->rpid);
 
         // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid) &&
-            get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
-            $this->postfix = "_$companyid";
-        } else {
-            $this->postfix = "";
-        }
+        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
 
-        $this->userverification = get_config('factor_webauthn', 'userverification' . $this->postfix);
+        $this->userverification = iomad::get_config('factor_webauthn', 'userverification');
     }
 
     /**
@@ -201,7 +194,10 @@ class factor extends object_factor_base {
      * @return \MoodleQuickForm $mform
      */
     public function login_form_definition(\MoodleQuickForm $mform): \MoodleQuickForm {
-        global $PAGE, $USER, $SESSION;
+        global $CFG, $PAGE, $USER, $SESSION;
+
+        // IOMAD.
+        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
 
         $mform->addElement('hidden', 'response_input', '', ['id' => 'id_response_input']);
         $mform->setType('response_input', PARAM_RAW);
@@ -217,7 +213,7 @@ class factor extends object_factor_base {
             $ids[] = base64_decode($registration->credentialId);
         }
 
-        $types = explode(',', get_config('factor_webauthn', 'authenticatortypes' . $this->postfix));
+        $types = explode(',', iomad::get_config('factor_webauthn', 'authenticatortypes'));
         $getargs =
             $this->webauthn->getGetArgs($ids, 20, in_array('usb', $types), in_array('nfc', $types), in_array('ble', $types),
                 in_array('hybrid', $types), in_array('internal', $types), $this->userverification);
@@ -291,7 +287,10 @@ class factor extends object_factor_base {
      * @return \MoodleQuickForm $mform
      */
     public function setup_factor_form_definition(\MoodleQuickForm $mform): \MoodleQuickForm {
-        global $PAGE, $USER, $SESSION, $OUTPUT;
+        global $CFG, $PAGE, $USER, $SESSION, $OUTPUT;
+
+        // IOMAD.
+        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
 
         $headingstring = $mform->elementExists('replaceid') ? 'replacefactor' : 'setupfactor';
         $mform->addElement('html', $OUTPUT->heading(get_string($headingstring, 'factor_webauthn'), 2));
@@ -329,7 +328,7 @@ class factor extends object_factor_base {
         // Cross-platform: true if type internal is not allowed,
         // false if only internal is allowed,
         // null if internal and cross-platform is allowed.
-        $types = explode(',', get_config('factor_webauthn', 'authenticatortypes' . $this->postfix));
+        $types = explode(',', iomad::get_config('factor_webauthn', 'authenticatortypes'));
         $crossplatformattachment = null;
         if ((in_array('usb', $types) || in_array('nfc', $types) || in_array('ble', $types) || in_array('hybrid', $types)) &&
             !in_array('internal', $types)) {

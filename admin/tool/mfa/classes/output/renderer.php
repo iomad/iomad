@@ -481,15 +481,7 @@ class renderer extends \plugin_renderer_base {
         global $DB, $CFG;
 
         // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid) &&
-            get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
-            $postfix = "_$companyid";
-        } else {
-            $postfix = "";
-        }
-
+        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
         $factors = factor::get_factors();
 
         $table = new \html_table();
@@ -510,7 +502,7 @@ class renderer extends \plugin_renderer_base {
             'right',
         ];
         $table->data = [];
-        $locklevel = (int) get_config('tool_mfa', 'lockout' . $postfix);
+        $locklevel = (int) iomad::get_config('tool_mfa', 'lockout');
 
         foreach ($factors as $factor) {
             $sql = "SELECT COUNT(DISTINCT(userid))
@@ -546,14 +538,7 @@ class renderer extends \plugin_renderer_base {
         global $DB, $CFG;
 
         // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid) &&
-            get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
-            $postfix = "_$companyid";
-        } else {
-            $postfix = "";
-        }
+        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
 
         $table = new \html_table();
         $table->attributes['class'] = 'generaltable table table-bordered w-auto';
@@ -576,7 +561,7 @@ class renderer extends \plugin_renderer_base {
         ];
         $table->data = [];
 
-        $locklevel = (int) get_config('tool_mfa', 'lockout' . $postfix);
+        $locklevel = (int) iomad::get_config('tool_mfa', 'lockout');
         $sql = "SELECT mfa.id as mfaid, u.*, mfa.createdfromip, mfa.timemodified
                   FROM {tool_mfa} mfa
                   JOIN {user} u ON mfa.userid = u.id
@@ -635,17 +620,10 @@ class renderer extends \plugin_renderer_base {
         global $CFG;
 
         // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid) &&
-            get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
-            $postfix = "_$companyid";
-        } else {
-            $postfix = "";
-        }
+        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
 
         // Try the guidance page link first.
-        if (get_config('tool_mfa', 'guidance' . $postfix)) {
+        if (iomad::get_config('tool_mfa', 'guidance')) {
             return $this->render_from_template('tool_mfa/guide_link', []);
         } else {
             return $this->output->supportemail([], true);
@@ -696,14 +674,7 @@ class renderer extends \plugin_renderer_base {
         global $CFG;
 
         // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid) &&
-            get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
-            $postfix = "_$companyid";
-        } else {
-            $postfix = "";
-        }
+        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
 
         $allloginfactors = factor::get_all_user_login_factors();
         $additionalfactors = [];
@@ -742,7 +713,7 @@ class renderer extends \plugin_renderer_base {
         // Check if we need to display a remaining attempts message.
         $remattempts = $factor->get_remaining_attempts();
         $verificationerror = $form->get_element_error('verificationcode');
-        if ($remattempts < get_config('tool_mfa', 'lockout' . $postfix) && !empty($verificationerror)) {
+        if ($remattempts < iomad::get_config('tool_mfa', 'lockout') && !empty($verificationerror)) {
             // Update the validation error for the code form field to include the remaining attempts.
             $remattemptsstr = get_string('lockoutnotification', 'tool_mfa', $factor->get_remaining_attempts());
             $updatederror = $verificationerror . '&nbsp;' . $remattemptsstr;
