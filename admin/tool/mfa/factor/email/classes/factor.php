@@ -16,6 +16,10 @@
 
 namespace factor_email;
 
+// IOMAD.
+require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+
+use iomad;
 use stdClass;
 use tool_mfa\local\factor\object_factor_base;
 
@@ -188,7 +192,7 @@ class factor extends object_factor_base {
                AND NOT label = ?';
 
         $record = $DB->get_record_sql($sql, [$USER->id, 'email', $USER->email]);
-        $duration = get_config('factor_email', 'duration' . $this->postfix);
+        $duration = iomad::get_config('factor_email', 'duration');
         $newcode = random_int(100000, 999999);
 
         if (empty($record)) {
@@ -230,7 +234,7 @@ class factor extends object_factor_base {
      */
     private function check_verification_code(string $enteredcode): bool {
         global $DB, $USER;
-        $duration = get_config('factor_email', 'duration' . $this->postfix);
+        $duration = iomad::get_config('factor_email', 'duration');
 
         // Get instance that isnt parent email type (label check).
         // This check must exclude the main singleton record, with the label as the email.

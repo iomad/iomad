@@ -16,6 +16,9 @@
 
 namespace tool_mfa\plugininfo;
 
+// IOMAD
+require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+
 use moodle_url;
 use stdClass;
 use iomad;
@@ -72,20 +75,8 @@ class factor extends \core\plugininfo\base {
      * @throws \dml_exception
      */
     public static function sort_factors_by_order(array $unsorted): array {
-        global $CFG;
-
-        // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid) &&
-            get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
-            $postfix = "_$companyid";
-        } else {
-            $postfix = "";
-        }
-
         $sorted = [];
-        $orderarray = explode(',', get_config('tool_mfa', 'factor_order' . $postfix));
+        $orderarray = explode(',', iomad::get_config('tool_mfa', 'factor_order'));
 
         foreach ($orderarray as $order => $factorname) {
             foreach ($unsorted as $key => $factor) {
@@ -143,14 +134,10 @@ class factor extends \core\plugininfo\base {
     public static function enable_plugin(string $pluginname, int $enabled): bool {
         global $CFG;
 
-        // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid)) {
-            $postfix = "_$companyid";
-        } else {
-            $postfix = "";
-        }
+        // IOMAD.
+        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+        $postfix = iomad::get_company_postfix();
+
         $enabledfactors = array_map(fn($f) => $f->name, self::get_enabled_factors());
         $currentlyenabled = in_array($pluginname, $enabledfactors);
 
@@ -388,22 +375,16 @@ class factor extends \core\plugininfo\base {
      * @private
      */
     public function uninstall_cleanup() {
-        global $DB, $CFG;
+        global $DB;
 
-        // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid) &&
-            get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
-            $postfix = "_$companyid";
-        } else {
-            $postfix = "";
-        }
+        // IOMAD.
+        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+        $postfix = iomad::get_company_postfix();
 
         $DB->delete_records('tool_mfa', ['factor' => $this->name]);
         $DB->delete_records('tool_mfa_secrets', ['factor' => $this->name]);
 
-        $order = explode(',', get_config('tool_mfa', 'factor_order' . $postfix));
+        $order = explode(',', iomad::get_config('tool_mfa', 'factor_order'));
         if (in_array($this->name, $order)) {
             $order = array_diff($order, [$this->name]);
             \tool_mfa\manager::set_factor_config(['factor_order' . $postfix => implode(',', $order)], 'tool_mfa');
