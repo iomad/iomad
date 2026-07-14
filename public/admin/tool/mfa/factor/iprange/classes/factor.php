@@ -16,6 +16,7 @@
 
 namespace factor_iprange;
 
+use local_iomad\iomad;
 use stdClass;
 use tool_mfa\local\factor\object_factor_base;
 
@@ -74,7 +75,7 @@ class factor extends object_factor_base {
      * {@inheritDoc}
      */
     public function get_state(): string {
-        $safeips = get_config('factor_iprange', 'safeips' . $this->postfix);
+        $safeips = iomad::get_config('factor_iprange', 'safeips');
 
         // TODO: Check for failures here.
 

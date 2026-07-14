@@ -14,28 +14,31 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-use local_iomadcustompage\local\models\page;
-
 /**
- *  uninstall.php contains the uninstallation procedures for local_iomadcustompage.
+ * Edit phonenumber redirect
  *
- * @package     local_iomadcustompage
- * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
+ * @package     factor_sms
+ * @copyright   2023 Raquel Ortega <raquel.ortega@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/**
- * uninstall hook for cleanup
- * @return bool
- * @throws coding_exception
- */
-function xmldb_local_iomadcustompage_uninstall(): bool {
+require_once(__DIR__ . '/../../../../../config.php');
 
-    $iomadcustompages = page::get_records();
-
-    foreach ($iomadcustompages as $iomadcustompage) {
-        $iomadcustompage->delete();
-    }
-
-    return true;
+require_login(null, false);
+if (isguestuser()) {
+    throw new require_login_exception('error:isguestuser', 'tool_mfa');
 }
+
+$sesskey = optional_param('sesskey', false, PARAM_TEXT);
+require_sesskey();
+
+// Remove session phone number.
+unset($SESSION->tool_mfa_sms_number);
+// Clean temp secrets code.
+$secretmanager = new \tool_mfa\local\secret_manager('sms');
+$secretmanager->cleanup_temp_secrets();
+
+redirect(new \moodle_url('/admin/tool/mfa/action.php', [
+    'action' => 'setup',
+    'factor' => 'sms',
+]));

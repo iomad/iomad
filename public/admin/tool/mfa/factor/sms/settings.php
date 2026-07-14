@@ -23,7 +23,11 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\iomad;
+
 defined('MOODLE_INTERNAL') || die();
+
+$postfix = iomad::get_company_postfix();
 
 if ($ADMIN->fulltree) {
     // Get the gateway records.
@@ -70,7 +74,7 @@ if ($ADMIN->fulltree) {
 
     $settings->add(
         new admin_setting_configselect(
-            'factor_sms/smsgateway',
+            'factor_sms/smsgateway' . $postfix,
             new lang_string('settings:smsgateway', 'factor_sms'),
             new lang_string('settings:smsgateway_help', 'factor_sms', $smsconfigureurl),
             0,
@@ -79,7 +83,7 @@ if ($ADMIN->fulltree) {
     );
 
     $enabled = new admin_setting_configcheckbox(
-        'factor_sms/enabled',
+        'factor_sms/enabled' . $postfix,
         new lang_string('settings:enablefactor', 'tool_mfa'),
         new lang_string('settings:enablefactor_help', 'tool_mfa'),
         0,
@@ -87,14 +91,14 @@ if ($ADMIN->fulltree) {
     $enabled->set_updatedcallback(function () {
         \tool_mfa\manager::do_factor_action(
             'sms',
-            get_config('factor_sms', 'enabled') ? 'enable' : 'disable',
+            iomad::get_config('factor_sms', 'enabled') ? 'enable' : 'disable',
         );
     });
     $settings->add($enabled);
 
     $settings->add(
         new admin_setting_configtext(
-            'factor_sms/weight',
+            'factor_sms/weight' . $postfix,
             new lang_string('settings:weight', 'tool_mfa'),
             new lang_string('settings:weight_help', 'tool_mfa'),
             100,
@@ -104,7 +108,7 @@ if ($ADMIN->fulltree) {
 
     $settings->add(
         new admin_setting_configduration(
-            'factor_sms/duration',
+            'factor_sms/duration' . $postfix,
             new lang_string('settings:duration', 'tool_mfa'),
             new lang_string('settings:duration_help', 'tool_mfa'),
             30 * MINSECS,

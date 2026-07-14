@@ -33,15 +33,6 @@ $instanceid = required_param('instance', PARAM_INT);
 $pass = optional_param('pass', '0', PARAM_INT);
 $secret = optional_param('secret', 0, PARAM_INT);
 
-// IOMAD
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
-if ($companyid > 0 &&
-            get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
-    $postfix = "_$companyid";
-} else {
-    $postfix = "";
-}
-
 $context = context_system::instance();
 $PAGE->set_context($context);
 $url = new moodle_url('/admin/tool/mfa/factor/email/email.php',
@@ -107,7 +98,7 @@ if ($fromform = $form->get_data()) {
         $event->trigger();
 
         // Suspend user account.
-        if (get_config('factor_email', 'suspend' . $postfix)) {
+        if (iomad::get_config('factor_email', 'suspend')) {
             $DB->set_field('user', 'suspended', 1, ['id' => $user->id]);
         }
 

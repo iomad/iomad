@@ -16,6 +16,7 @@
 
 namespace factor_sms;
 
+use local_iomad\iomad;
 use moodle_url;
 use stdClass;
 use tool_mfa\local\factor\object_factor_base;
@@ -152,7 +153,7 @@ class factor extends object_factor_base {
             return $mform;
         }
 
-        $duration = get_config('factor_sms', 'duration');
+        $duration = iomad::get_config('factor_sms', 'duration');
         $code = $this->secretmanager->create_secret($duration, true);
         if (!empty($code)) {
             $this->sms_verification_code($code, $phonenumber);
@@ -351,7 +352,7 @@ class factor extends object_factor_base {
      * @return bool
      */
     public function show_setup_buttons(): bool {
-        if (get_config('factor_sms', 'smsgateway') > 0) {
+        if (iomad::get_config('factor_sms', 'smsgateway') > 0) {
             return true;
         }
         return false;
@@ -375,7 +376,7 @@ class factor extends object_factor_base {
     private function generate_and_sms_code(): ?int {
         global $DB, $USER;
 
-        $duration = get_config('factor_sms', 'duration');
+        $duration = iomad::get_config('factor_sms', 'duration');
         $instance = $DB->get_record('tool_mfa', ['factor' => $this->name, 'userid' => $USER->id, 'revoked' => 0]);
         if (empty($instance)) {
             return null;
@@ -417,7 +418,7 @@ class factor extends object_factor_base {
             recipientuserid: null,
             issensitive: true,
             async: false,
-            gatewayid: get_config('factor_sms', 'smsgateway'),
+            gatewayid: iomad::get_config('factor_sms', 'smsgateway'),
         );
     }
 

@@ -16,6 +16,7 @@
 
 namespace factor_role;
 
+use local_iomad\iomad;
 use stdClass;
 use tool_mfa\local\factor\object_factor_base;
 
@@ -75,7 +76,8 @@ class factor extends object_factor_base {
      */
     public function get_state(): string {
         global $USER;
-        $rolestring = get_config('factor_role', 'roles' . $this->postfix);
+
+        $rolestring = iomad::get_config('factor_role', 'roles');
 
         // Nothing selected, everyone passes.
         if (empty($rolestring)) {
@@ -140,7 +142,8 @@ class factor extends object_factor_base {
      * {@inheritDoc}
      */
     public function get_summary_condition(): string {
-        $selectedroles = get_config('factor_role', 'roles' . $this->postfix);
+
+        $selectedroles = iomad::get_config('factor_role', 'roles');
         if (empty($selectedroles)) {
             return get_string('summarycondition', 'factor_role', get_string('none'));
         }

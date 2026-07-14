@@ -34,13 +34,8 @@ require_capability('moodle/site:config', context_system::instance());
 
 $returnurl = get_local_referer(false);
 
-// IOMAD
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
-if ($companyid > 0) {
-    $postfix = "_$companyid";
-} else {
-    $postfix = "";
-}
+// IOMAD.
+$postfix = iomad::get_company_postfix();
 
 $PAGE->set_url('/admin/tool/mfa/index.php');
 

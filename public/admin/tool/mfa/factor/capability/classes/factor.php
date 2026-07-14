@@ -16,6 +16,7 @@
 
 namespace factor_capability;
 
+use local_iomad\iomad;
 use stdClass;
 use tool_mfa\local\factor\object_factor_base;
 
@@ -75,7 +76,8 @@ class factor extends object_factor_base {
      */
     public function get_state(): string {
         global $USER;
-        $adminpass = (bool) get_config('factor_capability', 'adminpasses' . $this->postfix);
+
+        $adminpass = (bool) iomad::get_config('factor_capability', 'adminpasses');
 
         // Do anything check is controlled from factor config.
         if (!has_capability('factor/capability:cannotpassfactor', \context_system::instance(), $USER, $adminpass)) {

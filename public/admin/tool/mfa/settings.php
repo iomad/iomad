@@ -27,13 +27,8 @@ use local_iomad\iomad;
 
 defined('MOODLE_INTERNAL') || die();
 
-// IOMAD
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
-if ($companyid > 0) {
-    $postfix = "_$companyid";
-} else {
-    $postfix = "";
-}
+// IOMAD.
+$postfix = iomad::get_company_postfix();
 
 if ($hassiteconfig) {
     $ADMIN->add('tools', new admin_category('toolmfafolder', new lang_string('pluginname', 'tool_mfa'), false));

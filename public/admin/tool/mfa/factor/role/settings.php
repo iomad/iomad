@@ -27,30 +27,23 @@ use local_iomad\iomad;
 
 defined('MOODLE_INTERNAL') || die();
 
-global $CFG;
-
 // IOMAD
-
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
-$postfix = "";
-if ($companyid > 0) {
-    $postfix = "_$companyid";
-}
+$postfix = iomad::get_company_postfix();
 
 if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_heading('factor_role/description', '',
         new lang_string('settings:description', 'factor_role')));
     $settings->add(new admin_setting_heading('factor_role/settings', new lang_string('settings', 'moodle'), ''));
 
-    $enabled = new admin_setting_configcheckbox('factor_role/enabled',
+    $enabled = new admin_setting_configcheckbox('factor_role/enabled' . $postfix,
         new lang_string('settings:enablefactor', 'tool_mfa'),
         new lang_string('settings:enablefactor_help', 'tool_mfa'), 0);
     $enabled->set_updatedcallback(function () {
-        \tool_mfa\manager::do_factor_action('role', get_config('factor_role', 'enabled') ? 'enable' : 'disable');
+        \tool_mfa\manager::do_factor_action('role', iomad::get_config('factor_role', 'enabled') ? 'enable' : 'disable');
     });
     $settings->add($enabled);
 
-    $settings->add(new admin_setting_configtext('factor_role/weight',
+    $settings->add(new admin_setting_configtext('factor_role/weight' . $postfix,
         new lang_string('settings:weight', 'tool_mfa'),
         new lang_string('settings:weight_help', 'tool_mfa'), 100, PARAM_INT));
 
@@ -60,7 +53,7 @@ if ($ADMIN->fulltree) {
         $choices[$role->id] = role_get_name($role);
     }
 
-    $settings->add(new admin_setting_configmultiselect('factor_role/roles',
+    $settings->add(new admin_setting_configmultiselect('factor_role/roles' . $postfix,
         new lang_string('settings:roles', 'factor_role'),
         new lang_string('settings:roles_help', 'factor_role'), ['admin'], $choices));
 }

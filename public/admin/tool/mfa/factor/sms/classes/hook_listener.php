@@ -18,6 +18,7 @@ namespace factor_sms;
 
 use core_sms\hook\before_gateway_deleted;
 use core_sms\hook\before_gateway_disabled;
+use local_iomad\iomad;
 
 /**
  * Hook listener for SMS factor.
@@ -39,7 +40,7 @@ class hook_listener {
         before_gateway_deleted|before_gateway_disabled $hook,
     ): void {
         try {
-            $smsgatewayid = (int)get_config('factor_sms', 'smsgateway');
+            $smsgatewayid = (int)iomad::get_config('factor_sms', 'smsgateway');
             if ($smsgatewayid && $smsgatewayid === (int)$hook->gateway->id) {
                 $hook->stop_propagation();
             }

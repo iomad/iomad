@@ -16,6 +16,8 @@
 
 namespace factor_sms;
 
+use local_iomad\iomad;
+
 /**
  * Helper class for shared sms gateway functions
  *
@@ -48,7 +50,7 @@ class helper {
         }
 
         // Prepend country code.
-        $countrycode = get_config('factor_sms', 'countrycode');
+        $countrycode = iomad::get_config('factor_sms', 'countrycode');
         $phonenumber = !empty($countrycode) ? '+' . $countrycode . $phonenumber : $phonenumber;
 
         return $phonenumber;
