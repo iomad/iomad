@@ -446,7 +446,6 @@ class factor extends \core\plugininfo\base {
     public static function change_plugin_order(string $pluginname, int $direction): bool {
         $activefactors = array_keys(self::get_sorted_plugins(true));
         $key = array_search($pluginname, $activefactors);
-error_log("DIRECTION = $direction AND PLUGIN NAME = $pluginname");
 
         if ($key === false) {
             return false;
