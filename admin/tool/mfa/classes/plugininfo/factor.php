@@ -16,9 +16,6 @@
 
 namespace tool_mfa\plugininfo;
 
-// IOMAD
-require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
-
 use moodle_url;
 use stdClass;
 use local_iomad\iomad;
@@ -338,12 +335,7 @@ class factor extends \core\plugininfo\base {
     public function uninstall_cleanup() {
         global $DB;
 
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid)) {
-            $postfix = "_$companyid";
-        } else {
-            $postfix = "";
-        }
+        $postfix = iomad::get_company_postfix();
 
         $DB->delete_records('tool_mfa', ['factor' => $this->name]);
         $DB->delete_records('tool_mfa_secrets', ['factor' => $this->name]);

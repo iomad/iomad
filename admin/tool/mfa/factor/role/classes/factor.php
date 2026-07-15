@@ -16,7 +16,7 @@
 
 namespace factor_role;
 
-use iomad;
+use local_iomad\iomad;
 use stdClass;
 use tool_mfa\local\factor\object_factor_base;
 
@@ -76,9 +76,6 @@ class factor extends object_factor_base {
      */
     public function get_state(): string {
         global $CFG, $USER;
-
-        // IOMAD.
-        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
 
         $rolestring = iomad::get_config('factor_role', 'roles');
 
@@ -145,10 +142,6 @@ class factor extends object_factor_base {
      * {@inheritDoc}
      */
     public function get_summary_condition(): string {
-        global $CFG;
-
-        // IOMAD.
-        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
 
         $selectedroles = iomad::get_config('factor_role', 'roles');
         if (empty($selectedroles)) {

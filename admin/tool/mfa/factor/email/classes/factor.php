@@ -16,10 +16,7 @@
 
 namespace factor_email;
 
-// IOMAD.
-require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
-
-use iomad;
+use local_iomad\iomad;
 use stdClass;
 use tool_mfa\local\factor\object_factor_base;
 

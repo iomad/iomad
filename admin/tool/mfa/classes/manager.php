@@ -780,14 +780,9 @@ class manager {
         global $CFG;
 
         // IOMAD
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if ($companyid > 0) {
-            $postfix = "_$companyid";
-        } else {
-            $postfix = "";
-        }
+        $postfix = iomad::get_company_postfix();
 
-        $order = explode(',', iomad::get_config('tool_mfa', 'factor_order'));
+        $order = explode(',', iomad::get_config('tool_mfa', 'factor_order', null, true));
         $key = array_search($factorname, $order);
 
         switch ($action) {

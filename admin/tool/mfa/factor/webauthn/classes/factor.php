@@ -191,10 +191,7 @@ class factor extends object_factor_base {
      * @return \MoodleQuickForm $mform
      */
     public function login_form_definition(\MoodleQuickForm $mform): \MoodleQuickForm {
-        global $CFG, $PAGE, $USER, $SESSION;
-
-        // IOMAD.
-        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+        global $PAGE, $USER, $SESSION;
 
         $mform->addElement('hidden', 'response_input', '', ['id' => 'id_response_input']);
         $mform->setType('response_input', PARAM_RAW);
@@ -284,10 +281,7 @@ class factor extends object_factor_base {
      * @return \MoodleQuickForm $mform
      */
     public function setup_factor_form_definition(\MoodleQuickForm $mform): \MoodleQuickForm {
-        global $CFG, $PAGE, $USER, $SESSION, $OUTPUT;
-
-        // IOMAD.
-        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+        global $PAGE, $USER, $SESSION, $OUTPUT;
 
         $headingstring = $mform->elementExists('replaceid') ? 'replacefactor' : 'setupfactor';
         $mform->addElement('html', $OUTPUT->heading(get_string($headingstring, 'factor_webauthn'), 2));

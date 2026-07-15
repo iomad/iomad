@@ -303,6 +303,26 @@ class iomad {
     }
 
     /**
+     * Get the current postfix for settings.
+     *
+     * @param string $separator
+     * @return string
+     */
+    public static function get_company_postfix(string $separator): string {
+
+        // Set the default blank.
+        $postfix = "";
+
+        // Are we in a company?
+        $companyid = self::get_my_companyid(context_system::instance(), false);
+        if ($companyid > 0) {
+            $postfix = $separator . $companyid;
+        }
+
+        return $postfix;
+    }
+
+    /**
      * SQL text processing to add a company course table join
      *
      * @param string $alias
@@ -2309,7 +2329,7 @@ class iomad {
      * @param int $companyid
      * @return bool|object|string
      */
-    public static function get_config($plugin, $name = null, $companyid = 0) {
+    public static function get_config($plugin, $name = null, $companyid = 0, $force = false) {
 
         // Did we get passed an item?
         if (empty($name)) {
@@ -2330,7 +2350,8 @@ class iomad {
 
         // Is there a company value?
         $value = get_config($plugin, $companyname);
-        if ($value === false || $value == '') {
+        if (!$force &&
+            ($value === false || $value == '')) {
             // Use the site setting.
             return get_config($plugin, $name);
         } else {

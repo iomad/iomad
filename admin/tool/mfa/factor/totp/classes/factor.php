@@ -29,9 +29,7 @@ require_once(__DIR__.'/../extlib/ParagonIE/ConstantTime/EncoderInterface.php');
 require_once(__DIR__.'/../extlib/ParagonIE/ConstantTime/Binary.php');
 require_once(__DIR__.'/../extlib/ParagonIE/ConstantTime/Base32.php');
 
-require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
-
-use iomad;
+use local_iomad\iomad;
 use MoodleQuickForm;
 use tool_mfa\local\factor\object_factor_base;
 use OTPHP\TOTP;

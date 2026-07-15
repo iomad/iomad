@@ -73,9 +73,6 @@ abstract class object_factor_base implements object_factor {
     public function load_locked_state(): void {
         global $CFG, $DB, $USER;
 
-        // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
-
         // Check if lockcounter column exists (incase upgrade hasnt run yet).
         // Only 'input factors' are lockable.
         if ($this->is_enabled() && $this->is_lockable()) {
@@ -111,9 +108,6 @@ abstract class object_factor_base implements object_factor {
     public function is_enabled(): bool {
         global $CFG;
 
-        // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
-
         // Have to be explicit here - so not using $this value without checking.
         $status = iomad::get_config('factor_'.$this->name, 'enabled');
         if ($status == 1) {
@@ -132,9 +126,6 @@ abstract class object_factor_base implements object_factor {
      */
     public function get_weight(): int {
         global $CFG;
-
-        // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
 
         $weight = iomad::get_config('factor_'.$this->name, 'weight');
         if ($weight) {
@@ -655,9 +646,6 @@ abstract class object_factor_base implements object_factor {
     public function increment_lock_counter(): void {
         global $CFG, $DB, $USER;
 
-        // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
-
         // First make sure the state is loaded.
         $this->load_locked_state();
 
@@ -683,10 +671,6 @@ abstract class object_factor_base implements object_factor {
      * @return int the number of attempts at this factor remaining.
      */
     public function get_remaining_attempts(): int {
-        global $CFG;
-
-        // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
 
         $lockthreshold = iomad::get_config('tool_mfa', 'lockout');
         if ($this->lockcounter === -1) {

@@ -29,15 +29,8 @@ defined('MOODLE_INTERNAL') || die();
 
 global $OUTPUT;
 
-global $CFG;
-
 // IOMAD
-
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
-$postfix = "";
-if ($companyid > 0) {
-    $postfix = "_$companyid";
-}
+$postfix = iomad::get_company_postfix();
 
 if ($ADMIN->fulltree) {
     $enabled = new admin_setting_configcheckbox('factor_iprange/enabled' . $postfix,
@@ -54,7 +47,7 @@ if ($ADMIN->fulltree) {
 
 
     // Current IP validation against list for description.
-    $allowedips = get_config('factor_iprange', 'safeips' . $postfix);
+    $allowedips = iomad::get_config('factor_iprange', 'safeips');
     if (trim($allowedips) == '') {
         $message = 'allowedipsempty';
         $type = 'notifyerror';
