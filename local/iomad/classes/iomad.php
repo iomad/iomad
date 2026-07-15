@@ -308,7 +308,7 @@ class iomad {
      * @param string $separator
      * @return string
      */
-    public static function get_company_postfix(string $separator): string {
+    public static function get_company_postfix(?string $separator = '_'): string {
 
         // Set the default blank.
         $postfix = "";
