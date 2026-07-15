@@ -338,12 +338,7 @@ class factor extends \core\plugininfo\base {
     public function uninstall_cleanup() {
         global $DB;
 
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid)) {
-            $postfix = "_$companyid";
-        } else {
-            $postfix = "";
-        }
+        $postfix = iomad::get_company_postfix();
 
         $DB->delete_records('tool_mfa', ['factor' => $this->name]);
         $DB->delete_records('tool_mfa_secrets', ['factor' => $this->name]);

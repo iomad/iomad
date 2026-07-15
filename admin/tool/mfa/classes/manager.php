@@ -793,14 +793,9 @@ class manager {
 
         // IOMAD
         require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid)) {
-            $postfix = "_$companyid";
-        } else {
-            $postfix = "";
-        }
+        $postfix = iomad::get_company_postfix();
 
-        $order = explode(',', iomad::get_config('tool_mfa', 'factor_order'));
+        $order = explode(',', iomad::get_config('tool_mfa', 'factor_order', null, true));
         $key = array_search($factorname, $order);
 
         switch ($action) {

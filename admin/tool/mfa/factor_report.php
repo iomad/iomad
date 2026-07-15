@@ -27,7 +27,6 @@ require_once($CFG->libdir.'/adminlib.php');
 
 // IOMAD
 require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
 
 admin_externalpage_setup('factorreport');
 

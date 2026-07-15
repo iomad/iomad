@@ -35,12 +35,7 @@ $returnurl = get_local_referer(false);
 
 // IOMAD
 require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
-if (!empty($companyid)) {
-    $postfix = "_$companyid";
-} else {
-    $postfix = "";
-}
+$postfix = iomad::get_company_postfix();
 
 $PAGE->set_url('/admin/tool/mfa/index.php');
 
