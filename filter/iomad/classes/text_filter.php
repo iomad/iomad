@@ -50,7 +50,7 @@ class text_filter extends \core_filters\text_filter {
 
         // Alter the URL used to match the current url.
         // Find all URLS for any src attribute.
-        $pattern = '/((?:src|href)="http?:\/\/)\S*?(\/\S*?pluginfile\.php\S*?")/i';
+        $pattern = '/((?:src|href)="http.*?:\/\/)\S*?(\/\S*?pluginfile\.php\S*?")/i';
 
         // Get the current URL which is being used.
         $url = $CFG->wwwroot;
