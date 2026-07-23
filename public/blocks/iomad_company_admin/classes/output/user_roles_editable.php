@@ -100,7 +100,7 @@ class user_roles_editable extends inplace_editable {
         $listofroles = [];
         $role = json_decode($this->value);
 
-        if ($this->editable || array_key_exists($role, $this->profileroles)) {
+        if ($this->editable || array_key_exists($role, $this->assignableroles)) {
             $listofroles[] = format_string($this->assignableroles[$role], true, ['context' => $this->context]);
         }
 
