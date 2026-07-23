@@ -2712,8 +2712,16 @@ It could very slow or timeout. The function is designed to search some specific 
                 ];
 
                 // Is this a department manager?
-                if (!empty($companydetails->managertype) &&
-                    $companydetails->managertype == 2) {
+                if ($DB->record_exists(
+                    'local_iomad_company_users',
+                    [
+                        'companyid' => $company->id,
+                        'userid' => $user->id,
+                        'managertype' => 2,
+                    ])) {
+
+                    // Make sure we enforce it.
+                    $companydetails->managertype = 2;
 
                     // Get their main department.
                     $userlevels = $company->get_userlevel($user);
