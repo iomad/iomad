@@ -28,11 +28,7 @@ defined('MOODLE_INTERNAL') || die;
 use local_iomad\iomad;
 
 // IOMAD.
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
-$postfix = "";
-if ($companyid > 0) {
-    $postfix = "_$companyid";
-}
+$postfix = iomad::get_company_postfix();
 
 if ($hassiteconfig && !empty($USER->id)) {
 

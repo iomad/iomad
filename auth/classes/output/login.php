@@ -90,15 +90,6 @@ class login implements renderable, templatable {
     public function __construct(array $authsequence, $username = '') {
         global $CFG, $OUTPUT, $PAGE;
 
-        // IOMAD
-        
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if ($companyid > 0) {
-            $postfix = "_$companyid";
-        } else {
-            $postfix = "";
-        }
-
         $this->username = $username;
 
         $languagedata = new \core\output\language_menu($PAGE);

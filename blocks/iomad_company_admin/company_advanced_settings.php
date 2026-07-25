@@ -46,7 +46,7 @@ $systemcontext = context_system::instance();
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
-$postfix = "_$companyid";
+$postfix = iomad::get_company_postfix();
 
 // Are we allowed to do anything?
 iomad::require_capability('block/iomad_company_admin:companyadvancedsettings', $companycontext);

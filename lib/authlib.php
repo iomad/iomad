@@ -133,15 +133,8 @@ class auth_plugin_base {
      * Constructor function for the class
      */
     function __construct() {
-        global $CFG;
 
-        
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if ($companyid > 0) {
-            $this->postfix = "_$companyid";
-        } else {
-            $this->postfix = "";
-        }
+        $this->postfix = iomad::get_company_postfix();
     }
 
     /**
