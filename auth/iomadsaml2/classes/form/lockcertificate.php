@@ -28,6 +28,7 @@ namespace auth_iomadsaml2\form;
 defined('MOODLE_INTERNAL') || die();
 
 use html_writer;
+use iomad;
 use moodleform;
 
 require_once($CFG->libdir . '/formslib.php');
