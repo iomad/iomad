@@ -43,7 +43,7 @@ if ($hassiteconfig && !empty($USER->id)) {
         30 * 24 * 60 * 60)
     );
 
-    if ($companyid > 0) {
+    if (!empty($postfix)) {  // Requires that $companyid > 0.
         $settings->add(new admin_setting_configduration(
             'local_report_completion_overview/warningduration' . $postfix,
             get_string('warningdurationcompany', 'local_report_completion_overview'),
