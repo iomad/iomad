@@ -57,6 +57,10 @@ final class licence_management_test extends advanced_testcase {
         $this->resetAfterTest();
         $this->markTestIncomplete();
 
+        // Create company.
+        $company = $generator->create_company();
+        $companyid = $company->id;
+
         // Create licence.
         $licenserecord = (object) [];
         $licenserecord->companyid = $companyid;
@@ -84,6 +88,10 @@ final class licence_management_test extends advanced_testcase {
         $this->resetAfterTest();
         $this->setAdminUser();
         $generator = $this->getDataGenerator()->get_plugin_generator('local_iomad');
+
+        // Create company.
+        $company = $generator->create_company();
+        $companyid = $company->id;
 
         // Create licence.
         $licenserecord = (object) [];
