@@ -43,7 +43,6 @@ use block_iomad_company_admin\event\{
     user_license_unassigned,
     user_license_used,
 };
-use cache;
 use cache_helper;
 use context_course;
 use context_system;
@@ -86,7 +85,7 @@ class company {
     /** @var int company id */
     public $id = 0;
 
-    /** @var array company record */
+    /** @var object company record */
     protected $companyrecord = null;
 
     /** @var object company context */
@@ -126,7 +125,25 @@ class company {
 
         // Required fields.
         if (empty($data->name) || empty($data->shortname) || empty($data->city) || empty($data->country)) {
-            throw new moodle_exception(get_string('errorcompanydefaults', 'local_iomad'));
+            // Create a list of missing fields.
+            $a = '';
+            if (empty($data->name)) {
+                $a = $a . 'name, ';
+            }
+            if (empty($data->shortname)) {
+                $a = $a . 'shortname, ';
+            }
+            if (empty($data->city)) {
+                $a = $a . 'city, ';
+            }
+            if (empty($data->country)) {
+                $a = $a . 'country';
+            }
+            $a = trim($a, ', ');
+            $aindex = strrpos($a, ', ');
+            $a = substr($a, 0, $aindex) . ', and ' . substr($a, $aindex - strlen($a) + 2);
+
+            throw new moodle_exception(get_string('errorcompanydefaults', 'local_iomad', $a));
         }
 
         // Removing whitespace from strings.
@@ -145,7 +162,7 @@ class company {
 
         $data->shortname = clean_param($data->shortname, PARAM_NOTAGS);  // Must be varchar(25).
         if (!preg_match('/^[A-Za-z0-9_]+$/', $data->shortname)) {
-            throw new Exception(get_string('errorbadcompanyshortname', 'local_iomad'));
+            throw new moodle_exception(get_string('errorbadcompanyshortname', 'local_iomad'));
         }
 
         // If the company already exists, update it.
@@ -164,6 +181,7 @@ class company {
             ]);
             $event->trigger();
         } else {
+            unset($data->id);  // If the record already exists, we want to avoid ID conflicts.
             $companyid = $DB->insert_record('local_iomad_companies', $data);
             $data->id = $companyid;
 
@@ -222,7 +240,7 @@ class company {
                 }
             }
 
-            // Update record.
+            // Update new record.
             $DB->update_record('local_iomad_companies', $data);
         } else {
             // Set up a profiles field category for this company.
