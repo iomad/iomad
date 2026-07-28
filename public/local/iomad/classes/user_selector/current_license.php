@@ -158,7 +158,7 @@ class current_license extends company_base {
                        $this->required_fields_sql('u') . ',
                        u.email,
                        clu.isusing ';
-            $countfields = 'SELECT (clu.id)';
+            $countfields = 'SELECT COUNT(DISTINCT clu.id)';
 
             $sql = " FROM {local_iomad_company_license_users} clu
                      JOIN {user} u ON (clu.userid = u.id)
