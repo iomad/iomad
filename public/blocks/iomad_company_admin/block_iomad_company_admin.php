@@ -269,7 +269,7 @@ class block_iomad_company_admin extends block_base {
             $panes[4] = ['category' => 'LicenseAdmin', 'items' => [], 'selected' => $selected];
             $selected = false;
         }
-        if ($viewcompanytab) {
+        if ($viewcompetencytab) {
             $tabs[] = [
                 'category' => 'CompetencyAdmin',
                 'icon' => 'fa-cubes',
