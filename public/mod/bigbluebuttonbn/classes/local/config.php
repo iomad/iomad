@@ -154,9 +154,9 @@ class config {
         global $CFG;
 
         // IOMAD.
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if ($companyid > 0) {
-            $companysetting = $setting . "_$companyid";
+        $postfix = iomad::get_company_postfix();
+        if (!empty($postfix)) {
+            $companysetting = $setting . $postfix;
             if (isset($CFG->bigbluebuttonbn[$companysetting])) {
                 return (string) $CFG->bigbluebuttonbn[$companysetting];
             }
