@@ -89,6 +89,6 @@ class iomad_customcert {
         $template = new template($templaterec);
 
         // Generate the PDF output.
-        return $template->generate_pdf(false, $certissue->id, true);
+        return $template->generate_pdf(false, $certissue->userid, true);
     }
 }
