@@ -1600,7 +1600,7 @@ class company_user {
 
                 // Remove LTI information.
                 if (enrol_is_enabled('lti')) {
-                    $coursecontext = context_course::instance($courseid);
+                    $contextcourse = context_course::instance($courseid);
                     if ($ltitools = $DB->get_record('enrol_lti_tools', ['contextid' => $contextcourse->id])) {
                         foreach ($ltitools as $ltitool) {
                             $DB->set_value(
