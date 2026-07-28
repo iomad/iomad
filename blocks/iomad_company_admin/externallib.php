@@ -2723,8 +2723,22 @@ It could very slow or timeout. The function is designed to search some specific 
                     // Make sure we enforce it.
                     $companydetails->managertype = 2;
 
-                    // Get their main department.
-                    $userlevels = $company->get_userlevel($user);
+                    // Get their main department - which we have to do by hand.
+                    $userlevels = $DB->get_records_sql(
+                        "SELECT d.*
+                         FROM {local_iomad_company_departments} d
+                         JOIN {local_iomad_company_users} cu ON (
+                             d.companyid = cu.companyid
+                             AND d.id = cu.departmentid
+                         )
+                         WHERE cu.userid = :userid
+                         AND cu.companyid = :companyid
+                         ORDER BY d.name",
+                        [
+                            'userid' => $user->id,
+                            'companyid' => $company->id,
+                        ]
+                    );
                     $licenserec['departmentid'] = key($userlevels);
                 }
                 $licenseid = $DB->insert_record('local_iomad_company_licenses', $licenserec);
