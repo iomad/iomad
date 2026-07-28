@@ -157,10 +157,10 @@ class config {
         $postfix = iomad::get_company_postfix();
         if (!empty($postfix)) {
             $companysetting = $setting . $postfix;
-            if (isset($CFG->bigbluebuttonbn[$companysetting])) {
+            if (!empty($CFG->bigbluebuttonbn[$companysetting])) {
                 return (string) $CFG->bigbluebuttonbn[$companysetting];
             }
-            if (isset($CFG->{'bigbluebuttonbn_' . $companysetting})) {
+            if (!empty($CFG->{'bigbluebuttonbn_' . $companysetting})) {
                 return (string) $CFG->{'bigbluebuttonbn_' . $companysetting};
             }
         }
