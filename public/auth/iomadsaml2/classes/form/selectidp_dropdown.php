@@ -40,7 +40,6 @@ require_once("$CFG->libdir/formslib.php");
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class selectidp_dropdown extends moodleform {
-
     /**
      * Definition
      */
@@ -56,10 +55,8 @@ class selectidp_dropdown extends moodleform {
         $mform->addElement('hidden', 'wants', $wants);
         $mform->setType('wants', PARAM_URL);
         $mform->addElement('select', 'idp', '', $idpentityids);
-        $mform->addElement('checkbox', 'rememberidp' , '', get_string('rememberidp', 'auth_iomadsaml2'));
+        $mform->addElement('checkbox', 'rememberidp', '', get_string('rememberidp', 'auth_iomadsaml2'));
 
-        $mform->addElement('submit', 'login', $idpname, array('style' => 'margin-left:0px'));
+        $mform->addElement('submit', 'login', $idpname, ['style' => 'margin-left:0px']);
     }
-
 }
-

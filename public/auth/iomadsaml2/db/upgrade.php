@@ -37,7 +37,6 @@ function xmldb_auth_iomadsaml2_upgrade($oldversion) {
     $dbman = $DB->get_manager();
 
     if ($oldversion < 2016031701) {
-
         // Define table auth_iomadsaml2_vkstore to be created.
         $table = new xmldb_table('auth_samltwo_kvstore');
 
@@ -49,10 +48,10 @@ function xmldb_auth_iomadsaml2_upgrade($oldversion) {
         $table->add_field('expire', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
 
         // Adding keys to table auth_iomadsaml2_vkstore.
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
 
         // Adding indexes to table auth_iomadsaml2_vkstore.
-        $table->add_index('key_type', XMLDB_INDEX_UNIQUE, array('k', 'type'));
+        $table->add_index('key_type', XMLDB_INDEX_UNIQUE, ['k', 'type']);
 
         // Conditionally launch create table for auth_iomadsaml2_vkstore.
         if (!$dbman->table_exists($table)) {
@@ -74,21 +73,21 @@ function xmldb_auth_iomadsaml2_upgrade($oldversion) {
     }
 
     if ($oldversion < 2016080302) {
-        // Update plugin configuration settings from auth_iomadsaml2 to auth/saml2.
+        // Update plugin configuration settings from auth_iomadsaml2 to auth/iomadsaml2.
         $currentconfig = get_config('auth_iomadsaml2');
 
         // Remove old config.
-        $rs = $DB->get_recordset_select('config_plugins', 'plugin = ?', array('auth_iomadsaml2'));
+        $rs = $DB->get_recordset_select('config_plugins', 'plugin = ?', ['auth_iomadsaml2']);
         foreach ($rs as $record) {
             if ($record->name != 'version') {
-                $DB->delete_records('config_plugins', array('id' => $record->id));
+                $DB->delete_records('config_plugins', ['id' => $record->id]);
             }
         }
         $rs->close();
 
         // Set new config.
         foreach ($currentconfig as $key => $value) {
-            set_config($key, $value, 'auth/saml2');
+            set_config($key, $value, 'auth/iomadsaml2');
         }
 
         // Saml2 savepoint reached.
@@ -96,13 +95,13 @@ function xmldb_auth_iomadsaml2_upgrade($oldversion) {
     }
 
     if ($oldversion < 2017051800) {
-        // Update plugin configuration settings from auth/saml2 to auth_iomadsaml2.
+        // Update plugin configuration settings from auth/iomadsaml2 to auth_iomadsaml2.
         $currentconfig = (array)get_config('auth_iomadsaml2');
-        $oldconfig = $DB->get_records('config_plugins', ['plugin' => 'auth/saml2']);
+        $oldconfig = $DB->get_records('config_plugins', ['plugin' => 'auth/iomadsaml2']);
 
         // Convert old config items to new.
         foreach ($oldconfig as $item) {
-            $DB->delete_records('config_plugins', array('id' => $item->id));
+            $DB->delete_records('config_plugins', ['id' => $item->id]);
             set_config($item->name, $item->value, 'auth_iomadsaml2');
         }
 
@@ -117,13 +116,13 @@ function xmldb_auth_iomadsaml2_upgrade($oldversion) {
 
     // Depending on the path from the previous version branch, we may need to run this again.
     if ($oldversion < 2018021900) {
-        // Update plugin configuration settings from auth/saml2 to auth_iomadsaml2.
+        // Update plugin configuration settings from auth/iomadsaml2 to auth_iomadsaml2.
         $currentconfig = (array)get_config('auth_iomadsaml2');
-        $oldconfig = $DB->get_records('config_plugins', ['plugin' => 'auth/saml2']);
+        $oldconfig = $DB->get_records('config_plugins', ['plugin' => 'auth/iomadsaml2']);
 
         // Convert old config items to new.
         foreach ($oldconfig as $item) {
-            $DB->delete_records('config_plugins', array('id' => $item->id));
+            $DB->delete_records('config_plugins', ['id' => $item->id]);
             set_config($item->name, $item->value, 'auth_iomadsaml2');
         }
 
@@ -138,10 +137,10 @@ function xmldb_auth_iomadsaml2_upgrade($oldversion) {
 
     if ($oldversion < 2018021901) {
         /* Multiple IdP support
-         * sitedata/saml2/idp.xml is now sitedata/saml2/md5($entityid).idp.xml
+         * sitedata/iomadsaml2/idp.xml is now sitedata/iomadsaml2/md5($entityid).idp.xml
          */
 
-        $xmlfile = $CFG->dataroot . "/saml2/idp.xml";
+        $xmlfile = $CFG->dataroot . "/iomadsaml2/idp.xml";
         $entityids = [];
         $mduinames = [];
 
@@ -167,7 +166,7 @@ function xmldb_auth_iomadsaml2_upgrade($oldversion) {
             if ($idpelements && isset($idpelements[0])) {
                 $entityid = (string)$idpelements[0]->attributes('', true)->entityID[0];
                 $entityids[$type] = $entityid;
-                rename($xmlfile, $CFG->dataroot . "/saml2/" . md5($entityid) . ".idp.xml");
+                rename($xmlfile, $CFG->dataroot . "/iomadsaml2/" . md5($entityid) . ".idp.xml");
 
                 // Locate a displayname element provided by the IdP XML metadata.
                 $names = @$idpelements[0]->xpath('//mdui:DisplayName');
@@ -206,7 +205,6 @@ function xmldb_auth_iomadsaml2_upgrade($oldversion) {
     }
 
     if ($oldversion < 2019022100) {
-
         // Define table auth_iomadsaml2_idps to be created.
         $tablename = 'auth_iomadsaml2_idps';
         $table = new xmldb_table($tablename);
@@ -224,7 +222,7 @@ function xmldb_auth_iomadsaml2_upgrade($oldversion) {
         $table->add_field('alias', XMLDB_TYPE_CHAR, '50', null, null, null, null);
 
         // Adding keys to table auth_iomadsaml2_idps.
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
 
         // Conditionally launch create table for auth_iomadsaml2_idps.
         if (!$dbman->table_exists($table)) {
@@ -379,9 +377,9 @@ function xmldb_auth_iomadsaml2_upgrade($oldversion) {
     if ($oldversion < 2022031503) {
         if (in_array($CFG->dbtype, ['mysqli', 'mariadb'])) {
             $tolower = get_config('auth_iomadsaml2', 'tolower');
-            if (empty($tolower) || $tolower == auth_iomadsaml2\admin\saml2_settings::OPTION_TOLOWER_EXACT) {
+            if (empty($tolower) || $tolower == auth_iomadsaml2\admin\iomadsaml2_settings::OPTION_TOLOWER_EXACT) {
                 // Previous versions of the code meant that mariadb operated in a case-insensitive manner set to prevent issues.
-                set_config('tolower', auth_iomadsaml2\admin\saml2_settings::OPTION_TOLOWER_CASE_INSENSITIVE, 'auth_iomadsaml2');
+                set_config('tolower', auth_iomadsaml2\admin\iomadsaml2_settings::OPTION_TOLOWER_CASE_INSENSITIVE, 'auth_iomadsaml2');
             }
         }
 

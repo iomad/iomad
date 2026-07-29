@@ -1,0 +1,46 @@
+{
+    "name": "simplesamlphp/xml-soap",
+    "description": "SimpleSAMLphp library for XML SOAP",
+    "type": "simplesamlphp-xmlprovider",
+    "license": "LGPL-2.1-or-later",
+    "authors": [
+        {
+            "name": "Tim van Dijen",
+            "email": "tvdijen@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "ext-dom": "*",
+        "ext-pcre": "*",
+
+        "simplesamlphp/assert": "~1.8.1",
+        "simplesamlphp/xml-common": "~1.25.0"
+    },
+    "require-dev": {
+        "simplesamlphp/simplesamlphp-test-framework": "~1.9.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "SimpleSAML\\SOAP\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SimpleSAML\\Test\\SOAP\\": ["tests/"]
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "v2.0.x-dev"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/package-versions-deprecated": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true,
+            "simplesamlphp/composer-xmlprovider-installer": true
+        }
+    }
+}

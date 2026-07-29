@@ -1,0 +1,6 @@
+<dsig11:PnB xmlns:dsig11="http://www.w3.org/2009/xmldsig11#">
+  <dsig11:M>1024</dsig11:M>
+  <dsig11:K1>128</dsig11:K1>
+  <dsig11:K2>256</dsig11:K2>
+  <dsig11:K3>512</dsig11:K3>
+</dsig11:PnB>

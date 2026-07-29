@@ -98,8 +98,10 @@ class auto_login {
                 }
                 // If the cookie is set to the same value it was last time we looked, do nothing.
                 $currentcookie = $_COOKIE[$auth->config->autologincookie];
-                if (!empty($SESSION->auth_iomadsaml2_lastautologincookie) &&
-                        $SESSION->auth_iomadsaml2_lastautologincookie === $currentcookie) {
+                if (
+                    !empty($SESSION->auth_iomadsaml2_lastautologincookie) &&
+                        $SESSION->auth_iomadsaml2_lastautologincookie === $currentcookie
+                ) {
                     return;
                 }
                 break;
@@ -174,7 +176,7 @@ class auto_login {
         $params = [
             'isPassive' => true,
             'ErrorURL' => $CFG->wwwroot . '/auth/iomadsaml2/autologin.php?success=0&url=' . $encodedtarget,
-            'ReturnTo' => $CFG->wwwroot . '/auth/iomadsaml2/autologin.php?success=1&url=' . $encodedtarget
+            'ReturnTo' => $CFG->wwwroot . '/auth/iomadsaml2/autologin.php?success=1&url=' . $encodedtarget,
         ];
 
         $simplesaml->requireAuth($params);

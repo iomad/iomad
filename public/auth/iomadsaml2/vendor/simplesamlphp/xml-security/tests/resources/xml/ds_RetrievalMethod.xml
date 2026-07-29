@@ -1,0 +1,7 @@
+<ds:RetrievalMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" URI="#Encrypted_KEY_ID" Type="http://www.w3.org/2001/04/xmlenc#EncryptedKey">
+  <ds:Transforms>
+    <ds:Transform Algorithm="http://www.w3.org/TR/1999/REC-xpath-19991116">
+      <ds:XPath>self::xenc:CipherValue[@Id="example1"]</ds:XPath>
+    </ds:Transform>
+  </ds:Transforms>
+</ds:RetrievalMethod>

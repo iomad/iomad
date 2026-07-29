@@ -96,11 +96,16 @@ echo html_writer::tag('pre', s($domxml->saveXML()));
 
 // Show a form.
 echo html_writer::start_tag('form', ['method' => 'post', 'action' => 'slo.php']);
-echo html_writer::empty_tag('input',
-        ['type' => 'hidden', 'name' => 'SAMLRequest', 'value' => $requestparam]);
+echo html_writer::empty_tag(
+    'input',
+    ['type' => 'hidden', 'name' => 'SAMLRequest', 'value' => $requestparam]
+);
 echo html_writer::start_div();
-echo html_writer::tag('div', html_writer::tag('button', 'Submit',
-        ['type' => 'submit', 'name' => 'login', 'value' => 1]));
+echo html_writer::tag('div', html_writer::tag(
+    'button',
+    'Submit',
+    ['type' => 'submit', 'name' => 'login', 'value' => 1]
+));
 
 echo html_writer::end_div();
 echo html_writer::end_tag('form');

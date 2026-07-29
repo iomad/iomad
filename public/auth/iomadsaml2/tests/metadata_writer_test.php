@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace auth_iomadsaml2;
+
 /**
  * Testcase class for metadata_writer class.
  *
@@ -22,18 +24,8 @@
  * @copyright  Copyright (c) 2017 Blackboard Inc. (http://www.blackboard.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-use auth_iomadsaml2\metadata_writer;
-
-/**
- * Testcase class for metadata_writer class.
- *
- * @package    auth_iomadsaml2
- * @copyright  Copyright (c) 2017 Blackboard Inc. (http://www.blackboard.com)
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class auth_iomadsaml2_metadata_writer_testcase extends basic_testcase {
-
-    public function test_write_default_path() {
+final class metadata_writer_test extends \basic_testcase {
+    public function test_write_default_path(): void {
         global $CFG;
 
         $filename = 'idp.xml';
@@ -45,7 +37,7 @@ class auth_iomadsaml2_metadata_writer_testcase extends basic_testcase {
         $this->assertEquals($content, file_get_contents("$CFG->dataroot/iomadsaml2/idp.xml"));
     }
 
-    public function test_write_empty_filename() {
+    public function test_write_empty_filename(): void {
         $filename = '';
         $content = 'Test data';
 
@@ -54,7 +46,7 @@ class auth_iomadsaml2_metadata_writer_testcase extends basic_testcase {
         $writer->write($filename, $content);
     }
 
-    public function test_write_non_dataroot_path() {
+    public function test_write_non_dataroot_path(): void {
         global $CFG;
 
         $filename = 'idp.xml';
@@ -74,7 +66,7 @@ class auth_iomadsaml2_metadata_writer_testcase extends basic_testcase {
         $this->assertEquals($content, file_get_contents("$CFG->dataroot/iomadsaml2/idp.xml"));
     }
 
-    public function test_write_trailing_slash() {
+    public function test_write_trailing_slash(): void {
         global $CFG;
 
         $filename = 'idp.xml';

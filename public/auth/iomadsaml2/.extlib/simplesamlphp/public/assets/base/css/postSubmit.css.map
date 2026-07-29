@@ -1,1 +1,0 @@
-{"version":3,"file":"css/postSubmit.css","mappings":"AACA,4BACE,a","sources":["webpack://simplesamlphp-assets/./resources/css/postSubmit.scss"],"sourcesContent":["$primaryBackground: #b8002c; $transitionBackground: #db0100; $secondaryBackground: #e8410c;\ninput#postLoginSubmitButton {\n  display: none;\n}\n"],"names":[],"sourceRoot":""}

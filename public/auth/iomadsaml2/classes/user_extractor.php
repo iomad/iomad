@@ -34,7 +34,6 @@ namespace auth_iomadsaml2;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class user_extractor {
-
     /**
      * Get extracted from DB user.
      *
@@ -59,7 +58,6 @@ class user_extractor {
         $params['mnethostid'] = $CFG->mnet_localhost_id;
 
         if (user_fields::is_custom_profile_field($fieldname)) {
-
             $fieldname = user_fields::get_field_short_name($fieldname);
 
             $joins = " LEFT JOIN {user_info_field} f ON f.shortname = :fieldname ";
@@ -67,7 +65,6 @@ class user_extractor {
 
             $fieldsql = " AND " . $DB->sql_equal('d.data', ':fieldvalue', !$insensitive, $accentsensitive);
             $params['fieldname'] = $fieldname;
-
         } else {
             // Check if requested field exists, required for Totara compatibility.
             $fields = array_merge(\core_user::AUTHSYNCFIELDS, ['id', 'username']);

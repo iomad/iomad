@@ -1,0 +1,11 @@
+<xenc11:OtherSource xmlns:xenc11="http://www.w3.org/2009/xmlenc11#" Algorithm="urn:x-simplesamlphp:algorithm">
+  <xenc11:Parameters xmlns:ssp="urn:x-simplesamlphp:namespace" ssp:attr1="testval1">
+    <ssp:AuthenticationContextDeclaration>
+      <ssp:Identification nym="verinymity">
+        <ssp:Extension>
+          <ssp:NoVerification/>
+        </ssp:Extension>
+      </ssp:Identification>
+    </ssp:AuthenticationContextDeclaration>
+  </xenc11:Parameters>
+</xenc11:OtherSource>

@@ -39,4 +39,3 @@ try {
 } catch (Exception $e) {
     throw new iomadsaml2_exception($e->getMessage(), $e->getTraceAsString());
 }
-

@@ -1,0 +1,5 @@
+<xenc11:ConcatKDFParams xmlns:xenc11="http://www.w3.org/2009/xmlenc11#" AlgorithmID="a1b2" PartyUInfo="b2c3" PartyVInfo="c3d4" SuppPubInfo="d4e5" SuppPrivInfo="e5f6">
+  <ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2001/04/xmlenc#sha256">
+    <some:Chunk xmlns:some="urn:test:some">Random</some:Chunk>
+  </ds:DigestMethod>
+</xenc11:ConcatKDFParams>

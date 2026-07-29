@@ -33,26 +33,18 @@ require_capability('moodle/site:config', context_system::instance());
 $PAGE->set_url("$CFG->wwwroot/auth/iomadsaml2/certificatelock.php");
 $PAGE->set_course($SITE);
 
+// IOMAD.
+$postfix = iomad::get_company_postfix();
 
 require('setup.php');
-
-// IOMAD
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
-if ($companyid > 0) {
-    $postfix = "_$companyid";
-} else {
-    $postfix = "";
-}
 
 $form = new \auth_iomadsaml2\form\lockcertificate();
 
 $settingspage = new moodle_url('/admin/settings.php?section=authsettingiomadsaml2');
 
 if ($data = $form->get_data()) {
-
     if ($form->is_submitted()) {
-
-        $certfiles = array($iomadsaml2auth->certpem, $iomadsaml2auth->certcrt);
+        $certfiles = [$iomadsaml2auth->certpem, $iomadsaml2auth->certcrt];
         if (isset($data->unlockcertsbutton)) {
             // Change the permissions in order to regenerate if unlocked.
             foreach ($certfiles as $certfile) {

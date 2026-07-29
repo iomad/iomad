@@ -33,7 +33,8 @@ require_once(__DIR__ . '/../../config.php');
 // @codingStandardsIgnoreEnd
 require('setup.php');
 
-$wantsurl = optional_param('wantsurl', '', PARAM_LOCALURL); // Overrides $SESSION->wantsurl if given.
+// Get the wants if set. May be set as either wantsurl or wants from the button on the login page.
+$wantsurl = optional_param('wantsurl', '', PARAM_LOCALURL) ?: optional_param('wants', '', PARAM_LOCALURL);
 if ($wantsurl !== '') {
     // This is later used in core_login_get_return_url().
     $SESSION->wantsurl = (new moodle_url($wantsurl))->out(false);
@@ -41,4 +42,3 @@ if ($wantsurl !== '') {
 
 // Crap for hash anchor handling.
 $iomadsaml2auth->saml_login();
-

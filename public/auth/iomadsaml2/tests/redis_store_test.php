@@ -14,31 +14,24 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace auth_iomadsaml2;
+
 /**
- * Testcase class for auth/saml2 Redis store.
+ * Testcase class for auth/iomadsaml2 Redis store.
  *
  * @package    auth_iomadsaml2
  * @author     Sam Chaffee
  * @copyright  Copyright (c) 2017 Blackboard Inc. (http://www.blackboard.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-use auth_iomadsaml2\redis_store;
-
-/**
- * Testcase class for auth/saml2 Redis store.
- *
- * @package    auth_iomadsaml2
- * @copyright  Copyright (c) 2017 Blackboard Inc. (http://www.blackboard.com)
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class auth_iomadsaml2_redis_store_testcase extends advanced_testcase {
-
+final class redis_store_test extends \advanced_testcase {
     /**
      * @var null|\Redis
      */
     protected $redis;
 
     public function setUp(): void {
+        parent::setUp();
         if (!$this->is_redis_available()) {
             $this->markTestSkipped('Redis was not available - skipping test');
         }
@@ -51,9 +44,10 @@ class auth_iomadsaml2_redis_store_testcase extends advanced_testcase {
 
     public function tearDown(): void {
         unset($this->redis);
+        parent::tearDown();
     }
 
-    public function test_set_with_expire() {
+    public function test_set_with_expire(): void {
         $now = time();
         $expectedttl = 60;
         $expire = $now + $expectedttl;
@@ -64,7 +58,7 @@ class auth_iomadsaml2_redis_store_testcase extends advanced_testcase {
         $this->assertEquals($expectedttl, $ttl, '', 5);
     }
 
-    public function test_set_no_expire() {
+    public function test_set_no_expire(): void {
         // Redis returns -1 for keys that have no TTL.
         $expectedttl = -1;
         $redisstore = new redis_store($this->redis);
@@ -74,7 +68,7 @@ class auth_iomadsaml2_redis_store_testcase extends advanced_testcase {
         $this->assertEquals($expectedttl, $ttl);
     }
 
-    public function test_get_key_exists() {
+    public function test_get_key_exists(): void {
         $redisstore = new redis_store($this->redis);
 
         $value = (object) ['k' => 'v', 'k2' => 'v2'];
@@ -83,13 +77,13 @@ class auth_iomadsaml2_redis_store_testcase extends advanced_testcase {
         $this->assertEquals($value, $redisstore->get('session', 'g98765'));
     }
 
-    public function test_get_key_not_exists() {
+    public function test_get_key_not_exists(): void {
         $redisstore = new redis_store($this->redis);
 
         $this->assertNull($redisstore->get('session', 'nonexistentkey'));
     }
 
-    public function test_delete() {
+    public function test_delete(): void {
         $redisstore = new redis_store($this->redis);
 
         $redisstore->set('session', '12345-09', 'value');
@@ -99,12 +93,12 @@ class auth_iomadsaml2_redis_store_testcase extends advanced_testcase {
         $this->assertNull($redisstore->get('session', '12345-09'));
     }
 
-    public function test_delete_key_not_exists() {
+    public function test_delete_key_not_exists(): void {
         $redisstore = new redis_store($this->redis);
         $redisstore->delete('session', 'nonexistentkey');
     }
 
-    public function test_bootstrap_redis() {
+    public function test_bootstrap_redis(): void {
         global $CFG;
 
         $this->resetAfterTest(true);

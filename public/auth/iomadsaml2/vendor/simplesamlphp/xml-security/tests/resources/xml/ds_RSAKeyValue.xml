@@ -1,0 +1,4 @@
+<ds:RSAKeyValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+  <ds:Modulus>dGhpcyBpcyBzb21lIHJhbmRvbSBtb2R1bHVzCg==</ds:Modulus>
+  <ds:Exponent>dGhpcyBpcyBzb21lIHJhbmRvbSBleHBvbmVudAo=</ds:Exponent>
+</ds:RSAKeyValue>

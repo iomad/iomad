@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE schema
+  PUBLIC "-//W3C//DTD XMLSchema 200102//EN" "http://www.w3.org/2001/XMLSchema.dtd"
+ [
+   <!ATTLIST schema 
+     xmlns:ds CDATA #FIXED "urn:x-simplesamlphp:namespace">
+   <!ENTITY ssp 'urn:x-simplesamlphp:namespace'>
+   <!ENTITY % p ''>
+   <!ENTITY % s ''>
+  ]>
+
+<!-- Schema for SimpleSAMLphp dummy classes -->
+
+
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+        xmlns:ssp="urn:x-simplesamlphp:namespace"
+        xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+        targetNamespace="urn:x-simplesamlphp:namespace"
+        version="0.1" elementFormDefault="qualified"> 
+
+<import namespace='http://www.w3.org/2000/09/xmldsig#'
+          schemaLocation='../../../resources/schemas/xmldsig1-schema.xsd'/>
+
+<!-- Start Chunk -->
+
+<element name="Chunk" type="string"/>
+
+<!-- End Chunk -->
+
+</schema>
+

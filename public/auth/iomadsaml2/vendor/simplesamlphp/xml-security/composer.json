@@ -1,0 +1,61 @@
+{
+    "name": "simplesamlphp/xml-security",
+    "description": "SimpleSAMLphp library for XML Security",
+    "type": "simplesamlphp-xmlprovider",
+    "license": "LGPL-2.1-or-later",
+    "keywords": [
+        "xml",
+        "xmldsig",
+        "signature",
+        "security"
+    ],
+    "homepage": "https://github.com/simplesamlphp/xml-security",
+    "authors": [
+        {
+            "name": "Jaime Perez Crespo",
+            "email": "jaime.perez@uninett.no",
+            "role": "Maintainer"
+        },
+        {
+            "name": "Tim van Dijen",
+            "email": "tvdijen@gmail.com",
+            "role": "Maintainer"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "SimpleSAML\\XMLSecurity\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SimpleSAML\\XMLSecurity\\Test\\": "tests",
+            "SimpleSAML\\XMLSecurity\\Test\\Utils\\": "tests/Utils",
+            "SimpleSAML\\XMLSecurity\\Test\\XML\\": "tests/XML"
+        }
+    },
+    "require": {
+        "php": "^8.1",
+        "ext-dom": "*",
+        "ext-hash": "*",
+        "ext-mbstring": "*",
+        "ext-openssl": "*",
+        "ext-pcre": "*",
+        "ext-spl": "*",
+
+        "simplesamlphp/assert": "~1.8.1",
+        "simplesamlphp/xml-common": "~1.25.0"
+    },
+    "require-dev": {
+        "simplesamlphp/simplesamlphp-test-framework": "~1.9.2"
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/package-versions-deprecated": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true,
+            "simplesamlphp/composer-module-installer": true,
+            "simplesamlphp/composer-xmlprovider-installer": true
+        }
+    }
+}

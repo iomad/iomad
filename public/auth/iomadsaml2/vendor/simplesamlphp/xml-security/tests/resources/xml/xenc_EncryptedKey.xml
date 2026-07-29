@@ -1,0 +1,18 @@
+<xenc:EncryptedKey xmlns:xenc="http://www.w3.org/2001/04/xmlenc#" Id="Encrypted_KEY_ID" Type="http://www.w3.org/2001/04/xmlenc#Element" MimeType="text/plain" Encoding="urn:x-simplesamlphp:encoding" Recipient="some_ENTITY_ID">
+  <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-1_5"/>
+  <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+    <xenc:EncryptedKey>
+      <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>
+      <xenc:CipherData>
+        <xenc:CipherValue>/CTj03d1DB5e2t7CTo9BEzCf5S9NRzwnBgZRlm32REI=</xenc:CipherValue>
+      </xenc:CipherData>
+    </xenc:EncryptedKey>
+  </ds:KeyInfo>
+  <xenc:CipherData>
+    <xenc:CipherValue>3W3C4UoWshi02yrqsLC2z8Qr1FjdTz7LV9CvpunilOX4teGKsjKqNbS92DKcXLwS8s4eHBdHejiL1bySDQT5diN/TVo8zz0AmPwX3/eHPQE91NWzceB+yaoEDauMPvi7twUdoipbLZa7cyT4QR+RO9w5P5wf4wDoTPUoQV6dF9YSJqehuRFCqVJprIDZNfrKnm7WfwMiaMLvaLVdLWgXjuVdiH0lT/F4KJrhJwAnjp57KGn9mhAcwkFe+qDIMSi8Ond6I0FOV3SOx8NxpSTHYfZ4qE1Xn/dvUUXqgRnEFPHAw4JFmJPjgTSCPU6BdwBLzqVjh1pCLoCn66P/Zt7I9Q==</xenc:CipherValue>
+  </xenc:CipherData>
+  <xenc:ReferenceList>
+    <xenc:DataReference URI="#Encrypted_DATA_ID"/>
+  </xenc:ReferenceList>
+  <xenc:CarriedKeyName>Name of the key</xenc:CarriedKeyName>
+</xenc:EncryptedKey>

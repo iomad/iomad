@@ -1,0 +1,38 @@
+{
+    "name": "catalyst/moodle-aith_saml2",
+    "description": "SAML done 100% in Moodle, fast, simple, secure",
+    "type": "library",
+    "config": {
+        "prepend-autoloader": false,
+        "allow-plugins": {
+            "simplesamlphp/composer-xmlprovider-installer": true,
+            "simplesamlphp/composer-module-installer": true,
+            "cweagans/composer-patches": true
+        },
+        "platform": {
+            "php": "8.1"
+        },
+        "audit": {
+            "ignore": {
+                "PKSA-sxbn-dpg6-6ng9": "PKSA is outdated, https://github.com/simplesamlphp/xml-security/security/advisories/GHSA-r353-4845-pr5p indicates xml-security@1.13.9 (in simplesamlphp@2.3.11) is patched."
+            }
+        }
+    },
+    "require": {
+        "simplesamlphp/simplesamlphp": "~2.4.5",
+        "cweagans/composer-patches": "^1.7"
+    },
+    "minimum-stability": "stable",
+    "extra": {
+        "patches": {
+            "simplesamlphp/simplesamlphp":{
+                "Multiple older changes re-done, check patch file for details": "patches/0001-WR-333356-Manually-apply-below-patch-due-to-dir-chan.patch",
+                "Issue #768: Remove unnecessary param being sent to sendSAML2AuthnRequest()": "patches/0002-Issue-768-Remove-unnecessary-param-being-sent-to-sen.patch",
+                "Issue #768: Force de-prioritisation of BINDING_HTTP_ARTIFACT": "patches/0003-Issue-768-Force-de-prioritisation-of-BINDING_HTTP_AR.patch",
+                "Update post.twig to point to publicly available post files (#793)": "patches/0004-Update-post.twig-to-point-to-publicly-available-post.patch",
+                "[#801] fix issue with IdP initiated login after upgrade to v2.0.5 (#802)": "patches/0005-801-fix-issue-with-IdP-initiated-login-after-upgrade.patch",
+                "set SESSION->iomadsaml2idp during unsolicited logins": "patches/0006-set-SESSION-saml2idp-during-unsolicited-logins.patch"
+            }
+        }
+    }
+}

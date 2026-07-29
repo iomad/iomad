@@ -67,4 +67,3 @@ try {
     // extlib/simplesamlphp/www/_include.php handles it.
     redirect(new moodle_url('/'));
 }
-

@@ -1,0 +1,9 @@
+<xenc11:Parameters xmlns:xenc11="http://www.w3.org/2009/xmlenc11#" xmlns:ssp="urn:x-simplesamlphp:namespace" ssp:attr1="testval1">
+  <ssp:AuthenticationContextDeclaration>
+    <ssp:Identification nym="verinymity">
+      <ssp:Extension>
+        <ssp:NoVerification/>
+      </ssp:Extension>
+    </ssp:Identification>
+  </ssp:AuthenticationContextDeclaration>
+</xenc11:Parameters>

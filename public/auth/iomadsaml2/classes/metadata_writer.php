@@ -67,7 +67,7 @@ class metadata_writer {
         if (!file_exists($this->certpath)) {
             make_writable_directory($this->certpath);
         }
-        $result = file_put_contents($this->certpath . $filename , $content);
+        $result = file_put_contents($this->certpath . $filename, $content);
         if ($result === false) {
             throw new \coding_exception('Could not write to file ' . $filename);
         }

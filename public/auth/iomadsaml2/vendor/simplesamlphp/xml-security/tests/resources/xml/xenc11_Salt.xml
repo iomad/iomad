@@ -1,0 +1,7 @@
+<xenc11:Salt xmlns:xenc11="http://www.w3.org/2009/xmlenc11#">
+  <xenc11:OtherSource Algorithm="urn:x-simplesamlphp:algorithm">
+    <xenc11:Parameters xmlns:ssp="urn:x-simplesamlphp:namespace" ssp:attr1="testval1">
+      <ssp:Chunk>Some</ssp:Chunk>
+    </xenc11:Parameters>
+  </xenc11:OtherSource>
+</xenc11:Salt>

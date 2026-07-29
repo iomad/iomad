@@ -37,7 +37,6 @@ require_once("$CFG->libdir/formslib.php");
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class regenerate extends moodleform {
-
     /**
      * Definition
      */
@@ -46,49 +45,91 @@ class regenerate extends moodleform {
 
         $mform->addElement('text', 'countryname', get_string('countryname', 'auth_iomadsaml2'), 'size=64');
         $mform->setType('countryname', PARAM_TEXT);
-        $mform->addRule('countryname', get_string('required', 'auth_iomadsaml2'),
-                'required', null, 'client');
+        $mform->addRule(
+            'countryname',
+            get_string('required', 'auth_iomadsaml2'),
+            'required',
+            null,
+            'client'
+        );
 
         $mform->addElement('text', 'stateorprovincename', get_string('stateorprovincename', 'auth_iomadsaml2'), 'size=64');
         $mform->setType('stateorprovincename', PARAM_TEXT);
-        $mform->addRule('stateorprovincename', get_string('required', 'auth_iomadsaml2'),
-                'required', null, 'client');
+        $mform->addRule(
+            'stateorprovincename',
+            get_string('required', 'auth_iomadsaml2'),
+            'required',
+            null,
+            'client'
+        );
 
         $mform->addElement('text', 'localityname', get_string('localityname', 'auth_iomadsaml2'), 'size=64');
         $mform->setType('localityname', PARAM_TEXT);
-        $mform->addRule('localityname', get_string('required', 'auth_iomadsaml2'),
-                'required', null, 'client');
+        $mform->addRule(
+            'localityname',
+            get_string('required', 'auth_iomadsaml2'),
+            'required',
+            null,
+            'client'
+        );
 
         $mform->addElement('text', 'organizationname', get_string('organizationname', 'auth_iomadsaml2'), 'size=64');
         $mform->setType('organizationname', PARAM_TEXT);
-        $mform->addRule('organizationname', get_string('required', 'auth_iomadsaml2'),
-                'required', null, 'client');
+        $mform->addRule(
+            'organizationname',
+            get_string('required', 'auth_iomadsaml2'),
+            'required',
+            null,
+            'client'
+        );
 
         $mform->addElement('text', 'organizationalunitname', get_string('organizationalunitname', 'auth_iomadsaml2'), 'size=64');
         $mform->setType('organizationalunitname', PARAM_TEXT);
-        $mform->addRule('organizationalunitname', get_string('required', 'auth_iomadsaml2'),
-                'required', null, 'client');
+        $mform->addRule(
+            'organizationalunitname',
+            get_string('required', 'auth_iomadsaml2'),
+            'required',
+            null,
+            'client'
+        );
 
         $mform->addElement('text', 'commonname', get_string('commonname', 'auth_iomadsaml2'), 'size=64');
         $mform->setType('commonname', PARAM_TEXT);
-        $mform->addRule('commonname', get_string('required', 'auth_iomadsaml2'),
-                'required', null, 'client');
+        $mform->addRule(
+            'commonname',
+            get_string('required', 'auth_iomadsaml2'),
+            'required',
+            null,
+            'client'
+        );
 
         $mform->addElement('text', 'email', get_string('email'), 'size=64');
         $mform->setType('email', PARAM_NOTAGS);
-        $mform->addRule('email', get_string('required', 'auth_iomadsaml2'),
-                'required', null, 'client');
+        $mform->addRule(
+            'email',
+            get_string('required', 'auth_iomadsaml2'),
+            'required',
+            null,
+            'client'
+        );
 
         $mform->addElement('text', 'expirydays', get_string('expirydays', 'auth_iomadsaml2'), 'size=5');
         $mform->setType('expirydays', PARAM_INT);
-        $mform->addRule('expirydays', get_string('requireint', 'auth_iomadsaml2'),
-                'numeric', null, 'client');
-        $mform->addRule('expirydays', get_string('requireint', 'auth_iomadsaml2'),
-                'required', null, 'client');
+        $mform->addRule(
+            'expirydays',
+            get_string('requireint', 'auth_iomadsaml2'),
+            'numeric',
+            null,
+            'client'
+        );
+        $mform->addRule(
+            'expirydays',
+            get_string('requireint', 'auth_iomadsaml2'),
+            'required',
+            null,
+            'client'
+        );
 
         $this->add_action_buttons(true, get_string('regenerate_submit', 'auth_iomadsaml2'));
-
     }
-
 }
-

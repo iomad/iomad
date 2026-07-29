@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-use auth_iomadsaml2\ssl_algorithms;
+namespace auth_iomadsaml2;
 
 /**
  * Test Saml2 SSL Algorithms.
@@ -24,23 +24,28 @@ use auth_iomadsaml2\ssl_algorithms;
  * @copyright  Catalyst IT
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class auth_iomadsaml2_ssl_algorithms_test extends basic_testcase {
-    public function test_default_saml_signature_algorithm_is_valid_saml_signature_algorithm() {
-        $this->assertTrue(array_key_exists(ssl_algorithms::get_default_saml_signature_algorithm(),
-            ssl_algorithms::get_valid_saml_signature_algorithms()));
+final class ssl_algorithm_test extends \basic_testcase {
+    public function test_default_saml_signature_algorithm_is_valid_saml_signature_algorithm(): void {
+        $this->assertTrue(array_key_exists(
+            ssl_algorithms::get_default_saml_signature_algorithm(),
+            ssl_algorithms::get_valid_saml_signature_algorithms()
+        ));
     }
 
-    public function test_sha256_is_valid_saml_signature_algorithm() {
-        $this->assertTrue(array_key_exists('http://www.w3.org/2001/04/xmldsig-more#rsa-sha256',
-            ssl_algorithms::get_valid_saml_signature_algorithms()));
+    public function test_sha256_is_valid_saml_signature_algorithm(): void {
+        $this->assertTrue(array_key_exists(
+            'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256',
+            ssl_algorithms::get_valid_saml_signature_algorithms()
+        ));
     }
 
-    public function test_sha256_is_matching_digest_algorithm_for_default_saml_algorithm() {
+    public function test_sha256_is_matching_digest_algorithm_for_default_saml_algorithm(): void {
         $this->assertEquals('SHA256', ssl_algorithms::convert_signature_algorithm_to_digest_alg_format(
-            ssl_algorithms::get_default_saml_signature_algorithm()));
+            ssl_algorithms::get_default_saml_signature_algorithm()
+        ));
     }
 
-    public function test_sha256_is_matching_digest_algorithm_for_garbage_algorithm() {
+    public function test_sha256_is_matching_digest_algorithm_for_garbage_algorithm(): void {
         $this->assertEquals('SHA256', ssl_algorithms::convert_signature_algorithm_to_digest_alg_format('garbage nonsense'));
     }
 }

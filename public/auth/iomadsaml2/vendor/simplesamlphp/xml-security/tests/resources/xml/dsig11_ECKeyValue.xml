@@ -1,0 +1,23 @@
+<dsig11:ECKeyValue xmlns:dsig11="http://www.w3.org/2009/xmldsig11#" Id="phpunit">
+  <dsig11:ECParameters xmlns:dsig11="http://www.w3.org/2009/xmldsig11#">
+    <dsig11:FieldID>
+      <dsig11:PnB>
+        <dsig11:M>1024</dsig11:M>
+        <dsig11:K1>128</dsig11:K1>
+        <dsig11:K2>256</dsig11:K2>
+        <dsig11:K3>512</dsig11:K3>
+      </dsig11:PnB>
+    </dsig11:FieldID>
+    <dsig11:Curve>
+      <dsig11:A>6tN39Q9d6IevlAWLeM7lQGazUnVlJOe1wCk3sro2rfE=</dsig11:A>
+      <dsig11:B>6tN39Q9d6IevlAWLeM7lQGazUnVlJOe1wCk3sro2rfE=</dsig11:B>
+    </dsig11:Curve>
+    <dsig11:Base>6tN39Q9d6IevlAWLeM7lQGazUnVlJOe1wCk3sro2rfE=</dsig11:Base>
+    <dsig11:Order>6tN39Q9d6IevlAWLeM7lQGazUnVlJOe1wCk3sro2rfE=</dsig11:Order>
+    <dsig11:CoFactor>128</dsig11:CoFactor>
+    <dsig11:ValidationData hashAlgorithm="http://www.w3.org/2000/09/xmldsig#sha1">
+      <dsig11:seed>6tN39Q9d6IevlAWLeM7lQGazUnVlJOe1wCk3sro2rfE=</dsig11:seed>
+    </dsig11:ValidationData>
+  </dsig11:ECParameters>
+  <dsig11:PublicKey xmlns:dsig11="http://www.w3.org/2009/xmldsig11#">6tN39Q9d6IevlAWLeM7lQGazUnVlJOe1wCk3sro2rfE=</dsig11:PublicKey>
+</dsig11:ECKeyValue>

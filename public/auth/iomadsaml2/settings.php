@@ -27,23 +27,25 @@ use auth_iomadsaml2\admin\setting_button;
 use auth_iomadsaml2\admin\setting_textonly;
 use auth_iomadsaml2\ssl_algorithms;
 use auth_iomadsaml2\user_fields;
-use local_iomad\iomad;
 
 defined('MOODLE_INTERNAL') || die;
 
 global $CFG;
 
 if ($ADMIN->fulltree) {
-    require_once($CFG->dirroot.'/auth/iomadsaml2/locallib.php');
+    require_once($CFG->dirroot . '/auth/iomadsaml2/locallib.php');
 
-    $yesno = array(
+    $yesno = [
             new lang_string('no'),
             new lang_string('yes'),
-    );
+    ];
 
     // Introductory explanation.
-    $settings->add(new admin_setting_heading('auth_iomadsaml2/pluginname', '',
-        new lang_string('auth_iomadsaml2description', 'auth_iomadsaml2')));
+    $settings->add(new admin_setting_heading(
+        'auth_iomadsaml2/pluginname',
+        '',
+        new lang_string('auth_iomadsaml2description', 'auth_iomadsaml2')
+    ));
 
     // IDP Metadata.
     $idpmetadata = new \auth_iomadsaml2\admin\setting_idpmetadata();
@@ -52,11 +54,12 @@ if ($ADMIN->fulltree) {
 
     // IDP name.
     $settings->add(new admin_setting_configtext(
-            'auth_iomadsaml2/idpname',
-            get_string('idpname', 'auth_iomadsaml2'),
-            get_string('idpname_help', 'auth_iomadsaml2'),
-            get_string('idpnamedefault', 'auth_iomadsaml2'),
-            PARAM_TEXT));
+        'auth_iomadsaml2/idpname',
+        get_string('idpname', 'auth_iomadsaml2'),
+        get_string('idpname_help', 'auth_iomadsaml2'),
+        get_string('idpnamedefault', 'auth_iomadsaml2'),
+        PARAM_TEXT
+    ));
 
     // Manage available IdPs.
     $settings->add(new setting_button(
@@ -65,41 +68,50 @@ if ($ADMIN->fulltree) {
         get_string('availableidps_help', 'auth_iomadsaml2'),
         get_string('availableidps', 'auth_iomadsaml2'),
         $CFG->wwwroot . '/auth/iomadsaml2/availableidps.php'
-        ));
+    ));
 
     // Display IDP Link.
     $settings->add(new admin_setting_configselect(
-            'auth_iomadsaml2/showidplink',
-            get_string('showidplink', 'auth_iomadsaml2'),
-            get_string('showidplink_help', 'auth_iomadsaml2'),
-            1, $yesno));
+        'auth_iomadsaml2/showidplink',
+        get_string('showidplink', 'auth_iomadsaml2'),
+        get_string('showidplink_help', 'auth_iomadsaml2'),
+        1,
+        $yesno
+    ));
 
     // IDP Metadata refresh.
     $settings->add(new admin_setting_configselect(
-            'auth_iomadsaml2/idpmetadatarefresh',
-            get_string('idpmetadatarefresh', 'auth_iomadsaml2'),
-            get_string('idpmetadatarefresh_help', 'auth_iomadsaml2'),
-            1, $yesno));
+        'auth_iomadsaml2/idpmetadatarefresh',
+        get_string('idpmetadatarefresh', 'auth_iomadsaml2'),
+        get_string('idpmetadatarefresh_help', 'auth_iomadsaml2'),
+        1,
+        $yesno
+    ));
 
     // Debugging.
     $settings->add(new admin_setting_configselect(
-            'auth_iomadsaml2/debug',
-            get_string('debug', 'auth_iomadsaml2'),
-            get_string('debug_help', 'auth_iomadsaml2', $CFG->wwwroot . '/auth/iomadsaml2/debug.php'),
-            0, $yesno));
+        'auth_iomadsaml2/debug',
+        get_string('debug', 'auth_iomadsaml2'),
+        get_string('debug_help', 'auth_iomadsaml2', $CFG->wwwroot . '/auth/iomadsaml2/debug.php'),
+        0,
+        $yesno
+    ));
 
     // Logging.
     $settings->add(new admin_setting_configselect(
-            'auth_iomadsaml2/logtofile',
-            get_string('logtofile', 'auth_iomadsaml2'),
-            get_string('logtofile_help', 'auth_iomadsaml2'),
-            0, $yesno));
+        'auth_iomadsaml2/logtofile',
+        get_string('logtofile', 'auth_iomadsaml2'),
+        get_string('logtofile_help', 'auth_iomadsaml2'),
+        0,
+        $yesno
+    ));
     $settings->add(new admin_setting_configtext(
-            'auth_iomadsaml2/logdir',
-            get_string('logdir', 'auth_iomadsaml2'),
-            get_string('logdir_help', 'auth_iomadsaml2'),
-            get_string('logdirdefault', 'auth_iomadsaml2'),
-            PARAM_TEXT));
+        'auth_iomadsaml2/logdir',
+        get_string('logdir', 'auth_iomadsaml2'),
+        get_string('logdir_help', 'auth_iomadsaml2'),
+        get_string('logdirdefault', 'auth_iomadsaml2'),
+        PARAM_TEXT
+    ));
 
     // See section 8.3 from http://docs.oasis-open.org/security/saml/v2.0/saml-core-2.0-os.pdf for more information.
     $nameidlist = [
@@ -117,55 +129,61 @@ if ($ADMIN->fulltree) {
         get_string('nameidpolicy', 'auth_iomadsaml2'),
         get_string('nameidpolicy_help', 'auth_iomadsaml2'),
         'urn:oasis:names:tc:SAML:2.0:nameid-format:transient',
-        array_combine($nameidlist, $nameidlist));
+        array_combine($nameidlist, $nameidlist)
+    );
     $nameidpolicy->set_updatedcallback('auth_iomadsaml2_update_sp_metadata');
     $settings->add($nameidpolicy);
 
     // Add NameID as attribute.
     $settings->add(new admin_setting_configselect(
-            'auth_iomadsaml2/nameidasattrib',
-            get_string('nameidasattrib', 'auth_iomadsaml2'),
-            get_string('nameidasattrib_help', 'auth_iomadsaml2'),
-            0, $yesno));
+        'auth_iomadsaml2/nameidasattrib',
+        get_string('nameidasattrib', 'auth_iomadsaml2'),
+        get_string('nameidasattrib_help', 'auth_iomadsaml2'),
+        0,
+        $yesno
+    ));
 
     // Lock certificate.
     $settings->add(new setting_button(
-            'auth_iomadsaml2/certificatelock',
-            get_string('certificatelock', 'auth_iomadsaml2'),
-            get_string('certificatelock_help', 'auth_iomadsaml2'),
-            get_string('certificatelock', 'auth_iomadsaml2'),
-            $CFG->wwwroot . '/auth/iomadsaml2/certificatelock.php'
-            ));
+        'auth_iomadsaml2/certificatelock',
+        get_string('certificatelock', 'auth_iomadsaml2'),
+        get_string('certificatelock_help', 'auth_iomadsaml2'),
+        get_string('certificatelock', 'auth_iomadsaml2'),
+        $CFG->wwwroot . '/auth/iomadsaml2/certificatelock.php'
+    ));
 
     // Regenerate certificate.
     $settings->add(new setting_button(
-            'auth_iomadsaml2/certificate',
-            get_string('certificate', 'auth_iomadsaml2'),
-            get_string('certificate_help', 'auth_iomadsaml2', $CFG->wwwroot . '/auth/iomadsaml2/cert.php'),
-            get_string('certificate', 'auth_iomadsaml2'),
-            $CFG->wwwroot . '/auth/iomadsaml2/regenerate.php'
-            ));
+        'auth_iomadsaml2/certificate',
+        get_string('certificate', 'auth_iomadsaml2'),
+        get_string('certificate_help', 'auth_iomadsaml2', $CFG->wwwroot . '/auth/iomadsaml2/cert.php'),
+        get_string('certificate', 'auth_iomadsaml2'),
+        $CFG->wwwroot . '/auth/iomadsaml2/regenerate.php'
+    ));
 
     $settings->add(new admin_setting_configpasswordunmask(
         'auth_iomadsaml2/privatekeypass',
         get_string('privatekeypass', 'auth_iomadsaml2'),
         get_string('privatekeypass_help', 'auth_iomadsaml2'),
         get_site_identifier(),
-        PARAM_TEXT));
+        PARAM_TEXT
+    ));
 
     // SP Metadata.
     $settings->add(new setting_textonly(
-           'auth_iomadsaml2/spmetadata',
-           get_string('spmetadata', 'auth_iomadsaml2'),
-           get_string('spmetadata_help', 'auth_iomadsaml2', $CFG->wwwroot . '/auth/iomadsaml2/sp/metadata.php')
-           ));
+        'auth_iomadsaml2/spmetadata',
+        get_string('spmetadata', 'auth_iomadsaml2'),
+        get_string('spmetadata_help', 'auth_iomadsaml2', $CFG->wwwroot . '/auth/iomadsaml2/sp/metadata.php')
+    ));
 
     // SP Metadata signature.
     $spmetadatasign = new admin_setting_configselect(
-            'auth_iomadsaml2/spmetadatasign',
-            get_string('spmetadatasign', 'auth_iomadsaml2'),
-            get_string('spmetadatasign_help', 'auth_iomadsaml2'),
-            0, $yesno);
+        'auth_iomadsaml2/spmetadatasign',
+        get_string('spmetadatasign', 'auth_iomadsaml2'),
+        get_string('spmetadatasign_help', 'auth_iomadsaml2'),
+        0,
+        $yesno
+    );
     $spmetadatasign->set_updatedcallback('auth_iomadsaml2_update_sp_metadata');
     $settings->add($spmetadatasign);
 
@@ -182,7 +200,8 @@ if ($ADMIN->fulltree) {
         'auth_iomadsaml2/wantassertionssigned',
         get_string('wantassertionssigned', 'auth_iomadsaml2'),
         get_string('wantassertionssigned_help', 'auth_iomadsaml2'),
-        0, $yesno
+        0,
+        $yesno
     );
     $wantassertionssigned->set_updatedcallback('auth_iomadsaml2_update_sp_metadata');
     $settings->add($wantassertionssigned);
@@ -197,7 +216,7 @@ if ($ADMIN->fulltree) {
         'auth_iomadsaml2/assertionsconsumerservices',
         get_string('assertionsconsumerservices', 'auth_iomadsaml2'),
         get_string('assertionsconsumerservices_help', 'auth_iomadsaml2'),
-        array(),
+        [],
         $assertionsconsumerservices
     );
     $acssetting->set_updatedcallback('auth_iomadsaml2_update_sp_metadata');
@@ -207,14 +226,16 @@ if ($ADMIN->fulltree) {
         'auth_iomadsaml2/allowcreate',
         get_string('allowcreate', 'auth_iomadsaml2'),
         get_string('allowcreate_help', 'auth_iomadsaml2'),
-        0, $yesno
+        0,
+        $yesno
     ));
 
     $settings->add(new admin_setting_configtext(
         'auth_iomadsaml2/authncontext',
         get_string('authncontext', 'auth_iomadsaml2'),
         get_string('authncontext_help', 'auth_iomadsaml2'),
-        '', PARAM_TEXT
+        '',
+        PARAM_TEXT
     ));
 
     $settings->add(new admin_setting_configselect(
@@ -222,7 +243,8 @@ if ($ADMIN->fulltree) {
         get_string('signaturealgorithm', 'auth_iomadsaml2'),
         get_string('signaturealgorithm_help', 'auth_iomadsaml2'),
         ssl_algorithms::get_default_saml_signature_algorithm(),
-        ssl_algorithms::get_valid_saml_signature_algorithms()));
+        ssl_algorithms::get_valid_saml_signature_algorithms()
+    ));
 
     // Dual Login.
     $dualloginoptions = [
@@ -232,14 +254,16 @@ if ($ADMIN->fulltree) {
         iomadsaml2_settings::OPTION_DUAL_LOGIN_TEST    => get_string('test_idp_conn', 'auth_iomadsaml2'),
     ];
     $settings->add(new admin_setting_configselect(
-            'auth_iomadsaml2/duallogin',
-            get_string('duallogin', 'auth_iomadsaml2'),
-            get_string('duallogin_help', 'auth_iomadsaml2'),
-            iomadsaml2_settings::OPTION_DUAL_LOGIN_YES,
-            $dualloginoptions));
+        'auth_iomadsaml2/duallogin',
+        get_string('duallogin', 'auth_iomadsaml2'),
+        get_string('duallogin_help', 'auth_iomadsaml2'),
+        iomadsaml2_settings::OPTION_DUAL_LOGIN_YES,
+        $dualloginoptions
+    ));
 
     if (get_config('auth_iomadsaml2', 'duallogin') == iomadsaml2_settings::OPTION_DUAL_LOGIN_TEST) {
-        $settings->add(new admin_setting_configtext('auth_iomadsaml2/testendpoint',
+        $settings->add(new admin_setting_configtext(
+            'auth_iomadsaml2/testendpoint',
             get_string('test_endpoint', 'auth_iomadsaml2'),
             get_string('test_endpoint_desc', 'auth_iomadsaml2'),
             'https://example.com',
@@ -261,45 +285,56 @@ if ($ADMIN->fulltree) {
         iomadsaml2_settings::OPTION_AUTO_LOGIN_COOKIE => get_string('autologinbycookie', 'auth_iomadsaml2'),
     ];
     $settings->add(new admin_setting_configselect(
-            'auth_iomadsaml2/autologin',
-            get_string('autologin', 'auth_iomadsaml2'),
-            get_string('autologin_help', 'auth_iomadsaml2'),
-            iomadsaml2_settings::OPTION_AUTO_LOGIN_NO,
-            $autologinoptions));
+        'auth_iomadsaml2/autologin',
+        get_string('autologin', 'auth_iomadsaml2'),
+        get_string('autologin_help', 'auth_iomadsaml2'),
+        iomadsaml2_settings::OPTION_AUTO_LOGIN_NO,
+        $autologinoptions
+    ));
     $settings->add(new admin_setting_configtext(
-            'auth_iomadsaml2/autologincookie',
-            get_string('autologincookie', 'auth_iomadsaml2'),
-            get_string('autologincookie_help', 'auth_iomadsaml2'),
-            '', PARAM_TEXT));
+        'auth_iomadsaml2/autologincookie',
+        get_string('autologincookie', 'auth_iomadsaml2'),
+        get_string('autologincookie_help', 'auth_iomadsaml2'),
+        '',
+        PARAM_TEXT
+    ));
 
     // Allow any auth type.
     $settings->add(new admin_setting_configselect(
-            'auth_iomadsaml2/anyauth',
-            get_string('anyauth', 'auth_iomadsaml2'),
-            get_string('anyauth_help', 'auth_iomadsaml2'),
-            0, $yesno));
+        'auth_iomadsaml2/anyauth',
+        get_string('anyauth', 'auth_iomadsaml2'),
+        get_string('anyauth_help', 'auth_iomadsaml2'),
+        0,
+        $yesno
+    ));
 
     // Simplify attributes.
     $settings->add(new admin_setting_configselect(
-            'auth_iomadsaml2/attrsimple',
-            get_string('attrsimple', 'auth_iomadsaml2'),
-            get_string('attrsimple_help', 'auth_iomadsaml2'),
-            1, $yesno));
+        'auth_iomadsaml2/attrsimple',
+        get_string('attrsimple', 'auth_iomadsaml2'),
+        get_string('attrsimple_help', 'auth_iomadsaml2'),
+        1,
+        $yesno
+    ));
 
     // IDP to Moodle mapping.
     // IDP attribute.
     $settings->add(new admin_setting_configtext(
-            'auth_iomadsaml2/idpattr',
-            get_string('idpattr', 'auth_iomadsaml2'),
-            get_string('idpattr_help', 'auth_iomadsaml2'),
-            'uid', PARAM_TEXT));
+        'auth_iomadsaml2/idpattr',
+        get_string('idpattr', 'auth_iomadsaml2'),
+        get_string('idpattr_help', 'auth_iomadsaml2'),
+        'uid',
+        PARAM_TEXT
+    ));
 
     // Moodle Field.
     $settings->add(new admin_setting_configselect(
-            'auth_iomadsaml2/mdlattr',
-            get_string('mdlattr', 'auth_iomadsaml2'),
-            get_string('mdlattr_help', 'auth_iomadsaml2'),
-            'username', user_fields::get_supported_fields()));
+        'auth_iomadsaml2/mdlattr',
+        get_string('mdlattr', 'auth_iomadsaml2'),
+        get_string('mdlattr_help', 'auth_iomadsaml2'),
+        'username',
+        user_fields::get_supported_fields()
+    ));
 
     // Lowercase.
     $toloweroptions = [
@@ -309,11 +344,12 @@ if ($ADMIN->fulltree) {
         iomadsaml2_settings::OPTION_TOLOWER_CASE_AND_ACCENT_INSENSITIVE => get_string('tolower:caseandaccentinsensitive', 'auth_iomadsaml2'),
     ];
     $settings->add(new admin_setting_configselect(
-            'auth_iomadsaml2/tolower',
-            get_string('tolower', 'auth_iomadsaml2'),
-            get_string('tolower_help', 'auth_iomadsaml2'),
-            iomadsaml2_settings::OPTION_TOLOWER_EXACT,
-            $toloweroptions));
+        'auth_iomadsaml2/tolower',
+        get_string('tolower', 'auth_iomadsaml2'),
+        get_string('tolower_help', 'auth_iomadsaml2'),
+        iomadsaml2_settings::OPTION_TOLOWER_EXACT,
+        $toloweroptions
+    ));
 
     // Requested Attributes.
     $settings->add(new admin_setting_configtextarea(
@@ -323,14 +359,17 @@ if ($ADMIN->fulltree) {
 urn:mace:dir:attribute-def:eduPersonPrincipalName
 urn:mace:dir:attribute-def:mail *</pre>"]),
         '',
-        PARAM_TEXT));
+        PARAM_TEXT
+    ));
 
     // Autocreate Users.
     $settings->add(new admin_setting_configselect(
-            'auth_iomadsaml2/autocreate',
-            get_string('autocreate', 'auth_iomadsaml2'),
-            get_string('autocreate_help', 'auth_iomadsaml2'),
-            0, $yesno));
+        'auth_iomadsaml2/autocreate',
+        get_string('autocreate', 'auth_iomadsaml2'),
+        get_string('autocreate_help', 'auth_iomadsaml2'),
+        0,
+        $yesno
+    ));
 
     // Group access rules.
     $settings->add(new admin_setting_configtextarea(
@@ -338,27 +377,30 @@ urn:mace:dir:attribute-def:mail *</pre>"]),
         get_string('grouprules', 'auth_iomadsaml2'),
         get_string('grouprules_help', 'auth_iomadsaml2'),
         '',
-        PARAM_TEXT));
+        PARAM_TEXT
+    ));
 
     // Alternative Logout URL.
     $settings->add(new admin_setting_configtext(
-            'auth_iomadsaml2/alterlogout',
-            get_string('alterlogout', 'auth_iomadsaml2'),
-            get_string('alterlogout_help', 'auth_iomadsaml2'),
-            '',
-            PARAM_URL));
+        'auth_iomadsaml2/alterlogout',
+        get_string('alterlogout', 'auth_iomadsaml2'),
+        get_string('alterlogout_help', 'auth_iomadsaml2'),
+        '',
+        PARAM_URL
+    ));
 
     // Multi IdP display type.
     $multiidpdisplayoptions = [
         iomadsaml2_settings::OPTION_MULTI_IDP_DISPLAY_DROPDOWN => get_string('multiidpdropdown', 'auth_iomadsaml2'),
-        iomadsaml2_settings::OPTION_MULTI_IDP_DISPLAY_BUTTONS => get_string('multiidpbuttons', 'auth_iomadsaml2')
+        iomadsaml2_settings::OPTION_MULTI_IDP_DISPLAY_BUTTONS => get_string('multiidpbuttons', 'auth_iomadsaml2'),
     ];
     $settings->add(new admin_setting_configselect(
         'auth_iomadsaml2/multiidpdisplay',
         get_string('multiidpdisplay', 'auth_iomadsaml2'),
         get_string('multiidpdisplay_help', 'auth_iomadsaml2'),
         iomadsaml2_settings::OPTION_MULTI_IDP_DISPLAY_DROPDOWN,
-        $multiidpdisplayoptions));
+        $multiidpdisplayoptions
+    ));
 
     // Attempt Single Sign out.
     $settings->add(new admin_setting_configselect(
@@ -366,25 +408,27 @@ urn:mace:dir:attribute-def:mail *</pre>"]),
         get_string('attemptsignout', 'auth_iomadsaml2'),
         get_string('attemptsignout_help', 'auth_iomadsaml2'),
         1,
-        $yesno));
+        $yesno
+    ));
 
-    // SAMLPHP tempdir
+    // SAMLPHP tempdir.
     $settings->add(new admin_setting_configtext(
         'auth_iomadsaml2/tempdir',
         get_string('tempdir', 'auth_iomadsaml2'),
         get_string('tempdir_help', 'auth_iomadsaml2'),
-        get_string('tempdirdefault', 'auth_iomadsaml2'),
+        '/tmp/simplesaml',
         PARAM_TEXT,
         50,
-        3));
+        3
+    ));
 
     // SAMLPHP version.
     $authplugin = get_auth_plugin('iomadsaml2');
     $settings->add(new setting_textonly(
-            'auth_iomadsaml2/sspversion',
-            get_string('sspversion', 'auth_iomadsaml2'),
-            $authplugin->get_ssp_version()
-            ));
+        'auth_iomadsaml2/sspversion',
+        get_string('sspversion', 'auth_iomadsaml2'),
+        $authplugin->get_ssp_version()
+    ));
 
 
     // Display locking / mapping of profile fields.
@@ -393,13 +437,16 @@ urn:mace:dir:attribute-def:mail *</pre>"]),
     $help .= get_string('auth_updateremote_expl', 'auth');
 
     // User block and redirect feature setting section.
-    $settings->add(new admin_setting_heading('auth_iomadsaml2/blockredirectheading', get_string('blockredirectheading', 'auth_iomadsaml2'),
-        new lang_string('auth_iomadsaml2blockredirectdescription', 'auth_iomadsaml2')));
+    $settings->add(new admin_setting_heading(
+        'auth_iomadsaml2/blockredirectheading',
+        get_string('blockredirectheading', 'auth_iomadsaml2'),
+        new lang_string('auth_iomadsaml2blockredirectdescription', 'auth_iomadsaml2')
+    ));
 
     // Flagged login response options.
     $flaggedloginresponseoptions = [
         iomadsaml2_settings::OPTION_FLAGGED_LOGIN_MESSAGE => get_string('flaggedresponsetypemessage', 'auth_iomadsaml2'),
-        iomadsaml2_settings::OPTION_FLAGGED_LOGIN_REDIRECT => get_string('flaggedresponsetyperedirect', 'auth_iomadsaml2')
+        iomadsaml2_settings::OPTION_FLAGGED_LOGIN_REDIRECT => get_string('flaggedresponsetyperedirect', 'auth_iomadsaml2'),
     ];
 
     // Flagged login response options selector.
@@ -408,7 +455,8 @@ urn:mace:dir:attribute-def:mail *</pre>"]),
         get_string('flagresponsetype', 'auth_iomadsaml2'),
         get_string('flagresponsetype_help', 'auth_iomadsaml2'),
         iomadsaml2_settings::OPTION_FLAGGED_LOGIN_REDIRECT,
-        $flaggedloginresponseoptions));
+        $flaggedloginresponseoptions
+    ));
 
 
     // Set the http OR https fully qualified scheme domain name redirect destination for flagged accounts.
@@ -417,7 +465,8 @@ urn:mace:dir:attribute-def:mail *</pre>"]),
         get_string('flagredirecturl', 'auth_iomadsaml2'),
         get_string('flagredirecturl_help', 'auth_iomadsaml2'),
         '',
-        PARAM_URL));
+        PARAM_URL
+    ));
 
     // Set the displayed message for flagged accounts.
     $settings->add(new admin_setting_configtextarea(
@@ -427,22 +476,72 @@ urn:mace:dir:attribute-def:mail *</pre>"]),
         get_string('flagmessage_default', 'auth_iomadsaml2'),
         PARAM_TEXT,
         50,
-        3));
+        3
+    ));
 
     if (moodle_major_version() < '3.3') {
-        auth_iomadsaml2_display_auth_lock_options($settings, $authplugin->authtype, $authplugin->userfields, $help, true, true,
-            $authplugin->get_custom_user_profile_fields());
+        auth_iomadsaml2_display_auth_lock_options(
+            $settings,
+            $authplugin->authtype,
+            $authplugin->userfields,
+            $help,
+            true,
+            true,
+            $authplugin->get_custom_user_profile_fields()
+        );
     } else {
-        display_auth_lock_options($settings, $authplugin->authtype, $authplugin->userfields, $help, true, true,
-            $authplugin->get_custom_user_profile_fields());
+        display_auth_lock_options(
+            $settings,
+            $authplugin->authtype,
+            $authplugin->userfields,
+            $help,
+            true,
+            true,
+            $authplugin->get_custom_user_profile_fields()
+        );
     }
 
     // The field delimiter to use for multiple value fields from IdP.
     $settings->add(new admin_setting_configtext(
-            'auth_iomadsaml2/fielddelimiter',
-            get_string('fielddelimiter', 'auth_iomadsaml2'),
-            get_string('fielddelimiter_help', 'auth_iomadsaml2'),
-            ',',
-            PARAM_TEXT,
-            5));
+        'auth_iomadsaml2/fielddelimiter',
+        get_string('fielddelimiter', 'auth_iomadsaml2'),
+        get_string('fielddelimiter_help', 'auth_iomadsaml2'),
+        ',',
+        PARAM_TEXT,
+        5
+    ));
+
+    // Moodle as an IDP feature setting section.
+    $settings->add(new admin_setting_heading(
+        'auth_iomadsaml2/moodleidpheading',
+        get_string('moodleidpheading', 'auth_iomadsaml2'),
+        new lang_string('moodleidpdescription', 'auth_iomadsaml2')
+    ));
+
+    // Enable Moodle IDP.
+    $settings->add(new admin_setting_configselect(
+        'auth_iomadsaml2/moodleidpenabled',
+        get_string('moodleidpenabled', 'auth_iomadsaml2'),
+        get_string('moodleidpenabled_help', 'auth_iomadsaml2'),
+        0,
+        $yesno
+    ));
+
+        // IDP Metadata.
+    $settings->add(new setting_textonly(
+        'auth_iomadsaml2/moodleidpmetadata',
+        get_string('moodleidpmetadata', 'auth_iomadsaml2'),
+        get_string('moodleidpmetadata_help', 'auth_iomadsaml2', $CFG->wwwroot . '/auth/iomadsaml2/idp/metadata.php')
+    ));
+
+    // List valid SPs.
+    $settings->add(new admin_setting_configtextarea(
+        'auth_iomadsaml2/moodleidpsplist',
+        get_string('moodleidpsplist', 'auth_iomadsaml2'),
+        get_string('moodleidpsplist_help', 'auth_iomadsaml2', ['example' => "<pre>
+https://www.someothermoodle.com/auth/iomadsaml2/sp/metadata.php
+</pre>"]),
+        '',
+        PARAM_TEXT
+    ));
 }

@@ -29,27 +29,22 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG, $iomadsaml2auth, $iomadsaml2config;
 
-// IOMAD
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
-if ($companyid > 0) {
-    $postfix = "_$companyid";
-} else {
-    $postfix = "";
-}
+// IOMAD.
+$postfix = iomad::get_company_postfix();
 
 $metadatasources = [];
 foreach ($iomadsaml2auth->metadataentities as $idpentity) {
     $metadataurlhash = md5($idpentity->metadataurl);
     $metadatasources[$metadataurlhash] = [
         'type' => 'xml',
-        'file' => "$CFG->dataroot/iomadsaml2/" . $metadataurlhash . $postfix . ".idp.xml"
+        'file' => "$CFG->dataroot/iomadsaml2/" . $metadataurlhash . $postfix . ".idp.xml",
     ];
 }
 
 $remoteip = getremoteaddr();
 $baseurl = optional_param('baseurl', $CFG->wwwroot, PARAM_URL);
 
-$config = array(
+$config = [
     'baseurlpath'       => $baseurl . '/auth/iomadsaml2/sp/',
     'application'       => [
       'baseURL'         => $baseurl . '/auth/iomadsaml2/sp/',
@@ -107,8 +102,7 @@ $config = array(
     'authproc.sp' => \auth_iomadsaml2\api::authproc_filters_hook(),
 
     // TODO setting for redirect.sign.
-);
+];
 
 // Save this in a global for later.
 $iomadsaml2config = $config;
-

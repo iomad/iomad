@@ -1,0 +1,3 @@
+<ds:Transform xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/TR/1999/REC-xpath-19991116">
+  <ds:XPath>count(//. | //@* | //namespace::*)</ds:XPath>
+</ds:Transform>

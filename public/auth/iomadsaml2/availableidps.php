@@ -34,15 +34,17 @@ $heading = get_string('manageidpsheading', 'auth_iomadsaml2');
 
 $PAGE->set_pagelayout('standard');
 
-auth_iomadsaml2_admin_nav($heading,
-    "/auth/iomadsaml2/availableidps.php");
+auth_iomadsaml2_admin_nav(
+    $heading,
+    "/auth/iomadsaml2/availableidps.php"
+);
 
 $PAGE->requires->css('/auth/iomadsaml2/styles.css');
 
 $metadataentities = auth_iomadsaml2_get_idps(false, true);
 
 $data = [
-    'metadataentities' => $metadataentities
+    'metadataentities' => $metadataentities,
 ];
 
 $action = new moodle_url('/auth/iomadsaml2/availableidps.php');

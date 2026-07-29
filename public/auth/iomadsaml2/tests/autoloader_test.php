@@ -14,9 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace auth_iomadsaml2;
+
 defined('MOODLE_INTERNAL') || die();
 
-require_once(__DIR__ . '/../_autoload.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
  * Test Saml2 Autoloader
@@ -26,14 +28,14 @@ require_once(__DIR__ . '/../_autoload.php');
  * @copyright   2018 Catalyst IT Australia {@link http://www.catalyst-au.net}
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class auth_iomadsaml2_autoloader_test extends advanced_testcase {
-    public function test_it_loads_classes() {
+final class autoloader_test extends \advanced_testcase {
+    public function test_it_loads_classes(): void {
         $classes = [
             \Psr\Log\LoggerInterface::class,
             \SAML2\Utils::class,
             \SimpleSAML\Configuration::class,
             \RobRichards\XMLSecLibs\XMLSecEnc::class,
-            Twig\Loader\FilesystemLoader::class,
+            \Twig\Loader\FilesystemLoader::class,
         ];
         foreach ($classes as $class) {
             $found = class_exists($class) || interface_exists($class);

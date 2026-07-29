@@ -1,0 +1,3 @@
+<ds:Object xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="abc123" MimeType="image/png" Encoding="http://www.w3.org/2000/09/xmldsig#base64">
+  <ssp:data xmlns:ssp="urn:ssp:custom">iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=</ssp:data>
+</ds:Object>

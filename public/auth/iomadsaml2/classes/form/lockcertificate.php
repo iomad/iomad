@@ -28,8 +28,8 @@ namespace auth_iomadsaml2\form;
 defined('MOODLE_INTERNAL') || die();
 
 use html_writer;
-use moodleform;
 use local_iomad\iomad;
+use moodleform;
 
 require_once($CFG->libdir . '/formslib.php');
 
@@ -44,20 +44,12 @@ class lockcertificate extends moodleform {
      * Form definition.
      */
     protected function definition() {
-        global $OUTPUT, $CFG;
+        global $OUTPUT;
         $mform = $this->_form;
         $buttonarray = [];
 
-        // IOMAD
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if ($companyid > 0) {
-            $postfix = "_$companyid";
-        } else {
-            $postfix = "";
-        }
-
         $certslockwarning  = html_writer::start_div('warning');
-        if (get_config('auth_iomadsaml2', 'certs_locked' . $postfix) == false) {
+        if (iomad::get_config('auth_iomadsaml2', 'certs_locked') == false) {
             // The certs are unlocked.
             $certslockwarning .= $OUTPUT->notification(get_string('certificatelock_warning', 'auth_iomadsaml2'), 'warning');
             $certslockwarning .= html_writer::end_div();
@@ -68,11 +60,14 @@ class lockcertificate extends moodleform {
             $certslockwarning .= $OUTPUT->notification(get_string('certificatelock_lockedmessage', 'auth_iomadsaml2'), 'warning');
             $certslockwarning .= html_writer::end_div();
             $mform->addElement('html', $certslockwarning);
-            $buttonarray[] = &$mform->createElement('submit', 'unlockcertsbutton',
-                    get_string('certificatelock_unlock', 'auth_iomadsaml2'));
+            $buttonarray[] = &$mform->createElement(
+                'submit',
+                'unlockcertsbutton',
+                get_string('certificatelock_unlock', 'auth_iomadsaml2')
+            );
         }
 
         $buttonarray[] = &$mform->createElement('cancel');
-        $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
+        $mform->addGroup($buttonarray, 'buttonar', '', [' '], false);
     }
 }

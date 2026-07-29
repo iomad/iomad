@@ -21,7 +21,7 @@
  * way so it has been copied here and forked. The main differences are
  * the config lookup, but also using the proxy SP module urls.
  *
- * Original file is: /.extlib/simplesamlphp/modules/saml/www/sp/metadata.php
+ * Original file is: simplesamlphp/modules/saml/www/sp/metadata.php
  *
  * @package    auth_iomadsaml2
  * @copyright  Brendan Heywood <brendan@catalyst-au.net>

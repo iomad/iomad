@@ -14,16 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * SAML2 SP metadata tests.
- *
- * @package    auth_iomadsaml2
- * @copyright  Brendan Heywood <brendan@catalyst-au.net>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+namespace auth_iomadsaml2;
 
-use auth_iomadsaml2\admin\saml2_settings;
-use auth_iomadsaml2\admin\setting_idpmetadata;
+use SimpleXMLElement;
 
 defined('MOODLE_INTERNAL') || die();
 require_once(__DIR__ . '/../locallib.php');
@@ -31,23 +24,24 @@ require_once(__DIR__ . '/../locallib.php');
 /**
  * Tests for SAML
  *
+ * @package    auth_iomadsaml2
  * @copyright  Brendan Heywood <brendan@catalyst-au.net>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class auth_iomadsaml2_locallib_testcase extends advanced_testcase {
+final class locallib_test extends \advanced_testcase {
     /**
      * Regression test for Issue 132.
      */
-    public function test_it_can_initialise_more_than_once() {
+    public function test_it_can_initialise_more_than_once(): void {
         global $CFG, $DB;
         $this->resetAfterTest(true);
 
         // Add a fake IdP.
-        $DB->insert_record('auth_iomadsaml2_idps', array(
+        $DB->insert_record('auth_iomadsaml2_idps', [
             'metadataurl' => 'http://www.example.com',
             'entityid'    => 'http://www.example.com',
             'name'        => 'Test IdP',
-            'activeidp'   => 1));
+            'activeidp'   => 1]);
 
         for ($i = 0; $i < 3; $i++) {
             require($CFG->dirroot . '/auth/iomadsaml2/setup.php');
@@ -57,7 +51,7 @@ class auth_iomadsaml2_locallib_testcase extends advanced_testcase {
         }
     }
 
-    public function test_auth_iomadsaml2_sp_metadata() {
+    public function test_auth_iomadsaml2_sp_metadata(): void {
         global $CFG;
 
         $this->resetAfterTest();
@@ -74,18 +68,17 @@ class auth_iomadsaml2_locallib_testcase extends advanced_testcase {
         $rawxml = auth_iomadsaml2_get_sp_metadata();
 
         $xml = new SimpleXMLElement($rawxml);
-        $xml->registerXPathNamespace('md',   'urn:oasis:names:tc:SAML:2.0:metadata');
+        $xml->registerXPathNamespace('md', 'urn:oasis:names:tc:SAML:2.0:metadata');
         $xml->registerXPathNamespace('mdui', 'urn:oasis:names:tc:SAML:metadata:ui');
 
         $contact = $xml->xpath('//md:EntityDescriptor/md:ContactPerson');
         $this->assertNotNull($contact);
-
     }
 
     /**
      * If locked do not generate the cert, if unlocked then generate the cert.
      */
-    public function test_setup_no_cert_generate_if_locked() {
+    public function test_setup_no_cert_generate_if_locked(): void {
         $this->resetAfterTest();
         $auth = get_auth_plugin('iomadsaml2');
         set_config('certs_locked', 1, 'auth_iomadsaml2');
@@ -115,7 +108,7 @@ class auth_iomadsaml2_locallib_testcase extends advanced_testcase {
     /**
      * If locked and we try to generate certs, throw an exception and do not generate the certs.
      */
-    public function test_create_certificates_if_locked() {
+    public function test_create_certificates_if_locked(): void {
         $this->resetAfterTest();
         $auth = get_auth_plugin('iomadsaml2');
         set_config('certs_locked', 1, 'auth_iomadsaml2');
@@ -126,7 +119,7 @@ class auth_iomadsaml2_locallib_testcase extends advanced_testcase {
             create_certificates($auth);
             // Fail if the exception is not thrown.
             $this->fail();
-        } catch (\saml2_exception $e) {
+        } catch (\iomadsaml2_exception $e) {
             $this->assertFalse(file_exists($auth->certcrt));
         }
     }

@@ -1,0 +1,9 @@
+<ds:DSAKeyValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+  <ds:P>GpM1</ds:P>
+  <ds:Q>GpM2</ds:Q>
+  <ds:G>GpM3</ds:G>
+  <ds:Y>GpM4</ds:Y>
+  <ds:J>GpM5</ds:J>
+  <ds:Seed>GpM6</ds:Seed>
+  <ds:PgenCounter>GpM7</ds:PgenCounter>
+</ds:DSAKeyValue>

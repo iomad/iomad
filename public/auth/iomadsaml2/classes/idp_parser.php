@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 namespace auth_iomadsaml2;
 
 /**
@@ -47,7 +48,6 @@ class idp_parser {
             $this->parse_xml($data);
         } else {
             $this->parse_urls($data);
-
         }
 
         return $this->idps;
@@ -114,13 +114,14 @@ class idp_parser {
                 $idpicon = $scheme . $parts[2];
 
                 $idpdata = new \auth_iomadsaml2\idp_data($idpname, $idpurl, $idpicon);
-
             } else if (count($parts) === 2) {
                 // Two elements could either be a IdPName + IdPURL, or IdPURL + IdPIcon.
 
                 // Detect if $parts[0] starts with a URL.
-                if (substr($parts[0], 0, 8) === 'https://' ||
-                    substr($parts[0], 0, 7) === 'http://') {
+                if (
+                    substr($parts[0], 0, 8) === 'https://' ||
+                    substr($parts[0], 0, 7) === 'http://'
+                ) {
                     $idpurl = $scheme . $parts[1];
                     $idpicon = $scheme . $parts[2];
 
@@ -132,7 +133,6 @@ class idp_parser {
 
                     $idpdata = new \auth_iomadsaml2\idp_data($idpname, $idpurl, null);
                 }
-
             } else if (count($parts) === 1) {
                 // One element is the previous default.
                 $idpurl = $scheme . $parts[0];

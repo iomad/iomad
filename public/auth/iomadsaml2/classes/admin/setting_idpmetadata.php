@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 namespace auth_iomadsaml2\admin;
 
 use admin_setting_configtextarea;
@@ -36,18 +37,23 @@ require_once("{$CFG->libdir}/adminlib.php");
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class setting_idpmetadata extends admin_setting_configtextarea {
+
+    /** @var string */
+    protected $postfix;
+
+    /** @var int */
+    protected $companyid;
+
     /**
      * Constructor
      */
-    protected $postfix;
-    protected $companyid;
-    public function __construct($postfix = "") {
+    public function __construct($postfix = '') {
 
         // IOMAD set the postfix.
         $this->postfix = $postfix;
         $this->companyid = 0;
-        if ("" != $postfix) {
-            list ($drop, $companyid) = explode('_', $postfix);
+        if ('' != $postfix) {
+            [$drop, $companyid] = explode('_', $postfix);
             $this->companyid = $companyid;
         }
 
@@ -60,7 +66,8 @@ class setting_idpmetadata extends admin_setting_configtextarea {
             '',
             PARAM_RAW,
             80,
-            5);
+            5
+        );
     }
 
     /**
@@ -95,10 +102,10 @@ class setting_idpmetadata extends admin_setting_configtextarea {
         global $DB;
 
         $currentidpsrs = $DB->get_records('auth_iomadsaml2_idps', ['companyid' => $this->companyid]);
-        $oldidps = array();
+        $oldidps = [];
         foreach ($currentidpsrs as $idpentity) {
             if (!isset($oldidps[$idpentity->metadataurl])) {
-                $oldidps[$idpentity->metadataurl] = array();
+                $oldidps[$idpentity->metadataurl] = [];
             }
 
             $oldidps[$idpentity->metadataurl][$idpentity->entityid] = $idpentity;
@@ -143,8 +150,13 @@ class setting_idpmetadata extends admin_setting_configtextarea {
      * @param mixed $oldidps
      * @param int $activedefault
      */
-    private function process_idp_xml(idp_data $idp, DOMElement $idpelements, DOMXPath $xpath,
-                                        &$oldidps, $activedefault = 0) {
+    private function process_idp_xml(
+        idp_data $idp,
+        DOMElement $idpelements,
+        DOMXPath $xpath,
+        &$oldidps,
+        $activedefault = 0
+    ) {
         global $DB;
         $entityid = $idpelements->getAttribute('entityID');
 
@@ -170,11 +182,11 @@ class setting_idpmetadata extends admin_setting_configtextarea {
             $oldidp = $oldidps[$idp->idpurl][$entityid];
 
             if (!empty($idpname) && $oldidp->defaultname !== $idpname) {
-                $DB->set_field('auth_iomadsaml2_idps', 'defaultname', $idpname, array('id' => $oldidp->id));
+                $DB->set_field('auth_iomadsaml2_idps', 'defaultname', $idpname, ['id' => $oldidp->id]);
             }
 
             if (!empty($logo) && $oldidp->logo !== $logo) {
-                $DB->set_field('auth_iomadsaml2_idps', 'logo', $logo, array('id' => $oldidp->id));
+                $DB->set_field('auth_iomadsaml2_idps', 'logo', $logo, ['id' => $oldidp->id]);
             }
 
             // Remove the idp from the current array so that we don't delete it later.
@@ -204,7 +216,7 @@ class setting_idpmetadata extends admin_setting_configtextarea {
 
         foreach ($oldidps as $metadataidps) {
             foreach ($metadataidps as $oldidp) {
-                $DB->delete_records('auth_iomadsaml2_idps', array('id' => $oldidp->id));
+                $DB->delete_records('auth_iomadsaml2_idps', ['id' => $oldidp->id]);
             }
         }
     }
@@ -218,7 +230,7 @@ class setting_idpmetadata extends admin_setting_configtextarea {
     public function get_idps_data($value) {
         global $CFG;
 
-        require_once($CFG->libdir.'/filelib.php');
+        require_once($CFG->libdir . '/filelib.php');
 
         $parser = new idp_parser();
         $idps = $parser->parse($value);

@@ -59,32 +59,23 @@ foreach (explode(PHP_EOL, $iomadsaml2auth->config->requestedattributes) as $attr
 }
 // Moodle language code does not always map to the iso code, which is preferable for xml:lang attributes.
 $lang = get_string('iso6391', 'core_langconfig');
-
-// IOMAD
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
-if ($companyid > 0) {
-    $postfix = "_$companyid";
-} else {
-    $postfix = "";
-}
-
 $config[$iomadsaml2auth->spname] = [
     'saml:SP',
     'entityID' => !empty($iomadsaml2auth->config->spentityid) ? $iomadsaml2auth->config->spentityid : $defaultspentityid,
     'discoURL' => !empty($CFG->auth_iomadsaml2_disco_url) ? $CFG->auth_iomadsaml2_disco_url : null,
     'idp' => empty($CFG->auth_iomadsaml2_disco_url) ? $idpentityid : null,
     'NameIDPolicy' => ['Format' => $iomadsaml2auth->config->nameidpolicy, 'AllowCreate' => true],
-    'OrganizationName' => array(
+    'OrganizationName' => [
         $lang => $SITE->shortname,
-    ),
-    'OrganizationDisplayName' => array(
+    ],
+    'OrganizationDisplayName' => [
         $lang => $SITE->fullname,
-    ),
-    'OrganizationURL' => array(
+    ],
+    'OrganizationURL' => [
         $lang => $baseurl,
-    ),
+    ],
     'privatekey' => $iomadsaml2auth->spname . '.pem',
-    'privatekey_pass' => get_config('auth_iomadsaml2', 'privatekeypass' . $postfix),
+    'privatekey_pass' => iomad::get_config('auth_iomadsaml2', 'privatekeypass', 0, true),
     'certificate' => $iomadsaml2auth->spname . '.crt',
     'sign.logout' => true,
     'redirect.sign' => true,
@@ -111,10 +102,10 @@ if (!empty($iomadsaml2auth->config->authncontext)) {
  * the nameid value appears under the attribute "nameid"
  */
 if ($iomadsaml2auth->config->nameidasattrib) {
-    $config[$iomadsaml2auth->spname]['authproc'] = array(
-        20 => array(
+    $config[$iomadsaml2auth->spname]['authproc'] = [
+        20 => [
             'class' => 'saml:NameIDAttribute',
             'format' => '%V',
-        ),
-    );
+        ],
+    ];
 }

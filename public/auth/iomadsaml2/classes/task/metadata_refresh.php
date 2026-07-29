@@ -79,36 +79,52 @@ class metadata_refresh extends \core\task\scheduled_task {
      * @param bool $force
      */
     public function execute($force = false) {
+        global $DB;
+
         $config = get_config('auth_iomadsaml2');
 
-        if (empty($config->idpmetadata)) {
-            mtrace('IdP metadata not configured.');
-            return false;
+        // IOMAD - Get all of the companies.
+        $companies = $DB->get_records('local_iomad_companies', ['suspended' => 0]);
+        $didsomething = false;
+
+        // Process them.
+        foreach ($companies as $company) {
+            $postfix = '_' . $company->id;
+            $idpmetadata = 'idpmetadata' . $postfix;
+            $idpmetadatarefresh = 'idpmetadatarefresh' . $postfix;
+            if (empty($config->$idpmetadata)) {
+                mtrace('IdP metadata not configured for company ID ' . $company->id . '.');
+                continue;
+            }
+
+            if (!$force && empty($config->$idpmetadatarefresh)) {
+                $str = 'IdP metadata refresh is not configured for company ID ' . $company->id .
+                       '. Enable it in the auth settings or disable this scheduled task';
+                mtrace($str);
+                continue;
+            }
+
+            if (!$this->idpparser instanceof idp_parser) {
+                $this->idpparser = new idp_parser();
+            }
+
+            if ($this->idpparser->check_xml($config->$idpmetadata) == true) {
+                mtrace('IdP metadata config not a URL for company ID ' . $company->id .
+                       ', nothing to refresh.');
+                continue;
+            }
+
+            if (!$this->idpmetadata instanceof setting_idpmetadata) {
+                $this->idpmetadata = new setting_idpmetadata();
+            }
+
+            $this->idpmetadata->validate($config->$idpmetadata);
+
+            mtrace('IdP metadata refresh completed successfully for company ID ' . $company->id . '.');
+            $didsomething = true;
         }
 
-        if (!$force && empty($config->idpmetadatarefresh)) {
-            $str = 'IdP metadata refresh is not configured. Enable it in the auth settings or disable this scheduled task';
-            mtrace($str);
-            return false;
-        }
-
-        if (!$this->idpparser instanceof idp_parser) {
-            $this->idpparser = new idp_parser();
-        }
-
-        if ($this->idpparser->check_xml($config->idpmetadata) == true) {
-            mtrace('IdP metadata config not a URL, nothing to refresh.');
-            return false;
-        }
-
-        if (!$this->idpmetadata instanceof setting_idpmetadata) {
-            $this->idpmetadata = new setting_idpmetadata();
-        }
-
-        $this->idpmetadata->validate($config->idpmetadata);
-
-        mtrace('IdP metadata refresh completed successfully.');
-        return true;
+        return $didsomething;
     }
 
     /**

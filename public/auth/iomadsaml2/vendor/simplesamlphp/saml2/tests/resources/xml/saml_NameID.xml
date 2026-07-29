@@ -1,0 +1,1 @@
+<saml:NameID xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" NameQualifier="urn:x-simplesamlphp:namequalifier" SPNameQualifier="urn:x-simplesamlphp:spnamequalifier" Format="urn:the:format" SPProvidedID="TheSPProvidedID">TheNameIDValue</saml:NameID>

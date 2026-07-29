@@ -37,6 +37,11 @@ use core\check\result;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class certificateexpiry extends check {
+    /** @var string Check ID */
+    protected string $id;
+
+    /** @var string Check name */
+    protected $name;
 
     /**
      * Constructor
@@ -55,14 +60,15 @@ class certificateexpiry extends check {
     public function get_action_link(): ?\action_link {
         return new \action_link(
             new \moodle_url('/auth/iomadsaml2/cert.php'),
-            get_string('certificatedetails', 'auth_iomadsaml2'));
+            get_string('certificatedetails', 'auth_iomadsaml2')
+        );
     }
 
     /**
      * Return result
      * @return result
      */
-    public function get_result() : result {
+    public function get_result(): result {
         global $CFG, $iomadsaml2auth;
 
         $path = $iomadsaml2auth->certcrt;
@@ -95,4 +101,3 @@ class certificateexpiry extends check {
         return new result(result::OK, $summary, '');
     }
 }
-

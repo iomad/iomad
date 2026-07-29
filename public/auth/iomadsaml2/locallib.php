@@ -94,17 +94,17 @@ function auth_iomadsaml2_get_sp_metadata($baseurl = '') {
         $acsArray = array('index' => $index);
         switch ($services) {
         case 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST':
-            $acsArray['Binding'] = SAML2\Constants::BINDING_HTTP_POST;
-            $acsArray['Location'] = "{$baseurl}/auth/iomadsaml2/sp/saml2-acs.php/{$sourceId}";
+                $acsArray['Binding'] = SAML2\Constants::BINDING_HTTP_POST;
+                $acsArray['Location'] = "{$baseurl}/auth/iomadsaml2/sp/saml2-acs.php/{$sourceId}";
             break;
         case 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact':
-            $acsArray['Binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact';
-            $acsArray['Location'] = "{$baseurl}/auth/iomadsaml2/sp/saml2-acs.php/{$sourceId}";
+                $acsArray['Binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact';
+                $acsArray['Location'] = "{$baseurl}/auth/iomadsaml2/sp/saml2-acs.php/{$sourceId}";
             break;
         case 'urn:oasis:names:tc:SAML:2.0:profiles:holder-of-key:SSO:browser':
-            $acsArray['Binding'] = 'urn:oasis:names:tc:SAML:2.0:profiles:holder-of-key:SSO:browser';
-            $acsArray['Location'] = "{$baseurl}/auth/iomadsaml2/sp/saml2-acs.php/{$sourceId}";
-            $acsArray['hoksso:ProtocolBinding'] = SAML2\Constants::BINDING_HTTP_REDIRECT;
+                $acsArray['Binding'] = 'urn:oasis:names:tc:SAML:2.0:profiles:holder-of-key:SSO:browser';
+                $acsArray['Location'] = "{$baseurl}/auth/iomadsaml2/sp/saml2-acs.php/{$sourceId}";
+                $acsArray['hoksso:ProtocolBinding'] = SAML2\Constants::BINDING_HTTP_REDIRECT;
             break;
         }
         $eps[] = $acsArray;
@@ -497,16 +497,22 @@ function auth_iomadsaml2_admin_nav($title, $url) {
     $PAGE->set_url($url);
     $PAGE->set_course($SITE);
 
-    $PAGE->navbar->add(get_string('administrationsite'),
-            new moodle_url('/admin/search.php'));
+    $PAGE->navbar->add(
+        get_string('administrationsite'),
+        new moodle_url('/admin/search.php')
+    );
 
     $PAGE->navbar->add(get_string('plugins', 'admin'));
 
-    $PAGE->navbar->add(get_string('authentication', 'admin'),
-            new moodle_url('/admin/settings.php?section=manageauths'));
+    $PAGE->navbar->add(
+        get_string('authentication', 'admin'),
+        new moodle_url('/admin/settings.php?section=manageauths')
+    );
 
-    $PAGE->navbar->add(get_string('pluginname', 'auth_iomadsaml2'),
-            new moodle_url('/admin/settings.php', array('section' => 'authsettingiomadsaml2')));
+    $PAGE->navbar->add(
+        get_string('pluginname', 'auth_iomadsaml2'),
+        new moodle_url('/admin/settings.php', ['section' => 'authsettingiomadsaml2'])
+    );
 
     $PAGE->navbar->add($title, new moodle_url($url));
 

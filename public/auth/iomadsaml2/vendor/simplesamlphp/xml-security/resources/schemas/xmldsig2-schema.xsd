@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+#
+# Copyright ©[2011] World Wide Web Consortium 
+# (Massachusetts Institute of Technology,  
+#  European Research Consortium for Informatics and Mathematics, 
+#  Keio University). All Rights Reserved.  
+# This work is distributed under the W3C® Software License [1] in the
+# hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+# the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+# PURPOSE. 
+# [1] http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
+#
+-->
+
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:dsig11="http://www.w3.org/2009/xmldsig11#" xmlns:dsig2="http://www.w3.org/2010/xmldsig2#" targetNamespace="http://www.w3.org/2010/xmldsig2#" elementFormDefault="qualified" version="0.1">
+	<import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="xmldsig-core-schema.xsd"/>
+	<import namespace="http://www.w3.org/2009/xmldsig11#" schemaLocation="xmldsig11-schema.xsd"/>
+	<element name="Selection" type="dsig2:SelectionType"/>
+	<complexType name="SelectionType">
+		<sequence>
+			<any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+			<!--
+                The <disg2:Selection> element's content depends on the Algorithm,
+                and includes these built-in elements, or any other element content:
+               <element ref="disg2:IncludedXPath">
+               <element ref="dsig2:ExcludedXPath">
+               <element ref="disg2:ByteRange">
+            -->
+		</sequence>
+		<attribute name="URI" type="anyURI" use="required"/>
+		<attribute name="Algorithm" type="anyURI" use="required"/>
+	</complexType>
+	<element name="IncludedXPath" type="string"/>
+	<element name="ExcludedXPath" type="string"/>
+	<element name="ByteRange" type="string"/>
+    <element name="Verifications" type="dsig2:VerificationsType"/>
+    <complexType name="VerificationsType">
+        <sequence>
+          <element ref="dsig2:Verification" maxOccurs="unbounded"/>
+        </sequence>
+    </complexType>
+	<element name="Verification" type="dsig2:VerificationType"/>
+	<complexType name="VerificationType">
+        <choice minOccurs="0" maxOccurs="unbounded">
+            <any namespace="##other" processContents="lax"/>
+            <element ref="dsig2:QualifiedAttr"/>
+            <element ref="dsig2:UnqualifiedAttr"/>
+        </choice>
+        <attribute name="Type" type="anyURI" use="required"/>
+        <attribute name="DigestDataLength" type="nonNegativeInteger"/>
+        <attribute name="PositionAssertion" type="string"/>
+        <anyAttribute namespace="##other" processContents="lax"/>
+	</complexType>
+    <element name="QualifiedAttr" type="dsig2:QualifiedAttrType"/>
+    <complexType type="QualifiedAttrType">
+        <attribute name="Name" type="NCName" use="required"/>
+        <attribute name="NS" type="anyURI" use="required"/>
+    </complexType>
+    <element name="UnqualifiedAttr" type="dsig2:UnqualifiedAttrType"/>
+    <complexType type="UnqualifiedAttrType">
+        <attribute name="Name" type="NCName" use="required"/>
+        <attribute name="ParentName" type="NCName" use="required"/>
+        <attribute name="ParentNS" type="anyURI"/>
+    </complexType>
+</schema>

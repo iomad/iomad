@@ -1,0 +1,56 @@
+
+{% set pagetitle = dictTitle | trans %}
+{% extends "base.twig" %}
+{% block content %}
+    <h2>{{ dictTitle | trans }}</h2>
+    {{ dictDescr | trans(parameters) }}
+
+    {# include optional information for error
+       Some exceptions set 'includeTemplate' to the name of a template to include.
+       e.g. "core:no_state.tpl.php". The format is "<module>:<template name>"
+    #}
+    {% if includeTemplate -%}
+        {% set parts = includeTemplate|split(':') %}
+        {% set namespacedTemplate = "@" ~ parts[0] ~ "/" ~ parts[1] %}
+        {% include(namespacedTemplate) %}
+    {%- endif %}
+
+    <div class="message-box">
+        <p>{{ 'If you report this error, please also report this tracking number which makes it possible to locate your session in the logs available to the system administrator:' | trans }}</p>
+        <div class="pure-button-group two-elements" role="group">
+            <label class="pure-button hollow" disabled><pre id="trackid">{{ error.trackId }}</pre></label>
+            <button data-clipboard-target="#trackid" id="btntrackid" class="pure-button clipboard-btn copy">
+                <i class="fa fa-copy"></i>
+            </button>
+        </div>
+    </div>
+
+    {# print out exception only if the exception is available #}
+    {% if showerrors -%}
+        <h2>{{'Debug information' | trans}}</h2>
+        <p>{{'The debug information below may be of interest to the administrator / help desk:' | trans}}</p>
+        <p class="message-box error"><tt>{{ error.exceptionMsg }}</tt></p>
+        <div class="code-box code-box-content"><pre>{{ error.exceptionTrace }}</pre></div>
+    {%- endif %}
+
+    {# Add error report submit section if we have a valid technical contact. 'errorreportaddress' will only be set if
+       the technical contact email address has been set. #}
+    {% if errorReportAddress is defined -%}
+        <h2>{{ 'Report errors' | trans }}</h2>
+        <form action="{{ errorReportAddress }}" class="pure-form" method="post">
+            <p>{{ 'Optionally enter your email address, for the administrators to be able contact you for further questions about your issue:' | trans }}</p>
+            <label for="email">{{ 'E-mail address:' | trans }}</label>
+                <input type="email" name="email" id="email" class="edge" size="50" value="{{ email }}">
+
+            <textarea class="text-area edge" name="text" rows="6" cols="50" placeholder="{{ 'Explain what you did when this error occurred...' | trans }}" required></textarea>
+        <p class="center">
+            <input type="hidden" name="reportId" value="{{ error.reportId }}" />
+            <input type="submit" name="send" class="pure-button pure-button-red" value="{{ 'Send error report' | trans }}" />
+        </p>
+        </form>
+    {%- endif %}
+
+    <h2>{{ 'How to get help' | trans }}</h2>
+    <p>{{ 'This error probably is due to some unexpected behaviour or to misconfiguration of SimpleSAMLphp. Contact the administrator of this login service, and send them the error message above.' | trans }}</p>
+
+{% endblock %}

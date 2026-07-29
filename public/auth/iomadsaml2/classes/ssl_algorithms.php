@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 namespace auth_iomadsaml2;
 
 defined('MOODLE_INTERNAL') || die();
@@ -40,7 +41,7 @@ abstract class ssl_algorithms {
      * Return an array of signature algorithms in a form suitable for feeding into a dropdown form.
      */
     public static function get_valid_saml_signature_algorithms() {
-        $return = array();
+        $return = [];
         $return['http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'] = get_string('sha256', 'auth_iomadsaml2');
         $return['http://www.w3.org/2001/04/xmldsig-more#rsa-sha384'] = get_string('sha384', 'auth_iomadsaml2');
         $return['http://www.w3.org/2001/04/xmldsig-more#rsa-sha512'] = get_string('sha512', 'auth_iomadsaml2');
@@ -55,7 +56,7 @@ abstract class ssl_algorithms {
      * @return string
      */
     public static function convert_signature_algorithm_to_digest_alg_format($signaturealgorithm) {
-        switch($signaturealgorithm) {
+        switch ($signaturealgorithm) {
             case 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256':
                 return 'SHA256';
             case 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha384':

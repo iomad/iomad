@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE schema
+  PUBLIC "-//W3C//DTD XMLSchema 200102//EN" "http://www.w3.org/2001/XMLSchema.dtd"
+ [
+   <!ATTLIST schema 
+     xmlns:ds CDATA #FIXED "urn:x-simplesamlphp:namespace">
+   <!ENTITY ssp 'urn:x-simplesamlphp:namespace'>
+   <!ENTITY % p ''>
+   <!ENTITY % s ''>
+  ]>
+
+<!-- Schema for SimpleSAMLphp dummy classes -->
+
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+        xmlns:ssp="urn:x-simplesamlphp:namespace"
+        targetNamespace="urn:x-simplesamlphp:namespace"
+        version="0.1" elementFormDefault="qualified"> 
+
+<!-- Start ExtendableElement -->
+
+<element name="ExtendableElement" type="ssp:ExtendableElementType"/>
+<complexType name="ExtendableElementType">
+  <sequence> 
+    <element ref="ssp:Chunk"/> 
+    <any namespace="##any" processContents="lax"/>
+    <!-- (1,1) elements from (1,1) external namespace -->
+  </sequence>  
+</complexType>
+
+<!-- End ExtendableElement -->
+
+<!-- Start Chunk -->
+
+<element name="Chunk" type="string"/>
+
+<!-- End Chunk -->
+
+<!-- Start BooleanElement -->
+
+<element name="BooleanElement" type="boolean"/>
+
+<!-- End BooleanElement -->
+
+<!-- Start StringElement -->
+
+<element name="StringElement" type="string"/>
+
+<!-- End StringElement -->
+
+<!-- Start URIElement -->
+
+<element name="URIElement" type="anyURI"/>
+
+<!-- End URIElement -->
+
+<!-- Start ExtendableAttributesElement -->
+
+<element name="ExtendableAttributesElement" type="ssp:ExtendableAttributesElementType"/>
+<complexType name="ExtendableAttributesElementType">
+  <anyAttribute namespace="##any" processContents="lax"/>
+</complexType>
+
+<!-- End ExtendableAttributesElement -->
+
+</schema>

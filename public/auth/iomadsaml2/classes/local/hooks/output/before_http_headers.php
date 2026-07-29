@@ -24,7 +24,6 @@ namespace auth_iomadsaml2\local\hooks\output;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class before_http_headers {
-
     /**
      * Callback before HTTP headers are sent.
      *

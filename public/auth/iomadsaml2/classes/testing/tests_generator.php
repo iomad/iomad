@@ -13,6 +13,11 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+namespace auth_iomadsaml2\testing;
+
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Methods common to Moodle and Totara tests generators
  *
@@ -21,12 +26,7 @@
  * @copyright Catalyst IT
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-namespace auth_iomadsaml2\testing;
-
-defined('MOODLE_INTERNAL') || die();
-
 trait tests_generator {
-
     /**
      * To be called from data reset code only,
      * do not use in tests.
@@ -43,7 +43,7 @@ trait tests_generator {
      * @param bool $createfiles
      * @return \stdClass record from db
      */
-    public function create_idp_entity($idprecord = [], $createfiles = true) : \stdClass {
+    public function create_idp_entity($idprecord = [], $createfiles = true): \stdClass {
         global $DB;
         // Add IdP and configuration.
         $entitycount = ++$this->entitiescount;
@@ -66,7 +66,7 @@ trait tests_generator {
             $auth = get_auth_plugin('iomadsaml2');
             touch($auth->certcrt);
             touch($auth->certpem);
-            touch($auth->get_file(md5($idprecord['metadataurl']). ".idp.xml"));
+            touch($auth->get_file(md5($idprecord['metadataurl']) . ".idp.xml"));
         }
         return $DB->get_record('auth_iomadsaml2_idps', ['id' => $recordid]);
     }

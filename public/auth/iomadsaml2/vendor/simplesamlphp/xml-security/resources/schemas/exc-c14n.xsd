@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+   <!DOCTYPE schema
+     PUBLIC "-//W3C//DTD XMLSchema 200102//EN" "http://www.w3.org/2001/XMLSchema.dtd"
+    [
+      <!ATTLIST schema
+        xmlns:ec CDATA #FIXED 'http://www.w3.org/2001/10/xml-exc-c14n#'>
+      <!ENTITY ec 'http://www.w3.org/2001/10/xml-exc-c14n#'>
+      <!ENTITY % p ''>
+      <!ENTITY % s ''>
+     ]> 
+
+
+<!-- Schema for Exclusive Canonicalization
+    http://www.w3.org/2001/10/xml-exc-c14n#
+    $Revision: 1.2 $ on $Date: 2021/07/21 15:23:07 $ by $Author: carcone $
+
+    Copyright 2002 The Internet Society and W3C (Massachusetts Institute
+    of Technology, Institut National de Recherche en Informatique et en
+    Automatique, Keio University). All Rights Reserved.
+    http://www.w3.org/Consortium/Legal/
+
+    This document is governed by the W3C Software License [1] as described
+    in the FAQ [2].
+
+    [1] http://www.w3.org/Consortium/Legal/copyright-software-19980720
+    [2] http://www.w3.org/Consortium/Legal/IPR-FAQ-20000620.html#DTD
+-->
+
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+           xmlns:ec="http://www.w3.org/2001/10/xml-exc-c14n#"
+           targetNamespace="http://www.w3.org/2001/10/xml-exc-c14n#"
+           version="0.1" elementFormDefault="qualified">
+   <element name="InclusiveNamespaces" type="ec:InclusiveNamespaces"/>
+    
+   <complexType name="InclusiveNamespaces">
+      <attribute name="PrefixList" type="NMTOKENS"/>
+   </complexType>
+</schema>

@@ -27,8 +27,10 @@ require_once(__DIR__ . '/../../config.php');
 // @codingStandardsIgnoreEnd
 require('setup.php');
 
-auth_iomadsaml2_admin_nav(get_string('certificatedetails', 'auth_iomadsaml2'),
-    '/auth/iomadsaml2/cert.php');
+auth_iomadsaml2_admin_nav(
+    get_string('certificatedetails', 'auth_iomadsaml2'),
+    '/auth/iomadsaml2/cert.php'
+);
 
 $path = $iomadsaml2auth->certcrt;
 $data = openssl_x509_parse(file_get_contents($path));
@@ -38,4 +40,3 @@ echo get_string('certificatedetailshelp', 'auth_iomadsaml2');
 echo "<p>$path</p>";
 echo pretty_print($data);
 echo $OUTPUT->footer();
-

@@ -1,0 +1,3 @@
+<xenc11:KeyDerivationMethod xmlns:xenc11="http://www.w3.org/2009/xmlenc11#" Algorithm="http://www.w3.org/2009/xmlenc11#ConcatKDF">
+  <ds:KeyName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">testkey</ds:KeyName>
+</xenc11:KeyDerivationMethod>

@@ -1,0 +1,4 @@
+<ssp:ExtendableElement xmlns:ssp="urn:x-simplesamlphp:namespace">
+  <ssp:Chunk>some</ssp:Chunk>
+  <dummy:Chunk xmlns:dummy="urn:custom:dummy">some</dummy:Chunk>
+</ssp:ExtendableElement>

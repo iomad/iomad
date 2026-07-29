@@ -1,0 +1,8 @@
+<ds:Reference xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="ghi789" Type="urn:some:type" URI="#_1e280ee704fb1d8d9dec4bd6c1889ec96942921153">
+  <ds:Transforms>
+    <ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
+    <ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />
+  </ds:Transforms>
+  <ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256" />
+  <ds:DigestValue>/CTj03d1DB5e2t7CTo9BEzCf5S9NRzwnBgZRlm32REI=</ds:DigestValue>
+</ds:Reference>

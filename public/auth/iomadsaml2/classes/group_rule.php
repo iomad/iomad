@@ -29,7 +29,6 @@ namespace auth_iomadsaml2;
  * Class group_rule.
  */
 class group_rule {
-
     /**
      * Allow status.
      */
@@ -64,7 +63,7 @@ class group_rule {
      * @param string $config Rules config string.
      * @return \auth_iomadsaml2\group_rule[]
      */
-    public static function get_list(string  $config) {
+    public static function get_list(string $config) {
         $rules = [];
 
         $items = explode("\n", str_replace("\r\n", "\n", $config));

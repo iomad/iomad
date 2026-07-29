@@ -25,7 +25,7 @@
 
 // NOTE: no MOODLE_INTERNAL test here, this file may be required by behat before including /config.php.
 
-use auth_iomadsaml2\admin\saml2_settings;
+use auth_iomadsaml2\admin\iomadsaml2_settings;
 use auth_iomadsaml2\task\metadata_refresh;
 use Behat\Behat\Hook\Scope\AfterStepScope;
 use Behat\Mink\Exception\ExpectationException;
@@ -70,7 +70,7 @@ class behat_auth_iomadsaml2 extends behat_base {
      * @Given /^I go to the (login|self-test) page +\# auth_iomadsaml2$/
      */
     public function i_go_to_the_login_page_auth_saml($page) {
-        switch ($page){
+        switch ($page) {
             case 'login':
                 $page = '/login/index.php';
                 break;
@@ -277,8 +277,11 @@ EOF;
      */
     public function the_mock_saml_idp_allows_login_with_the_following_attributes($passive, TableNode $data) {
         // Check the correct page is current.
-        $this->find('xpath', '//h1[normalize-space(.)="Mock IdP login"]',
-                new ExpectationException('Not on the IdP login page.', $this->getSession()));
+        $this->find(
+            'xpath',
+            '//h1[normalize-space(.)="Mock IdP login"]',
+            new ExpectationException('Not on the IdP login page.', $this->getSession())
+        );
 
         // Find out if it's in passive mode.
         $pagepassive = $this->getSession()->getDriver()->find('//h2[normalize-space(.)="Passive mode"]');
@@ -307,11 +310,17 @@ EOF;
      */
     public function the_mock_saml_idp_does_not_allow_passive_login() {
         // Check the correct page is current.
-        $this->find('xpath', '//h1[normalize-space(.)="Mock IdP login"]',
-                new ExpectationException('Not on the IdP login page.', $this->getSession()));
+        $this->find(
+            'xpath',
+            '//h1[normalize-space(.)="Mock IdP login"]',
+            new ExpectationException('Not on the IdP login page.', $this->getSession())
+        );
 
-        $this->find('xpath', '//h2[normalize-space(.)="Passive mode"]',
-                new ExpectationException('Expected passive mode, but not passive.', $this->getSession()));
+        $this->find(
+            'xpath',
+            '//h2[normalize-space(.)="Passive mode"]',
+            new ExpectationException('Expected passive mode, but not passive.', $this->getSession())
+        );
 
         // Press the no-login button.
         $this->getSession()->getDriver()->click('//button[@id="nologin"]');
@@ -326,8 +335,11 @@ EOF;
      */
     public function the_mock_saml_idp_confirms_logout() {
         // Check the correct page is current.
-        $this->find('xpath', '//h1[normalize-space(.)="Mock IdP logout"]',
-                new ExpectationException('Not on the IdP logout page.', $this->getSession()));
+        $this->find(
+            'xpath',
+            '//h1[normalize-space(.)="Mock IdP logout"]',
+            new ExpectationException('Not on the IdP logout page.', $this->getSession())
+        );
 
         // Press the submit button.
         $this->getSession()->getDriver()->click('//button');
@@ -379,26 +391,22 @@ EOF;
     }
 
     /**
-     * Execute.
+     * Helper function to execute api in a given context.
      *
-     * @param string $contextapi context in which api is defined.
-     * @param array $params list of params to pass.
+     * Note: The contextapi does not support a callback.
+     *
+     * @param string|array $contextapi context in which api is defined.
+     * @param mixed $params list of params to pass or a single parameter
      */
-    protected function execute($contextapi, $params = []) {
+    protected function execute(
+        string|array $contextapi,
+        mixed $params = []
+    ): void {
         global $CFG;
 
         // We allow usage of depricated behat steps for now.
         $CFG->behat_usedeprecated = true;
 
-        // If newer Moodle, use the correct version.
-        if ($CFG->branch >= 29) {
-            return parent::execute($contextapi, $params);
-        }
-
-        // Backported for Moodle 27 and 28.
-        list($class, $method) = explode("::", $contextapi);
-        $object = behat_context_helper::get($class);
-        $object->setMinkParameter('base_url', $CFG->wwwroot);
-        return call_user_func_array([$object, $method], $params);
+        parent::execute($contextapi, $params);
     }
 }

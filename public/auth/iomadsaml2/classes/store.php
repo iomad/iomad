@@ -27,7 +27,7 @@ namespace auth_iomadsaml2;
 /**
  * A moodle DB datastore
  *
- * This is essentially a clone of /.extlib/simplesamlphp/lib/SimpleSAML/Store/SQL.php
+ * This is essentially a clone of simplesamlphp/lib/SimpleSAML/Store/SQL.php
  * but with the SQL rewritten to use the moodle api $DB->blah() instead of PDO;
  *
  * @copyright  2016 Brendan Heywood <brendan@catalyst-au.net>
@@ -41,7 +41,7 @@ class store implements \SimpleSAML\Store\StoreInterface {
      * @param string $key  The key.
      * @return mixed|NULL  The value.
      */
-    public function get($type, $key) {
+    public function get(string $type, string $key): mixed {
         global $DB;
 
         assert(is_string($type));
@@ -59,11 +59,11 @@ class store implements \SimpleSAML\Store\StoreInterface {
                AND (expire IS NULL
                    OR expire > :now
                    )';
-        $params = array(
+        $params = [
             'type' => $type,
             'k' => $key,
             'now' => time(),
-        );
+        ];
 
         $rows = $DB->get_records_sql($query, $params);
         if (empty($rows)) {
@@ -104,17 +104,17 @@ class store implements \SimpleSAML\Store\StoreInterface {
         $value = serialize($value);
         $value = rawurlencode($value);
 
-        $data = array(
+        $data = [
             'type' => $type,
             'k' => $key,
             'value' => $value,
             'expire' => $expire,
-        );
+        ];
 
-        $find = array(
+        $find = [
             'type' => $type,
             'k' => $key,
-        );
+        ];
 
         $record = $DB->get_record('auth_iomadsaml2_kvstore', $find);
         if ($record) {
@@ -138,10 +138,10 @@ class store implements \SimpleSAML\Store\StoreInterface {
             $key = sha1($key);
         }
 
-        $data = array(
+        $data = [
             'type' => $type,
             'k' => $key,
-        );
+        ];
 
         $DB->delete_records('auth_iomadsaml2_kvstore', $data);
     }
@@ -153,10 +153,8 @@ class store implements \SimpleSAML\Store\StoreInterface {
         global $DB;
         $sql = 'DELETE FROM {auth_iomadsaml2_kvstore}
                  WHERE expire < :now';
-        $params = array('now' => time());
+        $params = ['now' => time()];
 
         $DB->execute($sql, $params);
     }
-
 }
-

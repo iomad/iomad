@@ -40,7 +40,6 @@ require_once("$CFG->libdir/formslib.php");
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class selectidp_buttons extends moodleform {
-
     /**
      * Definition
      */
@@ -53,13 +52,15 @@ class selectidp_buttons extends moodleform {
 
         $mform->addElement('hidden', 'wants', $wants);
         $mform->setType('wants', PARAM_URL);
-        $mform->addElement('checkbox', 'rememberidp' , '', get_string('rememberidp', 'auth_iomadsaml2'));
+        $mform->addElement('checkbox', 'rememberidp', '', get_string('rememberidp', 'auth_iomadsaml2'));
 
         foreach ($metadataentities as $idpentities) {
             if (isset($idpentities[$storedchoiceidp])) {
                 $storedchoiceidp = $idpentities[$storedchoiceidp];
-                $mform->addElement('html',
-                    $this->get_idpbutton($storedchoiceidp, $storedchoiceidp->name, $storedchoiceidp->logo, true));
+                $mform->addElement(
+                    'html',
+                    $this->get_idpbutton($storedchoiceidp, $storedchoiceidp->name, $storedchoiceidp->logo, true)
+                );
                 $mform->addElement('html', '<hr>');
                 unset($idpentities[$storedchoiceidp]);
             }
@@ -91,6 +92,4 @@ class selectidp_buttons extends moodleform {
 </div>
 EOD;
     }
-
 }
-

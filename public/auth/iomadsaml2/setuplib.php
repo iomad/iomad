@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 use auth_iomadsaml2\ssl_algorithms;
 use local_iomad\iomad;
 
-require_once(__DIR__ . '/_autoload.php');
+require_once(__DIR__ . '/vendor/autoload.php');
 
 global $CFG;
 require_once("{$CFG->dirroot}/auth/iomadsaml2/auth.php");
@@ -43,26 +43,18 @@ require_once("{$CFG->dirroot}/auth/iomadsaml2/auth.php");
  * @param integer $numberofdays Certificate expirey period
  */
 function create_certificates($iomadsaml2auth, $dn = false, $numberofdays = 3650) {
-    global $CFG, $SITE;
+    global $SITE;
 
-    // IOMAD
-    $companyid = iomad::get_my_companyid(context_system::instance(), false);
-    if ($companyid > 0) {
-        $postfix = "_$companyid";
-    } else {
-        $postfix = "";
-    }
-
-    if (get_config('auth_iomadsaml2', 'certs_locked' . $postfix) == true) {
+    if (iomad::get_config('auth_iomadsaml2', 'certs_locked', 0, true) == true) {
         throw new iomadsaml2_exception('cert_lock_error', get_string('certificatelock_regenerate', 'auth_iomadsaml2'));
     }
     $signaturealgorithm = ssl_algorithms::get_default_saml_signature_algorithm();
     if (!empty($iomadsaml2auth->config->signaturealgorithm)) {
         $signaturealgorithm = $iomadsaml2auth->config->signaturealgorithm;
     }
-    $opensslargs = array(
+    $opensslargs = [
       'digest_alg' => ssl_algorithms::convert_signature_algorithm_to_digest_alg_format($signaturealgorithm),
-    );
+    ];
     if (array_key_exists('OPENSSL_CONF', $_SERVER)) {
         $opensslargs['config'] = $_SERVER['OPENSSL_CONF'];
     }
@@ -70,7 +62,7 @@ function create_certificates($iomadsaml2auth, $dn = false, $numberofdays = 3650)
     if ($dn == false) {
         // These are somewhat arbitrary and aren't really seen except inside
         // the auto created certificate used to sign saml requests.
-        $dn = array(
+        $dn = [
             'commonName' => 'moodle',
             'countryName' => 'AU',
             'localityName' => 'moodleville',
@@ -78,11 +70,11 @@ function create_certificates($iomadsaml2auth, $dn = false, $numberofdays = 3650)
             'organizationName' => $SITE->shortname ? $SITE->shortname : 'moodle',
             'stateOrProvinceName' => 'moodle',
             'organizationalUnitName' => 'moodle',
-        );
+        ];
     }
 
     certificate_openssl_error_strings(); // Ensure existing messages are dropped.
-    $privkeypass = get_config('auth_iomadsaml2', 'privatekeypass' . $postfix);
+    $privkeypass = iomad::get_config('auth_iomadsaml2', 'privatekeypass', 0, true);
     $privkey = openssl_pkey_new($opensslargs);
     $csr     = openssl_csr_new($dn, $privkey, $opensslargs);
     $sscert  = openssl_csr_sign($csr, null, $privkey, $numberofdays, $opensslargs);
@@ -100,13 +92,12 @@ function create_certificates($iomadsaml2auth, $dn = false, $numberofdays = 3650)
         return get_string('nullpubliccert', 'auth_iomadsaml2') . $errors;
     }
 
-    if ( !file_put_contents($iomadsaml2auth->certpem, $privatekey) ) {
+    if (!file_put_contents($iomadsaml2auth->certpem, $privatekey)) {
         return get_string('nullprivatecert', 'auth_iomadsaml2');
     }
-    if ( !file_put_contents($iomadsaml2auth->certcrt, $publickey) ) {
+    if (!file_put_contents($iomadsaml2auth->certcrt, $publickey)) {
         return get_string('nullpubliccert', 'auth_iomadsaml2');
     }
-
 }
 
 /**
@@ -115,7 +106,7 @@ function create_certificates($iomadsaml2auth, $dn = false, $numberofdays = 3650)
  * @return string
  */
 function certificate_openssl_error_strings() {
-    $errors = array();
+    $errors = [];
     while ($error = openssl_error_string()) {
         $errors[] = $error;
     }
@@ -143,8 +134,10 @@ function pretty_print($arr) {
             if (is_array($val)) {
                 $retstr .= '<tr><td>' . $key . '</td><td>' . pretty_print($val) . '</td></tr>';
             } else {
-                if (strpos($key, 'valid') !== false
-                    && is_int($val)) {
+                if (
+                    strpos($key, 'valid') !== false
+                    && is_int($val)
+                ) {
                     $val = userdate($val) . " ($val)";
                 }
                 $retstr .= '<tr><td>' . $key . '</td><td>' . ($val == '' ? '""' : $val) . '</td></tr>';
@@ -181,7 +174,6 @@ function get_dn_email() {
  * General saml exception
  */
 class iomadsaml2_exception extends moodle_exception {
-
     /**
      * Constructor
      *

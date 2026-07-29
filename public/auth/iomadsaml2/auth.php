@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * Authenticate using an embeded SimpleSamlPhp instance
  *
@@ -23,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->libdir.'/authlib.php');
+require_once($CFG->libdir . '/authlib.php');
 
 /**
  * Plugin for Saml2 authentication.
@@ -33,5 +34,4 @@ require_once($CFG->libdir.'/authlib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class auth_plugin_iomadsaml2 extends \auth_iomadsaml2\auth {
-
 }

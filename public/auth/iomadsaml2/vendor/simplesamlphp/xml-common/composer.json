@@ -1,0 +1,56 @@
+{
+    "name": "simplesamlphp/xml-common",
+    "description": "A library with classes and utilities for handling XML structures.",
+    "type": "simplesamlphp-xmlprovider",
+    "keywords": ["saml", "xml"],
+    "homepage": "http://simplesamlphp.org",
+    "license": "LGPL-2.1-or-later",
+    "authors": [
+        {
+            "name": "Jaime Perez",
+            "email": "jaime.perez@uninett.no"
+        },
+        {
+            "name": "Tim van Dijen",
+            "email": "tvdijen@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "SimpleSAML\\XML\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SimpleSAML\\Test\\XML\\": ["tests/XML", "tests/Utils"]
+        }
+    },
+    "require": {
+        "php": "^8.1",
+        "ext-date": "*",
+        "ext-dom": "*",
+        "ext-filter": "*",
+        "ext-libxml": "*",
+        "ext-pcre": "*",
+        "ext-spl": "*",
+
+        "simplesamlphp/assert": "~1.8.1",
+        "simplesamlphp/composer-xmlprovider-installer": "~1.0.2",
+        "symfony/finder": "~6.4.0"
+    },
+    "require-dev": {
+        "simplesamlphp/simplesamlphp-test-framework": "~1.9.2"
+    },
+    "support": {
+        "issues": "https://github.com/simplesamlphp/xml-common/issues",
+        "source": "https://github.com/simplesamlphp/xml-common"
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/package-versions-deprecated": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true,
+            "simplesamlphp/composer-xmlprovider-installer": true
+        }
+    }
+}

@@ -82,15 +82,15 @@ if ($logout) {
 
 if (!$auth->isAuthenticated() && $passive) {
     /* Prevent it from calling the missing post redirection. /auth/iomadsaml2/sp/module.php/core/postredirect.php */
-    $auth->requireAuth(array(
+    $auth->requireAuth([
         'KeepPost' => false,
         'isPassive' => true,
-        'ErrorURL' => $CFG->wwwroot . '/auth/iomadsaml2/test.php?passivefail=1'
-    ));
+        'ErrorURL' => $CFG->wwwroot . '/auth/iomadsaml2/test.php?passivefail=1',
+    ]);
 } else if (!$auth->isAuthenticated() && $trylogin) {
-    $auth->requireAuth(array(
-        'KeepPost' => false
-    ));
+    $auth->requireAuth([
+        'KeepPost' => false,
+    ]);
 } else if (!$auth->isAuthenticated()) {
     echo '<p>You are not logged in: <a href="?login=true">Login</a> | <a href="?passive=true">isPassive test</a></p>';
     if ($passivefail) {
@@ -106,4 +106,3 @@ if (!$auth->isAuthenticated() && $passive) {
     echo '</pre>';
     echo '<p>You are logged in: <a href="?logout=true&idplogout=' . md5($auth->getAuthData('saml:sp:IdP')) . '">Logout</a></p>';
 }
-

@@ -1,0 +1,36 @@
+msgid ""
+msgstr ""
+"Content-Transfer-Encoding: 8bit\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: hu\n"
+"MIME-Version: 1.0\n"
+"Project-Id-Version: SimpleSAMLphp\n"
+"X-Domain: cron\n"
+
+msgid "Click here to run the cron jobs:"
+msgstr "Kattintson a cron futtatásához."
+
+msgid "Cron is a way to run things regularly on unix systems."
+msgstr "A cron egy módszer unix rendszereken parancsok rendszeres futtatására."
+
+#: /home/runner/work/simplesamlphp/simplesamlphp/modules/cron/hooks/hook_configpage.php:18
+msgid "Cron module information page"
+msgstr ""
+
+msgid "Cron ran at"
+msgstr "A cron ekkor futott le:"
+
+msgid "Cron report"
+msgstr "Cron jelentés."
+
+msgid "Cron result page"
+msgstr "Cron futási eredmények"
+
+msgid "Here are the result for the cron job execution:"
+msgstr "A cron lefutásának eredményei:"
+
+msgid "Here is a suggestion for a crontab file:"
+msgstr "Javaslat crontab file-ra."
+
+msgid "Run cron:"
+msgstr "Cron futás:"

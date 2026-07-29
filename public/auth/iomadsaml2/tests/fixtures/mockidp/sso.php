@@ -16,7 +16,7 @@
 
 /**
  * This test fixture mocks IdP behaviour by providing a basic user interface that can be manipulated
- * 
+ *
  * with specific Behat steps.
  *
  * The steps that work on this page (depending on how it was launched) are:
@@ -148,8 +148,10 @@ EOF;
     echo html_writer::tag('head', html_writer::tag('title', 'Behat SSO redirect back'));
     echo html_writer::start_tag('body');
     echo html_writer::start_tag('form', ['id' => 'frog', 'method' => 'post', 'action' => $destination]);
-    echo html_writer::empty_tag('input',
-            ['type' => 'hidden', 'name' => 'SAMLResponse', 'value' => base64_encode($outdoc->saveXML())]);
+    echo html_writer::empty_tag(
+        'input',
+        ['type' => 'hidden', 'name' => 'SAMLResponse', 'value' => base64_encode($outdoc->saveXML())]
+    );
     echo html_writer::end_tag('form');
     echo html_writer::tag('script', 'document.getElementById("frog").submit();');
     echo html_writer::end_tag('form');
@@ -210,21 +212,32 @@ echo html_writer::tag('pre', s($domxml->saveXML()));
 
 // Show a form.
 echo html_writer::start_tag('form', ['method' => 'post', 'action' => 'sso.php']);
-echo html_writer::empty_tag('input',
-        ['type' => 'hidden', 'name' => 'SAMLRequest', 'value' => $requestparam]);
+echo html_writer::empty_tag(
+    'input',
+    ['type' => 'hidden', 'name' => 'SAMLRequest', 'value' => $requestparam]
+);
 echo html_writer::start_div();
 echo html_writer::start_tag('label') . 'Attributes<br/>';
 $attributes = json_encode(['uid' => 'abc123', 'firstname' => 'Adam', 'surname' => 'Cliff',
         'email' => 'adam.cliff@example.com', 'lang' => 'en'], JSON_PRETTY_PRINT);
-echo html_writer::tag('textarea', $attributes,
-        ['id' => 'attributes', 'rows' => 10, 'cols' => 60, 'name' => 'attributes']);
+echo html_writer::tag(
+    'textarea',
+    $attributes,
+    ['id' => 'attributes', 'rows' => 10, 'cols' => 60, 'name' => 'attributes']
+);
 echo html_writer::end_tag('label');
 
-$buttons = html_writer::tag('button', 'Logged in',
-        ['type' => 'submit', 'id' => 'login', 'name' => 'login', 'value' => 1]);
+$buttons = html_writer::tag(
+    'button',
+    'Logged in',
+    ['type' => 'submit', 'id' => 'login', 'name' => 'login', 'value' => 1]
+);
 if ($passive) {
-    $buttons .= html_writer::tag('button', 'Not logged in',
-            ['type' => 'submit', 'id' => 'nologin', 'name' => 'nologin', 'value' => 1]);
+    $buttons .= html_writer::tag(
+        'button',
+        'Not logged in',
+        ['type' => 'submit', 'id' => 'nologin', 'name' => 'nologin', 'value' => 1]
+    );
 }
 echo html_writer::tag('div', $buttons);
 

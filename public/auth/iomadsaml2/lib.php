@@ -23,45 +23,6 @@
  */
 
 /**
- * Check if we have the saml=on param set. If so, disable guest access and force the user to log in with saml.
- *
- * This is an implementation of a legacy callback that will only be called in older Moodle versions.
- * It will not be called in Moodle 4.5+ that contain the hook core\hook\after_config,
- * instead, the callback auth_iomadsaml2\local\hooks\after_config::callback will be executed.
- *
- * @since  Moodle 3.8
- * @return void
- */
-function auth_iomadsaml2_after_config() {
-    global $CFG;
-    try {
-        $iomadsaml = optional_param('iomadsaml', null, PARAM_BOOL);
-        if ($iomadsaml == 1) {
-            if (isguestuser()) {
-                // We want to force users to log in with a real account, so log guest users out.
-                require_logout();
-            }
-            // We have the saml=on param set. Disable guest access (in memory -
-            // not saved in database) to force the login with saml for this request.
-            unset($CFG->autologinguests);
-        }
-    } catch (\Exception $exception) {
-        debugging('auth_iomadsaml2_after_config error', DEBUG_DEVELOPER, $exception->getTrace());
-    }
-}
-
-/**
- * Callback immediately after require_login succeeds.
- *
- * This is an implementation of a legacy callback that will only be called in older Moodle versions.
- * It will not be called in Moodle 4.4+ that contain the hook core\hook\output\before_http_headers,
- * instead, the callback auth_iomadsaml2\local\hooks\output\before_http_headers::callback will be executed.
- */
-function auth_iomadsaml2_after_require_login() {
-    \auth_iomadsaml2\auto_login::process();
-}
-
-/**
  * Callback before HTTP headers are sent.
  *
  * This is called on every page.
@@ -75,7 +36,7 @@ function auth_iomadsaml2_before_http_headers() {
  *
  * @return array of check objects
  */
-function auth_iomadsaml2_status_checks() : array {
+function auth_iomadsaml2_status_checks(): array {
     global $iomadsaml2auth;
     require_once(__DIR__ . '/setup.php');
 

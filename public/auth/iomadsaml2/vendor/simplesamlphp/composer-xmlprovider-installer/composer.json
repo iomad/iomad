@@ -1,0 +1,23 @@
+{
+    "name": "simplesamlphp/composer-xmlprovider-installer",
+    "description": "A composer plugin that will auto-generate a classmap with all classes that implement SerializableElementInterface.",
+    "license": "LGPL-2.1-only",
+    "type": "composer-plugin",
+    "autoload": {
+        "psr-4": {
+            "SimpleSAML\\Composer\\XMLProvider\\": "src/"
+        }
+    },
+    "extra": {
+        "class": "SimpleSAML\\Composer\\XMLProvider\\XMLProviderInstallerPlugin"
+    },
+    "require": {
+        "php": "^8.1",
+
+        "composer-plugin-api": "^2.0"
+    },
+    "require-dev": {
+        "composer/composer": "^2.4",
+        "simplesamlphp/simplesamlphp-test-framework": "^1.5.4"
+    }
+}

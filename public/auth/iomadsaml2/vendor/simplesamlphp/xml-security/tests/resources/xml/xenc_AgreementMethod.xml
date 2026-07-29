@@ -1,0 +1,22 @@
+<xenc:AgreementMethod xmlns:xenc="http://www.w3.org/2001/04/xmlenc#" Algorithm="http://www.w3.org/2009/xmlenc11#ECDH-ES">
+  <xenc:KA-Nonce>/CTj03d1DB5e2t7CTo9BEzCf5S9NRzwnBgZRlm32REI=</xenc:KA-Nonce>
+  <ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2001/04/xmlenc#sha256">
+    <some:Chunk xmlns:some="urn:x-simplesamlphp:namespace">some</some:Chunk>
+  </ds:DigestMethod>
+  <xenc:OriginatorKeyInfo Id="fed123">
+    <ds:KeyName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">testkey</ds:KeyName>
+    <ds:X509Data xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+      <ds:X509Certificate>MIICxDCCAi2gAwIBAgIUZ9QDx+SBFHednUWDFGm9tyVKrgQwDQYJKoZIhvcNAQELBQAwczElMCMGA1UEAwwcc2VsZnNpZ25lZC5zaW1wbGVzYW1scGhwLm9yZzEZMBcGA1UECgwQU2ltcGxlU0FNTHBocCBIUTERMA8GA1UEBwwISG9ub2x1bHUxDzANBgNVBAgMBkhhd2FpaTELMAkGA1UEBhMCVVMwIBcNMjIxMjAzMTAzNTQwWhgPMjEyMjExMDkxMDM1NDBaMHMxJTAjBgNVBAMMHHNlbGZzaWduZWQuc2ltcGxlc2FtbHBocC5vcmcxGTAXBgNVBAoMEFNpbXBsZVNBTUxwaHAgSFExETAPBgNVBAcMCEhvbm9sdWx1MQ8wDQYDVQQIDAZIYXdhaWkxCzAJBgNVBAYTAlVTMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDessdFRVDTMQQW3Na81B1CjJV1tmY3nopoIhZrkbDxLa+pv7jGDRcYreyu1DoQxEs06V2nHLoyOPhqJXSFivqtUwVYhR6NYgbNI6RRSsIJCweH0YOdlHna7gULPcLX0Bfbi4odStaFwG9yzDySwSEPtsKxm5pENPjNVGh+jJ+H/QIDAQABo1MwUTAdBgNVHQ4EFgQUvV75t8EoQo2fVa0E9otdtIGK5X0wHwYDVR0jBBgwFoAUvV75t8EoQo2fVa0E9otdtIGK5X0wDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOBgQANQUeiwPJXkWMXuaDHToEBKcezYGqGEYnGUi9LMjeb+Kln7X8nn5iknlz4k77rWCbSwLPC/WDr0ySYQA+HagaeUaFpoiYFJKS6uFlK1HYWnM3W4PUiGHg1/xeZlMO44wTwybXVo0y9KMhchfB5XNbDdoJcqWYvi6xtmZZNRbxUyw==</ds:X509Certificate>
+      <ds:X509SubjectName>/CN=selfsigned.simplesamlphp.org/O=SimpleSAMLphp HQ/L=Honolulu/ST=Hawaii/C=US</ds:X509SubjectName>
+    </ds:X509Data>
+    <ssp:Chunk xmlns:ssp="urn:x-simplesamlphp:namespace">originator</ssp:Chunk>
+  </xenc:OriginatorKeyInfo>
+  <xenc:RecipientKeyInfo Id="fed654">
+    <ds:KeyName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">testkey</ds:KeyName>
+    <ds:X509Data xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+      <ds:X509Certificate>MIICxDCCAi2gAwIBAgIUZ9QDx+SBFHednUWDFGm9tyVKrgQwDQYJKoZIhvcNAQELBQAwczElMCMGA1UEAwwcc2VsZnNpZ25lZC5zaW1wbGVzYW1scGhwLm9yZzEZMBcGA1UECgwQU2ltcGxlU0FNTHBocCBIUTERMA8GA1UEBwwISG9ub2x1bHUxDzANBgNVBAgMBkhhd2FpaTELMAkGA1UEBhMCVVMwIBcNMjIxMjAzMTAzNTQwWhgPMjEyMjExMDkxMDM1NDBaMHMxJTAjBgNVBAMMHHNlbGZzaWduZWQuc2ltcGxlc2FtbHBocC5vcmcxGTAXBgNVBAoMEFNpbXBsZVNBTUxwaHAgSFExETAPBgNVBAcMCEhvbm9sdWx1MQ8wDQYDVQQIDAZIYXdhaWkxCzAJBgNVBAYTAlVTMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDessdFRVDTMQQW3Na81B1CjJV1tmY3nopoIhZrkbDxLa+pv7jGDRcYreyu1DoQxEs06V2nHLoyOPhqJXSFivqtUwVYhR6NYgbNI6RRSsIJCweH0YOdlHna7gULPcLX0Bfbi4odStaFwG9yzDySwSEPtsKxm5pENPjNVGh+jJ+H/QIDAQABo1MwUTAdBgNVHQ4EFgQUvV75t8EoQo2fVa0E9otdtIGK5X0wHwYDVR0jBBgwFoAUvV75t8EoQo2fVa0E9otdtIGK5X0wDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOBgQANQUeiwPJXkWMXuaDHToEBKcezYGqGEYnGUi9LMjeb+Kln7X8nn5iknlz4k77rWCbSwLPC/WDr0ySYQA+HagaeUaFpoiYFJKS6uFlK1HYWnM3W4PUiGHg1/xeZlMO44wTwybXVo0y9KMhchfB5XNbDdoJcqWYvi6xtmZZNRbxUyw==</ds:X509Certificate>
+      <ds:X509SubjectName>/CN=selfsigned.simplesamlphp.org/O=SimpleSAMLphp HQ/L=Honolulu/ST=Hawaii/C=US</ds:X509SubjectName>
+    </ds:X509Data>
+    <ssp:Chunk xmlns:ssp="urn:x-simplesamlphp:namespace">recipient</ssp:Chunk>
+  </xenc:RecipientKeyInfo>
+</xenc:AgreementMethod>

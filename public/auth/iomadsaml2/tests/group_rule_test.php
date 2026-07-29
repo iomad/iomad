@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace auth_iomadsaml2;
+
 /**
  * Testcase class for group_rule class.
  *
@@ -22,20 +24,11 @@
  * @copyright  Catalyst IT
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-/**
- * Testcase class for group_rule class.
- *
- * @package    auth_iomadsaml2
- * @copyright  Catalyst IT
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class auth_iomadsaml2_group_rule_test_testcase extends advanced_testcase {
-
+final class group_rule_test extends \advanced_testcase {
     /**
      * Test we can get list of rules from config string.
      */
-    public function test_get_list() {
+    public function test_get_list(): void {
         $config = "allow group1=allowed\r\ngroup=blocked\r\ndeny group2=blocked\ndeny groups|blocked\ndeny groups= \ndeny  =test";
 
         $rules = \auth_iomadsaml2\group_rule::get_list($config);
@@ -49,5 +42,4 @@ class auth_iomadsaml2_group_rule_test_testcase extends advanced_testcase {
         $this->assertEquals('blocked', $rules[1]->get_group());
         $this->assertEquals(false, $rules[1]->is_allowed());
     }
-
 }

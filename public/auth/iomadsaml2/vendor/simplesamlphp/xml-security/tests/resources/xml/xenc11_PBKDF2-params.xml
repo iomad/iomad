@@ -1,0 +1,12 @@
+<xenc11:PBKDF2-params xmlns:xenc11="http://www.w3.org/2009/xmlenc11#">
+  <xenc11:Salt>
+    <xenc11:OtherSource Algorithm="urn:x-simplesamlphp:algorithm">
+      <xenc11:Parameters xmlns:ssp="urn:x-simplesamlphp:namespace" ssp:attr1="testval1">
+        <ssp:Chunk>Some</ssp:Chunk>
+      </xenc11:Parameters>
+    </xenc11:OtherSource>
+  </xenc11:Salt>
+  <xenc11:IterationCount>3</xenc11:IterationCount>
+  <xenc11:KeyLength>4096</xenc11:KeyLength>
+  <xenc11:PRF Algorithm="urn:x-simplesamlphp:algorithm" />
+</xenc11:PBKDF2-params>

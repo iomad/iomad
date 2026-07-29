@@ -1,0 +1,30 @@
+{
+    "name": "simplesamlphp/composer-module-installer",
+    "description": "A Composer plugin that allows installing SimpleSAMLphp modules through Composer.",
+    "license": "LGPL-2.1-only",
+    "type": "composer-plugin",
+    "autoload": {
+        "psr-4": {
+            "SimpleSAML\\Composer\\": "src/"
+        }
+    },
+    "extra": {
+        "class": "SimpleSAML\\Composer\\ModuleInstallerPlugin"
+    },
+    "require": {
+        "php": "^8.1",
+
+        "composer-plugin-api": "^2.6",
+        "simplesamlphp/assert": "^1.6"
+    },
+    "require-dev": {
+        "composer/composer": "^2.8.3",
+        "simplesamlphp/simplesamlphp-test-framework": "^1.8.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true
+        }
+    }
+}

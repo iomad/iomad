@@ -1,17 +1,31 @@
 <?xml version="1.0"?>
 <libraries>
   <library>
-    <location>.extlib/simplesamlphp</location>
-    <name>SimpleSamlPHP</name>
-    <version>2.0.5</version>
-    <license>LGPL</license>
-    <licenseversion>2.1+</licenseversion>
-  </library>
-  <library>
     <location>sp/metadata.php</location>
     <name>SP metadata</name>
     <version></version>
     <license></license>
     <licenseversion></licenseversion>
+  </library>
+  <library>
+    <location>vendor</location>
+    <name>Composer</name>
+    <version></version>
+    <license></license>
+    <licenseversion></licenseversion>
+  </library>
+  <library>
+    <location>vendor/cweagans/composer-patches</location>
+    <name>Composer Patches</name>
+    <version>1.7.3</version>
+    <license>BSD</license>
+    <licenseversion>3</licenseversion>
+  </library>
+  <library>
+    <location>vendor/simplesamlphp/simplesamlphp</location>
+    <name>SimpleSamlPHP</name>
+    <version>2.4.5</version>
+    <license>LGPL</license>
+    <licenseversion>2.1</licenseversion>
   </library>
 </libraries>

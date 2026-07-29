@@ -40,7 +40,6 @@ require_once("$CFG->libdir/formslib.php");
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class testidpselect extends moodleform {
-
     /**
      * Definition
      */
@@ -68,6 +67,4 @@ class testidpselect extends moodleform {
         $mform->addElement('select', 'idplogout', get_string('test_auth_button_logout', 'auth_iomadsaml2'), $selectvalues);
         $mform->addElement('submit', 'logout', get_string('test_auth_button_logout', 'auth_iomadsaml2'));
     }
-
 }
-

@@ -1,0 +1,5 @@
+<ds:SignatureProperties xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="def456">
+  <ds:SignatureProperty Target="https://simplesamlphp.org/some/target" Id="abc123">
+    <ssp:HSMSerialNumber xmlns:ssp="urn:x-simplesamlphp:namespace">1234567890</ssp:HSMSerialNumber>
+  </ds:SignatureProperty>
+</ds:SignatureProperties>

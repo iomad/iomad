@@ -1,0 +1,64 @@
+{
+    "name": "simplesamlphp/saml2",
+    "description": "SAML2 PHP library from SimpleSAMLphp",
+    "license": "LGPL-2.1-or-later",
+    "authors": [
+        {
+            "name": "Andreas Åkre Solberg",
+            "email": "andreas.solberg@uninett.no"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "ext-date": "*",
+        "ext-dom": "*",
+        "ext-filter": "*",
+        "ext-libxml": "*",
+        "ext-openssl": "*",
+        "ext-pcre": "*",
+        "ext-zlib": "*",
+
+        "nyholm/psr7": "~1.8.2",
+        "psr/clock": "~1.0.0",
+        "psr/http-message": "~2.0",
+        "psr/log": "~2.3.1 || ~3.0.0",
+        "simplesamlphp/assert": "~1.8.1",
+        "simplesamlphp/xml-common": "~1.25.0",
+        "simplesamlphp/xml-security": "~1.13.8",
+        "simplesamlphp/xml-soap": "~1.7.0"
+    },
+    "require-dev": {
+        "ext-intl": "*",
+
+        "beste/clock": "~3.0.0",
+        "mockery/mockery": "~1.6.12",
+        "simplesamlphp/composer-xmlprovider-installer": "~1.0.2",
+        "simplesamlphp/simplesamlphp-test-framework": "~1.9.2"
+    },
+    "suggest": {
+        "ext-soap": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "SimpleSAML\\SAML2\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SimpleSAML\\Test\\SAML2\\": "tests/SAML2/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "v5.0.x-dev"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/package-versions-deprecated": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true,
+            "simplesamlphp/composer-xmlprovider-installer": true
+        }
+    }
+}

@@ -42,7 +42,7 @@ $iomadsaml2auth = new \auth_iomadsaml2\auth();
 // This is one area which many SSP instances get horridly wrong and leave the
 // default certificates which is very insecure. Here we create a customized
 // cert/key pair just-in-time. If for some reason you do want to use existing
-// files then just copy them over the files in /sitedata/saml2/.
+// files then just copy them over the files in /sitedata/iomadsaml2/.
 $iomadsaml2auth->get_saml2_directory(); // It will create it if needed.
 $missingcertpem = !file_exists($iomadsaml2auth->certpem);
 $missingcertcrt = !file_exists($iomadsaml2auth->certcrt);
@@ -52,13 +52,15 @@ if ($missingcertpem || $missingcertcrt) {
     $missingcertpem ? $errorstring .= "= Missing cert pem file! =\n" : null;
     $missingcertcrt ? $errorstring .= "= Missing cert crt file! = \n" : null;
     $errorstring .= "Now regenerating iomadsaml2 certificates...";
-    if (!(PHPUNIT_TEST || (defined('BEHAT_TEST') && BEHAT_TEST) ||
-            defined('BEHAT_SITE_RUNNING'))) {
+    if (
+        !(PHPUNIT_TEST || (defined('BEHAT_TEST') && BEHAT_TEST) ||
+            defined('BEHAT_SITE_RUNNING'))
+    ) {
         debugging($errorstring);
     }
     try {
         create_certificates($iomadsaml2auth);
-    } catch (saml2_exception $exception) {
+    } catch (iomadsaml2_exception $exception) {
         debugging($exception->getMessage(), DEBUG_DEVELOPER, $exception->getTrace());
     }
     cert_regenerated::create(['other' => ['reason' => $errorstring]])->trigger();

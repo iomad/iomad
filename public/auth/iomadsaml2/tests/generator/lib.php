@@ -23,7 +23,6 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class auth_iomadsaml2_generator extends component_generator_base {
-
     use auth_iomadsaml2\testing\tests_generator;
 
     /**
@@ -31,5 +30,4 @@ class auth_iomadsaml2_generator extends component_generator_base {
      * @var int
      */
     protected $entitiescount = 0;
-
 }

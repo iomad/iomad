@@ -14,16 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Test for user extractor class.
- *
- * @package    auth_iomadsaml2
- * @author     Dmitrii Metelkin <dmitriim@catalyst-au.net>
- * @copyright  2021 Catalyst IT
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
-use auth_iomadsaml2\user_extractor;
+namespace auth_iomadsaml2;
 
 /**
  * Test for user extractor class.
@@ -33,8 +24,7 @@ use auth_iomadsaml2\user_extractor;
  * @copyright  2021 Catalyst IT
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class auth_iomadsaml2_user_extractor_test extends advanced_testcase {
-
+final class user_extractor_test extends \advanced_testcase {
     /**
      * A helper function to create a custom profile field.
      *
@@ -44,7 +34,7 @@ class auth_iomadsaml2_user_extractor_test extends advanced_testcase {
      *
      * @return \stdClass
      */
-    protected function add_user_profile_field(string $shortname, string $datatype, bool $unique = false) : stdClass {
+    protected function add_user_profile_field(string $shortname, string $datatype, bool $unique = false): \stdClass {
         global $DB;
 
         // Create a new profile field.
@@ -68,7 +58,7 @@ class auth_iomadsaml2_user_extractor_test extends advanced_testcase {
     /**
      * Test we can extract users using fields from {user} table.
      */
-    public function test_get_user_by_field_from_user_table() {
+    public function test_get_user_by_field_from_user_table(): void {
         $this->resetAfterTest();
 
         $user1 = $this->getDataGenerator()->create_user();
@@ -92,7 +82,7 @@ class auth_iomadsaml2_user_extractor_test extends advanced_testcase {
     /**
      * Test we can extract users using fields from {user} table when multiple users found.
      */
-    public function test_get_user_by_field_from_user_table_when_multiple_users_found() {
+    public function test_get_user_by_field_from_user_table_when_multiple_users_found(): void {
         $this->resetAfterTest();
 
         // Two users with empty idnumber.
@@ -106,7 +96,7 @@ class auth_iomadsaml2_user_extractor_test extends advanced_testcase {
     /**
      * Test we can extract users using custom profile fields.
      */
-    public function test_get_user_by_custom_profile_field() {
+    public function test_get_user_by_custom_profile_field(): void {
         $this->resetAfterTest();
 
         // Unique fields.
@@ -155,7 +145,7 @@ class auth_iomadsaml2_user_extractor_test extends advanced_testcase {
     /**
      * Tests for case insensitive match on custom user fields.
      */
-    public function test_get_user_case_insensitive_custom_fields() {
+    public function test_get_user_case_insensitive_custom_fields(): void {
         global $CFG;
         $this->resetAfterTest();
 
@@ -190,7 +180,7 @@ class auth_iomadsaml2_user_extractor_test extends advanced_testcase {
     /**
      * Tests for case and accent insensitive match on custom user fields.
      */
-    public function test_get_user_case_and_accent_insensitive_custom_fields() {
+    public function test_get_user_case_and_accent_insensitive_custom_fields(): void {
         $this->resetAfterTest();
 
         // Arrange data.
@@ -233,7 +223,7 @@ class auth_iomadsaml2_user_extractor_test extends advanced_testcase {
     /**
      * Tests for case insensitive match on core user fields.
      */
-    public function test_get_user_case_insensitive_core_fields() {
+    public function test_get_user_case_insensitive_core_fields(): void {
         global $CFG, $DB;
         $this->resetAfterTest();
 
@@ -268,7 +258,7 @@ class auth_iomadsaml2_user_extractor_test extends advanced_testcase {
     /**
      * Tests for case insensitive match on core user fields.
      */
-    public function test_get_user_case_and_accent_insensitive_core_fields() {
+    public function test_get_user_case_and_accent_insensitive_core_fields(): void {
         global $CFG, $DB;
         $this->resetAfterTest();
 
@@ -318,7 +308,7 @@ class auth_iomadsaml2_user_extractor_test extends advanced_testcase {
     /**
      * Test we can extract users using custom profile fields when found multiple users.
      */
-    public function test_get_user_by_custom_profile_field_when_multiple_users_found() {
+    public function test_get_user_by_custom_profile_field_when_multiple_users_found(): void {
         $this->resetAfterTest();
 
         // Non unique fields.
@@ -339,5 +329,4 @@ class auth_iomadsaml2_user_extractor_test extends advanced_testcase {
         $actual = user_extractor::get_user('profile_field_field2', 'User 1 Field 2');
         $this->assertFalse($actual);
     }
-
 }

@@ -1,0 +1,4 @@
+<ds:X509IssuerSerial xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+  <ds:X509IssuerName>C=US,ST=Hawaii,L=Honolulu,O=SimpleSAMLphp HQ,CN=SimpleSAMLphp Testing CA,emailAddress=noreply@simplesamlphp.org</ds:X509IssuerName>
+  <ds:X509SerialNumber>2</ds:X509SerialNumber>
+</ds:X509IssuerSerial>

@@ -1,0 +1,8 @@
+<xenc:EncryptionProperties xmlns:xenc="http://www.w3.org/2001/04/xmlenc#" Id="outer">
+  <xenc:EncryptionProperty Target="urn:x-simplesamlphp:phpunit" Id="inner-first" xml:lang="en">
+    <ssp:Chunk xmlns:ssp="urn:x-simplesamlphp:namespace">Some</ssp:Chunk>
+  </xenc:EncryptionProperty>
+  <xenc:EncryptionProperty Target="urn:x-simplesamlphp:phpunit" Id="inner-second" xml:lang="nl">
+    <ssp:Chunk xmlns:ssp="urn:x-simplesamlphp:namespace">Other</ssp:Chunk>
+  </xenc:EncryptionProperty>
+</xenc:EncryptionProperties>
