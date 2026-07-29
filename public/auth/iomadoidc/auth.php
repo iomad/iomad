@@ -63,7 +63,7 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
             if (!empty($forceloginflow) && is_string($forceloginflow)) {
                 $loginflow = $forceloginflow;
             } else {
-                $configuredloginflow = iomad::get_config('auth_iomadoidc', 'loginflow', true);
+                $configuredloginflow = iomad::get_config('auth_iomadoidc', 'loginflow', 0, true);
                 if (!empty($configuredloginflow)) {
                     $loginflow = $configuredloginflow;
                 }
@@ -372,7 +372,7 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
     public function postlogout_hook($user) {
         global $CFG, $DB;
 
-        $singlesignoutsetting = iomad::get_config('auth_iomadoidc', 'single_sign_off', true);
+        $singlesignoutsetting = iomad::get_config('auth_iomadoidc', 'single_sign_off', 0, true);
 
         if ($singlesignoutsetting) {
             $redirect = false;
@@ -391,8 +391,8 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
             }
 
             if ($redirect) {
-                $logouturl = iomad::get_config('auth_iomadoidc', 'logouturi', true);
-                $idptype = iomad::get_config('auth_iomadoidc', 'idptype', true);
+                $logouturl = iomad::get_config('auth_iomadoidc', 'logouturi', 0, true);
+                $idptype = iomad::get_config('auth_iomadoidc', 'idptype', 0, true);
 
                 $redirecturl = $this->build_logout_url($logouturl, $idptype, $user);
                 if ($redirecturl) {
