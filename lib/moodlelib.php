@@ -4203,7 +4203,8 @@ function complete_user_login($user, array $extrauserinfo = []) {
 
     // IOMAD: if we have a SESSION for the company
     // Check that it matches the user's actual company.
-    if (!empty($SESSION->currenteditingcompany)) {
+    if (!empty($SESSION->currenteditingcompany)
+        && $SESSION->currenteditingcompany > 0) {
         if (!company::check_valid_user($SESSION->currenteditingcompany, $USER->id)) {
             if ($company = company::by_userid($USER->id, true)) {
                 if ($company->id != $SESSION->currenteditingcompany) {

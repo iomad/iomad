@@ -145,7 +145,9 @@ class company {
     public static function by_userid(int $userid, bool $login = false): company|bool {
         global $DB, $SESSION;
 
-        if (!$login && !empty($SESSION->currenteditingcompany)) {
+        if (!$login &&
+            !empty($SESSION->currenteditingcompany) &&
+            $SESSION->currenteditingcompany > 0) {
             return new company($SESSION->currenteditingcompany);
         } else {
             if ($companies = $DB->get_records_sql("SELECT DISTINCT companyid,lastused
