@@ -26,12 +26,16 @@
 use auth_iomadoidc\form\application;
 use core\context\system;
 use core\url;
+use local_iomad\custom_context\context_company;
 use local_iomad\iomad;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/auth/iomadoidc/lib.php');
+
+// IOMAD.
+$companyonly = optional_param('companyonly', false, PARAM_BOOL);
 
 require_login();
 
@@ -52,6 +56,7 @@ $PAGE->requires->js_init_call('M.auth_iomadoidc.init', $jsparams, true, $jsmodul
 
 // IOMAD.
 $postfix = iomad::get_company_postfix();
+$companyid = iomad::get_my_companyid(context_system::instance(), false);
 
 // Is this from the company advanced settings page?
 if ($companyonly && !empty($companyid)) {
@@ -110,7 +115,7 @@ if ($formsubmitted) {
 $form->set_data($formdata);
 
 if ($form->is_cancelled()) {
-    redirect($url);
+    redirect($returnurl);
 } else if ($fromform = $form->get_data()) {
     // Handle odd cases where clientauthmethod is not received.
     if (!isset($fromform->clientauthmethod)) {
