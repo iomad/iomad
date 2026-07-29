@@ -142,8 +142,8 @@ class iomad {
 
         if ($user->id == $USER->id && !empty($SESSION->currenteditingcompany)) {
             return $SESSION->currenteditingcompany;
-        } else if ($usercompanies = $DB->get_records('company_users', ['userid' => $user->id], 'id', 'id,companyid', 0, 1)) {
-            $usercompany = array_pop($usercompanies);
+        } else if ($usercompanies = $DB->get_records('company_users', ['userid' => $user->id], 'lastused DESC', 'id,companyid')) {
+            $usercompany = array_shift($usercompanies);
 
             // Cache this if it's the current user.
             if ($user->id == $USER->id) {
