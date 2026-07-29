@@ -84,8 +84,8 @@ class iomad_iomadcertificate {
 
         // Some name changes (as used in cert template).
         $certuser = $user;
-        $certificatename = 'iomadcertificatetype';;
-        $$certificatename = $certificate;
+        $certificatename = 'iomadcertificatetype';
+        $certificatename = $certificate;
         $certrecord = $certissue;
 
         // Load certificate template (magically creates $pdf variable. Grrrrrr).
