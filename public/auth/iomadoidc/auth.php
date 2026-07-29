@@ -23,12 +23,13 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-defined('MOODLE_INTERNAL') || die();
-
+use core\url;
 use local_iomad\iomad;
 
-require_once($CFG->libdir.'/authlib.php');
-require_once($CFG->dirroot.'/login/lib.php');
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->libdir . '/authlib.php');
+require_once($CFG->dirroot . '/login/lib.php');
 
 /**
  * OpenID Connect Authentication Plugin.
@@ -53,20 +54,22 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
         global $SESSION;
         $loginflow = 'authcode';
 
-        if (isset($SESSION->stateadditionaldata) && !empty($SESSION->stateadditionaldata) &&
-            isset($SESSION->stateadditoinaldata['forceflow'])) {
-            $loginflow = $SESSION->stateadditoinaldata['forceflow'];
+        if (
+            isset($SESSION->stateadditionaldata) && !empty($SESSION->stateadditionaldata) &&
+            isset($SESSION->stateadditionaldata['forceflow'])
+        ) {
+            $loginflow = $SESSION->stateadditionaldata['forceflow'];
         } else {
             if (!empty($forceloginflow) && is_string($forceloginflow)) {
                 $loginflow = $forceloginflow;
             } else {
-                $configuredloginflow = get_config('auth_iomadoidc', 'loginflow' . $this->postfix);
+                $configuredloginflow = iomad::get_config('auth_iomadoidc', 'loginflow', true);
                 if (!empty($configuredloginflow)) {
                     $loginflow = $configuredloginflow;
                 }
             }
         }
-        $loginflowclass = '\auth_iomadoidc\loginflow\\'.$loginflow;
+        $loginflowclass = '\auth_iomadoidc\loginflow\\' . $loginflow;
         if (class_exists($loginflowclass)) {
             $this->loginflow = new $loginflowclass($this->config);
         } else {
@@ -80,7 +83,7 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
      *
      * @return bool
      */
-    function can_be_manually_set() {
+    public function can_be_manually_set() {
         return true;
     }
 
@@ -105,6 +108,33 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
     }
 
     /**
+     * Hook for overriding behaviour of logout page.
+     */
+    public function logoutpage_hook() {
+        global $redirect;
+
+        // No need for custom logic if we don't force the redirect on login.
+        if (!isset($this->config->forceredirect) || !$this->config->forceredirect) {
+            return;
+        }
+
+        // When we log out and are redirecting to the login page, add the noredirect to prevent our own redirect.
+        if (empty($redirect)) {
+            return;
+        }
+
+        $redirecturl = is_string($redirect) ? new url($redirect) : $redirect;
+        if (!($redirecturl instanceof url)) {
+            return;
+        }
+
+        if ($redirecturl->compare(new url('/login/index.php'), URL_MATCH_BASE)) {
+            $redirecturl->param('noredirect', 1);
+            $redirect = $redirecturl->out(false);
+        }
+    }
+
+    /**
      * Hook for overriding behaviour of login page.
      * This method is called from login/index.php page for all enabled auth plugins.
      */
@@ -123,7 +153,7 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
      * @return bool If this returns true then redirect
      */
     public function should_login_redirect() {
-        global $CFG, $SESSION;
+        global $SESSION;
 
         $iomadoidc = optional_param('iomadoidc', null, PARAM_BOOL);
         // Also support noredirect param - used by other auth plugins.
@@ -145,17 +175,6 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
         //
         // This isn't needed when duallogin is on because $iomadoidc will default to 0 and duallogin is not part of the request.
         if ((isset($SESSION->iomadoidc) && $SESSION->iomadoidc == 0)) {
-            if (!isset($SESSION->silent_login_mode)) {
-                return false;
-            }
-        }
-
-        // If the user is redirectred to the login page immediately after logging out, don't redirect.
-        $silentloginmodesetting = get_config('auth_iomadoidc', 'silentloginmode' . $this->postfix);
-        $forceredirectsetting = get_config('auth_iomadoidc', 'forceredirect' . $this->postfix);
-        $forceloginsetting = get_config('core', 'forcelogin');
-        if ($silentloginmodesetting && $forceredirectsetting && $forceloginsetting && isset($_SERVER['HTTP_REFERER']) &&
-            strpos($_SERVER['HTTP_REFERER'], $CFG->wwwroot) !== false) {
             return false;
         }
 
@@ -164,7 +183,7 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
             $SESSION->iomadoidc = $iomadoidc;
             return false;
         }
-        // We are off to IOMAD OIDC land so reset the force in SESSION.
+        // We are off to IOMADOIDC land so reset the force in SESSION.
         if (isset($SESSION->iomadoidc)) {
             unset($SESSION->iomadoidc);
         }
@@ -191,18 +210,23 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
     }
 
     /**
-     * Handle IOMAD OIDC disconnection from Moodle account.
+     * Handle IOMADOIDC disconnection from Moodle account.
      *
-     * @param bool $justremovetokens If true, just remove the stored IOMAD OIDC tokens for the user, otherwise revert login methods.
+     * @param bool $justremovetokens If true, just remove the stored IOMADOIDC tokens for the user, otherwise revert login methods.
      * @param bool $donotremovetokens If true, do not remove tokens when disconnecting. This migrates from a login account to a
      *                                "linked" account.
-     * @param moodle_url|null $redirect Where to redirect if successful.
-     * @param moodle_url|null $selfurl The page this is accessed from. Used for some redirects.
+     * @param url|null $redirect Where to redirect if successful.
+     * @param url|null $selfurl The page this is accessed from. Used for some redirects.
      * @param null $userid
      * @return mixed
      */
-    public function disconnect($justremovetokens = false, $donotremovetokens = false, ?\moodle_url $redirect = null,
-                               ?\moodle_url $selfurl = null, $userid = null) {
+    public function disconnect(
+        $justremovetokens = false,
+        $donotremovetokens = false,
+        ?url $redirect = null,
+        ?url $selfurl = null,
+        $userid = null
+    ) {
         return $this->loginflow->disconnect($justremovetokens, $donotremovetokens, $redirect, $selfurl, $userid);
     }
 
@@ -216,7 +240,7 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
     public function user_login($username, $password = null) {
         global $CFG;
         // Short circuit for guest user.
-        if (!empty(iomad::get_config('', 'guestloginbutton')) && $username === 'guest' && $password === 'guest') {
+        if (!empty($CFG->guestloginbutton) && $username === 'guest' && $password === 'guest') {
             return false;
         }
         return $this->loginflow->user_login($username, $password);
@@ -268,7 +292,7 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
             if (!empty($tokenrec)) {
                 // If the token record username is out of sync (ie username changes), update it.
                 if ($tokenrec->username != $user->username) {
-                    $updatedtokenrec = new \stdClass;
+                    $updatedtokenrec = new stdClass();
                     $updatedtokenrec->id = $tokenrec->id;
                     $updatedtokenrec->username = $user->username;
                     $DB->update_record('auth_iomadoidc_token', $updatedtokenrec);
@@ -280,7 +304,7 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
                 $tokenrec = $DB->get_record('auth_iomadoidc_token', ['username' => $username]);
                 if (!empty($tokenrec)) {
                     $tokenrec->userid = $user->id;
-                    $updatedtokenrec = new \stdClass;
+                    $updatedtokenrec = new stdClass();
                     $updatedtokenrec->id = $tokenrec->id;
                     $updatedtokenrec->userid = $user->id;
                     $DB->update_record('auth_iomadoidc_token', $updatedtokenrec);
@@ -299,6 +323,46 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
     }
 
     /**
+     * Build logout URL with appropriate IdP-specific parameters.
+     *
+     * @param string $logouturl Base logout URL from config.
+     * @param string $idptype IdP type (from constants).
+     * @param stdClass $user User object.
+     * @return string|null Logout URL, or null if logout should be skipped.
+     */
+    private function build_logout_url(string $logouturl, string $idptype, stdClass $user): ?string {
+        global $CFG, $DB;
+
+        $params = [
+            'post_logout_redirect_uri' => $CFG->wwwroot,
+        ];
+
+        switch ($idptype) {
+            case AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID:
+            case AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM:
+                if (!$logouturl) {
+                    $logouturl = 'https://login.microsoftonline.com/organizations/oauth2/logout';
+                }
+                $url = new url($logouturl, $params);
+                return $url->out(false);
+
+            case AUTH_IOMADOIDC_IDP_TYPE_OTHER:
+                if (!$logouturl) {
+                    return null;
+                }
+                $token = $DB->get_record('auth_iomadoidc_token', ['userid' => $user->id]);
+                if ($token) {
+                    $params['id_token_hint'] = $token->idtoken;
+                }
+                $url = new url($logouturl, $params);
+                return $url->out(false);
+
+            default:
+                return null;
+        }
+    }
+
+    /**
      * Log out user from Microsoft 365 if single sign off integration is enabled.
      *
      * @param stdClass $user
@@ -308,7 +372,7 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
     public function postlogout_hook($user) {
         global $CFG, $DB;
 
-        $singlesignoutsetting = get_config('auth_iomadoidc', 'single_sign_off' . $this->postfix);
+        $singlesignoutsetting = iomad::get_config('auth_iomadoidc', 'single_sign_off', true);
 
         if ($singlesignoutsetting) {
             $redirect = false;
@@ -321,19 +385,19 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
                 }
             }
 
-            if ($redirect) {
-                $logouturl = get_config('auth_iomadoidc', 'logouturi' . $this->postfix);
-                if (!$logouturl) {
-                    $logouturl = 'https://login.microsoftonline.com/common/oauth2/logout?post_logout_redirect_uri=' .
-                        urlencode($CFG->wwwroot);
-                } else {
-                    if (preg_match("/^https:\/\/login.microsoftonline.com\//", $logouturl) &&
-                        preg_match("/\/oauth2\/logout$/", $logouturl)) {
-                        $logouturl .= '?post_logout_redirect_uri=' . urlencode($CFG->wwwroot);
-                    }
-                }
+            // Do not redirect to logout endpoint when using loginas feature.
+            if (!empty($user->loginascontext)) {
+                $redirect = false;
+            }
 
-                redirect($logouturl);
+            if ($redirect) {
+                $logouturl = iomad::get_config('auth_iomadoidc', 'logouturi', true);
+                $idptype = iomad::get_config('auth_iomadoidc', 'idptype', true);
+
+                $redirecturl = $this->build_logout_url($logouturl, $idptype, $user);
+                if ($redirecturl) {
+                    redirect($redirecturl);
+                }
             }
         }
 

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Single Sign Out end point.
+ * Plugin installation script.
  *
  * @package auth_iomadoidc
  * @author Lai Wei <lai.wei@enovation.ie>
@@ -23,29 +23,22 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-use core\context\system;
+/**
+ * Installation script.
+ */
+function xmldb_auth_iomadoidc_install() {
+    global $DB;
 
-// phpcs:ignore moodle.Files.RequireLogin.Missing
-require_once(__DIR__ . '/../../config.php');
-
-$PAGE->set_url('/auth/iomadoidc/logout.php');
-$PAGE->set_context(system::instance());
-
-$sid = optional_param('sid', '', PARAM_TEXT);
-
-if ($sid) {
-    if ($authiomadoidcsidrecord = $DB->get_record('auth_iomadoidc_sid', ['sid' => $sid])) {
-        if ($authiomadoidcsidrecord->userid == $USER->id) {
-            $authsequence = get_enabled_auth_plugins(); // Auths, in sequence.
-            foreach ($authsequence as $authname) {
-                $authplugin = get_auth_plugin($authname);
-                $authplugin->logoutpage_hook();
-            }
-
-            $DB->delete_records('auth_iomadoidc_sid', ['sid' => $sid]);
-            require_logout();
-        }
+    // Set the default value for the bindingusernameclaim setting.
+    $bindingusernameclaimconfig = get_config('auth_iomadoidc', 'bindingusernameclaim');
+    if (empty($bindingusernameclaimconfig)) {
+        set_config('bindingusernameclaim', 'auto', 'auth_iomadoidc');
     }
-}
 
-die();
+    // Create unique constraint on (iomadoidcuniqid, tokenresource) to prevent duplicate tokens.
+    // Use CREATE UNIQUE INDEX which works on both MySQL and PostgreSQL.
+    // Note: PostgreSQL doesn't support column length prefixes, so we use full columns.
+    // For MySQL, the columns are naturally short enough (GUID + resource URL).
+    $sql = 'CREATE UNIQUE INDEX idx_iomadoidc_unique ON {auth_iomadoidc_token} (iomadoidcuniqid, tokenresource)';
+    $DB->execute($sql);
+}

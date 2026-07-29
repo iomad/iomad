@@ -94,7 +94,7 @@ function xmldb_auth_iomadoidc_upgrade($oldversion) {
 
                 // Populate token iomadoidcusername.
                 if (empty($user->iomadoidcusername)) {
-                    $updatedtoken = new \stdClass;
+                    $updatedtoken = new stdClass();
                     $updatedtoken->id = $user->tokenid;
                     $updatedtoken->iomadoidcusername = $iomadoidcusername;
                     $DB->update_record('auth_iomadoidc_token', $updatedtoken);
@@ -105,12 +105,12 @@ function xmldb_auth_iomadoidc_upgrade($oldversion) {
                     // Old username, update to upn/sub.
                     if ($iomadoidcusername != $user->username) {
                         // Update username.
-                        $updateduser = new \stdClass;
+                        $updateduser = new stdClass();
                         $updateduser->id = $user->userid;
                         $updateduser->username = $iomadoidcusername;
                         $DB->update_record('user', $updateduser);
 
-                        $updatedtoken = new \stdClass;
+                        $updatedtoken = new stdClass();
                         $updatedtoken->id = $user->tokenid;
                         $updatedtoken->username = $iomadoidcusername;
                         $DB->update_record('auth_iomadoidc_token', $updatedtoken);
@@ -125,7 +125,7 @@ function xmldb_auth_iomadoidc_upgrade($oldversion) {
 
     if ($oldversion < 2015012707) {
         if (!$dbman->table_exists('auth_iomadoidc_prevlogin')) {
-            $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'auth_iomadoidc_prevlogin');
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'auth_iomadoidc_prevlogin');
         }
         upgrade_plugin_savepoint(true, 2015012707, 'auth', 'iomadoidc');
     }
@@ -144,7 +144,7 @@ function xmldb_auth_iomadoidc_upgrade($oldversion) {
         foreach ($authtokensrs as $authtokenrec) {
             $newusername = trim(\core_text::strtolower($authtokenrec->username));
             if ($newusername !== $authtokenrec->username) {
-                $updatedrec = new \stdClass;
+                $updatedrec = new stdClass();
                 $updatedrec->id = $authtokenrec->id;
                 $updatedrec->username = $newusername;
                 $DB->update_record('auth_iomadoidc_token', $updatedrec);
@@ -157,10 +157,22 @@ function xmldb_auth_iomadoidc_upgrade($oldversion) {
         // Update old endpoints.
         $config = get_config('auth_iomadoidc');
         if ($config->authendpoint === 'https://login.windows.net/common/oauth2/authorize') {
+            add_to_config_log(
+                'authendpoint',
+                $config->authendpoint,
+                'https://login.microsoftonline.com/common/oauth2/authorize',
+                'auth_iomadoidc'
+            );
             set_config('authendpoint', 'https://login.microsoftonline.com/common/oauth2/authorize', 'auth_iomadoidc');
         }
 
         if ($config->tokenendpoint === 'https://login.windows.net/common/oauth2/token') {
+            add_to_config_log(
+                'tokenendpoint',
+                $config->tokenendpoint,
+                'https://login.microsoftonline.com/common/oauth2/token',
+                'auth_iomadoidc'
+            );
             set_config('tokenendpoint', 'https://login.microsoftonline.com/common/oauth2/token', 'auth_iomadoidc');
         }
 
@@ -177,7 +189,7 @@ function xmldb_auth_iomadoidc_upgrade($oldversion) {
                       JOIN {user} u ON u.username = tok.username';
             $records = $DB->get_recordset_sql($sql);
             foreach ($records as $record) {
-                $newrec = new \stdClass;
+                $newrec = new stdClass();
                 $newrec->id = $record->id;
                 $newrec->userid = $record->userid;
                 $DB->update_record('auth_iomadoidc_token', $newrec);
@@ -195,6 +207,10 @@ function xmldb_auth_iomadoidc_upgrade($oldversion) {
 
         $iomadoidcresource = get_config('auth_iomadoidc', 'iomadoidcresource');
         if ($iomadoidcresource !== false && strpos($iomadoidcresource, 'windows') !== false) {
+            $existingiomadoidcresource = get_config('auth_iomadoidc', 'iomadoidcresource');
+            if ($existingiomadoidcresource != 'https://graph.windows.net') {
+                add_to_config_log('iomadoidcresource', $existingiomadoidcresource, 'https://graph.microsoft.com', 'auth_iomadoidc');
+            }
             set_config('iomadoidcresource', 'https://graph.microsoft.com', 'auth_iomadoidc');
         }
 
@@ -204,6 +220,10 @@ function xmldb_auth_iomadoidc_upgrade($oldversion) {
     if ($oldversion < 2020071503) {
         $localo365singlesignoffsetting = get_config('local_o365', 'single_sign_off');
         if ($localo365singlesignoffsetting !== false) {
+            $existingsignlesignoffsetting = get_config('auth_iomadoidc', 'single_sign_off');
+            if ($existingsignlesignoffsetting !== true) {
+                add_to_config_log('single_sign_off', $existingsignlesignoffsetting, true, 'auth_iomadoidc');
+            }
             set_config('single_sign_off', true, 'auth_iomadoidc');
             unset_config('single_sign_off', 'local_o365');
         }
@@ -253,12 +273,20 @@ function xmldb_auth_iomadoidc_upgrade($oldversion) {
             $authorizationendpoint = get_config('auth_iomadoidc', 'authendpoint');
             if ($authorizationendpoint == 'https://login.microsoftonline.com/common/oauth2/authorize') {
                 $authorizationendpoint = str_replace('common', $entratenant, $authorizationendpoint);
+                $existingauthorizationendpoint = get_config('auth_iomadoidc', 'authendpoint');
+                if ($existingauthorizationendpoint != $authorizationendpoint) {
+                    add_to_config_log('authendpoint', $existingauthorizationendpoint, $authorizationendpoint, 'auth_iomadoidc');
+                }
                 set_config('authendpoint', $authorizationendpoint, 'auth_iomadoidc');
             }
 
             $tokenendpoint = get_config('auth_iomadoidc', 'tokenendpoint');
             if ($tokenendpoint == 'https://login.microsoftonline.com/common/oauth2/token') {
                 $tokenendpoint = str_replace('common', $entratenant, $tokenendpoint);
+                $existingtokenendpoint = get_config('auth_iomadoidc', 'tokenendpoint');
+                if ($existingtokenendpoint != $tokenendpoint) {
+                    add_to_config_log('tokenendpoint', $existingtokenendpoint, $tokenendpoint, 'auth_iomadoidc');
+                }
                 set_config('tokenendpoint', $tokenendpoint, 'auth_iomadoidc');
             }
         }
@@ -283,14 +311,28 @@ function xmldb_auth_iomadoidc_upgrade($oldversion) {
                         continue;
                     }
 
-                    list($remotefield, $localfield, $behaviour) = $fieldmap;
+                    [$remotefield, $localfield, $behaviour] = $fieldmap;
 
                     if ($remotefield == 'facsimileTelephoneNumber') {
                         $remotefield = 'faxNumber';
                     }
 
+                    $existingmapsetting = get_config('auth_iomadoidc', 'field_map_' . $localfield);
+                    if ($existingmapsetting !== $remotefield) {
+                        add_to_config_log('field_map_' . $localfield, $existingmapsetting, $remotefield, 'auth_iomadoidc');
+                    }
                     set_config('field_map_' . $localfield, $remotefield, 'auth_iomadoidc');
+
+                    $existinglocksetting = get_config('auth_iomadoidc', 'field_lock_' . $localfield);
+                    if ($existinglocksetting !== 'unlocked') {
+                        add_to_config_log('field_lock_' . $localfield, $existinglocksetting, 'unlocked', 'auth_iomadoidc');
+                    }
                     set_config('field_lock_' . $localfield, 'unlocked', 'auth_iomadoidc');
+
+                    $existingupdatelocalsetting = get_config('auth_iomadoidc', 'field_updatelocal_' . $localfield);
+                    if ($existingupdatelocalsetting !== $behaviour) {
+                        add_to_config_log('field_updatelocal_' . $localfield, $existingupdatelocalsetting, $behaviour, 'auth_iomadoidc');
+                    }
                     set_config('field_updatelocal_' . $localfield, $behaviour, 'auth_iomadoidc');
 
                     if (($key = array_search($localfield, $userfields)) !== false) {
@@ -299,8 +341,22 @@ function xmldb_auth_iomadoidc_upgrade($oldversion) {
                 }
 
                 foreach ($userfields as $userfield) {
+                    $existingmapsetting = get_config('auth_iomadoidc', 'field_map_' . $userfield);
+                    if ($existingmapsetting !== '') {
+                        add_to_config_log('field_map_' . $userfield, $existingmapsetting, '', 'auth_iomadoidc');
+                    }
                     set_config('field_map_' . $userfield, '', 'auth_iomadoidc');
+
+                    $existinglocksetting = get_config('auth_iomadoidc', 'field_lock_' . $userfield);
+                    if ($existinglocksetting !== 'unlocked') {
+                        add_to_config_log('field_lock_' . $userfield, $existinglocksetting, 'unlocked', 'auth_iomadoidc');
+                    }
                     set_config('field_lock_' . $userfield, 'unlocked', 'auth_iomadoidc');
+
+                    $existingupdatelocalsetting = get_config('auth_iomadoidc', 'field_updatelocal_' . $userfield);
+                    if ($existingupdatelocalsetting !== 'always') {
+                        add_to_config_log('field_updatelocal_' . $userfield, $existingupdatelocalsetting, 'always', 'auth_iomadoidc');
+                    }
                     set_config('field_updatelocal_' . $userfield, 'always', 'auth_iomadoidc');
                 }
             }
@@ -332,17 +388,38 @@ function xmldb_auth_iomadoidc_upgrade($oldversion) {
         $authorizationendpoint = get_config('auth_iomadoidc', 'authendpoint');
         if (empty($idptypeconfig)) {
             if (!$authorizationendpoint) {
+                $existingidptype = get_config('auth_iomadoidc', 'idptype');
+                if ($existingidptype != AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID) {
+                    add_to_config_log('idptype', $existingidptype, AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_iomadoidc');
+                }
                 set_config('idptype', AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_iomadoidc');
             } else {
                 $endpointversion = auth_iomadoidc_determine_endpoint_version($authorizationendpoint);
                 switch ($endpointversion) {
                     case AUTH_IOMADOIDC_MICROSOFT_ENDPOINT_VERSION_1:
+                        $existingidptype = get_config('auth_iomadoidc', 'idptype');
+                        if ($existinglocksetting != AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID) {
+                            add_to_config_log('idptype', $existingidptype, AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_iomadoidc');
+                        }
                         set_config('idptype', AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_iomadoidc');
                         break;
                     case AUTH_IOMADOIDC_MICROSOFT_ENDPOINT_VERSION_2:
+                        $existingidptype = get_config('auth_iomadoidc', 'idptype');
+                        if ($existinglocksetting != AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+                            add_to_config_log(
+                                'idptype',
+                                $existingidptype,
+                                AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM,
+                                'auth_iomadoidc'
+                            );
+                        }
                         set_config('idptype', AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, 'auth_iomadoidc');
                         break;
                     default:
+                        $existingidptype = get_config('auth_iomadoidc', 'idptype');
+                        if ($existinglocksetting != AUTH_IOMADOIDC_IDP_TYPE_OTHER) {
+                            add_to_config_log('idptype', $existingidptype, AUTH_IOMADOIDC_IDP_TYPE_OTHER, 'auth_iomadoidc');
+                        }
                         set_config('idptype', AUTH_IOMADOIDC_IDP_TYPE_OTHER, 'auth_iomadoidc');
                 }
             }
@@ -355,8 +432,21 @@ function xmldb_auth_iomadoidc_upgrade($oldversion) {
             $clientcertificateconfig = get_config('auth_iomadoidc', 'clientcert');
             $clientprivatekeyconfig = get_config('auth_iomadoidc', 'clientprivatekey');
             if (empty($clientsecretconfig) && !empty($clientcertificateconfig) && !empty($clientprivatekeyconfig)) {
+                $existingclientauthmethod = get_config('auth_iomadoidc', 'clientauthmethod');
+                if ($existingclientauthmethod != AUTH_IOMADOIDC_AUTH_METHOD_CERTIFICATE) {
+                    add_to_config_log(
+                        'clientauthmethod',
+                        $existingclientauthmethod,
+                        AUTH_IOMADOIDC_AUTH_METHOD_CERTIFICATE,
+                        'auth_iomadoidc'
+                    );
+                }
                 set_config('clientauthmethod', AUTH_IOMADOIDC_AUTH_METHOD_CERTIFICATE, 'auth_iomadoidc');
             } else {
+                $existingclientauthmethod = get_config('auth_iomadoidc', 'clientauthmethod');
+                if ($existingclientauthmethod != AUTH_IOMADOIDC_AUTH_METHOD_SECRET) {
+                    add_to_config_log('clientauthmethod', $existingclientauthmethod, AUTH_IOMADOIDC_AUTH_METHOD_SECRET, 'auth_iomadoidc');
+                }
                 set_config('clientauthmethod', AUTH_IOMADOIDC_AUTH_METHOD_SECRET, 'auth_iomadoidc');
             }
         }
@@ -366,6 +456,10 @@ function xmldb_auth_iomadoidc_upgrade($oldversion) {
         if (empty($tenantnameorguidconfig)) {
             $entratenant = get_config('local_o365', 'aadtenant');
             if ($entratenant) {
+                $existingtenantnameorguid = get_config('auth_iomadoidc', 'tenantnameorguid');
+                if ($existingtenantnameorguid != $entratenant) {
+                    add_to_config_log('tenantnameorguid', $existingtenantnameorguid, $entratenant, 'auth_iomadoidc');
+                }
                 set_config('tenantnameorguid', $entratenant, 'auth_iomadoidc');
             }
         }
@@ -385,11 +479,151 @@ function xmldb_auth_iomadoidc_upgrade($oldversion) {
     if ($oldversion < 2023100902) {
         // Set initial value for "clientcertsource" config.
         if (empty(get_config('auth_iomadoidc', 'clientcertsource'))) {
+            $existingclientcertsource = get_config('auth_iomadoidc', 'clientcertsource');
+            if ($existingclientcertsource != AUTH_IOMADOIDC_AUTH_CERT_SOURCE_TEXT) {
+                add_to_config_log('clientcertsource', $existingclientcertsource, AUTH_IOMADOIDC_AUTH_CERT_SOURCE_TEXT, 'auth_iomadoidc');
+            }
             set_config('clientcertsource', AUTH_IOMADOIDC_AUTH_CERT_SOURCE_TEXT, 'auth_iomadoidc');
         }
 
         upgrade_plugin_savepoint(true, 2023100902, 'auth', 'iomadoidc');
     }
 
+    if ($oldversion < 2024042201) {
+        // Set default values for new settings "bindingusernameclaim" and "customclaimname".
+        if (!get_config('auth_iomadoidc', 'bindingusernameclaim')) {
+            set_config('bindingusernameclaim', 'auto', 'auth_iomadoidc');
+        }
+
+        if (!get_config('auth_iomadoidc', 'customclaimname')) {
+            set_config('customclaimname', '', 'auth_iomadoidc');
+        }
+
+        // Define field useridentifier to be added to auth_iomadoidc_token.
+        $table = new xmldb_table('auth_iomadoidc_token');
+        $field = new xmldb_field('useridentifier', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'iomadoidcusername');
+
+        // Conditionally launch add field useridentifier.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+
+            // Save current value of iomadoidcusername to useridentifier.
+            $sql = 'UPDATE {auth_iomadoidc_token} SET useridentifier = iomadoidcusername';
+            $DB->execute($sql);
+        }
+
+        // Oidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2024042201, 'auth', 'iomadoidc');
+    }
+
+    if ($oldversion < 2024100701) {
+        // Set the default value for the bindingusernameclaim setting.
+        $bindingusernameclaimconfig = get_config('auth_iomadoidc', 'bindingusernameclaim');
+        if (empty($bindingusernameclaimconfig)) {
+            set_config('bindingusernameclaim', 'auto', 'auth_iomadoidc');
+        }
+
+        // Oidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2024100701, 'auth', 'iomadoidc');
+    }
+
+    if ($oldversion < 2024100702) {
+        // Define table auth_iomadoidc_sid to be created.
+        $table = new xmldb_table('auth_iomadoidc_sid');
+
+        // Adding fields to table auth_iomadoidc_sid.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('sid', XMLDB_TYPE_CHAR, '36', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table auth_iomadoidc_sid.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+
+        // Conditionally launch create table for auth_iomadoidc_sid.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Migrate existing sid values from auth_iomadoidc_tokens to auth_iomadoidc_sid.
+        if ($dbman->field_exists('auth_iomadoidc_token', 'sid')) {
+            $sql = "INSERT INTO {auth_iomadoidc_sid} (userid, sid, timecreated)
+                    SELECT userid, sid, ? AS timecreated
+                    FROM {auth_iomadoidc_token}
+                    WHERE sid IS NOT NULL AND sid != ''";
+            $DB->execute($sql, [time()]);
+        }
+
+        // Define field sid to be dropped from auth_iomadoidc_token.
+        $table = new xmldb_table('auth_iomadoidc_token');
+        $field = new xmldb_field('sid');
+
+        // Conditionally launch drop field sid.
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        // Oidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2024100702, 'auth', 'iomadoidc');
+    }
+
+    if ($oldversion < 2025100600.01) {
+        // Define index to be added to auth_iomadoidc_token.
+        $table = new xmldb_table('auth_iomadoidc_token');
+        $index = new xmldb_index('iomadoidcusername', XMLDB_INDEX_NOTUNIQUE, ['iomadoidcusername']);
+
+        // Conditionally launch add index iomadoidcusername.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Oidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2025100600.01, 'auth', 'iomadoidc');
+    }
+
+    if ($oldversion < 2025100601.01) {
+        upgrade_auth_iomadoidc_add_token_constraint();
+        upgrade_plugin_savepoint(true, 2025100601.01, 'auth', 'iomadoidc');
+    }
+
     return true;
+}
+
+/**
+ * Helper function to add unique constraint and remove duplicate tokens.
+ *
+ * Removes duplicate tokens, keeping the latest one for each (iomadoidcuniqid, tokenresource) pair.
+ * Uses a temporary table to work around MySQL error 1093 and PostgreSQL parameter limits.
+ */
+function upgrade_auth_iomadoidc_add_token_constraint(): void {
+    global $DB;
+
+    try {
+        $temptable = 'auth_iomadoidc_token_keep_ids';
+
+        // Step 1: Create a temporary table with the IDs to keep.
+        $sql = "CREATE TEMPORARY TABLE {" . $temptable . "} (id INT PRIMARY KEY)";
+        $DB->execute($sql);
+
+        // Step 2: Insert the IDs to keep (latest token for each iomadoidcuniqid, tokenresource pair).
+        $sql = "INSERT INTO {" . $temptable . "} (id)
+                SELECT MAX(id) FROM {auth_iomadoidc_token}
+                GROUP BY iomadoidcuniqid, tokenresource";
+        $DB->execute($sql);
+
+        // Step 3: Delete duplicates not in the temporary table.
+        $sql = "DELETE FROM {auth_iomadoidc_token} WHERE id NOT IN (SELECT id FROM {" . $temptable . "})";
+        $DB->execute($sql);
+
+        // Step 4: Drop the temporary table (automatic on transaction end, but explicit for clarity).
+        $sql = "DROP TEMPORARY TABLE IF EXISTS {" . $temptable . "}";
+        $DB->execute($sql);
+
+        // Step 5: Add unique constraint on (iomadoidcuniqid, tokenresource) to prevent duplicate tokens.
+        // Use CREATE UNIQUE INDEX which works on both MySQL and PostgreSQL.
+        $sql = 'CREATE UNIQUE INDEX idx_iomadoidc_unique ON {auth_iomadoidc_token} (iomadoidcuniqid, tokenresource)';
+        $DB->execute($sql);
+    } catch (Exception $e) {
+        unset($e);
+    }
 }

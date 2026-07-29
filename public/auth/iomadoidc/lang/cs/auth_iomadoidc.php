@@ -24,6 +24,9 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+// phpcs:disable moodle.Files.LangFilesOrdering.IncorrectOrder
+// phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment
+
 $string['pluginname'] = 'OpenID Connect';
 $string['auth_iomadoidcdescription'] = 'Plugin OpenID Connect poskytuje funkci jednotného přihlašování pomocí konfigurovatelných poskytovatelů identity.';
 $string['cfg_authendpoint_key'] = 'Koncový bod autorizace';
@@ -67,7 +70,7 @@ $string['cfg_loginflow_rocreds_desc'] = 'Při použití tohoto postupu uživatel
 $string['cfg_iomadoidcresource_key'] = 'Zdroj';
 $string['cfg_iomadoidcresource_desc'] = 'Zdroj OpenID Connect, pro který se odesílá požadavek.';
 $string['cfg_iomadoidcscope_key'] = 'Scope';
-$string['cfg_iomadoidcscope_desc'] = 'Rozsah OIDC, který se má použít.';
+$string['cfg_iomadoidcscope_desc'] = 'Rozsah IOMADOIDC, který se má použít.';
 $string['cfg_opname_key'] = 'Název poskytovatele';
 $string['cfg_opname_desc'] = 'Toto je údaj zobrazovaný koncovému uživateli, který identifikuje, jaký typ přihlašovacích údajů potřebuje uživatel použít k přihlášení. Tento údaj se používá na více místech rozhraní pro koncového uživatele v tomto pluginu k identifikaci vašeho poskytovatele.';
 $string['cfg_redirecturi_key'] = 'URI pro přesměrování';
@@ -125,3 +128,6 @@ $string['ucp_status_disabled'] = 'Zakázáno';
 $string['ucp_disconnect_title'] = 'Odpojení {$a}';
 $string['ucp_disconnect_details'] = 'Váš účet Moodle bude odpojen od {$a}. Budete si muset vytvořit uživatelské jméno a heslo pro přihlašování do Moodlu.';
 $string['ucp_title'] = 'Správa {$a}';
+
+// phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
+// phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

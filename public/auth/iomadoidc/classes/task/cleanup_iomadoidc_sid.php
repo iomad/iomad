@@ -15,18 +15,35 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version information.
+ * A scheduled task to clean up iomadoidc sid records.
  *
  * @package auth_iomadoidc
- * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright (C) 2021 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace auth_iomadoidc\task;
 
-$plugin->version = 2026042000;
-$plugin->requires = 2026042000;
-$plugin->release = '5.2.0';
-$plugin->component = 'auth_iomadoidc';
-$plugin->maturity = MATURITY_STABLE;
+use core\task\scheduled_task;
+
+/**
+ * A scheduled task that cleans up IOMADOIDC SID records.
+ */
+class cleanup_iomadoidc_sid extends scheduled_task {
+    /**
+     * Get a descriptive name for the task.
+     */
+    public function get_name() {
+        return get_string('task_cleanup_iomadoidc_sid', 'auth_iomadoidc');
+    }
+
+    /**
+     * Clean up IOMADOIDC SID records.
+     */
+    public function execute() {
+        global $DB;
+
+        $DB->delete_records_select('auth_iomadoidc_sid', 'timecreated < ?', [strtotime('-1 day')]);
+    }
+}

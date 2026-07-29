@@ -28,42 +28,22 @@ namespace auth_iomadoidc;
 use Exception;
 use moodle_exception;
 use auth_iomadoidc\event\action_failed;
-use context_system;
+use core\url;
 use local_iomad\iomad;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * General purpose utility class.
  */
 class utils {
-
-    /** @var string postfix for config based off of company id */
-    private $postfix;
-
     /**
-     * Constructor.
-     */
-    public function __construct() {
-        global $CFG;
-
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if ($companyid > 0) {
-            $this->postfix = "_$companyid";
-        } else {
-            $this->postfix = "";
-        }
-    }
-
-    /**
-     * Process an OIDC JSON response.
+     * Process an IOMADOIDC JSON response.
      *
      * @param string $response The received JSON.
      * @param array $expectedstructure
      * @return array The parsed JSON.
      * @throws moodle_exception
      */
-    public static function process_json_response($response, array $expectedstructure = array()) {
+    public static function process_json_response($response, array $expectedstructure = []) {
         $result = @json_decode($response, true);
         if (empty($result) || !is_array($result)) {
             self::debug('Bad response received', __METHOD__, $response);
@@ -74,6 +54,25 @@ class utils {
             $errmsg = 'Error response received.';
             self::debug($errmsg, __METHOD__, $result);
             if (isset($result['error_description'])) {
+                $isadminconsent = optional_param('admin_consent', false, PARAM_BOOL);
+                if ($isadminconsent) {
+                    if (
+                        iomad::get_config('auth_iomadoidc', 'idptype') == AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM &&
+                        auth_iomadoidc_is_local_365_installed() &&
+                        $result['error'] === 'invalid_grant' &&
+                        isset($result['error_codes']) && count($result['error_codes']) == 1 &&
+                        $result['error_codes'][0] == 53003
+                    ) {
+                        $localo365configurationpageurl = new url('/admin/settings.php', ['section' => 'local_o365']);
+                        throw new moodle_exception(
+                            'settings_adminconsent_error_53003',
+                            'local_o365',
+                            $localo365configurationpageurl,
+                            '',
+                            $result['error_description']
+                        );
+                    }
+                }
                 throw new moodle_exception('erroriomadoidccall_message', 'auth_iomadoidc', '', $result['error_description']);
             } else {
                 throw new moodle_exception('erroriomadoidccall', 'auth_iomadoidc');
@@ -82,7 +81,7 @@ class utils {
 
         foreach ($expectedstructure as $key => $val) {
             if (!isset($result[$key])) {
-                $errmsg = 'Invalid structure received. No "'.$key.'"';
+                $errmsg = 'Invalid structure received. No "' . $key . '"';
                 self::debug($errmsg, __METHOD__, $result);
                 throw new moodle_exception('erroriomadoidccall', 'auth_iomadoidc');
             }
@@ -90,7 +89,8 @@ class utils {
             if ($val !== null && $result[$key] !== $val) {
                 $strreceivedval = self::tostring($result[$key]);
                 $strval = self::tostring($val);
-                $errmsg = 'Invalid structure received. Invalid "'.$key.'". Received "'.$strreceivedval.'", expected "'.$strval.'"';
+                $errmsg = 'Invalid structure received. Invalid "' . $key . '". Received "' . $strreceivedval .
+                    '", expected "' . $strval . '"';
                 self::debug($errmsg, __METHOD__, $result);
                 throw new moodle_exception('erroriomadoidccall', 'auth_iomadoidc');
             }
@@ -107,9 +107,9 @@ class utils {
     public static function tostring($val) {
         if (is_scalar($val)) {
             if (is_bool($val)) {
-                return '(bool)'.(string)(int)$val;
+                return '(bool)' . (string)(int)$val;
             } else {
-                return '('.gettype($val).')'.(string)$val;
+                return '(' . gettype($val) . ')' . (string)$val;
             }
         } else if (is_null($val)) {
             return '(null)';
@@ -124,9 +124,9 @@ class utils {
                 $valinfo['errorcode'] = $val->errorcode;
                 $valinfo['module'] = $val->module;
             }
-            return print_r($valinfo, true);
+            return json_encode($valinfo, JSON_PRETTY_PRINT);
         } else {
-            return print_r($val, true);
+            return json_encode($val, JSON_PRETTY_PRINT);
         }
     }
 
@@ -138,29 +138,55 @@ class utils {
      * @param null $debugdata
      */
     public static function debug($message, $where = '', $debugdata = null) {
-        global $CFG;
-
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if ($companyid > 0) {
-            $postfix = "_$companyid";
-        } else {
-            $postfix = "";
-        }
-
-        $debugmode = (bool)get_config('auth_iomadoidc', 'debugmode' . $postfix);
+        $debugmode = (bool)iomad::get_config('auth_iomadoidc', 'debugmode');
         if ($debugmode === true) {
-            $backtrace = debug_backtrace();
-            $otherdata = [
+            $debugbacktrace = debug_backtrace();
+            $debugbacktracechecksum = md5(json_encode($debugbacktrace));
+
+            $otherdata = static::make_json_safe([
                 'other' => [
                     'message' => $message,
                     'where' => $where,
                     'debugdata' => $debugdata,
-                    'backtrace' => $backtrace,
+                    'backtrace_checksum' => $debugbacktracechecksum,
                 ],
-            ];
+            ]);
             $event = action_failed::create($otherdata);
             $event->trigger();
+
+            $debugbacktracedata = [
+                'checksum' => $debugbacktracechecksum,
+                'backtrace' => $debugbacktrace,
+            ];
+
+            debugging(json_encode($debugbacktracedata), DEBUG_DEVELOPER);
         }
+    }
+
+    /**
+     * Make a JSON structure safe for logging.
+     *
+     * @param mixed $data The data to make safe.
+     * @return mixed The safe data.
+     */
+    private static function make_json_safe($data) {
+        if (is_array($data)) {
+            foreach ($data as $key => $value) {
+                $data[$key] = static::make_json_safe($value);
+            }
+        } else if (is_object($data)) {
+            $data = (array)$data;
+            foreach ($data as $key => $value) {
+                $data[$key] = static::make_json_safe($value);
+            }
+        } else if (is_bool($data)) {
+            $data = (int)$data;
+        } else if (is_null($data)) {
+            $data = null;
+        } else if (!is_scalar($data)) {
+            $data = (string)$data;
+        }
+        return $data;
     }
 
     /**
@@ -169,7 +195,7 @@ class utils {
      * @return string The redirect URL.
      */
     public static function get_redirecturl() {
-        $redirecturl = new \moodle_url('/auth/iomadoidc/');
+        $redirecturl = new url('/auth/iomadoidc/');
         return $redirecturl->out(false);
     }
 
@@ -179,26 +205,17 @@ class utils {
      * @return string The redirect URL.
      */
     public static function get_frontchannellogouturl() {
-        $logouturl = new \moodle_url('/auth/iomadoidc/logout.php');
+        $logouturl = new url('/auth/iomadoidc/logout.php');
         return $logouturl->out(false);
     }
 
     /**
-     * Get and check existence of OIDC client certificate path.
+     * Get and check existence of IOMADOIDC client certificate path.
      *
      * @return string|bool cert path if exists otherwise false
      */
     public static function get_certpath() {
-        global $CFG;
-
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if ($companyid > 0) {
-            $postfix = "_$companyid";
-        } else {
-            $postfix = "";
-        }
-
-        $clientcertfile = get_config('auth_iomadoidc', 'clientcertfile' . $postfix);
+        $clientcertfile = iomad::get_config('auth_iomadoidc', 'clientcertfile');
         $certlocation = self::get_openssl_internal_path();
         $certfile = "$certlocation/$clientcertfile";
 
@@ -210,21 +227,12 @@ class utils {
     }
 
     /**
-     * Get and check existence of OIDC client key path.
+     * Get and check existence of IOMADOIDC client key path.
      *
      * @return string|bool key path if exists otherwise false
      */
     public static function get_keypath() {
-        global $CFG;
-
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if ($companyid > 0) {
-            $postfix = "_$companyid";
-        } else {
-            $postfix = "";
-        }
-
-        $clientprivatekeyfile = get_config('auth_iomadoidc', 'clientprivatekeyfile' . $postfix);
+        $clientprivatekeyfile = iomad::get_config('auth_iomadoidc', 'clientprivatekeyfile');
         $keylocation = self::get_openssl_internal_path();
         $keyfile = "$keylocation/$clientprivatekeyfile";
 

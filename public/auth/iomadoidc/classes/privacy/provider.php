@@ -25,31 +25,29 @@
 
 namespace auth_iomadoidc\privacy;
 
-defined('MOODLE_INTERNAL') || die();
-
-use \core_privacy\local\metadata\collection;
-use \core_privacy\local\request\contextlist;
-use \core_privacy\local\request\approved_contextlist;
-use \core_privacy\local\request\writer;
-
-interface auth_iomadoidc_userlist extends \core_privacy\local\request\core_userlist_provider {
-};
+use core\context\user;
+use core_privacy\local\metadata\collection;
+use core_privacy\local\metadata\provider as metadata_provider;
+use core_privacy\local\request\approved_contextlist;
+use core_privacy\local\request\contextlist;
+use core_privacy\local\request\core_userlist_provider;
+use core_privacy\local\request\plugin\provider as plugin_provider;
+use core_privacy\local\request\writer;
 
 /**
  * Privacy provider for auth_iomadoidc.
  */
 class provider implements
-    \core_privacy\local\request\plugin\provider,
-    \core_privacy\local\metadata\provider,
-    auth_iomadoidc_userlist {
-
+    core_userlist_provider,
+    metadata_provider,
+    plugin_provider {
     /**
      * Returns meta data about this system.
      *
      * @param   collection     $collection The initialised collection to add items to.
      * @return  collection     A listing of user data stored through this system.
      */
-    public static function get_metadata(collection $collection) : collection {
+    public static function get_metadata(collection $collection): collection {
 
         $tables = [
             'auth_iomadoidc_prevlogin' => [
@@ -62,6 +60,7 @@ class provider implements
                 'username',
                 'userid',
                 'iomadoidcusername',
+                'useridentifier',
                 'scope',
                 'tokenresource',
                 'authcode',
@@ -70,17 +69,22 @@ class provider implements
                 'refreshtoken',
                 'idtoken',
             ],
+            'auth_iomadoidc_sid' => [
+                'userid',
+                'sid',
+                'timecreated',
+            ],
         ];
 
         foreach ($tables as $table => $fields) {
             $fielddata = [];
             foreach ($fields as $field) {
-                $fielddata[$field] = 'privacy:metadata:'.$table.':'.$field;
+                $fielddata[$field] = 'privacy:metadata:' . $table . ':' . $field;
             }
             $collection->add_database_table(
                 $table,
                 $fielddata,
-                'privacy:metadata:'.$table
+                'privacy:metadata:' . $table
             );
         }
 
@@ -93,8 +97,8 @@ class provider implements
      * @param   int         $userid     The user to search.
      * @return  contextlist   $contextlist  The contextlist containing the list of contexts used in this plugin.
      */
-    public static function get_contexts_for_userid(int $userid) : contextlist {
-        $contextlist = new \core_privacy\local\request\contextlist();
+    public static function get_contexts_for_userid(int $userid): contextlist {
+        $contextlist = new contextlist();
 
         $sql = "SELECT ctx.id
                   FROM {auth_iomadoidc_token} tk
@@ -110,24 +114,32 @@ class provider implements
         $params = ['userid' => $userid, 'contextlevel' => CONTEXT_USER];
         $contextlist->add_from_sql($sql, $params);
 
+        $sql = "SELECT ctx.id
+                  FROM {auth_iomadoidc_sid} s
+                  JOIN {context} ctx ON ctx.instanceid = s.userid AND ctx.contextlevel = :contextlevel
+                 WHERE s.userid = :userid";
+        $params = ['userid' => $userid, 'contextlevel' => CONTEXT_USER];
+        $contextlist->add_from_sql($sql, $params);
+
         return $contextlist;
     }
 
     /**
      * Get the list of users who have data within a context.
      *
-     * @param userlist $userlist The userlist containing the list of users who have data in this context/plugin combination.
+     * @param \core_privacy\local\request\userlist $userlist The userlist containing the list of
+     * users who have data in this context/plugin combination.
      */
     public static function get_users_in_context(\core_privacy\local\request\userlist $userlist) {
         $context = $userlist->get_context();
 
-        if (!$context instanceof \context_user) {
+        if (!$context instanceof user) {
             return;
         }
 
         $params = [
             'contextuser' => CONTEXT_USER,
-            'contextid' => $context->id
+            'contextid' => $context->id,
         ];
 
         $sql = "SELECT ctx.instanceid as userid
@@ -145,6 +157,14 @@ class provider implements
                        AND ctx.contextlevel = :contextuser
                  WHERE ctx.id = :contextid";
         $userlist->add_from_sql('userid', $sql, $params);
+
+        $sql = "SELECT ctx.instanceid as userid
+                  FROM {auth_iomadoidc_sid} s
+                  JOIN {context} ctx
+                       ON ctx.instanceid = s.userid
+                       AND ctx.contextlevel = :contextuser
+                 WHERE ctx.id = :contextid";
+        $userlist->add_from_sql('userid', $sql, $params);
     }
 
     /**
@@ -155,14 +175,14 @@ class provider implements
     public static function export_user_data(approved_contextlist $contextlist) {
         global $DB;
         $user = $contextlist->get_user();
-        $context = \context_user::instance($contextlist->get_user()->id);
+        $context = user::instance($contextlist->get_user()->id);
         $tables = static::get_table_user_map($user);
         foreach ($tables as $table => $filterparams) {
             $records = $DB->get_recordset($table, $filterparams);
             foreach ($records as $record) {
                 writer::with_context($context)->export_data([
                     get_string('privacy:metadata:auth_iomadoidc', 'auth_iomadoidc'),
-                    get_string('privacy:metadata:'.$table, 'auth_iomadoidc')
+                    get_string('privacy:metadata:' . $table, 'auth_iomadoidc'),
                 ], $record);
             }
         }
@@ -174,10 +194,11 @@ class provider implements
      * @param \stdClass $user The user to get the map for.
      * @return array The table user map.
      */
-    protected static function get_table_user_map(\stdClass $user) : array {
+    protected static function get_table_user_map(\stdClass $user): array {
         $tables = [
             'auth_iomadoidc_prevlogin' => ['userid' => $user->id],
             'auth_iomadoidc_token' => ['userid' => $user->id],
+            'auth_iomadoidc_sid' => ['userid' => $user->id],
         ];
         return $tables;
     }
@@ -185,7 +206,7 @@ class provider implements
     /**
      * Delete all data for all users in the specified context.
      *
-     * @param context $context The specific context to delete data for.
+     * @param \context $context The specific context to delete data for.
      */
     public static function delete_data_for_all_users_in_context(\context $context) {
         if ($context->contextlevel == CONTEXT_USER) {
@@ -218,6 +239,7 @@ class provider implements
         global $DB;
         $DB->delete_records('auth_iomadoidc_prevlogin', ['userid' => $userid]);
         $DB->delete_records('auth_iomadoidc_token', ['userid' => $userid]);
+        $DB->delete_records('auth_iomadoidc_sid', ['userid' => $userid]);
     }
 
     /**
@@ -229,7 +251,7 @@ class provider implements
     public static function delete_data_for_users(\core_privacy\local\request\approved_userlist $userlist) {
         $context = $userlist->get_context();
         // Because we only use user contexts the instance ID is the user ID.
-        if ($context instanceof \context_user) {
+        if ($context instanceof user) {
             self::delete_user_data($context->instanceid);
         }
     }

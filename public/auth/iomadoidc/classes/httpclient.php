@@ -51,8 +51,8 @@ class httpclient extends \curl implements \auth_iomadoidc\httpclientinterface {
         $params = "lang=PHP; os={$ostype}; os_version={$osver}; arch={$arch}; version={$ver}; MoodleInstallId={$iid}";
         $clienttag = "Moodle/{$mdlver} ({$params})";
         return [
-            'User-Agent: '.$clienttag,
-            'X-ClientService-ClientTag: '.$clienttag,
+            'User-Agent: ' . $clienttag,
+            'X-ClientService-ClientTag: ' . $clienttag,
         ];
     }
 
@@ -63,8 +63,8 @@ class httpclient extends \curl implements \auth_iomadoidc\httpclientinterface {
      */
     protected function get_plugin_version() {
         global $CFG;
-        $plugin = new \stdClass;
-        require_once($CFG->dirroot.'/auth/iomadoidc/version.php');
+        $plugin = new \stdClass();
+        require_once($CFG->dirroot . '/auth/iomadoidc/version.php');
         return (isset($plugin->release)) ? $plugin->release : 'unknown';
     }
 
@@ -85,7 +85,7 @@ class httpclient extends \curl implements \auth_iomadoidc\httpclientinterface {
      * @param array $options
      * @return bool
      */
-    protected function request($url, $options = array()) {
+    protected function request($url, $options = []) {
         $this->setHeader($this->get_clienttag_headers());
         $result = parent::request($url, $options);
         $this->resetHeader();
@@ -100,7 +100,7 @@ class httpclient extends \curl implements \auth_iomadoidc\httpclientinterface {
      * @param array $options
      * @return bool
      */
-    public function post($url, $params = '', $options = array()) {
+    public function post($url, $params = '', $options = []) {
         // Encode data to disable uploading files when values are prefixed @.
         if (is_array($params)) {
             $params = http_build_query($params, '', '&');

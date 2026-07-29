@@ -23,19 +23,13 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use core\context\system;
+use core\url;
 use local_iomad\iomad;
 
-require_once(__DIR__.'/../../config.php');
-require_once(__DIR__.'/auth.php');
-require_once(__DIR__.'/lib.php');
-
-// IOMAD
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
-if ($companyid > 0) {
-    $postfix = "_$companyid";
-} else {
-    $postfix = "";
-}       
+require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/auth.php');
+require_once(__DIR__ . '/lib.php');
 
 require_login();
 
@@ -47,35 +41,34 @@ $iomadoidcconnected = (!empty($iomadoidctoken)) ? true : false;
 $iomadoidcloginconnected = ($USER->auth === 'iomadoidc') ? true : false;
 
 if (!is_enabled_auth('iomadoidc')) {
-    throw new \moodle_exception('erroriomadoidcnotenabled', 'auth_iomadoidc');
+    throw new moodle_exception('erroriomadoidcnotenabled', 'auth_iomadoidc');
 }
 
 if (!empty($action)) {
     if ($action === 'connectlogin' && $iomadoidcloginconnected === false) {
         // Use authorization request login flow to connect existing users.
         auth_iomadoidc_connectioncapability($USER->id, 'connect', true);
-        $auth = new \auth_iomadoidc\loginflow\authcode;
+        $auth = new \auth_iomadoidc\loginflow\authcode();
         $auth->set_httpclient(new \auth_iomadoidc\httpclient());
         $auth->initiateauthrequest();
     } else if ($action === 'disconnectlogin' && $iomadoidcloginconnected === true) {
         if (is_enabled_auth('manual') === true) {
             auth_iomadoidc_connectioncapability($USER->id, 'disconnect', true);
-            $auth = new \auth_plugin_iomadoidc;
+            $auth = new \auth_plugin_iomadoidc();
             $auth->set_httpclient(new \auth_iomadoidc\httpclient());
             $auth->disconnect();
         }
     } else {
-        throw new \moodle_exception('errorucpinvalidaction', 'auth_iomadoidc');
+        throw new moodle_exception('errorucpinvalidaction', 'auth_iomadoidc');
     }
 } else {
     $PAGE->set_url('/auth/iomadoidc/ucp.php');
-    $usercontext = \context_user::instance($USER->id);
-    $PAGE->set_context(\context_system::instance());
+    $PAGE->set_context(system::instance());
     $PAGE->set_pagelayout('standard');
     $USER->editing = false;
     $authconfig = get_config('auth_iomadoidc');
-    $configname = "opname$postfix";
-    $opname = (!empty($authconfig->$configname)) ? $authconfig->$configname : get_string('pluginname', 'auth_iomadoidc');
+    $opnamename = 'opname' . iomad::get_company_postfix();
+    $opname = (!empty($authconfig->$opnamename)) ? $authconfig->$opnamename : get_string('pluginname', 'auth_iomadoidc');
 
     $ucptitle = get_string('ucp_title', 'auth_iomadoidc', $opname);
     $PAGE->navbar->add($ucptitle, $PAGE->url);
@@ -99,7 +92,7 @@ if (!empty($action)) {
         echo \html_writer::tag('h4', get_string('ucp_status_enabled', 'auth_iomadoidc'), ['class' => 'notifysuccess']);
         if (is_enabled_auth('manual') === true) {
             if (auth_iomadoidc_connectioncapability($USER->id, 'disconnect')) {
-                $connectlinkuri = new \moodle_url('/auth/iomadoidc/ucp.php', ['action' => 'disconnectlogin']);
+                $connectlinkuri = new url('/auth/iomadoidc/ucp.php', ['action' => 'disconnectlogin']);
                 $strdisconnect = get_string('ucp_login_stop', 'auth_iomadoidc', $opname);
                 $linkhtml = \html_writer::link($connectlinkuri, $strdisconnect);
                 echo \html_writer::tag('h5', $linkhtml);
@@ -109,7 +102,7 @@ if (!empty($action)) {
     } else {
         echo \html_writer::tag('h4', get_string('ucp_status_disabled', 'auth_iomadoidc'), ['class' => 'notifyproblem']);
         if (auth_iomadoidc_connectioncapability($USER->id, 'connect')) {
-            $connectlinkuri = new \moodle_url('/auth/iomadoidc/ucp.php', ['action' => 'connectlogin']);
+            $connectlinkuri = new url('/auth/iomadoidc/ucp.php', ['action' => 'connectlogin']);
             $linkhtml = \html_writer::link($connectlinkuri, get_string('ucp_login_start', 'auth_iomadoidc', $opname));
             echo \html_writer::tag('h5', $linkhtml);
             echo \html_writer::span(get_string('ucp_login_start_desc', 'auth_iomadoidc', $opname));

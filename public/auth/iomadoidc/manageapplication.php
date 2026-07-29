@@ -24,20 +24,21 @@
  */
 
 use auth_iomadoidc\form\application;
-use local_iomad\custom_context\context_company;
+use core\context\system;
+use core\url;
 use local_iomad\iomad;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/auth/iomadoidc/lib.php');
-$companyonly = optional_param('companyonly', false, PARAM_BOOL);
 
 require_login();
 
-$url = new moodle_url('/auth/iomadoidc/manageapplication.php');
+$url = new url('/auth/iomadoidc/manageapplication.php');
 $PAGE->set_url($url);
-$PAGE->set_context(context_system::instance());
+$PAGE->set_context(system::instance());
+$PAGE->set_pagelayout('admin');
 $PAGE->set_heading(get_string('settings_page_application', 'auth_iomadoidc'));
 $PAGE->set_title(get_string('settings_page_application', 'auth_iomadoidc'));
 
@@ -49,12 +50,8 @@ $jsmodule = [
 ];
 $PAGE->requires->js_init_call('M.auth_iomadoidc.init', $jsparams, true, $jsmodule);
 
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
-if ($companyid > 0) {
-    $postfix = "_$companyid";
-} else {
-    $postfix = "";
-}
+// IOMAD.
+$postfix = iomad::get_company_postfix();
 
 // Is this from the company advanced settings page?
 if ($companyonly && !empty($companyid)) {
@@ -73,19 +70,47 @@ $iomadoidcconfig = get_config('auth_iomadoidc');
 $form = new application(null, ['iomadoidcconfig' => $iomadoidcconfig]);
 
 $formdata = ['companyonly' => $companyonly];
-foreach (['idptype', 'clientid', 'clientauthmethod', 'clientsecret', 'clientprivatekey', 'clientcert',
-    'clientcertsource', 'clientprivatekeyfile', 'clientcertfile', 'clientcertpassphrase',
-    'authendpoint', 'tokenendpoint', 'iomadoidcresource', 'iomadoidcscope', 'secretexpiryrecipients'] as $field) {
+$secretfields = ['clientsecret' . $postfix, 'clientcertpassphrase' . $postfix];
+
+// Check if form was submitted (to handle validation errors).
+$formsubmitted = optional_param('submitbutton', '', PARAM_TEXT);
+
+foreach (
+    [
+        'idptype', 'clientid', 'clientauthmethod', 'clientsecret', 'clientprivatekey', 'clientcert',
+        'clientcertsource', 'clientprivatekeyfile', 'clientcertfile', 'clientcertpassphrase',
+        'authendpoint', 'tokenendpoint', 'iomadoidcresource', 'iomadoidcscope', 'secretexpiryrecipients',
+        'bindingusernameclaim', 'customclaimname', 'customclaims',
+    ] as $field
+) {
     $fieldname = $field . $postfix;
     if (isset($iomadoidcconfig->$fieldname)) {
-        $formdata[$field] = $iomadoidcconfig->$fieldname;
+        // Mask sensitive secret fields for display only.
+        if (in_array($fieldname, $secretfields) && !empty($iomadoidcconfig->$fieldname)) {
+            $formdata[$fieldname] = auth_iomadoidc_mask_secret($iomadoidcconfig->$fieldname);
+        } else {
+            $formdata[$fieldname] = $iomadoidcconfig->$fieldname;
+        }
+    }
+}
+
+// After form validation errors, if the change checkbox wasn't checked, restore the masked value.
+if ($formsubmitted) {
+    $changesecret = optional_param('changesecret', 0, PARAM_BOOL);
+    $changecertpassphrase = optional_param('changecertpassphrase', 0, PARAM_BOOL);
+
+    if (!$changesecret && !empty($iomadoidcconfig->clientsecret)) {
+        $formdata['clientsecret'] = auth_iomadoidc_mask_secret($iomadoidcconfig->clientsecret);
+    }
+    if (!$changecertpassphrase && !empty($iomadoidcconfig->clientcertpassphrase)) {
+        $formdata['clientcertpassphrase'] = auth_iomadoidc_mask_secret($iomadoidcconfig->clientcertpassphrase);
     }
 }
 
 $form->set_data($formdata);
 
 if ($form->is_cancelled()) {
-    redirect($returnurl);
+    redirect($url);
 } else if ($fromform = $form->get_data()) {
     // Handle odd cases where clientauthmethod is not received.
     if (!isset($fromform->clientauthmethod)) {
@@ -94,7 +119,7 @@ if ($form->is_cancelled()) {
 
     // Prepare config settings to save.
     $configstosave = ['idptype', 'clientid', 'clientauthmethod', 'authendpoint', 'tokenendpoint',
-        'iomadoidcresource', 'iomadoidcscope'];
+        'iomadoidcresource', 'iomadoidcscope', 'customclaims'];
 
     // Depending on the value of clientauthmethod, save clientsecret or (clientprivatekey and clientcert).
     switch ($fromform->clientauthmethod) {
@@ -124,9 +149,37 @@ if ($form->is_cancelled()) {
     foreach ($configstosave as $config) {
         $configname = $config . $postfix;
         $existingsetting = get_config('auth_iomadoidc', $configname);
-        if ($fromform->$config != $existingsetting) {
-            set_config($configname, $fromform->$config, 'auth_iomadoidc');
-            add_to_config_log($configname, $existingsetting, $fromform->$config, 'auth_iomadoidc');
+        $newvalue = $fromform->$configname;
+
+        // Handle secret fields specially.
+        if (in_array($configname, $secretfields)) {
+            // If the value is a masked secret and hasn't changed, skip updating it.
+            if (auth_iomadoidc_is_masked_secret($newvalue)) {
+                // Check if the masked value matches what we would have displayed.
+                if ($existingsetting && auth_iomadoidc_mask_secret($existingsetting) === $newvalue) {
+                    // Value hasn't been changed, skip this field.
+                    continue;
+                }
+            }
+
+            // CRITICAL: Prevent saving empty secret when there's an existing one.
+            // This handles cases where the field is disabled and submits empty.
+            if (empty(trim($newvalue)) && !empty($existingsetting)) {
+                // Don't delete existing secret with empty value - skip this field.
+                continue;
+            }
+        }
+
+        if ($newvalue != $existingsetting) {
+            // Redact secret fields in the config log to prevent exposing sensitive values.
+            if (in_array($configname, $secretfields)) {
+                $logoldvalue = !empty($existingsetting) ? '[REDACTED]' : '';
+                $lognewvalue = !empty($newvalue) ? '[REDACTED]' : '';
+                add_to_config_log($configname, $logoldvalue, $lognewvalue, 'auth_iomadoidc');
+            } else {
+                add_to_config_log($configname, $existingsetting, $newvalue, 'auth_iomadoidc');
+            }
+            set_config($configname, $newvalue, 'auth_iomadoidc');
             $settingschanged = true;
             if ($config != 'secretexpiryrecipients') {
                 $updateapplicationtokenrequired = true;
@@ -150,15 +203,15 @@ if ($form->is_cancelled()) {
             purge_all_caches();
 
             // Then show the message to the user with instructions to update the application token.
-            $localo365configurl = new moodle_url('/admin/settings.php', ['section' => 'local_o365']);
+            $localo365configurl = new url('/admin/settings.php', ['section' => 'local_o365']);
             redirect($localo365configurl, get_string('application_updated_microsoft', 'auth_iomadoidc'));
         } else {
-            redirect($returnurl, get_string('application_updated', 'auth_iomadoidc'));
+            redirect($url, get_string('application_updated', 'auth_iomadoidc'));
         }
     } else if ($settingschanged) {
-        redirect($returnurl, get_string('application_updated', 'auth_iomadoidc'));
+        redirect($url, get_string('application_updated', 'auth_iomadoidc'));
     } else {
-        redirect($returnurl, get_string('application_not_changed', 'auth_iomadoidc'));
+        redirect($url, get_string('application_not_changed', 'auth_iomadoidc'));
     }
 }
 

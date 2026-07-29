@@ -24,6 +24,9 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+// phpcs:disable moodle.Files.LangFilesOrdering.IncorrectOrder
+// phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment
+
 $string['pluginname'] = 'OpenID Connect';
 $string['auth_iomadoidcdescription'] = 'De OpenID Connect-plugin verschaft de mogelijkheid voor eenmalige aanmelding met configureerbare identiteitsproviders.';
 $string['cfg_authendpoint_key'] = 'Autorisatie-eindpunt';
@@ -67,7 +70,7 @@ $string['cfg_loginflow_rocreds_desc'] = 'In deze flow voert de gebruiker zijn ge
 $string['cfg_iomadoidcresource_key'] = 'Bron';
 $string['cfg_iomadoidcresource_desc'] = 'De OpenID Connect-bron waarvoor het verzoek moet worden verzonden.';
 $string['cfg_iomadoidcscope_key'] = 'Reikwijdte';
-$string['cfg_iomadoidcscope_desc'] = 'De te gebruiken OIDC-reikwijdte.';
+$string['cfg_iomadoidcscope_desc'] = 'De te gebruiken IOMADOIDC-reikwijdte.';
 $string['cfg_opname_key'] = 'Naam provider';
 $string['cfg_opname_desc'] = 'Dit is een voor de gebruiker zichtbaar label dat aangeeft met welke type referenties de gebruiker zich moet aanmelden. Dit label wordt in alle voor de gebruiker zichtbare delen van deze plugin gebruikt om de provider aan te geven.';
 $string['cfg_redirecturi_key'] = 'Omleidings-URL';
@@ -125,3 +128,6 @@ $string['ucp_status_disabled'] = 'Uitgeschakeld';
 $string['ucp_disconnect_title'] = 'Verbinding met {$a} verbroken';
 $string['ucp_disconnect_details'] = 'Hiermee wordt de verbinding tussen je Moodle-account en {$a} verbroken. Je moet een gebruikersnaam en wachtwoord maken om je aan te melden bij Moodle.';
 $string['ucp_title'] = '{$a}-beheer';
+
+// phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
+// phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

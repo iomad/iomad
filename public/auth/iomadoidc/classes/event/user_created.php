@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * IOMAD OIDC user created event.
+ * IOMADOIDC user created event.
  *
  * @package auth_iomadoidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
@@ -25,10 +25,10 @@
 
 namespace auth_iomadoidc\event;
 
-defined('MOODLE_INTERNAL') || die();
+use core\context\system;
 
 /**
- * Event fired when IOMAD OIDC creates a new user.
+ * Event fired when IOMADOIDC creates a new user.
  */
 class user_created extends \core\event\base {
     /**
@@ -46,7 +46,7 @@ class user_created extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "A user (user id '{$this->userid}') was creatd using the OpenID Connect authentication plugin.";
+        return "A user (user id '{$this->userid}') was created using the OpenID Connect authentication plugin.";
     }
 
     /**
@@ -55,7 +55,7 @@ class user_created extends \core\event\base {
      * @return void
      */
     protected function init() {
-        $this->context = \context_system::instance();
+        $this->context = system::instance();
         $this->data['crud'] = 'c';
         $this->data['edulevel'] = self::LEVEL_OTHER;
         $this->data['objecttable'] = 'user';

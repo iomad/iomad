@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * IOMAD OIDC disconnect form.
+ * IOMADOIDC disconnect form.
  *
  * @package auth_iomadoidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
@@ -29,25 +29,20 @@ use local_iomad\iomad;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot.'/lib/formslib.php');
+require_once($CFG->dirroot . '/lib/formslib.php');
 
 /**
- * IOMAD OIDC Disconnect Form.
+ * IOMADOIDC Disconnect Form.
  */
 class disconnect extends \moodleform {
     /**
      * Form definition.
      */
     protected function definition() {
-        global $USER, $DB, $CFG;
+        global $USER, $DB;
 
-        // IOMAD
-        $companyid = iomad::get_my_companyid(\context_system::instance(), false);
-        if ($companyid > 0) {
-            $postfix = "_$companyid";
-        } else {
-            $postfix = "";
-        }
+        // IOMAD.
+        $postfix = iomad::get_company_postfix();
 
         if (!empty($this->_customdata['userid'])) {
             $userrec = $DB->get_record('user', ['id' => $this->_customdata['userid']]);
@@ -56,7 +51,7 @@ class disconnect extends \moodleform {
         }
 
         $authconfig = get_config('auth_iomadoidc');
-        $configname = "opname$postfix";
+        $configname = "opname" . $postfix;
         $opname = (!empty($authconfig->$configname)) ? $authconfig->$configname : get_string('pluginname', 'auth_iomadoidc');
 
         $mform =& $this->_form;

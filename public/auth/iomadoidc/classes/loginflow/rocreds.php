@@ -25,7 +25,9 @@
 
 namespace auth_iomadoidc\loginflow;
 
+use auth_iomadoidc\event\user_created;
 use auth_iomadoidc\utils;
+use local_iomad\iomad;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -62,8 +64,8 @@ class rocreds extends base {
     /**
      * Provides a hook into the login page.
      *
-     * @param object &$frm Form object.
-     * @param object &$user User object.
+     * @param stdClass $frm Form object.
+     * @param stdClass $user User object.
      * @return bool
      */
     public function loginpage_hook(&$frm, &$user) {
@@ -92,7 +94,7 @@ class rocreds extends base {
             }
         }
 
-        $autoappend = get_config('auth_iomadoidc', 'autoappend' . $this->postfix);
+        $autoappend = iomad::get_config('auth_iomadoidc', 'autoappend');
         if (empty($autoappend)) {
             // If we're not doing autoappend, just let things flow naturally.
             return true;
@@ -122,17 +124,31 @@ class rocreds extends base {
             $failurereason = AUTH_LOGIN_UNAUTHORISED;
 
             // Trigger login failed event.
-            $event = \core\event\user_login_failed::create(array('other' => array('username' => $username,
-                    'reason' => $failurereason)));
+            $event = \core\event\user_login_failed::create([
+                'other' => [
+                    'username' => $username,
+                    'reason' => $failurereason,
+                ],
+            ]);
             $event->trigger();
 
-            debugging('[client '.getremoteaddr()."]  $CFG->wwwroot  Unknown user, can not create new accounts:  $username  ".
+            debugging('[client ' . getremoteaddr() . "]  $CFG->wwwroot  Unknown user, can not create new accounts:  $username  " .
                 $_SERVER['HTTP_USER_AGENT']);
 
             return false;
         }
 
         $user = create_user_record($username, $password, $auth);
+
+        // Trigger user_created event.
+        $eventdata = [
+            'objectid' => $user->id,
+            'userid' => $user->id,
+            'relateduserid' => $user->id,
+        ];
+        $event = user_created::create($eventdata);
+        $event->trigger();
+
         return true;
     }
 
@@ -179,8 +195,10 @@ class rocreds extends base {
                 if (auth_iomadoidc_is_local_365_installed()) {
                     $apiclient = \local_o365\utils::get_api();
                     $userdetails = $apiclient->get_user($iomadoidcuniqid);
-                    if (!is_null($userdetails) && isset($userdetails['userPrincipalName']) &&
-                        stripos($userdetails['userPrincipalName'], '#EXT#') !== false) {
+                    if (
+                        !is_null($userdetails) && isset($userdetails['userPrincipalName']) &&
+                        stripos($userdetails['userPrincipalName'], '#EXT#') !== false
+                    ) {
                         $originalupn = $userdetails['userPrincipalName'];
                     }
                 }

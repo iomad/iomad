@@ -23,14 +23,17 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use core\context\system;
+use core\url;
+
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/auth/iomadoidc/lib.php');
 
 require_login();
 
-$context = context_system::instance();
-$pageurl = new moodle_url('/auth/iomadoidc/cleanupiomadoidctokens.php');
+$context = system::instance();
+$pageurl = new url('/auth/iomadoidc/cleanupiomadoidctokens.php');
 
 admin_externalpage_setup('auth_iomadoidc_cleanup_iomadoidc_tokens');
 
@@ -47,7 +50,7 @@ $mismatchedtokens = auth_iomadoidc_get_tokens_with_mismatched_usernames();
 
 $tokenstoclean = $emptyuseridtokens + $mismatchedtokens;
 
-uasort($tokenstoclean, function($a, $b) {
+uasort($tokenstoclean, function ($a, $b) {
     return strcmp($a->iomadoidcusername, $b->iomadoidcusername);
 });
 
@@ -65,12 +68,14 @@ if ($tokenstoclean) {
     $table->head = [
         get_string('table_token_id', 'auth_iomadoidc'),
         get_string('table_iomadoidc_username', 'auth_iomadoidc'),
+        get_string('table_iomadoidc_unique_identifier', 'auth_iomadoidc'),
         get_string('table_token_unique_id', 'auth_iomadoidc'),
         get_string('table_matching_status', 'auth_iomadoidc'),
         get_string('table_matching_details', 'auth_iomadoidc'),
         get_string('table_action', 'auth_iomadoidc'),
     ];
     $table->colclasses = [
+        'leftalign',
         'leftalign',
         'leftalign',
         'leftalign',
@@ -85,6 +90,7 @@ if ($tokenstoclean) {
         $table->data[] = [
             $item->id,
             $item->iomadoidcusername,
+            $item->useridentifier,
             $item->iomadoidcuniqueid,
             $item->matchingstatus,
             $item->details,

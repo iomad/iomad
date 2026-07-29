@@ -27,20 +27,22 @@ namespace auth_iomadoidc\adminsetting;
 
 use auth_iomadoidc\utils;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Displays the redirect URI for easier config.
  */
 class auth_iomadoidc_admin_setting_redirecturi extends \admin_setting {
+    /**
+     * @var string $url The redirect URL for the configuration.
+     */
     private $url;
 
     /**
      * Constructor.
      *
-     * @param $name
-     * @param $heading
-     * @param $description
+     * @param string $name The setting name.
+     * @param string $heading The setting heading.
+     * @param string $description The setting description.
+     * @param string $url The redirect URL.
      */
     public function __construct($name, $heading, $description, $url) {
         $this->nosave = true;

@@ -28,22 +28,22 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 
 $capabilities = [
-    'auth/iomadoidc:manageconnection' => [
-        'riskbitmask' => RISK_CONFIG,
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_USER,
-        'archetypes' => []
-    ],
-    'auth/iomadoidc:manageconnectionconnect' => [
-        'riskbitmask' => RISK_CONFIG,
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_USER,
-        'archetypes' => []
-    ],
-    'auth/iomadoidc:manageconnectiondisconnect' => [
-        'riskbitmask' => RISK_CONFIG,
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_USER,
-        'archetypes' => []
-    ],
+        'auth/iomadoidc:manageconnection' => [
+                'riskbitmask' => RISK_CONFIG,
+                'captype' => 'write',
+                'contextlevel' => CONTEXT_USER,
+                'archetypes' => [],
+        ],
+        'auth/iomadoidc:manageconnectionconnect' => [
+                'riskbitmask' => RISK_CONFIG,
+                'captype' => 'write',
+                'contextlevel' => CONTEXT_USER,
+                'archetypes' => [],
+        ],
+        'auth/iomadoidc:manageconnectiondisconnect' => [
+                'riskbitmask' => RISK_CONFIG,
+                'captype' => 'write',
+                'contextlevel' => CONTEXT_USER,
+                'archetypes' => [],
+        ],
 ];

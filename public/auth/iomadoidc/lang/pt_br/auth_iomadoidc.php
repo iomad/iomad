@@ -24,6 +24,9 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+// phpcs:disable moodle.Files.LangFilesOrdering.IncorrectOrder
+// phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment
+
 $string['pluginname'] = 'OpenID Connect';
 $string['auth_iomadoidcdescription'] = 'O plugin OpenID Connect oferece o recurso de logon único usando provedores de identidade que podem ser configurados.';
 $string['cfg_authendpoint_key'] = 'Ponto de extremidade de autorização';
@@ -67,7 +70,7 @@ $string['cfg_loginflow_rocreds_desc'] = 'Ao usar esse fluxo, o usuário informar
 $string['cfg_iomadoidcresource_key'] = 'Recurso';
 $string['cfg_iomadoidcresource_desc'] = 'O recurso do OpenID Connect para o qual a solicitação deverá ser enviada.';
 $string['cfg_iomadoidcscope_key'] = 'Escopo';
-$string['cfg_iomadoidcscope_desc'] = 'O escopo do OIDC a ser usado.';
+$string['cfg_iomadoidcscope_desc'] = 'O escopo do IOMADOIDC a ser usado.';
 $string['cfg_opname_key'] = 'Nome do provedor';
 $string['cfg_opname_desc'] = 'Esse é um rótulo visível para o usuário que identifica o tipo de credenciais que devem ser utilizadas pelo usuário no login. Esse rótulo é usado em todas as partes visíveis para o usuário deste plugin para a identificação do seu provedor.';
 $string['cfg_redirecturi_key'] = 'URI de redirecionamento';
@@ -125,3 +128,6 @@ $string['ucp_status_disabled'] = 'Desativado';
 $string['ucp_disconnect_title'] = 'Desconexão do {$a}';
 $string['ucp_disconnect_details'] = 'Essa ação desconectará sua conta do Moodle do {$a}. Você precisará criar um nome de usuário e uma senha para fazer login no Moodle.';
 $string['ucp_title'] = 'Gerenciamento do {$a}';
+
+// phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
+// phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

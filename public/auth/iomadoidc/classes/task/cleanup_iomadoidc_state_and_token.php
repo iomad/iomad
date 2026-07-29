@@ -25,8 +25,6 @@
 
 namespace auth_iomadoidc\task;
 
-defined('MOODLE_INTERNAL') || die();
-
 use core\task\scheduled_task;
 
 /**

@@ -35,4 +35,13 @@ $tasks = [
         'dayofweek' => '*',
         'month' => '*',
     ],
+    [
+        'classname' => 'auth_iomadoidc\task\cleanup_iomadoidc_sid',
+        'blocking' => 0,
+        'minute' => '51',
+        'hour' => '*',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*',
+    ],
 ];

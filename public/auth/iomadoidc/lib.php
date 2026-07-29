@@ -24,54 +24,204 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use auth_iomadoidc\jwt;
 use auth_iomadoidc\utils;
+use core\context\system;
+use core\context\user;
+use core\url;
 use local_iomad\iomad;
 
-defined('MOODLE_INTERNAL') || die();
-
 // IdP types.
-CONST AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID = 1;
-CONST AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM = 2;
-CONST AUTH_IOMADOIDC_IDP_TYPE_OTHER = 3;
-
-// Microsoft Entra ID / Microsoft endpoint version.
-CONST AUTH_IOMADOIDC_MICROSOFT_ENDPOINT_VERSION_UNKNOWN = 0;
-CONST AUTH_IOMADOIDC_MICROSOFT_ENDPOINT_VERSION_1 = 1;
-CONST AUTH_IOMADOIDC_MICROSOFT_ENDPOINT_VERSION_2 = 2;
-
-// IOMADOIDC application authentication method.
-CONST AUTH_IOMADOIDC_AUTH_METHOD_SECRET = 1;
-CONST AUTH_IOMADOIDC_AUTH_METHOD_CERTIFICATE = 2;
-
-// IOMADOIDC application auth certificate source.
-CONST AUTH_IOMADOIDC_AUTH_CERT_SOURCE_TEXT = 1;
-CONST AUTH_IOMADOIDC_AUTH_CERT_SOURCE_FILE = 2;
+/**
+ * Microsoft Entra ID identity provider type.
+ */
+const AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID = 1;
 
 /**
- * Initialize custom icon.
+ * Microsoft Identity Platform identity provider type.
+ */
+const AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM = 2;
+
+/**
+ * Other identity provider type.
+ */
+const AUTH_IOMADOIDC_IDP_TYPE_OTHER = 3;
+
+// Microsoft Entra ID / Microsoft endpoint version.
+/**
+ * Unknown Microsoft endpoint version.
+ */
+const AUTH_IOMADOIDC_MICROSOFT_ENDPOINT_VERSION_UNKNOWN = 0;
+
+/**
+ * Microsoft endpoint version 1.
+ */
+const AUTH_IOMADOIDC_MICROSOFT_ENDPOINT_VERSION_1 = 1;
+
+/**
+ * Microsoft endpoint version 2.
+ */
+const AUTH_IOMADOIDC_MICROSOFT_ENDPOINT_VERSION_2 = 2;
+
+// IOMADOIDC application authentication method.
+/**
+ * IOMADOIDC application authentication method using secret.
+ */
+const AUTH_IOMADOIDC_AUTH_METHOD_SECRET = 1;
+
+/**
+ * IOMADOIDC application authentication method using certificate.
+ */
+const AUTH_IOMADOIDC_AUTH_METHOD_CERTIFICATE = 2;
+
+// IOMADOIDC application auth certificate source.
+/**
+ * IOMADOIDC application authentication certificate source from text.
+ */
+const AUTH_IOMADOIDC_AUTH_CERT_SOURCE_TEXT = 1;
+
+/**
+ * IOMADOIDC application authentication certificate source from file.
+ */
+const AUTH_IOMADOIDC_AUTH_CERT_SOURCE_FILE = 2;
+
+/**
+ * Callback invoked when application credentials or endpoint settings are updated.
  *
- * @param $filefullname
- * @return false|void
+ * Clears cached application tokens and the setup verification result so that
+ * the connection is re-validated with the new values.
+ *
+ * @param string $settingname The full name of the setting that was updated.
+ * @return void
+ */
+function auth_iomadoidc_reset_app_tokens($settingname) {
+    // Use a static flag so cache purging and token clearing only happen once per request,
+    // even when multiple settings with this callback change in the same save.
+    static $cachespurged = false;
+    if (!$cachespurged) {
+        unset_config('apptokens', 'local_o365');
+        unset_config('azuresetupresult', 'local_o365');
+        purge_all_caches();
+        $cachespurged = true;
+    }
+
+    if (auth_iomadoidc_is_local_365_installed()) {
+        $idptype = iomad::get_config('auth_iomadoidc', 'idptype');
+        if ($idptype && $idptype != AUTH_IOMADOIDC_IDP_TYPE_OTHER) {
+            // Use a static flag so only one notification is queued per request,
+            // even when multiple settings with this callback change in the same save.
+            static $notificationqueued = false;
+            if (!$notificationqueued) {
+                $localo365configurl = new \core\url('/admin/settings.php', ['section' => 'local_o365']);
+                \core\notification::warning(
+                    get_string('application_updated_microsoft_notify', 'auth_iomadoidc', $localo365configurl->out())
+                );
+                $notificationqueued = true;
+            }
+        }
+    }
+}
+
+/**
+ * Validate authentication settings for invalid combinations.
+ *
+ * Checks for invalid combinations that could break authentication:
+ * - Certificate auth with Entra v1/Other IdP types (not supported)
+ * - Secret auth without a configured client secret
+ * - Certificate auth without required cert/key fields
+ *
+ * @param string $settingname The full name of the setting that was updated.
+ * @return void
+ */
+function auth_iomadoidc_validate_auth_settings(string $settingname) {
+    $idptype = iomad::get_config('auth_iomadoidc', 'idptype');
+    $clientauthmethod = iomad::get_config('auth_iomadoidc', 'clientauthmethod');
+
+    if (empty($idptype) || empty($clientauthmethod)) {
+        return;
+    }
+
+    $errors = [];
+
+    // Validate clientauthmethod according to idptype.
+    if (in_array($idptype, [AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_IOMADOIDC_IDP_TYPE_OTHER])) {
+        if ($clientauthmethod != AUTH_IOMADOIDC_AUTH_METHOD_SECRET) {
+            $errors[] = get_string('error_invalid_client_authentication_method', 'auth_iomadoidc');
+        }
+    } else if ($idptype == AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+        if (!in_array($clientauthmethod, [AUTH_IOMADOIDC_AUTH_METHOD_SECRET, AUTH_IOMADOIDC_AUTH_METHOD_CERTIFICATE])) {
+            $errors[] = get_string('error_invalid_client_authentication_method', 'auth_iomadoidc');
+        }
+    }
+
+    // Validate authentication-method-specific requirements.
+    if ($clientauthmethod == AUTH_IOMADOIDC_AUTH_METHOD_SECRET) {
+        $clientsecret = iomad::get_config('auth_iomadoidc', 'clientsecret');
+        if (empty($clientsecret)) {
+            $errors[] = get_string('error_empty_client_secret', 'auth_iomadoidc');
+        }
+    } else if ($clientauthmethod == AUTH_IOMADOIDC_AUTH_METHOD_CERTIFICATE) {
+        $clientcertsource = iomad::get_config('auth_iomadoidc', 'clientcertsource');
+
+        if ($clientcertsource == AUTH_IOMADOIDC_AUTH_CERT_SOURCE_TEXT) {
+            $clientprivatekey = iomad::get_config('auth_iomadoidc', 'clientprivatekey');
+            $clientcert = iomad::get_config('auth_iomadoidc', 'clientcert');
+
+            if (empty($clientprivatekey)) {
+                $errors[] = get_string('error_empty_client_private_key', 'auth_iomadoidc');
+            }
+            if (empty($clientcert)) {
+                $errors[] = get_string('error_empty_client_cert', 'auth_iomadoidc');
+            }
+        } else if ($clientcertsource == AUTH_IOMADOIDC_AUTH_CERT_SOURCE_FILE) {
+            $clientprivatekeyfile = iomad::get_config('auth_iomadoidc', 'clientprivatekeyfile');
+            $clientcertfile = iomad::get_config('auth_iomadoidc', 'clientcertfile');
+
+            if (empty($clientprivatekeyfile)) {
+                $errors[] = get_string('error_empty_client_private_key_file', 'auth_iomadoidc');
+            }
+            if (empty($clientcertfile)) {
+                $errors[] = get_string('error_empty_client_cert_file', 'auth_iomadoidc');
+            }
+        }
+    }
+
+    // Notify admin if validation errors are found.
+    if (!empty($errors)) {
+        $message = get_string('auth_settings_validation_error', 'auth_iomadoidc') . '<ul>';
+        foreach ($errors as $error) {
+            $message .= '<li>' . $error . '</li>';
+        }
+        $message .= '</ul>';
+        \core\notification::error($message);
+    }
+}
+
+/**
+ * Initialize custom icon for IOMADOIDC authentication.
+ *
+ * This function sets up a custom icon for the IOMADOIDC plugin by creating necessary directories
+ * and copying the file into the specified location in Moodle's data directory.
+ *
+ * @param string $filefullname Full name of the custom icon file.
+ * @return bool False if the file is missing or is a directory; void otherwise.
  */
 function auth_iomadoidc_initialize_customicon($filefullname) {
     global $CFG;
 
-    // IOMAD
-    $companyid = iomad::get_my_companyid(context_system::instance(), false);
-    $postfix = "";
+    // IOMAD.
     $filenum = 0;
+    $companyid = iomad::get_my_companyid(context_system::instance(), false);
     if ($companyid > 0) {
-        $postfix = "_$companyid";
         $filenum = $companyid;
     }
 
-
-    $file = get_config('auth_iomadoidc', 'customicon' . $postfix);
-    $systemcontext = \context_system::instance();
+    $file = iomad::get_config('auth_iomadoidc', 'customicon');
+    $systemcontext = system::instance();
     $fullpath = "/{$systemcontext->id}/auth_iomadoidc/customicon/{$filenum}{$file}";
 
     $fs = get_file_storage();
-    if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
+    if (!($file = $fs->get_file_by_hash(sha1($fullpath))) || $file->is_directory()) {
         return false;
     }
     $pixpluginsdir = 'pix_plugins/auth/iomadoidc/' . $filenum;
@@ -107,24 +257,24 @@ function auth_iomadoidc_connectioncapability($userid, $mode = 'connect', $requir
     if ($require) {
         // If requiring the capability and user has manageconnection than checking connect and disconnect is not needed.
         $check = 'require_capability';
-        if (has_capability('auth/iomadoidc:manageconnection', \context_user::instance($userid), $userid)) {
+        if (has_capability('auth/iomadoidc:manageconnection', user::instance($userid), $userid)) {
             return true;
         }
-    } else if ($check('auth/iomadoidc:manageconnection', \context_user::instance($userid), $userid)) {
+    } else if ($check('auth/iomadoidc:manageconnection', user::instance($userid), $userid)) {
         return true;
     }
 
     $result = false;
     switch ($mode) {
         case "connect":
-            $result = $check('auth/iomadoidc:manageconnectionconnect', \context_user::instance($userid), $userid);
+            $result = $check('auth/iomadoidc:manageconnectionconnect', user::instance($userid), $userid);
             break;
         case "disconnect":
-            $result = $check('auth/iomadoidc:manageconnectiondisconnect', \context_user::instance($userid), $userid);
+            $result = $check('auth/iomadoidc:manageconnectiondisconnect', user::instance($userid), $userid);
             break;
         case "both":
-            $result = $check('auth/iomadoidc:manageconnectionconnect', \context_user::instance($userid), $userid);
-            $result = $result && $check('auth/iomadoidc:manageconnectiondisconnect', \context_user::instance($userid), $userid);
+            $result = $check('auth/iomadoidc:manageconnectionconnect', user::instance($userid), $userid);
+            $result = $result && $check('auth/iomadoidc:manageconnectiondisconnect', user::instance($userid), $userid);
     }
     if ($require) {
         return true;
@@ -165,12 +315,13 @@ function auth_iomadoidc_get_tokens_with_empty_ids() {
         $item = new stdClass();
         $item->id = $record->id;
         $item->iomadoidcusername = $record->iomadoidcusername;
+        $item->useriditifier = $record->useridentifier;
         $item->moodleusername = $record->username;
         $item->userid = 0;
         $item->iomadoidcuniqueid = $record->iomadoidcuniqid;
         $item->matchingstatus = get_string('unmatched', 'auth_iomadoidc');
         $item->details = get_string('na', 'auth_iomadoidc');
-        $deletetokenurl = new moodle_url('/auth/iomadoidc/cleanupiomadoidctokens.php', ['id' => $record->id]);
+        $deletetokenurl = new url('/auth/iomadoidc/cleanupiomadoidctokens.php', ['id' => $record->id]);
         $item->action = html_writer::link($deletetokenurl, get_string('delete_token', 'auth_iomadoidc'));
 
         $emptyuseridtokens[$record->id] = $item;
@@ -190,22 +341,26 @@ function auth_iomadoidc_get_tokens_with_mismatched_usernames() {
     $mismatchedtokens = [];
 
     $sql = 'SELECT tok.id AS id, tok.userid AS tokenuserid, tok.username AS tokenusername, tok.iomadoidcusername AS iomadoidcusername,
-                   tok.iomadoidcuniqid as iomadoidcuniqid, u.id AS muserid, u.username AS musername
+                   tok.useridentifier, tok.iomadoidcuniqid as iomadoidcuniqid, u.id AS muserid, u.username AS musername
               FROM {auth_iomadoidc_token} tok
               JOIN {user} u ON u.id = tok.userid
              WHERE tok.userid != 0
-               AND u.username != tok.username';
+               AND LOWER(u.username) != LOWER(tok.username)';
     $records = $DB->get_recordset_sql($sql);
     foreach ($records as $record) {
         $item = new stdClass();
         $item->id = $record->id;
         $item->iomadoidcusername = $record->iomadoidcusername;
+        $item->useridentifier = $record->useridentifier;
         $item->userid = $record->muserid;
         $item->iomadoidcuniqueid = $record->iomadoidcuniqid;
         $item->matchingstatus = get_string('mismatched', 'auth_iomadoidc');
-        $item->details = get_string('mismatched_details', 'auth_iomadoidc',
-            ['tokenusername' => $record->tokenusername, 'moodleusername' => $record->musername]);
-        $deletetokenurl = new moodle_url('/auth/iomadoidc/cleanupiomadoidctokens.php', ['id' => $record->id]);
+        $item->details = get_string(
+            'mismatched_details',
+            'auth_iomadoidc',
+            ['tokenusername' => $record->tokenusername, 'moodleusername' => $record->musername]
+        );
+        $deletetokenurl = new url('/auth/iomadoidc/cleanupiomadoidctokens.php', ['id' => $record->id]);
         $item->action = html_writer::link($deletetokenurl, get_string('delete_token_and_reference', 'auth_iomadoidc'));
 
         $mismatchedtokens[$record->id] = $item;
@@ -228,7 +383,13 @@ function auth_iomadoidc_delete_token(int $tokenid): void {
                   JOIN {auth_iomadoidc_token} tok ON obj.o365name = tok.username
                   JOIN {user} u ON obj.moodleid = u.id
                  WHERE obj.type = :type AND tok.id = :tokenid';
-        if ($objectrecord = $DB->get_record_sql($sql, ['type' => 'user', 'tokenid' => $tokenid], IGNORE_MULTIPLE)) {
+        if (
+            $objectrecord = $DB->get_record_sql(
+                $sql,
+                ['type' => 'user', 'tokenid' => $tokenid],
+                IGNORE_MULTIPLE
+            )
+        ) {
             // Delete record from local_o365_objects.
             $DB->delete_records('local_o365_objects', ['id' => $objectrecord->id]);
 
@@ -236,12 +397,71 @@ function auth_iomadoidc_delete_token(int $tokenid): void {
             $DB->delete_records('local_o365_token', ['user_id' => $objectrecord->userid]);
 
             // Delete record from local_o365_connections.
-            $DB->delete_records_select('local_o365_connections', 'muserid = :userid OR LOWER(entraidupn) = :email',
-                ['userid' => $objectrecord->userid, 'email' => $objectrecord->email]);
+            $DB->delete_records_select(
+                'local_o365_connections',
+                'muserid = :userid OR LOWER(entraidupn) = :email',
+                ['userid' => $objectrecord->userid, 'email' => $objectrecord->email]
+            );
         }
     }
 
     $DB->delete_records('auth_iomadoidc_token', ['id' => $tokenid]);
+}
+
+/**
+ * Get validated custom claim names from configuration.
+ *
+ * Parses the customclaims configuration, validates claim name format, and returns
+ * the list of valid claim names to be used for token claim extraction and field mapping.
+ *
+ * @return array Array of validated custom claim names.
+ */
+function auth_iomadoidc_get_validated_custom_claim_names() {
+    $customclaimsconfig = iomad::get_config('auth_iomadoidc', 'customclaims');
+    if (empty($customclaimsconfig)) {
+        return [];
+    }
+
+    // Split by space, trim, remove empty values, and remove duplicates.
+    $customclaims = array_filter(array_map('trim', explode(' ', $customclaimsconfig)));
+    $customclaims = array_unique($customclaims);
+
+    $validated = [];
+    foreach ($customclaims as $claimname) {
+        // Validate claim name format (alphanumeric, underscore, hyphen only).
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $claimname)) {
+            debugging("Invalid custom claim name skipped: $claimname", DEBUG_DEVELOPER);
+            continue;
+        }
+        $validated[] = $claimname;
+    }
+
+    return $validated;
+}
+
+/**
+ * Process and add custom claims to remote fields array with validation.
+ *
+ * @param array $remotefields Existing remote fields array
+ * @return array Updated remote fields array with validated custom claims
+ */
+function auth_iomadoidc_process_custom_claims($remotefields) {
+    $customclaims = auth_iomadoidc_get_validated_custom_claim_names();
+
+    // Get all existing field names as reserved to prevent overriding.
+    $reserved = array_keys($remotefields);
+
+    foreach ($customclaims as $claimname) {
+        // Prevent overriding existing fields.
+        if (in_array($claimname, $reserved, true)) {
+            debugging("Reserved custom claim name skipped: $claimname", DEBUG_DEVELOPER);
+            continue;
+        }
+
+        $remotefields[$claimname] = $claimname;
+    }
+
+    return $remotefields;
 }
 
 /**
@@ -253,6 +473,7 @@ function auth_iomadoidc_get_remote_fields() {
     if (auth_iomadoidc_is_local_365_installed()) {
         $remotefields = [
             '' => get_string('settings_fieldmap_feild_not_mapped', 'auth_iomadoidc'),
+            'bindingusernameclaim' => get_string('settings_fieldmap_field_bindingusernameclaim', 'auth_iomadoidc'),
             'objectId' => get_string('settings_fieldmap_field_objectId', 'auth_iomadoidc'),
             'userPrincipalName' => get_string('settings_fieldmap_field_userPrincipalName', 'auth_iomadoidc'),
             'displayName' => get_string('settings_fieldmap_field_displayName', 'auth_iomadoidc'),
@@ -284,38 +505,62 @@ function auth_iomadoidc_get_remote_fields() {
 
         $order = 0;
         while ($order++ < 15) {
-            $remotefields['extensionAttribute' . $order] = get_string('settings_fieldmap_field_extensionattribute', 'auth_iomadoidc',
-                $order);
+            $remotefields['extensionAttribute' . $order] = get_string(
+                'settings_fieldmap_field_extensionattribute',
+                'auth_iomadoidc',
+                $order
+            );
         }
 
         // SDS profile sync.
-        [$sdsprofilesyncenabled, $schoolid, $schoolname] = local_o365\feature\sds\utils::get_profile_sync_status_with_id_name();
+        [$sdsprofilesyncenabled, $schoolid, $schoolname] =
+            local_o365\feature\sds\utils::get_profile_sync_status_with_id_name();
 
         if ($sdsprofilesyncenabled) {
-            $remotefields['sds_school_id'] = get_string('settings_fieldmap_field_sds_school_id', 'auth_iomadoidc',
-                get_config('local_o365', 'sdsprofilesync', $schoolid));
-            $remotefields['sds_school_name'] = get_string('settings_fieldmap_field_sds_school_name', 'auth_iomadoidc', $schoolname);
+            $remotefields['sds_school_id'] = get_string(
+                'settings_fieldmap_field_sds_school_id',
+                'auth_iomadoidc',
+                get_config('local_o365', 'sdsprofilesync', $schoolid)
+            );
+            $remotefields['sds_school_name'] = get_string(
+                'settings_fieldmap_field_sds_school_name',
+                'auth_iomadoidc',
+                $schoolname
+            );
             $remotefields['sds_school_role'] = get_string('settings_fieldmap_field_sds_school_role', 'auth_iomadoidc');
             $remotefields['sds_student_externalId'] = get_string('settings_fieldmap_field_sds_student_externalId', 'auth_iomadoidc');
             $remotefields['sds_student_birthDate'] = get_string('settings_fieldmap_field_sds_student_birthDate', 'auth_iomadoidc');
             $remotefields['sds_student_grade'] = get_string('settings_fieldmap_field_sds_student_grade', 'auth_iomadoidc');
-            $remotefields['sds_student_graduationYear'] = get_string('settings_fieldmap_field_sds_student_graduationYear',
-                'auth_iomadoidc');
-            $remotefields['sds_student_studentNumber'] = get_string('settings_fieldmap_field_sds_student_studentNumber',
-                'auth_iomadoidc');
+            $remotefields['sds_student_graduationYear'] = get_string(
+                'settings_fieldmap_field_sds_student_graduationYear',
+                'auth_iomadoidc'
+            );
+            $remotefields['sds_student_studentNumber'] = get_string(
+                'settings_fieldmap_field_sds_student_studentNumber',
+                'auth_iomadoidc'
+            );
             $remotefields['sds_teacher_externalId'] = get_string('settings_fieldmap_field_sds_teacher_externalId', 'auth_iomadoidc');
-            $remotefields['sds_teacher_teacherNumber'] = get_string('settings_fieldmap_field_sds_teacher_teacherNumber',
-                'auth_iomadoidc');
+            $remotefields['sds_teacher_teacherNumber'] = get_string(
+                'settings_fieldmap_field_sds_teacher_teacherNumber',
+                'auth_iomadoidc'
+            );
         }
+
+        // Add custom claims if configured, with validation.
+        $remotefields = auth_iomadoidc_process_custom_claims($remotefields);
     } else {
         $remotefields = [
             '' => get_string('settings_fieldmap_feild_not_mapped', 'auth_iomadoidc'),
+            'bindingusernameclaim' => get_string('settings_fieldmap_field_bindingusernameclaim', 'auth_iomadoidc'),
             'objectId' => get_string('settings_fieldmap_field_objectId', 'auth_iomadoidc'),
             'userPrincipalName' => get_string('settings_fieldmap_field_userPrincipalName', 'auth_iomadoidc'),
             'givenName' => get_string('settings_fieldmap_field_givenName', 'auth_iomadoidc'),
             'surname' => get_string('settings_fieldmap_field_surname', 'auth_iomadoidc'),
             'mail' => get_string('settings_fieldmap_field_mail', 'auth_iomadoidc'),
         ];
+
+        // Add custom claims if configured, with validation.
+        $remotefields = auth_iomadoidc_process_custom_claims($remotefields);
     }
 
     return $remotefields;
@@ -341,15 +586,8 @@ function auth_iomadoidc_get_email_remote_fields() {
  * @return array
  */
 function auth_iomadoidc_get_field_mappings() {
-    global $CFG;
-
-    // IOMAD
-    $companyid = iomad::get_my_companyid(context_system::instance(), false);
-    if ($companyid > 0) {
-        $postfix = "_$companyid";
-    } else {
-        $postfix = "";
-    }
+    // IOMAD.
+    $postfix = iomad::get_company_postfix();
 
     $fieldmappings = [];
 
@@ -358,19 +596,22 @@ function auth_iomadoidc_get_field_mappings() {
     $authiomadoidcconfig = get_config('auth_iomadoidc');
 
     foreach ($userfields as $userfield) {
-        $fieldmapsettingname = 'field_map_' . $userfield . $postfix;
+        // IOMAD.
+        $fieldname = $userfield . $postfix;
+
+        $fieldmapsettingname = 'field_map_' . $fieldname;
         if (property_exists($authiomadoidcconfig, $fieldmapsettingname) && $authiomadoidcconfig->$fieldmapsettingname) {
             $fieldsetting = [];
             $fieldsetting['field_map'] = $authiomadoidcconfig->$fieldmapsettingname;
 
-            $fieldlocksettingname = 'field_lock_' . $userfield . $postfix;
+            $fieldlocksettingname = 'field_lock_' . $fieldname;
             if (property_exists($authiomadoidcconfig, $fieldlocksettingname)) {
                 $fieldsetting['field_lock'] = $authiomadoidcconfig->$fieldlocksettingname;
             } else {
                 $fieldsetting['field_lock'] = 'unlocked';
             }
 
-            $fieldupdatelocksettignname = 'field_updatelocal_' . $userfield . $postfix;
+            $fieldupdatelocksettignname = 'field_updatelocal_' . $fieldname;
             if (property_exists($authiomadoidcconfig, $fieldupdatelocksettignname)) {
                 $fieldsetting['update_local'] = $authiomadoidcconfig->$fieldupdatelocksettignname;
             } else {
@@ -394,17 +635,14 @@ function auth_iomadoidc_get_field_mappings() {
  * @return array
  */
 function auth_iomadoidc_apply_default_email_mapping() {
-    global $CFG;
+    // IOMAD.
+    $postfix = iomad::get_company_postfix();
 
-    // IOMAD
-    $companyid = iomad::get_my_companyid(context_system::instance(), false);
-    if ($companyid > 0) {
-        $postfix = "_$companyid";
-    } else {
-        $postfix = "";
+    $existingsetting = iomad::get_config('auth_iomadoidc', 'field_map_email');
+    if ($existingsetting != 'mail') {
+        add_to_config_log('field_map_email', $existingsetting, 'mail', 'auth_iomadoidc');
     }
-
-    set_config('field_map_email' . $postfix, 'mail', 'auth_iomadoidc');
+    set_config('field_map_email', 'mail', 'auth_iomadoidc');
 
     $authiomadoidcconfig = get_config('auth_iomadoidc');
 
@@ -413,7 +651,7 @@ function auth_iomadoidc_apply_default_email_mapping() {
 
     $opname = "field_lock_email" . $postfix;
     if (property_exists($authiomadoidcconfig, $opname)) {
-        $fieldsetting['field_lock' . $postfix] = $authiomadoidcconfig->$oopname;
+        $fieldsetting['field_lock' . $postfix] = $authiomadoidcconfig->$opname;
     } else {
         $fieldsetting['field_lock' . $postfix] = 'unlocked';
     }
@@ -439,23 +677,29 @@ function auth_iomadoidc_apply_default_email_mapping() {
  * @param boolean $updateremotefields Allow remote updates
  * @param array $customfields list of custom profile fields
  */
-function auth_iomadoidc_display_auth_lock_options($settings, $auth, $userfields, $helptext, $mapremotefields, $updateremotefields,
-    $customfields = array()) {
-    global $CFG, $DB;
+function auth_iomadoidc_display_auth_lock_options(
+    $settings,
+    $auth,
+    $userfields,
+    $helptext,
+    $mapremotefields,
+    $updateremotefields,
+    $customfields = []
+) {
+    global $DB;
 
-    // IOMAD
-    $companyid = iomad::get_my_companyid(context_system::instance(), false);
-    if ($companyid > 0) {
-        $postfix = "_$companyid";
-    } else {
-        $postfix = "";
-    }
+    // IOMAD.
+    $postfix = iomad::get_company_postfix();
 
     // Introductory explanation and help text.
     if ($mapremotefields) {
-        $settings->add(new admin_setting_heading($auth.'/data_mapping', new lang_string('auth_data_mapping', 'auth'), $helptext));
+        $settings->add(
+            new admin_setting_heading($auth . '/data_mapping', new lang_string('auth_data_mapping', 'auth'), $helptext)
+        );
     } else {
-        $settings->add(new admin_setting_heading($auth.'/auth_fieldlocks', new lang_string('auth_fieldlocks', 'auth'), $helptext));
+        $settings->add(
+            new admin_setting_heading($auth . '/auth_fieldlocks', new lang_string('auth_fieldlocks', 'auth'), $helptext)
+        );
     }
 
     // Generate the list of options.
@@ -518,38 +762,71 @@ function auth_iomadoidc_display_auth_lock_options($settings, $auth, $userfields,
         // Generate the list of fields / mappings.
         if ($fieldnametoolong) {
             // Display a message that the field can not be mapped because it's too long.
-            $url = new moodle_url('/user/profile/index.php');
+            $url = new url('/user/profile/index.php');
             $a = (object)['fieldname' => s($fieldname), 'shortname' => s($field), 'charlimit' => 67, 'link' => $url->out()];
-            $settings->add(new admin_setting_heading($auth.'/field_not_mapped_'.sha1($field) . $postfix, '',
-                get_string('cannotmapfield', 'auth', $a)));
+            $settings->add(new admin_setting_heading(
+                $auth . '/field_not_mapped_' . sha1($field) . $postfix,
+                '',
+                get_string('cannotmapfield', 'auth', $a)
+            ));
         } else if ($mapremotefields) {
             // We are mapping to a remote field here.
             // Mapping.
             if ($field == 'email') {
-                $settings->add(new admin_setting_configselect("auth_iomadoidc/field_map_{$field}{$postfix}",
-                    get_string('auth_fieldmapping', 'auth', $fieldname), '', null, $emailremotefields));
+                $settings->add(new admin_setting_configselect(
+                    "auth_iomadoidc/field_map_{$field}" . $postfix,
+                    get_string('auth_fieldmapping', 'auth', $fieldname),
+                    '',
+                    null,
+                    $emailremotefields
+                ));
             } else {
-                $settings->add(new admin_setting_configselect("auth_iomadoidc/field_map_{$field}{$postfix}",
-                    get_string('auth_fieldmapping', 'auth', $fieldname), '', null, $remotefields));
+                $settings->add(new admin_setting_configselect(
+                    "auth_iomadoidc/field_map_{$field}" . $postfix,
+                    get_string('auth_fieldmapping', 'auth', $fieldname),
+                    '',
+                    null,
+                    $remotefields
+                ));
             }
 
             // Update local.
-            $settings->add(new admin_setting_configselect("auth_{$auth}/field_updatelocal_{$field}{$postfix}",
-                get_string('auth_updatelocalfield', 'auth', $fieldname), '', 'always', $updatelocaloptions));
+            $settings->add(new admin_setting_configselect(
+                "auth_{$auth}/field_updatelocal_{$field}" . $postfix,
+                get_string('auth_updatelocalfield', 'auth', $fieldname),
+                '',
+                'always',
+                $updatelocaloptions
+            ));
 
             // Update remote.
             if ($updateremotefields) {
-                $settings->add(new admin_setting_configselect("auth_{$auth}/field_updateremote_{$field}{$postfix}",
-                    get_string('auth_updateremotefield', 'auth', $fieldname), '', 0, $updateextoptions));
+                $settings->add(new admin_setting_configselect(
+                    "auth_{$auth}/field_updateremote_{$field}" . $postfix,
+                    get_string('auth_updateremotefield', 'auth', $fieldname),
+                    '',
+                    0,
+                    $updateextoptions
+                ));
             }
 
             // Lock fields.
-            $settings->add(new admin_setting_configselect("auth_{$auth}/field_lock_{$field}{$postfix}",
-                get_string('auth_fieldlockfield', 'auth', $fieldname), '', 'unlocked', $lockoptions));
+            $settings->add(new admin_setting_configselect(
+                "auth_{$auth}/field_lock_{$field}" . $postfix,
+                get_string('auth_fieldlockfield', 'auth', $fieldname),
+                '',
+                'unlocked',
+                $lockoptions
+            ));
         } else {
             // Lock fields Only.
-            $settings->add(new admin_setting_configselect("auth_{$auth}/field_lock_{$field}{$postfix}",
-                get_string('auth_fieldlockfield', 'auth', $fieldname), '', 'unlocked', $lockoptions));
+            $settings->add(new admin_setting_configselect(
+                "auth_{$auth}/field_lock_{$field}" . $postfix,
+                get_string('auth_fieldlockfield', 'auth', $fieldname),
+                '',
+                'unlocked',
+                $lockoptions
+            ));
         }
     }
 }
@@ -570,7 +847,8 @@ function auth_iomadoidc_get_all_user_fields() {
 /**
  * Determine the endpoint version of the given Microsoft Entra ID / Microsoft authorization or token endpoint.
  *
- * @return int
+ * @param string $endpoint The URL of the endpoint to be checked.
+ * @return int The version of the Microsoft endpoint (1 or 2) or unknown.
  */
 function auth_iomadoidc_determine_endpoint_version(string $endpoint) {
     $endpointversion = AUTH_IOMADOIDC_MICROSOFT_ENDPOINT_VERSION_UNKNOWN;
@@ -593,15 +871,8 @@ function auth_iomadoidc_determine_endpoint_version(string $endpoint) {
  * @return string
  */
 function auth_iomadoidc_config_name_in_form(string $stringid) {
-    global $CFG;
-
-    // IOMAD
-    $companyid = iomad::get_my_companyid(context_system::instance(), false);
-    if ($companyid > 0) {
-        $postfix = "_$companyid";
-    } else {
-        $postfix = "";
-    }
+    // IOMAD.
+    $postfix = iomad::get_company_postfix();
 
     $formatedformitemname = get_string($stringid, 'auth_iomadoidc') .
         html_writer::span('auth_iomadoidc | ' . $stringid . $postfix, 'form-shortname d-block small text-muted');
@@ -615,16 +886,8 @@ function auth_iomadoidc_config_name_in_form(string $stringid) {
  * @return bool
  */
 function auth_iomadoidc_is_setup_complete() {
-    global $CFG;
-
-    // IOMAD
-    $companyid = iomad::get_my_companyid(context_system::instance(), false);
-    if ($companyid > 0) {
-        $postfix = "_$companyid";
-    } else {
-        $postfix = "";
-    }
-
+    // IOMAD.
+    $postfix = iomad::get_company_postfix();
     $clientid = 'clientid' . $postfix;
     $idptype = 'idptype' . $postfix;
     $clientauthmethod = 'clientauthmethod' . $postfix;
@@ -637,7 +900,6 @@ function auth_iomadoidc_is_setup_complete() {
     $tokenendpoint = "tokenendpoint" . $postfix;
 
     $pluginconfig = get_config('auth_iomadoidc');
-
     if (empty($pluginconfig->$clientid) || empty($pluginconfig->$idptype) || empty($pluginconfig->$clientauthmethod)) {
         return false;
     }
@@ -650,6 +912,10 @@ function auth_iomadoidc_is_setup_complete() {
             break;
         case AUTH_IOMADOIDC_AUTH_METHOD_CERTIFICATE:
             if (!isset($pluginconfig->$clientcertsource)) {
+                $existingclientcertsource = iomad::get_config('auth_iomadoidc', 'clientcertsource');
+                if ($existingclientcertsource != AUTH_IOMADOIDC_AUTH_CERT_SOURCE_TEXT) {
+                    add_to_config_log('clientcertsource', $existingclientcertsource, AUTH_IOMADOIDC_AUTH_CERT_SOURCE_TEXT, 'auth_iomadoidc');
+                }
                 set_config($clientcertsource, AUTH_IOMADOIDC_AUTH_CERT_SOURCE_TEXT, 'auth_iomadoidc');
                 $pluginconfig->$clientcertsource = AUTH_IOMADOIDC_AUTH_CERT_SOURCE_TEXT;
             }
@@ -681,19 +947,9 @@ function auth_iomadoidc_is_setup_complete() {
  * @return lang_string|string
  */
 function auth_iomadoidc_get_idp_type_name() {
-    global $CFG;
-
-    // IOMAD
-    $companyid = iomad::get_my_companyid(context_system::instance(), false);
-    if ($companyid > 0) {
-        $postfix = "_$companyid";
-    } else {
-        $postfix = "";
-    }
-
     $idptypename = '';
 
-    switch (get_config('auth_iomadoidc', 'idptype' . $postfix)) {
+    switch (iomad::get_config('auth_iomadoidc', 'idptype')) {
         case AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID:
             $idptypename = get_string('idp_type_microsoft_entra_id', 'auth_iomadoidc');
             break;
@@ -714,19 +970,9 @@ function auth_iomadoidc_get_idp_type_name() {
  * @return lang_string|string
  */
 function auth_iomadoidc_get_client_auth_method_name() {
-    global $CFG;
-
-    // IOMAD
-    $companyid = iomad::get_my_companyid(context_system::instance(), false);
-    if ($companyid > 0) {
-        $postfix = "_$companyid";
-    } else {
-        $postfix = "";
-    }
-
     $authmethodname = '';
 
-    switch (get_config('auth_iomadoidc', 'clientauthmethod' . $postfix)) {
+    switch (iomad::get_config('auth_iomadoidc', 'clientauthmethod')) {
         case AUTH_IOMADOIDC_AUTH_METHOD_SECRET:
             $authmethodname = get_string('auth_method_secret', 'auth_iomadoidc');
             break;
@@ -736,4 +982,149 @@ function auth_iomadoidc_get_client_auth_method_name() {
     }
 
     return $authmethodname;
+}
+
+/**
+ * Return the name of the configured binding username claim.
+ *
+ * @return string
+ */
+function auth_iomadoidc_get_binding_username_claim(): string {
+    $bindingusernameclaim = iomad::get_config('auth_iomadoidc', 'bindingusernameclaim');
+
+    if (empty($bindingusernameclaim)) {
+        $bindingusernameclaim = 'auto';
+    } else if ($bindingusernameclaim === 'custom') {
+        $bindingusernameclaim = iomad::get_config('auth_iomadoidc', 'customclaimname');
+    } else if (
+        !in_array(
+            $bindingusernameclaim,
+            ['auto', 'preferred_username', 'email', 'upn', 'unique_name', 'sub', 'oid', 'samaccountname']
+        )
+    ) {
+        $bindingusernameclaim = 'auto';
+    }
+
+    return $bindingusernameclaim;
+}
+
+/**
+ * Return the claims that presents in the existing tokens.
+ *
+ * @return array
+ * @throws moodle_exception
+ */
+function auth_iomadoidc_get_existing_claims(): array {
+    global $DB;
+
+    $sql = 'SELECT *
+              FROM {auth_iomadoidc_token}
+          ORDER BY expiry DESC';
+    $tokenrecord = $DB->get_record_sql($sql, null, IGNORE_MULTIPLE);
+
+    $tokenclaims = [];
+
+    if ($tokenrecord) {
+        $excludedclaims = ['appid', 'appidacr', 'app_displayname', 'ipaddr', 'scp', 'tenant_region_scope', 'ver', 'aud', 'iss',
+            'iat', 'nbf', 'exp', 'idtyp', 'plantf', 'xms_tcdt', 'xms_tdbr', 'amr', 'nonce', 'tid', 'acct', 'acr', 'signin_state',
+            'wids'];
+
+        foreach (['idtoken', 'token'] as $tokenkey) {
+            $decodedtoken = jwt::decode($tokenrecord->$tokenkey);
+            if (is_array($decodedtoken) && count($decodedtoken) > 1) {
+                foreach ($decodedtoken[1] as $claim => $value) {
+                    if (
+                        !in_array($claim, $excludedclaims) && (is_string($value) || is_numeric($value)) &&
+                        !in_array($claim, $tokenclaims)
+                    ) {
+                        $tokenclaims[] = $claim;
+                    }
+                }
+            }
+        }
+
+        asort($tokenclaims);
+    }
+
+    return $tokenclaims;
+}
+
+/**
+ * Return if the user sync feature in local_o365 plugin is enabled.
+ *
+ * @return bool|void
+ */
+function auth_iomadoidc_is_user_sync_enabled() {
+    global $CFG;
+
+    if (auth_iomadoidc_is_local_365_installed()) {
+        require_once($CFG->dirroot . '/local/o365/classes/feature/usersync/main.php');
+        return local_o365\feature\usersync\main::is_enabled();
+    }
+
+    return false;
+}
+
+/**
+ * Mask a secret value by showing only the first 2 characters followed by asterisks.
+ * Similar to how Azure Portal masks secrets.
+ *
+ * @param string $secret The secret value to mask
+ * @return string The masked value (e.g., "Ab**********")
+ */
+function auth_iomadoidc_mask_secret($secret) {
+    if (empty($secret) || strlen($secret) < 2) {
+        return '**********';
+    }
+    return substr($secret, 0, 2) . '**********';
+}
+
+/**
+ * Check if a value appears to be a masked secret.
+ *
+ * @param string $value The value to check
+ * @return bool True if the value is masked, false otherwise
+ */
+function auth_iomadoidc_is_masked_secret($value) {
+    // Check if value matches pattern: exactly 10 asterisks, or 2 chars followed by 10 asterisks.
+    // This matches both cases: secrets shorter than 2 chars (masked as **********)
+    // and secrets 2+ chars (masked as XX**********).
+    return preg_match('/^(.{2})?\*{10}$/', $value) === 1;
+}
+
+/**
+ * Build Bootstrap nav-tabs HTML for navigating between auth_iomadoidc settings pages.
+ *
+ * Renders a row of tab links to each settings sub-page, with the current page
+ * marked as active. The "Binding username claim" tab is only included if IdP type
+ * is configured, since the corresponding settings page is only registered in that case.
+ *
+ * @param string $currentpage Section ID of the currently active page.
+ * @return string HTML for the navigation bar.
+ */
+function auth_iomadoidc_get_settings_nav_html(string $currentpage): string {
+    $pages = [
+        'auth_iomadoidc_application' => get_string('settings_page_application', 'auth_iomadoidc'),
+    ];
+
+    // Only include the binding username claim tab if IdP type is configured.
+    $idptype = iomad::get_config('auth_iomadoidc', 'idptype');
+    if ($idptype) {
+        $pages['auth_iomadoidc_binding_username_claim'] = get_string('settings_page_binding_username_claim', 'auth_iomadoidc');
+    }
+
+    $pages += [
+        'auth_iomadoidc_other_settings' => get_string('settings_page_other_settings', 'auth_iomadoidc'),
+        'auth_iomadoidc_field_mapping' => get_string('settings_page_field_mapping', 'auth_iomadoidc'),
+    ];
+
+    $html = html_writer::start_tag('ul', ['class' => 'nav nav-tabs mb-3']);
+    foreach ($pages as $section => $label) {
+        $url = new \core\url('/admin/settings.php', ['section' => $section]);
+        $linkattrs = ['class' => 'nav-link' . ($section === $currentpage ? ' active' : '')];
+        $html .= html_writer::tag('li', html_writer::link($url, $label, $linkattrs), ['class' => 'nav-item']);
+    }
+    $html .= html_writer::end_tag('ul');
+
+    return $html;
 }

@@ -25,8 +25,6 @@
 
 namespace auth_iomadoidc\adminsetting;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Displays the redirect URI for easier config.
  */
@@ -74,18 +72,18 @@ class auth_iomadoidc_admin_setting_loginflow extends \admin_setting {
 
         foreach ($this->flowtypes as $flowtype) {
             $html .= \html_writer::start_div();
-            $flowtypeid = $baseid.'_'.$flowtype;
+            $flowtypeid = $baseid . '_' . $flowtype;
             $radioattrs = [
                 'type' => 'radio',
                 'name' => $inputname,
                 'id' => $flowtypeid,
-                'value' => $flowtype
+                'value' => $flowtype,
             ];
             if ($data === $flowtype || (empty($data) && $flowtype === $this->get_defaultsetting())) {
                 $radioattrs['checked'] = 'checked';
             }
-            $typename = get_string('cfg_loginflow_'.$flowtype, 'auth_iomadoidc');
-            $typedesc = get_string('cfg_loginflow_'.$flowtype.'_desc', 'auth_iomadoidc');
+            $typename = get_string('cfg_loginflow_' . $flowtype, 'auth_iomadoidc');
+            $typedesc = get_string('cfg_loginflow_' . $flowtype . '_desc', 'auth_iomadoidc');
             $html .= \html_writer::empty_tag('input', $radioattrs);
             $html .= \html_writer::label($typename, $flowtypeid, false);
             $html .= '<br />';

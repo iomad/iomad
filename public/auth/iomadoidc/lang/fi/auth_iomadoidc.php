@@ -24,6 +24,9 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+// phpcs:disable moodle.Files.LangFilesOrdering.IncorrectOrder
+// phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment
+
 $string['pluginname'] = 'OpenID Connect';
 $string['auth_iomadoidcdescription'] = 'OpenID Connect -lisäosa mahdollistaa kertakirjautumisen käyttämällä määritettävissä olevaa identiteetintarjoajaa.';
 $string['cfg_authendpoint_key'] = 'Todennuksen päätepiste';
@@ -67,7 +70,7 @@ $string['cfg_loginflow_rocreds_desc'] = 'Jos tämä kirjautumiskulku on käytös
 $string['cfg_iomadoidcresource_key'] = 'Resurssi';
 $string['cfg_iomadoidcresource_desc'] = 'OpenID Connect -resurssi, jota lähetettävä pyyntö koskee.';
 $string['cfg_iomadoidcscope_key'] = 'laajuus';
-$string['cfg_iomadoidcscope_desc'] = 'Käytettävä OIDC-soveltamisala.';
+$string['cfg_iomadoidcscope_desc'] = 'Käytettävä IOMADOIDC-soveltamisala.';
 $string['cfg_opname_key'] = 'Palveluntarjoajan nimi';
 $string['cfg_opname_desc'] = 'Tämä on loppukäyttäjälle näkyvä selite, joka ilmoittaa kirjautumiseen käytettävien tunnistetietojen tyypin. Tätä palveluntarjoajan selitettä käytetään tämän lisäosan kaikissa käyttäjälle näkyvissä osioissa.';
 $string['cfg_redirecturi_key'] = 'Uudelleenohjauksen URI';
@@ -125,3 +128,6 @@ $string['ucp_status_disabled'] = 'Ei käytössä';
 $string['ucp_disconnect_title'] = '{$a} -yhteyden katkaisu';
 $string['ucp_disconnect_details'] = 'Tämä katkaisee Moodle-tilin yhteyden kohteesta {$a}. Tarvitset käyttäjänimen ja salasanan, jotta voit kirjautua Moodleen.';
 $string['ucp_title'] = '{$a} -hallinta';
+
+// phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
+// phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

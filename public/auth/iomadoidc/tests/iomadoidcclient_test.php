@@ -15,13 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * OIDC client test cases.
+ * IOMADOIDC client test cases.
  *
  * @package auth_iomadoidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
+
+
+
+namespace auth_iomadoidc;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -33,19 +37,21 @@ global $CFG;
  * @group auth_iomadoidc
  * @group office365
  */
-class auth_iomadoidc_iomadoidcclient_testcase extends \advanced_testcase {
+final class iomadoidcclient_test extends \advanced_testcase {
     /**
      * Perform setup before every test. This tells Moodle's phpunit to reset the database after every test.
      */
-    protected function setUp():void {
+    protected function setUp(): void {
         parent::setUp();
         $this->resetAfterTest(true);
     }
 
     /**
      * Test getting and setting credentials.
+     *
+     * @covers \auth_iomadoidc\tests\mockiomadoidcclient::setcreds
      */
-    public function test_creds_getters_and_setters() {
+    public function test_creds_getters_and_setters(): void {
         $httpclient = new \auth_iomadoidc\tests\mockhttpclient();
         $client = new \auth_iomadoidc\tests\mockiomadoidcclient($httpclient);
 
@@ -58,7 +64,7 @@ class auth_iomadoidc_iomadoidcclient_testcase extends \advanced_testcase {
         $redirecturi = 'redirecturi';
         $tokenresource = 'resource';
         $scope = (isset($this->config->iomadoidcscope)) ? $this->config->iomadoidcscope : null;
-        $client->setcreds($id, $secret, $redirecturi, $tokenresource,$scope);
+        $client->setcreds($id, $secret, $redirecturi, $tokenresource, $scope);
 
         $this->assertEquals($id, $client->get_clientid());
         $this->assertEquals($secret, $client->get_clientsecret());
@@ -71,32 +77,32 @@ class auth_iomadoidc_iomadoidcclient_testcase extends \advanced_testcase {
      *
      * @return array Array of arrays of test parameters.
      */
-    public function dataprovider_endpoints() {
+    public static function dataprovider_endpoints(): array {
         $tests = [];
 
         $tests['oneinvalid'] = [
-            ['auth' => 100],
-            ['Exception', 'Invalid Endpoint URI received.']
+                ['auth' => 100],
+                ['Exception', 'Invalid Endpoint URI received.'],
         ];
 
         $tests['oneinvalidonevalid1'] = [
-            ['auth' => 100, 'token' => 'http://example.com/token'],
-            ['Exception', 'Invalid Endpoint URI received.']
+                ['auth' => 100, 'token' => 'http://example.com/token'],
+                ['Exception', 'Invalid Endpoint URI received.'],
         ];
 
         $tests['oneinvalidonevalid2'] = [
-            ['token' => 'http://example.com/token', 'auth' => 100],
-            ['Exception', 'Invalid Endpoint URI received.']
+                ['token' => 'http://example.com/token', 'auth' => 100],
+                ['Exception', 'Invalid Endpoint URI received.'],
         ];
 
         $tests['onevalid'] = [
-            ['token' => 'http://example.com/token'],
-            []
+                ['token' => 'http://example.com/token'],
+                [],
         ];
 
         $tests['twovalid'] = [
-            ['auth' => 'http://example.com/auth', 'token' => 'http://example.com/token'],
-            []
+                ['auth' => 'http://example.com/auth', 'token' => 'http://example.com/token'],
+                [],
         ];
 
         return $tests;
@@ -106,10 +112,11 @@ class auth_iomadoidc_iomadoidcclient_testcase extends \advanced_testcase {
      * Test setting and getting endpoints.
      *
      * @dataProvider dataprovider_endpoints
-     * @param $endpoints
-     * @param $expectedexception
+     * @covers \auth_iomadoidc\tests\mockiomadoidcclient::setendpoints
+     * @param array $endpoints
+     * @param array $expectedexception
      */
-    public function test_endpoints_getters_and_setters($endpoints, $expectedexception) {
+    public function test_endpoints_getters_and_setters(array $endpoints, array $expectedexception): void {
         if (!empty($expectedexception)) {
             $this->expectException($expectedexception[0]);
             $this->expectExceptionMessage($expectedexception[1]);

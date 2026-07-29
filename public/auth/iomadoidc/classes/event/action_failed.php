@@ -25,7 +25,7 @@
 
 namespace auth_iomadoidc\event;
 
-defined('MOODLE_INTERNAL') || die();
+use core\context\system;
 
 /**
  * Event fired whenever we need to record a debug message.
@@ -46,16 +46,7 @@ class action_failed extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return $this->data['other'];
-    }
-
-    /**
-     * Return legacy data for add_to_log().
-     *
-     * @return array
-     */
-    protected function get_legacy_logdata() {
-        return array(SITEID, 'auth_iomadoidc', 'error', 'index.php');
+        return json_encode($this->data['other']);
     }
 
     /**
@@ -64,7 +55,7 @@ class action_failed extends \core\event\base {
      * @return void
      */
     protected function init() {
-        $this->context = \context_system::instance();
+        $this->context = system::instance();
         $this->data['crud'] = 'r';
         $this->data['edulevel'] = self::LEVEL_OTHER;
     }

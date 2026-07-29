@@ -24,6 +24,9 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+// phpcs:disable moodle.Files.LangFilesOrdering.IncorrectOrder
+// phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment
+
 $string['pluginname'] = 'OpenID Connect';
 $string['auth_iomadoidcdescription'] = 'OpenID Connectプラグインは、設定可能なアイデンティティプロバイダを使用してシングルサインオン機能を提供します。';
 $string['cfg_authendpoint_key'] = '認証エンドポイント';
@@ -67,7 +70,7 @@ $string['cfg_loginflow_rocreds_desc'] = 'このフローでは、手動による
 $string['cfg_iomadoidcresource_key'] = 'リソース';
 $string['cfg_iomadoidcresource_desc'] = 'リクエストを送る、OpenID Connectのリソース。';
 $string['cfg_iomadoidcscope_key'] = '範囲';
-$string['cfg_iomadoidcscope_desc'] = '使用するOIDCスコープ。';
+$string['cfg_iomadoidcscope_desc'] = '使用するIOMADOIDCスコープ。';
 $string['cfg_opname_key'] = 'プロバイダ名';
 $string['cfg_opname_desc'] = 'これはユーザがログインするために使用する必要がある認証情報の種類を識別するラベルで、エンドユーザに表示されます。このラベルはプロバイダを識別するために、このプラグインのユーザに表示されるすべての部分で使用されます。';
 $string['cfg_redirecturi_key'] = 'リダイレクトURI';
@@ -125,3 +128,6 @@ $string['ucp_status_disabled'] = '無効';
 $string['ucp_disconnect_title'] = '{$a} 接続解除';
 $string['ucp_disconnect_details'] = 'Moodleアカウントを {$a} から接続解除します。Moodleにログインするには、ユーザ名とパスワードを作成する必要があります。';
 $string['ucp_title'] = '{$a} 管理';
+
+// phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
+// phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment
