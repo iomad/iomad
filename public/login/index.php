@@ -313,7 +313,8 @@ if ($frm and isset($frm->username)) {                             // Login WITH 
         // IOMAD
         // Update the company for the user if there is one.
         if ($DB->get_manager()->table_exists('local_iomad_companies')) {
-            if (!empty($SESSION->currenteditingcompany)) {
+            if (!empty($SESSION->currenteditingcompany)
+                && $SESSION->currenteditingcompany > 0) {
                 $DB->set_field('local_iomad_company_users', 'lastused', time(), ['userid' => $user->id, 'companyid' => $SESSION->currenteditingcompany]);
             } else {
                 $mycompanyid = iomad::get_my_companyid(context_system::instance(), false);
