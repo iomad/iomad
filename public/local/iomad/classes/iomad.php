@@ -95,13 +95,15 @@ class iomad {
 
         // Set the companyid to bypass the company select form if possible.
         $companyid = 0;
-        if (!empty($SESSION->currenteditingcompany)) {
+        if (!empty($SESSION->currenteditingcompany) &&
+            $SESSION->currenteditingcompany > 0) {
             $companyid = $SESSION->currenteditingcompany;
         } else if (self::is_company_user($USER)) {
             $companyid = self::companyid();
         } else if (!self::has_capability('block/iomad_company_admin:company_view_all', $context) && $required) {
             if (self::has_capability('block/iomad_company_admin:company_edit', $context)) {
-                if (!empty($SESSION->currenteditingcompany)) {
+                if (!empty($SESSION->currenteditingcompany) &&
+                    $SESSION->currenteditingcompany > 0) {
                     return $SESSION->currenteditingcompany;
                 } else {
                     redirect(
@@ -133,28 +135,26 @@ class iomad {
      */
     public static function is_company_user(?object $user): bool|int {
         global $DB, $SESSION, $USER;
-
         if (empty($user->id) && empty($SESSION->currenteditingcompany)) {
             // We are installing.  Go no further.
             return false;
         }
 
-        if ($user->id == $USER->id && !empty($SESSION->currenteditingcompany)) {
+        if ($user->id == $USER->id &&
+            !empty($SESSION->currenteditingcompany) &&
+            $SESSION->currenteditingcompany > 0) {
             return $SESSION->currenteditingcompany;
         } else if ($usercompanies = $DB->get_records(
             'local_iomad_company_users',
             ['userid' => $user->id],
-            'id',
-            'id,companyid',
-            0,
-            1)) {
-            $usercompany = array_pop($usercompanies);
+            'lastused DESC',
+            'id,companyid')) {
+            $usercompany = array_shift($usercompanies);
 
             // Cache this if it's the current user.
             if ($user->id == $USER->id) {
                 $SESSION->currenteditingcompany = $usercompany->companyid;
             }
-
             return $usercompany->companyid;
         } else {
             return false;
@@ -1174,17 +1174,17 @@ class iomad {
             $sqlsearch .= " AND u.id {$insql}";
         }
         if (!empty($params['firstname'])) {
-            $sqlsearch .= " AND " . $DB->sql_like('u.firstname', ':firstname');
+            $sqlsearch .= " AND " . $DB->sql_like('u.firstname', ':firstname', false, false);
             $searchparams['firstname'] = '%' . $params['firstname'] . '%';
         }
 
         if (!empty($params['lastname'])) {
-            $sqlsearch .= " AND " . $DB->sql_like('u.lastname', ':lastname');
+            $sqlsearch .= " AND " . $DB->sql_like('u.lastname', ':lastname', false, false);
             $searchparams['lastname'] = '%' . $params['lastname'] . '%';
         }
 
         if (!empty($params['email'])) {
-            $sqlsearch .= " AND " . $DB->sql_like('u.email', ':email');
+            $sqlsearch .= " AND " . $DB->sql_like('u.email', ':email', false, false);
             $searchparams['email'] = '%' . $params['email'] . '%';
         }
         if (!empty($params['compfrom'])) {
@@ -1727,17 +1727,17 @@ class iomad {
             $sqlsearch .= " AND u.id $insql ";
         }
         if (!empty($params['firstname'])) {
-            $sqlsearch .= " AND " . $DB->sql_like('u.firstname', ':firstname');
+            $sqlsearch .= " AND " . $DB->sql_like('u.firstname', ':firstname', false, false);
             $searchparams['firstname'] = '%' . $params['firstname'] . '%';
         }
 
         if (!empty($params['lastname'])) {
-            $sqlsearch .= " AND " . $DB->sql_like('u.lastname', ':lastname');
+            $sqlsearch .= " AND " . $DB->sql_like('u.lastname', ':lastname', false, false);
             $searchparams['lastname'] = '%' . $params['lastname'] . '%';
         }
 
         if (!empty($params['email'])) {
-            $sqlsearch .= " AND " . $DB->sql_like('u.email', ':email');
+            $sqlsearch .= " AND " . $DB->sql_like('u.email', ':email', false, false);
             $searchparams['email'] = '%' . $params['email'] . '%';
         }
 

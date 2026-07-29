@@ -686,7 +686,7 @@ function profile_get_user_fields_with_data(int $userid): array {
                       OR uif.categoryid IN (
                       SELECT id FROM {user_info_category} WHERE id NOT IN (SELECT profilecategoryid from {local_iomad_companies}))) ";
             $params['companyuserid'] = $userid;
-	    $params['companyid'] = $companyid;
+            $params['companyid'] = $companyid;
         }
     }
 
