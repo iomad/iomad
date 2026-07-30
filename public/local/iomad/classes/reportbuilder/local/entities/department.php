@@ -135,13 +135,13 @@ class department extends base {
 
         // Parentid.
         $columns[] = (new column(
-            'parentid',
+            'parent',
             new lang_string('parent', 'block_iomad_company_admin'),
             $this->get_entity_name()
         ))
             ->add_joins($this->get_joins())
             ->set_type(column::TYPE_TEXT)
-            ->add_field("{$departmentalias}.parentid")
+            ->add_field("{$departmentalias}.parent")
             ->set_is_sortable(false);
 
         return $columns;
