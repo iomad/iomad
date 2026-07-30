@@ -300,6 +300,26 @@ class iomad {
     }
 
     /**
+     * Get the current postfix for settings.
+     *
+     * @param string $separator
+     * @return string
+     */
+    public static function get_company_postfix(?string $separator = '_'): string {
+
+        // Set the default blank.
+        $postfix = "";
+
+        // Are we in a company?
+        $companyid = self::get_my_companyid(context_system::instance(), false);
+        if ($companyid > 0) {
+            $postfix = $separator . $companyid;
+        }
+
+        return $postfix;
+    }
+
+    /**
      * SQL text processing to add a company course table join
      *
      * @param string $alias
@@ -1151,17 +1171,17 @@ class iomad {
             $sqlsearch .= " AND u.id {$insql}";
         }
         if (!empty($params['firstname'])) {
-            $sqlsearch .= " AND " . $DB->sql_like('u.firstname', ':firstname');
+            $sqlsearch .= " AND " . $DB->sql_like('u.firstname', ':firstname', false, false);
             $searchparams['firstname'] = '%' . $params['firstname'] . '%';
         }
 
         if (!empty($params['lastname'])) {
-            $sqlsearch .= " AND " . $DB->sql_like('u.lastname', ':lastname');
+            $sqlsearch .= " AND " . $DB->sql_like('u.lastname', ':lastname', false, false);
             $searchparams['lastname'] = '%' . $params['lastname'] . '%';
         }
 
         if (!empty($params['email'])) {
-            $sqlsearch .= " AND " . $DB->sql_like('u.email', ':email');
+            $sqlsearch .= " AND " . $DB->sql_like('u.email', ':email', false, false);
             $searchparams['email'] = '%' . $params['email'] . '%';
         }
         if (!empty($params['compfrom'])) {
@@ -1697,17 +1717,17 @@ class iomad {
             $sqlsearch .= " AND u.id $insql ";
         }
         if (!empty($params['firstname'])) {
-            $sqlsearch .= " AND " . $DB->sql_like('u.firstname', ':firstname');
+            $sqlsearch .= " AND " . $DB->sql_like('u.firstname', ':firstname', false, false);
             $searchparams['firstname'] = '%' . $params['firstname'] . '%';
         }
 
         if (!empty($params['lastname'])) {
-            $sqlsearch .= " AND " . $DB->sql_like('u.lastname', ':lastname');
+            $sqlsearch .= " AND " . $DB->sql_like('u.lastname', ':lastname', false, false);
             $searchparams['lastname'] = '%' . $params['lastname'] . '%';
         }
 
         if (!empty($params['email'])) {
-            $sqlsearch .= " AND " . $DB->sql_like('u.email', ':email');
+            $sqlsearch .= " AND " . $DB->sql_like('u.email', ':email', false, false);
             $searchparams['email'] = '%' . $params['email'] . '%';
         }
 

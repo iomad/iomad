@@ -16,6 +16,9 @@
 
 namespace factor_auth;
 
+require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+
+use iomad;
 use stdClass;
 use tool_mfa\local\factor\object_factor_base;
 
@@ -76,7 +79,7 @@ class factor extends object_factor_base {
     public function get_state(): string {
         global $USER;
 
-        $safetypes = get_config('factor_auth', 'goodauth' . $this->postfix);
+        $safetypes = iomad::get_config('factor_auth', 'goodauth');
         if (strlen($safetypes) != 0) {
             $safetypes = explode(',', $safetypes);
 
@@ -108,7 +111,7 @@ class factor extends object_factor_base {
      * {@inheritDoc}
      */
     public function get_summary_condition(): string {
-        $safetypes = get_config('factor_auth', 'goodauth' . $this->postfix);
+        $safetypes = iomad::get_config('factor_auth', 'goodauth');
 
         return get_string('summarycondition', 'factor_'.$this->name, $safetypes);
     }

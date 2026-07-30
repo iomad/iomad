@@ -52,6 +52,14 @@ class course_expiry_warning_task extends \core\task\scheduled_task {
         // We only want the student role.
         $studentrole = $DB->get_record('role', array('shortname' => 'student'));
 
+        // Set the string time for the repeat periods.
+        $periods = [
+            1 => " day",
+            2 => " week",
+            3 => " fortnight",
+            4 => " month",
+        ];
+
         mtrace("Running email report course expiry warning task at ".date('d M Y h:i:s', $runtime));
 
         // Getting courses which have expiry settings.

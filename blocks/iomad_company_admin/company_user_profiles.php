@@ -242,7 +242,8 @@ function profile_category_icons($category) {
     // Can only delete the last category if there are no fields in it.
     if (($categorycount > 1) || ($fieldcount == 0)) {
         $deleteurl = new moodle_url('/blocks/iomad_company_admin/company_user_profiles.php', ['id' => $category->id,
-                                                                                              'action' => 'deletecategory']);
+                                                                                              'action' => 'deletecategory',
+                                                                                              'sesskey' => sesskey()]);
         $editstr .= html_writer::tag(
             'a',
             html_writer::tag(
@@ -360,7 +361,8 @@ function profile_field_icons($field) {
 
     // Delete!
     $deleteurl = new moodle_url('/blocks/iomad_company_admin/company_user_profiles.php', ['id' => $field->id,
-                                                                                          'action' => 'deletefield']);
+                                                                                          'action' => 'deletefield',
+                                                                                          'sesskey' => sesskey()]);
     $editstr .= html_writer::tag(
         'a',
         html_writer::tag(

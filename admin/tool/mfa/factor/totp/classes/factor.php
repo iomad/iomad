@@ -29,6 +29,9 @@ require_once(__DIR__.'/../extlib/ParagonIE/ConstantTime/EncoderInterface.php');
 require_once(__DIR__.'/../extlib/ParagonIE/ConstantTime/Binary.php');
 require_once(__DIR__.'/../extlib/ParagonIE/ConstantTime/Base32.php');
 
+require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+
+use iomad;
 use MoodleQuickForm;
 use tool_mfa\local\factor\object_factor_base;
 use OTPHP\TOTP;
@@ -283,7 +286,7 @@ class factor extends object_factor_base {
         global $USER;
         $factors = $this->get_active_user_factors($USER);
         $result = ['verificationcode' => get_string('error:wrongverification', 'factor_totp')];
-        $window = get_config('factor_totp', 'window' . $this->postfix);
+        $window = iomad::get_config('factor_totp', 'window');
 
         foreach ($factors as $factor) {
             $totp = TOTP::create($factor->secret, clock: $this->clock);

@@ -25,28 +25,32 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+// IOMAD
+require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+$postfix = iomad::get_company_postfix();
+
 if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_heading('factor_grace/description', '',
         new lang_string('settings:description', 'factor_grace')));
     $settings->add(new admin_setting_heading('factor_grace/settings', new lang_string('settings', 'moodle'), ''));
 
-    $enabled = new admin_setting_configcheckbox('factor_grace/enabled',
+    $enabled = new admin_setting_configcheckbox('factor_grace/enabled' . $postfix,
         new lang_string('settings:enablefactor', 'tool_mfa'),
         new lang_string('settings:enablefactor_help', 'tool_mfa'), 0);
     $enabled->set_updatedcallback(function () {
-        \tool_mfa\manager::do_factor_action('grace', get_config('factor_grace', 'enabled') ? 'enable' : 'disable');
+        \tool_mfa\manager::do_factor_action('grace', iomad::get_config('factor_grace', 'enabled') ? 'enable' : 'disable');
     });
     $settings->add($enabled);
 
-    $settings->add(new admin_setting_configtext('factor_grace/weight',
+    $settings->add(new admin_setting_configtext('factor_grace/weight' . $postfix,
         new lang_string('settings:weight', 'tool_mfa'),
         new lang_string('settings:weight_help', 'tool_mfa'), 100, PARAM_INT));
 
-    $settings->add(new admin_setting_configcheckbox('factor_grace/forcesetup',
+    $settings->add(new admin_setting_configcheckbox('factor_grace/forcesetup' . $postfix,
         new lang_string('settings:forcesetup', 'factor_grace'),
         new lang_string('settings:forcesetup_help', 'factor_grace'), 0));
 
-    $settings->add(new admin_setting_configduration('factor_grace/graceperiod',
+    $settings->add(new admin_setting_configduration('factor_grace/graceperiod' . $postfix,
         new lang_string('settings:graceperiod', 'factor_grace'),
         new lang_string('settings:graceperiod_help', 'factor_grace'), '604800'));
 
@@ -56,11 +60,11 @@ if ($ADMIN->fulltree) {
     foreach ($factors as $factor) {
         $gracefactors[$factor->name] = $factor->get_display_name();
     }
-    $settings->add(new admin_setting_configmultiselect('factor_grace/ignorelist',
+    $settings->add(new admin_setting_configmultiselect('factor_grace/ignorelist' . $postfix,
         new lang_string('settings:ignorelist', 'factor_grace'),
         new lang_string('settings:ignorelist_help', 'factor_grace'), [], $gracefactors));
 
-    $settings->add(new admin_setting_confightmleditor('factor_grace/customwarning',
+    $settings->add(new admin_setting_confightmleditor('factor_grace/customwarning' . $postfix,
         new lang_string('settings:customwarning', 'factor_grace'),
         new lang_string('settings:customwarning_help', 'factor_grace'), '', PARAM_RAW));
 }

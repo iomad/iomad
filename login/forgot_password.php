@@ -41,15 +41,6 @@ require_once('set_password_form.php');
 
 $token = optional_param('token', false, PARAM_ALPHANUM);
 
-// IOMAD
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
-if (!empty($companyid)) {
-    $postfix = "_$companyid";
-} else {
-    $postfix = "";
-}
-
 $PAGE->set_url('/login/forgot_password.php');
 $systemcontext = context_system::instance();
 $PAGE->set_context($systemcontext);
