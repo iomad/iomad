@@ -137,7 +137,7 @@ class primary implements renderable, templatable {
         }
 
         // If filtering of the primary custom menu is enabled, apply only the string filters.
-        if (!empty($CFG->navfilter && !empty($CFG->stringfilters))) {
+        if (!empty($CFG->navfilter) && !empty($CFG->stringfilters)) {
             // Apply filters that are enabled for Content and Headings.
             $filtermanager = \filter_manager::instance();
             $custommenuitems = $filtermanager->filter_string($custommenuitems, \context_system::instance());
