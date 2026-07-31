@@ -1693,18 +1693,18 @@ class company_user {
                 }
 
                 // Remove traininevent registrations.
-                if ($trainigevents = $DB->get_records('trainingevent', ['course' => $courseid])) {
-                    foreach ($trainigevents as $trainigevent) {
+                if ($trainingevents = $DB->get_records('trainingevent', ['course' => $courseid])) {
+                    foreach ($trainingevents as $trainingevent) {
                         $DB->delete_records(
                             'trainingevent_users',
-                            ['trainigeventid' => $trainigevent->id, 'userid' => $userid]
+                            ['trainingeventid' => $trainingevent->id, 'userid' => $userid]
                         );
                     }
                 }
 
                 // Remove LTI information.
                 if (enrol_is_enabled('lti')) {
-                    $contextcourse = context_course::instance($courseid);
+                    $coursecontext = context_course::instance($courseid);
                     if ($ltitools = $DB->get_record('enrol_lti_tools', ['contextid' => $contextcourse->id])) {
                         foreach ($ltitools as $ltitool) {
                             $DB->set_value(
@@ -1800,6 +1800,7 @@ class company_user {
                                                               'timecompleted' => null]);
                 } else {
                     $DB->delete_records('local_iomad_tracks', ['id' => $litid]);
+                    track::delete_entry($litid, true);
                 }
             } else {
                 $litparams = $litparams +
