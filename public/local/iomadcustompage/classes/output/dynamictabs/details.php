@@ -18,44 +18,44 @@ declare(strict_types=1);
 
 namespace local_iomadcustompage\output\dynamictabs;
 
-use coding_exception;
-use core\output\dynamic_tabs\base;
+use core\context\system;
 use local_iomadcustompage\factories\page_factory;
-use local_iomadcustompage\local\models\page;
-use local_iomadcustompage\permission;
 use renderer_base;
+use core\output\dynamic_tabs\base;
+use local_iomadcustompage\permission;
+use core_reportbuilder\system_report_factory;
+use local_iomadcustompage\local\models\page;
 
 /**
- * Page details dynamic tab
+ * Schedules dynamic tab
  *
  * @package     local_iomadcustompage
+ * @copyright   2021 Paul Holden <paulh@moodle.com>
  * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class details extends base {
-  /**
-   * Export this for use in a mustache template context
-   *
-   * @param renderer_base $output
-   * @return array
-   * @throws coding_exception
-   */
+    /**
+     * Export this for use in a mustache template context
+     *
+     * @param renderer_base $output
+     * @return array
+     */
     public function export_for_template(renderer_base $output): array {
-        $iomadcustompage = page_factory::create((int) $this->data['pageid']);
+        $iomadcustompage = page_factory::create((int)$this->data['pageid']);
 
         return [
-                'pageid' => $this->data['pageid'],
-                'contextid' => (new page((int) $this->data['pageid']))->get('contextid'),
-                'pagedetails' => $iomadcustompage->details_output(),
+            'pageid' => $this->data['pageid'],
+                  'contextid' => (new page((int)$this->data['pageid']))->get('contextid'),
+            'pagedetails' => $iomadcustompage->details_output(),
         ];
     }
 
-  /**
-   * The label to be displayed on the tab
-   *
-   * @return string
-   * @throws coding_exception
-   */
+    /**
+     * The label to be displayed on the tab
+     *
+     * @return string
+     */
     public function get_tab_label(): string {
         return get_string('details');
     }

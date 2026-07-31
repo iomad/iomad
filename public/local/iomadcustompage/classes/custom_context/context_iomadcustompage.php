@@ -17,22 +17,19 @@
 namespace local_iomadcustompage\custom_context;
 
 use coding_exception;
-use context;
-use context_system;
-use core\exception\moodle_exception;
-use dml_exception;
-use dml_transaction_exception;
+use core\context;
 use moodle_url;
 use stdClass;
 use local_iomad\custom_context\context_company;
 use local_iomad\iomad;
 
+require_once $CFG->dirroot . "/local/iomadcustompage/lib.php";
 /**
- *  context_iomadcustompage.php description here.
+ * IOMAD Custom page context implementation.
  *
- * @package     local_iomadcustompage
- * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    local_iomadcustompage
+ * @copyright  2024 BitAscii Solutions <bitascii.dev@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class context_iomadcustompage extends context {
     /**
@@ -44,25 +41,15 @@ class context_iomadcustompage extends context {
      */
     protected function __construct(stdClass $record) {
         parent::__construct($record);
-        if ($record->contextlevel != CONTEXT_CUSTOMPAGE) {
+        if ($record->contextlevel != \CONTEXT_CUSTOMPAGE) {
             throw new coding_exception('Invalid $record->contextlevel in context_iomadcustompage constructor.');
         }
     }
 
     /**
-     * Returns short context name.
-     *
-     * @since Moodle 4.2
-     *
-     * @return string
-     */
-    public static function get_short_name(): string {
-        return 'iomadcustompage';
-    }
-
-    /**
      * Returns human readable context level name.
-     * @return string the human-readable context level name.
+     *
+     * @return string the human readable context level name.
      */
     public static function get_level_name() {
         return get_string('iomadcustompage', 'local_iomadcustompage');
@@ -74,7 +61,7 @@ class context_iomadcustompage extends context {
      * @param true $withprefix
      * @param false $short
      * @param true $escape
-     * @return string the human-readable context name.
+     * @return string the human readable context name.
      */
     public function get_context_name($withprefix = true, $short = false, $escape = true) {
         global $DB;
@@ -82,7 +69,7 @@ class context_iomadcustompage extends context {
         $name = '';
         if ($iomadcustompage = $DB->get_record('local_iomadcustompages', ['id' => $this->_instanceid])) {
             if ($withprefix) {
-                $name = get_string('iomadcustompage', 'local_iomadcustompage').': ';
+                $name = get_string('iomadcustompage', 'local_iomadcustompage') . ': ';
             }
             $name .= format_string($iomadcustompage->name, true, ['context' => $this]);
         }
@@ -95,7 +82,7 @@ class context_iomadcustompage extends context {
      * @return moodle_url
      */
     public function get_url() {
-        return new moodle_url('/local/iomadcustompage/index.php', ['pageid' => $this->_instanceid]);
+        return new moodle_url('/local/iomadcustompage/view.php', ['id' => $this->_instanceid]);
     }
 
     /**
@@ -108,7 +95,7 @@ class context_iomadcustompage extends context {
         global $DB;
 
         return $DB->get_records_list('capabilities', 'contextlevel', [
-        CONTEXT_CUSTOMPAGE,
+        \CONTEXT_CUSTOMPAGE,
         CONTEXT_BLOCK,
         ], $sort);
     }
@@ -118,29 +105,30 @@ class context_iomadcustompage extends context {
      *
      * @param int $pageid id from {iomadcustompages} table
      * @param int $strictness
-     * @return context|bool context instance
+     * @return context_iomadcustompage context instance
      */
-    public static function instance(int $pageid, $strictness = MUST_EXIST) {
+    public static function instance($pageid, $strictness = MUST_EXIST) {
         global $DB;
 
-        if ($context = context::cache_get(CONTEXT_CUSTOMPAGE, $pageid)) {
+        if ($context = context::cache_get(\CONTEXT_CUSTOMPAGE, $pageid)) {
             return $context;
         }
 
-        if (!$record = $DB->get_record('context', ['contextlevel' => CONTEXT_CUSTOMPAGE, 'instanceid' => $pageid])) {
+        if (!$record = $DB->get_record('context', ['contextlevel' => \CONTEXT_CUSTOMPAGE, 'instanceid' => $pageid])) {
             if ($iomadcustompage = $DB->get_record('local_iomadcustompages', ['id' => $pageid], 'id,parent', $strictness)) {
                 if ($iomadcustompage->parent) {
                     $parentcontext = self::instance($iomadcustompage->parent);
-                    $record = context::insert_context_record(CONTEXT_CUSTOMPAGE, $iomadcustompage->id, $parentcontext->path);
+                    $record = context::insert_context_record(\CONTEXT_CUSTOMPAGE, $iomadcustompage->id, $parentcontext->path);
                 } else {
-                    // IOMAD!
-                    $path = '/' . SYSCONTEXTID;
+                    // IOMAD.
+                    $path = '/' . \SYSCONTEXTID;
                     $companyid = iomad::get_my_companyid(context_system::instance());
                     if ($companyid > 0) {
                         $companycontext = context_company::instance($companyid);
                         $path = $companycontext->path;
                     }
-                    $record = context::insert_context_record(CONTEXT_CUSTOMPAGE, $iomadcustompage->id, $path, 0);
+
+                    $record = context::insert_context_record(\CONTEXT_CUSTOMPAGE, $iomadcustompage->id, $path, 0);
                 }
             }
         }
@@ -163,15 +151,15 @@ class context_iomadcustompage extends context {
     public function get_child_contexts() {
         global $DB;
 
-        if (empty($this->_path) || empty($this->_depth)) {
-            debugging('Can not find child contexts of context '.$this->_id.' try rebuilding of context paths');
+        if (empty($this->_path) or empty($this->_depth)) {
+            debugging('Can not find child contexts of context ' . $this->_id . ' try rebuilding of context paths');
             return [];
         }
 
         $sql = "SELECT ctx.*
                   FROM {context} ctx
                  WHERE ctx.path LIKE ? AND (ctx.depth = ? OR ctx.contextlevel = ?)";
-        $params = [$this->_path.'/%', $this->depth + 1, CONTEXT_CUSTOMPAGE];
+        $params = [$this->_path . '/%', $this->depth + 1, \CONTEXT_CUSTOMPAGE];
         $records = $DB->get_records_sql($sql, $params);
 
         $result = [];
@@ -188,14 +176,14 @@ class context_iomadcustompage extends context {
     protected static function create_level_instances() {
         global $DB;
 
-        $sql = "SELECT ".CONTEXT_CUSTOMPAGE.", sp.id
+        $sql = "SELECT " . \CONTEXT_CUSTOMPAGE . ", sp.id
                   FROM {local_iomadcustompages} sp
                  WHERE NOT EXISTS (SELECT 'x'
                                      FROM {context} cx
-                                    WHERE sp.id = cx.instanceid AND cx.contextlevel=".CONTEXT_CUSTOMPAGE.")";
+                                    WHERE sp.id = cx.instanceid AND cx.contextlevel=" . \CONTEXT_CUSTOMPAGE . ")";
         $contextdata = $DB->get_recordset_sql($sql);
         foreach ($contextdata as $context) {
-            context::insert_context_record(CONTEXT_CUSTOMPAGE, $context->id, null);
+            context::insert_context_record(\CONTEXT_CUSTOMPAGE, $context->id, null);
         }
         $contextdata->close();
     }
@@ -206,12 +194,14 @@ class context_iomadcustompage extends context {
      * @return string cleanup SQL
      */
     protected static function get_cleanup_sql() {
-      return "
-                SELECT c.*
-                  FROM {context} c
-       LEFT OUTER JOIN {local_iomadcustompages} sp ON c.instanceid = sp.id
-                 WHERE sp.id IS NULL AND c.contextlevel = ".CONTEXT_CUSTOMPAGE."
-             ";
+        $sql = "
+                  SELECT c.*
+                    FROM {context} c
+         LEFT OUTER JOIN {local_iomadcustompages} sp ON c.instanceid = sp.id
+                   WHERE sp.id IS NULL AND c.contextlevel = " . \CONTEXT_CUSTOMPAGE . "
+               ";
+
+        return $sql;
     }
 
     /**
@@ -222,10 +212,12 @@ class context_iomadcustompage extends context {
     protected static function build_paths($force) {
         global $DB;
 
-        $syscontextid = SYSCONTEXTID;
+        $syscontextid = \SYSCONTEXTID;
 
-        if ($force ||
-                $DB->record_exists_select('context', "contextlevel = ".CONTEXT_CUSTOMPAGE." AND (depth = 0 OR path IS NULL)")) {
+        if ($force or $DB->record_exists_select(
+                'context',
+                "contextlevel = " . \CONTEXT_CUSTOMPAGE . " AND (depth = 0 OR path IS NULL)"
+        )) {
             if ($force) {
                 $ctxemptyclause = $emptyclause = '';
             } else {
@@ -233,31 +225,30 @@ class context_iomadcustompage extends context {
                 $emptyclause    = "AND ({context}.path IS NULL OR {context}.depth = 0)";
             }
 
-            $base = '/'.SYSCONTEXTID;
+            $base = '/' . \SYSCONTEXTID;
 
-            // Normal top level pages.
-            // This will be used when we allow creating hierarchical custompages. For now we only have flat ones
-            /*
+            // Normal top level tenants.
             $sql = "UPDATE {context}
                        SET depth=2,
-                           path=".$DB->sql_concat("'$base/'", 'id')."
-                     WHERE contextlevel=".CONTEXT_CUSTOMPAGE."
+                           path=" . $DB->sql_concat("'$base/'", 'id') . "
+                     WHERE contextlevel=" . \CONTEXT_CUSTOMPAGE . "
                            AND EXISTS (SELECT 'x'
                                          FROM {local_iomadcustompages} sp
                                         WHERE sp.id = {context}.instanceid AND sp.depth=1)
                            $emptyclause";
             $DB->execute($sql);
-            */
 
             // Deeper pages - one query per depthlevel.
-            $maxdepth = $DB->get_field_sql("SELECT MAX(depth) FROM {iomadcustompages}");
+            $maxdepth = $DB->get_field_sql("SELECT MAX(depth) FROM {local_iomadcustompages}");
             for ($n = 2; $n <= $maxdepth; $n++) {
                 $sql = "INSERT INTO {context_temp} (id, path, depth, locked)
-                        SELECT ctx.id, ".$DB->sql_concat('pctx.path', "'/'", 'ctx.id').", pctx.depth+1, ctx.locked
+                        SELECT ctx.id, " . $DB->sql_concat('pctx.path', "'/'", 'ctx.id') . ",
+                               pctx.depth+1, ctx.locked
                           FROM {context} ctx
                           JOIN {local_iomadcustompages} sp
-                            ON (sp.id = ctx.instanceid AND ctx.contextlevel = ".CONTEXT_CUSTOMPAGE." AND sp.depth = $n)
-                          JOIN {context} pctx ON (pctx.instanceid = sp.parent AND pctx.contextlevel = ".CONTEXT_CUSTOMPAGE.")
+                            ON (sp.id = ctx.instanceid AND ctx.contextlevel = " . \CONTEXT_CUSTOMPAGE . " AND sp.depth = $n)
+                          JOIN {context} pctx
+                            ON (pctx.instanceid = sp.parent AND pctx.contextlevel = " . \CONTEXT_CUSTOMPAGE . ")
                          WHERE pctx.path IS NOT NULL AND pctx.depth > 0
                                $ctxemptyclause";
                 $trans = $DB->start_delegated_transaction();
@@ -266,9 +257,7 @@ class context_iomadcustompage extends context {
                 context::merge_context_temp_table();
                 $DB->delete_records('context_temp');
                 $trans->allow_commit();
-
             }
         }
     }
 }
-

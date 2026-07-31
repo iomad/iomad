@@ -18,7 +18,6 @@ declare(strict_types=1);
 
 namespace local_iomadcustompage\local\audiences;
 
-use coding_exception;
 use core_plugin_manager;
 use MoodleQuickForm;
 use stdClass;
@@ -30,11 +29,12 @@ use local_iomadcustompage\page_access_exception;
  * Audience base class
  *
  * @package     local_iomadcustompage
+ * @copyright   2021 David Matamoros <davidmc@moodle.com>
  * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class base {
-    /** @var int Maximum number of multi-select elements to show in description, before appending "plus X more" */
+    /** @var int Maximim number of multi-select elements to show in description, before appending "plus X more" */
     private const MULTI_SELECT_LIMIT = 5;
 
     /** @var audience The persistent object associated with this audience */
@@ -215,7 +215,8 @@ abstract class base {
      * @return array decoded configdata
      */
     final public function get_configdata(): array {
-        return json_decode($this->audience->get('configdata'), true);
+        $configdata = json_decode($this->audience->get('configdata'), true);
+        return $configdata !== null ? $configdata : [];
     }
 
     /**

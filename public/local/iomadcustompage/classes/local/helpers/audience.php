@@ -19,34 +19,32 @@ declare(strict_types=1);
 namespace local_iomadcustompage\local\helpers;
 
 use cache;
-use coding_exception;
-use context;
-use context_system;
+use core\context;
+use core\context\system;
 use core_collator;
 use core_component;
 use core_plugin_manager;
 use core_reportbuilder\local\helpers\database;
-use dml_exception;
 use local_iomadcustompage\local\audiences\base;
 use local_iomadcustompage\local\models\audience as audience_model;
 use local_iomad\iomad;
 use local_iomad\custom_context\context_company;
 
 /**
- * Class containing page audience helper methods
+ * Class containing report audience helper methods
  *
  * @package     local_iomadcustompage
+ * @copyright   2021 David Matamoros <davidmc@moodle.com>
  * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class audience {
-  /**
-   * Return audience instances for a given page. Note that any records pointing to invalid audience types will be excluded
-   *
-   * @param int $pageid
-   * @return base[]
-   * @throws coding_exception
-   */
+    /**
+     * Return audience instances for a given report. Note that any records pointing to invalid audience types will be excluded
+     *
+     * @param int $pageid
+     * @return base[]
+     */
     public static function get_base_records(int $pageid): array {
         $records = audience_model::get_records(['pageid' => $pageid], 'id');
 
@@ -60,21 +58,18 @@ class audience {
 
     /**
      * Returns list of iomadcustompages IDs that the specified user can access, based on audience configuration.
-     * This can be expensive if the site has lots of pages, with lots of audiences, so we cache the result for the duration
-     * of the users session
+     * This can be expensive if the site has lots of reports, with lots of audiences, so we cache the result
+     * for the duration of the users session.
      *
      * @param int|null $userid User ID to check, or the current user if omitted
      * @return int[]
-     * @throws \core\exception\coding_exception
-     * @throws dml_exception
-     * @throws coding_exception
      */
     public static function get_allowed_pages(?int $userid = null): array {
         global $USER, $DB;
 
         $userid = $userid ?: (int) $USER->id;
 
-        // Prepare cache, if we previously stored the users allowed pages then return that.
+        // Prepare cache, if we previously stored the users allowed reports then return that.
         $cache = cache::make('local_iomadcustompage', 'iomadcustompage_allowed_pages');
         $cachedpages = $cache->get($userid);
         if ($cachedpages !== false) {
@@ -84,14 +79,14 @@ class audience {
         $allowedpages = [];
         $pageaudiences = [];
 
-        // Retrieve all audiences and group them by page for convenience.
+        // Retrieve all audiences and group them by report for convenience.
         $audiences = audience_model::get_records();
         foreach ($audiences as $audience) {
             $pageaudiences[$audience->get('pageid')][] = $audience;
         }
 
         foreach ($pageaudiences as $pageid => $audiences) {
-            // Generate audience SQL based on those for the current page.
+            // Generate audience SQL based on those for the current report.
             [$wheres, $params] = self::user_audience_sql($audiences);
             if (count($wheres) === 0) {
                 continue;
@@ -106,35 +101,32 @@ class audience {
                        AND u.deleted = 0
                        AND u.id = :{$paramuserid}";
 
-            // If we have a matching record, user can view the page.
+            // If we have a matching record, user can view the report.
             if ($DB->record_exists_sql($sql, $params)) {
                 $allowedpages[] = $pageid;
             }
         }
 
-        // Store users allowed pages in cache.
+        // Store users allowed reports in cache.
         $cache->set($userid, $allowedpages);
 
         return $allowedpages;
     }
 
     /**
-     * Purge the audience cache of allowed pages
+     * Purge the audience cache of allowed reports
      */
     public static function purge_caches(): void {
         cache::make('local_iomadcustompage', 'iomadcustompage_allowed_pages')->purge();
     }
 
-  /**
-   * Generate SQL select clause and params for selecting pages specified user can access, based on audience configuration
-   *
-   * @param string $pagetablealias
-   * @param int|null $userid User ID to check, or the current user if omitted
-   * @return array
-   * @throws \core\exception\coding_exception
-   * @throws coding_exception
-   * @throws dml_exception
-   */
+    /**
+     * Generate SQL select clause and params for selecting reports specified user can access, based on audience configuration
+     *
+     * @param string $pagetablealias
+     * @param int|null $userid User ID to check, or the current user if omitted
+     * @return array
+     */
     public static function user_pages_list_sql(string $pagetablealias, ?int $userid = null): array {
         global $DB;
 
@@ -152,18 +144,15 @@ class audience {
         return [$sql, $params];
     }
 
-  /**
-   * Return list of page ID's specified user can access, based on audience configuration
-   *
-   * @param int|null $userid User ID to check, or the current user if omitted
-   * @return int[]
-   * @throws \core\exception\coding_exception
-   * @throws coding_exception
-   * @throws dml_exception
-   */
+    /**
+     * Return list of page ID's specified user can access, based on audience configuration
+     *
+     * @param int|null $userid User ID to check, or the current user if omitted
+     * @return int[]
+     */
     public static function user_pages_list(?int $userid = null): array {
         global $DB;
-        $pagetablealias = database::generate_alias();
+        $pagetablealias = \core_reportbuilder\local\helpers\database::generate_alias();
         [$select, $params] = self::user_pages_list_sql($pagetablealias, $userid);
         $sql = "SELECT {$pagetablealias}.id
                   FROM {local_iomadcustompages} $pagetablealias
@@ -172,33 +161,31 @@ class audience {
         return $DB->get_fieldset_sql($sql, $params);
     }
 
-  /**
-   * Returns SQL to limit the list of pages to those that the given user has access to
-   *
-   * - A user with 'editall' capability will have access to all pages
-   * - A user with 'edit' capability will have access to:
-   *      - Those pages this user has created
-   *      - Those pages this user is in audience of
-   * - A user with 'view' capability will have access to:
-   *      - Those pages this user is in audience of
-   *
-   * @param string $pagetablealias
-   * @param int|null $userid User ID to check, or the current user if omitted
-   * @param context|null $context
-   * @return array
-   * @throws \core\exception\coding_exception
-   * @throws coding_exception
-   * @throws dml_exception
-   */
+    /**
+     * Returns SQL to limit the list of reports to those that the given user has access to
+     *
+     * - A user with 'editall' capability will have access to all reports
+     * - A user with 'edit' capability will have access to:
+     *      - Those reports this user has created
+     *      - Those reports this user is in audience of
+     * - A user with 'view' capability will have access to:
+     *      - Those reports this user is in audience of
+     *
+     * @param string $pagetablealias
+     * @param int|null $userid User ID to check, or the current user if omitted
+     * @param context|null $context
+     * @return array
+     */
     public static function user_pages_list_access_sql(
         string $pagetablealias,
         ?int $userid = null,
-        ?context $context = null
+        ?\core\context $context = null
     ): array {
         global $DB, $USER;
 
         if ($context === null) {
-            $context = context_system::instance();
+            $context = \core\context\system::instance();
+
             // IOMAD!
             $companyid = iomad::get_my_companyid($context);
             if ($companyid > 0) {
@@ -206,7 +193,7 @@ class audience {
             }
         }
 
-        // If user can't view all pages, limit the returned list to those pages they can see.
+        // If user can't view all reports, limit the returned list to those reports they can see.
         if (!has_capability('local/iomadcustompage:editall', $context, $userid)) {
             $pages = self::user_pages_list($userid);
 
@@ -215,7 +202,7 @@ class audience {
 
             $where = "{$pagetablealias}.id {$pageselect}";
 
-            // User can also see any pages that they can edit.
+            // User can also see any reports that they can edit.
             if (has_capability('local/iomadcustompage:edit', $context, $userid)) {
                 $where = "({$pagetablealias}.usercreated = :{$paramuserid} OR {$where})";
                 $params[$paramuserid] = $userid ?? $USER->id;
@@ -227,14 +214,13 @@ class audience {
         return ['1=1', []];
     }
 
-  /**
-   * Return appropriate list of where clauses and params for given audiences
-   *
-   * @param audience_model[] $audiences
-   * @param string $usertablealias
-   * @return array[] [$wheres, $params]
-   * @throws coding_exception
-   */
+    /**
+     * Return appropriate list of where clauses and params for given audiences
+     *
+     * @param audience_model[] $audiences
+     * @param string $usertablealias
+     * @return array[] [$wheres, $params]
+     */
     public static function user_audience_sql(array $audiences, string $usertablealias = 'u'): array {
         $wheres = $params = [];
 
@@ -256,12 +242,11 @@ class audience {
         return [$wheres, $params];
     }
 
-  /**
-   * Returns the list of audiences types in the system.
-   *
-   * @return array
-   * @throws coding_exception
-   */
+    /**
+     * Returns the list of audiences types in the system.
+     *
+     * @return array
+     */
     private static function get_audience_types(): array {
         $sources = [];
 
@@ -284,17 +269,16 @@ class audience {
         return $sources;
     }
 
-  /**
-   * Get all the audiences types the current user can add to, organised by categories.
-   *
-   * @return array
-   *
-   * @throws coding_exception
-   * @deprecated since Moodle 4.1 - please do not use this function any more, {@see custom_page_audience_cards_exporter}
-   */
+    /**
+     * Get all the audiences types the current user can add to, organised by categories.
+     *
+     * @return array
+     *
+     * @deprecated since Moodle 4.1 - please do not use this function any more, {@see custom_page_audience_cards_exporter}
+     */
     public static function get_all_audiences_menu_types(): array {
         debugging('The function ' . __FUNCTION__ . '() is deprecated, please do not use it any more. ' .
-            'See \'custom_page_audience_cards_exporter\' class for replacement', DEBUG_DEVELOPER);
+            'See \'custom_report_audience_cards_exporter\' class for replacement', DEBUG_DEVELOPER);
 
         $menucardsarray = [];
         $notavailablestr = get_string('notavailable', 'moodle');

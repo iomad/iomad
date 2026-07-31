@@ -15,16 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- *  page_deatils.php description here.
+ * Page details renderable for template output.
  *
- * @package
- * @copyright  local_iomadcustompage
+ * @package    local_iomadcustompage
+ * @copyright  2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace local_iomadcustompage\output;
 
-use coding_exception;
 use local_iomadcustompage\local\models\page;
 use renderable;
 use renderer_base;
@@ -32,32 +31,35 @@ use stdClass;
 use templatable;
 
 /**
- * page_deatils class
+ * Page details renderable class.
+ *
+ * @package    local_iomadcustompage
+ * @copyright  2024 BitAscii Solutions <bitascii.dev@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class page_deatils implements renderable, templatable {
-    /**
-     * @var page
-     */
-    private $page_persistent;
+class page_details implements renderable, templatable {
+    /** @var page The page persistent model. */
+    private page $page;
 
     /**
-     * constructor
-     * @param page $pagepersistent
-     */
-    public function __construct(page $pagepersistent) {
-        $this->page_persistent = $pagepersistent;
-    }
-    /**
-     * export for template
+     * Constructor.
      *
-     * @param renderer_base $output
-     * @return stdClass
-     * @throws coding_exception
+     * @param page $page The page persistent model.
      */
-    public function export_for_template(renderer_base $output) {
+    public function __construct(page $page) {
+        $this->page = $page;
+    }
+
+    /**
+     * Export data for template.
+     *
+     * @param renderer_base $output The renderer.
+     * @return stdClass Data for template.
+     */
+    public function export_for_template(renderer_base $output): stdClass {
         $data = new stdClass();
-        $data->name = $this->page_persistent->get_formatted_name();
-        $data->title = $this->page_persistent->get_formatted_title();
+        $data->name = $this->page->get_formatted_name();
+        $data->title = $this->page->get_formatted_title();
         return $data;
     }
 }

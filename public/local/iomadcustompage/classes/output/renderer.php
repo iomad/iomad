@@ -15,86 +15,95 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- *  renderer.php description here.
+ * Renderer for local_iomadcustompage plugin.
  *
- * @package     local_iomadcustompage
- * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    local_iomadcustompage
+ * @copyright  2024 BitAscii Solutions <bitascii.dev@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 declare(strict_types=1);
+
 namespace local_iomadcustompage\output;
-use coding_exception;
-use core\exception\moodle_exception;
+
 use html_writer;
-use local_iomadcustompage\local\models\page;
 use moodle_url;
 use plugin_renderer_base;
+use local_iomadcustompage\local\models\page;
 
 /**
- * renderer for local_iomadcustompage
+ * Renderer class for local_iomadcustompage plugin.
+ *
+ * @package    local_iomadcustompage
+ * @copyright  2024 BitAscii Solutions <bitascii.dev@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class renderer extends plugin_renderer_base {
-  /**
-   * Renders the New page button
-   *
-   * @return string
-   * @throws coding_exception
-   */
+    /**
+     * Renders the New Page button.
+     *
+     * @return string The HTML for the new page button.
+     */
     public function render_new_page_button(): string {
         return html_writer::tag('button', get_string('newpage', 'local_iomadcustompage'), [
-        'class' => 'btn btn-primary my-auto',
-        'data-action' => 'page-create',
+            'class' => 'btn btn-primary my-auto',
+            'data-action' => 'page-create',
         ]);
     }
 
-  /**
-   * Renders full page editor header
-   *
-   * @param page $page
-   * @return string
-   * @throws moodle_exception
-   * @throws coding_exception
-   */
+    /**
+     * Renders full page editor header.
+     *
+     * @param page $page The page model to render header for.
+     * @return string The rendered HTML.
+     */
     public function render_fullpage_editor_header(page $page): string {
         $pagename = $page->get_formatted_name();
+
+        $editdetailsbutton = html_writer::tag('button', get_string('editpagedetails', 'local_iomadcustompage'), [
+            'class' => 'btn btn-outline-secondary mr-2',
+            'data-action' => 'page-edit',
+            'data-page-id' => $page->get('id'),
+        ]);
 
         $closebutton = html_writer::link(
             new moodle_url('/local/iomadcustompage/edit.php', ['id' => $page->get('id')]),
             get_string('closebuttontitle'),
             [
-            'class' => 'btn btn-secondary',
-            'title' => get_string('closebuttontitle', 'moodle', $pagename),
-            'role' => 'button',
+                'class' => 'btn btn-secondary',
+                'title' => get_string('closebuttontitle', 'moodle', $pagename),
+                'role' => 'button',
             ]
         );
+
         $context = [
-        'title' => $pagename,
-        'closebutton' => $closebutton,
-        'output' => $this->output,
+            'title' => $pagename,
+            'closebutton' => $closebutton,
+            'output' => $this->output,
         ];
 
         return $this->render_from_template('local_iomadcustompage/editor_navbar', $context);
     }
 
     /**
-     * render page details
-     * @param $moodlepage
-     * @return bool|string
-     * @throws \moodle_exception
+     * Renders page details.
+     *
+     * @param page_details $pagedetails The page details renderable.
+     * @return string The rendered HTML.
      */
-    public function render_page_deatils($moodlepage) {
-        $data = $moodlepage->export_for_template($this);
+    public function render_page_details(page_details $pagedetails): string {
+        $data = $pagedetails->export_for_template($this);
         return $this->render_from_template('local_iomadcustompage/page_details', $data);
     }
 
     /**
-     * render page contents
-     * @param $moodlepage
-     * @return bool|string
-     * @throws \moodle_exception
+     * Renders page contents.
+     *
+     * @param page_contents $pagecontents The page contents renderable.
+     * @return string The rendered HTML.
      */
-    public function render_page_contents($moodlepage) {
-        $data = $moodlepage->export_for_template($this);
+    public function render_page_contents(page_contents $pagecontents): string {
+        $data = $pagecontents->export_for_template($this);
         return $this->render_from_template('local_iomadcustompage/page_contents', $data);
     }
 }

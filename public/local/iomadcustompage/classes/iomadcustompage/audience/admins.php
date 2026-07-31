@@ -18,16 +18,15 @@ declare(strict_types=1);
 
 namespace local_iomadcustompage\iomadcustompage\audience;
 
-use coding_exception;
 use local_iomadcustompage\local\audiences\base;
 use core_reportbuilder\local\helpers\database;
-use dml_exception;
 use MoodleQuickForm;
 
 /**
  * Administrators audience type
  *
  * @package     local_iomadcustompage
+ * @copyright   2022 Paul Holden <paulh@moodle.com>
  * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

@@ -64,17 +64,3 @@
 #page-admin-local-iomadcustompage-edit .alert-secondary {
   background-color: #e7e7e7;
 }
-
-#page-local-iomadcustompage-view #page.drawers .main-inner {
-   width: 95%;
-   max-width: 100%;
-}
-
-#page-local-iomadcustompage-view #page.drawers{
-    padding: unset;
-}
-
-#page-local-iomadcustompage-view #page.drawers .main-inner .container, .container-sm, .container-md, .container-lg{
-    width: 100%;
-    max-width: 100%;
-}

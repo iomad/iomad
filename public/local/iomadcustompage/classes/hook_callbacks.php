@@ -18,15 +18,12 @@ namespace local_iomadcustompage;
 
 use core\hook\after_config;
 use core\hook\output\before_standard_top_of_body_html_generation;
-use dml_read_exception;
-use Exception;
-use html_writer;
-use moodle_url;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
- * Allows the plugin to perform action based on hook callback.
+ * Hook callbacks for local_iomadcustompage.
+ *
+ * Restores the original custom menu items after navigation injection,
+ * preventing persistent modification of the global $CFG->custommenuitems.
  *
  * @package    local_iomadcustompage
  * @copyright  2024 BitAscii Solutions <bitascii.dev@gmail.com>
@@ -34,11 +31,16 @@ defined('MOODLE_INTERNAL') || die();
  */
 class hook_callbacks {
     /**
-     * Unset the $CFG->dbunmodifiedcustommenuitems and reset back the modified custom menu.
+     * Restore the original custom menu items after page rendering.
+     *
+     * The navigation service modifies $CFG->custommenuitems to inject custom pages.
+     * This hook restores the original value to prevent persistent modification.
      *
      * @param before_standard_top_of_body_html_generation $hook
      */
-    public static function before_standard_top_of_body_html_generation(before_standard_top_of_body_html_generation $hook): void {
+    public static function before_standard_top_of_body_html_generation(
+        before_standard_top_of_body_html_generation $hook
+    ): void {
         global $CFG;
 
         if (isset($CFG->dbunmodifiedcustommenuitems)) {
@@ -47,18 +49,27 @@ class hook_callbacks {
         }
     }
 
+    /**
+     * Register custom context class after Moodle configuration is loaded.
+     *
+     * @param after_config $hook
+     */
     public static function after_config(after_config $hook): void {
-      global $CFG;
-      require_once($CFG->dirroot . '/local/iomadcustompage/lib.php');
+        global $CFG;
 
-      $customcontextclasses = [
-        CONTEXT_CUSTOMPAGE => 'local_iomadcustompage\\custom_context\\context_iomadcustompage',
-      ];
+        if (!defined('CONTEXT_CUSTOMPAGE')) {
+            define('CONTEXT_CUSTOMPAGE', 75);
+        }
 
-      if (isset($CFG->custom_context_classes)) {
-        $CFG->custom_context_classes = $CFG->custom_context_classes + $customcontextclasses;
-      } else {
-        $CFG->custom_context_classes = $customcontextclasses;
-      }
+        $customcontextclasses = [
+            \CONTEXT_CUSTOMPAGE => 'local_iomadcustompage\\custom_context\\context_iomadcustompage',
+        ];
+
+        if (!empty($CFG->custom_context_classes)) {
+            $existing = (array)$CFG->custom_context_classes;
+            $CFG->custom_context_classes = $existing + $customcontextclasses;
+        } else {
+            $CFG->custom_context_classes = $customcontextclasses;
+        }
     }
 }

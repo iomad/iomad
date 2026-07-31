@@ -15,28 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file contains the settings for the custom page plugin.
- *
+ * Admin settings for local_iomadcustompage.
  *
  * @package    local_iomadcustompage
  * @copyright  2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use /**
- * Determines access permission for the external page in the core_admin module.
- *
- * This callback function is used to check whether a user has the appropriate permissions
- * to access a specific external page within the admin section of the application.
- *
- * The function should evaluate the user's current role, capabilities, and any other
- * contextual information required to determine access permission.
- *
- * @param stdClass $user The user object representing the currently logged-in user.
- * @param string $page The identifier for the external page being accessed.
- * @return bool Returns true if the user has access to the page, false otherwise.
- */
-  core_admin\local\externalpage\accesscallback;
+use core_admin\local\externalpage\accesscallback;
 use local_iomadcustompage\permission;
 
 defined('MOODLE_INTERNAL') || die();

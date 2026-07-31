@@ -15,30 +15,36 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- *  page_factory.php description here.
+ * Factory class for creating page wrapper instances.
  *
- * @package     local_iomadcustompage
- * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    local_iomadcustompage
+ * @copyright  2024 BitAscii Solutions <bitascii.dev@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace local_iomadcustompage\factories;
-use local_iomadcustompage\local\iomadcustompage\page;
+
 use local_iomadcustompage\local\models\page as page_persistent;
+use local_iomadcustompage\local\iomadcustompage\page;
 
 /**
- * page factory.
+ * Factory for creating page wrapper objects.
  *
- * This factory creates the page object, which is responsible for accessing the data
- * from the database and performing the logic of the page.
+ * Provides a convenient way to instantiate page wrapper objects
+ * from page IDs.
+ *
+ * @package    local_iomadcustompage
+ * @copyright  2024 BitAscii Solutions <bitascii.dev@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class page_factory {
     /**
-     * create instance of a page
-     * @param int $pageid
-     * @return page
+     * Create a page wrapper instance from a page ID.
+     *
+     * @param int $pageid The ID of the page to load.
+     * @return page The page wrapper instance.
      */
-    public static function create(int $pageid) {
+    public static function create(int $pageid): page {
         $pagepersistent = new page_persistent($pageid);
         return new page($pagepersistent);
     }

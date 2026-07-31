@@ -18,8 +18,7 @@ declare(strict_types=1);
 
 namespace local_iomadcustompage\form;
 
-use context;
-use core\exception\moodle_exception;
+use core\context;
 use core_form\dynamic_form;
 use local_iomadcustompage\local\audiences\base;
 use local_iomadcustompage\output\audience_heading_editable;
@@ -31,14 +30,13 @@ use stdClass;
  * Dynamic audience form
  *
  * @package     local_iomadcustompage
+ * @copyright   2021 David Matamoros <davidmc@moodle.com>
  * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class audience extends dynamic_form {
     /**
-     * The audience we are working with. The instance is created based on the current
-     * page and the "id" parameter in the URL. If the "id" parameter is not provided,
-     * a new instance is created.
+     * Audience we work with
      *
      * @return base
      */
@@ -47,7 +45,7 @@ class audience extends dynamic_form {
 
         $record = new stdClass();
         if (!$id) {
-            // New instance, pre-define page id and classname.
+            // New instance, pre-define report id and classname.
             $record->pageid = $this->optional_param('pageid', null, PARAM_INT);
             $record->classname = $this->optional_param('classname', null, PARAM_RAW_TRIMMED);
         }
@@ -101,7 +99,7 @@ class audience extends dynamic_form {
     /**
      * Ensure current user is able to use this form
      *
-     * A {@see \local_iomadcustompage\page_access_exception} will be thrown if they can't
+     * A {@see \core_reportbuilder\report_access_exception} will be thrown if they can't
      */
     protected function check_access_for_dynamic_submission(): void {
         $audience = $this->get_audience();
@@ -169,12 +167,11 @@ class audience extends dynamic_form {
         $this->set_data($formdata);
     }
 
-  /**
-   * Page url
-   *
-   * @return moodle_url
-   * @throws moodle_exception
-   */
+    /**
+     * Page url
+     *
+     * @return moodle_url
+     */
     protected function get_page_url_for_dynamic_submission(): moodle_url {
         return new moodle_url('/local/iomadcustompage/edit.php', ['id' => $this->optional_param('pageid', 0, PARAM_INT)]);
     }

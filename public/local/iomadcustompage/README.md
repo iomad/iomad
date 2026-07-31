@@ -1,46 +1,106 @@
-# IOMAD
+# IOMAD Custom Pages (local_iomadcustompage)
 
-<p align="center"><a href="https://www.iomad.org" target="_blank" title="IOMAD Website">
-  <img src="https://avatars.githubusercontent.com/u/5493428?v=4" alt="The IOMAD Logo">
-</a></p>
+A Moodle plugin for creating and managing custom pages with block support, hierarchical organisation, audience-based access control, and primary navigation integration.
 
-The local IOMAD custom pages plugin is a fork of the local_custompage plugin developed by BitAscii Solutions with additional
-functionality to limit the audience by company.
+## Features
 
-Part of the IOMAD suite of plugins, enhancing the core Moodle feature set with multi-tenant functionalities.
+- **Hierarchical Page Management**: Create container and content pages with 2-level nesting
+- **Block Support**: Full Moodle block support via custom context (CONTEXT_CUSTOMPAGE)
+- **Audience-Based Access Control**: 5 audience types control who can view each page
+  - All users (authenticated)
+  - Guests
+  - Administrators
+  - System role holders
+  - Manually selected users
+- **Primary Navigation Integration**: Published pages appear in the site's primary navigation menu
+- **Inline Editing**: Edit page names and titles directly from the management interface
+- **Drag-and-Drop Ordering**: Reorder pages with move up/down actions and vancode-based sorting
+- **Report Builder Integration**: Two system reports — pages list and page access list
+- **Privacy API (GDPR)**: Full compliance with Moodle's Privacy API for user data export/deletion
+- **Event System**: 7 event classes for page and audience lifecycle tracking
+- **Moodle 4.3+ Hooks**: Modern hook-based navigation integration
 
-IOMAD plugins are interdependent, so all of them need to be installed. IOMAD also requires Moodle core code changes to 
-support the multi-tenancy functions. Patches for this, and installation instructions, can be found here: 
-https://github.com/iomad/moodle-core_patch
+## Requirements
 
-More information on the IOMAD suite of plugins is available in the description of the main plugin: https://moodle.org/plugins/local_iomad
+- Moodle 4.5 or later
+- PHP 8.1 or later
 
-## Installing via uploaded ZIP file ##
+## Installation
 
-Log in to your Moodle site as an admin and go to _Site administration > Plugins > Install plugins_.
-Upload the ZIP file with the plugin code. You should only be prompted to add extra details if your plugin type is not automatically detected.
-Check the plugin validation report and finish the installation.
+### Via uploaded ZIP file
 
-## Installing manually ##
+1. Log in to your Moodle site as an admin and go to _Site administration > Plugins > Install plugins_.
+2. Upload the ZIP file with the plugin code.
+3. Check the plugin validation report and finish the installation.
 
-The plugin can be also installed by adding the contents of this directory to
+### Manually
 
-    {your/moodle/dirroot}/mod/iomadcertificate
+1. Copy the `iomadcustompage` folder to `local/iomadcustompage` in your Moodle installation.
+2. Navigate to _Site administration > Notifications_ to complete the installation.
 
-Afterwards, log in to your Moodle site as an admin and go to _Site administration > Notifications_ to complete the installation.
+Or from the command line:
 
-Alternatively, you can run
+    php admin/cli/upgrade.php
 
-    $ php admin/cli/upgrade.php
+## Configuration
 
-to complete the installation from the command line.
+After installation, go to _Site administration > IOMAD Custom Pages_ to manage pages.
 
-## License ##
+### Creating Pages
 
-2010+ e-Learn Design Ltd. https://www.e-learndesign.co.uk
-IOMAD is a registered trademark in the UK belonging to Derick Turner
+1. Click **Create new page** from the management interface
+2. Choose page type: **Container** (holds child pages) or **Content** (displays blocks)
+3. Set page name and title
+4. Configure audience access rules
 
-2024 BitAscii Solutions <bitascii.dev@gamil.com>
+### Page Types
+
+| Type | Description |
+|------|-------------|
+| Container | Groups child pages under a navigation heading |
+| Content | Displays content via Moodle blocks |
+
+### Audience Types
+
+| Audience | Description |
+|----------|-------------|
+| All Users | Any authenticated user can view the page |
+| Guests | Guest users can view the page |
+| Admins | Only site administrators can view the page |
+| System Role | Users with a specific system-level role can view the page |
+| Manual | Individually selected users can view the page |
+
+## Capabilities
+
+| Capability | Type | Description |
+|-----------|------|-------------|
+| `local/iomadcustompage:create` | Write | Create new custom pages |
+| `local/iomadcustompage:editall` | Write | Edit all custom pages |
+| `local/iomadcustompage:edit` | Write | Edit own custom pages |
+| `local/iomadcustompage:view` | Read | View custom pages |
+
+## Web Services
+
+The plugin provides 5 AJAX web services for the management interface:
+
+- Delete audience
+- Delete page
+- Move page up
+- Move page down
+- Update sort order
+
+## Privacy
+
+This plugin stores personal data in the following tables:
+
+- `local_iomadcustompage_audience`: Tracks audience membership for access control
+- `local_iomadcustompages`: Records page creator and modifier information
+
+Users can request export or deletion of their data through Moodle's privacy tools.
+
+## License
+
+2024 BitAscii Solutions <bitascii.dev@gmail.com>
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
@@ -49,7 +109,7 @@ version.
 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-this program.  If not, see <https://www.gnu.org/licenses/>.
+this program. If not, see <https://www.gnu.org/licenses/>.

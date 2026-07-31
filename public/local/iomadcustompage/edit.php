@@ -15,11 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Edit page for managing custom pages, including content, details, audience and access settings.
+ * Edit a custom page.
  *
- * @package     local_iomadcustompage
- * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    local_iomadcustompage
+ * @copyright  2024 BitAscii Solutions <bitascii.dev@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 declare(strict_types=1);
@@ -37,39 +37,43 @@ require_once("{$CFG->libdir}/adminlib.php");
 
 $pageid = required_param('id', PARAM_INT);
 
+admin_externalpage_setup(
+    'manageiomadcustompages',
+    null,
+    ['id' => $pageid],
+    new moodle_url('/local/iomadcustompage/edit.php'),
+    ['pagelayout' => 'admin', 'nosearch' => true]
+);
+
 $page = manager::get_page_from_id($pageid);
 permission::require_can_edit_page($page);
-
-admin_externalpage_setup('manageiomadcustompages',
-        null,
-        ['id' => $pageid],
-        new moodle_url('/local/iomadcustompage/edit.php'),
-        ['pagelayout' => 'admin', 'nosearch' => true]);
 
 $PAGE->set_context($page->get_context());
 $PAGE->navbar->add($page->get_formatted_name(), $PAGE->url);
 $PAGE->set_secondary_navigation(false);
 $PAGE->set_heading($page->get_formatted_name());
 
-/** @var \local_iomadcustompage\output\renderer $renderer */
-$renderer = $PAGE->get_renderer('local_iomadcustompage');
-
 $pagename = $page->get_formatted_name();
 $PAGE->set_title($pagename);
 
-// Log this page view.
+// IOMAD - log this page view.
 block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 echo $OUTPUT->header();
 
 // Add dynamic tabs.
 $tabdata = ['pageid' => $pageid];
-$tabs = [
-  new content($tabdata),
-  new details($tabdata),
-  new audience($tabdata),
-  new access($tabdata),
-];
+$tabs = [];
+
+if (!$page->is_container()) {
+    $tabs[] = new content($tabdata);
+}
+
+$tabs = array_merge($tabs, [
+    new details($tabdata),
+    new audience($tabdata),
+    new access($tabdata),
+]);
 
 echo $OUTPUT->render_from_template(
     'core/dynamic_tabs',

@@ -18,22 +18,19 @@ declare(strict_types=1);
 
 namespace local_iomadcustompage\output\dynamictabs;
 
-use coding_exception;
-use context_system;
+use core\context\system;
 use core\output\dynamic_tabs\base;
-use core_reportbuilder\exception\source_invalid_exception;
-use local_iomadcustompage\local\models\page;
-use local_iomadcustompage\reportbuilder\local\systemreports\page_access_list;
-use local_iomadcustompage\permission;
 use core_reportbuilder\system_report_factory;
-use dml_exception;
-use local_iomadcustompage\custom_context\context_iomadcustompage;
+use local_iomadcustompage\local\models\page;
+use local_iomadcustompage\permission;
+use local_iomadcustompage\reportbuilder\local\systemreports\page_access_list;
 use renderer_base;
 
 /**
  * Access dynamic tab
  *
  * @package     local_iomadcustompage
+ * @copyright   2021 David Matamoros <davidmc@moodle.com>
  * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -47,7 +44,7 @@ class access extends base {
     public function export_for_template(renderer_base $output): array {
         $report = system_report_factory::create(
             page_access_list::class,
-            context_system::instance(),
+            \core\context\system::instance(),
             'local_iomadcustompage',
             '',
             (int)$this->data['pageid'],

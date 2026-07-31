@@ -14,7 +14,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * IOMAD Custom pages management
+ * Page builder pages list management
  *
  * @module      local_iomadcustompage/pages_list
  * @copyright   2021 David Matamoros <davidmc@moodle.com>
@@ -31,7 +31,7 @@ import {get_string as getString} from 'core/str';
 import {add as addToast} from 'core/toast';
 import * as reportEvents from 'core_reportbuilder/local/events';
 import * as pageSelectors from 'local_iomadcustompage/local/selectors';
-import {deletePage} from 'local_iomadcustompage/local/repository/pages';
+import {deletePage, movePageUp, movePageDown} from 'local_iomadcustompage/local/repository/pages';
 import {createPageModal} from 'local_iomadcustompage/local/repository/modals';
 
 /**
@@ -45,6 +45,10 @@ export const init = () => {
         'newpage',
         'pagedeleted',
         'pageupdated',
+        'moveup',
+        'movedown',
+        'sortorderupdated',
+        'errorsortingpages',
     ]);
 
     prefetchStrings('core', [
@@ -115,5 +119,56 @@ export const init = () => {
                     .catch(Notification.exception);
             }).catch(Notification.exception);
         }
+
+        const pageMoveUp = event.target.closest('[data-action="page-move-up"]');
+        if (pageMoveUp) {
+            event.preventDefault();
+            handlePageMove(pageMoveUp.dataset.pageId, 'up');
+        }
+
+        const pageMoveDown = event.target.closest('[data-action="page-move-down"]');
+        if (pageMoveDown) {
+            event.preventDefault();
+            handlePageMove(pageMoveDown.dataset.pageId, 'down');
+        }
     });
+
+    /**
+     * Handle page move up/down operations
+     *
+     * @param {string} pageId The page ID to move
+     * @param {string} direction Either 'up' or 'down'
+     */
+    const handlePageMove = (pageId, direction) => {
+        const pendingPromise = new Pending(`local_iomadcustompage/pages:move-${direction}`);
+        const tableElement = window.document.querySelector('div.reportbuilder-report');
+
+        const moveFunction = direction === 'up' ? movePageUp : movePageDown;
+        const successMessage = direction === 'up' ? 'sortorderupdated' : 'sortorderupdated';
+
+        moveFunction(parseInt(pageId))
+            .then((result) => {
+                if (result.success) {
+                    return getString(successMessage, 'local_iomadcustompage');
+                } else {
+                    throw new Error(result.message);
+                }
+            })
+            .then(addToast)
+            .then(() => {
+                dispatchEvent(reportEvents.tableReload, {preservePagination: true}, tableElement);
+                return pendingPromise.resolve();
+            })
+            .catch((error) => {
+                getString('errorsortingpages', 'local_iomadcustompage')
+                    .then((errorMsg) => {
+                        Notification.addNotification({
+                            type: 'error',
+                            message: errorMsg + ': ' + error.message
+                        });
+                    })
+                    .catch(Notification.exception);
+                pendingPromise.resolve();
+            });
+    };
 };

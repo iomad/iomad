@@ -18,10 +18,7 @@ declare(strict_types=1);
 
 namespace local_iomadcustompage\iomadcustompage\audience;
 
-use coding_exception;
 use core_reportbuilder\local\helpers\database;
-use dml_exception;
-use local_iomad\iomad;
 use local_iomadcustompage\local\audiences\base;
 use MoodleQuickForm;
 
@@ -29,28 +26,26 @@ use MoodleQuickForm;
  * Administrators audience type
  *
  * @package     local_iomadcustompage
+ * @copyright   2022 Paul Holden <paulh@moodle.com>
  * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class guests extends base {
-  /**
-   * Add audience elements to the current form
-   *
-   * @param MoodleQuickForm $mform
-   * @throws coding_exception
-   */
+    /**
+     * Add audience elements to the current form
+     *
+     * @param MoodleQuickForm $mform
+     */
     public function get_config_form(MoodleQuickForm $mform): void {
         $mform->addElement('static', 'guest', get_string('guest', 'moodle'));
     }
 
-  /**
-   * Return SQL to retrieve users that match this audience
-   *
-   * @param string $usertablealias
-   * @return array [$join, $select, $params]
-   * @throws dml_exception
-   * @throws coding_exception
-   */
+    /**
+     * Return SQL to retrieve users that match this audience
+     *
+     * @param string $usertablealias
+     * @return array [$join, $select, $params]
+     */
     public function get_sql(string $usertablealias): array {
         global $CFG, $DB;
 
@@ -60,12 +55,11 @@ class guests extends base {
         return ['', "{$usertablealias}.id {$select}", $params];
     }
 
-  /**
-   * Return name of this audience
-   *
-   * @return string
-   * @throws coding_exception
-   */
+    /**
+     * Return name of this audience
+     *
+     * @return string
+     */
     public function get_name(): string {
         return get_string('nonauthenticatedusers', 'local_iomadcustompage');
     }
@@ -99,12 +93,14 @@ class guests extends base {
     public function user_can_add(): bool {
         return is_siteadmin();
     }
+
     /**
-     * if the guest access audience available
+     * Determine whether the guests audience is available on this site.
+     *
      * @return bool
      */
     public function is_available(): bool {
         global $CFG;
-        return (bool) iomad::get_config('', 'guestloginbutton');
+        return (bool)$CFG->guestloginbutton;
     }
 }

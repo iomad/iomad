@@ -18,28 +18,17 @@ declare(strict_types=1);
 
 namespace local_iomadcustompage\output;
 
-use coding_exception;
-use core\invalid_persistent_exception;
 use core\output\inplace_editable;
-use core_external;
-use core_external\restricted_context_exception;
 use html_writer;
 use local_iomadcustompage\local\models\page;
 use local_iomadcustompage\permission;
-use invalid_parameter_exception;
-// use local_custompage\page_access_exception;
-use moodle_exception;
 use moodle_url;
-
-defined('MOODLE_INTERNAL') || die;
-
-global $CFG;
-require_once("{$CFG->libdir}/external/externallib.php");
 
 /**
  * Page title editable component
  *
  * @package     local_iomadcustompage
+ * @copyright   2021 Paul Holden <paulh@moodle.com>
  * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -47,11 +36,9 @@ class page_title_editable extends inplace_editable {
     /**
      * Class constructor
      *
-     * @param int $pageid
+     * @param int $page
      * @param page|null $page The page persistent, note that in addition to id/name properties being present we also
      *      require the following to be correctly set in order to perform permission checks: contextid/usercreated
-     * @throws \coding_exception
-     * @throws \moodle_exception
      */
     public function __construct(int $pageid, ?page $page = null) {
         if ($page === null) {
@@ -72,30 +59,28 @@ class page_title_editable extends inplace_editable {
             $page->get('id'),
             $editable,
             $displayvalue,
-            $page->get('title'),
+            strip_tags($displayvalue ?? ''),
             get_string('editpagetitle', 'local_iomadcustompage')
         );
     }
 
     /**
-     * Update page persistent and return self, called from inplace_editable callback
+     * Update report persistent and return self, called from inplace_editable callback
      *
-     * @param int $pageid
+     * @param int $reportid
      * @param string $value
      * @return self
      */
     public static function update(int $pageid, string $value): self {
         $page = new page($pageid);
 
-        core_external::validate_context($page->get_context());
+        \core_external\external_api::validate_context($page->get_context());
         permission::require_can_edit_page($page);
 
         $value = trim(clean_param($value, PARAM_TEXT));
-        if ($value !== '') {
-            $page
-                ->set('title', $value)
-                ->update();
-        }
+        $page
+            ->set('title', $value === '' ? null : $value)
+            ->update();
 
         return new self(0, $page);
     }

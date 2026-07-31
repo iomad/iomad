@@ -19,21 +19,18 @@ declare(strict_types=1);
 namespace local_iomadcustompage\reportbuilder\local\systemreports;
 
 use core_reportbuilder\local\entities\user;
-use core_reportbuilder\system_report;
-use core_user\fields;
 use local_iomadcustompage\local\helpers\audience as audience_helper;
 use local_iomadcustompage\local\models\audience;
 use local_iomadcustompage\local\models\page;
 use local_iomadcustompage\permission;
+use core_reportbuilder\system_report;
+use core_user\fields;
 
 /**
- * Provides functionality for generating a report of users with access to a specific page.
- *
- * This class extends the `system_report` class and is designed to retrieve and display
- * a list of users allowed to access a specific page. It incorporates filters and sorting
- * to handle user-related data efficiently, including support for identity fields.
+ * Report access list
  *
  * @package     local_iomadcustompage
+ * @copyright   2021 David Matamoros <davidmc@moodle.com>
  * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -48,7 +45,7 @@ class page_access_list extends system_report {
         $this->set_main_table('user', $userentityalias);
         $this->add_entity($userentity);
 
-        // Find users allowed to view the page through the page audiences.
+        // Find users allowed to view the report thru the report audiences.
         $audiences = audience::get_records(['pageid' => $this->get_parameter('id', 0, PARAM_INT)]);
         [$wheres, $params] = audience_helper::user_audience_sql($audiences, $userentityalias);
 
@@ -103,7 +100,7 @@ class page_access_list extends system_report {
         $this->add_filter($userentity->get_filter('fullname'));
 
         // Include all identity field filters.
-        $identityfields = fields::for_identity($this->get_context())->get_required_fields();
+        $identityfields = fields::for_identity($this->get_context(), true)->get_required_fields();
         foreach ($identityfields as $identityfield) {
             $this->add_filter($userentity->get_identity_filter($identityfield));
         }

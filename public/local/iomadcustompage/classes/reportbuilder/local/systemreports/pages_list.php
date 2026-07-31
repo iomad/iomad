@@ -18,27 +18,27 @@ declare(strict_types=1);
 
 namespace local_iomadcustompage\reportbuilder\local\systemreports;
 
-
-use core_reportbuilder\local\entities\user;
+use coding_exception;
 use core_reportbuilder\local\helpers\format;
+use local_iomadcustompage\local\models\page;
+use local_iomadcustompage\reportbuilder\local\entities\iomadcustompages;
+use core_reportbuilder\local\entities\user;
 use core_reportbuilder\local\report\action;
 use core_reportbuilder\local\report\column;
-use core_reportbuilder\system_report;
+use html_writer;
 use lang_string;
-use local_iomadcustompage\local\helpers\audience;
-use local_iomadcustompage\local\models\page;
-use local_iomadcustompage\output\page_name_editable;
-use local_iomadcustompage\output\page_title_editable;
-use local_iomadcustompage\permission;
-use local_iomadcustompage\reportbuilder\local\entities\iomadcustompages;
 use moodle_url;
 use pix_icon;
+use core_reportbuilder\system_report;
 use stdClass;
+use local_iomadcustompage\local\helpers\audience;
+use local_iomadcustompage\permission;
 
 /**
  * Pages list
  *
  * @package     local_iomadcustompage
+ * @copyright   2021 David Matamoros <davidmc@moodle.com>
  * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -55,11 +55,7 @@ class pages_list extends system_report {
         $this->add_entity($iomadcustompageentity);
 
         // Select fields required for actions, permission checks, and row class callbacks.
-        $this->add_base_fields("{$entitymainalias}.id,
-                                {$entitymainalias}.name,
-                                {$entitymainalias}.title,
-                                {$entitymainalias}.usercreated,
-                                {$entitymainalias}.usermodified, {$entitymainalias}.contextid");
+        $this->add_base_fields("{$entitymainalias}.id");
 
         // Limit the returned list to those pages the current user can access.
         [$where, $params] = audience::user_pages_list_access_sql($entitymainalias);
@@ -90,30 +86,24 @@ class pages_list extends system_report {
 
     /**
      * Add columns to report
+     *
+     * @throws coding_exception
      */
     protected function add_columns(iomadcustompages $iomadcustompageentity): void {
 
         $tablealias = $this->get_main_table_alias();
-        // Page name column.
-        $this->add_column((new column(
-            'name',
-            new lang_string('name'),
-            $iomadcustompageentity->get_entity_name()
-        ))
-            ->set_type(column::TYPE_TEXT)
-            // We need enough fields to re-create the persistent and pass to the editable component.
-            ->add_fields(implode(', ', [
-                "{$tablealias}.id",
-                "{$tablealias}.name",
-                "{$tablealias}.contextid",
-            ]))
-            ->set_is_sortable(true, ["{$tablealias}.name"])
-            ->add_callback(static function (string $value, stdClass $page): string {
-                global $PAGE;
-                $editable = new page_name_editable(0, new page(0, $page));
-                return $editable->render($PAGE->get_renderer('core'));
 
-            }));
+        $this->add_column_from_entity('iomadcustompages:name')
+            ->set_is_sortable(false)
+            ->add_callback(static function (?string $value, stdClass $page): string {
+                $pageobj = new page(0, $page);
+                $editable = permission::can_edit_page($pageobj);
+                $url = $editable
+                    ? new moodle_url('/local/iomadcustompage/edit.php', ['id' => $page->id])
+                    : new moodle_url('/local/iomadcustompage/view.php', ['id' => $page->id]);
+                $displayname = $pageobj->get_formatted_name_with_indent();
+                return html_writer::link($url, $displayname);
+            });
 
         $this->add_column((new column(
             'title',
@@ -121,17 +111,15 @@ class pages_list extends system_report {
             $iomadcustompageentity->get_entity_name()
         ))
         ->set_type(column::TYPE_TEXT)
-        // We need enough fields to re-create the persistent and pass to the editable component.
         ->add_fields(implode(', ', [
           "{$tablealias}.id",
           "{$tablealias}.title",
           "{$tablealias}.contextid",
         ]))
-        ->set_is_sortable(true, ["{$tablealias}.title"])
+        ->set_is_sortable(false, ["{$tablealias}.title"])
         ->add_callback(static function (string $value, stdClass $page): string {
-            global $PAGE;
-            $editable = new page_title_editable(0, new page(0, $page));
-            return $editable->render($PAGE->get_renderer('core'));
+            $pageobj = new page(0, $page);
+            return $pageobj->get_formatted_title();
         }));
 
         // Time modified column.
@@ -142,12 +130,15 @@ class pages_list extends system_report {
         ))
             ->set_type(column::TYPE_TIMESTAMP)
             ->add_fields("{$tablealias}.timemodified")
-            ->set_is_sortable(true)
+            ->set_is_sortable(false)
             ->add_callback([format::class, 'userdate']));
 
-        // The user who modified the page.
+        // The user who modified the report.
         $this->add_column_from_entity('user:fullname')
-            ->set_title(new lang_string('usermodified', 'reportbuilder'));
+            ->set_title(new lang_string('usermodified', 'reportbuilder'))
+            ->set_is_sortable(false);
+
+        $this->set_initial_sort_column('iomadcustompages:name', SORT_ASC);
     }
 
     /**
@@ -199,8 +190,32 @@ class pages_list extends system_report {
             new lang_string('viewpage', 'local_iomadcustompage')
         ))
             ->add_callback(function (stdClass $row): bool {
-                // We check this only to give the action to editors, because normal users can just click on the page name.
+                // We check this only to give the action to editors, because normal users can just click on the report name.
                 return permission::can_view_page(new page(0, $row));
+            }));
+
+        // Move up action.
+        $this->add_action((new action(
+            new moodle_url('#'),
+            new pix_icon('t/up', ''),
+            ['data-action' => 'page-move-up', 'data-page-id' => ':id'],
+            false,
+            new lang_string('moveup', 'local_iomadcustompage')
+        ))
+            ->add_callback(function (stdClass $row): bool {
+                return permission::can_edit_page(new page(0, $row));
+            }));
+
+        // Move down action.
+        $this->add_action((new action(
+            new moodle_url('#'),
+            new pix_icon('t/down', ''),
+            ['data-action' => 'page-move-down', 'data-page-id' => ':id'],
+            false,
+            new lang_string('movedown', 'local_iomadcustompage')
+        ))
+            ->add_callback(function (stdClass $row): bool {
+                return permission::can_edit_page(new page(0, $row));
             }));
 
         // Delete action.
@@ -217,7 +232,7 @@ class pages_list extends system_report {
                 $page = new page(0, $row);
                 $row->name = $page->get_formatted_name();
 
-                // We don't check whether page is valid to ensure editor can always delete them.
+                // We don't check whether report is valid to ensure editor can always delete them.
                 return permission::can_edit_page($page);
             }));
     }

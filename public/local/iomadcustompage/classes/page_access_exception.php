@@ -21,17 +21,17 @@ namespace local_iomadcustompage;
 use moodle_exception;
 
 /**
- * User cannot access page exception
+ * Exception thrown when a user cannot access a custom page
  *
  * @package     local_iomadcustompage
- * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
+ * @copyright   2021 Paul Holden <paulh@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class page_access_exception extends moodle_exception {
     /**
-     * Constructor
+     * Constructor for the page access exception
      *
-     * @param string $errorcode
+     * @param string $errorcode The language string identifier for the error message
      */
     public function __construct(string $errorcode = 'errorpageview') {
         parent::__construct($errorcode, 'local_iomadcustompage');

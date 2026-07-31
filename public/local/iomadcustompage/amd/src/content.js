@@ -14,9 +14,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * IOMAD Custom page content editor
+ * IOMAD Custom pages editor
  *
- * @module      local_iomadcustompage/content
+ * @module      local_iomadcustompage/editor
  * @copyright   2021 David Matamoros <davidmc@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

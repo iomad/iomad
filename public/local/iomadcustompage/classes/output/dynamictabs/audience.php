@@ -18,7 +18,6 @@ declare(strict_types=1);
 
 namespace local_iomadcustompage\output\dynamictabs;
 
-use coding_exception;
 use core\output\dynamic_tabs\base;
 use local_iomadcustompage\external\custom_page_audience_cards_exporter;
 use local_iomadcustompage\local\helpers\audience as audience_helper;
@@ -31,17 +30,17 @@ use renderer_base;
  * Audience dynamic tab
  *
  * @package     local_iomadcustompage
+ * @copyright   2021 David Matamoros <davidmc@moodle.com>
  * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class audience extends base {
-  /**
-   * Export this for use in a mustache template context.
-   *
-   * @param renderer_base $output
-   * @return array
-   * @throws coding_exception
-   */
+    /**
+     * Export this for use in a mustache template context.
+     *
+     * @param renderer_base $output
+     * @return array
+     */
     public function export_for_template(renderer_base $output): array {
         // Get all the audiences types to populate the left menu.
         $menucardsexporter = new custom_page_audience_cards_exporter(null);
@@ -62,12 +61,11 @@ class audience extends base {
         return $data;
     }
 
-  /**
-   * The label to be displayed on the tab
-   *
-   * @return string
-   * @throws coding_exception
-   */
+    /**
+     * The label to be displayed on the tab
+     *
+     * @return string
+     */
     public function get_tab_label(): string {
         return get_string('audience', 'core_reportbuilder');
     }
@@ -91,12 +89,11 @@ class audience extends base {
         return 'local_iomadcustompage/local/dynamictabs/audience';
     }
 
-  /**
-   * Get all current audiences instances for this page.
-   *
-   * @return array
-   * @throws coding_exception
-   */
+    /**
+     * Get all current audiences instances for this page.
+     *
+     * @return array
+     */
     private function get_all_page_audiences(): array {
         global $PAGE;
 

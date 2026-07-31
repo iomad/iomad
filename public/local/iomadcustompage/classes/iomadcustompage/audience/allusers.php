@@ -18,17 +18,16 @@ declare(strict_types=1);
 
 namespace local_iomadcustompage\iomadcustompage\audience;
 
-use coding_exception;
-use context_system;
+use core\context\system;
 use local_iomadcustompage\local\audiences\base;
 use core_reportbuilder\local\helpers\database;
-use dml_exception;
 use MoodleQuickForm;
 
 /**
  * The backend class for All users audience type
  *
  * @package     local_iomadcustompage
+ * @copyright   2021 David Matamoros <davidmc@moodle.com>
  * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -43,7 +42,7 @@ class allusers extends base {
     }
 
     /**
-     * Helps to build SQL to retrieve users that matches the current page audience
+     * Helps to build SQL to retrieve users that matches the current report audience
      *
      * @param string $usertablealias
      * @return array array of three elements [$join, $where, $params]
@@ -80,7 +79,7 @@ class allusers extends base {
      * @return bool
      */
     public function user_can_add(): bool {
-        return has_capability('moodle/user:viewalldetails', context_system::instance());
+        return has_capability('moodle/user:viewalldetails', \core\context\system::instance());
     }
 
     /**
@@ -89,6 +88,6 @@ class allusers extends base {
      * @return bool
      */
     public function user_can_edit(): bool {
-        return has_capability('moodle/user:viewalldetails', context_system::instance());
+        return has_capability('moodle/user:viewalldetails', \core\context\system::instance());
     }
 }

@@ -15,15 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Defines capabilities for the local_iomadcustompage plugin.
- * This file specifies access control permissions and capabilities for managing custom pages.
+ * Capability definitions for local_iomadcustompage.
  *
- * @package     local_iomadcustompage
- * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    local_iomadcustompage
+ * @copyright  2024 BitAscii Solutions <bitascii.dev@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
+
+require_once(__DIR__ . '/../lib.php');
 
 $capabilities = [
   'local/iomadcustompage:edit' => [
@@ -44,6 +45,13 @@ $capabilities = [
     'captype' => 'read',
     'riskbitmask' => RISK_PERSONAL,
     'contextlevel' => CONTEXT_CUSTOMPAGE,
+    'archetypes' => [
+    ],
+  ],
+  'local/iomadcustompage:create' => [
+    'captype' => 'write',
+    'riskbitmask' => RISK_SPAM | RISK_DATALOSS | RISK_XSS,
+    'contextlevel' => CONTEXT_SYSTEM,
     'archetypes' => [
     ],
   ],

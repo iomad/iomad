@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Hook callbacks for Custom Pages
+ * Hook callbacks registration for local_iomadcustompage.
  *
  * @package    local_iomadcustompage
  * @copyright  2024 BitAscii Solutions <bitascii.dev@gmail.com>
@@ -31,7 +31,8 @@ $callbacks = [
         'priority' => 0,
     ],
     [
-      'hook' => \core\hook\after_config::class,
-      'callback' => [\local_iomadcustompage\hook_callbacks::class, 'after_config'],
+        'hook' => \core\hook\after_config::class,
+        'callback' => \local_iomadcustompage\hook_callbacks::class . '::after_config',
+        'priority' => 0,
     ],
 ];

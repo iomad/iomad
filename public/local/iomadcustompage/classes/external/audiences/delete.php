@@ -18,27 +18,19 @@ declare(strict_types=1);
 
 namespace local_iomadcustompage\external\audiences;
 
-use coding_exception;
-use core_external\restricted_context_exception;
 use local_iomadcustompage\local\audiences\base;
-use external_api;
-use external_function_parameters;
-use external_value;
-use invalid_parameter_exception;
+use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_value;
 use local_iomadcustompage\manager;
 use local_iomadcustompage\permission;
 
-defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
-require_once("{$CFG->libdir}/externallib.php");
-
 /**
- * External method for deleting a page audience
+ * External method for deleting a custom page audience.
  *
- * @package     local_iomadcustompage
- * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    local_iomadcustompage
+ * @copyright  2024 BitAscii Solutions <bitascii.dev@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class delete extends external_api {
     /**
@@ -56,7 +48,7 @@ class delete extends external_api {
     }
 
     /**
-     * External function to delete a page audience instance.
+     * External function to delete a report audience instance.
      *
      * @param int $pageid
      * @param int $instanceid
@@ -92,6 +84,6 @@ class delete extends external_api {
      * @return external_value
      */
     public static function execute_returns(): external_value {
-        return new external_value(PARAM_BOOL, '', VALUE_REQUIRED);
+        return new external_value(PARAM_BOOL, 'True if audience was successfully deleted, false otherwise', VALUE_REQUIRED);
     }
 }

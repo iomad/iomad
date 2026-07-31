@@ -16,7 +16,7 @@
 /**
  * Module to handle report AJAX requests
  *
- * @module      local_iomadcustompage/local/repository/pages
+ * @module      local_iomadcustompage/local/repository/reports
  * @copyright   2021 Paul Holden <paulh@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -33,6 +33,55 @@ export const deletePage = pageId => {
     const request = {
         methodname: 'local_iomadcustompage_page_delete',
         args: {pageid: pageId}
+    };
+
+    return Ajax.call([request])[0];
+};
+
+/**
+ * Move page up in sort order
+ *
+ * @param {Number} pageId
+ * @return {Promise}
+ */
+export const movePageUp = pageId => {
+    const request = {
+        methodname: 'local_iomadcustompage_page_move_up',
+        args: {pageid: pageId}
+    };
+
+    return Ajax.call([request])[0];
+};
+
+/**
+ * Move page down in sort order
+ *
+ * @param {Number} pageId
+ * @return {Promise}
+ */
+export const movePageDown = pageId => {
+    const request = {
+        methodname: 'local_iomadcustompage_page_move_down',
+        args: {pageid: pageId}
+    };
+
+    return Ajax.call([request])[0];
+};
+
+/**
+ * Update sort order of pages
+ *
+ * @param {Array} pageIds Array of page IDs in desired order
+ * @param {Number} parentId Parent page ID (0 for root pages)
+ * @return {Promise}
+ */
+export const updateSortOrder = (pageIds, parentId = 0) => {
+    const request = {
+        methodname: 'local_iomadcustompage_page_update_sort_order',
+        args: {
+            pageids: pageIds,
+            parentid: parentId
+        }
     };
 
     return Ajax.call([request])[0];

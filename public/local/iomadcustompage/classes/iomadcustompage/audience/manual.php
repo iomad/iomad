@@ -18,18 +18,17 @@ declare(strict_types=1);
 
 namespace local_iomadcustompage\iomadcustompage\audience;
 
-use coding_exception;
-use context_system;
+use core\context\system;
 use local_iomadcustompage\local\audiences\base;
 use core_reportbuilder\local\helpers\database;
 use core_user;
-use dml_exception;
 use MoodleQuickForm;
 
 /**
  * The backend class for Manually added users audience type
  *
  * @package     local_iomadcustompage
+ * @copyright   2021 David Matamoros <davidmc@moodle.com>
  * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -46,7 +45,7 @@ class manual extends base {
             'multiple' => true,
             'valuehtmlcallback' => function ($userid) {
                 $user = core_user::get_user($userid);
-                return fullname($user, has_capability('moodle/site:viewfullnames', context_system::instance()));
+                return fullname($user, has_capability('moodle/site:viewfullnames', \core\context\system::instance()));
             },
         ];
 
@@ -55,7 +54,7 @@ class manual extends base {
     }
 
     /**
-     * Helps to build SQL to retrieve users that matches the current page audience
+     * Helps to build SQL to retrieve users that matches the current report audience
      *
      * @param string $usertablealias
      * @return array array of three elements [$join, $where, $params]
@@ -63,7 +62,7 @@ class manual extends base {
     public function get_sql(string $usertablealias): array {
         global $DB;
 
-        $users = $this->get_configdata()['users'];
+        $users = $this->get_configdata()['users'] ?? [];
         $prefix = database::generate_param_name() . '_';
         [$insql, $inparams] = $DB->get_in_or_equal($users, SQL_PARAMS_NAMED, $prefix);
 
@@ -87,11 +86,11 @@ class manual extends base {
     public function get_description(): string {
         global $DB;
 
-        $canviewfullnames = has_capability('moodle/site:viewfullnames', context_system::instance());
+        $canviewfullnames = has_capability('moodle/site:viewfullnames', \core\context\system::instance());
 
         $userslist = [];
 
-        $userids = $this->get_configdata()['users'];
+        $userids = $this->get_configdata()['users'] ?? [];
         [$sort] = users_order_by_sql();
         $users = $DB->get_records_list('user', 'id', $userids, $sort);
         foreach ($users as $user) {
@@ -107,7 +106,7 @@ class manual extends base {
      * @return bool
      */
     public function user_can_add(): bool {
-        return has_capability('moodle/user:viewalldetails', context_system::instance());
+        return has_capability('moodle/user:viewalldetails', \core\context\system::instance());
     }
 
     /**
@@ -116,6 +115,6 @@ class manual extends base {
      * @return bool
      */
     public function user_can_edit(): bool {
-        return has_capability('moodle/user:viewalldetails', context_system::instance());
+        return has_capability('moodle/user:viewalldetails', \core\context\system::instance());
     }
 }

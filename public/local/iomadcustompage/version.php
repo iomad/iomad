@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - https://moodle.org/
+// This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,21 +12,21 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Plugin version and other meta-data are defined here.
  *
  * @package     local_iomadcustompage
  * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
- * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '5.1.4 (Build: 20260420)';    // Human-friendly version name.
 $plugin->component = 'local_iomadcustompage';
-$plugin->version = 2025053151;
-$plugin->requires = 2024042200;
-$plugin->maturity = MATURITY_RC;
-$plugin->supported = [404, 501];
+$plugin->release = '1.0.1';
+$plugin->version = 2026050100;
+$plugin->requires = 2024100700;     // Moodle 4.5.
+$plugin->supported = [405, 407];    // Moodle 4.5 to 4.7.
+$plugin->maturity = MATURITY_STABLE;

@@ -20,7 +20,6 @@ namespace local_iomadcustompage\event;
 
 use coding_exception;
 use core\event\base;
-use core\exception\moodle_exception;
 use local_iomadcustompage\local\models\audience;
 use moodle_url;
 
@@ -28,13 +27,14 @@ use moodle_url;
  * IOMAD Custom page audience updated event class.
  *
  * @package     local_iomadcustompage
+ * @copyright   2021 David Matamoros <davidmc@moodle.com>
  * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  * @property-read array $other {
  *      Extra information about the event.
  *
- *      - int    pageid:      The id of the page
+ *      - int    pageid:      The id of the report
  * }
  */
 class audience_updated extends base {
@@ -47,13 +47,12 @@ class audience_updated extends base {
         $this->data['edulevel'] = self::LEVEL_OTHER;
     }
 
-  /**
-   * Creates an instance from a iomadcustompage audience object
-   *
-   * @param audience $audience
-   * @return self
-   * @throws coding_exception
-   */
+    /**
+     * Creates an instance from a report audience object
+     *
+     * @param audience $audience
+     * @return self
+     */
     public static function create_from_object(audience $audience): self {
         $eventparams = [
             'context'  => $audience->get_page()->get_context(),
@@ -67,12 +66,11 @@ class audience_updated extends base {
         return $event;
     }
 
-  /**
-   * Returns localised general event name.
-   *
-   * @return string
-   * @throws coding_exception
-   */
+    /**
+     * Returns localised general event name.
+     *
+     * @return string
+     */
     public static function get_name() {
         return get_string('audienceupdated', 'core_reportbuilder');
     }
@@ -89,7 +87,7 @@ class audience_updated extends base {
     }
 
     /**
-     * Custom validations.
+     * IOMAD Custom validations.
      *
      * @throws coding_exception
      */
@@ -103,12 +101,11 @@ class audience_updated extends base {
         }
     }
 
-  /**
-   * Returns relevant URL.
-   *
-   * @return moodle_url
-   * @throws moodle_exception
-   */
+    /**
+     * Returns relevant URL.
+     *
+     * @return moodle_url
+     */
     public function get_url(): moodle_url {
         return new moodle_url('/local/iomadcustompage/edit.php', ['id' => $this->other['pageid']], 'audience');
     }

@@ -18,8 +18,8 @@ declare(strict_types=1);
 
 namespace local_iomadcustompage\privacy;
 
-use coding_exception;
-use context;
+use core\context;
+use stdClass;
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\approved_userlist;
@@ -30,20 +30,18 @@ use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 use local_iomadcustompage\local\models\audience;
 use local_iomadcustompage\local\models\page;
-use stdClass;
 
 /**
  * Privacy Subsystem for local_iomadcustompage
  *
- * @package     local_iomadcustompage
- * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    local_iomadcustompage
+ * @copyright  2024 BitAscii Solutions <bitascii.dev@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class provider implements
     \core_privacy\local\metadata\provider,
     \core_privacy\local\request\plugin\provider,
     core_userlist_provider {
-
     /**
      * Returns metadata about the component
      *
@@ -73,13 +71,12 @@ class provider implements
         return $collection;
     }
 
-  /**
-   * Get export sub context for a page
-   *
-   * @param page $page
-   * @return array
-   * @throws coding_exception
-   */
+    /**
+     * Get export sub context for a page
+     *
+     * @param page $page
+     * @return array
+     */
     public static function get_export_subcontext(page $page): array {
         $pagenode = implode('-', [
             $page->get('id'),
@@ -139,12 +136,11 @@ class provider implements
         $userlist->add_from_sql('usermodified', $sql, $params);
     }
 
-  /**
-   * Export all user data for the specified user in the specified contexts
-   *
-   * @param approved_contextlist $contextlist
-   * @throws coding_exception
-   */
+    /**
+     * Export all user data for the specified user in the specified contexts
+     *
+     * @param approved_contextlist $contextlist
+     */
     public static function export_user_data(approved_contextlist $contextlist): void {
         if (empty($contextlist->count())) {
             return;
@@ -202,13 +198,12 @@ class provider implements
         // We don't perform any deletion of user data.
     }
 
-  /**
-   * Export given page in context
-   *
-   * @param array $subcontext
-   * @param page $page
-   * @throws coding_exception
-   */
+    /**
+     * Export given page in context
+     *
+     * @param array $subcontext
+     * @param page $page
+     */
     protected static function export_page(array $subcontext, page $page): void {
 
         $pagedata = (object) [
@@ -222,16 +217,15 @@ class provider implements
         writer::with_context($page->get_context())->export_data($subcontext, $pagedata);
     }
 
-  /**
-   * Export given audiences in context
-   *
-   * @param context $context
-   * @param array $subcontext
-   * @param audience[] $audiences
-   * @throws coding_exception
-   */
+    /**
+     * Export given audiences in context
+     *
+     * @param context $context
+     * @param array $subcontext
+     * @param audience[] $audiences
+     */
     protected static function export_audiences(context $context, array $subcontext, array $audiences): void {
-        $audiencedata = array_map(static function(audience $audience) use ($context): stdClass {
+        $audiencedata = array_map(static function (audience $audience) use ($context): stdClass {
             // Show the audience name, if it exists.
             $classname = $audience->get('classname');
             if (class_exists($classname)) {

@@ -17,17 +17,17 @@
 use local_iomadcustompage\local\models\page;
 
 /**
- *  uninstall.php contains the uninstallation procedures for local_iomadcustompage.
+ * Uninstall steps for local_iomadcustompage.
  *
- * @package     local_iomadcustompage
- * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    local_iomadcustompage
+ * @copyright  2024 BitAscii Solutions <bitascii.dev@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
- * uninstall hook for cleanup
+ * Execute iomadcustompage uninstall.
+ *
  * @return bool
- * @throws coding_exception
  */
 function xmldb_local_iomadcustompage_uninstall(): bool {
 

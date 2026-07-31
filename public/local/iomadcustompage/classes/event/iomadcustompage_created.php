@@ -20,7 +20,6 @@ namespace local_iomadcustompage\event;
 
 use coding_exception;
 use core\event\base;
-use core\exception\moodle_exception;
 use local_iomadcustompage\local\models\page;
 use moodle_url;
 
@@ -28,6 +27,7 @@ use moodle_url;
  * IOMAD Custom page created event class.
  *
  * @package     local_iomadcustompage
+ * @copyright   2021 David Matamoros <davidmc@moodle.com>
  * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
@@ -35,7 +35,7 @@ use moodle_url;
  *      Extra information about the event.
  *
  *      - string    name:      The name of the page
- *      - string    title:    The title of the page
+ *      - string    title:     The title of the page
  * }
  */
 class iomadcustompage_created extends base {
@@ -48,13 +48,12 @@ class iomadcustompage_created extends base {
         $this->data['edulevel'] = self::LEVEL_OTHER;
     }
 
-  /**
-   * Creates an instance from a iomadcustompage object
-   *
-   * @param page $page
-   * @return self
-   * @throws coding_exception
-   */
+    /**
+     * Creates an instance from a page object
+     *
+     * @param page $page The page that was created
+     * @return self Event instance
+     */
     public static function create_from_object(page $page): self {
         $eventparams = [
             'context'  => $page->get_context(),
@@ -69,12 +68,11 @@ class iomadcustompage_created extends base {
         return $event;
     }
 
-  /**
-   * Returns localised general event name.
-   *
-   * @return string
-   * @throws coding_exception
-   */
+    /**
+     * Returns localised general event name.
+     *
+     * @return string
+     */
     public static function get_name() {
         return get_string('pagecreated', 'local_iomadcustompage');
     }
@@ -89,7 +87,7 @@ class iomadcustompage_created extends base {
     }
 
     /**
-     * Custom validations.
+     * IOMAD Custom validations.
      *
      * @throws coding_exception
      */
@@ -100,13 +98,12 @@ class iomadcustompage_created extends base {
         }
     }
 
-  /**
-   * Returns relevant URL.
-   *
-   * @return moodle_url
-   * @throws moodle_exception
-   */
+    /**
+     * Returns relevant URL.
+     *
+     * @return moodle_url
+     */
     public function get_url(): moodle_url {
-        return new moodle_url('/local/iomadcustompage/edit.php', ['id' => $this->objectid]);
+        return new moodle_url('/local/iomadcustompage/view.php', ['id' => $this->objectid]);
     }
 }

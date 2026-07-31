@@ -15,24 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- *  index.php description here.
+ * Main management page for custom pages listing.
  *
- * @package     local_iomadcustompage
- * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
+ * @package    local_iomadcustompage
+ * @copyright  2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 declare(strict_types=1);
 
-use local_iomadcustompage\output\renderer;
 use local_iomadcustompage\permission;
 use core_reportbuilder\system_report_factory;
-use local_iomad\custom_context\context_company;
-use local_iomad\iomad;
 use local_iomadcustompage\reportbuilder\local\systemreports\pages_list;
+use local_iomad\iomad;
+use local_iomad\custom_context\context_company;
 
 require_once(__DIR__ . '/../../config.php');
 require_once("{$CFG->libdir}/adminlib.php");
 
+// IOMAD.
 $systemcontext = context_system::instance();
 if (has_capability('moodle/site:configview', $systemcontext)) {
     admin_externalpage_setup(
@@ -49,9 +49,9 @@ if (has_capability('moodle/site:configview', $systemcontext)) {
 
 $PAGE->set_secondary_navigation(false);
 $PAGE->set_heading('');
-
 $PAGE->requires->js_call_amd('local_iomadcustompage/pages_list', 'init');
 
+// IOMAD.
 $context = $systemcontext;
 $companyid = iomad::get_my_companyid($systemcontext);
 if ($companyid > 0) {
@@ -63,21 +63,24 @@ $PAGE->set_context($systemcontext);
 block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 echo $OUTPUT->header();
-echo html_writer::start_div('d-flex justify-content-between mb-2');
 
-echo $OUTPUT->heading(get_string('iomadcustompages', 'local_iomadcustompage'));
+// Header section with title and create button.
+echo html_writer::start_div('d-flex justify-content-between align-items-center mb-3');
+echo $OUTPUT->heading(get_string('iomadcustompages', 'local_iomadcustompage'), 2, 'mb-0');
 
 if (permission::can_create_page()) {
-    /** @var renderer $renderer */
     $renderer = $PAGE->get_renderer('local_iomadcustompage');
     echo $renderer->render_new_page_button();
 }
-
 echo html_writer::end_div();
 
-$report = system_report_factory::create(pages_list::class, $context);
-echo html_writer::start_div('mt-5');
-echo $report->output();
-echo html_writer::end_div();
+// Pages list report.
+try {
+    $report = system_report_factory::create(pages_list::class, $context);
+    echo html_writer::div($report->output(), 'pages-list-container mt-4');
+} catch (Exception $e) {
+    debugging('Error loading pages list: ' . $e->getMessage(), DEBUG_DEVELOPER);
+    echo $OUTPUT->notification(get_string('error'), 'error');
+}
 
 echo $OUTPUT->footer();

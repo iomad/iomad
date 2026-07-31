@@ -18,31 +18,30 @@ declare(strict_types=1);
 
 namespace local_iomadcustompage\output\dynamictabs;
 
-use coding_exception;
-use core\exception\moodle_exception;
 use core\output\dynamic_tabs\base;
 use local_iomadcustompage\factories\page_factory;
 use local_iomadcustompage\local\models\page;
+use core_reportbuilder\output\custom_report;
 use local_iomadcustompage\permission;
 use moodle_url;
 use renderer_base;
+use stdClass;
 
 /**
- * Page contents tab
+ * Editor dynamic tab
  *
  * @package     local_iomadcustompage
+ * @copyright   2021 David Matamoros <davidmc@moodle.com>
  * @copyright   2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class content extends base {
-  /**
-   * Export this for use in a mustache template context.
-   *
-   * @param renderer_base $output
-   * @return array
-   * @throws coding_exception
-   * @throws moodle_exception
-   */
+    /**
+     * Export this for use in a mustache template context.
+     *
+     * @param renderer_base $output
+     * @return array
+     */
     public function export_for_template(renderer_base $output) {
         global $PAGE;
 
@@ -57,12 +56,11 @@ class content extends base {
         ];
     }
 
-  /**
-   * The label to be displayed on the tab
-   *
-   * @return string
-   * @throws coding_exception
-   */
+    /**
+     * The label to be displayed on the tab
+     *
+     * @return string
+     */
     public function get_tab_label(): string {
         return get_string('content', 'local_iomadcustompage');
     }
