@@ -110,7 +110,7 @@ if ($options['userid']) {
 }
 
 if ($options['username']) {
-    $user = $DB->get_record('user', ['id' => $options['username']], '*', MUST_EXIST);
+    $user = $DB->get_record('user', ['username' => $options['username']], '*', MUST_EXIST);
 }
 
 // Set the other options.
