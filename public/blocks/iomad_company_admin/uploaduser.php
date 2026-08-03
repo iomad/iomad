@@ -767,7 +767,7 @@ if (!empty($cancelled)) {
                     } else if ($updatetype == 2 || $updatetype == 3) {
                         $allowed = array_merge($stdfields, $prffields);
                     }
-                    $temppasswordhandler = '';
+                    $temppasswordhandler = $existinguser->password;
                     foreach ($allowed as $column) {
                         if ($column == 'username') {
                             continue;
@@ -800,10 +800,6 @@ if (!empty($cancelled)) {
                                             $upt->track('email', $stremailduplicate, 'warning');
                                         }
                                     }
-                                }
-
-                                if ($column == 'password') {
-                                    $temppasswordhandler = $existinguser->password;
                                 }
 
                                 if ($column == 'auth') {
@@ -886,10 +882,10 @@ if (!empty($cancelled)) {
 
                     // Remove user preference.
                     if (get_user_preferences('create_password', false, $existinguser)) {
-                        unset_user_preference('create_password', $existinguser);
+                        //unset_user_preference('create_password', $existinguser);
                     }
                     if (get_user_preferences('auth_forcepasswordchange', false, $existinguser)) {
-                        unset_user_preference('auth_forcepasswordchange', $existinguser);
+                        //unset_user_preference('auth_forcepasswordchange', $existinguser);
                     }
 
                     if ($isinternalauth && $updatepasswords) {
