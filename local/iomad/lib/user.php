@@ -1302,8 +1302,8 @@ class company_user {
                 if ($trainigevents = $DB->get_records('trainingevent', ['course' => $courseid])){
                     foreach ($trainigevents as $trainigevent) {
                         $DB->delete_records(
-                            'trainingevent_user',
-                            ['trainigeventid' => $trainigevent->id, 'userid' => $userid]
+                            'trainingevent_users',
+                            ['trainingeventid' => $trainigevent->id, 'userid' => $userid]
                         );
                     }
                 }
