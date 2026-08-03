@@ -220,7 +220,7 @@ class cron_task extends scheduled_task {
                             }
                         } else {
                             mtrace("Removing unused license for userid $litrec->userid from courseid $litrec->courseid");
-                            $DB->delete_records('local_iomad_company_license_users', ['licenseid' => $litrec->licensid,
+                            $DB->delete_records('local_iomad_company_license_users', ['licenseid' => $litrec->licenseid,
                                                                          'courseid' => $litrec->courseid,
                                                                          'userid' => $litrec->userid,
                                                                          'issuedate' => $litrec->licenseallocated]);
