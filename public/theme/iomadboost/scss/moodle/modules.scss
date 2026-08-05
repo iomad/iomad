@@ -10,7 +10,11 @@ select {
 }
 
 .path-mod {
-    .activity-header:not(:empty) {
+    .activity-header {
+        max-width: $course-content-maxwidth;
+        margin: 0 auto !important; /* stylelint-disable-line declaration-no-important */
+    }
+    .activity-details:not(:empty) {
         background-color: $gray-100;
         margin-bottom: map-get($spacers, 3);
         padding-left: map-get($spacers, 3);
@@ -22,22 +26,42 @@ select {
             border-bottom: 0;
         }
     }
-    .activity-information {
+    .activity-dates {
+        padding-top: map-get($spacers, 2);
+        padding-bottom: map-get($spacers, 3);
+        display: grid;
+        grid-template-columns: 1fr 1fr; // Creates two equal columns
+        gap: map-get($spacers, 2) map-get($spacers, 4); // Vertical and horizontal spacing
+        width: 100%;
+        align-items: center;
+        .date-item {
+            color: $gray-700;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
 
-        .activity-dates {
-            padding-top: map-get($spacers, 3);
-            padding-bottom: map-get($spacers, 3);
-            border-bottom: $border-width solid $border-color;
+            &:not(:last-child)::after {
+                display: none;
+            }
+
+            .date-item-label {
+                font-weight: 600;
+                margin-right: map-get($spacers, 1);
+            }
         }
+    }
+    .activity-details {
         .completion-info {
-            padding-top: map-get($spacers, 3);
-            padding-bottom: map-get($spacers, 3);
-            border-bottom: $border-width solid $border-color;
+            padding-top: map-get($spacers, 2);
+            padding-bottom: map-get($spacers, 2);
         }
     }
     .activity-description {
         padding-top: map-get($spacers, 3);
         padding-bottom: map-get($spacers, 3);
+        &.has-automatic-completion {
+            border-bottom: $border-width solid $border-color;
+        }
         & > .box.py-3 {
             padding-top: 0 !important; /* stylelint-disable-line declaration-no-important */
             padding-bottom: 0 !important; /* stylelint-disable-line declaration-no-important */
@@ -45,6 +69,27 @@ select {
         & > .box.py-3:empty {
             display: none;
         }
+    }
+    .automatic-completion-title {
+        padding-top: map-get($spacers, 2);
+        padding-bottom: map-get($spacers, 2);
+    }
+    .automatic-completion-conditions ul {
+        list-style: none;
+        padding-left: 0;
+    }
+    .automatic-completion-conditions li {
+        position: relative;
+        padding-left: map-get($spacers, 5);
+    }
+    .automatic-completion-conditions li::before {
+        content: "•";
+        position: absolute;
+        left: map-get($spacers, 2);
+        /* Scaling the dot down while keeping it centered */
+        font-size: 0.8rem;
+        top: 50%;
+        transform: translateY(-50%);
     }
     .automatic-completion-conditions .badge {
         font-size: 80%;
@@ -65,9 +110,49 @@ select {
             margin-top: 0;
         }
     }
+    .automatic-completion-conditions {
+        li {
+            &:has(.automatic-completion-is-complete),
+            &:has(.automatic-completion-is-failed) {
+                &::before {
+                    content: "";
+                }
+            }
+        }
+
+        li {
+            &:has(.automatic-completion-is-complete) {
+                color: $success;
+                padding-left: map-get($spacers, 1);
+                .icon {
+                    font-size: 0.8rem;
+                }
+            }
+        }
+
+        li {
+            &:has(.automatic-completion-is-failed) {
+                color: $danger;
+                padding-left: map-get($spacers, 1);
+            }
+        }
+    }
     .activity-description .no-overflow p:last-child {
         padding-bottom: 0;
         margin-bottom: 0;
+    }
+    .completion-status {
+        font-weight: $font-weight-medium;
+        white-space: nowrap;
+        i {
+            margin-right: map-get($spacers, 1);
+        }
+    }
+}
+
+@media (max-width: 767px) {
+    .path-mod .activity-dates {
+        grid-template-columns: 1fr; // Stack them on small screens
     }
 }
 
@@ -82,6 +167,12 @@ select {
 .path-mod-choice {
     .choices .option label {
         vertical-align: top;
+    }
+}
+
+.path-mod-choice {
+    .responseaction select.singleselect {
+        display: inline-block;
     }
 }
 
@@ -1028,7 +1119,7 @@ div#dock {
         align-self: flex-start;
     }
 }
-.path-mod-lesson .generaltable td {
+.path-mod-lesson .table td {
     vertical-align: middle;
     label {
         margin-bottom: 0;
@@ -1548,9 +1639,6 @@ $popout-header-height: 4rem;
 .path-mod-feedback {
     span.feedback_info {
         font-weight: bold;
-    }
-    div.feedback_is_dependent {
-        background: $gray-600;
     }
     span.feedback_depend {
         color: $danger;

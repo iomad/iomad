@@ -266,7 +266,7 @@
     padding: .15em .5em;
 }
 
-#trustedhosts .generaltable {
+#trustedhosts .table {
     margin-left: auto;
     margin-right: auto;
     width: 500px;
@@ -670,5 +670,21 @@
 
     .uuinfo {
         background-color: $state-success-bg;
+    }
+}
+
+/* Custom fields management */
+.path-admin .customfield-category-list {
+    .categorieslist {
+        tbody,
+        tr,
+        td {
+            border-style: inherit;
+        }
+    }
+    .sharedcategorieslist {
+        .card.disabled {
+            opacity: .65;
+        }
     }
 }

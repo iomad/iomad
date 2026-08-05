@@ -32,6 +32,9 @@
     }
     .dropdown-menu {
         max-width: 500px;
+        @include media-breakpoint-down(sm) {
+            max-width: 85vw;
+        }
         .dropdown-item {
             @include text-truncate;
         }
@@ -264,10 +267,6 @@ $blocks-plus-gutter: calc(#{$blocks-column-width} + (#{$grid-gutter-width} * 0.5
         @include media-breakpoint-down(xl) {
             width: 100%;
         }
-    }
-    // Make space for active item indicator.
-    .dropdown-item {
-        padding-left: map-get($spacers, 4);
     }
 }
 

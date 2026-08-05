@@ -1,8 +1,8 @@
 // Import Boost Core moodle CSS
 @import "../../boost/scss/moodle";
 
-// Import Specific IOMAD Bootstrap theme moodle CSS
-@import "iomadbootstrap/course.scss";
+// Import Specific Classic theme moodle CSS
+@import "classic/course.scss";
 
 img.userpicture {
     margin-right: 0.5rem;
@@ -32,7 +32,7 @@ img.userpicture {
     }
 
     .book_content {
-        margin: 0 30px;
+        margin: 0 40px;
 
         @include media-breakpoint-down(md) {
             margin-left: -10px;

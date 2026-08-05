@@ -506,16 +506,6 @@ a.skip:active {
     width: 14em;
 }
 
-.groupselector {
-    margin-top: 3px;
-    margin-bottom: 3px;
-    display: inline-block;
-}
-
-.groupselector label {
-    display: inline-block;
-}
-
 // Notes
 .notepost {
     margin-bottom: 1em;
@@ -702,11 +692,6 @@ table.mod_index {
 /**
 * Tags
 */
-
-#tag-search-box {
-    text-align: center;
-    margin: 10px auto;
-}
 
 span.flagged-tag,
 tr.flagged-tag,
@@ -1424,156 +1409,6 @@ audio.mediaplugin_html5audio {
     }
 }
 
-/**
- * Module chooser dialogue (moodle-core-chooserdialogue)
- *
- * This CSS belong to the chooser dialogue which should work both with, and
- * without javascript enabled
- */
-.modchooser .modal-body {
-    padding: 0;
-    overflow-y: auto;
-    min-height: 640px;
-    display: flex;
-    flex-direction: column;
-
-    .searchresultitemscontainer-wrapper {
-        min-height: 495px;
-    }
-
-    .carousel-item.active {
-        display: flex;
-    }
-    .chooser-container {
-        display: flex;
-        flex-direction: column;
-        flex: 1 1 auto;
-    }
-
-    .loading-icon {
-        opacity: 1;
-        .icon {
-            display: block;
-            font-size: 3em;
-            max-height: 3em;
-            max-width: 3em;
-        }
-    }
-    .carousel-item .loading-icon .icon {
-        margin: 1em auto;
-    }
-    .searchbar {
-        width: 100%;
-    }
-}
-
-.modchooser .modal-footer {
-    height: 70px;
-    background: $modal-content-bg;
-    .moodlenet-logo {
-        .icon {
-            height: 2.5rem;
-            width: 6rem;
-            max-height: 2.5rem;
-            max-width: 6rem;
-            margin-bottom: .6rem;
-        }
-    }
-}
-
-.modchoosercontainer.noscroll {
-    overflow-y: hidden;
-}
-
-.modchoosercontainer .optionscontainer,
-.modchoosercontainer .searchresultitemscontainer {
-    overflow-x: hidden;
-    .option {
-        // 2 items per line.
-        flex-basis: calc(50% - 0.5rem);
-        .optionactions {
-            .optionaction {
-                cursor: pointer;
-                color: $gray-600;
-                i {
-                    margin: 0;
-                }
-            }
-        }
-        .optioninfo {
-            a {
-                color: $gray-700;
-                &:hover {
-                    text-decoration: none;
-                }
-            }
-        }
-    }
-}
-
-.modchooser .modal-body .optionsummary {
-    background-color: $white;
-    overflow-x: hidden;
-    overflow-y: auto;
-    height: 640px;
-
-    .content {
-        overflow-y: auto;
-        .heading {
-            .icon {
-                height: 32px;
-                width: 32px;
-                font-size: 32px;
-                padding: 0;
-            }
-        }
-    }
-
-    .actions {
-        border-top: 1px solid $gray-300;
-        background: $white;
-    }
-}
-
-@include media-breakpoint-down(sm) {
-    .path-course-view .modal-dialog.modal-lg,
-    .path-course-view .modal-content,
-    .modchooser .modal-body,
-    .modchooser .modal-body .carousel,
-    .modchooser .modal-body .carousel-inner,
-    .modchooser .modal-body .carousel-item,
-    .modchooser .modal-body .optionsummary,
-    .modchoosercontainer,
-    .optionscontainer,
-    .searchresultitemscontainer {
-        min-height: auto;
-        height: 100%;
-        overflow-y: auto;
-    }
-    .path-course-view .modal-dialog.modal-lg {
-        margin: 0;
-    }
-    .modchooser .modal-body .searchresultitemscontainer-wrapper {
-        min-height: auto;
-    }
-}
-
-@include media-breakpoint-up(sm) {
-    .modchoosercontainer .optionscontainer .option,
-    .modchoosercontainer .searchresultitemscontainer .option {
-        // Three items per line.
-        flex-basis: calc(33.33% - 0.5rem);
-    }
-}
-
-@include media-breakpoint-up(lg) {
-    .modchoosercontainer .optionscontainer .option,
-    .modchoosercontainer .searchresultitemscontainer .option {
-        // Six items per line.
-        flex-basis: calc(16.66% - 0.5rem);
-    }
-}
-
 /* Form element: listing */
 .formlistingradio {
     padding-bottom: 25px;
@@ -1924,6 +1759,11 @@ nav.navbar .logo img {
 
 ul.dragdrop-keyboard-drag li {
     list-style-type: none;
+    a,
+    a:hover {
+        color: inherit;
+        text-decoration: none;
+    }
 }
 
 a.disabled:hover,
@@ -2214,6 +2054,11 @@ $footer-link-color: $bg-inverse-link-color !default;
     .popover-body {
         padding: 0;
         .footer-section {
+            // Add a bottom padding to the direct child divs of the footer-section container so the links within will meet SC 2.5.8.
+            > div {
+                padding-bottom: 0.2rem;
+            }
+
             a {
                 color: $body-color;
                 text-decoration: underline;
@@ -2230,6 +2075,13 @@ $footer-link-color: $bg-inverse-link-color !default;
 
 .footer-support-link {
     padding-bottom: 5px;
+}
+
+.footer-content-popover {
+    // Ensure that the footer links when rendered out of the popover will also have sufficient spacing and meet SC 2.5.8.
+    .footer-section > div {
+        padding-bottom: 0.1rem;
+    }
 }
 
 @include media-breakpoint-up(sm) {
@@ -2279,7 +2131,7 @@ $footer-link-color: $bg-inverse-link-color !default;
     }
 }
 
-[data-drag-type="move"] {
+[data-drag-type="move"]:not(:disabled) {
     cursor: move;
     touch-action: none;
 }
@@ -2428,6 +2280,7 @@ input[disabled] {
 .clamp-2 {
     display: -webkit-box;
     -webkit-box-orient: vertical;
+    line-clamp: 2;
     -webkit-line-clamp: 2;
     overflow: hidden;
 }
@@ -2903,13 +2756,16 @@ body.dragging {
     }
 }
 
-.drawers {
-    .block_myoverview {
-        border: 0;
-        & > .card-body {
-            padding-top: 0 !important; /* stylelint-disable-line declaration-no-important */
-            padding-left: 0 !important; /* stylelint-disable-line declaration-no-important */
-            padding-right: 0 !important; /* stylelint-disable-line declaration-no-important */
+.page-mycourses {
+    // Boost theme styling only (drawers not used in classic).
+    .drawers {
+        .block_myoverview {
+            border: 0;
+            & > .card-body {
+                padding-top: 0 !important; /* stylelint-disable-line declaration-no-important */
+                padding-left: 0 !important; /* stylelint-disable-line declaration-no-important */
+                padding-right: 0 !important; /* stylelint-disable-line declaration-no-important */
+            }
         }
     }
 }
@@ -3134,4 +2990,26 @@ blockquote {
 /* General card customisations. */
 .card.active {
     border-color: $gray-500;
+}
+
+/* Loading icon */
+.loading-icon {
+    &.overlay {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        padding-top: 3rem;
+        background-color: rgba($white, .5);
+        .icon {
+            width: map-get($iconwidthsizes, 5);
+            height: map-get($iconsizes, 5);
+            max-width: map-get($iconwidthsizes, 5);
+            max-height: map-get($iconsizes, 5);
+            font-size: map-get($iconsizes, 5);
+        }
+    }
 }

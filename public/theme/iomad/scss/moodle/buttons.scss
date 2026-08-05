@@ -98,8 +98,8 @@ p.arrow_button {
     }
     @each $size, $length in $iconsizes {
         &.icon-size-#{$size} {
-            height: calc(#{$length} + 1rem);
-            width: calc(#{$length} + 1rem);
+            height: calc(#{$length} * 2);
+            width: calc(#{$length} * 2);
             --#{$prefix}btn-font-size: #{$length};
             --#{$prefix}btn-line-height: #{$length};
         }
@@ -122,7 +122,7 @@ p.arrow_button {
 
 @each $color, $value in $theme-colors {
     .btn-subtle-#{$color} {
-        --#{$prefix}btn-font-weight: #{$font-weight-bold};
+        --#{$prefix}btn-font-weight: #{$font-weight-medium};
         --#{$prefix}btn-color: var(--#{$prefix}#{$color}-text-emphasis);
         --#{$prefix}btn-bg: var(--#{$prefix}#{$color}-bg-subtle);
         --#{$prefix}btn-active-color: var(--#{$prefix}#{$color}-text-emphasis);
@@ -134,7 +134,7 @@ p.arrow_button {
     }
 }
 .btn-subtle-body {
-    --#{$prefix}btn-font-weight: #{$font-weight-bold};
+    --#{$prefix}btn-font-weight: #{$font-weight-medium};
     --#{$prefix}btn-color: var(--#{$prefix}body-color);
     --#{$prefix}btn-bg: transparent;
     --#{$prefix}btn-border-color: var(--#{$prefix}border-color);
@@ -142,4 +142,24 @@ p.arrow_button {
     --#{$prefix}btn-hover-bg: var(--#{$prefix}gray-600);
     --#{$prefix}btn-focus-shadow-rgb: #{to-rgb($gray-600)};
     @include button-focus($gray-600, $white);
+}
+
+/*
+ * Add content buttons.
+ */
+
+.btn-add-content {
+    @include border-radius();
+    border: map-get($border-widths, 2) dashed $border-color;
+    color: $primary;
+    background-color: $body-bg;
+    font-size: $font-size-sm;
+    font-weight: bold;
+    &:hover,
+    &:focus {
+        background-color: $primary-light-background;
+        border-style: solid;
+        border-color: $primary;
+        color: $primary;
+    }
 }

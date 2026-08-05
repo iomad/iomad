@@ -10,9 +10,9 @@ Font Awesome comes in 2 parts relating to Moodle:
   b. Update lib/thirdpartylibs.xml.
 
 2. SCSS:
-  a. Replace the files in this folder (/theme/iomadboost/scss/fontawesome) with the files in the scss folder.
-  b. Copy the LICENSE.txt file from the root to theme/iomadboost/scss/fontawesome.
-  c. Update theme/iomadboost/thirdpartylibs.xml.
+  a. Replace the files in this folder (/theme/boost/scss/fontawesome) with the files in the scss folder.
+  b. Copy the LICENSE.txt file from the root to theme/boost/scss/fontawesome.
+  c. Update theme/boost/thirdpartylibs.xml.
 
 CHANGES
 --------

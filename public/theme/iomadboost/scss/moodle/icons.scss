@@ -1,45 +1,6 @@
 // The only class we need for icons is .icon
 // Standardize the size, padding and alignment for all icons in Moodle.
 
-// Size of default icons.
-$icon-width: 20px;
-$icon-height: 16px;
-// Size of medium icons.
-$icon-medium-width: 40px;
-$icon-medium-height: 32px;
-// Size of big icons.
-$icon-big-width: 80px;
-$icon-big-height: 64px;
-// Size of icon boxes.
-$icon-box-width: 60px;
-$icon-box-height: 48px;
-
-// stylelint-disable
-$iconsizes: () !default;
-$iconsizes: map-merge((
-  0: 0,
-  1: ($icon-height * .25),
-  2: ($icon-height * .5),
-  3: $icon-height,
-  4: ($icon-height * 1.5),
-  5: ($icon-height * 2),
-  6: ($icon-height * 2.5),
-  7: ($icon-height * 3)
-), $iconsizes);
-$iconwidthsizes: () !default;
-$iconwidthsizes: map-merge((
-  0: 0,
-  1: ($icon-width * .25),
-  2: ($icon-width * .5),
-  3: $icon-width,
-  4: ($icon-width * 1.5),
-  5: ($icon-width * 2),
-  6: ($icon-width * 2.5),
-  7: ($icon-width * 3)
-), $iconwidthsizes);
-
-// stylelint-enable
-
 // This mixin change an icon color using filters.
 // The code is adapted from https://jsfiddle.net/Tegos/3fchp0qm/ example.
 @mixin recolor-icon($color: #000, $opacity: 1) {
@@ -71,10 +32,9 @@ $iconwidthsizes: map-merge((
 .icon {
     max-width: map-get($iconwidthsizes, 4);
     max-height: map-get($iconsizes, 4);
-    margin: 0;
+    margin: 0 map-get($spacers, 2) 0 0;
     padding: 0;
     box-sizing: content-box;
-    margin-right: 0.5rem;
 
     &.spacer {
         margin-right: 0;
@@ -192,55 +152,6 @@ img.icon {
     }
 }
 
-// Revisit these styles when MDL-78284 lands with new icons.
-// Icon container will be removed and icons will be used directly.
-.activityiconcontainer {
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 4px;
-    .activityicon,
-    .icon {
-        margin: 0;
-        font-size: $icon-medium-height;
-        height: $icon-medium-height;
-        width: $icon-medium-width;
-        max-height: $icon-medium-height;
-        max-width: $icon-medium-width;
-    }
-    &.small {
-        width: $activity-iconcontainer-width - 10px;
-        height: $activity-iconcontainer-height - 10px;
-        max-width: $activity-iconcontainer-width - 10px;
-        max-height: $activity-iconcontainer-height - 10px;
-    }
-    &.smaller {
-        width: $activity-iconcontainer-width - 20px;
-        height: $activity-iconcontainer-height - 20px;
-        max-width: $activity-iconcontainer-width - 20px;
-        max-height: $activity-iconcontainer-height - 20px;
-        .activityicon {
-            width: $icon-medium-width;
-            height: $icon-medium-height;
-            max-width: $icon-medium-width;
-            max-height: $icon-medium-height;
-        }
-    }
-}
-
-@each $type, $value in $activity-icon-colors {
-    .activityiconcontainer.#{$type} {
-        &:not(.isbranded) {
-            .activityicon,
-            .icon {
-                &:not(.nofilter) {
-                    @include recolor-icon($value, 1);
-                }
-            }
-        }
-    }
-}
-
 .icon-box {
     width: $icon-box-width;
     height: $icon-box-height;
@@ -267,6 +178,8 @@ img.icon {
     .icon {
         margin: 0;
         text-align: center;
+        width: unset;
+        height: unset;
         max-width: unset;
         max-height: unset;
         color: $black;
@@ -276,6 +189,51 @@ img.icon {
         background-color: darken($gray-400, 8%);
         .icon {
             color: $white;
+        }
+    }
+}
+
+/*
+ * Activity icons
+ */
+
+.activityiconcontainer {
+    width: $activity-iconcontainer-width;
+    height: $activity-iconcontainer-height;
+    max-width: $activity-iconcontainer-width;
+    max-height: $activity-iconcontainer-height;
+    &.small {
+        width: $activity-iconcontainer-width - 10px;
+        height: $activity-iconcontainer-height - 10px;
+        max-width: $activity-iconcontainer-width - 10px;
+        max-height: $activity-iconcontainer-height - 10px;
+    }
+    &.smaller {
+        width: $activity-iconcontainer-width - 20px;
+        height: $activity-iconcontainer-height - 20px;
+        max-width: $activity-iconcontainer-width - 20px;
+        max-height: $activity-iconcontainer-height - 20px;
+    }
+    .activityicon,
+    .icon {
+        margin: 0;
+        font-size: inherit;
+        width: inherit;
+        height: inherit;
+        max-width: inherit;
+        max-height: inherit;
+    }
+}
+
+@each $type, $value in $activity-icon-colors {
+    .activityiconcontainer.#{$type} {
+        &:not(.isbranded) {
+            .activityicon,
+            .icon {
+                &:not(.nofilter) {
+                    @include recolor-icon($value, 1);
+                }
+            }
         }
     }
 }
