@@ -258,9 +258,9 @@ class track {
              FROM {local_iomad_courses} ic
              LEFT JOIN {local_iomad_company_course_options} cco ON (
                  ic.courseid = cco.courseid
+                 AND cco.companyid = :companyid
              )
              WHERE ic.courseid = :courseid
-             AND cco.companyid = :companyid
              AND (
                  ic.validlength > 0
                  OR cco.validlength > 0
