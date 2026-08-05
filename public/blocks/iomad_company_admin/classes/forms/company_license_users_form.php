@@ -342,60 +342,70 @@ class company_license_users_form extends moodleform {
         $mform->addElement('html', $this->currentusers->display(true));
 
         if ($this->license->expirydate > time()) {
-            $mform->addElement(
-            'html',
-            html_writer::end_tag('td') .
-            html_writer::start_tag('td', ['id' => 'buttonscell']) .
-            html_writer::start_tag('p', ['class' => 'arrow_button']) .
-            html_writer::empty_tag(
-                'input',
-                [
-                    'name' => 'add',
-                    'id' => 'add',
-                    'type' => 'submit',
-                    'value' => $output->larrow() . ' ' . get_string('licenseallocate', 'block_iomad_company_admin'),
-                    'title' => get_string('licenseallocate', 'block_iomad_company_admin'),
-                    'class' => 'btn btn-secondary',
-                ]) .
-            html_writer::empty_tag('br') .
-            html_writer::empty_tag(
-                'input',
-                [
-                    'name' => 'remove',
-                    'id' => 'remove',
-                    'type' => 'submit',
-                    'value' => get_string('licenseremove', 'block_iomad_company_admin') . ' ' . $output->rarrow(),
-                    'title' => get_string('licenseremove', 'block_iomad_company_admin'),
-                    'class' => 'btn btn-secondary',
-                ]) .
-            html_writer::empty_tag('br') .
-            html_writer::empty_tag(
-                'input',
-                [
-                    'name' => 'addall',
-                    'id' => 'addall',
-                    'type' => 'submit',
-                    'value' => $output->larrow() . ' ' . $output->larrow() . ' ' .
-                               get_string('licenseallocateall', 'block_iomad_company_admin'),
-                    'title' => get_string('licenseallocateall', 'block_iomad_company_admin'),
-                    'class' => 'btn btn-secondary',
-                ]) .
-            html_writer::empty_tag('br') .
-            html_writer::empty_tag(
-                'input',
-                [
-                    'name' => 'removeall',
-                    'id' => 'removeall',
-                    'type' => 'submit',
-                    'value' => get_string('licenseremoveall', 'block_iomad_company_admin') .
-                               ' ' . $output->rarrow() . ' ' . $output->rarrow(),
-                    'title' => get_string('licenseremoveall', 'block_iomad_company_admin'),
-                    'class' => 'btn btn-secondary',
-                ]) .
-            html_writer::end_tag('p') .
-            html_writer::end_tag('td') .
-            html_writer::start_tag('td', ['id' => 'potencialcell']));
+            $buttonhtml = html_writer::end_tag('td') .
+                html_writer::start_tag('td', ['id' => 'buttonscell']) .
+                html_writer::start_tag('p', ['class' => 'arrow_button']) .
+                html_writer::empty_tag(
+                    'input',
+                    [
+                        'name' => 'add',
+                        'id' => 'add',
+                        'type' => 'submit',
+                        'value' => $output->larrow() . ' ' . get_string('licenseallocate', 'block_iomad_company_admin'),
+                        'title' => get_string('licenseallocate', 'block_iomad_company_admin'),
+                        'class' => 'btn btn-secondary',
+                    ]
+                );
+            if (!$this->license->instant ||
+                $this->license->type == 1 ||
+                $this->license->type == 3) {
+                $buttonhtml .= html_writer::empty_tag('br') .
+                    html_writer::empty_tag(
+                        'input',
+                        [
+                            'name' => 'remove',
+                            'id' => 'remove',
+                            'type' => 'submit',
+                            'value' => get_string('licenseremove', 'block_iomad_company_admin') . ' ' . $output->rarrow(),
+                            'title' => get_string('licenseremove', 'block_iomad_company_admin'),
+                            'class' => 'btn btn-secondary',
+                        ]);
+            }
+            $buttonhtml .= html_writer::empty_tag('br') .
+                html_writer::empty_tag(
+                    'input',
+                    [
+                        'name' => 'addall',
+                        'id' => 'addall',
+                        'type' => 'submit',
+                        'value' => $output->larrow() . ' ' . $output->larrow() . ' ' .
+                            get_string('licenseallocateall', 'block_iomad_company_admin'),
+                        'title' => get_string('licenseallocateall', 'block_iomad_company_admin'),
+                        'class' => 'btn btn-secondary',
+                    ]
+                );
+            if (!$this->license->instant ||
+                $this->license->type == 1 ||
+                $this->license->type == 3) {
+                $buttonhtml .= html_writer::empty_tag('br') .
+                    html_writer::empty_tag(
+                        'input',
+                        [
+                            'name' => 'removeall',
+                            'id' => 'removeall',
+                            'type' => 'submit',
+                            'value' => get_string('licenseremoveall', 'block_iomad_company_admin') .
+                                ' ' . $output->rarrow() . ' ' . $output->rarrow(),
+                            'title' => get_string('licenseremoveall', 'block_iomad_company_admin'),
+                            'class' => 'btn btn-secondary',
+                        ]
+                    );
+            }
+            $buttonhtml .= html_writer::end_tag('p') .
+                html_writer::end_tag('td') .
+                html_writer::start_tag('td', ['id' => 'potencialcell']);
 
+            $mform->addElement('html', $buttonhtml);
             $mform->addElement('html', $this->potentialusers->display(true));
         }
 
