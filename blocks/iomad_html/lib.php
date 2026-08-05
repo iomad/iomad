@@ -73,8 +73,10 @@ function block_iomad_html_pluginfile($course, $birecordorcm, $context, $filearea
     $filename = array_pop($args);
     $filepath = $args ? '/'.implode('/', $args).'/' : '/';
 
-    if (!$file = $fs->get_file($context->id, 'block_iomad_html', 'content', 0, $filepath, $filename) ||
-                 $file->is_directory()) {
+    if (!$file = $fs->get_file($context->id, 'block_iomad_html', 'content', 0, $filepath, $filename)) {
+        send_file_not_found();
+    }
+    if ($file->is_directory()) {
         send_file_not_found();
     }
 
@@ -107,10 +109,17 @@ function block_iomad_html_global_db_replace($search, $replace) {
     $instances = $DB->get_recordset('block_instances', ['blockname' => 'iomad_html']);
     foreach ($instances as $instance) {
         // TODO: intentionally hardcoded until MDL-26800 is fixed.
-        $config = unserialize(base64_decode($instance->configdata));
+        $config = unserialize_object(base64_decode($instance->configdata));
         if (isset($config->text) && is_string($config->text)) {
             $config->text = str_replace($search, $replace, $config->text);
-            $DB->set_field('block_instances', 'configdata', base64_encode(serialize($config)), ['id' => $instance->id]);
+            $DB->update_record(
+                'block_instances',
+                [
+                    'id' => $instance->id,
+                    'configdata' => base64_encode(serialize($config)),
+                    'timemodified' => time(),
+                ]
+            );
         }
     }
     $instances->close();
