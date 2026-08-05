@@ -157,7 +157,7 @@ class current_course extends company_base {
 
         // We want the enrolment id here not the user id.
         foreach ($availableusers as $id => $user) {
-            $availableusers[$id]->id = $id;
+            $availableusers[$id]->id = $user->userid;
 
         }
 
