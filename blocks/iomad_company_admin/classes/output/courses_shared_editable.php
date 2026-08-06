@@ -125,7 +125,7 @@ class courses_shared_editable extends inplace_editable {
 
         // Check permissions.
         iomad::require_capability('block/iomad_company_admin:managecourses', $companycontext);
-        if (!$DB->record_exists('local_iomad_courses', ['courseid' => $courseid])) {
+        if (!$courserec = $DB->get_record('local_iomad_courses', ['courseid' => $courseid])) {
             throw new coding_exception('Course is not under IOMAD control');
         }
 
