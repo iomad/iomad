@@ -952,6 +952,12 @@ class helper {
             $payload['extragroupaction'] = null;
         }
 
+        if (!empty($user->passwordstash)) {
+            $payload['newpassword'] = $user->passwordstash;
+        } else {
+            $payload['newpassword'] = null;
+        }
+
         return self::docall($call, $payload, $companyid);
     }
 
