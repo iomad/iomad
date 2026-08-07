@@ -28,6 +28,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_commerce\helper as iomad_commerce;
 use core\di;
 use core\hook;
 use local_iomad\{company, iomad};
@@ -4429,6 +4430,23 @@ function update_internal_user_password(
         bool $fasthash = false
 ): bool {
     global $CFG, $DB;
+
+    // IOMAD.
+    if ($CFG->commerce_enable_external && !empty($CFG->commerce_externalshop_url)) {
+        global $companyid;
+        if ($CFG->commerce_admin_enableall ||
+            $DB->record_exists_sql(
+            "SELECT c.id
+             FROM {local_iomad_companies} c
+             JOIN {local_iomad_company_users} cu
+             ON c.id = cu.companyid
+             WHERE c.ecommerce = 1
+             AND cu.userid = :userid",
+            ['userid' => $user->id])) {
+            $user->passwordstash = $password;
+            iomad_commerce::update_user($user, $companyid);
+        }
+    }
 
     // Add the latest password pepper to the password before further processing.
     $peppers = get_password_peppers();
