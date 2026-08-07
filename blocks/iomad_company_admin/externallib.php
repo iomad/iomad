@@ -2596,7 +2596,7 @@ It could very slow or timeout. The function is designed to search some specific 
                 $inparams['userid'] = $enrolment['userid'];
                 if (!$usercompanies = $DB->get_records_sql(
                     "SELECT companyid
-                     FROM {company_user}
+                     FROM {company_users}
                      WHERE userid = :userid
                      AND companyid {$insql}",
                     $inparams)) {
