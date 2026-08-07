@@ -87,13 +87,45 @@ $company = new company($companyid);
 // We need to unset the companyid as we could be looking elsewhere.
 $companyid = optional_param('companyid', $companyid, PARAM_INT);
 
-// Is this a user downloading their certificates?
-if ($action == 'downloadcerts' && $USER->id == $certusers) {
-    iomad::require_capability('block/iomad_company_admin:downloadmycertificates', $companycontext);
-} else {
-    // Nope - you need the permissions.
-    iomad::require_capability('local/report_completion:view', $companycontext);
+// Process downloading certificates.
+if ($action == 'downloadcerts' && confirm_sesskey()) {
+    if ((!empty($certusers) &&
+         $USER->id == $certusers &&
+         iomad::has_capability('block/iomad_company_admin:downloadmycertificates', $companycontext)) ||
+        iomad::has_capability('block/iomad_company_admin:downloadcertificates', $companycontext)) {
+
+        // Generate the download for the certificates.
+        $myusers = [];
+        $mycourses = [];
+        if (empty($certusers)) {
+            // Get all the users that this person can see.
+            $myuserslist = company::get_my_users($companyid);
+            foreach ($myuserslist as $myuser) {
+                $myusers[$myuser->userid] = $myuser->userid;
+            }
+        } else {
+            $myusers[$certusers] = $certusers;
+        }
+        if (!empty($certcourses)) {
+            $mycourses[$certcourses] = $certcourses;
+        }
+
+        // Do the download.
+        track::download_certs($companyid, $mycourses, $myusers);
+        die;
+    } else {
+        // Do nothing further.
+        throw new moodle_exception(
+            'nopermissions',
+            'error',
+            '',
+            get_string('downloadcertificates', 'block_iomad_company_admin'));
+        die;
+    }
 }
+
+// Check we can view the page.
+iomad::require_capability('local/report_completion:view', $companycontext);
 
 // Are we showing any child companies?
 $canseechildren = false;
