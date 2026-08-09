@@ -124,6 +124,7 @@ class course_expiry_warning_task extends scheduled_task {
             // Deal with users.
             foreach ($expirycourses as $expirycourse) {
                 $targettime = $expirycourse->warnexpire * 86400;
+                $course = $DB->get_record('course', ['id' => $expirycourse->courseid]);
 
                 // Get all the users for this company.
                 $allusers = $DB->get_records_sql(
@@ -153,141 +154,156 @@ class course_expiry_warning_task extends scheduled_task {
 
                 // Process all of the users.
                 foreach ($allusers as $compuser) {
-                    mtrace("Dealing with user id $compuser->userid");
-
-                    // Deal with parent companies as we only want users in this company.
-                    if ($parentslist = $company->get_parent_companies_recursive()) {
-                        [$insql, $inparams] = $DB->get_in_or_equal(array_keys($parentslist),
-                                                                   SQL_PARAMS_NAMED,
-                                                                   'pids');
-                        $inparams['userid'] = $compuser->userid;
-
-                        // Is this a parent company manager?
-                        if ($DB->get_records_sql(
-                            "SELECT userid
-                             FROM {local_iomad_company_users}
-                             WHERE managertype = 1
-                             AND companyid {$insql}
-                             AND userid = :userid",
-                            $inparams)) {
-                            continue;
-                        }
-                    }
-
-                    // Expire the user from the course.
-                    mtrace("Expiring $user->id from course id $course->id as a student");
-                    $event = user_course_expired::create([
-                        'context' => context_course::instance($course->id),
-                        'courseid' => $course->id,
-                        'objectid' => $course->id,
-                        'companyid' => $company->id,
-                        'userid' => $user->id,
-                    ]);
-                    $event->trigger();
-
-                    // Set the local record object to match.
-                    $compuser->coursecleared = true;
-
-                    // Get the company template info.
-                    // Check against per company template repeat instead.
-                    if ($templateinfo = $DB->get_record(
-                        'local_iomad_email_templates',
+                    // Only live users.
+                    if ($userrec = $DB->get_record(
+                        'user',
                         [
-                            'companyid' => $company->id,
-                            'name' => 'expiry_warn_user',
-                        ])) {
+                            'id' => $compuser->userid,
+                            'suspended' => 0,
+                            'deleted' => 0,
+                        ]
+                    )) {
+                        mtrace("Dealing with user id $compuser->userid");
 
-                        // Check if its the correct day, if not continue.
-                        if (!empty($templateinfo->repeatday) &&
-                            $templateinfo->repeatday != 99 &&
-                            $templateinfo->repeatday != $dayofweek - 1) {
-                            continue;
-                        }
+                        // Deal with parent companies as we only want users in this company.
+                        if ($parentslist = $company->get_parent_companies_recursive()) {
+                            [$insql, $inparams] = $DB->get_in_or_equal(array_keys($parentslist),
+                                                                    SQL_PARAMS_NAMED,
+                                                                    'pids');
+                            $inparams['userid'] = $compuser->userid;
 
-                        // Only check for previous emails if repeat is enabled and not never or always.
-                        if (!empty($templateinfo->repeatperiod) &&
-                            $templateinfo->repeatperiod != 0 &&
-                            $templateinfo->repeatperiod != 99) {
-                            // For specific periods (1=daily, 2=weekly, 3=fortnightly, 4=monthly)
-                            // check if user has already received emails during this enrollment.
-                            $lastemail = $DB->get_record_sql(
-                                "SELECT MAX(sent) AS lastsent
-                                 FROM {local_iomad_emails}
-                                 WHERE userid = :userid
-                                 AND courseid = :courseid
-                                 AND templatename = :templatename
-                                 AND modifiedtime > :timeenrolled",
-                                [
-                                    'userid' => $compuser->userid,
-                                    'courseid' => $compuser->courseid,
-                                    'templatename' => 'expiry_warn_user',
-                                    'timeenrolled' => $compuser->timeenrolled,
-                                ]
-                            );
-
-                            // Calculate next allowed send time based on last email sent time.
-                            if ($lastemail && $lastemail->lastsent) {
-                                $nextallowedtime = strtotime("+ 1" . $periods[$templateinfo->repeatperiod], $lastemail->lastsent);
-
-                                // Compare dates only (ignore time component) since cron runs once per day
-                                // this prevents issues where email was sent at 0:00:30 but cron runs at 0:00:00.
-                                $nextalloweddate = strtotime('midnight', $nextallowedtime);
-                                $currentdate = strtotime('midnight', $runtime);
-
-                                // Check if enough time has passed since last email.
-                                if ($currentdate < $nextalloweddate) {
-                                    continue;
-                                }
-                            }
-                        } else if ($templateinfo->repeatperiod == 0) {
-                            // Template never repeats so check if it's already been sent.
-                            if ($DB->record_exists(
-                                'local_iomad_emails',
-                                [
-                                    'userid' => $compuser->userid,
-                                    'courseid' => $compuser->courseid,
-                                    'templatename' => 'expiry_warn_user',
-                                ])) {
-                                // Email already sent so skip it.
+                            // Is this a parent company manager?
+                            if ($DB->get_records_sql(
+                                "SELECT userid
+                                FROM {local_iomad_company_users}
+                                WHERE managertype = 1
+                                AND companyid {$insql}
+                                AND userid = :userid",
+                                $inparams)) {
                                 continue;
                             }
                         }
-                    }
 
-                    // Passed all checks, send the email.
-                    mtrace("Sending expiry warning email to $user->email");
-                    emailtemplate::send('expiry_warn_user', ['course' => $course, 'user' => $user, 'company' => $company]);
+                        // Expire the user from the course.
+                        mtrace("Expiring $user->id from course id $course->id as a student");
+                        $event = user_course_expired::create([
+                            'context' => context_course::instance($course->id),
+                            'courseid' => $course->id,
+                            'objectid' => $course->id,
+                            'companyid' => $company->id,
+                            'userid' => $user->id,
+                        ]);
+                        $event->trigger();
 
-                    // Send the supervisor email too.
-                    if (!$templateinfo->disablesupervisor) {
-                        mtrace("Sending supervisor warning email for $user->email");
-                        company::send_supervisor_expiry_warning_email($user, $course);
-                    }
+                        // Set the local record object to match.
+                        $compuser->coursecleared = true;
 
-                    // Do we have a value for the template repeat?
-                    if (!empty($templateinfo->repeatvalue)) {
-                        $sentcount = $DB->count_records_sql(
-                            "SELECT count(id)
-                             FROM {local_iomad_emails}
-                             WHERE userid =:userid
-                             AND courseid = :courseid
-                             AND templatename = :templatename
-                             AND modifiedtime > :timesent",
-                            ['userid' => $compuser->userid,
-                             'courseid' => $compuser->courseid,
-                             'templatename' => $templateinfo->name,
-                             'timesent' => $compuser->timecompleted]);
-                        if ($sentcount >= $templateinfo->repeatvalue) {
+                        // Get the company template info.
+                        // Check against per company template repeat instead.
+                        if ($templateinfo = $DB->get_record(
+                            'local_iomad_email_templates',
+                            [
+                                'companyid' => $company->id,
+                                'name' => 'expiry_warn_user',
+                            ])) {
+
+                            // Check if its the correct day, if not continue.
+                            if (!empty($templateinfo->repeatday) &&
+                                $templateinfo->repeatday != 99 &&
+                                $templateinfo->repeatday != $dayofweek - 1) {
+                                continue;
+                            }
+
+                            // Only check for previous emails if repeat is enabled and not never or always.
+                            if (!empty($templateinfo->repeatperiod) &&
+                                $templateinfo->repeatperiod != 0 &&
+                                $templateinfo->repeatperiod != 99) {
+                                // For specific periods (1=daily, 2=weekly, 3=fortnightly, 4=monthly)
+                                // check if user has already received emails during this enrollment.
+                                $lastemail = $DB->get_record_sql(
+                                    "SELECT MAX(sent) AS lastsent
+                                    FROM {local_iomad_emails}
+                                    WHERE userid = :userid
+                                    AND courseid = :courseid
+                                    AND templatename = :templatename
+                                    AND modifiedtime > :timeenrolled",
+                                    [
+                                        'userid' => $compuser->userid,
+                                        'courseid' => $compuser->courseid,
+                                        'templatename' => 'expiry_warn_user',
+                                        'timeenrolled' => $compuser->timeenrolled,
+                                    ]
+                                );
+
+                                // Calculate next allowed send time based on last email sent time.
+                                if ($lastemail && $lastemail->lastsent) {
+                                    $nextallowedtime = strtotime("+ 1" . $periods[$templateinfo->repeatperiod], $lastemail->lastsent);
+
+                                    // Compare dates only (ignore time component) since cron runs once per day
+                                    // this prevents issues where email was sent at 0:00:30 but cron runs at 0:00:00.
+                                    $nextalloweddate = strtotime('midnight', $nextallowedtime);
+                                    $currentdate = strtotime('midnight', $runtime);
+
+                                    // Check if enough time has passed since last email.
+                                    if ($currentdate < $nextalloweddate) {
+                                        continue;
+                                    }
+                                }
+                            } else if ($templateinfo->repeatperiod == 0) {
+                                // Template never repeats so check if it's already been sent.
+                                if ($DB->record_exists(
+                                    'local_iomad_emails',
+                                    [
+                                        'userid' => $compuser->userid,
+                                        'courseid' => $compuser->courseid,
+                                        'templatename' => 'expiry_warn_user',
+                                    ])) {
+                                    // Email already sent so skip it.
+                                    continue;
+                                }
+                            }
+                        }
+
+                        // Passed all checks, send the email.
+                        mtrace("Sending expiry warning email to $userrec->email");
+                        emailtemplate::send(
+                            'expiry_warn_user',
+                            [
+                                'course' => $course,
+                                'user' => $userrec,
+                                'company' => $company,]);
+
+                        // Send the supervisor email too.
+                        if (!$templateinfo->disablesupervisor) {
+                            mtrace("Sending supervisor warning email for $userrec->email");
+                            company::send_supervisor_expiry_warning_email($userrec, $course);
+                        }
+
+                        // Do we have a value for the template repeat?
+                        if (!empty($templateinfo->repeatvalue)) {
+                            $sentcount = $DB->count_records_sql(
+                                "SELECT count(id)
+                                FROM {local_iomad_emails}
+                                WHERE userid =:userid
+                                AND courseid = :courseid
+                                AND templatename = :templatename
+                                AND modifiedtime > :timesent",
+                                ['userid' => $compuser->userid,
+                                'courseid' => $compuser->courseid,
+                                'templatename' => $templateinfo->name,
+                                'timesent' => $compuser->timecompleted]);
+                            if ($sentcount >= $templateinfo->repeatvalue) {
+                                $compuser->expiredstop = 1;
+                                $compuser->modifiedtime = $runtime;
+                                $DB->update_record('local_iomad_tracks', $compuser);
+                            }
+                        }
+                        if (empty($templateinfo->repeatperiod)) {
+                            // Set to never so mark it to stop.
                             $compuser->expiredstop = 1;
                             $compuser->modifiedtime = $runtime;
                             $DB->update_record('local_iomad_tracks', $compuser);
                         }
-                    }
-                    if (empty($templateinfo->repeatperiod)) {
-                        // Set to never so mark it to stop.
-                        $compuser->expiredstop = 1;
-                        $compuser->modifiedtime = $runtime;
-                        $DB->update_record('local_iomad_tracks', $compuser);
                     }
                 }
             }
