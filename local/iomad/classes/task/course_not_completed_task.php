@@ -121,6 +121,7 @@ class course_not_completed_task extends scheduled_task {
 
             // Deal with courses which have completed by warnings.
             foreach ($warnnotcompletedcourses as $warnnotcompletedcourse) {
+                $course = $DB->get_record('course', ['id' => $warnnotcompletedcourse->courseid]);
                 $checktime = $runtime - $warnnotcompletedcourse->warncompletion * 60 * 60 * 24;
 
                 // Get all of the users for this course.
