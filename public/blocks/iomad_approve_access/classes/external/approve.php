@@ -123,7 +123,7 @@ class approve extends external_api {
             '*',
             MUST_EXIST
         );
-        $location->time = userdate($event->startdatetime, get_config('local_iomad', 'date_format') . " %I:%M%p");
+        $location->time = userdate($trainingevent->startdatetime, get_config('local_iomad', 'date_format') . " %I:%M%p");
 
         // Get the CMID.
         $cm = get_coursemodule_from_instance('trainingevent', $trainingevent->id, $course->id);
@@ -143,7 +143,7 @@ class approve extends external_api {
         $result = false;
 
         // Is the event full?
-        if ($numattendees < $capacity) {
+        if ($location->isvirtual || $numattendees < $capacity) {
             // Department manager approvals.
             if ($myapprovaltype == 'both' || $myapprovaltype == 'manager') {
                 $request->manager_ok = 1;
@@ -212,15 +212,15 @@ class approve extends external_api {
             // Are we emailing the original requester?
             if ($sendemail) {
 
+                $cancontinue = false;
                 if ($location->isvirtual || $numattendees < $capacity) {
                     // There is space, so adding them directly.
                     $waitlisted = 0;
+                    $cancontinue = true;
                 } else if ($trainingevent->haswaitinglist) {
                     // Put them on the waiting list.
                     $waitlisted = 1;
-                } else {
-                    // Event is already full so doesn't matter.
-                    $cancontinue = false;
+                    $cancontinue = true;
                 }
 
                 // Can we add the user to the event after all of that?
@@ -234,6 +234,7 @@ class approve extends external_api {
                     ]);
 
                     // Update the attendance at the event.
+                    $user->companyid = $company->id;
                     iomad_approve_access::register_user($user, $trainingevent, $waitlisted);
 
                     // Fire an event for this.

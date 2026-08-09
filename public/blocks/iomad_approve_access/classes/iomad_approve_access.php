@@ -212,11 +212,16 @@ class iomad_approve_access {
      *
      **/
     public static function register_user($user, $trainingevent, $waitlisted=0) {
-        global $DB, $USER, $company;
+        global $DB, $USER;
 
         // Get the CMID.
         if (! $cm = get_coursemodule_from_instance('trainingevent', $trainingevent->id)) {
             throw new moodle_exception('invalidcoursemodule');
+        }
+
+        // Do we have a companyid?
+        if (!$companyid = iomad::get_my_companyid(context_system::instance(), false)) {
+            return false;
         }
 
         // Do we already have this?
@@ -248,7 +253,7 @@ class iomad_approve_access {
             'userid' => $USER->id,
             'relateduserid' => $user->id,
             'objectid' => $trainingevent->id,
-            'companyid' => $company->id,
+            'companyid' => $companyid,
             'courseid' => $trainingevent->course,
             'other' => $eventother,
         ]);

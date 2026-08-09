@@ -231,9 +231,9 @@ class deny extends external_api {
         // Are we emailing the original requester?
         if ($senddenied) {
             emailtemplate::send('course_classroom_denied', [
-                'course' => $approvecourse,
+                'course' => $course,
                 'event' => $trainingevent,
-                'user' => $approveuser,
+                'user' => $user,
                 'company' => $company,
                 'classroom' => $location,
             ]);
