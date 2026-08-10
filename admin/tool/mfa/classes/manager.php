@@ -800,7 +800,7 @@ class manager {
         require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
         $postfix = iomad::get_company_postfix();
 
-        $order = explode(',', iomad::get_config('tool_mfa', 'factor_order'));
+        $order = explode(',', iomad::get_config('tool_mfa', 'factor_order', null, true));
         $key = array_search($factorname, $order);
 
         switch ($action) {

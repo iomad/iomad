@@ -2319,7 +2319,7 @@ class iomad {
      * @param int $companyid
      * @return bool|object|string
      */
-    public static function get_config($plugin, $name = null, $companyid = 0) {
+    public static function get_config($plugin, $name = null, $companyid = 0, $force = false) {
 
         // Did we get passed an item?
         if (empty($name)) {
@@ -2340,7 +2340,8 @@ class iomad {
 
         // Is there a company value?
         $value = get_config($plugin, $companyname);
-        if ($value === false || $value == '') {
+        if (!$force &&
+            ($value === false || $value == '')) {
             // Use the site setting.
             return get_config($plugin, $name);
         } else {
