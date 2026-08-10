@@ -46,5 +46,8 @@ function xmldb_qbank_tagquestion_upgrade(int $oldversion): bool {
 
         upgrade_plugin_savepoint(true, 2025112800, 'qbank', 'tagquestion');
     }
+    // Automatically generated Moodle v5.2.0 release upgrade line.
+    // Put any upgrade step following this.
+
     return true;
 }

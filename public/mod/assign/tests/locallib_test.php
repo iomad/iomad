@@ -1005,16 +1005,19 @@ final class locallib_test extends \advanced_testcase {
             $this->getDataGenerator()->create_and_enrol($course, 'student');
         }
 
-        // Create 10 suspended students.
+        // Create 10 students with suspended enrolments.
         for ($i = 0; $i < 10; $i++) {
             $this->getDataGenerator()->create_and_enrol($course, 'student', null, 'manual', 0, 0, ENROL_USER_SUSPENDED);
         }
+
+        // Create a student with an active enrolment and suspended account.
+        $this->getDataGenerator()->create_and_enrol($course, 'student', ['suspended' => 1]);
 
         $this->setUser($teacher);
         set_user_preference('grade_report_showonlyactiveenrol', false);
         $assign = $this->create_instance($course, ['grade' => 100]);
 
-        $this->assertCount(10, $assign->list_participants(null, true));
+        $this->assertCount(11, $assign->list_participants(0, true));
     }
 
     public function test_list_participants_with_group_restriction(): void {
@@ -1659,6 +1662,44 @@ final class locallib_test extends \advanced_testcase {
             ASSIGN_SUBMISSION_STATUS_SUBMITTED,
             [$allgroups['groupa']->id, $allgroups['groupb']->id, $allgroups['groupc']->id],
         ));
+    }
+
+    /**
+     * Tests that unenrolled users are not included in the count of submissions with status and groups.
+     *
+     * @covers \assign::count_submissions_with_status_and_groups
+     */
+    public function test_count_submissions_with_status_and_groups_unenrolled_users(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $assign = $this->create_instance($course, [
+            'assignsubmission_onlinetext_enabled' => 1,
+        ]);
+
+        $this->getDataGenerator()->create_and_enrol($course, 'editingteacher');
+
+        // Create 3 students and have them all submit.
+        $students = [];
+        for ($i = 0; $i < 3; $i++) {
+            $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+            $this->add_submission($student, $assign);
+            $this->submit_for_grading($student, $assign);
+            $students[] = $student;
+        }
+
+        // All 3 enrolled students have submitted.
+        $this->assertEquals(3, $assign->count_submissions_with_status_and_groups(ASSIGN_SUBMISSION_STATUS_SUBMITTED));
+
+        // Unenrol one student.
+        $manualenrol = enrol_get_plugin('manual');
+        $enrolinstance = $DB->get_record('enrol', ['courseid' => $course->id, 'enrol' => 'manual'], '*', MUST_EXIST);
+        $manualenrol->unenrol_user($enrolinstance, $students[0]->id);
+
+        // Only 2 submissions should be counted now because the unenrolled user's submission must be excluded.
+        $this->assertEquals(2, $assign->count_submissions_with_status_and_groups(ASSIGN_SUBMISSION_STATUS_SUBMITTED));
     }
 
     public function test_count_submissions_need_grading_with_groups(): void {
@@ -2553,6 +2594,69 @@ You can see it appended to your <a href="' . $assignurl .
 
         $this->setUser($teacher);
         $this->assertEquals(false, $assign->testable_submissions_open($student->id));
+    }
+
+    /**
+     * Tests {@see \assign::submissions_open()} with a user override.
+     */
+    public function test_submissions_open_user_override(): void {
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $this->setAdminUser();
+
+        $now = time();
+        $tomorrow = $now + DAYSECS;
+        $yesterday = $now - DAYSECS;
+
+        // Assign that is due in the past.
+        $assign = $this->create_instance($course, ['duedate' => $yesterday, 'cutoffdate' => $yesterday]);
+
+        // Initially, submissions are not open for the student.
+        $this->assertFalse($assign->testable_submissions_open($student->id));
+
+        // Add a user override for the student to make cutoff date later.
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_assign');
+        $generator->create_override([
+            'assignid' => $assign->get_instance()->id,
+            'userid' => $student->id,
+            'cutoffdate' => $tomorrow,
+        ]);
+
+        // Now submissions are open for the student.
+        $this->assertTrue($assign->testable_submissions_open($student->id));
+    }
+
+    /**
+     * Tests {@see \assign::submissions_open()} with a group override.
+     */
+    public function test_submissions_open_group_override(): void {
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $this->setAdminUser();
+
+        $now = time();
+        $yesterday = $now - DAYSECS;
+
+        // Assign that is due in the past.
+        $assign = $this->create_instance($course, ['duedate' => $yesterday, 'cutoffdate' => $yesterday]);
+
+        // Initially, submissions are not open for the student.
+        $this->assertFalse($assign->testable_submissions_open($student->id));
+
+        // Add a group override for the student to turn off the cutoff date.
+        $group = $this->getDataGenerator()->create_group(['courseid' => $course->id]);
+        groups_add_member($group, $student->id);
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_assign');
+        $generator->create_override([
+            'assignid' => $assign->get_instance()->id,
+            'groupid' => $group->id,
+            'cutoffdate' => 0,
+        ]);
+        $this->assertTrue($assign->testable_submissions_open($student->id));
     }
 
     public function test_get_graders(): void {

@@ -1653,20 +1653,35 @@ function xmldb_main_upgrade($oldversion) {
         $batchsize = 50000;
         $lastid = 0;
         do {
+            // We only need the ID, but can't pass limits to get_fieldset_sql, so we use get_records_sql.
             $questions = $DB->get_records_sql(
                 "SELECT id FROM {question} WHERE qtype = 'random' AND id > :lastid ORDER BY id",
                 ['lastid' => $lastid],
                 0,
                 $batchsize,
             );
-            $recordcount = 0;
-            foreach ($questions as $question) {
-                $lastid = $question->id;
-                question_delete_question($question->id);
-                $recordcount++;
+            $recordcount = count($questions);
+            $questionids = array_keys($questions);
+            if ($recordcount > 0) {
+                [$insql, $params] = $DB->get_in_or_equal($questionids);
+                $questionversionsandentires = $DB->get_records_select_menu(
+                    'question_versions',
+                    'questionid ' . $insql,
+                    $params,
+                    fields: 'id, questionbankentryid'
+                );
+                $versionids = array_keys($questionversionsandentires);
+                $entryids = array_unique(array_values($questionversionsandentires));
+                // No need to call question_delete_question, it is safe to delete the records directly. See MDL-88393.
+                // These are all random questions, so have no files or other qtype-specific records to clean up.
+                $DB->delete_records_list('question_versions', 'id', $versionids);
+                $DB->delete_records_list('question_bank_entries', 'id', $entryids);
+                $DB->delete_records_list('question', 'id', $questionids);
+                // Reset timeout after each batch to avoid timeouts on large sites.
+                upgrade_set_timeout();
+                // Set the start point for the next batch. IDs were fetched in order, so we use the last one we got.
+                $lastid = end($questionids);
             }
-            // Reset timeout after each batch to avoid timeouts on large sites.
-            upgrade_set_timeout();
         } while ($recordcount === $batchsize);
         // Finally, uninstall qtype_random as it's been removed.
         uninstall_plugin('qtype', 'random');
@@ -1768,11 +1783,9 @@ function xmldb_main_upgrade($oldversion) {
     }
 
     if ($oldversion < 2026022700.02) {
-        $orphanedquestions = core_question\category_manager::cleanup_questions_without_categories();
-        if ($orphanedquestions > 0) {
-            upgrade_log(UPGRADE_LOG_NORMAL, null, "Cleaned up {$orphanedquestions} questions left over from restores.");
-        }
-
+        $task = new \core\task\cleanup_questions_without_categories_task();
+        \core\task\manager::queue_adhoc_task($task);
+        upgrade_log(UPGRADE_LOG_NORMAL, null, 'Queueing cleanup task for questions without categories.');
         upgrade_main_savepoint(true, 2026022700.02);
     }
 
@@ -1863,6 +1876,16 @@ function xmldb_main_upgrade($oldversion) {
         }
 
         upgrade_main_savepoint(true, 2026032700.01);
+    }
+
+    // Automatically generated Moodle v5.2.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    if ($oldversion < 2026042000.06) {
+        // Force H5P content dependencies to be rebuilt lazily after the h5plib_v128 library update.
+        $DB->set_field_select('h5p', 'filtered', null, $DB->sql_compare_text('filtered') . ' IS NOT NULL');
+
+        upgrade_main_savepoint(true, 2026042000.06);
     }
 
     return true;

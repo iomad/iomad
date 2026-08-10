@@ -542,6 +542,45 @@ final class adhoc_task_test extends \advanced_testcase {
     }
 
     /**
+     * Ensure that the reschedule_or_queue_adhoc_task function will schedule a new task if no tasks exist.
+     */
+    public function test_reschedule_or_queue_adhoc_task_after_failure(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $clock = $this->mock_clock_with_frozen();
+
+        // Schedule adhoc task.
+        $task = new adhoc_test_task();
+        $task->set_custom_data(['courseid' => 10]);
+        $task->set_next_run_time($clock->time()); // Not realistic. Normally in the future but does not matter.
+        manager::reschedule_or_queue_adhoc_task($task);
+        $this->assertEquals(1, count(manager::get_adhoc_tasks('core\task\adhoc_test_task')));
+        $taskrecord1 = manager::get_queued_adhoc_task_record($task);
+        $this->assertObjectHasProperty('id', $taskrecord1);
+        $this->assertEquals($clock->time(), $taskrecord1->nextruntime);
+
+        // Now mark the task permanently failed.
+        $DB->update_record('task_adhoc', (object) [
+            'id' => $taskrecord1->id,
+            'faildelay' => 86400,
+            'attemptsavailable' => 0,
+        ]);
+
+        // Now, schedule the task again. Should create a new task.
+        $task = new adhoc_test_task();
+        $task->set_custom_data(['courseid' => 10]);
+        $task->set_next_run_time($clock->time() + HOURSECS);
+        manager::reschedule_or_queue_adhoc_task($task);
+        $this->assertEquals(2, count(manager::get_adhoc_tasks('core\task\adhoc_test_task')));
+        $taskrecord2 = manager::get_queued_adhoc_task_record($task);
+        $this->assertNotEquals($taskrecord1->id, $taskrecord2->id);
+        $this->assertEquals($clock->time() + HOURSECS, $taskrecord2->nextruntime);
+        $this->assertEquals(0, $taskrecord2->faildelay);
+        $this->assertEquals(12, $taskrecord2->attemptsavailable);
+    }
+
+    /**
      * Ensure that the reschedule_or_queue_adhoc_task function will schedule a new task if a task for the same user does
      * not exist.
      */
@@ -704,6 +743,47 @@ final class adhoc_task_test extends \advanced_testcase {
         $task6->set_userid($user->id);
         $this->assertEmpty(manager::queue_adhoc_task($task6, true));
         $this->assertEquals(6, count(manager::get_adhoc_tasks('core\task\adhoc_test_task')));
+    }
+
+    /**
+     * Test that, after a permanent failure, queue_adhoc_task(..., checkforexisting: true) works.
+     */
+    public function test_queue_adhoc_task_if_not_scheduled_after_failure(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        // Schedule adhoc task.
+        $task = new adhoc_test_task();
+        $task->set_custom_data(['courseid' => 10]);
+        $this->assertNotEmpty(manager::queue_adhoc_task($task, true));
+        $this->assertEquals(1, count(manager::get_adhoc_tasks('core\task\adhoc_test_task')));
+        $taskrecord1 = manager::get_queued_adhoc_task_record($task);
+        $this->assertObjectHasProperty('id', $taskrecord1);
+
+        // Verify again that re-scheduling the same task does nothing.
+        $task = new adhoc_test_task();
+        $task->set_custom_data(['courseid' => 10]);
+        $this->assertFalse(manager::queue_adhoc_task($task, true));
+        $this->assertEquals(1, count(manager::get_adhoc_tasks('core\task\adhoc_test_task')));
+        $taskrecord2 = manager::get_queued_adhoc_task_record($task);
+        $this->assertEquals($taskrecord1->id, $taskrecord2->id);
+
+        // Now mark the task permanently failed.
+        $DB->update_record('task_adhoc', (object) [
+            'id' => $taskrecord1->id,
+            'faildelay' => 86400,
+            'attemptsavailable' => 0,
+        ]);
+
+        // Now, schedule the task again. Should create a new task.
+        $task = new adhoc_test_task();
+        $task->set_custom_data(['courseid' => 10]);
+        $this->assertNotEmpty(manager::queue_adhoc_task($task, true));
+        $this->assertEquals(2, count(manager::get_adhoc_tasks('core\task\adhoc_test_task')));
+        $taskrecord3 = manager::get_queued_adhoc_task_record($task);
+        $this->assertNotEquals($taskrecord1->id, $taskrecord3->id);
+        $this->assertEquals(0, $taskrecord3->faildelay);
+        $this->assertEquals(12, $taskrecord3->attemptsavailable);
     }
 
     /**
@@ -1028,5 +1108,63 @@ final class adhoc_task_test extends \advanced_testcase {
 
         // Close sink.
         $messagesink->close();
+    }
+
+    /**
+     * Test that is_adhoc_task_delayed() returns false by default and true after set_soft_retry_delay().
+     *
+     * @covers \core\task\adhoc_task::is_adhoc_task_delayed
+     */
+    public function test_is_adhoc_task_delayed(): void {
+        $task = new adhoc_test_task();
+        $this->assertFalse($task->is_adhoc_task_delayed());
+
+        $task->set_soft_retry_delay();
+        $this->assertTrue($task->is_adhoc_task_delayed());
+    }
+
+    /**
+     * Test that set_soft_retry_delay() accepts null and positive integers.
+     *
+     * @covers \core\task\adhoc_task::set_soft_retry_delay
+     */
+    public function test_set_soft_retry_delay_accepts_valid_values(): void {
+        $task = new adhoc_test_task();
+
+        // Null triggers exponential backoff.
+        $task->set_soft_retry_delay(null);
+        $this->assertNull($task->get_soft_retry_delay());
+        $this->assertTrue($task->is_adhoc_task_delayed());
+
+        // Positive integer sets an explicit delay.
+        $task2 = new adhoc_test_task();
+        $task2->set_soft_retry_delay(300);
+        $this->assertEquals(300, $task2->get_soft_retry_delay());
+        $this->assertTrue($task2->is_adhoc_task_delayed());
+    }
+
+    /**
+     * Test that set_soft_retry_delay() rejects zero and negative values.
+     *
+     * @covers \core\task\adhoc_task::set_soft_retry_delay
+     * @dataProvider invalid_soft_retry_delay_provider
+     * @param int $value The invalid delay value to test.
+     */
+    public function test_set_soft_retry_delay_rejects_invalid_values(int $value): void {
+        $task = new adhoc_test_task();
+        $this->expectException(\coding_exception::class);
+        $task->set_soft_retry_delay($value);
+    }
+
+    /**
+     * Data provider for test_set_soft_retry_delay_rejects_invalid_values.
+     *
+     * @return array
+     */
+    public static function invalid_soft_retry_delay_provider(): array {
+        return [
+            'zero'     => [0],
+            'negative' => [-1],
+        ];
     }
 }

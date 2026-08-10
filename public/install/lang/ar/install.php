@@ -36,7 +36,7 @@ $string['chooselanguagesub'] = 'يرجى تحديد لغة لاستعمالها 
 $string['clialreadyconfigured'] = 'ملف التهيئة config.php موجود سلفاً. لطفاً، استعمل الرابط ذي المسار admin/cli/install_database.php لتنصيب مودل في هذا الموقع.';
 $string['clialreadyinstalled'] = 'ملف التهيئة config.php موجود سلفاً. لطفاً، استعمل الرابط ذي المسار admin/cli/install_database.php لترقية مودل في هذا الموقع.';
 $string['cliinstallheader'] = 'برنامج تنصيب مودل {$a} عبر سطر الأوامر النصية';
-$string['clitablesexist'] = 'جداول قاعدة البيانات موجودة سلفاً؛ التنصيب عبر واجهة سطر الأوامر لا يمكنه الاستمرار.';
+$string['clitablesexist'] = 'جداول قاعدة البيانات موجودة سلفاً؛ التنصيب عبر واجهة سطر الأوامر (CLI) لا يمكنه الاستمرار.';
 $string['databasehost'] = 'مستضيف قاعدة البيانات';
 $string['databasename'] = 'اسم قاعدة البيانات';
 $string['databasetypehead'] = 'إختر مشغل قاعدة البيانات';
@@ -69,7 +69,7 @@ $string['pathsunsecuredataroot'] = 'موضع مجلد البيانات الرئ�
 $string['pathswrongadmindir'] = 'مجلد المشرف غير موجود';
 $string['phpextension'] = 'إمتداد PHP {$a}';
 $string['phpversion'] = 'إصدار PHP';
-$string['webserverconfigproblemdescription'] = 'إن مخدمك ليس مهيئًا لمنع الوصول إلى الملفات الواقعة خارج المجلد /public. يرجى الرجوع إلى <a href="https://moodledev.io/docs/5.1/guides/restructure">https://moodledev.io/docs/5.1/guides/restructure</a> للاطلاع على تفاصيل كيفية تهيئة مخدمك. بمجرد إعادة تهيئته، ترجى <a href="{$a}">زيارة مجلد الويب الأساسي</a>.';
+$string['webserverconfigproblemdescription'] = 'إن مخدمك ليس مهيئًا لمنع الوصول إلى الملفات الواقعة خارج المجلد /public. للاطلاع على تفاصيل كيفية تهيئة مخدمك بشكل صحيح، أنظر التوثيقات <a href="https://docs.moodle.org/en/Upgrading#Code_directories_restructure">الترقية - تقييد الوصول إلى مجلدات النصوص البرمجية</a>. بمجرد إعادة تهيئته، ترجى <a href="{$a}">إعادة زيارة مجلد الويب الأساسي</a>.';
 $string['webservernotconfigured'] = 'مخدم الويب غير مهيأ';
 $string['welcomep10'] = '{$a->installername} ({$a->installerversion})';
 $string['welcomep20'] = 'أنت تشاهد هذه الصفحة لأنك تمكنت بنجاح من تنصيب وإطلاق

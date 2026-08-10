@@ -662,13 +662,18 @@ abstract class object_factor_base implements object_factor {
             return;
         }
 
+        // Do not increment beyond the lockout threshold.
+        $lockthreshold = iomad::get_config('tool_mfa', 'lockout');
+        if ($this->lockcounter >= $lockthreshold) {
+            return;
+        }
+
         $this->lockcounter++;
         // Update record in DB.
         $DB->set_field('tool_mfa', 'lockcounter', $this->lockcounter, ['userid' => $USER->id, 'factor' => $this->name]);
 
-        // Now lock this factor if over the counter.
-        $lockthreshold = iomad::get_config('tool_mfa', 'lockout');
-        if ($this->lockcounter >= $lockthreshold) {
+        // Now lock this factor if the counter has reached the threshold.
+        if ($this->lockcounter == $lockthreshold) {
             $this->set_state(\tool_mfa\plugininfo\factor::STATE_LOCKED);
         }
     }

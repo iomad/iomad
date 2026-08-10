@@ -4330,8 +4330,9 @@ class admin_setting_configmixedhostiplist extends admin_setting_configtextarea {
             $badentries[] = $entry;
         }
 
-        if ($badentries) {
-            return get_string('validateerrorlist', 'admin', join(', ', $badentries));
+        if (count($badentries) > 0) {
+            $badentries = implode(get_string('listsep', 'core_langconfig') . ' ', $badentries);
+            return get_string('validateerrorlist', 'admin', $badentries);
         }
         return true;
     }
@@ -4448,7 +4449,8 @@ class admin_setting_configportlist extends admin_setting_configtextarea {
                 $badentries[] = $port;
             }
         }
-        if ($badentries) {
+        if (count($badentries) > 0) {
+            $badentries = implode(get_string('listsep', 'core_langconfig') . ' ', $badentries);
             return get_string('validateerrorlist', 'admin', $badentries);
         }
         return true;

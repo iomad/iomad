@@ -108,6 +108,9 @@ function xmldb_bigbluebuttonbn_upgrade($oldversion = 0) {
         upgrade_mod_savepoint(true, 2026022600, 'bigbluebuttonbn');
     }
 
+    // Automatically generated Moodle v5.2.0 release upgrade line.
+    // Put any upgrade step following this.
+
     return true;
 }
 

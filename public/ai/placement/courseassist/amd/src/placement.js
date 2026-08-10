@@ -332,11 +332,15 @@ const AICourseAssist = class {
             case 'summarise_text':
                 params.method = 'aiplacement_courseassist_summarise_text';
                 params.heading = await getString('aisummary', 'aiplacement_courseassist');
+                params.copylabel = await getString('copyaisummary', 'aiplacement_courseassist');
+                params.regeneratelabel = await getString('regenerateaisummary', 'aiplacement_courseassist');
                 break;
 
             case 'explain_text':
                 params.method = 'aiplacement_courseassist_explain_text';
                 params.heading = await getString('aiexplain', 'aiplacement_courseassist');
+                params.copylabel = await getString('copyaiexplanation', 'aiplacement_courseassist');
+                params.regeneratelabel = await getString('regenerateaiexplanation', 'aiplacement_courseassist');
                 break;
         }
 
@@ -407,16 +411,16 @@ const AICourseAssist = class {
                 this.aiDrawerBodyElement.scrollTop = existingReponse.offsetTop;
             }
         } else {
-            // Display loading spinner.
-            this.displayLoading();
-            // Clear the drawer to prevent including the previously generated response in the new response prompt.
+            // Capture page content before any drawer UI changes. The drawer lives inside [role="main"].
+            const prompttext = this.getTextContent();
             this.aiDrawerBodyElement.innerHTML = '';
             const params = await this.getParamsForAction(action);
+            this.displayLoading();
             const request = {
                 methodname: params.method,
                 args: {
                     contextid: this.contextId,
-                    prompttext: this.getTextContent(),
+                    prompttext: prompttext,
                 }
             };
             try {
@@ -486,6 +490,8 @@ const AICourseAssist = class {
             content: content,
             heading: params.heading,
             action: action,
+            copylabel: params.copylabel,
+            regeneratelabel: params.regeneratelabel,
         };
         Templates.render('aiplacement_courseassist/response', args).then((html) => {
             this.addResponseToStack(action, html);
@@ -521,12 +527,49 @@ const AICourseAssist = class {
     }
 
     /**
-     * Get the text content of the main region.
+     * Get the text content of the main region for use as an AI prompt.
      * @return {String} The text content.
      */
     getTextContent() {
         const mainRegion = document.querySelector(Selectors.ELEMENTS.MAIN_REGION);
-        return mainRegion.innerText || mainRegion.textContent;
+        if (!mainRegion) {
+            return '';
+        }
+
+        // The drawer is rendered inside [role="main"]. Temporarily hide AI placement UI so
+        // innerText reflects only visible page content, matching live DOM behaviour.
+        const aiElements = mainRegion.querySelectorAll(
+            `${Selectors.ELEMENTS.AIDRAWER}, ${Selectors.ELEMENTS.RESPONSE}, ${Selectors.ELEMENTS.COURSE_ASSIST_CONTROLS}`
+        );
+        const previousDisplay = [];
+        aiElements.forEach((element) => {
+            previousDisplay.push(element.style.display);
+            element.style.display = 'none';
+        });
+
+        try {
+            const rawText = mainRegion.innerText || mainRegion.textContent || '';
+            return this.normalizePromptText(rawText);
+        } finally {
+            aiElements.forEach((element, index) => {
+                element.style.display = previousDisplay[index];
+            });
+        }
+    }
+
+    /**
+     * Collapse redundant whitespace from extracted page text.
+     * @param {String} text Raw text from the main region.
+     * @return {String} Normalized prompt text.
+     */
+    normalizePromptText(text) {
+        return text
+            .replace(/\r\n/g, '\n')
+            .split('\n')
+            .map((line) => line.replace(/\s+/g, ' ').trim())
+            .join('\n')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
     }
 };
 

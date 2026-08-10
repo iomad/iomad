@@ -304,7 +304,7 @@ final class overviewtable_test extends \advanced_testcase {
 
         $this->assertEquals($visible, $cm->visible);
         $this->assertEquals($isavailable, $cm->available);
-        if ($isavailable || !$visible) {
+        if ($isavailable) {
             $this->assertEmpty($cm->availableinfo);
         } else {
             $this->assertEquals($availabilityvisible, !empty($cm->availableinfo));
@@ -450,7 +450,7 @@ final class overviewtable_test extends \advanced_testcase {
 
         $this->assertEquals($visible, $cm->visible);
         $this->assertEquals($isavailable, $cm->available);
-        if ($isavailable || !$visible) {
+        if ($isavailable) {
             $this->assertEmpty($cm->availableinfo);
         } else {
             $this->assertEquals($availabilityvisible, !empty($cm->availableinfo));

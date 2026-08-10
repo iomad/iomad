@@ -49,5 +49,19 @@ function xmldb_qtype_multianswer_upgrade($oldversion) {
     // Automatically generated Moodle v5.1.0 release upgrade line.
     // Put any upgrade step following this.
 
+    // Automatically generated Moodle v5.2.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    if ($oldversion < 2026042001) {
+        // The cleanup task may have failed before due to MDL-86281.
+        $task = new \qtype_multianswer\task\cleanup_duplicate_subquestions();
+        $queuedtask = \core\task\manager::get_queued_adhoc_task_record($task);
+        if ($queuedtask && $queuedtask->faildelay > 0 && $queuedtask->attemptsavailable === 0) {
+            mtrace('Subquestion cleanup task failed before. Re-queueing.');
+            \core\task\manager::queue_adhoc_task($task);
+        }
+        upgrade_plugin_savepoint(true, 2026042001, 'qtype', 'multianswer');
+    }
+
     return true;
 }

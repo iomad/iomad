@@ -24,11 +24,15 @@
 
 declare(strict_types=1);
 
+use core\exception\invalid_parameter_exception;
 use core\output\inplace_editable;
 use core_reportbuilder\form\audience;
 use core_reportbuilder\form\filter;
+use core_reportbuilder\local\audiences\base as audience_base;
 use core_reportbuilder\local\helpers\audience as audience_helper;
 use core_reportbuilder\local\models\report;
+use core_reportbuilder\local\report\base as report_base;
+use core_reportbuilder\{manager, permission};
 use core_tag\output\{tagfeed, tagindex};
 
 /**
@@ -38,11 +42,20 @@ use core_tag\output\{tagfeed, tagindex};
  * @return string
  */
 function core_reportbuilder_output_fragment_filters_form(array $params): string {
+    $report = new report($params['reportid']);
+
+    // Verify current user can access the report data.
+    if ($report->get('type') === report_base::TYPE_CUSTOM_REPORT) {
+        permission::require_can_view_report($report);
+    } else {
+        $reportinstance = manager::get_report_from_persistent($report, (array) json_decode($params['parameters']));
+        $reportinstance->require_can_view();
+    }
+
     $filtersform = new filter(null, null, 'post', '', [], true, [
         'reportid' => $params['reportid'],
         'parameters' => $params['parameters'],
     ]);
-
     $filtersform->set_data_for_dynamic_submission();
 
     return $filtersform->render();
@@ -53,9 +66,20 @@ function core_reportbuilder_output_fragment_filters_form(array $params): string 
  *
  * @param array $params
  * @return string
+ * @throws invalid_parameter_exception
  */
 function core_reportbuilder_output_fragment_audience_form(array $params): string {
     global $PAGE;
+
+    $report = new report($params['reportid']);
+    permission::require_can_edit_report($report);
+
+    // Verify current user can add the requested audience type.
+    $instance = audience_base::instance(0, (object) $params);
+    if ($instance === null) {
+        throw new invalid_parameter_exception($params['classname']);
+    }
+    $instance->require_user_can_add();
 
     $audienceform = new audience(null, null, 'post', '', [], true, [
         'reportid' => $params['reportid'],

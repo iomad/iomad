@@ -25,7 +25,7 @@ Feature: Unenrol action to disable course enrolment
       | user       | course | role           | timestart       |
       | teacher001 | C001   | editingteacher | ##1 month ago## |
 
-  @javascript @skip_chrome_zerosize
+  @javascript
   Scenario: Removing the user from the cohort will suspend the enrolment but keep the role
     When I log in as "teacher001"
     And I am on the "Course 001" "enrolment methods" page
@@ -50,14 +50,13 @@ Feature: Unenrol action to disable course enrolment
     And I set the field "Current users" to "Student 001 (student001@example.com)"
     And I wait "1" seconds
     And I press "Remove"
-    And I am on "Course 001" course homepage
-    And I navigate to course participants
+    And I am on the "Course 001" "enrolled users" page
     And I should see "Suspended" in the "Student 001" "table_row"
     And I should see "Active" in the "Student 002" "table_row"
     And I should see "Active" in the "Student 003" "table_row"
     And I should see "Active" in the "Student 004" "table_row"
 
-  @javascript @skip_chrome_zerosize
+  @javascript
   Scenario: Deleting non-empty cohort will suspend the enrolment but keep the role
     When I log in as "teacher001"
     And I am on the "Course 001" "enrolment methods" page
@@ -79,8 +78,7 @@ Feature: Unenrol action to disable course enrolment
     And I navigate to "Users > Accounts > Cohorts" in site administration
     When I press "Delete" action in the "System cohort" report row
     And I click on "Delete" "button" in the "Delete selected" "dialogue"
-    And I am on "Course 001" course homepage
-    And I navigate to course participants
+    And I am on the "Course 001" "enrolled users" page
     And I should see "Suspended" in the "Student 001" "table_row"
     And I should see "Suspended" in the "Student 002" "table_row"
     And I should see "Suspended" in the "Student 003" "table_row"

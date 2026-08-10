@@ -24,13 +24,10 @@
  *   <component>/js/esm/src/**\/*.{ts,tsx}  →  <component>/js/esm/build/**\/*.js
  *
  * Exports:
- *   createBuildConfig(isDev)           esbuild config object; pass isDev=true
- *                                      to disable minification / add sourcemaps.
- *   buildPluginComponents(isDev)       Glob for every js/esm/src tree across
+ *   createBuildConfig()                esbuild config object (always production).
+ *   buildPluginComponents()            Glob for every js/esm/src tree across
  *                                      core and plugins, compile all in parallel.
- *   buildSingleFile(filePath, isDev)   Compile one source file; used by the
- *                                      Grunt watch task on incremental changes.
- *   watchComponents(isDev)             Start esbuild's native watch mode so the
+ *   watchComponents(onRebuild)         Start esbuild's native watch mode so the
  *                                      compiler rebuilds affected files on save.
  *   resolveComponentPaths(entry)       Map an absolute source path to its
  *                                      relative input path and output path.
@@ -179,33 +176,70 @@ async function runParallelBuilds(entryPoints, buildConfig) {
 }
 
 /**
+ * An esbuild plugin that externalizes relative imports within the same esm/src/ directory.
+ *
+ * This prevents sibling modules from being inlined into each output bundle, so that
+ * a change to a dependency (e.g. StorageWrapper) does not alter the built output of
+ * its consumers (e.g. LocalStorage, SessionStorage).
+ *
+ * Relative imports are rewritten from their source extension (.ts/.tsx) to .js in the output.
+ *
+ * @returns {import('esbuild').Plugin}
+ */
+function externalRelativeImports() {
+    return {
+        name: 'external-relative-imports',
+        setup(build) {
+            // Match relative imports (starting with ./ or ../) that are NOT .css/.scss files.
+            build.onResolve({ filter: /^\.\.?\// }, (args) => {
+                // Only externalize imports within esm/src trees.
+                if (!args.importer || !args.importer.includes(path.join('esm', 'src'))) {
+                    return null;
+                }
+
+                // Resolve the full path to determine if it's within the same esm/src tree.
+                const resolved = path.resolve(path.dirname(args.importer), args.path);
+                if (!resolved.includes(path.join('esm', 'src'))) {
+                    return null;
+                }
+
+                // Rewrite the extension to remove any extension.
+                let externalPath = args.path;
+                if (/\.(ts|tsx|js|jsx)$/.test(externalPath)) {
+                    externalPath = externalPath.replace(/\.(ts|tsx|js|jsx)$/, '');
+                }
+
+                return { path: externalPath, external: true };
+            });
+        },
+    };
+}
+
+/**
  * Create the shared esbuild build configuration.
  *
- * @param {boolean} isDev Whether development mode is enabled.
  * @returns {import('esbuild').BuildOptions} esbuild configuration object.
  */
-export function createBuildConfig(isDev) {
+export function createBuildConfig() {
     return {
         bundle: true,
         format: "esm",
         external: ["react", "react/*", "react-dom", "react-dom/*", "@moodlehq/design-system", "@moodlehq/design-system/*", "@moodle/lms", "@moodle/lms/*"],
         jsx: "automatic",
-        minify: !isDev,
-        sourcemap: isDev ? 'inline' : false,
-        jsxDev: isDev,
-        keepNames: isDev,
-        treeShaking: !isDev,
-        define: { 'process.env.NODE_ENV': isDev ? '"development"' : '"production"' },
+        minify: true,
+        sourcemap: 'linked',
+        treeShaking: true,
+        plugins: [externalRelativeImports()],
+        define: { 'process.env.NODE_ENV': '"production"' },
     };
 }
 
 /**
  * Build all plugin and core React components.
  *
- * @param {boolean} isDev Whether development mode is enabled.
  * @returns {Promise<void>}
  */
-export async function buildPluginComponents(isDev) {
+export async function buildPluginComponents() {
     console.log(chalk.green('> Building components...'));
 
     const entryPoints = glob.sync("**/js/esm/src/**/*.{ts,tsx}", {
@@ -217,7 +251,7 @@ export async function buildPluginComponents(isDev) {
         ],
     });
 
-    const buildConfig = createBuildConfig(isDev);
+    const buildConfig = createBuildConfig();
 
     const { errors } = await runParallelBuilds(entryPoints, buildConfig);
 
@@ -233,13 +267,12 @@ export async function buildPluginComponents(isDev) {
  * esbuild can reuse its internal graph between rebuilds instead of starting
  * from scratch on every file change.
  *
- * @param {boolean} isDev Whether to build in development mode.
  * @param {((srcFiles: string[]) => void) | undefined} [onRebuild] Called with the rebuilt entry source
  *        files (relative to project root) after each non-initial successful rebuild. Use this to run
  *        follow-up tasks such as linting without coupling them to this module.
  * @returns {Promise<import('esbuild').BuildContext|null>} The active context, or null if no source files exist.
  */
-export async function watchComponents(isDev, onRebuild) {
+export async function watchComponents(onRebuild) {
     const entryPoints = glob.sync("**/js/esm/src/**/*.{ts,tsx}", {
         cwd: projectRoot,
         absolute: true,
@@ -253,7 +286,7 @@ export async function watchComponents(isDev, onRebuild) {
         return null;
     }
 
-    const buildConfig = createBuildConfig(isDev);
+    const buildConfig = createBuildConfig();
 
     // Map each source file to an {in, out} pair so esbuild can write each
     // component to its custom output directory while sharing a single context.
@@ -316,7 +349,7 @@ export async function watchComponents(isDev, onRebuild) {
         entryPoints: entryPairs,
         outdir: projectRoot,
         metafile: true,
-        plugins: [watchReporter],
+        plugins: [...(buildConfig.plugins || []), watchReporter],
     });
 
     await ctx.watch();
