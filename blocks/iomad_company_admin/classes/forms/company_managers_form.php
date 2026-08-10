@@ -365,11 +365,11 @@ class company_managers_form extends moodleform {
                             ]);
                     // We have to be mindful of educator types here.
                     $educator = false;
-                    $usermanagertype = 0;
+                    $usermanagertype = $roletype;
                     if (!$CFG->iomad_autoenrol_managers) {
                         if ($roletype != 3) {
                             $educator = $userrec->educator;
-                            $usermanagertype = 0;
+                            $usermanagertype = $roletype;
                         } else {
                             $educator = false;
                             $usermanagertype = $userrec->managertype;

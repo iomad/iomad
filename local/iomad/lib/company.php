@@ -1528,6 +1528,18 @@ class company {
             $companycourses[$sharedcourse->courseid] = $sharedcourse;
         }
 
+        // Store the last used data.
+        $lastusedinfo = $DB->get_record_sql(
+            "SELECT MAX(lastused) AS latest
+                FROM {local_iomad_company_users}
+                WHERE userid = :userid
+                AND companyid = :companyid",
+            [
+                'userid' => $userid,
+                'companyid' => $companyid,
+            ]
+        );
+
         // Does the user exist in the department?
         if (!$user = $DB->get_record('company_users', $assign)) {
             if (($managertype == 1 || $managertype == 2) && $CFG->iomad_autoenrol_managers) {
@@ -1552,6 +1564,8 @@ class company {
                 ];
                 $DB->delete_records_select('company_users', $selectsql, $selectparams);
             }
+
+            // Process any role changes.
             if ($managertype == 0 &&
                 $DB->get_records_select(
                      'company_users',
@@ -1856,21 +1870,16 @@ class company {
                     }
                 }
             }
+
+            // Are we demoting a manager?
             if (($user->managertype == 1 ||
                  $user->managertype == 2 ||
                  $user->managertype == 4)
                  && $managertype == 0) {
                 // Demoting a manager to a user.
                 // Deal with company course roles.
-                $multidepartment = $DB->get_records_select(
-                    'company_users',
-                    "companyid = :companyid
-                     AND departmentid != :departmentid",
-                    ['companyid' => $companyid,
-                     'departmentid' => $departmentid]);
                 if ($CFG->iomad_autoenrol_managers &&
-                    !empty($companycourses) &&
-                    empty($multidepartment)) {
+                    !empty($companycourses)) {
                     foreach ($companycourses as $companycourse) {
                         if ($DB->record_exists('course', ['id' => $companycourse->courseid])) {
                             company_user::unenrol($userid,
@@ -1880,11 +1889,10 @@ class company {
                         }
                     }
                 }
-                if (empty($multidepartment)) {
-                    role_unassign($companymanagerrole->id, $userid, $companycontext->id);
-                    role_unassign($departmentmanagerrole->id, $userid, $companycontext->id);
-                    role_unassign($companyreporterrole->id, $userid, $companycontext->id);
-                }
+                role_unassign($companymanagerrole->id, $userid, $companycontext->id);
+                role_unassign($departmentmanagerrole->id, $userid, $companycontext->id);
+                role_unassign($companyreporterrole->id, $userid, $companycontext->id);
+
                 if ($user->managertype == 1) {
                     // Deal with child companies.
                     $childcompanies = $company->get_child_companies_recursive();
@@ -1912,10 +1920,8 @@ class company {
                         );
                     }
                 }
-                if (empty($multidepartment)) {
-                    // Make sure all department records in the company match this.
-                    $DB->set_field('company_users', 'managertype', 0, ['companyid' => $companyid, 'userid' => $userid]);
-                }
+                // Make sure all department records in the company match this.
+                $DB->set_field('company_users', 'managertype', 0, ['companyid' => $companyid, 'userid' => $userid]);
             }
             if ($educator && $user->educator != 1 &&
                  !$CFG->iomad_autoenrol_managers &&
@@ -1962,6 +1968,18 @@ class company {
                 $success = $DB->update_record('company_users', array_merge($assign, $s));
             }
         }
+
+        // Fix any last used values.
+        $DB->set_field(
+            'local_iomad_company_users',
+            'lastused',
+            $lastusedinfo->latest,
+            [
+                'userid' => $userid,
+                'companyid' => $companyid,
+            ]
+        );
+
         if (!$success) {
             throw new moodle_exception(get_string('cantassignusersdb', 'block_iomad_company_admin'));
         }
