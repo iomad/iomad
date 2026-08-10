@@ -16,8 +16,11 @@
 
 namespace core;
 
+use core\context\course;
+use core\context\module;
 use core_question\local\bank\question_bank_helper;
 use mod_quiz\quiz_settings;
+use PHPUnit\Framework\Attributes\DataProvider;
 use question_bank;
 
 defined('MOODLE_INTERNAL') || die();
@@ -53,9 +56,9 @@ final class questionlib_test extends \advanced_testcase {
 
     /**
      * Generate a course and question bank module instance for use in test cases, and return the bank context.
-     * @return \core\context\module
+     * @return module
      */
-    protected function create_course_and_question_bank(): \core\context\module {
+    protected function create_course_and_question_bank(): module {
         $course = self::getDataGenerator()->create_course();
         $qbank = self::getDataGenerator()->create_module('qbank', ['course' => $course->id]);
         return \context_module::instance($qbank->cmid);
@@ -401,6 +404,77 @@ final class questionlib_test extends \advanced_testcase {
         $this->assertEquals($newcm->modname, 'qbank');
         $this->assertEquals(question_bank_helper::TYPE_SYSTEM, $DB->get_field('qbank', 'type', ['id' => $newcm->instance]));
         $this->assertEquals($targetcourseid, $newcourse->id);
+    }
+
+    /**
+     * This function tests the question_category_delete_safe function when the context of
+     * the question category no longer exists (orphaned category).
+     *
+     * When using the script admin/cli/fix_orphaned_question_categories the context of
+     * a question category is missing: the questions should be rescued to the site-level
+     * question bank instead of throwing a fatal error.
+     *
+     * @covers ::question_category_delete_safe
+     */
+    public function test_question_catetory_delete_safe_orphaned(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        [, , , $qcat, $questions] = $this->setup_quiz_and_questions();
+
+        // Simulate an orphaned question category by deleting the context from the database directly,
+        // bypassing Moodle's context cleanup so the category still references the now-missing context.
+        $DB->delete_records('context', ['id' => $qcat->contextid]);
+        \context_helper::reset_caches();
+
+        $sink = $this->redirectEvents();
+
+        // Calling question_category_delete_safe on an orphaned category must not throw an exception.
+        question_category_delete_safe($qcat);
+
+        // Verify event question_moved is triggered for systemcontext.
+        $events = $sink->get_events();
+
+        // Reset expected debugging call caused by missing context.
+        $this->resetDebugging();
+
+        $questionmovedevents = array_filter($events, function ($event) {
+            return $event->get_data()['eventname'] === '\core\event\question_moved';
+        });
+
+        $this->assertCount(1, $questionmovedevents);
+        $questionmovedevent = reset($questionmovedevents);
+        $this->assertEquals(SITEID, $questionmovedevent->get_data()['contextid']);
+
+        // Verify category deleted.
+        $criteria = ['id' => $qcat->id];
+        $this->assertEquals(0, $DB->count_records('question_categories', $criteria));
+
+        // Verify questions deleted or moved out of the deleted category.
+        $this->assert_category_contains_questions($qcat->id, 0);
+
+        // Verify question not deleted – it must have been rescued to the site-level question bank.
+        $criteria = ['id' => $questions[0]->id];
+        $savedquestion = $DB->get_record_sql(
+            "SELECT q.*, qbe.questioncategoryid
+               FROM {question} q
+                    JOIN {question_versions} qv ON qv.questionid = q.id
+                    JOIN {question_bank_entries} qbe ON qv.questionbankentryid = qbe.id",
+            $criteria
+        );
+        $this->assertNotEmpty($savedquestion);
+
+        // Verify question now sits in a system qbank at site level (fallback when context is missing).
+        $this->assertNotEquals($qcat->id, $savedquestion->questioncategoryid);
+        $newcategory = $DB->get_record('question_categories', ['id' => $savedquestion->questioncategoryid], strictness: MUST_EXIST);
+        $newcategorycontext = \context::instance_by_id($newcategory->contextid);
+        $this->assertEquals(\context_module::LEVEL, $newcategorycontext->contextlevel);
+        [$newcourse, $newcm] = get_course_and_cm_from_cmid($newcategorycontext->instanceid);
+        $this->assertEquals($newcm->modname, 'qbank');
+        $this->assertEquals(question_bank_helper::TYPE_SYSTEM, $DB->get_field('qbank', 'type', ['id' => $newcm->instance]));
+        // When context is missing, questions must be rescued to the site (SITEID).
+        $this->assertEquals(SITEID, $newcourse->id);
     }
 
     /**
@@ -1776,5 +1850,77 @@ final class questionlib_test extends \advanced_testcase {
 
         $this->assertEquals($randomquestion->contextid, $context2->id);
         $this->assertEquals($randomquestion->filtercondition['filter']['category']['values'][0], $topcategory2->id);
+    }
+
+    /**
+     * Provide examples of different modules and the page types returned by their _page_type_list function.
+     *
+     * @return array[] Module name, and a list of page types.
+     */
+    public static function module_page_types(): array {
+        return [
+            'quiz' => [
+                'module' => 'quiz',
+                'pagetypes' => [
+                    'mod-quiz-*',
+                    'mod-quiz-view',
+                    'mod-quiz-attempt',
+                    'mod-quiz-summary',
+                    'mod-quiz-review',
+                    'mod-quiz-edit',
+                    'mod-quiz-report',
+                ],
+            ],
+            'forum' => [
+                'module' => 'forum',
+                'pagetypes' => [
+                    'mod-forum-*',
+                    'mod-forum-view',
+                    'mod-forum-discuss',
+                ],
+            ],
+            'scorm' => [
+                'module' => 'scorm',
+                'pagetypes' => [
+                    'mod-scorm-*',
+                ],
+            ],
+            'lti' => [ // LTI has no additional page types.
+                'module' => 'lti',
+                'pagetypes' => [],
+            ],
+        ];
+    }
+
+    /**
+     * Calling question_page_type_list should return the question page types, plus the page types for the module context.
+     *
+     * @covers ::question_page_type_list
+     * @param string $module The module name.
+     * @param string[] $pagetypes A list of the page type patterns this module should add.
+     */
+    #[DataProvider('module_page_types')]
+    public function test_question_page_type_list(string $module, array $pagetypes): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $coursecontext = course::instance($course->id);
+
+        $modulerecord = $this->getDataGenerator()->create_module($module, ['course' => $course->id]);
+        $modulecontext = module::instance($modulerecord->cmid);
+
+        $questionpagetypes = [
+            'question-*',
+            'question-edit',
+            'question-bank-managecategories-category',
+            'question-bank-exportquestions-export',
+            'question-bank-importquestions-import',
+        ];
+
+        $expectedpagetypes = array_merge($pagetypes, $questionpagetypes);
+        $actualpagetypes = question_page_type_list('question-edit', $coursecontext, $modulecontext);
+        // Check that the expected page type patterns match those returned for this module.
+        $this->assertEquals($expectedpagetypes, array_keys($actualpagetypes));
     }
 }

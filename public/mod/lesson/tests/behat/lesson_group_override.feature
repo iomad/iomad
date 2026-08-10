@@ -87,24 +87,18 @@ Feature: Lesson group override
     And I set the following fields to these values:
       | Allow multiple attempts | 0 |
     And I press "Save and display"
-    When I am on the "Test lesson name" "lesson activity" page logged in as student1
-    And I should see "Cat is an amphibian"
-    And I set the following fields to these values:
-      | False | 1 |
-    And I press "Submit"
-    And I press "Continue"
-    And I should see "Congratulations - end of lesson reached"
+    And the following "mod_lesson > attempts" exist:
+      | lesson           | user     | page                  | answer | correct |
+      | Test lesson name | student1 | True/false question 1 | False  | 1       |
+      | Test lesson name | student2 | True/false question 1 | False  | 1       |
+    When I am on the "Course 1" course page logged in as student1
+    And I follow "Grades" in the user menu
+    And I click on "Course 1" "link" in the "Course 1" "table_row"
+    Then I should see "100" in the "Test lesson name" "table_row"
     And I am on the "Test lesson name" "lesson activity" page
-    Then I should not see "You are not allowed to retake this lesson."
+    And I should not see "You are not allowed to retake this lesson."
     And I should see "Cat is an amphibian"
     And I am on the "Test lesson name" "lesson activity" page logged in as student2
-    And I should see "Cat is an amphibian"
-    And I set the following fields to these values:
-      | False | 1 |
-    And I press "Submit"
-    And I press "Continue"
-    And I should see "Congratulations - end of lesson reached"
-    And I am on the "Test lesson name" "lesson activity" page
     And I should see "You are not allowed to retake this lesson."
 
   Scenario: Allow a single group to have a different password
@@ -380,8 +374,7 @@ Feature: Lesson group override
     And the following "mod_lesson > user overrides" exist:
       | lesson           | user     | available    | deadline          |
       | Test lesson name | student1 | ##tomorrow## | ##tomorrow noon## |
-    And I am on the "C1" "Course" page logged in as teacher1
-    And I navigate to course participants
+    And I am on the "C1" "enrolled users" page logged in as teacher1
     And I click on "Unenrol" "icon" in the "student1" "table_row"
     And I click on "Unenrol" "button" in the "Unenrol" "dialogue"
     When I log in as "student1"

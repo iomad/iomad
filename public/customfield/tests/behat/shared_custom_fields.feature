@@ -10,10 +10,28 @@ Feature: Create shared categories and fields
     And I press "Add a new category"
     And I wait until the page is ready
     Then I should see "Other fields" in the "#customfield_catlist" "css_element"
+    And "The category has been successfully added" "toast_message" should exist
     And I click on "[data-role='deletecategory']" "css_element"
     And I click on "Yes" "button" in the "Confirm" "dialogue"
     And I wait until the page is ready
     And I wait until "Other fields" "text" does not exist
+
+  @accessibility
+  Scenario: Create categories for shared custom fields using keyboard
+    Given I log in as "admin"
+    And I navigate to "Custom fields > Shared custom fields" in site administration
+    And the "region-main" "region" should meet accessibility standards with "best-practice" extra tests
+    And I press the tab key
+    And I click on "Skip to main content" "link"
+    And I press the tab key
+    And the focused element is "Add a new category" "button"
+    When I press the space key
+    Then I wait until "Other fields" "text" exists
+    And I press the tab key
+    And the focused element is "Add a new category" "button"
+    And I press enter
+    And I wait until "Other fields 1" "text" exists
+    And the "region-main" "region" should meet accessibility standards with "best-practice" extra tests
 
   Scenario: Shared custom field short name must be unique across all instance fields
     Given the following "custom field categories" exist:

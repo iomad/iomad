@@ -349,6 +349,31 @@ final class manager_test extends \advanced_testcase {
     }
 
     /**
+     * Test that get_next_adhoc_task() skips orphaned tasks whose class no longer exists
+     * (e.g. because the providing plugin was removed) instead of throwing and blocking
+     * dispatch of other valid tasks.
+     *
+     * @covers \core\task\manager::get_next_adhoc_task
+     */
+    public function test_get_next_adhoc_task_skips_orphaned_task_with_invalid_classname(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        manager::queue_adhoc_task(new adhoc_test_task());
+        $orphanedid = manager::queue_adhoc_task(new adhoc_test_task());
+        $DB->set_field('task_adhoc', 'classname', '\core\task\nonexistent_removed_plugin_task', ['id' => $orphanedid]);
+
+        $timestart = time();
+
+        $task = manager::get_next_adhoc_task($timestart);
+        $this->assertDebuggingCalled('Failed to load task: \core\task\nonexistent_removed_plugin_task');
+        $this->assertNotNull($task);
+        $this->assertNotEquals($orphanedid, $task->get_id());
+        manager::adhoc_task_complete($task);
+    }
+
+    /**
      * Test verifying \core\task\manager behaviour for scheduled tasks when dealing with deprecated plugin types.
      *
      * This only verifies that existing tasks will not be listed, or returned for execution via existing APIs, like:
@@ -554,5 +579,89 @@ final class manager_test extends \advanced_testcase {
         $this->assertNotNull($taskfromqueue);
         $taskfromqueue->execute();
         manager::adhoc_task_complete($taskfromqueue);
+    }
+
+    /**
+     * Test that adhoc_task_delayed schedules a task correctly, for both exponential
+     * backoff (null delay) and an explicit soft retry delay.
+     *
+     * @covers \core\task\manager::adhoc_task_delayed
+     * @dataProvider adhoc_task_delayed_provider
+     * @param int|null $softretrydelay The soft retry delay to set (null for exponential backoff).
+     * @param int $expectednextruntime The expected next run time after the delay.
+     */
+    public function test_adhoc_task_delayed(?int $softretrydelay, int $expectednextruntime): void {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        // Freeze time.
+        $clock = $this->createMock(\core\clock::class);
+        $clock->method('time')->willReturn(1000);
+        \core\di::set(\core\clock::class, $clock);
+
+        // Create and queue task.
+        $task = new adhoc_test_task();
+        $taskid = \core\task\manager::queue_adhoc_task($task);
+
+        // Reload task from DB.
+        $record = $DB->get_record('task_adhoc', ['id' => $taskid], '*', MUST_EXIST);
+        $task = \core\task\manager::adhoc_task_from_record($record);
+
+        // Simulate calling set_soft_retry_delay() from within execute().
+        $task->set_soft_retry_delay($softretrydelay);
+
+        // Fake an initial next run time (first retry).
+        $task->set_next_run_time(1000);
+
+        // Lock the task properly.
+        $lockfactory = \core\lock\lock_config::get_lock_factory('cron');
+        $lock = $lockfactory->get_lock('adhoc_' . $taskid, 10);
+        $task->set_lock($lock);
+
+        // Get the initialattempts value before we delay the task.
+        $initialattempts = $task->get_attempts_available();
+
+        // Call delayed retry.
+        ob_start();
+        \core\task\manager::adhoc_task_delayed($task);
+        ob_end_clean();
+
+        // Reload after update.
+        $record = $DB->get_record('task_adhoc', ['id' => $taskid], '*', MUST_EXIST);
+        $task = \core\task\manager::adhoc_task_from_record($record);
+
+        $this->assertEquals($expectednextruntime, $task->get_next_run_time());
+
+        // Metadata reset.
+        $this->assertEmpty($task->get_timestarted());
+        $this->assertEmpty($task->get_hostname());
+        $this->assertEmpty($task->get_pid());
+
+        // Attempts should decrement.
+        $this->assertEquals($initialattempts - 1, $task->get_attempts_available());
+
+        // Fail delay must be 0 — delayed tasks are not failures.
+        $this->assertEquals(0, $task->get_fail_delay());
+    }
+
+    /**
+     * Data provider for test_adhoc_task_delayed.
+     *
+     * @return array
+     */
+    public static function adhoc_task_delayed_provider(): array {
+        return [
+            // Exponential: retrycount = max(0, 12 - attemptsavailable(12)) = 0, delay = min(86400, 60 * pow(2, 0)) = 60.
+            'exponential_backoff' => [
+                'softretrydelay'      => null,
+                'expectednextruntime' => 1060,
+            ],
+            // Explicit: delay = 120, so nextruntime = now(1000) + 120.
+            'explicit_delay' => [
+                'softretrydelay'      => 120,
+                'expectednextruntime' => 1120,
+            ],
+        ];
     }
 }

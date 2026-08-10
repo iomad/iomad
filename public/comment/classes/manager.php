@@ -217,7 +217,7 @@ class manager {
         $this->template .= html_writer::start_tag('div', ['class' => 'comment-message-meta me-3']);
 
         $this->template .= html_writer::tag('span', '___picture___', ['class' => 'picture']);
-        $this->template .= html_writer::tag('span', '___name___', ['class' => 'user']) . ' - ';
+        $this->template .= html_writer::tag('span', '___name___', ['class' => 'user fw-bold']) . ' - ';
         $this->template .= html_writer::tag('span', '___time___', ['class' => 'time']);
 
         $this->template .= html_writer::end_tag('div'); // End .comment-message-meta.
@@ -261,7 +261,6 @@ class manager {
 
         $page->requires->strings_for_js(
             [
-                'addcomment',
                 'comments',
                 'commentsrequirelogin',
                 'deletecommentbyon',
@@ -526,6 +525,7 @@ class manager {
                     'rows' => 2,
                     'id' => 'dlg-content-' . $this->cid,
                     'aria-label' => get_string('addcomment'),
+                    'placeholder' => get_string('addcomment'),
                 ];
                 if (!$this->fullwidth) {
                     $textareaattrs['cols'] = '20';
@@ -543,7 +543,9 @@ class manager {
                 $html .= html_writer::tag('textarea', '', $textareaattrs);
                 $html .= html_writer::end_tag('div'); // End .db.
 
-                $html .= html_writer::start_tag('div', ['class' => 'fd', 'id' => 'comment-action-' . $this->cid]);
+                // SC 2.5.8: add spacing above the action links so the "Save comment" link
+                // meets the target size minimum relative to the textarea above it.
+                $html .= html_writer::start_tag('div', ['class' => 'fd mt-1', 'id' => 'comment-action-' . $this->cid]);
                 $html .= html_writer::link('#', get_string('savecomment'), ['id' => 'comment-action-post-' . $this->cid]);
 
                 if ($this->displaycancel) {

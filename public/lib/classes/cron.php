@@ -33,7 +33,6 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class cron {
-
     /** @var ?stdClass A copy of the standard cron 'user' */
     protected static ?stdClass $cronuser = null;
 
@@ -274,7 +273,6 @@ class cron {
             !\core\local\cli\shutdown::should_gracefully_exit() &&
             !\core\task\manager::static_caches_cleared_since($startprocesstime)
         ) {
-
             if ($checklimits && (time() - $startruntime) >= $maxruntime) {
                 if ($waiting) {
                     $waiting = false;
@@ -352,6 +350,10 @@ class cron {
     /**
      * Execute all failed adhoc tasks.
      *
+     * This includes tasks that have exhausted their retry limits.
+     * It is intended for manual intervention from CLI or UI scripts,
+     * matching the behaviour of manually triggering individual failed tasks.
+     *
      * @param string|null  $classname Run only tasks of this class
      */
     public static function run_failed_adhoc_tasks(?string $classname = null): void {
@@ -364,8 +366,6 @@ class cron {
             $params['classname'] = \core\task\manager::get_canonical_class_name($classname);
         }
 
-        // Only rerun the failed tasks that allow to be re-tried or have the remaining attempts available.
-        $where .= ' AND (attemptsavailable > 0 OR attemptsavailable IS NULL)';
         $tasks = $DB->get_records_sql("SELECT * from {task_adhoc} WHERE $where", $params);
         foreach ($tasks as $t) {
             self::run_adhoc_task($t->id);
@@ -527,8 +527,12 @@ class cron {
                 mtrace("... used " . (microtime(1) - $pretime) . " seconds");
             }
             mtrace('... used ' . display_size(memory_get_peak_usage()) . ' peak memory');
-            mtrace("Adhoc task complete: " . get_class($task));
-            \core\task\manager::adhoc_task_complete($task);
+            if ($task->is_adhoc_task_delayed()) {
+                \core\task\manager::adhoc_task_delayed($task);
+            } else {
+                mtrace("Adhoc task complete: " . get_class($task));
+                \core\task\manager::adhoc_task_complete($task);
+            }
         } catch (\Throwable $e) {
             if ($DB && $DB->is_transaction_started()) {
                 error_log('Database transaction aborted automatically in ' . get_class($task));

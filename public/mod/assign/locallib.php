@@ -2409,9 +2409,6 @@ class assign {
                 }
             }
 
-            // Exclude suspended users from the list of participants.
-            $additionalfilters .= " AND u.suspended = 0 AND u.auth <> 'nologin'";
-
             $sql = "SELECT $fields
                       FROM {user} u
                       JOIN ($esql UNION $ssql) je ON je.id = u.id
@@ -5803,6 +5800,8 @@ class assign {
             $gradingitem = $gradinginfo->items[0];
         }
 
+        $usergrade = $this->get_grade_item()->get_grade($userid, false);
+
         foreach ($grades as $grade) {
             // First lookup the grader info.
             if (!$showgradername) {
@@ -5819,7 +5818,7 @@ class assign {
 
             // The assign grade for each attempt is not stored in the gradebook.
             // We need to calculate them from assign_grade records.
-            [$penalisedgrade, $deductedmark] = $this->calculate_penalised_grade($grade);
+            [$penalisedgrade, $deductedmark] = $this->calculate_penalised_grade($grade, $usergrade);
 
             // Now get the gradefordisplay.
             if ($controller) {
@@ -5848,9 +5847,10 @@ class assign {
      * Calculate penalised grade and deducted mark.
      *
      * @param stdClass $grade The grade object
+     * @param grade_grade|null $usergraderecord Optional pre-fetched grade_grade for the user.
      * @return array [$penalisedgrade, $deductedmark] the penalised grade and the deducted mark
      */
-    public function calculate_penalised_grade(stdClass $grade): array {
+    public function calculate_penalised_grade(stdClass $grade, ?\grade_grade $usergraderecord = null): array {
         $penalisedgrade = $grade->grade;
         $deductedmark = 0;
 
@@ -5863,6 +5863,17 @@ class assign {
             $deductedmark = $grade->grade * $grade->penalty / 100;
             $penalisedgrade = $grade->grade - $deductedmark;
         }
+        // Apply the grade-item factors so the returned grade matches the
+        // final grade stored in the gradebook.
+        $gradeitem = $this->get_grade_item();
+        if ($usergraderecord === null) {
+            $usergraderecord = $gradeitem->get_grade($grade->userid, false);
+        }
+        $penalisedgrade = \core_grades\penalty_manager::apply_grade_item_factors(
+            $penalisedgrade,
+            $gradeitem,
+            $usergraderecord
+        );
         return [$penalisedgrade, $deductedmark];
     }
 
@@ -6375,11 +6386,15 @@ class assign {
             $userid = $USER->id;
         }
 
+        // Include overrides for current user into consideration.
+        $this->update_effective_access($userid);
+
         $time = \core\di::get(\core\clock::class)->time();
         $dateopen = true;
         $finaldate = false;
-        if ($this->get_instance()->cutoffdate) {
-            $finaldate = $this->get_instance()->cutoffdate;
+        $instance = $this->get_instance($userid);
+        if ($instance->cutoffdate) {
+            $finaldate = $instance->cutoffdate;
         }
 
         if ($flags === false) {
@@ -6400,9 +6415,9 @@ class assign {
         }
 
         if ($finaldate) {
-            $dateopen = ($this->get_instance()->allowsubmissionsfromdate <= $time && $time <= $finaldate);
+            $dateopen = ($instance->allowsubmissionsfromdate <= $time && $time <= $finaldate);
         } else {
-            $dateopen = ($this->get_instance()->allowsubmissionsfromdate <= $time);
+            $dateopen = ($instance->allowsubmissionsfromdate <= $time);
         }
 
         if (!$dateopen) {
@@ -6415,7 +6430,7 @@ class assign {
         }
         // Note you can pass null for submission and it will not be fetched.
         if ($submission === false) {
-            if ($this->get_instance()->teamsubmission) {
+            if ($instance->teamsubmission) {
                 $submission = $this->get_group_submission($userid, 0, false);
             } else {
                 $submission = $this->get_user_submission($userid, false);
@@ -6423,7 +6438,7 @@ class assign {
         }
         if ($submission) {
 
-            if ($this->get_instance()->submissiondrafts && $submission->status == ASSIGN_SUBMISSION_STATUS_SUBMITTED) {
+            if ($instance->submissiondrafts && $submission->status == ASSIGN_SUBMISSION_STATUS_SUBMITTED) {
                 // Drafts are tracked and the student has submitted the assignment.
                 return false;
             }
@@ -6431,11 +6446,13 @@ class assign {
 
         // See if this user grade is locked in the gradebook.
         if ($gradinginfo === false) {
-            $gradinginfo = grade_get_grades($this->get_course()->id,
-                                            'mod',
-                                            'assign',
-                                            $this->get_instance()->id,
-                                            array($userid));
+            $gradinginfo = grade_get_grades(
+                $this->get_course()->id,
+                'mod',
+                'assign',
+                $instance->id,
+                [$userid],
+            );
         }
         if ($gradinginfo &&
                 isset($gradinginfo->items[0]->grades[$userid]) &&

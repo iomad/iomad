@@ -272,6 +272,8 @@ function question_category_delete_safe($category, bool $coursedeletion = false):
                 $name = $context->get_context_name();
                 $parentcontext = $context->get_course_context(false);
                 $course = ($parentcontext && !$coursedeletion) ? get_course($parentcontext->instanceid) : get_site();
+            } else {
+                $course = get_site();
             }
             $qbank = core_question\local\bank\question_bank_helper::get_default_open_instance_system_type($course, true);
             question_save_from_deletion(array_keys($questionids), $qbank->context->id, $name, $rescue);
@@ -642,8 +644,18 @@ function question_move_questions_to_category($questionids, $newcategoryid): bool
         $DB->update_record('question_bank_entries', $entry);
 
         // Log this question move.
-        $event = \core\event\question_moved::create_from_question_instance($question, context::instance_by_id($question->contextid),
-                ['oldcategoryid' => $question->category, 'newcategoryid' => $newcategorydata->id]);
+        $oldcontext = context::instance_by_id($question->contextid, IGNORE_MISSING);
+        // When fixing orphaned question categories (e.g. via admin/cli/fix_orphaned_question_categories.php),
+        // the original context may be missing. The question_moved event requires a valid context
+        // and will throw a fatal exception otherwise, so fall back to the system context.
+        if ($oldcontext === false) {
+            $oldcontext = \context_system::instance();
+        }
+        $event = \core\event\question_moved::create_from_question_instance(
+            $question,
+            $oldcontext,
+            ['oldcategoryid' => $question->category, 'newcategoryid' => $newcategorydata->id]
+        );
         $event->trigger();
     }
 
@@ -1840,27 +1852,39 @@ function core_question_question_preview_pluginfile($previewcontext, $questionid,
 }
 
 /**
- * Return a list of page types
+ * Return a list of page types for questions and the page types for the current module/context.
+ *
+ * This list is used when displaying blocks on a question page, to provide the list of possible page type patterns for the block.
+ *
  * @param string $pagetype current page type
  * @param stdClass $parentcontext Block's parent context
  * @param stdClass $currentcontext Current context of block
  * @return array
  */
 function question_page_type_list($pagetype, $parentcontext, $currentcontext): array {
-    global $CFG;
     $types = [
         'question-*' => get_string('page-question-x', 'question'),
         'question-edit' => get_string('page-question-edit', 'question'),
-        'question-category' => get_string('page-question-category', 'question'),
-        'question-export' => get_string('page-question-export', 'question'),
-        'question-import' => get_string('page-question-import', 'question')
+        'question-bank-managecategories-category' => get_string('page-question-category', 'question'),
+        'question-bank-exportquestions-export' => get_string('page-question-export', 'question'),
+        'question-bank-importquestions-import' => get_string('page-question-import', 'question'),
     ];
-    if ($currentcontext && $currentcontext->contextlevel == CONTEXT_COURSE) {
-        require_once($CFG->dirroot . '/course/lib.php');
-        return array_merge(course_page_type_list($pagetype, $parentcontext, $currentcontext), $types);
-    } else {
-        return $types;
+    // If current page is in a module context, include the list of page types for that module, if it provides one.
+    if ($currentcontext && $currentcontext->contextlevel == CONTEXT_MODULE) {
+        [, $cm] = get_course_and_cm_from_cmid($currentcontext->instanceid);
+        $directory = core_component::get_plugin_directory('mod', $cm->modname);
+        if (!empty($directory)) {
+            $libfile = $directory . '/lib.php';
+            if (file_exists($libfile)) {
+                require_once($libfile);
+                $function = $cm->modname . '_page_type_list';
+                if (function_exists($function)) {
+                    return array_merge($function($pagetype, $parentcontext, $currentcontext), $types);
+                }
+            }
+        }
     }
+    return $types;
 }
 
 /**

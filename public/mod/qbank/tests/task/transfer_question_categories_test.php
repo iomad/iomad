@@ -80,7 +80,7 @@ final class transfer_question_categories_test extends \advanced_testcase {
 
         [$insql, $inparams] = $DB->get_in_or_equal($categoryids);
 
-        $sql = "SELECT q.id, qbe.questioncategoryid AS categoryid, qv.status
+        $sql = "SELECT q.id, q.qtype, qbe.questioncategoryid AS categoryid, qv.status
                   FROM {question} q
                   JOIN {question_versions} qv ON qv.questionid = q.id
                   JOIN {question_bank_entries} qbe ON qbe.id = qv.questionbankentryid
@@ -390,7 +390,9 @@ final class transfer_question_categories_test extends \advanced_testcase {
         // Make sure we have 2 questions in the above course category level question category.
         $questions = $this->get_question_data(array_map(static fn($cat) => $cat->id, $allcoursecatcats));
         $this->assertCount(2, $questions);
-        $question = reset($questions);
+        $essayquestions = array_filter($questions, static fn($question) => $question->qtype === 'essay');
+        $this->assertCount(1, $essayquestions);
+        $question = reset($essayquestions);
         $this->assertEquals($parentcat->id, $question->categoryid);
         // Make sure there are files in the expected fileareas for this question.
         $fs = get_file_storage();
@@ -1130,6 +1132,13 @@ final class transfer_question_categories_test extends \advanced_testcase {
         $this->resetAfterTest();
         $this->setup_pre_install_data();
 
+        $sitecontext = context_system::instance();
+        $expectedcategoryids = [
+            $DB->get_field('question_categories', 'id', ['contextid' => $sitecontext->id, 'name' => 'Site Parent Cat'], MUST_EXIST),
+            $DB->get_field('question_categories', 'id', ['contextid' => $sitecontext->id, 'name' => 'Site Child Cat'], MUST_EXIST),
+        ];
+        sort($expectedcategoryids);
+
         require_once(__DIR__ . '/../fixtures/testable_transfer_question_categories.php');
         $task = new testable_transfer_question_categories();
         try {
@@ -1139,8 +1148,19 @@ final class transfer_question_categories_test extends \advanced_testcase {
             $this->assertStringContainsString('This is a mocked exception for testing purposes.', $e->getMessage());
         }
         // We want to verify a failure does not prevent the creation of tasks with hitherto transferred categories and their data.
-        // We should have a transfer_questions task for two of the categories that were moved.
         $questiontasks = manager::get_adhoc_tasks(transfer_questions::class);
-        $this->assertCount(2, $questiontasks);
+        $this->assertCount(count($expectedcategoryids), $questiontasks);
+
+        // Check the queued tasks are for the categories moved before the simulated failure.
+        $actualcategoryids = array_map(
+            static fn(transfer_questions $task): int => $task->get_custom_data()->categoryid,
+            $questiontasks,
+        );
+        sort($actualcategoryids);
+        $this->assertEquals($expectedcategoryids, $actualcategoryids);
+
+        foreach ($questiontasks as $questiontask) {
+            $this->assertEquals($sitecontext->id, $questiontask->get_custom_data()->contextid);
+        }
     }
 }
