@@ -507,6 +507,54 @@ final class authlib_test extends \advanced_testcase {
     }
 
     /**
+     * Test that signup_validate_data() never passes an existing, persisted user's id to
+     * the password policy service via the temporary signup user object.
+     *
+     * @runInSeparateProcess
+     */
+    public function test_signup_validate_data_password_policy_user_id(): void {
+        global $CFG;
+
+        $this->resetAfterTest();
+        require_once($CFG->libdir . '/authlib.php');
+        require_once($CFG->dirroot . '/user/profile/lib.php');
+
+        $CFG->registerauth = 'email';
+        $CFG->passwordpolicy = 1;
+
+        // Mock an auth plugin implementing the check_password_policy callback, to capture the
+        // $user object signup_validate_data() forwards to it via check_password_policy().
+        $this->add_mocked_plugin(
+            'auth',
+            'passwordpolicyprobe',
+            "{$CFG->dirroot}/lib/tests/fixtures/fakeplugins/auth/passwordpolicyprobe",
+        );
+        // Force get_plugin_list_with_file() to rescan disk instead of using its stale cached
+        // file map, so it picks up the mocked plugin's lib.php.
+        $componentreflection = new \ReflectionClass(\core_component::class);
+        $componentreflection->setStaticPropertyValue('filemap', null);
+        set_config('version', 2026080300, 'auth_passwordpolicyprobe');
+        \core_plugin_manager::reset_caches(true);
+        unset($CFG->allversionshash);
+
+        $formdata = [
+            'username' => 'signupuseridprobetest',
+            'firstname' => 'First',
+            'lastname' => 'Last',
+            'email' => 'signupuseridprobetest@example.com',
+            'email2' => 'signupuseridprobetest@example.com',
+            'password' => 'anypassword',
+        ];
+
+        signup_validate_data($formdata, []);
+
+        // The temporary signup user's id must be 0 (belonging to no real user), never an
+        // existing user's id such as the admin's.
+        $this->assertNotNull(\auth_passwordpolicyprobe_capture::$user);
+        $this->assertSame(0, \auth_passwordpolicyprobe_capture::$user->id);
+    }
+
+    /**
      * Test the find_cli_user method
      */
     public function test_find_cli_user(): void {
