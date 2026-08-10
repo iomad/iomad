@@ -6213,7 +6213,7 @@ function send_password_change_confirmation_email($user, $resetrecord) {
     foreach ($placeholders as $field => $value) {
         $data->{$field} = $value;
     }
-    $data->username  = $user->username;
+    $data->username  = s($user->username);
     $data->sitename  = format_string($site->fullname);
     $data->link      = $CFG->wwwroot .'/login/forgot_password.php?token='. $resetrecord->token;
     $data->admin     = generate_email_signoff();
@@ -8544,9 +8544,25 @@ function address_in_subnet($addr, $subnetstr, $checkallzeros = false) {
     if ($addr == '0.0.0.0' && !$checkallzeros) {
         return false;
     }
+
+    $addr = trim($addr);
+
+    // An IPv4-mapped IPv6 address (::ffff:x.x.x.x) is equivalent to its plain IPv4 form.
+    // Also test the unwrapped IPv4 form against the subnet list, so IPv4-notation rules apply
+    // (e.g. 127.0.0.0/8) without changing how $addr itself is matched against rules already
+    // expressed in IPv6 notation (e.g. ::ffff:127.0.0.0/104) below.
+    $packed = @inet_pton($addr);
+    if ($packed !== false && strlen($packed) === 16
+            && substr($packed, 0, 12) === "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff") {
+        $unwrapped = inet_ntop(substr($packed, 12));
+        if ($unwrapped !== false && address_in_subnet($unwrapped, $subnetstr, $checkallzeros)) {
+            return true;
+        }
+    }
+
     $subnets = explode(',', $subnetstr);
     $found = false;
-    $addr = trim($addr);
+
     $addr = cleanremoteaddr($addr, false); // Normalise.
     if ($addr === null) {
         return false;

@@ -27,6 +27,7 @@ import {
     getString,
     getStrings,
 } from 'core/str';
+import {add as addToast} from 'core/toast';
 import ModalForm from 'core_form/modalform';
 import Notification from 'core/notification';
 import Pending from 'core/pending';
@@ -89,6 +90,7 @@ const createNewCategory = (component, area, itemid) => {
 
     promises[1].then(response => Templates.render('core_customfield/list', response))
     .then((html, js) => Templates.replaceNode(jQuery('[data-region="list-page"]'), html, js))
+    .then(() => addToast(getString('categoryadded', 'core_customfield'), {type: 'success'}))
     .then(() => pendingPromise.resolve())
     .catch(Notification.exception);
 };
@@ -226,6 +228,7 @@ const setupSortableLists = rootNode => {
         } else if (afterElement.attr('data-field-name')) {
             return getString('afterfield', 'customfield', afterElement.attr('data-field-name'));
         } else {
+            // Empty string signals sortable_list to skip this destination.
             return Promise.resolve('');
         }
     };

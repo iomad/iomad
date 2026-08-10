@@ -10,8 +10,27 @@ Feature: Managers can manage categories for course custom fields
     And I press "Add a new category"
     And I wait until the page is ready
     Then I should see "Other fields" in the "#customfield_catlist" "css_element"
+    And "The category has been successfully added" "toast_message" should exist
+    And I wait until "The category has been successfully added" "toast_message" does not exist
     And I navigate to "Reports > Logs" in site administration
     And I press "Get these logs"
+
+  @accessibility
+  Scenario: Create categories for custom course fields using keyboard
+    Given I log in as "admin"
+    And I navigate to "Courses > Default settings > Course custom fields" in site administration
+    And the "region-main" "region" should meet accessibility standards with "best-practice" extra tests
+    And I press the tab key
+    And I click on "Skip to main content" "link"
+    And I press the tab key
+    And the focused element is "Add a new category" "button"
+    When I press the space key
+    Then I wait until "Other fields" "text" exists
+    And I press the tab key
+    And the focused element is "Add a new category" "button"
+    And I press enter
+    And I wait until "Other fields 1" "text" exists
+    And the "region-main" "region" should meet accessibility standards with "best-practice" extra tests
 
   Scenario: Edit a category name for custom course fields
     Given the following "custom field categories" exist:
@@ -43,6 +62,7 @@ Feature: Managers can manage categories for course custom fields
     And I navigate to "Reports > Logs" in site administration
     And I press "Get these logs"
 
+  @accessibility
   Scenario: Move field in the course custom fields to another category
     Given the following "custom field categories" exist:
       | name      | component   | area   | itemid |
@@ -60,6 +80,7 @@ Feature: Managers can manage categories for course custom fields
     And "Field2" "text" should appear after "Category2" "text"
     And "Category3" "text" should appear after "Field2" "text"
     And I press "Move \"Field1\""
+    And the page should meet accessibility standards
     And I follow "To the top of category Category2"
     And "Category2" "text" should appear after "Category1" "text"
     And "Field1" "text" should appear after "Category2" "text"

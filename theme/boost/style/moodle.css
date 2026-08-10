@@ -25027,6 +25027,7 @@ nav.navbar .logo img {
 
 ul.dragdrop-keyboard-drag li {
   list-style-type: none;
+  margin-bottom: 0.1em;
 }
 
 a.disabled:hover,
@@ -27290,6 +27291,9 @@ img.icon {
   .block_recentlyaccessedcourses .paging-bar-container {
     margin-top: 0;
   }
+}
+.editing .block_recentlyaccessedcourses .paging-bar-container {
+  margin-top: 0;
 }
 
 #block-region-side-pre .block_recentlyaccessedcourses .paging-bar-container {
@@ -31948,6 +31952,9 @@ a.ygtvspacer:hover {
   color: #fff;
   background-color: #0f6cbf;
 }
+.message-app .list-group .list-group-item:hover .message-icon-forward {
+  color: inherit !important;
+}
 .message-app .list-group .list-group-item:hover .badge-primary {
   background-color: #fff;
   color: #0f6cbf;
@@ -35079,6 +35086,11 @@ img.userpicture {
   z-index: 1;
 }
 
+@media (max-width: 576px) and (max-height: 320px) {
+  .path-mod-assign .gradingtable thead tr {
+    position: static;
+  }
+}
 /**
  * Mod LTI.
  */
@@ -38996,6 +39008,19 @@ div.editor_atto_toolbar button .icon {
 .drawer-primary .drawercontent .list-group .list-group-item {
   border-left: 0;
   border-right: 0;
+}
+
+.drawer-primary .drawerheader [data-region=site-home-link] {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+.drawer-primary .drawerheader .logo {
+  max-width: 100%;
+  max-height: 60px;
+  width: auto;
+  height: 60px;
+  object-fit: contain;
 }
 
 .secondary-navigation {
