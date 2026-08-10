@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->release  = '4.5.12 (Build: 20260608)'; // Human-friendly version name.
+$plugin->release  = '4.5.13 (Build: 20260810)'; // Human-friendly version name.
 $plugin->version  = 2026022845;   // The (date) version of this plugin.
 $plugin->requires = 2024100700;   // Requires this Moodle version.
 $plugin->component  = 'local_report_user_license_allocations';
