@@ -4435,8 +4435,8 @@ function update_internal_user_password(
         if ($CFG->commerce_admin_enableall ||
             $DB->record_exists_sql(
             "SELECT c.id 
-             FROM {local_iomad_companies} c
-             JOIN {local_iomad_company_users} cu
+             FROM {company} c
+             JOIN {company_users} cu
              ON c.id = cu.companyid
              WHERE c.ecommerce = 1
              AND cu.userid = :userid",
