@@ -379,7 +379,7 @@ class track {
                     ['courseid' => $courseid]
                     )) {
                     // Does the course belong to any company?
-                    if ($count($companycourserecs == 1)) {
+                    if (count($companycourserecs) == 1) {
                         $companycourserec = array_pop($companycourserecs);
                         $companyid = $companycourserec->companyid;
                     }
