@@ -1529,6 +1529,18 @@ class company {
             $companycourses[$sharedcourse->courseid] = $sharedcourse;
         }
 
+        // Store the last used data.
+        $lastusedinfo = $DB->get_record_sql(
+            "SELECT MAX(lastused) AS latest
+                FROM {company_users}
+                WHERE userid = :userid
+                AND companyid = :companyid",
+            [
+                'userid' => $userid,
+                'companyid' => $companyid,
+            ]
+        );
+
         // Does the user exist in the department?
         if (!$user = $DB->get_record('company_users', $assign)) {
             if (($managertype == 1 || $managertype == 2) && $CFG->iomad_autoenrol_managers) {
@@ -1963,6 +1975,18 @@ class company {
                 $success = $DB->update_record('company_users', array_merge($assign, $s));
             }
         }
+
+        // Fix any last used values.
+        $DB->set_field(
+            'company_users',
+            'lastused',
+            $lastusedinfo->latest,
+            [
+                'userid' => $userid,
+                'companyid' => $companyid,
+            ]
+        );
+
         if (!$success) {
             throw new moodle_exception(get_string('cantassignusersdb', 'block_iomad_company_admin'));
         }
