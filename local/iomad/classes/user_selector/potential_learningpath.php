@@ -108,7 +108,7 @@ class potential_learningpath extends company_user_selector_base {
                                                        SQL_PARAMS_NAMED,
                                                        'pcids');
             $userfilter = " AND u.id NOT IN (
-                                SELECT userid FROM {local_iomad_company_users}
+                                SELECT userid FROM {company_users}
                                 WHERE managertype = 1
                                 AND companyid {$insql}
                             )";

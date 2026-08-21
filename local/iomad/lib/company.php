@@ -1531,7 +1531,7 @@ class company {
         // Store the last used data.
         $lastusedinfo = $DB->get_record_sql(
             "SELECT MAX(lastused) AS latest
-                FROM {local_iomad_company_users}
+                FROM {company_users}
                 WHERE userid = :userid
                 AND companyid = :companyid",
             [
@@ -1971,7 +1971,7 @@ class company {
 
         // Fix any last used values.
         $DB->set_field(
-            'local_iomad_company_users',
+            'company_users',
             'lastused',
             $lastusedinfo->latest,
             [
