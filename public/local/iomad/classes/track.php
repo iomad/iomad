@@ -704,7 +704,14 @@ class track {
             if ($DB->get_record('local_iomad_courses', ['courseid' => $courseid, 'shared' => 1]) ||
                 !$DB->get_record('local_iomad_courses', ['courseid' => $courseid])) {
                 // Then it's every company the user is assigned to.
-                $companies = array_keys(company::get_companies_select(false, false, false));
+                $companies = array_keys(
+                    $DB->get_records_sql(
+                        "SELECT DISTINCT companyid
+                         FROM {local_iomad_company_users}
+                         WHERE userid = :userid",
+                        ['userid' => $userid]
+                    )
+                );
             } else {
                 // We only want the companies which the course is assigned to and the user belongs to.
                 $companies = $DB->get_records_sql("SELECT DISTINCT cu.companyid AS id
