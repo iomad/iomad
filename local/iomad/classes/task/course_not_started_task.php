@@ -177,10 +177,10 @@ class course_not_started_task extends scheduled_task {
                                          AND templatename = :templatename
                                          AND modifiedtime > :timeenrolled",
                                         [
-                                            'userid' => $compuser->userid,
-                                            'courseid' => $compuser->courseid,
+                                            'userid' => $notstarteduser->userid,
+                                            'courseid' => $notstarteduser->courseid,
                                             'templatename' => 'course_not_started_warning',
-                                            'timeenrolled' => $compuser->timeenrolled,
+                                            'timeenrolled' => $notstarteduser->timeenrolled,
                                         ]);
 
                                     // Calculate next allowed send time based on last email sent time.
@@ -204,8 +204,8 @@ class course_not_started_task extends scheduled_task {
                                     if ($DB->record_exists(
                                         'local_iomad_emails',
                                         [
-                                            'userid' => $compuser->userid,
-                                            'courseid' => $compuser->courseid,
+                                            'userid' => $notstarteduser->userid,
+                                            'courseid' => $notstarteduser->courseid,
                                             'templatename' => 'course_not_started_warning',
                                         ]
                                     )) {
