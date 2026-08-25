@@ -1,0 +1,142 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Front-end class.
+ *
+ * @package availability_iomadcoursecompletion
+ * @copyright 2022 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author Derick Turner
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+namespace availability_iomadcoursecompletion;
+
+use company;
+use context_course;
+use context_system;
+use iomad;
+
+/**
+ * Front-end class.
+ *
+ * @package availability_iomadcoursecompletion
+ * @copyright 2026 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author Derick Turner
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class frontend extends \core_availability\frontend {
+    /** @var array Array of course info for course */
+    protected $allcourses;
+
+    /** @var int Course id that $allcourses is for */
+    protected $allcoursescourseid;
+
+    /**
+     * Function to get the string for the javascript menu.
+     *
+     * @return void
+     */
+    protected function get_javascript_strings() {
+        return ['anycourse', 'validoption'];
+    }
+
+    /**
+     * Function to get javascript params.
+     *
+     * @param object $course
+     * @param \cm_info|null $cm
+     * @param \section_info|null $section
+     * @return void
+     */
+    protected function get_javascript_init_params($course, ?\cm_info $cm = null,
+            ?\section_info $section = null) {
+        // Get all courses for course.
+        $courses = $this->get_all_courses($course->id);
+
+        // Change to JS array format and return.
+        $jsarray = [];
+        $context = context_course::instance($course->id);
+        foreach ($courses as $id => $name) {
+            $jsarray[] = (object) ['id' => $id,
+                                   'name' => format_string($name, true, ['context' => $context])];
+        }
+        return [$jsarray];
+    }
+
+    /**
+     * Gets all companys for the given course.
+     *
+     * @param int $courseid Course id
+     * @return array Array of all the company objects
+     */
+    protected function get_all_courses($courseid) {
+        global $CFG, $DB;
+
+        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+
+        if ($courseid != $this->allcoursescourseid) {
+            $systemcontext = context_system::instance();
+
+            // Can the current user see all of the companies?
+            if (iomad::has_capability(
+                'block/iomad_company_admin:company_view_all',
+                $systemcontext
+                )
+            ) {
+                // Get all of the IOMAD controlled courses.
+                $this->allcourses = $DB->get_records_sql_menu(
+                    "SELECT c.id, c.fullname
+                    FROM {course} c
+                    JOIN {iomad_courses} ic ON (c.id = ic.courseid)
+                    ORDER BY c.fullname"
+                );
+            } else {
+                // Get the courses for the company the user is in.
+                $companyid = iomad::get_my_companyid($systemcontext, false);
+                $company = new company($companyid);
+                $this->allcourses = $company->get_menu_courses(
+                    true,
+                    false,
+                    false,
+                    true,
+                    false,
+                    false,
+                    true,
+                    );
+            }
+            $this->allcoursescourseid = $courseid;
+        }
+
+        return $this->allcourses;
+    }
+
+    /**
+     * Function to check if we can add the condition.
+     *
+     * @param (object) $course
+     * @param \cm_info|null $cm
+     * @param \section_info|null $section
+     * @return void
+     */
+    protected function allow_add($course, ?\cm_info $cm = null,
+            ?\section_info $section = null) {
+
+        // Only show this option if there are some courses.
+        return count($this->get_all_courses($course->id)) > 0;
+    }
+}
