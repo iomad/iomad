@@ -26,8 +26,6 @@
 namespace availability_iomadcoursecompletion;
 
 use coding_exception;
-use iomad;
-use company;
 
 /**
  * Condition main class.
@@ -110,7 +108,7 @@ class condition extends \core_availability\condition {
         // Check if we are looking for in date courses only.
         if ($this->indate && $this->courseid) {
             // Get the IOMAD course setting.
-            if ($DB->record_exists('iomad_courses', ['id' => $this->courseid])) {
+            if ($DB->record_exists('local_iomad_courses', ['id' => $this->courseid])) {
                 $indatesql =
                 "AND (
                     timeexpires + 24*60*60 > :timestamp
@@ -123,7 +121,7 @@ class condition extends \core_availability\condition {
         // Get all courses the user has completed.
         $courses = $DB->get_records_sql(
             "SELECT DISTINCT courseid
-             FROM {local_iomad_track}
+             FROM {local_iomad_tracks}
              WHERE userid = :userid
              AND timecompleted > 0
              $indatesql",

@@ -25,10 +25,9 @@
 
 namespace availability_iomadcoursecompletion;
 
-use company;
 use context_course;
 use context_system;
-use iomad;
+use local_iomad\{company, iomad};
 
 /**
  * Front-end class.
@@ -86,9 +85,6 @@ class frontend extends \core_availability\frontend {
     protected function get_all_courses($courseid) {
         global $CFG, $DB;
 
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
-
         if ($courseid != $this->allcoursescourseid) {
             $systemcontext = context_system::instance();
 
@@ -102,7 +98,7 @@ class frontend extends \core_availability\frontend {
                 $this->allcourses = $DB->get_records_sql_menu(
                     "SELECT c.id, c.fullname
                     FROM {course} c
-                    JOIN {iomad_courses} ic ON (c.id = ic.courseid)
+                    JOIN {local_iomad_courses} ic ON (c.id = ic.courseid)
                     ORDER BY c.fullname"
                 );
             } else {
