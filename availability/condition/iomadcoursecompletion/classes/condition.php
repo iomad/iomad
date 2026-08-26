@@ -111,7 +111,7 @@ class condition extends \core_availability\condition {
             if ($DB->record_exists('local_iomad_courses', ['id' => $this->courseid])) {
                 $indatesql =
                 "AND (
-                    timeexpires + 24*60*60 > :timestamp
+                    timeexpires + 24*60*60 < :timestamp
                     OR timeexpires IS NULL
                 )";
                 $sqlparams['timestamp'] = strtotime('midnight', time());
