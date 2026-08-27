@@ -4510,7 +4510,7 @@ class company {
                     // Its an optional profile field.
                     $profilefield = $DB->get_record(
                         'user_info_field',
-                        ['shortname' => str_replace('profile_field_', '', $extrafield)]
+                        ['shortname' => trim(str_replace('profile_field_', '', $extrafield))]
                     );
                     if ($profilefield->categoryid == $this->companyrecord->profileid ||
                         !$DB->get_record('company', ['profileid' => $profilefield->categoryid])) {
