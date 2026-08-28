@@ -110,13 +110,14 @@ class condition extends \core_availability\condition {
         // Check if we are looking for in date courses only.
         if ($this->indate && $this->courseid) {
             // Get the IOMAD course setting.
-            if ($DB->record_exists('iomad_courses', ['id' => $this->courseid])) {
+            if ($iomadcourse = $DB->get_record('iomad_courses', ['id' => $this->courseid])) {
                 $indatesql =
                 "AND (
-                    timeexpires + 24*60*60 < :timestamp
+                    timeexpires - (:warnexpire * 24 * 60 * 60) > :timestamp
                     OR timeexpires IS NULL
                 )";
                 $sqlparams['timestamp'] = strtotime('midnight', time());
+                $sqlparams['warnexpire'] = $iomadcourse->warnexpire;
             }
         }
 
