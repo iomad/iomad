@@ -108,7 +108,7 @@ class condition extends \core_availability\condition {
         // Check if we are looking for in date courses only.
         if ($this->indate && $this->courseid) {
             // Get the IOMAD course setting.
-            if ($iomadcourse = $DB->get_record('local_iomad_courses', ['id' => $this->courseid])) {
+            if ($iomadcourse = $DB->get_record('local_iomad_courses', ['courseid' => $this->courseid])) {
                 $indatesql =
                 "AND (
                     timeexpires - (:warnexpire * 24 * 60 * 60) > :timestamp
