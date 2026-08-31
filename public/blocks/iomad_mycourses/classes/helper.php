@@ -106,6 +106,7 @@ class helper {
         }
 
         // Then process the course name and any grade.
+        $myinprogress = [];
         foreach ($allcourses as $id => $inprogress) {
             if (!empty($inprogress->realcourseid)) {
                 $inprogress->coursefullname = format_string($inprogress->coursefullname,
