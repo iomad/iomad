@@ -826,6 +826,7 @@ if (!$bycourse) {
     $table->attributes = ['class' => 'generaltable overviewbyuser'];
 }
 $table->head = $headers;
+$warningduration = iomad::get_config('local_report_completion_overview', 'warningduration');
 
 // Keep track if there were rows added.
 $rowsadded = false;
@@ -974,7 +975,6 @@ if (!$bycourse) {
             }
 
             // Set up the cell classes.
-            $warningduration = iomad::get_config('local_report_completion_overview', 'warningduration');
             if (empty($courses[$usercourse->courseid])) {
                 $rowclass = "ignored";
                 $statustext = "";
