@@ -1298,17 +1298,24 @@ class company_user {
                                 'div',
                                 html_writer::tag(
                                     'div',
-                                    '0%',
+                                    html_writer::tag(
+                                        'div',
+                                        '',
+                                        [
+                                            'class' => 'progress-bar',
+                                            'style' => 'width:0%;height:20px',
+                                        ]
+                                    ),
                                     [
-                                        'class' => 'progress-bar',
-                                        'style' => 'width:0%;height:20px',
+                                        'class' => 'progress',
+                                        'style' => 'height:20px;',
+                                        'data-html' => 'true',
+                                        'title' => nl2br($tooltip),
                                     ]
-                                ),
+                                ) .
+                                "&nbsp" . get_string('percents', 'moodle', 0),
                                 [
-                                    'class' => 'progress',
-                                    'style' => 'height:20px;',
-                                    'data-html' => 'true',
-                                    'title' => nl2br($tooltip),
+                                    'class' => 'row',
                                 ]
                             );
                         } else {
@@ -1337,17 +1344,24 @@ class company_user {
                     'div',
                     html_writer::tag(
                         'div',
-                        $progress . '%',
+                        html_writer::tag(
+                            'div',
+                            '',
+                            [
+                                'class' => 'progress-bar',
+                                'style' => 'width:' . $progress . '%;height:20px',
+                            ]
+                        ),
                         [
-                            'class' => 'progress-bar',
-                            'style' => 'width:' . $progress . '%;height:20px',
+                            'class' => 'progress',
+                            'style' => 'height:20px;',
+                            'data-html' => 'true',
+                            'title' => $tooltip,
                         ]
-                    ),
+                    ) .
+                    "&nbsp" . get_string('percents', 'moodle', 0),
                     [
-                        'class' => 'progress',
-                        'style' => 'height:20px;',
-                        'data-html' => 'true',
-                        'title' => $tooltip,
+                        'class' => 'row',
                     ]
                 );
             } else {
