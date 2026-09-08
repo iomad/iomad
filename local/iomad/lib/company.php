@@ -786,19 +786,22 @@ class company {
 
         // Add the template.
         foreach ($templates as $template) {
-            $templatesetid = $template->id;
+            $newtemplatesetid = $template->id;
             unset($template->templateset);
             $template->companyid = $this->id;
             $templateid = $DB->insert_record('email_template', $template);
 
             // Get all of the lang strings too.
-            $langstrings = $DB->get_records('email_templateset_template_strings', ['templatesetid' => $templatesetid]);
+            $langstrings = $DB->get_records('email_templateset_template_strings', ['templatesetid' => $newtemplatesetid]);
             foreach ($langstrings as $langstring) {
                 $langstring->templateid = $templateid;
                 unset($langstring->templatesetid);
                 $DB->insert_record('email_template_strings', $langstring);
             }
         }
+
+        // Update the company to record this being set.
+        $DB->set_field('company', 'previousemailtemplateid', $templatesetid, ['id' => $this->id]);
 
         return true;
     }
