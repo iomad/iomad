@@ -1493,19 +1493,25 @@ class company {
 
         // Add the template.
         foreach ($templates as $template) {
-            $templatesetid = $template->id;
+            $newtemplatesetid = $template->id;
             unset($template->templateset);
             $template->companyid = $this->id;
             $templateid = $DB->insert_record('local_iomad_email_templates', $template);
 
             // Get all of the lang strings too.
-            $langstrings = $DB->get_records('local_iomad_email_templateset_template_strings', ['templatesetid' => $templatesetid]);
+            $langstrings = $DB->get_records(
+                'local_iomad_email_templateset_template_strings',
+                ['templatesetid' => $newtemplatesetid]
+            );
             foreach ($langstrings as $langstring) {
                 $langstring->templateid = $templateid;
                 unset($langstring->templatesetid);
                 $DB->insert_record('local_iomad_email_template_strings', $langstring);
             }
         }
+
+        // Update the company to record this being set.
+        $DB->set_field('local_iomad_companies', 'previousemailtemplateid', $templatesetid, ['id' => $this->id]);
 
         return true;
     }
