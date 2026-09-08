@@ -125,7 +125,6 @@ if (!$new) {
     // Get any default email templates.
     if ($emailtemplateset = $DB->get_record('local_iomad_email_templatesets', ['isdefault' => 1])) {
         $companyrecord->emailtemplate = $emailtemplateset->id;
-        $companyrecord->previousemailtemplateid = $emailtemplateset->id;
     }
 
     // Do we have a parent company or has it changed?
