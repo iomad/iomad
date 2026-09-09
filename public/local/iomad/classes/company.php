@@ -999,7 +999,7 @@ class company {
      * @param int $courseid
      * @return object
      */
-    public function get_iomad_course_options(int $courseid): object {
+    public function get_iomad_course_options(int $courseid): object|bool {
         global $DB;
 
         return $DB->get_record_sql(
