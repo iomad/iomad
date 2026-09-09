@@ -26,6 +26,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 use local_iomad\company;
+use local_iomad\company_user;
 
 require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->dirroot.'/user/profile/lib.php');
