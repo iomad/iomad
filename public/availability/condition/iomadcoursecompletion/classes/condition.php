@@ -26,6 +26,9 @@
 namespace availability_iomadcoursecompletion;
 
 use coding_exception;
+use context_system;
+use local_iomad\company;
+use local_iomad\iomad;
 
 /**
  * Condition main class.
@@ -99,16 +102,39 @@ class condition extends \core_availability\condition {
      * @return boolean
      */
     public function is_available($not, \core_availability\info $info, $grabthelot, $userid) {
-        global $DB;
+        global $DB, $USER;
 
+        // Try and work out the company id.
+        $companyid = 0;
+        if ($USER->id == $userid) {
+            $companyid = iomad::get_my_companyid(context_system::instance(), false);
+            $company = new company($companyid);
+        } else {
+            $company = company::get_company_byuserid($userid);
+            if (!empty($company->id) && $company->id > 0) {
+                $companyid = $company->id;
+            }
+        }
+
+        // Set some other defaults.
         $allow = false;
         $indatesql = "";
         $sqlparams = ['userid' => $userid];
 
         // Check if we are looking for in date courses only.
         if ($this->indate && $this->courseid) {
-            // Get the IOMAD course setting.
-            if ($iomadcourse = $DB->get_record('local_iomad_courses', ['courseid' => $this->courseid])) {
+            if ($companyid > 0) {
+                // Get the company settings.
+                $iomadcourse = $company->get_iomad_course_options($this->courseid);
+            } else {
+                // Get the IOMAD course setting.
+                $iomadcourse = $DB->get_record_sql(
+                    "SELECT id, warnexpire
+                     FROM {local_iomad_courses}
+                     WHERE courseid = :courseid",
+                    ['courseid' => $this->courseid]);
+            }
+            if (!empty($iomadcourse)) {
                 $indatesql =
                 "AND (
                     timeexpires - (:warnexpire * 24 * 60 * 60) > :timestamp
