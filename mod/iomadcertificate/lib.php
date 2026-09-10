@@ -314,7 +314,7 @@ function iomadcertificate_pluginfile($course, $cm, $context, $filearea, $args, $
         $fullpath = "/{$context->id}/mod_iomadcertificate/issue/$certrecord->id/$relativepath";
 
         $fs = get_file_storage();
-        if (!$file = $fs->get_file_by_hash(sha1($fullpath)) || $file->is_directory()) {
+        if ((!$file = $fs->get_file_by_hash(sha1($fullpath))) || $file->is_directory()) {
             return false;
         }
         send_stored_file($file, 0, 0, true); // Download MUST be forced - security!
