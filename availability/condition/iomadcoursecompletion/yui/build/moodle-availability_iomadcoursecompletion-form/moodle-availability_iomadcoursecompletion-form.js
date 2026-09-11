@@ -74,6 +74,7 @@ M.availability_iomadcoursecompletion.form.getNode = function(json) {
         }, '.availability_iomadcoursecompletion select');
 
         root.delegate('click', function() {
+            updateCheckbox(this, true);
             M.core_availability.form.update();
         }, '.availability_iomadcoursecompletion input[type=checkbox]');
 
@@ -89,11 +90,6 @@ M.availability_iomadcoursecompletion.form.fillValue = function(value, node) {
     } else if (selected !== 'any') {
         value.id = parseInt(selected, 10);
     }
-    if (node.one('input[name=indate]').get('checked')) {
-        value.indate = true;
-    } else {
-        value.indate = false;
-    }
 };
 
 M.availability_iomadcoursecompletion.form.fillErrors = function(errors, node) {
@@ -105,5 +101,6 @@ M.availability_iomadcoursecompletion.form.fillErrors = function(errors, node) {
         errors.push('availability_iomadcoursecompletion:error_selectcourse');
     }
 };
+
 
 }, '@VERSION@', {"requires": ["base", "node", "event", "moodle-core_availability-form"]});
