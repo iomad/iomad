@@ -204,8 +204,18 @@ class track {
             $certname = rtrim($certrec->name, '.');
             $filename = clean_filename(format_string($certname) . ".pdf");
 
+            // Work around for certificates which get their own dates rather than being passed.
+            if (method_exists($certclass, set_completion)) {
+                $currentrecord = $certclass::set_completion($trackinfo);
+            }
+
             // Create the certificate content (always create new so it's up to date).
             $content = $certclass::create_certificate($certrec, $user, $cm, $course, $certissue);
+
+            // Work around for certificates which get their own dates rather than being passed.
+            if (method_exists($certclass, reset_completion)) {
+                $certclass::reset_completion($currentrecord);
+            }
 
             // Store the certificate.
             self::store_certificate($context->id, $filename, $trackid, $certrec, $content);
