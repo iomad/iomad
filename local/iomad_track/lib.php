@@ -49,7 +49,7 @@ function local_iomad_track_pluginfile($course, $birecord_or_cm, $context, $filea
     $itemid = array_shift($args);
     $filename = array_pop($args);
     $filepath = $args ? '/'.implode('/', $args).'/' : '/';
-    if (!$file = $fs->get_file($context->id, 'local_iomad_track', 'issue', $itemid, $filepath, $filename) or $file->is_directory()) {
+    if (!($file = $fs->get_file($context->id, 'local_iomad_track', 'issue', $itemid, $filepath, $filename)) || $file->is_directory()) {
         send_file_not_found();
     }
 

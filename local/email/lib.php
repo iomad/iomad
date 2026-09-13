@@ -141,7 +141,7 @@ function local_email_pluginfile($course, $cm, $context, $filearea, $args, $force
         $itemid = 0;
     }
 
-    if (!$file = $fs->get_file($context->id, 'local_email', $filearea, $itemid, '/', $filename) or $file->is_directory()) {
+    if (!($file = $fs->get_file($context->id, 'local_email', $filearea, $itemid, '/', $filename)) || $file->is_directory()) {
         send_file_not_found();
     }
 

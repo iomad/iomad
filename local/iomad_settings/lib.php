@@ -54,7 +54,7 @@ function local_iomad_settings_pluginfile($course,
         $fullpath = "/{$context->id}/local_iomad_settings/$filearea/$itemid/$relativepath";
 
         $fs = get_file_storage();
-        if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
+        if (!($file = $fs->get_file_by_hash(sha1($fullpath))) || $file->is_directory()) {
             return false;
         }
         // Download MUST be forced - security!
