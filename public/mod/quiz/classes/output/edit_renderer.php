@@ -1114,7 +1114,7 @@ class edit_renderer extends \plugin_renderer_base {
         if (!question_bank::is_qtype_usable($question->qtype)) {
             $output .= html_writer::span($title);
             $output .= html_writer::span(
-                get_string('invalidquestiontype', 'question', $question->originalqtype),
+                get_string('invalidquestiontype', 'question', $question->originalqtype ?? $question->qtype),
                 'badge bg-danger text-white ms-3'
             );
         } else {

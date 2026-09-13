@@ -172,19 +172,41 @@ class block extends base {
      * @private
      */
     public function uninstall_cleanup() {
-        global $DB, $CFG;
+        global $DB;
 
         if ($block = $DB->get_record('block', array('name'=>$this->name))) {
+            $hasinstances = $DB->record_exists('block_instances', ['blockname' => $block->name]);
+
             // Inform block it's about to be deleted.
             $blockobject = block_instance($block->name);
             if ($blockobject) {
                 $blockobject->before_delete();  // Only if we can create instance, block might have been already removed.
+
+                // If the block overrides instance_delete(), that per-instance cleanup hook must run
+                // now, while the block code is still guaranteed to be available on disk. Blocks not
+                // overriding it, the vast majority, skip this loop entirely.
+                if ($hasinstances) {
+                    $reflection = new \ReflectionMethod($blockobject, 'instance_delete');
+                    if ($reflection->getDeclaringClass()->getName() !== 'block_base') {
+                        $instances = $DB->get_recordset('block_instances', ['blockname' => $block->name]);
+                        foreach ($instances as $instance) {
+                            if ($blockinstance = block_instance($block->name, $instance)) {
+                                $blockinstance->instance_delete();
+                            }
+                        }
+                        $instances->close();
+                    }
+                }
             }
 
-            // First delete instances and related contexts.
-            $instances = $DB->get_records('block_instances', array('blockname' => $block->name));
-            foreach ($instances as $instance) {
-                blocks_delete_instance($instance);
+            // Queue an ad-hoc task to delete the instances and their related data in batches.
+            // Deleting them here can take hours on large sites and once the block
+            // record is deleted below, any remaining instances are no longer displayed anywhere.
+            if ($hasinstances) {
+                \core\task\manager::queue_adhoc_task(
+                    \core\task\delete_block_instances_task::instance($block->name),
+                    true,
+                );
             }
 
             // Delete block.

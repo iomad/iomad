@@ -4732,6 +4732,7 @@ class assign {
                             'icon' => $operation->icon,
                             'confirmationtitle' => $operation->confirmationtitle,
                             'confirmationquestion' => $operation->confirmationquestion,
+                            'confirmationyes' => $operation->confirmationyes ?? get_string('savechanges'),
                         ];
                     }
                 }
@@ -5863,17 +5864,31 @@ class assign {
             $deductedmark = $grade->grade * $grade->penalty / 100;
             $penalisedgrade = $grade->grade - $deductedmark;
         }
-        // Apply the grade-item factors so the returned grade matches the
-        // final grade stored in the gradebook.
+
         $gradeitem = $this->get_grade_item();
         if ($usergraderecord === null) {
             $usergraderecord = $gradeitem->get_grade($grade->userid, false);
         }
-        $penalisedgrade = \core_grades\penalty_manager::apply_grade_item_factors(
-            $penalisedgrade,
-            $gradeitem,
-            $usergraderecord
-        );
+
+        // Check whether this student's grade still requires the legacy penalty calculation.
+        // A course-level freeze can contain both legacy and correctly calculated grades.
+        $requireslegacypenalty = $usergraderecord
+            && \core_grades\penalty_manager::is_frozen_for_legacy_penalty($this->get_course()->id)
+            && \core_grades\penalty_manager::requires_legacy_penalty_calculation(
+                $usergraderecord,
+                \core_grades\penalty_manager::get_authoritative_user_grades($gradeitem),
+                $gradeitem
+            );
+
+        if (!$requireslegacypenalty) {
+            // Apply the grade-item factors so the returned grade matches the
+            // final grade stored in the gradebook.
+            $penalisedgrade = \core_grades\penalty_manager::apply_grade_item_factors(
+                $penalisedgrade,
+                $gradeitem,
+                $usergraderecord
+            );
+        }
         return [$penalisedgrade, $deductedmark];
     }
 

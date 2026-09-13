@@ -57,6 +57,7 @@ M.form.dateselector = {
     currentowner: null,
     hidetimeout: null,
     repositiontimeout: null,
+    modalwatcher: null,
     init_date_selectors: function(config) {
         if (this.panel === null) {
             this.initPanel(config);
@@ -98,6 +99,17 @@ M.form.dateselector = {
         Y.one('#dateselector-calendar-panel').on('click', function(e) {
             e.halt();
         });
+
+        // When the panel is shown inside a modal dialogue it becomes a descendant of the modal, so
+        // an Escape keypress in the open calendar would otherwise bubble up to the modal's own
+        // Escape handler and close the whole modal. Stop the Escape keydown here so that it only
+        // closes the calendar (handled on keyup); do not interfere with any other keys.
+        Y.one('#dateselector-calendar-panel').on('keydown', function(e) {
+            if (this.currentowner && e.keyCode === 27) {
+                e.stopPropagation();
+            }
+        }, this);
+
         Y.one(document.body).on('click', this.document_click, this);
 
         this.calendar = new MOODLECALENDAR({
@@ -139,6 +151,77 @@ M.form.dateselector = {
                 config.fri,
                 config.sat,
             ],
+        });
+    },
+    /**
+     * Move the shared calendar panel into (or out of) the modal dialogue that owns the given
+     * calendar trigger node so that Moodle's modal focus lock (which restricts tabbing to
+     * descendants of the modal root) includes the popup calendar.
+     *
+     * Without this, the calendar panel remains a child of `document.body` (where it was originally
+     * rendered), so it sits outside the modal's focus trap and cannot be reached or navigated
+     * with the keyboard while a modal dialogue is open.
+     *
+     * @param {Y.Node} triggernode The calendar toggle button that was used to open the panel.
+     */
+    movePanelForContext: function(triggernode) {
+        var panelnode = this.panel.get('boundingBox');
+        var modal = triggernode.ancestor('.modal');
+        var target = modal || Y.one(document.body);
+        if (panelnode.get('parentNode') !== target) {
+            target.append(panelnode);
+            if (!modal) {
+                // The panel is being moved back out to the document body. If it was previously
+                // hosted by a modal that has since been hidden, that modal's Aria.hide() will have
+                // forced tabindex="-1" on the panel's focusable controls (storing the originals in
+                // a data attribute) and the matching Aria.unhide() never reached them because the
+                // panel had already left the modal. Restore that focusability now, otherwise the
+                // calendar's controls stay unreachable by keyboard on the next open.
+                require(['core/aria'], function(Aria) {
+                    Aria.unhide(panelnode.getDOMNode());
+                });
+            }
+        }
+        // Watch the hosting modal (if any) so the shared panel is released back to the document
+        // body should the modal be dismissed while the calendar is still open.
+        this.watchModalForContext(modal);
+    },
+    /**
+     * Track the modal dialogue that currently hosts the shared calendar panel so that the
+     * calendar is released the moment that modal is hidden or destroyed.
+     *
+     * The panel is a singleton that gets reparented into the modal (see movePanelForContext) so
+     * that it lives inside the modal's focus lock. If the modal is dismissed directly (for
+     * example via its own Cancel button) while the calendar is still open, the panel would
+     * otherwise be removed from the DOM along with the modal, leaving every date field on the
+     * page unusable until a page reload. Releasing the calendar on the modal's hide/destroy
+     * events moves the panel back out to the document body before that happens.
+     *
+     * @param {Y.Node|null} modal The modal dialogue hosting the panel, or null when it is back on
+     *     the document body.
+     */
+    watchModalForContext: function(modal) {
+        // Detach any watcher registered for a previously hosting modal.
+        if (this.modalwatcher) {
+            this.modalwatcher();
+            this.modalwatcher = null;
+        }
+        if (!modal) {
+            return;
+        }
+        var modalnode = modal.getDOMNode();
+        // Moodle's modal events are triggered via jQuery, so they can only be observed with it.
+        require(['jquery', 'core/modal_events'], function($, ModalEvents) {
+            var release = function() {
+                if (M.form.dateselector.currentowner) {
+                    M.form.dateselector.currentowner.release_calendar();
+                }
+            };
+            var events = ModalEvents.hidden + ' ' + ModalEvents.destroyed;
+            $(modalnode).on(events, release);
+            M.form.dateselector.modalwatcher = function() {
+                $(modalnode).off(events, release);
+            };
         });
     },
     findZIndex: function(node) {
@@ -285,14 +368,6 @@ CALENDAR.prototype = {
                 this.toggle_calendar_image();
             }
         }, this);
-
-        // Get the calendarimage element by its ID and check if any of its parents have the modal-dialog class to
-        // know if the link is inside a modal, if so, set the aria-hidden and tabindex properties to the indicated values.
-        var calendarimageelement = document.getElementById(this.calendarimage.get('id'));
-        if (calendarimageelement.closest('.modal-dialog')) {
-            this.calendarimage.set('aria-hidden', true);
-            this.calendarimage.set('tabIndex', '-1');
-        }
     },
     focus_event: function(e) {
         M.form.dateselector.cancel_any_timeout();
@@ -329,6 +404,7 @@ CALENDAR.prototype = {
         M.form.dateselector.currentowner = this;
         M.form.dateselector.calendar.set('minimumDate', new Date(this.yearselect.firstOptionValue(), 0, 1));
         M.form.dateselector.calendar.set('maximumDate', new Date(this.yearselect.lastOptionValue(), 11, 31));
+        M.form.dateselector.movePanelForContext(this.calendarimage);
         M.form.dateselector.panel.show();
         M.form.dateselector.calendar.show();
         M.form.dateselector.fix_position();
@@ -397,6 +473,9 @@ CALENDAR.prototype = {
         M.form.dateselector.calendar.detach('selectionChange', this.set_selects_from_date);
         M.form.dateselector.calendar.hide();
         M.form.dateselector.currentowner = null;
+        // Move the panel back out of any modal dialogue so that it is not removed from the DOM
+        // if that modal is later destroyed.
+        M.form.dateselector.movePanelForContext(Y.one(document.body));
 
         // Put the focus back to the image calendar that we clicked, only if it was visible.
         if (wasOwner && (e === null || typeof e === "undefined" || e.type !== "click")) {

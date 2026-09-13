@@ -83,4 +83,73 @@ final class restore_gradebook_structure_step_test extends \advanced_testcase {
         // Check the result.
         $this->assertFileEquals($expected, $filepath);
     }
+
+    /**
+     * Provide version boundary cases for the MDL-88407 penalty calculation freeze.
+     *
+     * @return array
+     */
+    public static function penalty_calculation_freeze_version_provider(): array {
+        $fixversion = \restore_gradebook_structure_step::PENALTY_CALCULATION_BUG_VERSION;
+
+        return [
+            'Before affected range' => [2025031799.00, false],
+            'Start of affected range' => [2025031800.00, true],
+            'Within affected range' => [2025090100.00, true],
+            'End of affected range' => [$fixversion, false],
+            'After affected range' => [$fixversion + 0.01, false],
+        ];
+    }
+
+    /**
+     * Tests that gradebook_calculation_freeze() applies the MDL-88407 penalty freeze for
+     * the correct backup version ranges and not for versions that already contain the fix.
+     *
+     * @dataProvider penalty_calculation_freeze_version_provider
+     * @covers \restore_gradebook_structure_step::gradebook_calculation_freeze
+     * @param float $version The moodle_version stored in the backup.
+     * @param bool $expectfreeze Whether a gradebook freeze should be applied for this version.
+     */
+    public function test_gradebook_calculation_freeze_penalty_version_boundary(
+        float $version,
+        bool $expectfreeze,
+    ): void {
+        global $CFG;
+        $this->resetAfterTest();
+
+        require_once($CFG->libdir . '/gradelib.php');
+
+        // A course with a penalised grade, so there is something for the freeze to apply to.
+        $course = $this->getDataGenerator()->create_course();
+        $gradeitem = new \grade_item();
+        $gradeitem->itemname = 'test item';
+        $gradeitem->itemtype = 'manual';
+        $gradeitem->courseid = $course->id;
+        $gradeitem->insert();
+        $grade = $gradeitem->get_grade($this->getDataGenerator()->create_user()->id, true);
+        $grade->rawgrade = 50;
+        $grade->deductedmark = 10;
+        $grade->update();
+
+        // A restore task reporting the version under test, wired into a real step instance
+        // via its normal constructor.
+        $task = $this->createMock(\restore_task::class);
+        $task->method('get_courseid')->willReturn($course->id);
+        $task->method('get_info')->willReturn((object) ['moodle_version' => $version]);
+        // Replicate restore_plan::backup_version_compare()'s behaviour, since the mocked
+        // task otherwise always returns null/false regardless of the version under test.
+        $task->method('backup_version_compare')->willReturnCallback(
+            static function (int $comparedversion, string $operator) use ($version): bool {
+                preg_match('/(\d{' . strlen((string) $comparedversion) . '})/', (string) $version, $matches);
+                $backupbuild = (int) $matches[1];
+                return version_compare($backupbuild, $comparedversion, $operator);
+            }
+        );
+        $step = new \restore_gradebook_structure_step('gradebook_structure', 'gradebook.xml', $task);
+
+        $rc = new \ReflectionClass($step);
+        $rc->getMethod('gradebook_calculation_freeze')->invoke($step);
+        $freeze = get_config('core', 'gradebook_calculations_freeze_' . $course->id);
+        $this->assertEquals($expectfreeze ? 20260808 : false, $freeze);
+    }
 }

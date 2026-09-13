@@ -1,5 +1,29 @@
 # core (subsystem) Upgrade notes
 
+## 5.1.7
+
+### Added
+
+- A new Behat step `I set the focus on the "<element>" "<selector>"` has been added to move keyboard focus onto an element without activating it.
+
+  For more information see [MDL-84065](https://tracker.moodle.org/browse/MDL-84065)
+- New `flexible_table::set_columnheadersattributes(...)` method for tables to define additional attributes ('class', 'data-X', etc.) for column headers
+
+  For more information see [MDL-89384](https://tracker.moodle.org/browse/MDL-89384)
+
+### Changed
+
+- The title of a modal dialogue rendered by the `core/modal` template is now an `<h2>` element instead of an `<h5>`, so that dialogue titles no longer break the page's heading hierarchy for assistive technology users.
+
+  The element carries the Bootstrap `fs-5` font size utility class, so the title's appearance is unchanged.
+
+  If your plugin renders headings inside modal dialogue content, set their levels relative to this `<h2>` (i.e. start at `<h3>`) so that the heading structure remains correctly nested. Headings that were previously nested beneath the old `<h5>` will now skip levels. If your plugin renders its own modal header markup, or overrides the `header` block of the `core/modal` template, apply the same `<h2 class="modal-title fs-5">` pattern.
+
+  For more information see [MDL-75699](https://tracker.moodle.org/browse/MDL-75699)
+- Uninstalling a block plugin no longer deletes its instances synchronously. \core\plugininfo\block::uninstall_cleanup() now queues the new \core\task\delete_block_instances_task ad-hoc task, which deletes the instances and their related data (contexts, positions, user preferences and search index entries) in batches. This makes block removal upgrade steps and plugin uninstallation effectively instant on large sites. Remaining instances are not displayed anywhere once the block record has been deleted.
+
+  For more information see [MDL-89289](https://tracker.moodle.org/browse/MDL-89289)
+
 ## 5.1.6
 
 ### Changed
