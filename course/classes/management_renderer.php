@@ -961,6 +961,9 @@ class core_course_management_renderer extends plugin_renderer_base {
         $attributes = array();
         if (!is_null($id)) {
             $attributes['id'] = $id;
+            // The id is the target of an accessible skip link (see accessible_skipto_links()).
+            // Make it focusable so activating the skip link moves keyboard focus here.
+            $attributes['tabindex'] = -1;
         }
         return html_writer::start_div($class . " grid_column_start", $attributes);
     }
@@ -1302,7 +1305,7 @@ class core_course_management_renderer extends plugin_renderer_base {
      * @return string
      */
     public function accessible_skipto_links($displaycategorylisting, $displaycourselisting, $displaycoursedetail) {
-        $html = html_writer::start_div('skiplinks accesshide');
+        $html = html_writer::start_div('skiplinks');
         $url = new moodle_url($this->page->url);
         if ($displaycategorylisting) {
             $url->set_anchor('category-listing');
