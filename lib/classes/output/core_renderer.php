@@ -2900,7 +2900,9 @@ EOD;
      * @return string the HTML to output.
      */
     public function skip_link_target($id = null) {
-        return html_writer::span('', '', ['id' => $id]);
+        // The tabindex="-1" makes the target focusable so that activating the skip link moves
+        // keyboard focus to it, rather than leaving focus on the link (which would trap the user).
+        return html_writer::span('', '', ['id' => $id, 'tabindex' => -1]);
     }
 
     /**

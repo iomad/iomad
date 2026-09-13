@@ -1674,12 +1674,14 @@ class core_course_renderer extends plugin_renderer_base {
         if (strval($contents) === '') {
             return '';
         }
-        $output = html_writer::link('#' . $skipdivid,
+        $output = html_writer::link(
+            '#' . $skipdivid,
             get_string('skipa', 'access', core_text::strtolower(strip_tags($header))),
-            array('class' => 'skip-block skip aabtn'));
+            ['class' => 'skip-block skip aabtn']
+        );
 
         // Wrap frontpage part in div container.
-        $output .= html_writer::start_tag('div', array('id' => $contentsdivid));
+        $output .= html_writer::start_tag('div', ['id' => $contentsdivid]);
         $output .= $this->heading($header);
 
         $output .= $contents;
@@ -1687,7 +1689,7 @@ class core_course_renderer extends plugin_renderer_base {
         // End frontpage part div container.
         $output .= html_writer::end_tag('div');
 
-        $output .= html_writer::tag('span', '', array('class' => 'skip-block-to', 'id' => $skipdivid));
+        $output .= html_writer::tag('span', '', ['class' => 'skip-block-to', 'id' => $skipdivid, 'tabindex' => -1]);
         return $output;
     }
 
