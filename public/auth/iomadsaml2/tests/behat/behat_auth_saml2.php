@@ -384,7 +384,7 @@ EOF;
      * @param string $contextapi context in which api is defined.
      * @param array $params list of params to pass.
      */
-    protected function execute($contextapi, $params = []) {
+    protected function execute(array|string $contextapi, mixed $params = []): void {
         global $CFG;
 
         // We allow usage of depricated behat steps for now.
@@ -392,13 +392,13 @@ EOF;
 
         // If newer Moodle, use the correct version.
         if ($CFG->branch >= 29) {
-            return parent::execute($contextapi, $params);
+            parent::execute($contextapi, $params);
         }
 
         // Backported for Moodle 27 and 28.
         list($class, $method) = explode("::", $contextapi);
         $object = behat_context_helper::get($class);
         $object->setMinkParameter('base_url', $CFG->wwwroot);
-        return call_user_func_array([$object, $method], $params);
+        call_user_func_array([$object, $method], $params);
     }
 }
