@@ -273,7 +273,7 @@ function block_iomad_company_admin_pluginfile($course, $birecord_or_cm, $context
 
         $filename = array_pop($args);
         $filepath = $args ? '/'.implode('/', $args).'/' : '/';
-        if (!$file = $fs->get_file($context->id, 'block_iomad_company_admin', 'classroom_description', 0, $filepath, $filename) or $file->is_directory()) {
+        if (!($file = $fs->get_file($context->id, 'block_iomad_company_admin', 'classroom_description', 0, $filepath, $filename)) || $file->is_directory()) {
             send_file_not_found();
         }
 
