@@ -91,4 +91,68 @@ class iomad_customcert {
         // Generate the PDF output.
         return $template->generate_pdf(false, $certissue->userid, true);
     }
+
+    /**
+     * Hacky function to change the course completion information on the fly to
+     * what we want it to be as the certificate module doesn't allow for the
+     * date to be passed as part of the generate_pdf function. Instead it gets
+     * its own date.
+     *
+     * @param object $trackinfo
+     * @return object
+     */
+    public static function set_completion($trackinfo) {
+        global $DB;
+
+        // Is there a current completion record?
+        if ($currentrecord = $DB->get_record(
+            'course_completions',
+            [
+                'userid' => $trackinfo->userid,
+                'course' => $trackinfo->courseid,
+            ])) {
+            // Update it to match our wanted date.
+            $DB->set_field(
+                'course_completions',
+                'timecompleted',
+                $trackinfo->timecompleted,
+                ['id' => $currentrecord->id]);
+        } else {
+            // Create a temporary record.
+            $currentrecord = (object) [
+                'userid' => $trackinfo->userid,
+                'course' => $trackinfo->courseid,
+                'timeenrolled' => $trackinfo->timeenrolled,
+                'timestarted' => $trackinfo->timestarted,
+                'timecompleted' => $trackinfo->timecompleted,
+            ];
+
+            $currentrecord->id = $DB->insert_record('course_completions', $currentrecord);
+            $currentrecord->deleteme = true;
+        }
+
+        return $currentrecord;
+    }
+
+    /**
+     * Undo the hacky set_completion function.
+     *
+     * @param object $currentrecord
+     * @return void
+     */
+    public static function reset_completion($currentrecord) {
+        global $DB;
+
+        // Did we create a temporary record?
+        if (!empty($currentrecord->deleteme)) {
+            $DB->delete_record('course_competions', ['id' => $currentrecord->id]);
+        } else {
+            // Put it back.
+            $DB->set_field(
+                'course_completions',
+                'timecompleted',
+                $currentrecord->timecompleted,
+                ['id' => $currentrecord->id]);
+        }
+    }
 }
