@@ -136,6 +136,7 @@ class add_entry_form extends dynamic_form {
             $data->licenseid = 0;
         }
         $data->modifiedtime = time();
+        $data->timestarted = $data->timeenrolled;
         if ($iomadcourse = $DB->get_record_sql(
             "SELECT ic.id,
                     ic.courseid,
@@ -145,13 +146,11 @@ class add_entry_form extends dynamic_form {
              FROM {local_iomad_courses} ic
              LEFT JOIN {local_iomad_company_course_options} cco ON (
                  ic.courseid = cco.courseid
-                 AND co.id = cco.courseid
+                 AND cco.courseid = :companyid
              )
-             WHERE cco.companyid = :companyid
-             AND (
-                 ic.validlength > 0
-                 OR cco.validlength > 0
-             )",
+             WHERE
+             ic.validlength > 0
+             OR cco.validlength > 0",
             ['courseid' => $data->courseid,
              'companyid' => $data->companyid])) {
             $data->timeexpires = $data->timecompleted + (24 * 60 * 60 * $iomadcourse->validlength);
