@@ -205,7 +205,7 @@ class track {
             $filename = clean_filename(format_string($certname) . ".pdf");
 
             // Work around for certificates which get their own dates rather than being passed.
-            if (method_exists($certclass, set_completion)) {
+            if (method_exists($certclass, 'set_completion')) {
                 $currentrecord = $certclass::set_completion($trackinfo);
             }
 
@@ -213,7 +213,7 @@ class track {
             $content = $certclass::create_certificate($certrec, $user, $cm, $course, $certissue);
 
             // Work around for certificates which get their own dates rather than being passed.
-            if (method_exists($certclass, reset_completion)) {
+            if (method_exists($certclass, 'reset_completion')) {
                 $certclass::reset_completion($currentrecord);
             }
 
