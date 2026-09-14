@@ -1760,7 +1760,7 @@ class company_user {
                                     foreach ($responsetables as $table) {
                                         $DB->delete_records($table, ['response_id' => $response->id]);
                                     }
-                                    $DB->delete_record('questionnaire_resonse', ['id' => $response->id]);
+                                    $DB->delete_records('questionnaire_resonse', ['id' => $response->id]);
                                 }
                             }
                         }
