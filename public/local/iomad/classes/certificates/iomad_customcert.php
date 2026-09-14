@@ -145,7 +145,7 @@ class iomad_customcert {
 
         // Did we create a temporary record?
         if (!empty($currentrecord->deleteme)) {
-            $DB->delete_record('course_competions', ['id' => $currentrecord->id]);
+            $DB->delete_records('course_completions', ['id' => $currentrecord->id]);
         } else {
             // Put it back.
             $DB->set_field(
