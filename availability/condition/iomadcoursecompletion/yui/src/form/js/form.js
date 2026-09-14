@@ -72,7 +72,6 @@ M.availability_iomadcoursecompletion.form.getNode = function(json) {
         }, '.availability_iomadcoursecompletion select');
 
         root.delegate('click', function() {
-            updateCheckbox(this, true);
             M.core_availability.form.update();
         }, '.availability_iomadcoursecompletion input[type=checkbox]');
 
@@ -87,6 +86,11 @@ M.availability_iomadcoursecompletion.form.fillValue = function(value, node) {
         value.id = 'choose';
     } else if (selected !== 'any') {
         value.id = parseInt(selected, 10);
+    }
+    if (node.one('input[name=indate]').get('checked')) {
+        value.indate = 1;
+    } else {
+        value.indate = 0;
     }
 };
 
