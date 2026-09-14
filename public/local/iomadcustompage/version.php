@@ -27,6 +27,6 @@ defined('MOODLE_INTERNAL') || die();
 $plugin->component = 'local_iomadcustompage';
 $plugin->release = '1.0.1';
 $plugin->version = 2026050100;
-$plugin->requires = 2024100700;     // Moodle 4.5.
-$plugin->supported = [405, 407];    // Moodle 4.5 to 4.7.
+$plugin->requires = 2026042000;     // Moodle 4.5.
+$plugin->supported = [502, 502];    // Moodle 4.5 to 4.7.
 $plugin->maturity = MATURITY_STABLE;

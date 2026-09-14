@@ -25,10 +25,10 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->release  = '5.1.4 (Build: 20260420)';    // Human-friendly version name.
+$plugin->release  = '5.2.3 (Build: 20260914)';    // Human-friendly version name.
 $plugin->version  = 2025100651;   // The (date) version of this plugin.
-$plugin->requires = 2025100600;   // Requires this Moodle version.
+$plugin->requires = 2026042000;   // Requires this Moodle version.
 $plugin->component  = 'local_report_completion_monthly';
 $plugin->dependencies = ['local_iomad' => 2026010100];
-$plugin->supported = [501, 501];
+$plugin->supported = [502, 502];
 $plugin->maturity = MATURITY_STABLE;

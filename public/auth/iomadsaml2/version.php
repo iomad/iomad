@@ -30,5 +30,5 @@ $plugin->release   = 2026040202;    // Match release exactly to version.
 $plugin->requires  = 2025040400;    // Requires Moodle 5.0
 $plugin->component = 'auth_iomadsaml2';  // Full name of the plugin (used for diagnostics).
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->supported = [500, 501];     // A range of branch numbers of supported moodle versions.
+$plugin->supported = [500, 502];     // A range of branch numbers of supported moodle versions.
 $plugin->dependencies = ['local_iomad' => 2026010100];
