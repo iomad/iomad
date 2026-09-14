@@ -269,6 +269,125 @@ function upgrade_calculated_grade_items($courseid = null) {
 }
 
 /**
+ * Freezes gradebook calculations for courses that may be affected by MDL-88407.
+ *
+ * Used during upgrade and course restore to prevent existing grades from being silently changed.
+ *
+ * Assignment grades are checked against the authoritative grade for the student's latest attempt,
+ * so a course is frozen when a penalised grade has an incorrect rawgrade. A second check recomputes
+ * finalgrade from the stored rawgrade and deductedmark using the fixed post-MDL-88407 formula, and
+ * freezes the course if that differs from the stored finalgrade.
+ *
+ * Other item types have no authoritative source to compare against, so any penalised grade
+ * conservatively freezes the course.
+ *
+ * Locked items and locked/overridden grades are excluded throughout: a regrade never touches them,
+ * so there is nothing for a freeze to protect against. The Assignment check also requires a
+ * value-type grade item and a non-null finalgrade, matching what
+ * penalty_manager::repair_penalised_rawgrade() requires to repair a row - freezing on a row that
+ * repair would never fix would leave it with a still-corrupted rawgrade once Accept forces a regrade.
+ *
+ * @param int|null $courseid Specify a course ID to run this script on just one course.
+ */
+function upgrade_penalty_calculation_freeze(?int $courseid = null) {
+    global $CFG, $DB;
+
+    require_once($CFG->libdir . '/gradelib.php');
+
+    $params = [];
+    $singlecoursesql = '';
+    if ($courseid !== null) {
+        $singlecoursesql = 'AND gi.courseid = :courseid';
+        $params['courseid'] = $courseid;
+    }
+
+    // Find courses containing a non-Assignment grade item that may be affected by the bug. Locked
+    // items and locked/overridden grades are never touched by a regrade, so they carry no risk of a
+    // silent change - the same reasoning penalty_manager::repair_penalised_rawgrade() uses to exclude
+    // them from repair.
+    $sql = "SELECT DISTINCT gi.courseid
+              FROM {grade_items} gi
+              JOIN {grade_grades} gg ON gg.itemid = gi.id
+             WHERE gg.deductedmark > 0
+               AND (gi.itemtype <> 'mod' OR gi.itemmodule <> 'assign')
+               AND gi.locked = 0
+               AND gg.locked = 0
+               AND gg.overridden = 0
+               $singlecoursesql";
+    $affectedcourseids = array_fill_keys($DB->get_fieldset_sql($sql, $params), true);
+
+    // Find penalised Assignment grades that meet the conditions required by
+    // penalty_manager::repair_penalised_rawgrade() to repair the row. Freezing a row that cannot be
+    // repaired would leave its rawgrade corrupted when Accept forces a regrade.
+    $assignparams = $params;
+    $assignparams['gradetype'] = GRADE_TYPE_VALUE;
+    $sql = "SELECT gg.id, gi.id AS itemid, gg.rawgrade, gg.deductedmark, ag.grade AS authoritativegrade,
+                   gi.courseid, gg.rawgrademin, gg.rawgrademax, gg.finalgrade
+              FROM {grade_items} gi
+              JOIN {grade_grades} gg ON gg.itemid = gi.id
+              JOIN {assign_submission} asub
+                ON asub.assignment = gi.iteminstance
+               AND asub.userid = gg.userid
+               AND asub.latest = 1
+              JOIN {assign_grades} ag
+                ON ag.assignment = asub.assignment
+               AND ag.userid = asub.userid
+               AND ag.attemptnumber = asub.attemptnumber
+             WHERE gg.deductedmark > 0
+               AND gg.rawgrade IS NOT NULL
+               AND gg.finalgrade IS NOT NULL
+               AND gi.itemtype = 'mod'
+               AND gi.itemmodule = 'assign'
+               AND gi.gradetype = :gradetype
+               AND gi.locked = 0
+               AND gg.locked = 0
+               AND gg.overridden = 0
+               AND ag.grade IS NOT NULL
+               AND ag.grade <> -1
+               $singlecoursesql";
+    $candidates = $DB->get_recordset_sql($sql, $assignparams);
+    $gradeitemcache = [];
+    foreach ($candidates as $candidate) {
+        if (grade_floats_different((float)$candidate->rawgrade, (float)$candidate->authoritativegrade)) {
+            $affectedcourseids[$candidate->courseid] = true;
+        } else {
+            // The rawgrade may match the authoritative grade even when finalgrade is affected by the
+            // legacy calculation, so verify finalgrade using the fixed calculation.
+            if (!array_key_exists($candidate->itemid, $gradeitemcache)) {
+                $gradeitemcache[$candidate->itemid] = grade_item::fetch(['id' => $candidate->itemid]);
+            }
+            $gradeitem = $gradeitemcache[$candidate->itemid];
+            if (!$gradeitem) {
+                continue;
+            }
+
+            $penalisedraw = max($gradeitem->grademin, $candidate->rawgrade - $candidate->deductedmark);
+            $fixedfinalgrade = $gradeitem->adjust_raw_grade(
+                $penalisedraw,
+                $candidate->rawgrademin,
+                $candidate->rawgrademax
+            );
+            if (grade_floats_different((float) $candidate->finalgrade, (float) $fixedfinalgrade)) {
+                // The finalgrade would change if regraded now, so freeze the whole course.
+                $affectedcourseids[$candidate->courseid] = true;
+            }
+        }
+    }
+    $candidates->close();
+
+    foreach (array_keys($affectedcourseids) as $affectedcourseid) {
+        // Check to see if the gradebook freeze is already in effect.
+        $gradebookfreeze = get_config('core', 'gradebook_calculations_freeze_' . $affectedcourseid);
+        if (!$gradebookfreeze) {
+            set_config(
+                'gradebook_calculations_freeze_' . $affectedcourseid,
+                \core_grades\penalty_manager::PENALTY_CALCULATION_FREEZE_VERSION
+            );
+        }
+    }
+}
+
+/**
  * This function creates a default separated/connected scale
  * so there's something in the database.
  *

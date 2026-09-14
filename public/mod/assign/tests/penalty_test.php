@@ -482,4 +482,75 @@ final class penalty_test extends \advanced_testcase {
             'calculate_penalised_grade result must match the gradebook finalgrade.'
         );
     }
+
+    /**
+     * Test that calculate_penalised_grade() applies grade-item factors to a verified grade while the
+     * course is frozen.
+     *
+     * A course-level freeze can contain both legacy and correctly calculated grades, so correctly
+     * calculated grades must continue to use the normal factor application.
+     *
+     * @covers \assign::calculate_penalised_grade
+     */
+    public function test_calculate_penalised_grade_applies_factors_for_verified_grade_while_frozen(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        [$course, $student] = $this->set_up_test();
+
+        $generator = $this->getDataGenerator();
+        $assignmentgenerator = $generator->get_plugin_generator('mod_assign');
+
+        $duedate = DAYSECS;
+        $instance = $assignmentgenerator->create_instance([
+            'course' => $course->id,
+            'duedate' => $duedate,
+            'assignsubmission_onlinetext_enabled' => 1,
+            'gradepenalty' => 1,
+            'grade' => 200,
+        ]);
+
+        $cm = get_coursemodule_from_instance('assign', $instance->id);
+        $context = \context_module::instance($cm->id);
+        $assign = new mod_assign_testable_assign($context, $cm, $course);
+
+        grade_update(
+            source: 'mod/assign',
+            courseid: $course->id,
+            itemtype: 'mod',
+            itemmodule: 'assign',
+            iteminstance: $instance->id,
+            itemnumber: 0,
+            grades: null,
+            itemdetails: ['multfactor' => 2.0, 'plusfactor' => 5.0],
+        );
+
+        $this->add_submission($student, $assign, 'Sample text');
+        $this->submit_for_grading($student, $assign);
+
+        // Submit one day after due date so a penalty applies.
+        $DB->set_field('assign_submission', 'timemodified', $duedate + 1, ['userid' => $student->id]);
+
+        // Teacher grades at 60/200 while the course is not frozen: (60 - 20) * 2 + 5 = 85.
+        $assign->testable_apply_grade_to_user((object)['grade' => 60.0], $student->id, 0);
+        $this->assertDebuggingCalledCount(2);
+
+        $gradeitem = grade_item::fetch([
+            'courseid' => $course->id,
+            'itemtype' => 'mod',
+            'itemmodule' => 'assign',
+            'iteminstance' => $instance->id,
+            'itemnumber' => 0,
+        ]);
+        $this->assertEquals(85.0, (float) $gradeitem->get_final($student->id)->finalgrade);
+
+        // Freeze the course, as if the upgrade had found unrelated legacy corruption elsewhere in it.
+        set_config('gradebook_calculations_freeze_' . $course->id, 20260808);
+
+        // The authoritative Assignment grade matches rawgrade, so the grade is not legacy-corrupted.
+        $assigngrade = $DB->get_record('assign_grades', ['assignment' => $instance->id, 'userid' => $student->id]);
+        [$penalisedgrade, $deductedmark] = $assign->calculate_penalised_grade($assigngrade);
+        $this->assertEqualsWithDelta(20.0, $deductedmark, 0.001);
+        $this->assertEqualsWithDelta(85.0, $penalisedgrade, 0.001, 'Grade-item factors must still be applied.');
+    }
 }

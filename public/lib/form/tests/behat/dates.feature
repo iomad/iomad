@@ -5,6 +5,26 @@ Feature: Setting and validating date fields
   Background:
     Given I log in as "admin"
 
+  @javascript
+  Scenario: The date time selector popup calendar is keyboard accessible on a standard form
+    Given I am on fixture page "/lib/form/tests/behat/fixtures/dates_form.php"
+    # Enable the optional date and time field so its calendar toggle button is not disabled.
+    # Clicking the checkbox itself avoids ever tabbing away from a native <select>, which some
+    # browsers intercept with their own dropdown-list keyboard handling.
+    When I click on "simpleoptionaldatetime[enabled]" "checkbox"
+    And I press the tab key
+    And I press the tab key
+    And I press the tab key
+    And I press the tab key
+    And I press the tab key
+    And I press the tab key
+    Then the focused element is "Date picker" "button" in the "#fitem_id_simpleoptionaldatetime" "css_element"
+    And I press the enter key
+    And I press the tab key
+    And the focused element is "Go to previous month" "button"
+    And I press the tab key
+    And the focused element is "Go to next month" "button"
+
   Scenario: Setting moodleform date fields by field label
     Given I am on fixture page "/lib/form/tests/behat/fixtures/dates_form.php"
     And I set the following fields to these values:

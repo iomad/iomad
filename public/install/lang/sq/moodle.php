@@ -30,5 +30,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['language'] = 'Gjuha';
-$string['next'] = 'Pasardhësi';
-$string['previous'] = 'Paraardhësi';
+$string['moodlelogo'] = 'Logo e Moodle';
+$string['next'] = 'Tjetra';
+$string['previous'] = 'E mëparshme';
+$string['reload'] = 'Riringarko';

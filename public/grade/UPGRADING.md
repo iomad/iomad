@@ -1,5 +1,13 @@
 # core_grades (subsystem) Upgrade notes
 
+## 5.2.3
+
+### Changed
+
+- Courses containing a grade with a penalty deducted from it are now frozen on upgrade to prevent existing grades from being changed unexpectedly by a regrade (see MDL-88407). Courses with no grades identified as affected are not frozen. The pre-MDL-88407 calculation is retained until a user with the `moodle/grade:manage` capability reviews the affected grades and chooses whether to keep the existing grades or apply the fix. When the fix is applied, Assignment grades are used as the authoritative source to restore the affected `rawgrade` values before normal gradebook processing recalculates the final grades. Grades from other activity modules cannot be confidently identified as affected but are still recalculated with the fixed formula once the fix is applied, as every grade item in the course is regraded at that point.
+
+  For more information see [MDL-89497](https://tracker.moodle.org/browse/MDL-89497)
+
 ## 5.2
 
 ### Removed

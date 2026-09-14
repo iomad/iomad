@@ -36,6 +36,27 @@ use stdClass;
  */
 class penalty_manager {
     /**
+     * The freeze sentinel value stored in the `gradebook_calculations_freeze_<courseid>` config setting
+     * for courses that may be affected by the pre-MDL-88407 penalty calculation bug.
+     *
+     * A course is treated as needing the legacy penalty calculation while its stored freeze value is
+     * less than or equal to this constant.
+     */
+    const PENALTY_CALCULATION_FREEZE_VERSION = 20260808;
+
+    /**
+     * Whether a course's gradebook is currently frozen specifically for the pre-MDL-88407 penalty
+     * calculation bug.
+     *
+     * @param int $courseid The course id.
+     * @return bool
+     */
+    public static function is_frozen_for_legacy_penalty(int $courseid): bool {
+        $freeze = get_config('core', 'gradebook_calculations_freeze_' . $courseid);
+        return $freeze && (int)$freeze <= self::PENALTY_CALCULATION_FREEZE_VERSION;
+    }
+
+    /**
      * List the modules that support the grade penalty feature.
      *
      * @return array list of supported modules.
@@ -231,31 +252,50 @@ class penalty_manager {
 
         // Update the grade if not in preview mode.
         if (!$previewonly) {
-            $oldfinalgrade = $grade->finalgrade;
+            // Check whether the gradebook is frozen and this grade is confirmed to use the legacy
+            // pre-MDL-88407 representation. Only confirmed legacy grades use the legacy calculation,
+            // which stores the already-penalised value in rawgrade. Grades that are already correct,
+            // or cannot be confirmed as legacy, use the normal calculation to avoid corrupting rawgrade
+            // (MDL-89497).
+            if (
+                self::is_frozen_for_legacy_penalty($gradeitem->courseid)
+                && self::requires_legacy_penalty_calculation(
+                    $grade,
+                    self::get_authoritative_user_grades($gradeitem),
+                    $gradeitem
+                )
+            ) {
+                // Update the raw grade and store the deducted mark.
+                $gradeitem->update_raw_grade($userid, $container->get_grade_after_penalties(), 'gradepenalty');
+                $gradeitem->update_deducted_mark($userid, $container->get_penalty());
+            } else {
+                $oldfinalgrade = $grade->finalgrade;
 
-            // Apply penalty to raw grade first, then apply grade-item factors to compute final grade.
-            // rawgrade is intentionally not updated - it must always hold the original unpenalised source grade.
-            $grade->deductedmark = $container->get_penalty();
+                // Read the penalised raw grade before updating deductedmark, as get_grade_after_penalties()
+                // re-checks whether the grade is legacy-corrupted using the current stored grade state.
+                // Updating deductedmark first would cause it to see a partially updated state and could apply
+                // the penalty incorrectly (see test_frozen_gradebook_uses_fixed_calculation_for_verified_grade, MDL-89749).
+                $penalisedraw = $container->get_grade_after_penalties();
+                $grade->deductedmark = $container->get_penalty();
+                $grade->finalgrade = self::apply_grade_item_factors($penalisedraw, $gradeitem, $grade);
 
-            $penalisedraw = $container->get_grade_after_penalties();
-            $grade->finalgrade = self::apply_grade_item_factors($penalisedraw, $gradeitem, $grade);
+                $grade->timemodified = time();
+                $grade->update('gradepenalty');
 
-            $grade->timemodified = time();
-            $grade->update('gradepenalty');
-
-            if (grade_floats_different($grade->finalgrade, $oldfinalgrade)) {
-                \core\event\user_graded::create_from_grade($grade)->trigger();
-                // Regrade parent category/course totals so the penalised finalgrade
-                // is preserved and updated through nested categories if present.
-                if (!$gradeitem->needsupdate && !grade_item::fetch_course_item($gradeitem->courseid)->needsupdate) {
-                    $updateditem = grade_item::fetch([
-                        'itemtype' => 'category',
-                        'iteminstance' => $gradeitem->categoryid,
-                        'courseid' => $gradeitem->courseid,
-                    ]) ?: grade_item::fetch_course_item($gradeitem->courseid);
-                    if (grade_regrade_final_grades($gradeitem->courseid, $userid, $updateditem) !== true) {
-                        // Fast regrade failed; mark the parent (category/course) item for regrading.
-                        $updateditem->force_regrading();
+                if (grade_floats_different($grade->finalgrade, $oldfinalgrade)) {
+                    \core\event\user_graded::create_from_grade($grade)->trigger();
+                    // Regrade parent category/course totals so the penalised finalgrade
+                    // is preserved and updated through nested categories if present.
+                    if (!$gradeitem->needsupdate && !grade_item::fetch_course_item($gradeitem->courseid)->needsupdate) {
+                        $updateditem = grade_item::fetch([
+                            'itemtype' => 'category',
+                            'iteminstance' => $gradeitem->categoryid,
+                            'courseid' => $gradeitem->courseid,
+                        ]) ?: grade_item::fetch_course_item($gradeitem->courseid);
+                        if (grade_regrade_final_grades($gradeitem->courseid, $userid, $updateditem) !== true) {
+                            // Fast regrade failed; mark the parent (category/course) item for regrading.
+                            $updateditem->force_regrading();
+                        }
                     }
                 }
             }
@@ -283,6 +323,181 @@ class penalty_manager {
         $rawmin = !empty($usergrade->id) ? $usergrade->rawgrademin : $gradeitem->grademin;
         $rawmax = !empty($usergrade->id) ? $usergrade->rawgrademax : $gradeitem->grademax;
         return $gradeitem->adjust_raw_grade($rawgrade, $rawmin, $rawmax);
+    }
+
+    /**
+     * Fetches the authoritative raw grades for every user in an Assignment instance using
+     * Assignment's own get_user_grades() function.
+     *
+     * This is deliberately restricted to mod_assign. {$modname}_get_user_grades() is an internal
+     * convention followed by only a handful of core modules, not a formal inter-component contract.
+     * In particular, how an ungraded attempt is represented is module-specific and cannot safely be
+     * interpreted generically.
+     *
+     * @param grade_item $gradeitem The grade item whose module instance to query.
+     * @return array|null Grades indexed by userid, or null if this is not an Assignment grade item, or
+     *                     Assignment's get_user_grades() could not be found.
+     */
+    public static function get_authoritative_user_grades(grade_item $gradeitem): ?array {
+        global $DB;
+
+        if ($gradeitem->itemtype !== 'mod' || $gradeitem->itemmodule !== 'assign') {
+            return null;
+        }
+
+        $modinstance = $DB->get_record($gradeitem->itemmodule, ['id' => $gradeitem->iteminstance]);
+        if (!$modinstance) {
+            return null;
+        }
+
+        // Use component_callback(), rather than a direct require_once() and call into mod_assign's
+        // own library, so that core_grades does not reach directly into another component's internals.
+        return component_callback('mod_' . $gradeitem->itemmodule, 'get_user_grades', [$modinstance, 0], null);
+    }
+
+    /**
+     * Whether a penalised grade should use the legacy pre-MDL-88407 calculation.
+     *
+     * A legacy calculation is used when the gradebook is frozen and the grade's stored rawgrade
+     * differs from Assignment's authoritative raw grade. Grades for ungraded latest attempts are
+     * not treated as legacy because there is no authoritative grade to compare against.
+     *
+     * A second check handles cases where the stored rawgrade matches the authoritative grade but the
+     * grade may still be affected by the legacy calculation. It recomputes finalgrade using the stored
+     * rawgrade and deductedmark with the fixed post-MDL-88407 formula, and considers the grade legacy
+     * if this differs from the stored finalgrade.
+     *
+     * If the authoritative grades cannot be obtained, the legacy calculation is used conservatively.
+     *
+     * @param grade_grade $grade The grade to check.
+     * @param array|null $authoritativegrades Assignment grades indexed by userid, or null if unavailable.
+     * @param grade_item $gradeitem The grade item, used to recompute the legacy and fixed finalgrade.
+     * @return bool
+     */
+    public static function requires_legacy_penalty_calculation(
+        grade_grade $grade,
+        ?array $authoritativegrades,
+        grade_item $gradeitem
+    ): bool {
+        if ($authoritativegrades === null) {
+            // Not an Assignment grade item, or Assignment's get_user_grades() could not be found - there
+            // is no way to check, so conservatively assume this row may still be legacy-corrupted.
+            return true;
+        }
+
+        if (!isset($authoritativegrades[$grade->userid])) {
+            // No current authoritative grade for this student's latest attempt at all.
+            return false;
+        }
+
+        $originalraw = $authoritativegrades[$grade->userid]->rawgrade;
+
+        // Null and -1 both represent an ungraded attempt - same reasoning as above.
+        if ($originalraw === null || (float)$originalraw === -1.0) {
+            return false;
+        }
+
+        if (grade_floats_different($grade->rawgrade, $originalraw)) {
+            // A genuine mismatch is the positive signal that this row is still legacy-corrupted.
+            return true;
+        }
+
+        // The stored rawgrade matches the authoritative mark, but that alone can be a coincidence.
+        // The legacy formula applies grade-item factors to rawgrade directly, ignoring deductedmark;
+        // the fixed formula subtracts deductedmark from rawgrade first.
+        $legacyfinalgrade = $gradeitem->adjust_raw_grade($grade->rawgrade, $grade->rawgrademin, $grade->rawgrademax);
+        $fixedpenalisedraw = max($gradeitem->grademin, $grade->rawgrade - $grade->deductedmark);
+        $fixedfinalgrade = $gradeitem->adjust_raw_grade($fixedpenalisedraw, $grade->rawgrademin, $grade->rawgrademax);
+
+        return !grade_floats_different($grade->finalgrade, $legacyfinalgrade)
+            && grade_floats_different($grade->finalgrade, $fixedfinalgrade);
+    }
+
+    /**
+     * Repairs rawgrade values left in the legacy representation by MDL-88407.
+     *
+     * A grade is repaired when:
+     * - it is an Assignment grade with a deducted mark and a non-null rawgrade;
+     * - its grade item is unlocked;
+     * - the grade itself is unlocked and not overridden;
+     * - Assignment's own current raw grade differs from the stored gradebook rawgrade.
+     *
+     * Assignment's own get_user_grades() function is used as the authoritative source for the current
+     * raw grade (see get_authoritative_user_grades() for why this is restricted to Assignment). Grades
+     * for ungraded attempts are skipped.
+     *
+     * @param int|null $courseid Specify a course ID to run this script on just one course.
+     */
+    public static function repair_penalised_rawgrade(?int $courseid = null): void {
+        global $DB;
+
+        $params = [];
+        $singlecoursesql = '';
+        if ($courseid !== null) {
+            $singlecoursesql = 'AND gi.courseid = :courseid';
+            $params['courseid'] = $courseid;
+        }
+
+        // Find grade items with penalised grades that may need to be repaired.
+        $sql = "SELECT DISTINCT gi.id
+                  FROM {grade_items} gi
+                  JOIN {grade_grades} gg ON gg.itemid = gi.id
+                 WHERE gg.deductedmark > 0
+                   AND gg.rawgrade IS NOT NULL
+                   AND gi.locked = 0
+                   AND gg.locked = 0
+                   AND gg.overridden = 0
+                   AND gi.itemtype = 'mod'
+                   AND gi.itemmodule = 'assign'
+                   AND gi.gradetype = :gradetype
+                   $singlecoursesql";
+
+        $params['gradetype'] = GRADE_TYPE_VALUE;
+        $itemids = $DB->get_fieldset_sql($sql, $params);
+
+        foreach ($itemids as $itemid) {
+            $gradeitem = grade_item::fetch(['id' => $itemid]);
+            if (!$gradeitem) {
+                continue;
+            }
+
+            $modgrades = self::get_authoritative_user_grades($gradeitem);
+            if ($modgrades === null) {
+                continue;
+            }
+
+            $sql = 'itemid = :itemid
+                    AND deductedmark > 0
+                    AND rawgrade IS NOT NULL
+                    AND locked = 0
+                    AND overridden = 0
+                    AND finalgrade IS NOT NULL';
+
+            $params = [
+                'itemid' => $itemid,
+            ];
+
+            $graderecords = $DB->get_recordset_select('grade_grades', $sql, $params);
+            foreach ($graderecords as $graderecord) {
+                if (!isset($modgrades[$graderecord->userid])) {
+                    continue;
+                }
+
+                $originalraw = $modgrades[$graderecord->userid]->rawgrade;
+
+                // Null and -1 both represent an ungraded attempt, so skip it.
+                if ($originalraw === null || (float)$originalraw === -1.0) {
+                    continue;
+                }
+
+                if (grade_floats_different($graderecord->rawgrade, $originalraw)) {
+                    // The module's current raw grade is the authoritative value. If it differs
+                    // from the stored gradebook rawgrade, repair the gradebook value.
+                    $DB->set_field('grade_grades', 'rawgrade', $originalraw, ['id' => (int)$graderecord->id]);
+                }
+            }
+            $graderecords->close();
+        }
     }
 
     /**

@@ -69,11 +69,8 @@ class behat_grade extends behat_base {
 
         $this->execute("behat_action_menu::i_choose_in_the_open_action_menu", $linktext);
 
-        if ($type !== 'gradeitem') {
-            $this->execute('behat_general::i_click_on_in_the', [get_string('showmore', 'form'),
-                'link', '.modal-dialog', 'css_element']);
-        }
-
+        $this->execute('behat_general::i_click_on_in_the', [get_string('showmore', 'form'),
+            'link', '.modal-dialog', 'css_element']);
 
         $this->execute("behat_forms::i_set_the_following_fields_to_these_values", $data);
         if ($this->getSession()->getPage()->find('xpath', './/button[@data-action="save"]')) {
@@ -237,6 +234,34 @@ class behat_grade extends behat_base {
         global $DB;
         $courseid = $DB->get_field('course', 'id', array('shortname' => $coursename), MUST_EXIST);
         set_config('gradebook_calculations_freeze_' . $courseid, $version);
+    }
+
+    /**
+     * Directly sets fields on a user's grade_grade, bypassing normal grade calculation logic.
+     *
+     * Used to simulate a grade produced by the pre-MDL-88407 penalty calculation.
+     *
+     * The grade item is looked up by its idnumber.
+     *
+     * @Given /^the grade for "(?P<username_string>(?:[^"]|\\")*)" in the grade item "(?P<gradeitemidnumber_string>(?:[^"]|\\")*)" is set to:$/
+     * @param string $username
+     * @param string $itemidnumber The grade item's idnumber, e.g. an Assignment activity's idnumber.
+     * @param TableNode $data A two-column table of grade_grade field => value pairs, one per row, e.g.
+     *                        | rawgrade     | 85 |
+     *                        | deductedmark | 20 |
+     */
+    public function the_grade_is_set_to($username, $itemidnumber, TableNode $data) {
+        global $DB;
+
+        $userid = $DB->get_field('user', 'id', ['username' => $username], MUST_EXIST);
+        $itemid = $DB->get_field('grade_items', 'id', ['idnumber' => $itemidnumber], MUST_EXIST);
+
+        $gradeitem = \grade_item::fetch(['id' => $itemid]);
+        $grade = $gradeitem->get_grade($userid, true);
+        foreach ($data->getRowsHash() as $field => $value) {
+            $grade->{$field} = (float) $value;
+        }
+        $grade->update();
     }
 
     /**

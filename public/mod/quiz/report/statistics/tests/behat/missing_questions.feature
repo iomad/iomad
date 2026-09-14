@@ -36,8 +36,11 @@ Feature: Robustness of the statistics calculations with missing qusetions
       |   2  | True     |
     And question "Test question 1" is changed to simulate being of an uninstalled type
     And question "Test question 2" no longer exists in the database
+    And I am on the "Quiz 1" "mod_quiz > Edit" page logged in as teacher
+    And I should see "Invalid question type: invalidqtype" in the "Test question 1" "list_item"
+    And I should see "Invalid question type: missingtype" in the "This question no longer seems to exist" "list_item"
 
-    When I am on the "Quiz 1" "mod_quiz > Statistics report" page logged in as teacher
+    When I am on the "Quiz 1" "mod_quiz > Statistics report" page
 
     Then I should see "Quiz structure analysis"
     And "1" row "Question name" column of "questionstatistics" table should contain "Missing question"

@@ -6,6 +6,106 @@ More detailed information on key changes can be found in the [Developer update n
 
 The format of this change log follows the advice given at [Keep a CHANGELOG](https://keepachangelog.com).
 
+## 5.2.3
+
+### core
+
+#### Added
+
+- A new Behat step `I set the focus on the "<element>" "<selector>"` has been added to move keyboard focus onto an element without activating it.
+
+  For more information see [MDL-84065](https://tracker.moodle.org/browse/MDL-84065)
+- New `flexible_table::set_columnheadersattributes(...)` method for tables to define additional attributes ('class', 'data-X', etc.) for column headers
+
+  For more information see [MDL-89384](https://tracker.moodle.org/browse/MDL-89384)
+
+#### Changed
+
+- The title of a modal dialogue rendered by the `core/modal` template is now an `<h2>` element instead of an `<h5>`, so that dialogue titles no longer break the page's heading hierarchy for assistive technology users.
+
+  The element carries the Bootstrap `fs-5` font size utility class, so the title's appearance is unchanged.
+
+  If your plugin renders headings inside modal dialogue content, set their levels relative to this `<h2>` (i.e. start at `<h3>`) so that the heading structure remains correctly nested. Headings that were previously nested beneath the old `<h5>` will now skip levels. If your plugin renders its own modal header markup, or overrides the `header` block of the `core/modal` template, apply the same `<h2 class="modal-title fs-5">` pattern.
+
+  For more information see [MDL-75699](https://tracker.moodle.org/browse/MDL-75699)
+- Uninstalling a block plugin no longer deletes its instances synchronously. \core\plugininfo\block::uninstall_cleanup() now queues the new \core\task\delete_block_instances_task ad-hoc task, which deletes the instances and their related data (contexts, positions, user preferences and search index entries) in batches. This makes block removal upgrade steps and plugin uninstallation effectively instant on large sites. Remaining instances are not displayed anywhere once the block record has been deleted.
+
+  For more information see [MDL-89289](https://tracker.moodle.org/browse/MDL-89289)
+
+### core_courseformat
+
+#### Changed
+
+- The course index tree semantics for subsections have moved from the delegated section wrapper to the activity that delegates it.
+
+  * The `li[role="treeitem"]` in `core_courseformat/local/courseindex/cm` should add the following attributes when the activity has a delegated section:
+    * `aria-owns`, set to the id of that section's collapsible content, `courseindexcollapse{{number}}`
+    * `aria-labelledby`, set to the id of that section's title element, `courseindexsection{{number}}-title`
+    * `aria-expanded`, set to `false` when the section's `indexcollapsed` is set and `true` otherwise
+  * In `core_courseformat/local/courseindex/section`, `role="treeitem"` and those same three attributes should no longer be set when the section is delegated, and the section title element needs `id="courseindexsection{{number}}-title"` so the tree item can reference it.
+
+  Note that the `core_courseformat/local/courseindex/section` JS keeps `aria-expanded` up to date by writing to the closest `[role="treeitem"]` ancestor, so the element carrying the role is the one that receives the state. Plugins overriding either template should update both, as the two are no longer independent.
+
+  For more information see [MDL-88949](https://tracker.moodle.org/browse/MDL-88949)
+
+### core_grades
+
+#### Changed
+
+- Courses containing a grade with a penalty deducted from it are now frozen on upgrade to prevent existing grades from being changed unexpectedly by a regrade (see MDL-88407). Courses with no grades identified as affected are not frozen. The pre-MDL-88407 calculation is retained until a user with the `moodle/grade:manage` capability reviews the affected grades and chooses whether to keep the existing grades or apply the fix. When the fix is applied, Assignment grades are used as the authoritative source to restore the affected `rawgrade` values before normal gradebook processing recalculates the final grades. Grades from other activity modules cannot be confidently identified as affected but are still recalculated with the fixed formula once the fix is applied, as every grade item in the course is regraded at that point.
+
+  For more information see [MDL-89497](https://tracker.moodle.org/browse/MDL-89497)
+
+### core_reportbuilder
+
+#### Added
+
+- New `add_header_attributes(...)` method on column class instances for defining additional header attributes for the column when rendered in a report
+
+  For more information see [MDL-89384](https://tracker.moodle.org/browse/MDL-89384)
+
+### aiprovider_gemini
+
+#### Added
+
+- A new `gemini31flashimage` model class has been added to support `gemini-3.1-flash-image`, the model Google recommends as the migration path for the retiring Imagen 4 endpoints (`imagen-4.0-generate-001`, `-ultra`, `-fast`), and it is now the default model for the "Generate image" action.
+
+  For more information see [MDL-89431](https://tracker.moodle.org/browse/MDL-89431)
+
+#### Changed
+
+- `process_generate_image` now branches its request and response handling on the configured endpoint's method (`:predict` for Imagen vs `:generateContent` for Gemini's native image generation), instead of assuming the Imagen protocol. This is determined from the endpoint URL rather than the model name, so it also applies to any custom model an admin configures.
+
+  For more information see [MDL-89431](https://tracker.moodle.org/browse/MDL-89431)
+
+### mod_assign
+
+#### Changed
+
+- The feedback plugin `get_grading_batch_operation_details()` method can return a `'confirmationyes'` key to define the content of the confirmation save button
+
+  For more information see [MDL-88688](https://tracker.moodle.org/browse/MDL-88688)
+
+### tiny_recordrtc
+
+#### Added
+
+- You can now always download the recorded files.
+
+  For more information see [MDL-88603](https://tracker.moodle.org/browse/MDL-88603)
+
+#### Changed
+
+- When a recording file is too large to upload, users are presented with an option to download the file.
+
+  For more information see [MDL-88603](https://tracker.moodle.org/browse/MDL-88603)
+
+#### Fixed
+
+- Duration metadata is created when recording is stopped to accurately determine the recording duration.
+
+  For more information see [MDL-88603](https://tracker.moodle.org/browse/MDL-88603)
+
 ## 5.2.2
 
 ### core
