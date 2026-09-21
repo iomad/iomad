@@ -217,8 +217,20 @@ class track {
                 $certclass::reset_completion($currentrecord);
             }
 
-            // Store the certificate.
-            self::store_certificate($context->id, $filename, $trackid, $certrec, $content);
+            // Store the certificate - if it's not already there.
+            if (!$DB->record_exists(
+                'files',
+                [
+                    'component' => 'local_iomad',
+                    'filearea' => 'certificate_issue',
+                    'contextid' => $context->id,
+                    'itemid' => $trackid,
+                    'filepath' => '/',
+                    'filename' => $filename,
+                ]
+            )) {
+                self::store_certificate($context->id, $filename, $trackid, $certrec, $content);
+            }
 
             // Record all of above in local_iomad_track db table.
             self::save_certificate($trackid, $filename);
