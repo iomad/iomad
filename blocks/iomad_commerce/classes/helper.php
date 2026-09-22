@@ -545,7 +545,6 @@ class helper {
                 $table->head[] = get_string('process', 'block_iomad_commerce');
             }
             $table->align = ["left", "center", "right", "right", "right"];
-            $table->width = "600px";
 
             $total = 0;
             $count = 0;

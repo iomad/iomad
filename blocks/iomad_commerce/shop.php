@@ -144,14 +144,15 @@ if (count($sqlparams) > 1) {
 
 echo html_writer::end_tag('ul');
 
-echo html_writer::start_tag('div', ['style' => 'display:inline-flex;padding-bottom:10px;',
+echo html_writer::start_tag('div', ['class' => 'form-check-inline pb-3',
                                     'id' => 'shoptagsearch']);
 echo html_writer::tag('span', get_string('search'));
 echo html_writer::start_tag('form', ['method' => 'get']);
 echo html_writer::empty_tag('input', ['type' => 'text',
                                       'name' => 'q',
-                                      'class' => 'form-control',
-                                      'style' => 'width: 195px;margin-left:20px;',
+                                      'class' => 'form-control offset-1',
+                                      'valuesize' => '50',
+                                      'maxlength' => '100',
                                       'value' => $searchkey]);
 echo html_writer::end_tag('form');
 echo html_writer::end_tag('div');
@@ -215,11 +216,10 @@ if ($itemcount) {
     }
     $strmoreinfo = get_string('moreinfo', 'block_iomad_commerce');
 
-    $table = new html_table();
-    $table->head = [get_string('course', 'block_iomad_commerce'), "", ""];
-    $table->align = ["left", "center", "center"];
-    $table->width = "95%";
+    // Set up the product table.
+    $producttable = "";
 
+    // Process all of the shop items.
     foreach ($items as $item) {
         $available = ($item->allow_single_purchase ||
                       $item->allow_license_blocks) &&
@@ -237,32 +237,60 @@ if ($itemcount) {
                             "&nbsp" . $strextra;
 
             $moreinfourl = new moodle_url($CFG->wwwroot . "/blocks/iomad_commerce/item.php", ['itemid' => $item->id]);
-            $moreinfobutton = "$price " . html_writer::tag('a', $strmoreinfo, ['href' => $moreinfourl,
-                                                                               'class' => 'btn btn-secondary']);
+            $moreinfobutton = html_writer::tag(
+                'a',
+                $strmoreinfo,
+                [
+                    'href' => $moreinfourl,
+                    'class' => 'btn btn-secondary',
+                ]
+            );
         } else {
             if ($mustlogin) {
                 $buynowurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_commerce/item.php", ['itemid' => $item->id]);
                 $buynowurl = new moodle_url($CFG->wwwroot . "/login/index.php", ['wantsurl' => $buynowurl->out()]);
-                $buynowbutton = html_writer::tag('a', $strbuynow, ['href' => $buynowurl,
-                                                                   'class' => 'btn btn-primary']) .
-                                "&nbsp" . $strextra;
+                $buynowbutton = html_writer::tag(
+                    'a',
+                    $strbuynow,
+                    [
+                        'href' => $buynowurl,
+                        'class' => 'btn btn-primary',
+                    ]
+                ) . "&nbsp" . $strextra;
             } else {
                 $buynowbutton = "";
             }
             $moreinfourl = new moodle_url($CFG->wwwroot . "/blocks/iomad_commerce/item.php", ['itemid' => $item->id]);
-            $moreinfobutton = "$price " . html_writer::tag('a', $strmoreinfo, ['href' => $moreinfourl,
-                                                                               'class' => 'btn btn-secondary']);
+            $moreinfobutton = $price . "&nbsp" .
+            html_writer::tag(
+                'a',
+                $strmoreinfo,
+                [
+                    'href' => $moreinfourl,
+                    'class' => 'btn btn-secondary',
+                ]
+            );
         }
 
-
-        $table->data[] = [html_writer::tag('h3', format_string($item->name)) .
-                          html_writer::tag('p', $item->short_description),
-                          $moreinfobutton,
-                          $buynowbutton];
+        // Add this to the product table.
+        $producttable .= html_writer::start_div('col d-flex pl-0 pr-1 mb-1');
+        $producttable .= html_writer::start_div('card h-100 shadow-sm');
+        $producttable .= html_writer::div(format_string($item->name), 'card-title h4 ps-2 pt-2');
+        $producttable .= html_writer::start_div('card-body');
+        $producttable .= html_writer::tag('p', $item->short_description, ['class' => 'card-text small']);
+        $producttable .= html_writer::end_div();
+        $producttable .= html_writer::tag('div', $price, ['class' => 'card-body']);
+        $producttable .= html_writer::start_div('card-footer d-flex flex-wrap gap-2 text-end');
+        $producttable .= html_writer::tag('span', $moreinfobutton . "&nbsp;" . $buynowbutton, ['class' => 'container']);
+        $producttable .= html_writer::end_div();
+        $producttable .= html_writer::end_div();
+        $producttable .= html_writer::end_div();
     }
 
-    if (!empty($table)) {
-        echo html_writer::table($table);
+    if (!empty($producttable)) {
+        echo html_writer::start_div('card-grid mx-0 row row-cols-1 row-cols-sm-2 row-cols-lg-3');
+        echo $producttable;
+        echo html_writer::end_div();
         echo $OUTPUT->paging_bar($itemcount, $page, $perpage, $baseurl);
     }
 
