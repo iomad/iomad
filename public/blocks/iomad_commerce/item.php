@@ -57,6 +57,8 @@ $PAGE->set_pagelayout('base');
 $PAGE->set_title($linktext);
 $PAGE->navbar->add($linktext, $linkurl);
 $PAGE->requires->js_call_amd('block_iomad_commerce/item_license_amount_form', 'init');
+$buttons = html_writer::tag('a', get_string('back'), ['class' => 'btn btn-secondary', 'href' => $linkurl]);
+$PAGE->set_button($buttons);
 
 if ($item = $DB->get_record('block_iomad_commerce_products', ['id' => $itemid, 'enabled' => 1, 'companyid' => $companyid])) {
     $PAGE->navbar->add($item->name);
@@ -95,7 +97,6 @@ if ($item) {
         $table = new html_table();
         $table->head = [get_string('priceoptions', 'block_iomad_commerce'), "", ""];
         $table->align = ["left", "center", "center"];
-        $table->width = "600px";
 
         if ($item->allow_single_purchase &&
             iomad::has_capability('block/iomad_commerce:buyitnow', $companycontext)) {
@@ -158,7 +159,6 @@ if ($item) {
             echo html_writer::tag('a', '', ['name' => 'buynow']);
             echo html_writer::table($table);
             echo $form;
-            echo html_writer::tag('a', get_string('back'), ['class' => 'btn btn-secondary', 'href' => $linkurl]);
         }
     }
 
