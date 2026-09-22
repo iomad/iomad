@@ -1472,7 +1472,7 @@ class company_user {
                             'title' => $tooltip,
                         ]
                     ) .
-                    "&nbsp" . get_string('percents', 'moodle', 0),
+                    "&nbsp" . get_string('percents', 'moodle', $progress),
                     [
                         'class' => 'row',
                     ]
