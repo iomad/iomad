@@ -2,10 +2,16 @@
     <input type="hidden" name="itemid" value="{{ item_id }}" />
     <input type="hidden" name="licenses" value="1" />
     {{ msg_txt }}
-    <div style="float:left;display:inline-flex;">
-    <label for="id_nlicenses"> {{ howmany_txt }} </label>
-    <input type="text" class="form-control" style="width: 195px;margin-left:20px;" name="nlicenses" id="id_nlicenses" value="" />
-    <input type="submit" class="btn btn-primary" style="margin-left:20px;" value="{{ buynow_txt }}" />
-    <p style="{{ noerror_style }}" class="text-danger ml-1 mr-1 {{ error_class }}" id="id_nlicenses_error">{{ error_txt }}</p>
+    <div class="mb-3 row fitem">
+        <div class="col-md-0 col-form-label d-flex pb-0 pe-md-0">
+            <label class="d-inline word-break align-self-center" for="id_nlicenses"> {{ howmany_txt }} </label>
+        </div>
+        <div class="col-md-1 col-form-label d-flex pb-0 pe-md-0">
+            <input type="text" class="form-control" valuesize="30" maxlenth="30" name="nlicenses" id="id_nlicenses" value="" />
+        </div>
+        <div class="col-md-1 col-form-label d-flex pb-0 pe-md-0">
+            <input type="submit" class="btn btn-primary" value="{{ buynow_txt }}" />
+        </div>
     </div>
+    <p style="{{ noerror_style }}" class="text-danger ms-1 me-1 {{ error_class }}" id="id_nlicenses_error">{{ error_txt }}</p>
 </form>
