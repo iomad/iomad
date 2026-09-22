@@ -1368,13 +1368,13 @@ class company_user {
                             'title' => $tooltip,
                         ]
                     ) .
-                    "&nbsp" . get_string('percents', 'moodle', $progress),
+                    "&nbsp" . get_string('percents', 'moodle', round(0, $progress)),
                     [
                         'class' => 'row',
                     ]
                 );
             } else {
-                return get_string('completion-alt-auto-y', 'completion', "$progress%");
+                return get_string('completion-alt-auto-y', 'completion', round(0, $progress) . "%");
             }
         }
     }
