@@ -26,6 +26,7 @@
 namespace block_iomad_commerce\tables;
 
 use block_iomad_commerce\output\product_name_editable;
+use core\output\notification;
 use table_sql;
 use local_iomad\iomad;
 use html_writer;
