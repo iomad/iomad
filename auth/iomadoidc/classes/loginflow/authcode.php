@@ -339,6 +339,18 @@ class authcode extends base {
         // Decode and verify ID token.
         [$iomadoidcuniqid, $idtoken] = $this->process_idtoken($tokenparams['id_token'], $orignonce);
 
+        // Fetch additional user claims from UserInfo endpoint.
+        if (isset($tokenparams['access_token'])) {
+            try {
+                $userinfo = $client->fetch_userinfo($tokenparams['access_token']);
+                if (!empty($userinfo)) {
+                    $tokenparams['userinfo'] = $userinfo;
+                }
+            } catch (\Exception $e) {
+                utils::debug('Failed to fetch userinfo: ' . $e->getMessage(), __METHOD__);
+            }
+        }
+
         // Check restrictions.
         $passed = $this->checkrestrictions($idtoken);
         if ($passed !== true && empty($additionaldata['ignorerestrictions'])) {
@@ -375,6 +387,12 @@ class authcode extends base {
                 $upn = $idtoken->claim('upn');
                 if (empty($upn)) {
                     $upn = $idtoken->claim('unique_name');
+                }
+                if (empty($upn)) {
+                    $upn = $idtoken->claim('preferred_username');
+                }
+                if (empty($upn)) {
+                    $upn = $idtoken->claim('email');
                 }
             }
             $userrec = $DB->count_records_sql('SELECT COUNT(*)
@@ -576,6 +594,12 @@ class authcode extends base {
             if (empty($iomadoidcusername)) {
                 $iomadoidcusername = $idtoken->claim('unique_name');
             }
+            if (empty($iomadoidcusername)) {
+                $iomadoidcusername = $idtoken->claim('preferred_username');
+            }
+            if (empty($iomadoidcusername)) {
+                $iomadoidcusername = $idtoken->claim('email');
+            }
         }
         if (empty($iomadoidcusername)) {
             $iomadoidcusername = $idtoken->claim('sub');
@@ -709,6 +733,12 @@ class authcode extends base {
                 if (empty($username)) {
                     $username = $idtoken->claim('unique_name');
                 }
+                if (empty($username)) {
+                    $username = $idtoken->claim('preferred_username');
+                }
+                if (empty($username)) {
+                    $username = $idtoken->claim('email');
+                }
             }
             $originalupn = null;
 
@@ -779,8 +809,22 @@ class authcode extends base {
                 if (empty($username)) {
                     $username = $idtoken->claim('unique_name');
                 }
+                if (empty($username)) {
+                    $username = $idtoken->claim('preferred_username');
+                }
+                if (empty($username)) {
+                    $username = $idtoken->claim('email');
+                }
             }
             $originalupn = null;
+
+            if (empty($username) && isset($tokenparams['userinfo'])) {
+                if (isset($tokenparams['userinfo']['preferred_username'])) {
+                    $username = $tokenparams['userinfo']['preferred_username'];
+                } else if (isset($tokenparams['userinfo']['email'])) {
+                    $username = $tokenparams['userinfo']['email'];
+                }
+            }
 
             if (empty($username)) {
                 $username = $iomadoidcuniqid;
@@ -814,7 +858,8 @@ class authcode extends base {
                 // User does not exist. Create user if site allows, otherwise fail.
                 if (empty($CFG->authpreventaccountcreation)) {
                     if (!$CFG->allowaccountssameemail) {
-                        $userinfo = $this->get_userinfo($username);
+                        $additionalclaims = isset($tokenparams['userinfo']) ? $tokenparams['userinfo'] : [];
+                        $userinfo = $this->get_userinfo($username, $additionalclaims);
                         if ($DB->count_records('user', array('email' => $userinfo['email'], 'deleted' => 0)) > 0) {
                             throw new moodle_exception('errorauthloginfaileddupemail', 'auth_iomadoidc', null, null, '1');
                         }
