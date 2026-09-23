@@ -276,7 +276,7 @@ class application extends moodleform {
         }
 
         // Validate iomadoidcresource.
-        if (in_array($data['idptype'], [AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_IOMADOIDC_IDP_TYPE_OTHER])) {
+        if ($data['idptype'] == AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID) {
             if (empty(trim($data['iomadoidcresource']))) {
                 $errors['iomadoidcresource'] = get_string('error_empty_iomadoidcresource', 'auth_iomadoidc');
             }
