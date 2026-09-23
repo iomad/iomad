@@ -73,24 +73,20 @@ if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $com
 // Are we downloading?
 if ($format) {
     $fields = [
-        'id' => 'id',
-        'username' => 'username',
-        'email' => 'email',
+        'id'        => 'id',
+        'suspended' => 'suspended',
+        'username'  => 'username',
+        'email'     => 'email',
         'firstname' => 'firstname',
-        'lastname' => 'lastname',
-        'idnumber' => 'idnumber',
+        'lastname'  => 'lastname',
         'institution' => 'institution',
-        'department' => 'department',
-        'phone1' => 'phone1',
-        'phone2' => 'phone2',
-        'city' => 'city',
-        'url' => 'url',
-        'icq' => 'icq',
-        'skype' => 'skype',
-        'aim' => 'aim',
-        'yahoo' => 'yahoo',
-        'msn' => 'msn',
-        'country' => 'country',
+        'phone1'    => 'phone1',
+        'phone2'    => 'phone2',
+        'city' => 'city',					
+        'country'   => 'country',
+        'lang' => 'lang',
+        'timezone' => 'timezone',
+        'lastaccess' => 'lastaccess',
     ];
 
     // Get company category.
@@ -147,10 +143,76 @@ if ($format) {
                          $sqlsearch",
         $params);
 
+    $userroles = [];
+    $userdepartments = [];
+    $usercourses = [];
+    $maxroles = 0;
+    $maxdepartments = 0;
+    $maxcourses = 0;
+
+    foreach (array_keys($userids) as $userid) {
+        $roles = $DB->get_records_sql(
+            "SELECT DISTINCT r.shortname
+               FROM {role_assignments} ra
+               JOIN {role} r ON ra.roleid = r.id
+              WHERE ra.userid = :userid
+           ORDER BY r.shortname",
+            ['userid' => $userid]
+        );
+        $userroles[$userid] = array_column($roles, 'shortname');
+        $maxroles = max($maxroles, count($userroles[$userid]));
+
+        $depts = $DB->get_records_sql(
+            "SELECT d.id, d.shortname
+               FROM {department} d
+               JOIN {company_users} cu ON d.id = cu.departmentid
+              WHERE cu.userid = :userid
+                AND cu.companyid = :companyid
+           ORDER BY d.id",
+            ['userid' => $userid, 'companyid' => $companyid]
+        );
+        $userdepartments[$userid] = array_column($depts, 'shortname');
+        $maxdepartments = max($maxdepartments, count($userdepartments[$userid]));
+
+        $haseducatorrole = in_array('companycourseeditor', $userroles[$userid]);
+
+        if (!$haseducatorrole) {
+            $courses = $DB->get_records_sql(
+                "SELECT DISTINCT c.id, c.shortname
+                   FROM {course} c
+                   JOIN {enrol} e ON e.courseid = c.id
+                   JOIN {user_enrolments} ue ON ue.enrolid = e.id
+                   JOIN {company_course} cc ON cc.courseid = c.id
+                  WHERE ue.userid = :userid
+                    AND ue.status = :active
+                    AND cc.companyid = :companyid
+                    AND c.id != :siteid
+               ORDER BY c.shortname",
+                ['userid' => $userid, 'active' => ENROL_USER_ACTIVE, 'companyid' => $companyid, 'siteid' => SITEID]
+            );
+            $usercourses[$userid] = array_column($courses, 'shortname');
+            $maxcourses = max($maxcourses, count($usercourses[$userid]));
+        } else {
+            $usercourses[$userid] = [];
+        }
+    }
+
+    for ($i = 1; $i <= $maxroles; $i++) {
+        $fields["role{$i}"] = "role{$i}";
+    }
+
+    for ($i = 1; $i <= $maxdepartments; $i++) {
+        $fields["department{$i}"] = "department{$i}";
+    }
+
+    for ($i = 1; $i <= $maxcourses; $i++) {
+        $fields["course{$i}"] = "course{$i}";
+    }
+
     switch ($format) {
-        case 'csv' : user_download_csv($userids, $fields, ! $companyid);
-        case 'ods' : user_download_ods($userids, $fields, ! $companyid);
-        case 'xls' : user_download_xls($userids, $fields, ! $companyid);
+        case 'csv' : user_download_csv($userids, $fields, ! $companyid, $userroles, $userdepartments, $usercourses);
+        case 'ods' : user_download_ods($userids, $fields, ! $companyid, $userroles, $userdepartments, $usercourses);
+        case 'xls' : user_download_xls($userids, $fields, ! $companyid, $userroles, $userdepartments, $usercourses);
 
     }
     die;
@@ -181,7 +243,7 @@ echo $OUTPUT->footer();
  * @param bool $includecompanyfield
  * @return void
  */
-function user_download_ods($userids, $fields, $includecompanyfield) {
+function user_download_ods($userids, $fields, $includecompanyfield, $userroles, $userdepartments, $usercourses) {
     global $CFG;
 
     require_once("$CFG->libdir/odslib.class.php");
@@ -214,12 +276,28 @@ function user_download_ods($userids, $fields, $includecompanyfield) {
         $col = 0;
         profile_load_data($user);
         foreach (array_keys($fields) as $field) {
-            // Stop the script from timing out on large numbers of users.
             set_time_limit(30);
             if ($includecompanyfield || $field != "profile_field_company") {
-                if (!empty($user->$field)) {
-                    // Check if the value ['text'] isset and if not return the value.
+                if (preg_match('/^role(\d+)$/', $field, $matches)) {
+                    $roleindex = $matches[1] - 1;
+                    $value = isset($userroles[$userid][$roleindex]) ? $userroles[$userid][$roleindex] : '';
+                    $worksheet[0]->write($row, $col, $value);
+                } else if (preg_match('/^department(\d+)$/', $field, $matches)) {
+                    $deptindex = $matches[1] - 1;
+                    $value = isset($userdepartments[$userid][$deptindex]) ? $userdepartments[$userid][$deptindex] : '';
+                    $worksheet[0]->write($row, $col, $value);
+                } else if (preg_match('/^course(\d+)$/', $field, $matches)) {
+                    $courseindex = $matches[1] - 1;
+                    $value = isset($usercourses[$userid][$courseindex]) ? $usercourses[$userid][$courseindex] : '';
+                    $worksheet[0]->write($row, $col, $value);
+                } else if (!empty($user->$field)) {
                     $value = (isset($user->{$field}['text'])) ? $user->{$field}['text'] : $user->$field;
+                    if ($field == 'timezone' && $value == '99') {
+                        $value = 'default';
+                    }
+                    if ($field == 'lastaccess' && $value > 0) {
+                        $value = date('d.m.Y', $value);
+                    }
                     $worksheet[0]->write($row, $col, $value);
                 } else {
                     $worksheet[0]->write($row, $col, '');
@@ -243,7 +321,7 @@ function user_download_ods($userids, $fields, $includecompanyfield) {
  * @param bool $includecompanyfield
  * @return void
  */
-function user_download_xls($userids, $fields, $includecompanyfield) {
+function user_download_xls($userids, $fields, $includecompanyfield, $userroles, $userdepartments, $usercourses) {
     global $CFG;
 
     require_once("$CFG->libdir/excellib.class.php");
@@ -279,9 +357,27 @@ function user_download_xls($userids, $fields, $includecompanyfield) {
             // Stop the script from timing out on large numbers of users.
             set_time_limit(30);
             if ($includecompanyfield || $field != "profile_field_company") {
-                if (!empty($user->$field)) {
+                if (preg_match('/^role(\d+)$/', $field, $matches)) {
+                    $roleindex = $matches[1] - 1;
+                    $value = isset($userroles[$userid][$roleindex]) ? $userroles[$userid][$roleindex] : '';
+                    $worksheet[0]->write($row, $col, $value);
+                } else if (preg_match('/^department(\d+)$/', $field, $matches)) {
+                    $deptindex = $matches[1] - 1;
+                    $value = isset($userdepartments[$userid][$deptindex]) ? $userdepartments[$userid][$deptindex] : '';
+                    $worksheet[0]->write($row, $col, $value);
+                } else if (preg_match('/^course(\d+)$/', $field, $matches)) {
+                    $courseindex = $matches[1] - 1;
+                    $value = isset($usercourses[$userid][$courseindex]) ? $usercourses[$userid][$courseindex] : '';
+                    $worksheet[0]->write($row, $col, $value);
+                } else if (!empty($user->$field)) {
                     // Check if the value ['text'] isset and if not return the value.
                     $value = (isset($user->{$field}['text'])) ? $user->{$field}['text'] : $user->$field;
+                    if ($field == 'lastaccess' && $value > 0) {
+                        $value = date('d.m.Y', $value);
+                    }
+                    if ($field == 'timezone' && $value == '99') {
+                        $value = 'default';
+                    }
                     $worksheet[0]->write($row, $col, $value);
                 } else {
                     $worksheet[0]->write($row, $col, '');
@@ -300,7 +396,7 @@ function user_download_xls($userids, $fields, $includecompanyfield) {
 /**
  * CSV Download processor
  */
-function user_download_csv($userids, $fields, $includecompanyfield) {
+function user_download_csv($userids, $fields, $includecompanyfield, $userroles, $userdepartments, $usercourses) {
     global $CFG;
 
     require_once($CFG->dirroot.'/user/profile/lib.php');
@@ -334,12 +430,28 @@ function user_download_csv($userids, $fields, $includecompanyfield) {
         }
         profile_load_data($user);
         foreach (array_keys($fields) as $field) {
-            // Stop the script from timing out on large numbers of users.
             set_time_limit(30);
             if ($includecompanyfield || $field != "profile_field_company") {
-                if (!empty($user->$field)) {
-                    // Check if the value ['text'] isset and if not return the value.
+                if (preg_match('/^role(\d+)$/', $field, $matches)) {
+                    $roleindex = $matches[1] - 1;
+                    $value = isset($userroles[$userid][$roleindex]) ? $userroles[$userid][$roleindex] : '';
+                    $row[] = str_replace($delimiter, $encdelim, $value);
+                } else if (preg_match('/^department(\d+)$/', $field, $matches)) {
+                    $deptindex = $matches[1] - 1;
+                    $value = isset($userdepartments[$userid][$deptindex]) ? $userdepartments[$userid][$deptindex] : '';
+                    $row[] = str_replace($delimiter, $encdelim, $value);
+                } else if (preg_match('/^course(\d+)$/', $field, $matches)) {
+                    $courseindex = $matches[1] - 1;
+                    $value = isset($usercourses[$userid][$courseindex]) ? $usercourses[$userid][$courseindex] : '';
+                    $row[] = str_replace($delimiter, $encdelim, $value);
+                } else if (!empty($user->$field)) {
                     $value = (isset($user->{$field}['text'])) ? $user->{$field}['text'] : $user->$field;
+                    if ($field == 'timezone' && $value == '99') {
+                        $value = 'default';
+                    }
+                    if ($field == 'lastaccess' && $value > 0) {
+                        $value = date('d.m.Y', $value);
+                    }
                     $row[] = str_replace($delimiter, $encdelim, $value);
                 } else {
                     $row[] = str_replace($delimiter, $encdelim, '');
