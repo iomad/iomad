@@ -10,7 +10,7 @@
   "author": "",
   "license": "SEE LICENSE IN README.md",
   "devDependencies": {
-    "copy-webpack-plugin": "^12.0.2",
+    "copy-webpack-plugin": "^14.0.0",
     "css-loader": "^6.10.0",
     "h5p-image-cropper": "github:h5p/h5p-image-cropper",
     "mini-css-extract-plugin": "^2.8.1",
