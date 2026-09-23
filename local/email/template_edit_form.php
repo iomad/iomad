@@ -95,7 +95,7 @@ if (empty($templatesetid)) {
                                                 WHERE et.id = :id
                                                 AND ets.lang = :lang",
                                                ['id' => $templateid,
-                                               'lang' => $lang])) {
+                                                'lang' => $lang])) {
         throw new \moodle_exception('templatenotfound', 'local_email', new moodle_url('/local/email/template_list.php'));
     }
 }
