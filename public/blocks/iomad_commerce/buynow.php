@@ -23,10 +23,12 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_commerce\helper;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once(dirname(__FILE__) . '/../iomad_company_admin/lib.php');
 
-block_iomad_commerce\helper::require_commerce_enabled();
+helper::require_commerce_enabled();
 
 $itemid = required_param('itemid', PARAM_INT);
 $nlicenses = optional_param('nlicenses', 0, PARAM_INT);
@@ -50,10 +52,10 @@ $context = $PAGE->context;
 if (!empty($SESSION->basketid)) {
     if (!$basket = $DB->get_record('block_iomad_commerce_invoices',
                                    ['id' => $SESSION->basketid,
-                                    'status' => block_iomad_commerce\helper::INVOICESTATUS_BASKET])) {
+                                    'status' => helper::INVOICESTATUS_BASKET])) {
         $basket = (object) [];
         $basket->userid = $USER->id;
-        $basket->status = block_iomad_commerce\helper::INVOICESTATUS_BASKET;
+        $basket->status = helper::INVOICESTATUS_BASKET;
         $basket->date = time();
         $basket->id = $DB->insert_record('block_iomad_commerce_invoices', $basket, true);
         $SESSION->basketid = $basket->id;
@@ -61,7 +63,7 @@ if (!empty($SESSION->basketid)) {
 } else {
     $basket = (object) [];
     $basket->userid = $USER->id;
-    $basket->status = block_iomad_commerce\helper::INVOICESTATUS_BASKET;
+    $basket->status = helper::INVOICESTATUS_BASKET;
     $basket->date = time();
     $basket->id = $DB->insert_record('block_iomad_commerce_invoices', $basket, true);
     $SESSION->basketid = $basket->id;
@@ -74,7 +76,7 @@ $invoiceitem->invoiceableitemid = $itemid;
 
 // Do we have license blocks?
 if ($nlicenses) {
-    if ($block = block_iomad_commerce\helper::get_license_block($itemid, $nlicenses)) {
+    if ($block = helper::get_license_block($itemid, $nlicenses)) {
         $invoiceitem->currency = $block->currency;
         $invoiceitem->price = $block->price;
         $invoiceitem->invoiceableitemtype = 'licenseblock';
@@ -90,14 +92,29 @@ if ($nlicenses) {
 } else {
 
     // Single purchase.
-    if ($course = $DB->get_record('block_iomad_commerce_products', ['id' => $itemid], '*', MUST_EXIST)) {
-        $invoiceitem->currency = $course->single_purchase_currency;
-        $invoiceitem->price = $course->single_purchase_price;
-        $invoiceitem->invoiceableitemtype = 'singlepurchase';
-
+    if ($product = $DB->get_record('block_iomad_commerce_products', ['id' => $itemid], '*', MUST_EXIST)) {
+        // Do we have a single purchase price set?
+        if ($product->allow_single_purchase) {
+            $invoiceitem->currency = $product->single_purchase_currency;
+            $invoiceitem->price = $product->single_purchase_price;
+            $invoiceitem->invoiceableitemtype = 'singlepurchase';
+            $invoiceitem->license_validlength = $product->single_purchase_validlength;
+            $invoiceitem->license_shelflife = 0;
+        } else {
+            // Need to use the block price for 1 item.
+            if ($block = helper::get_license_block($itemid, 1)) {
+                $invoiceitem->currency = $block->currency;
+                $invoiceitem->price = $block->price;
+                $invoiceitem->invoiceableitemtype = 'licenseblock';
+                $invoiceitem->license_validlength = $block->validlength;
+                $invoiceitem->license_shelflife = $block->shelflife;
+            } else {
+                redirect(new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/item.php',
+                                        ['itemid' => $itemid,
+                                        'invalidamount' => 'true']));
+            }
+        }
         $invoiceitem->license_allocation = 1;
-        $invoiceitem->license_validlength = $course->single_purchase_validlength;
-        $invoiceitem->license_shelflife = 0;
     }
 }
 

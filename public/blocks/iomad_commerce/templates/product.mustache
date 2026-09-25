@@ -1,0 +1,63 @@
+{{!
+ * @package   block_iomad_commerce
+ * @copyright 2026 e-Lean Design Ltd. https://www.e-learndesign.co.uk
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ }}
+
+{{#item}}
+    <div class="card-grid mx-0 row row-cols-1">
+        <div class="col d-flex p-0 m-0">
+            <div class="card h-100 shadow-sm">
+                <div class="card-title h3 ps-2 pt-2">{{pagetitle}}</div>
+                <div class="card-body">
+                    <p class="card-text">
+                        {{#long_description}}{{{long_description}}}{{/long_description}}
+                        {{^long_description}}{{{summary}}}{{/long_description}}
+                    </p>
+                    {{#pricetable}}
+                        <div class="table-responsive">
+                            <table class="generaltable">
+                                <thead>
+                                    <tr>
+                                        <th class="header c0 text-left" scope="col">{{#str}}priceoptions, block_iomad_commerce{{/str}}</th>
+                                        <th class="header c1 text-left"></td>
+                                        <th class="header c2 text-center"></td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{#prices}}
+                                        <tr>
+                                            <td class="cell c0 text-left">{{type}}</td>
+                                            <td class="cell c1 text-left">{{currency}} {{price}}</td>
+                                            <td class="cell c1 text-center">
+                                                {{#buyurl}}
+                                                    <a
+                                                        href="{{buyurl}}"
+                                                        class="btn btn-primary"
+                                                    >
+                                                        {{buynow}} {{extrainfo}}
+                                                    </a>
+                                                {{/buyurl}}
+                                            </td>
+                                        </tr>
+                                    {{/prices}}
+                                </tbody>
+                            </table>
+                        </div>
+                    {{/pricetable}}
+                    {{#formtemplate}}
+                        <div class="ps-2 pt-2">
+                            {{>block_iomad_commerce/item_license_amount_form}}
+                        </div>
+                    {{/formtemplate}}
+                </div>
+            </div>
+        </div>
+    </div>
+{{/item}}
+{{^item}}
+    <div class="alert alert-info alert-block fade in mt-3 " role="alert">
+        {{pagetitle}}
+    </div>
+{{/item}}

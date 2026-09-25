@@ -23,13 +23,16 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_commerce\forms\checkout_form;
+use block_iomad_commerce\helper;
+use core_payment\helper as payment_helper;
 use local_iomad\iomad;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->dirroot . '/blocks/iomad_company_admin/lib.php');
 require_once($CFG->libdir . '/formslib.php');
 
-block_iomad_commerce\helper::require_commerce_enabled();
+helper::require_commerce_enabled();
 
 // Users do need to be logged in to checkout.
 require_login();
@@ -51,9 +54,9 @@ $PAGE->set_pagelayout('base');
 $PAGE->set_title($linktext);
 $PAGE->set_heading(get_string('checkout', 'block_iomad_commerce'));
 
-// Build the nav bar.
-$PAGE->navbar->add($linktext, $shopurl);
-$PAGE->navbar->add(get_string('checkout', 'block_iomad_commerce'));
+// And control buttons.
+$buttons = helper::get_page_buttons('checkout');
+$PAGE->set_button($buttons);
 
 // JS For payment gateway.
 $PAGE->requires->js_call_amd('core_payment/gateways_modal', 'init');
@@ -69,12 +72,12 @@ $data->city = $companyrec->city;
 $data->state = $companyrec->region;
 
 // Set up the checkout form.
-$mform = new block_iomad_commerce\forms\checkout_form($PAGE->url);
+$mform = new checkout_form($PAGE->url);
 $mform->set_data($data);
 
 // Set up some defaults.
 $displaypage = 1;
-$basketid = block_iomad_commerce\helper::get_basket_id();
+$basketid = helper::get_basket_id();
 
 // Is there a valid basket or has the form been cancelled?
 if (empty($basketid) || $mform->is_cancelled()) {
@@ -90,18 +93,18 @@ if (empty($basketid) || $mform->is_cancelled()) {
     $DB->update_record('block_iomad_commerce_invoices', $data, ['id' => $data->id]);
 
     // Set up the payment options and details.
-    $basketsummary = trim(html_to_text(block_iomad_commerce\helper::get_invoice_summary($basketid, 0, 0, 0)));
-    $paymentoptions = core_payment\helper::gateways_modal_link_params('block_iomad_commerce',
-                                                                      'invoice',
-                                                                      $basketid,
-                                                                      $basketsummary);
+    $basketsummary = trim(html_to_text(helper::get_invoice_summary($basketid, 0, 0, 0)));
+    $paymentoptions = payment_helper::gateways_modal_link_params('block_iomad_commerce',
+                                                                 'invoice',
+                                                                 $basketid,
+                                                                 $basketsummary);
     $paymentoptions['class'] = 'btn btn-primary';
 
     // Display the payment options.
     echo $OUTPUT->header();
 
     // Display the basket.
-    echo block_iomad_commerce\helper::get_basket_html();
+    echo helper::get_basket_html();
 
     echo html_writer::start_tag('p');
     echo html_writer::tag('button', get_string('sendpaymentbutton', 'enrol_fee'), $paymentoptions);
@@ -121,6 +124,6 @@ echo $OUTPUT->header();
 $mform->display();
 
 // Display the basket information.
-echo block_iomad_commerce\helper::get_basket_html();
+echo helper::get_basket_html();
 
 echo $OUTPUT->footer();
