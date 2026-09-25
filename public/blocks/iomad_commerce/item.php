@@ -23,6 +23,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_iomad_commerce\helper;
+use block_iomad_commerce\output\product;
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
@@ -31,7 +33,7 @@ require_once(dirname(__FILE__) . '/../iomad_company_admin/lib.php');
 
 block_iomad_commerce\helper::require_commerce_enabled();
 
-$itemid         = required_param('itemid', PARAM_INT);
+$itemid = required_param('itemid', PARAM_INT);
 $licenseformempty = optional_param('licenseformempty', 0, PARAM_INT);
 $invalidamount = optional_param('invalidamount', 0, PARAM_BOOL);
 
@@ -44,126 +46,44 @@ $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
-// Correct the navbar.
-// Set the name for the page.
-$linktext = get_string('course_shop_title', 'block_iomad_commerce');
-// Set the url.
-$linkurl = new moodle_url('/blocks/iomad_commerce/shop.php');
+// Get the product details.
+$item = $DB->get_record(
+    'block_iomad_commerce_products',
+    [
+        'id' => $itemid,
+        'enabled' => 1,
+        'companyid' => $companyid,
+    ],
+);
 
 // Page stuff.
 $PAGE->set_context($companycontext);
-$PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
-$PAGE->set_title($linktext);
-$PAGE->navbar->add($linktext, $linkurl);
+
+// Set the url.
+$linkurl = new moodle_url('/blocks/iomad_commerce/shop.php');
+$PAGE->set_url($linkurl);
+
+// Set the name for the page.
+$pagetitle = !empty($item) ? format_string($item->name) : get_string('courseunavailable', 'block_iomad_commerce');
+$PAGE->set_title(format_string($item->name));
+
+// Add javascript stuff.
 $PAGE->requires->js_call_amd('block_iomad_commerce/item_license_amount_form', 'init');
-$buttons = html_writer::tag('a', get_string('back'), ['class' => 'btn btn-secondary', 'href' => $linkurl]);
+
+// And control buttons.
+$buttons = helper::get_page_buttons();
 $PAGE->set_button($buttons);
 
-if ($item = $DB->get_record('block_iomad_commerce_products', ['id' => $itemid, 'enabled' => 1, 'companyid' => $companyid])) {
-    $PAGE->navbar->add($item->name);
-}
+// Set up the renderers.
+$renderable = new product($companycontext, $item, $pagetitle, $invalidamount, $licenseformempty);
+$renderer = $PAGE->get_renderer('block_iomad_commerce');
 
+// Display the header.
 echo $OUTPUT->header();
 
-block_iomad_commerce\helper::show_basket_info();
+// Render the page content.
+echo $renderer->render($renderable);
 
-if ($item) {
-    $mustlogin = false;
-    $strextra = "";
-    $strbuynow = get_string('buynow', 'block_iomad_commerce');
-    if (!isloggedin() || isguestuser()) {
-        $mustlogin = true;
-        $strbuynow = get_string('login', 'moodle');
-        $strextra = get_string('product_login', 'block_iomad_commerce');
-    }
-    $strmoreinfo = get_string('moreinfo', 'block_iomad_commerce');
-
-    echo html_writer::tag('h3', format_string($item->name));
-
-    if (isset($item->long_description)) {
-        echo $item->long_description;
-    } else {
-        echo $item->summary;
-    }
-
-    if ($mustlogin) {
-        $buynowurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/buynow.php', ['itemid' => $item->id]);
-        $buynowurl = new moodle_url($CFG->wwwroot . "/login/index.php", ['wantsurl' => $buynowurl->out()]);
-        echo html_writer::tag('a',  $strbuynow, ['href' => $buynowurl, 'class' => 'btn btn-primary']) . "&nbsp" . $strextra;
-    } else if (($item->allow_single_purchase || $item->allow_license_blocks) &&
-        (iomad::has_capability('block/iomad_commerce:buyitnow', $companycontext) ||
-         iomad::has_capability('block/iomad_commerce:buyinbulk', $companycontext))) {
-        $table = new html_table();
-        $table->head = [get_string('priceoptions', 'block_iomad_commerce'), "", ""];
-        $table->align = ["left", "center", "center"];
-
-        if ($item->allow_single_purchase &&
-            iomad::has_capability('block/iomad_commerce:buyitnow', $companycontext)) {
-            $buynowurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/buynow.php', ['itemid' => $item->id]);
-            $table->data[] = [get_string('single_purchase', 'block_iomad_commerce'),
-                              $item->single_purchase_currency . number_format($item->single_purchase_price, 2),
-                              html_writer::tag('a', $strbuynow, ['href' => $buynowurl, 'class' => 'btn btn-primary']) .
-                                               "&nbsp" . $strextra,
-                              ];
-        }
-
-        $form = '';
-
-        if ($item->allow_license_blocks) {
-            $priceblocks = $DB->get_records(
-                'block_iomad_commerce_product_blockprices',
-                ['itemid' => $item->id],
-                'price_bracket_start'
-            );
-
-            if (count($priceblocks)) {
-                if (iomad::has_capability('block/iomad_commerce:buyinbulk', $companycontext)) {
-                    foreach ($priceblocks as $priceblock) {
-                        $table->data[] = [get_string('licenseblock_n', 'block_iomad_commerce', $priceblock->price_bracket_start),
-                                          $priceblock->currency . ' ' . number_format($priceblock->price, 2),
-                                          ''];
-                    }
-
-                    $msg = '';
-                    if ($licenseformempty) {
-                        $msg = html_writer::tag('p',
-                                                get_string('licenseformempty', 'block_iomad_commerce'),
-                                                ['class' => 'error']);
-                    }
-
-                    // Create url for the form.
-                    $licenseformurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/buynow.php', ['itemid' => $itemid]);
-
-                    // Create the template for the mustache file.
-                    $template = (object)[
-                        'form_url' => $licenseformurl->out(),
-                        'item_id' => $itemid,
-                        'msg_txt' => $msg,
-                        'howmany_txt' => get_string('howmanylicences', 'block_iomad_commerce'),
-                        'buynow_txt' => get_string('buynow', 'block_iomad_commerce'),
-                        'noerror_style' => 'display: none;',
-                    ];
-                    if (isset($invalidamount) && $invalidamount == true) {
-                        $template->error_class = 'text-danger';
-                        unset($template->noerror_style);
-                        $template->error_txt = get_string('error_singlepurchaseunavailable', 'block_iomad_commerce');
-                    }
-                    // Save the mustache file output in the variable $form.
-                    $form = $OUTPUT->render_from_template("block_iomad_commerce/item_license_amount_form", $template);
-                }
-            }
-        }
-
-        if (!empty($table)) {
-            echo html_writer::tag('a', '', ['name' => 'buynow']);
-            echo html_writer::table($table);
-            echo $form;
-        }
-    }
-
-} else {
-    echo html_writer::tag('p', get_string('courseunavailable', 'block_iomad_commerce'));
-}
-
+// Display the footer.
 echo $OUTPUT->footer();

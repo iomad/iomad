@@ -1,0 +1,16 @@
+{{!
+ * @package   block_iomad_commerce
+ * @copyright 2026 e-Lean Design Ltd. https://www.e-learndesign.co.uk
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ }}
+
+<div class="h3">{{#str}} basket, block_iomad_commerce {{/str}}</div>
+{{#baskethtml}}
+    {{{baskethtml}}}
+{{/baskethtml}}
+{{^baskethtml}}
+    <div class="alert alert-info alert-block fade in mt-3 " role="alert">
+        {{#str}} emptybasket, block_iomad_commerce {{/str}}
+    </div>
+{{/baskethtml}}

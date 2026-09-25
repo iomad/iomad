@@ -66,6 +66,61 @@ class helper {
     }
 
     /**
+     * Get the html for the page control buttons.
+     *
+     * @param string $page
+     * @return string
+     */
+    public static function get_page_buttons(string $page = ''): string {
+        global $SESSION;
+
+        // Set some  defaults.
+        $basketfull = self::basket_has_items() ? true : false;
+        $basketclass = ($page == 'basket' || !$basketfull) ? "iomad-commerce-basketcontrol d-none" : "iomad-commerce-basketcontrol";
+        $checkoutclass = ($page == 'checkout' || !$basketfull) ? "iomad-commerce-checkoutcontrol d-none" : "iomad-commerce-checkoutcontrol";
+        $shopclass = ($page == 'shop' &&
+                      !isset($SESSION->shopsearch) &&
+                      !isset($SESSION->shoptag)) ? "iomad-commerce-shopcontrol d-none" : "iomad-commerce-shopcontrol";
+        $basketurl = new moodle_url('/blocks/iomad_commerce/basket.php');
+        $checkouturl = new moodle_url('/blocks/iomad_commerce/checkout.php');
+        $shopurl = new moodle_url('/blocks/iomad_commerce/shop.php', ['q' => '', 'tag' => '']);
+        $buttons = [];
+
+        // Deal with the shop link.
+        $buttons[] = html_writer::tag(
+            'a',
+            get_string('remove_filter', 'block_iomad_commerce'),
+            [
+                'class' => "btn btn-secondary $shopclass",
+                'href' => $shopurl,
+            ]
+        );
+
+        // Deal with the basket link.
+        $buttons[] = html_writer::tag(
+            'a',
+            get_string('basket', 'block_iomad_commerce'),
+            [
+                'class' => "btn btn-secondary $basketclass",
+                'href' => $basketurl,
+            ]
+        );
+
+        // Deal with the checkout link.
+        $buttons[] = html_writer::tag(
+            'a',
+            get_string('checkout', 'block_iomad_commerce'),
+            [
+                'class' => "btn btn-primary $checkoutclass",
+                'href' => $checkouturl,
+            ]
+        );
+
+        // Build the button list.
+        return join("&nbsp", $buttons);
+    }
+
+    /**
      * Get the lowest price
      *
      * @param object $blockprice
@@ -130,6 +185,94 @@ class helper {
                                         'itemid' => $itemid],
                                         0, 1);
         return array_shift($record);
+    }
+
+    public static function get_shop_products($companyid, $companycontext) {
+        global $SESSION, $DB;
+
+        // Set some defaults.
+        $tagjoin = '';
+        $tagwhere = '';
+        $sqlparams = ['companyid' => $companyid];
+
+        // Do we have a tag selected?
+        if (isset($SESSION->shoptag) && $SESSION->shoptag != '') {
+            $tagjoin = 'INNER JOIN {block_iomad_commerce_product_shoptags} cst ON cst.itemid = css.id
+                        INNER JOIN {block_iomad_commerce_shoptags} st ON cst.shoptagid = st.id';
+            $tagwhere = ' AND st.tag = :tag ';
+            $sqlparams['tag'] = $SESSION->shoptag;
+        }
+
+        // Deal with any searching.
+        $searchwhere = '';
+        if (isset($SESSION->shopsearch)) {
+            $searchkey = $SESSION->shopsearch;
+
+            $searchwhere = ' AND
+                (' . $DB->sql_like("c.fullname", ":searchkey1", false, false) . '
+                OR
+                ' . $DB->sql_like("c.shortname", ":searchkey2", false, false) . '
+                OR
+                ' . $DB->sql_like("c.summary", ":searchkey3", false, false) . '
+                OR
+                ' . $DB->sql_like("css.short_description", ":searchkey4", false, false) . '
+                OR
+                ' . $DB->sql_like("css.long_description", ":searchkey5", false, false) . '
+                OR
+                ' . $DB->sql_like("css.name", ":searchkey6", false, false) . '
+                OR
+                ' . $DB->sql_like("ilp.name", ":searchkey7", false, false) . '
+                )
+            ';
+            for ($i = 1; $i < 8; $i++) {
+                $sqlparams['searchkey' . $i] = '%' . $searchkey . '%';
+            }
+        }
+
+        // Can the user only buy single purchase items.
+        $typewhere = "";
+        if (!iomad::has_capability('block/iomad_commerce:buyinbulk', $companycontext)) {
+            $typewhere = " AND css.allow_single_purchase = 1 ";
+        }
+
+        $sql = "FROM {block_iomad_commerce_products} css
+                LEFT JOIN {block_iomad_commerce_product_courses} csc ON (css.id = csc.itemid)
+                LEFT JOIN {course} c ON (csc.courseid = c.id)
+                LEFT JOIN {block_iomad_commerce_product_learningpaths} cssp ON (css.id = cssp.itemid)
+                LEFT JOIN {block_iomad_learningpath} ilp ON (cssp.pathid = ilp.id)
+                $tagjoin
+                LEFT JOIN {block_iomad_commerce_product_blockprices} sbp ON (
+                    css.id = sbp.itemid
+                    AND sbp.id = (
+                        SELECT id FROM {block_iomad_commerce_product_blockprices}
+                        WHERE itemid = css.id
+                        ORDER BY price
+                        LIMIT 1
+                    )
+                )
+                WHERE css.enabled = 1
+                AND css.companyid = :companyid
+                AND (
+                    css.allow_single_purchase = 1 OR css.id = sbp.itemid
+                    AND sbp.id = (
+                        SELECT id FROM {block_iomad_commerce_product_blockprices}
+                        WHERE itemid = css.id ORDER BY price LIMIT 1 ))
+                AND (
+                    ilp.id IS NULL
+                    OR (
+                        ilp.id IS NOT NULL
+                        AND ilp.id IN (
+                            SELECT pathid
+                            FROM {block_iomad_learningpath_courses}
+                            WHERE pathid = ilp.id)))
+                $tagwhere
+                $searchwhere
+                $typewhere
+                GROUP BY css.id, sbp.id
+                ORDER BY css.name";
+
+        // Get the number of Courses.
+        return $DB->get_records_sql("SELECT DISTINCT css.* $sql", $sqlparams);
     }
 
     /**
@@ -236,6 +379,37 @@ class helper {
         }
 
         return false;
+    }
+
+    /**
+     * Check if the user's basket has any items.
+     *
+     * @return boolean
+     */
+    public static function basket_has_items(): bool {
+        global $DB, $SESSION;
+
+        // If there is no basket, there are no items.
+        if (empty($SESSION->basketid)) {
+            return false;
+        }
+
+        // Get the basket items.
+        $nitems = $DB->count_records_sql(
+            "SELECT COUNT(*)
+             FROM {block_iomad_commerce_invoice_items} ii
+             INNER JOIN {course} c ON ii.invoiceableitemid = c.id
+             WHERE EXISTS (
+                 SELECT id
+                 FROM {block_iomad_commerce_invoices} i
+                 WHERE i.id = :basketid
+                 AND i.status = :status
+                 AND i.id = ii.invoiceid
+             )",
+            ['basketid' => $SESSION->basketid,
+             'status' => self::INVOICESTATUS_BASKET]);
+
+        return $nitems > 0 ? true : false;
     }
 
     /**
@@ -503,7 +677,7 @@ class helper {
      * @param int $includeremove
      * @return void
      */
-    public static function get_basket_html($includeremove = 0) {
+    public static function get_basket_html($includeremove = false) {
         if ($basketid = self::get_basket_id()) {
             return self::get_invoice_html($basketid, $includeremove);
         }
@@ -1272,6 +1446,5 @@ class helper {
         } catch (SoapFault $e) {
             return $e->getMessage();
         }
-        return $response;
     }
 }
