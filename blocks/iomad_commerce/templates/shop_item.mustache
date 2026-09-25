@@ -1,0 +1,35 @@
+{{!
+ * @package   block_iomad_commerce
+ * @copyright 2026 e-Lean Design Ltd. https://www.e-learndesign.co.uk
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ }}
+
+{{#items}}
+<div class="col d-flex pl-0 pr-1 mb-1">
+    <div class="card h-100 shadow-sm">
+        <a class="text-reset text-decoration-none"
+            href="{{moreinfourl}}"
+            aria-text="{{short_description}}">
+        <div class="card-title h4 ps-2 pt-2">{{name}}</div>
+        <div class="card-body">
+            <p class="card-text small">{{{short_description}}}</p>
+        </div>
+        <div class="card-body">{{{price}}}</div>
+        </a>
+        <div class="card-footer d-flex flex-wrap gap-2 text-end">
+            <span class="container">
+                {{#buynowurl}}
+                    &nbsp
+                    <a
+                        href="{{buynowurl}}"
+                        class="btn btn-primary"
+                    >
+                        {{#str}} buynow, block_iomad_commerce {{/str}}
+                    </a>&nbsp
+                {{/buynowurl}}
+            </span>
+        </div>
+    </div>
+</div>
+{{/items}}
