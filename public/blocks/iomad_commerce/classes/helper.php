@@ -99,20 +99,34 @@ class helper {
         // Deal with the basket link.
         $buttons[] = html_writer::tag(
             'a',
-            get_string('basket', 'block_iomad_commerce'),
+            html_writer::tag(
+                'span',
+                get_string('basket', 'block_iomad_commerce'),
+                [
+                    'class' => "btn btn-secondary $basketclass",
+                    'role' => 'button',
+                ]
+            ),
             [
-                'class' => "btn btn-secondary $basketclass",
                 'href' => $basketurl,
+                'data-action' => 'cartbutton'
             ]
         );
 
         // Deal with the checkout link.
         $buttons[] = html_writer::tag(
             'a',
-            get_string('checkout', 'block_iomad_commerce'),
+                        html_writer::tag(
+                'span',
+                get_string('checkout', 'block_iomad_commerce'),
+                [
+                    'class' => "btn btn-primary $checkoutclass",
+                    'role' => 'button',
+                ]
+            ),
             [
-                'class' => "btn btn-primary $checkoutclass",
                 'href' => $checkouturl,
+                'data-action' => 'checkoutbutton'
             ]
         );
 
@@ -757,7 +771,13 @@ class helper {
                 // Do we also add in the remove links?
                 if ($includeremove) {
                     $removeurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/basket.php', ['remove' => $item->id]);
-                    $removerow = html_writer::start_tag('a', ['href' => $removeurl]);
+                    $removerow = html_writer::start_tag(
+                        'a',
+                        [
+                            'href' => $removeurl,
+                            'data-action' => 'deleteitemconfirm',
+                            'data-itemid' => $item->id,
+                            'data-productname' => $item->name]);
                     $removerow .= html_writer::tag('i', '', ['class' => 'icon fa fa-trash fa-fw',
                                                              'title' => get_string('remove'),
                                                              'role' => 'img',
@@ -781,10 +801,11 @@ class helper {
 
             if (!$multiplecurrency) {
                 $totalrow = [
-                    '<b>' . get_string('total', 'block_iomad_commerce') . '</b>',
+                    html_writer::tag('b', get_string('total', 'block_iomad_commerce')),
                     '',
                     '',
-                    '<b>' . $currency . ' ' . number_format($total, 2) . '</b>',
+                    html_writer::tag('b', $currency . ' ' .
+                    html_writer::tag('span', number_format($total, 2), ['data-id' => 'invoicetotal'])),
                 ];
             } else {
                 $totalrow = ['', '', '', ''];

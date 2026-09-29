@@ -22,8 +22,13 @@
                 {{#buynowurl}}
                     &nbsp
                     <a
-                        href="{{buynowurl}}"
+                        href="#"
                         class="btn btn-primary"
+                        data-action="additemconfirm"
+                        data-productname="{{name}}"
+                        data-productid="{{id}}"
+                        data-amount="1"
+                        data-singlepurchase=1
                     >
                         {{#str}} buynow, block_iomad_commerce {{/str}}
                     </a>&nbsp
