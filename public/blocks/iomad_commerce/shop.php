@@ -81,6 +81,9 @@ if (array_key_exists('q', $_GET)) {
 $buttons = helper::get_page_buttons('shop');
 $PAGE->set_button($buttons);
 
+// Add the basket handler.
+$PAGE->requires->js_call_amd('block_iomad_commerce/basket', 'init');
+
 $baseurl = new moodle_url('/blocks/iomad_commerce/shop.php', ['sort' => $sort,
                                                               'dir' => $dir,
                                                               'perpage' => $perpage]);

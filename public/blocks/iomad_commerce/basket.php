@@ -51,29 +51,8 @@ $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
 $PAGE->set_title($linktext);
 
-// Process any actions.
-if (!empty($SESSION->basketid) && $remove) {
-    // Before deleting
-    // check that the record to be removed is on the current user's basket
-    // (and not on an invoice or on somebody else's basket).
-    if ($DB->record_exists_sql("SELECT ii.id
-                                    FROM {block_iomad_commerce_invoice_items} ii
-                                    WHERE ii.id = :toberemoved
-                                    AND
-                                EXISTS ( SELECT id
-                                            FROM {block_iomad_commerce_invoices} i
-                                            WHERE i.id = :basketid
-                                            AND i.status = :status
-                                            AND i.id = ii.invoiceid
-                                            )",
-                                ['basketid' => $SESSION->basketid,
-                                'status' => block_iomad_commerce\helper::INVOICESTATUS_BASKET,
-                                'toberemoved' => $remove])) {
-
-        // The remove it.
-        $DB->delete_records('block_iomad_commerce_invoice_items', ['id' => $remove]);
-    }
-}
+// Add the basket handler.
+$PAGE->requires->js_call_amd('block_iomad_commerce/basket', 'init');
 
 // And control buttons.
 $buttons = helper::get_page_buttons('basket');

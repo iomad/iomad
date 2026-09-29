@@ -68,6 +68,30 @@ $functions = [
         'ajax' => true,
         'capabilities' => 'block/iomad_commerce:manage_tags',
     ],
+
+    'block_iomad_commerce_add_to_cart' => [
+        'classname' => block_iomad_commerce\external\add_to_cart::class,
+        'description' => 'Add to cart',
+        'type' => 'read',
+        'ajax' => true,
+        'loginrequired' => false,
+    ],
+
+    'block_iomad_commerce_remove_from_cart' => [
+        'classname' => block_iomad_commerce\external\remove_from_cart::class,
+        'description' => 'Remove from cart',
+        'type' => 'write',
+        'ajax' => true,
+        'loginrequired' => false,
+    ],
+
+    'block_iomad_commerce_get_products' => [
+        'classname' => block_iomad_commerce\external\get_products::class,
+        'description' => 'Get products',
+        'type' => 'read',
+        'ajax' => true,
+        'loginrequired' => false,
+    ],
 ];
 
 $services = [
