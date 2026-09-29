@@ -70,6 +70,7 @@ $PAGE->set_title(format_string($item->name));
 
 // Add javascript stuff.
 $PAGE->requires->js_call_amd('block_iomad_commerce/item_license_amount_form', 'init');
+$PAGE->requires->js_call_amd('block_iomad_commerce/basket', 'init');
 
 // And control buttons.
 $buttons = helper::get_page_buttons();

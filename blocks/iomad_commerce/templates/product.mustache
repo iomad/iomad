@@ -33,8 +33,13 @@
                                             <td class="cell c1 text-center">
                                                 {{#buyurl}}
                                                     <a
-                                                        href="{{buyurl}}"
+                                                        href="#"
                                                         class="btn btn-primary"
+                                                        data-action="additemconfirm"
+                                                        data-productname="{{name}}"
+                                                        data-productid="{{id}}"
+                                                        data-amount="1"
+                                                        data-singlepurchase=1
                                                     >
                                                         {{buynow}} {{extrainfo}}
                                                     </a>
