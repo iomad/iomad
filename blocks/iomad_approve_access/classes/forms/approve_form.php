@@ -26,6 +26,7 @@
 namespace block_iomad_approve_access\forms;
 
 use block_iomad_approve_access\iomad_approve_access;
+use html_writer;
 use moodle_exception;
 use moodleform;
 use moodle_url;
