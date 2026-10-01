@@ -59,34 +59,15 @@ $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
 $PAGE->set_title($linktext);
 
-// Save the SESSION options.
-if (array_key_exists('tag', $_GET)) {
-    $shoptags = helper::get_shop_tags();
-    if (in_array( $_GET['tag'], $shoptags )) {
-        $SESSION->shoptag = optional_param('tag', '', PARAM_NOTAGS);
-    } else {
-        unset($SESSION->shoptag);
-    }
-}
-if (array_key_exists('q', $_GET)) {
-    $searchkey = optional_param('q', '', PARAM_NOTAGS);
-    if ($searchkey) {
-        $SESSION->shopsearch = $searchkey;
-    } else {
-        unset($SESSION->shopsearch);
-    }
-}
-
 // Add the control buttons.
 $buttons = helper::get_page_buttons('shop');
 $PAGE->set_button($buttons);
 
 // Add the basket handler.
 $PAGE->requires->js_call_amd('block_iomad_commerce/basket', 'init');
+//$PAGE->requires->js_call_amd('block_iomad_commerce/search', 'init');
 
-$baseurl = new moodle_url('/blocks/iomad_commerce/shop.php', ['sort' => $sort,
-                                                              'dir' => $dir,
-                                                              'perpage' => $perpage]);
+$baseurl = new moodle_url('/blocks/iomad_commerce/shop.php', ['perpage' => $perpage]);
 $returnurl = $baseurl;
 
 // Set up the renderers.

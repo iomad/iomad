@@ -73,7 +73,7 @@ class shop implements renderable, templatable {
      * @return stdClass
      */
     public function export_for_template(renderer_base $output) {
-        global $CFG, $SESSION;
+        global $CFG, $OUTPUT, $SESSION;
 
         // Deal with the shop tags.
         $shoptags = helper::get_shop_tags();
@@ -85,26 +85,24 @@ class shop implements renderable, templatable {
                 $selected = true;
                 $hasselected = true;
             }
-            $tagurl = new moodle_url('', ['tag' => $shoptag]);
             $tags[] = [
                 'tagname' => $shoptag,
-                'tagurl' => $tagurl->out(false),
                 'selected' => $selected,
             ];
         }
 
         // Deal with search text.
-        $searchkey = '';
-        if (isset($SESSION->shopsearch)) {
-            $searchkey = $SESSION->shopsearch;
-        }
+        $searchkey = isset($SESSION->shopsearch) ? $SESSION->shopsearch : '';
+
+        // Deal with current tag.
+        $searchtag = isset($SESSION->shoptag) ? $SESSION->shoptag : '';
 
         // Get the list of products.
-        $items = array_values(helper::get_shop_products($this->companyid, $this->companycontext));
-        $itemcount = count($items);
+        $items = array_values(helper::get_shop_products($this->companyid, $this->companycontext, $this->page, $this->perpage));
+        $itemcount = helper::count_shop_products($this->companyid, $this->companycontext);
 
         // Set up the rest.
-        $pagingbar = $output->paging_bar($itemcount, $this->page, $this->perpage, $this->baseurl);
+        $pagingbar = $OUTPUT->paging_bar($itemcount, $this->page, $this->perpage, $this->baseurl);
 
         // Process all of the shop items.
         foreach ($items as $id => $item) {
@@ -130,6 +128,10 @@ class shop implements renderable, templatable {
             'itemcount' => $itemcount,
             'pagingbar' => $pagingbar,
             'searchkey' => $searchkey,
+            'searchtag' => $searchtag,
+            'companyid' => $this->companyid,
+            'perpage' => $this->perpage,
+            'page' => $this->page,
             'tags' => $tags,
             'hastags' => !empty($tags),
             'hasselected' => $hasselected,
