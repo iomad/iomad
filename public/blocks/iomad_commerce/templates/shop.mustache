@@ -5,7 +5,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  }}
 
-    <div class="row no-gutters pb-3">
+<div id="id_shopcontents">
+    <div class="row no-gutters pb-3" id="id_shopcontents">
         <div class="col-6">
             {{#hasresults}}
                 <span class="h4">{{#str}} searchresults, moodle {{/str}}</span>
@@ -21,7 +22,15 @@
                 </li>
                 {{#tags}}
                     <li>
-                        <a href="{{tagurl}}">
+                        <a
+                            href="#"
+                            data-action="do-tagsearch"
+                            data-tagname="{{tagname}}"
+                            data-companyid="{{companyid}}"
+                            data-page="{{page}}"
+                            data-perpage="{{perpage}}"
+                            data-searchtext="{{searchkey}}"
+                        >
                             {{#selected}}
                                 <span class="flagged-tag font-weight-bold">{{tagname}}</span>
                             {{/selected}}
@@ -34,19 +43,40 @@
             </ul>
         </div>
         <div class="col-6">
-            <div class="simplesearchform d-flex justify-content-end" id="shoptagsearch">
+            <div class="simplesearchform d-flex justify-content-end">
                 <form
-                    method="get"
+                    action="#"
                     autocomplete="off"
                     accept-charset="utf-8"
+                    data-action="do-formsearch"
                     class="mform d-flex flex-wrap align-items-center simplesearchform">
+                    <div style="display: none;">
+                        <input
+                            type="hidden"
+                            name="companyid"
+                            id="id_companyid"
+                            value="{{companyid}}"
+                        >
+                        <input
+                            type="hidden"
+                            name="searchtag"
+                            id="id_searchtag"
+                            value="{{searchtag}}"
+                        >
+                        <input
+                            type="hidden"
+                            name="perpage"
+                            id="id_perpage"
+                            value="{{perpage}}"
+                        >
+                    </div>
                     <div class="input-group">
                         <label for="id_productsearchinput">
                             <span class="sr-only">{{#str}} search, moodle {{/str}}</span>
                         </label>
                         <input
                             type="text"
-                            name="q"
+                            name="id_productsearchinput"
                             id="id_productsearchinput"
                             class="form-control"
                             placeholder="{{#str}} search, moodle {{/str}}"
@@ -66,15 +96,22 @@
         </div>
     </div>
 
-{{#itemcount}}
-    {{{pagingbar}}}
-    <div class='card-grid mx-0 row row-cols-4 row-cols-sm-1 row-cols-lg-4'>
-        {{> block_iomad_commerce/shop_item}}
-    </div>
-    {{{pagingbar}}}
-{{/itemcount}}
-{{^itemcount}}
-    <div class="alert alert-info alert-block fade in mt-3 " role="alert">
-        {{#str}} nocoursesontheshop, block_iomad_commerce {{/str}}
-    </div>
-{{/itemcount}}
+    {{#itemcount}}
+        {{{pagingbar}}}
+        <div class='card-grid mx-0 row row-cols-4 row-cols-sm-1 row-cols-lg-4'>
+            {{> block_iomad_commerce/shop_item}}
+        </div>
+        {{{pagingbar}}}
+    {{/itemcount}}
+    {{^itemcount}}
+        <div class="alert alert-info alert-block fade in mt-3 " role="alert">
+            {{#str}} nocoursesontheshop, block_iomad_commerce {{/str}}
+        </div>
+    {{/itemcount}}
+</div>
+
+{{#js}}
+    require(['jquery', 'block_iomad_commerce/search'], function($, shopSearch) {
+        shopSearch.init();
+    });
+{{/js}}
