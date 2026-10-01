@@ -83,7 +83,7 @@ class helper {
                       !isset($SESSION->shoptag)) ? "iomad-commerce-shopcontrol d-none" : "iomad-commerce-shopcontrol";
         $basketurl = new moodle_url('/blocks/iomad_commerce/basket.php');
         $checkouturl = new moodle_url('/blocks/iomad_commerce/checkout.php');
-        $shopurl = new moodle_url('/blocks/iomad_commerce/shop.php', ['q' => '', 'tag' => '']);
+        $shopurl = new moodle_url('/blocks/iomad_commerce/shop.php');
         $buttons = [];
 
         // Deal with the shop link.
@@ -93,6 +93,8 @@ class helper {
             [
                 'class' => "btn btn-secondary $shopclass",
                 'href' => $shopurl,
+                'data-action' => 'shopbutton',
+
             ]
         );
 
@@ -201,7 +203,16 @@ class helper {
         return array_shift($record);
     }
 
-    public static function get_shop_products($companyid, $companycontext) {
+    /**
+     * Get the current list of products to display
+     *
+     * @param int $companyid
+     * @param object $companycontext
+     * @param integer $page
+     * @param integer $perpage
+     * @return void
+     */
+    public static function get_shop_products($companyid, $companycontext, $page = 0, $perpage = 30) {
         global $SESSION, $DB;
 
         // Set some defaults.
@@ -286,7 +297,18 @@ class helper {
                 ORDER BY css.name";
 
         // Get the number of Courses.
-        return $DB->get_records_sql("SELECT DISTINCT css.* $sql", $sqlparams);
+        return $DB->get_records_sql("SELECT DISTINCT css.* $sql", $sqlparams, $page, $perpage);
+    }
+
+    /**
+     * Get the total number of available shop products.
+     *
+     * @param int $companyid
+     * @param object $companycontext
+     * @return int
+     */
+    public static function count_shop_products($companyid, $companycontext) {
+        return count(self::get_shop_products($companyid, $companycontext, 0, 0));
     }
 
     /**

@@ -92,6 +92,14 @@ $functions = [
         'ajax' => true,
         'loginrequired' => false,
     ],
+
+    'block_iomad_commerce_reset_search' => [
+        'classname' => block_iomad_commerce\external\reset_search::class,
+        'description' => 'Reset search',
+        'type' => 'write',
+        'ajax' => true,
+        'loginrequired' => false,
+    ],
 ];
 
 $services = [

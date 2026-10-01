@@ -47,10 +47,14 @@ class basket implements renderable, templatable {
         // Get the basket html code.
         $baskethtml = helper::get_basket_html(1);
 
+        // Set the basket empty control class.
+        $basketempty = !empty($baskethtml) ? "d-none" : "";
+
         // Set up the JSON output.
         return [
             'baskethtml' => $baskethtml,
             'multiplecurrencies' => $multiplecurrencies,
+            'basketempty' => $basketempty,
         ];
     }
 }

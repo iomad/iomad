@@ -124,6 +124,8 @@ export const init = () => {
                             if (e.lastitem == true) {
                                 myCart.removeClass("d-none").addClass("d-none");
                                 myCheckout.removeClass("d-none").addClass("d-none");
+                                $("#id_basketcontents").removeClass("d-none").addClass("d-none");
+                                $("#id_basketempty").removeClass("d-none");
                             }
                             invoiceTotal.innerText = e.baskettotal;
                         },

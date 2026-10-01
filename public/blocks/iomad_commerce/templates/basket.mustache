@@ -7,10 +7,12 @@
 
 <div class="h3">{{#str}} basket, block_iomad_commerce {{/str}}</div>
 {{#baskethtml}}
-    {{{baskethtml}}}
+    <div id="id_basketcontents">
+        {{{baskethtml}}}
+    </div>
 {{/baskethtml}}
-{{^baskethtml}}
+<div class="{{basketempty}}" id="id_basketempty">
     <div class="alert alert-info alert-block fade in mt-3 " role="alert">
         {{#str}} emptybasket, block_iomad_commerce {{/str}}
     </div>
-{{/baskethtml}}
+</div>
