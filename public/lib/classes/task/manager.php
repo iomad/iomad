@@ -1073,8 +1073,6 @@ class manager {
             }
 
             if ($lock = $cronlockfactory->get_lock(($record->classname), 0)) {
-                $classname = '\\' . $record->classname;
-
                 $task->set_lock($lock);
 
                 // See if the component is disabled.

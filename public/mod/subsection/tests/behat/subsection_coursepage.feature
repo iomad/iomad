@@ -36,6 +36,23 @@ Feature: Users view subsections on course page
     And I click on "Page1 in Subsection1" "link" in the "Subsection1" "activity"
 
   @javascript
+  Scenario: Expanded subsections do not keep the collapse all toggle stuck
+    Given I am on the "C1" "Course" page logged in as "student1"
+    And I should see "Collapse all" in the "region-main" "region"
+    # Collapse every top level section but leave the subsections expanded.
+    When I click on "Collapse" "link" in the "General" "section"
+    And I click on "Collapse" "link" in the "Section 1" "section"
+    And I click on "Collapse" "link" in the "Section 2" "section"
+    And I click on "Collapse" "link" in the "Section 3" "section"
+    And I should not see "New database" in the "region-main" "region"
+    # Subsections are hidden inside a collapsed section, so they must not hold the toggle back.
+    Then I should see "Expand all" in the "region-main" "region"
+    But I should not see "Collapse all" in the "region-main" "region"
+    # The toggle must expand everything on the first click instead of being a dead click.
+    And I click on "Expand all" "button" in the "region-main" "region"
+    And I should see "New database" in the "region-main" "region"
+
+  @javascript
   Scenario: Teacher can create activities inside subsections on course page
     When I log in as "teacher1"
     And I am on "Course 1" course homepage with editing mode on

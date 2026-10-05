@@ -1,5 +1,13 @@
 # core_form (subsystem) Upgrade notes
 
+## 5.1.8
+
+### Changed
+
+- The `duration` form element type now more strictly enforces units as defined by the caller, to avoid undefined behaviour during submission. An exception will be thrown where `defaultunit` is not part of the element `units` array
+
+  For more information see [MDL-89434](https://tracker.moodle.org/browse/MDL-89434)
+
 ## 5.0
 
 ### Changed

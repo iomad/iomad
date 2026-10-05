@@ -198,8 +198,16 @@ class repository_recent extends repository {
         $mform->setType('recentfilesnumber', PARAM_INT);
         $mform->setDefault('recentfilesnumber', $number);
 
-        $mform->addElement('duration', 'recentfilestimelimit',
-            get_string('timelimit', 'repository_recent'), ['units' => [DAYSECS, WEEKSECS], 'optional' => true]);
+        $mform->addElement(
+            'duration',
+            'recentfilestimelimit',
+            get_string('timelimit', 'repository_recent'),
+            [
+                'units' => [DAYSECS, WEEKSECS],
+                'defaultunit' => DAYSECS,
+                'optional' => true,
+            ],
+        );
         $mform->addHelpButton('recentfilestimelimit', 'timelimit', 'repository_recent');
         $mform->setDefault('recentfilestimelimit', DEFAULT_RECENT_FILES_TIME_LIMIT);
     }
