@@ -179,8 +179,8 @@ class cron_task extends scheduled_task {
                                                         AND suspendafter > 0
                                                         AND validto + suspendafter < :runtime",
                                                        ['runtime' => $runtime])) {
-            foreach ($suspendcompanies as $suspendcompany) {
-                $target = new \company($suspendcompany->id);
+            foreach ($terminatecompanies as $terminatecompany) {
+                $target = new \company($terminatecompany->id);
                 $target->terminate();
             }
         }
