@@ -12,6 +12,7 @@
             "node-event-html5",
             "node-event-simulate",
             "yui-throttle",
+            "moodle-core-event",
             "moodle-core-notification-dialogue",
             "moodle-editor_atto-rangy",
             "handlebars",
