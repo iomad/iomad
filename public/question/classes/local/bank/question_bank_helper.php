@@ -269,11 +269,14 @@ class question_bank_helper {
         // Build the left joins for all modules of the type requested i.e. those that do or do not share questions.
         $pluginjoins = [];
         $pluginfields = [];
+        $excludepreviewsql = '';
         foreach ($plugins as $key => $plugin) {
             $join = "LEFT JOIN {{$plugin}} p{$key} ON p{$key}.id = cm.instance
                      AND m.name = '{$plugin}'";
             if ($plugin === self::get_default_question_bank_activity_name()) {
-                $join .= " AND p{$key}.type <> '" . self::TYPE_PREVIEW . "'";
+                // Exclude the preview question bank activity,
+                // (used by the qbank_columnsortorder plugin).
+                $excludepreviewsql = " AND NOT (m.name = '{$plugin}' AND p{$key}.type = '" . self::TYPE_PREVIEW . "')";
             }
             $pluginjoins[] = $join;
             $pluginfields[] = "p{$key}.name";
@@ -329,7 +332,7 @@ class question_bank_helper {
                 {$pluginjoinsql}
                 {$contextsql}
                 {$catsql}
-                WHERE 1=1 {$wheremodulesql} {$notincoursesql} {$incoursesql} {$searchsql}
+                WHERE 1=1 {$wheremodulesql} {$notincoursesql} {$incoursesql} {$searchsql} {$excludepreviewsql}
                 GROUP BY cm.id, cm.course {$contextgroupby}
                 {$orderbysql}";
 

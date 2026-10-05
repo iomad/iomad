@@ -93,6 +93,26 @@ class import_map implements \JsonSerializable {
     }
 
     /**
+     * Return the bare specifiers explicitly opted in to modulepreload hinting.
+     *
+     * This is a closed allowlist, not a shape-based filter: only entries registered with
+     * `preload: true` (currently a handful of core, site-wide, single-file dependencies) are
+     * returned, regardless of specifier name.
+     *
+     * @return string[]
+     */
+    public function get_preload_specifiers(): array {
+        $specifiers = [];
+        foreach ($this->imports as $specifier => $importdata) {
+            if (!$importdata->preload) {
+                continue;
+            }
+            $specifiers[] = $specifier;
+        }
+        return $specifiers;
+    }
+
+    /**
      * Add the standard entries to the importmap.
      * @return void
      */
@@ -105,10 +125,12 @@ class import_map implements \JsonSerializable {
         $this->add_import(
             '@moodlehq/design-system',
             path: 'lib/js/bundles/design-system/index.js',
+            preload: true,
         );
         $this->add_import(
             'react',
             path: 'lib/js/bundles/react/react',
+            preload: true,
         );
         $this->add_import(
             'react/',
@@ -117,6 +139,7 @@ class import_map implements \JsonSerializable {
         $this->add_import(
             'react-dom',
             path: 'lib/js/bundles/react-dom/react-dom',
+            preload: true,
         );
         $this->add_import(
             'react-dom/',
@@ -165,6 +188,10 @@ class import_map implements \JsonSerializable {
      * @param string[] $allowedsuffixes List of allowed suffixes for the resolved file.
      *   If the resolved path already ends with one of these suffixes, the default suffix will not be appended.
      *   Defaults to ['.js', '.js.map'] so that source maps are served without double-suffix mangling.
+     * @param bool $preload Whether this entry is a foundational, single-file dependency worth
+     *   preloading with a modulepreload hint. Restricted to an explicit opt-in (rather than
+     *   inferred from the specifier shape) so only the handful of entries core knows are used
+     *   site-wide on every ESM-using page are ever preloaded.
      */
     public function add_import(
         string $specifier,
@@ -174,6 +201,7 @@ class import_map implements \JsonSerializable {
         string $suffix = '.js',
         ?callable $modifier = null,
         array $allowedsuffixes = ['.js', '.js.map'],
+        bool $preload = false,
     ): void {
         if (!in_array($suffix, $allowedsuffixes, true)) {
             $allowedsuffixes[] = $suffix;
@@ -185,6 +213,7 @@ class import_map implements \JsonSerializable {
             'suffix' => $suffix,
             'allowedsuffixes' => $allowedsuffixes,
             'modifier' => $modifier,
+            'preload' => $preload,
         ];
         $this->importssorted = false;
     }

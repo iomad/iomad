@@ -31,6 +31,9 @@ use core_customfield\field_controller;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class shared_handler extends \core_customfield\handler {
+    /** @var bool Whether to cache handler instances during the request. */
+    protected const CACHE_HANDLER_INSTANCES = true;
+
     /**
      * The current user can configure custom fields on this component.
      *

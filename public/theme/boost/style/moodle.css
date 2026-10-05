@@ -31458,6 +31458,7 @@ body:not(.editing) [id^=module-]:target, body.editing [id^=module-]:target .acti
 }
 #course-category-listings .listitem > div .idnumber {
   margin-right: 2em;
+  min-width: 0;
 }
 #course-category-listings .listitem[data-visible="0"] {
   color: var(--bs-secondary-color);
@@ -32628,11 +32629,6 @@ body.drawer-ease {
   height: auto;
 }
 
-/* The javascript is adding a style="height: 0px;" to this element - we need to set the min-height so the height is ignored. */
-.filepicker .moodle-dialogue-bd {
-  min-height: 520px;
-}
-
 .fp-navbar {
   border-color: var(--bs-gray-500);
   border-bottom: 0;
@@ -32646,6 +32642,8 @@ body.drawer-ease {
   clear: none;
   overflow: auto;
   height: 452px;
+  min-height: 150px;
+  max-height: calc(100vh - 240px);
 }
 
 .filepicker.moodle-dialogue-fullscreen .file-picker .fp-content {
@@ -33660,24 +33658,8 @@ a.ygtvspacer:hover {
 .preferences-container .preference-table .preference-row .preference-name {
   vertical-align: middle;
 }
-.preferences-container .preference-table .preference-row .disabled-message {
-  text-align: center;
-  height: 30px;
-  line-height: 30px;
-}
 .preferences-container .preference-table .preference-row.loading .preference-name .loading-icon {
   display: block;
-}
-
-.disabled-message {
-  display: none;
-}
-
-.disabled .disabled-message {
-  display: block;
-}
-.disabled .disabled-message + form {
-  display: none;
 }
 
 .general-settings-container .loading-icon {
@@ -35240,6 +35222,10 @@ body.path-question-type .mform fieldset.hidden {
   justify-content: flex-start;
   width: 100%;
   margin-right: 0;
+}
+.mform .d-flex .fdate_time_selector .fitem {
+  margin-left: 0 !important; /* stylelint-disable-line declaration-no-important */
+  margin-right: 0 !important; /* stylelint-disable-line declaration-no-important */
 }
 
 .d-flex > .form-control {

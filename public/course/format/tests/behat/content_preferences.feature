@@ -75,3 +75,42 @@ Feature: Course content collapsed user preferences
     And I should see "Activity sample 3" in the "region-main" "region"
     And I should not see "Activity sample 4" in the "region-main" "region"
     And I should see "Activity sample 5" in the "region-main" "region"
+
+  @javascript
+  Scenario: The collapse all toggle is updated when only some sections are expanded
+    Given I am on the "C1" "Course" page logged in as "teacher1"
+    And I should see "Collapse all" in the "region-main" "region"
+    And I click on "Collapse all" "button" in the "region-main" "region"
+    And I should see "Expand all" in the "region-main" "region"
+    And I should not see "Activity sample 1" in the "region-main" "region"
+    # Expanding a single section is enough to offer collapsing all of them again.
+    When I click on "Expand" "link" in the "Section 1" "section"
+    Then I should see "Collapse all" in the "region-main" "region"
+    But I should not see "Expand all" in the "region-main" "region"
+
+  @javascript
+  Scenario: The collapse all toggle is updated when a new section is added
+    Given I am on the "C1" "Course" page logged in as "teacher1"
+    And I turn editing mode on
+    And I click on "Collapse all" "button" in the "region-main" "region"
+    And I should see "Expand all" in the "region-main" "region"
+    And the "aria-expanded" attribute of "#collapsesections" "css_element" should contain "false"
+    # New sections are expanded by default, so the toggle switches back to "Collapse all".
+    When I click on "Add section" "link" in the "course-addsection" "region"
+    Then I should see "Collapse all" in the "region-main" "region"
+    And the "aria-expanded" attribute of "#collapsesections" "css_element" should contain "true"
+    But I should not see "Expand all" in the "region-main" "region"
+
+  @javascript
+  Scenario: The collapse all toggle is updated when a section is deleted
+    Given I am on the "C1" "Course" page logged in as "teacher1"
+    And I turn editing mode on
+    And I click on "Collapse all" "button" in the "region-main" "region"
+    # Expand a single section to get a mixed state.
+    And I click on "Expand" "link" in the "Section 5" "section"
+    And I should see "Collapse all" in the "region-main" "region"
+    # Delete the only expanded section, so the toggle goes back to "Expand all".
+    When I delete section "5"
+    And I click on "Delete" "button" in the "Delete section?" "dialogue"
+    Then I should see "Expand all" in the "region-main" "region"
+    But I should not see "Collapse all" in the "region-main" "region"

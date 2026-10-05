@@ -20,6 +20,7 @@ namespace core_customfield;
 
 use advanced_testcase;
 use core_course\customfield\course_handler;
+use core_customfield\customfield\test_handler;
 use moodle_exception;
 
 /**
@@ -31,6 +32,27 @@ use moodle_exception;
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class handler_test extends advanced_testcase {
+    /**
+     * Test creating fresh and cached handler instances.
+     */
+    public function test_create(): void {
+        require_once(__DIR__ . '/fixtures/test_handler.php');
+
+        $first = test_handler::create();
+        $first->value = 'first';
+
+        $second = test_handler::create();
+        $second->value = 'second';
+
+        $this->assertNotSame($first, $second);
+        $this->assertSame('first', $first->value);
+
+        $cached = course_handler::create();
+        $this->assertSame($cached, course_handler::create());
+
+        handler::reset_caches();
+        $this->assertNotSame($cached, course_handler::create());
+    }
 
     /**
      * Test retrieving handler for given component/area

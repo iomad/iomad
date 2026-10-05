@@ -69,6 +69,31 @@ final class duration_test extends \basic_testcase {
     }
 
     /**
+     * The default unit (explicit) must be a member of the restricted units array.
+     */
+    public function test_constructor_rejects_defaultunit_not_in_units(): void {
+        $mform = $this->get_test_form();
+        $this->expectException(\coding_exception::class);
+        $this->expectExceptionMessageMatches('~is not one of the units allowed~');
+        $mform->addElement('duration', 'testel', null, [
+            'units' => [DAYSECS, WEEKSECS],
+            'defaultunit' => HOURSECS,
+        ]);
+    }
+
+    /**
+     * The class-default unit (MINSECS) must also be validated against a restricted units array.
+     */
+    public function test_constructor_rejects_class_default_not_in_units(): void {
+        $mform = $this->get_test_form();
+        $this->expectException(\coding_exception::class);
+        $this->expectExceptionMessageMatches('~is not one of the units allowed~');
+        $mform->addElement('duration', 'testel', null, [
+            'units' => [DAYSECS, WEEKSECS],
+        ]);
+    }
+
+    /**
      * Test constructor only some units.
      */
     public function test_constructor_limited_units(): void {
@@ -181,6 +206,36 @@ final class duration_test extends \basic_testcase {
         // Test.
         $this->assertEquals(['testel' => $expected], $el->exportValue($values, true));
         $this->assertEquals($expected, $el->exportValue($values));
+    }
+
+    /**
+     * When the timeunit child control is missing from the submission (e.g. the child <select>
+     * was disabled via disabledIf/hideIf and the browser did not submit it), exportValue()
+     * should fall back to the configured defaultunit rather than emit a PHP warning.
+     */
+    public function test_export_value_missing_timeunit_falls_back_to_defaultunit(): void {
+        $mform = $this->get_test_form();
+        /** @var \MoodleQuickForm_duration $el */
+        $el = $mform->addElement('duration', 'testel', null, ['defaultunit' => HOURSECS]);
+
+        // Simulate a submission where only 'number' arrived (timeunit control disabled).
+        $values = ['testel' => ['number' => '3']];
+        $this->assertEquals(['testel' => 3 * HOURSECS], $el->exportValue($values, true));
+        $this->assertEquals(3 * HOURSECS, $el->exportValue($values));
+    }
+
+    /**
+     * When the number child control is missing from the submission, exportValue() should
+     * treat it as 0 rather than emit a PHP warning.
+     */
+    public function test_export_value_missing_number_defaults_to_zero(): void {
+        $mform = $this->get_test_form();
+        /** @var \MoodleQuickForm_duration $el */
+        $el = $mform->addElement('duration', 'testel', null, ['defaultunit' => HOURSECS]);
+
+        $values = ['testel' => ['timeunit' => MINSECS]];
+        $this->assertEquals(['testel' => 0], $el->exportValue($values, true));
+        $this->assertEquals(0, $el->exportValue($values));
     }
 
     /**

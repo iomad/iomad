@@ -216,6 +216,30 @@ final class question_bank_helper_test extends \advanced_testcase {
     }
 
     /**
+     * Preview type question banks must never be returned by get_activity_instances_with_shareable_questions.
+     *
+     * @return void
+     * @covers ::get_activity_instances_with_shareable_questions
+     */
+    public function test_get_instances_excludes_preview_bank(): void {
+        $this->resetAfterTest();
+        self::setAdminUser();
+
+        $course = self::getDataGenerator()->create_course();
+        $sharedmodgen = self::getDataGenerator()->get_plugin_generator('mod_qbank');
+        $standardbank = $sharedmodgen->create_instance(['course' => $course]);
+
+        // Create the preview bank (it lives on the site course).
+        $previewbank = question_bank_helper::get_preview_open_instance_type(true);
+
+        $sharedbanks = question_bank_helper::get_activity_instances_with_shareable_questions();
+        $returnedids = array_map(fn($bank) => (int)$bank->cminfo->id, $sharedbanks);
+
+        $this->assertContains($standardbank->cmid, $returnedids);
+        $this->assertNotContains((int)$previewbank->id, $returnedids);
+    }
+
+    /**
      * We should be able to filter sharable question bank instances by name.
      *
      * @covers ::get_activity_instances_with_shareable_questions

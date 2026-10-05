@@ -42,6 +42,9 @@ use stdClass;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class handler {
+    /** @var bool Whether to cache handler instances during the request. */
+    protected const CACHE_HANDLER_INSTANCES = false;
+
     /** @var handler[] $instances */
     private static $instances = [];
 
@@ -88,13 +91,16 @@ abstract class handler {
     /**
      * Returns an instance of the handler
      *
-     * We statically cache the list of instances during request lifecycle, to allow this method to be called
-     * repeatedly without potential performance problems
+     * Handlers may cache instances during the request by overriding {@see self::CACHE_HANDLER_INSTANCES}.
      *
      * @param int $itemid
      * @return static
      */
     public static function create(int $itemid = 0): handler {
+        if (!static::CACHE_HANDLER_INSTANCES) {
+            return new static($itemid);
+        }
+
         $instancekey = static::class . ':' . $itemid;
         if (!array_key_exists($instancekey, static::$instances)) {
             static::$instances[$instancekey] = new static($itemid);

@@ -31,6 +31,15 @@
         width: 100%;
         margin-right: 0;
     }
+    // It can be a tight fit to fit the Date time selector with an "enable" checkbox present,
+    // especially in languages with longer text.
+    // Reduce any horizontal spacing we can around the Date time selector elements.
+    .fdate_time_selector {
+        .fitem {
+            margin-left: 0 !important; /* stylelint-disable-line declaration-no-important */
+            margin-right: 0 !important; /* stylelint-disable-line declaration-no-important */
+        }
+    }
 }
 
 // Override the default bootstrap form-control width.

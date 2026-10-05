@@ -108,6 +108,13 @@ class MoodleQuickForm_duration extends MoodleQuickForm_group {
             }
             krsort($displayunits, SORT_NUMERIC);
             $this->_options['units'] = $displayunits;
+
+            // The default unit (either supplied by the caller, or the class default) must be one
+            // of the restricted units, otherwise the element cannot render/submit correctly.
+            if (!array_key_exists($this->_options['defaultunit'], $displayunits)) {
+                throw new coding_exception($this->_options['defaultunit'] .
+                    ' is not one of the units allowed for this MoodleQuickForm_duration element.');
+            }
         }
     }
 
@@ -299,7 +306,10 @@ class MoodleQuickForm_duration extends MoodleQuickForm_group {
         if ($this->_options['optional'] && empty($valuearray['enabled'])) {
             return $this->_prepareValue(0, $assoc);
         }
-        return $this->_prepareValue(
-                (int) round($valuearray['number'] * $valuearray['timeunit']), $assoc);
+
+        // Missing number is treated as 0, missing timeunit falls back to the configured default unit.
+        $number = $valuearray['number'] ?? 0;
+        $timeunit = $valuearray['timeunit'] ?? $this->_options['defaultunit'];
+        return $this->_prepareValue((int) round($number * $timeunit), $assoc);
     }
 }
