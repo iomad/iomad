@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->release  = '5.2.3 (Build: 20260914)';    // Human-friendly version name.
+$plugin->release  = '5.2.4 (Build: 20261005)';    // Human-friendly version name.
 $plugin->version  = 2025100651;   // The (date) version of this plugin.
 $plugin->requires = 2026042000;   // Requires this Moodle version.
 $plugin->component  = 'local_report_completion_monthly';
