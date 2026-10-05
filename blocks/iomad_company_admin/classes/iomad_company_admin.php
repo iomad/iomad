@@ -480,7 +480,7 @@ class iomad_company_admin {
                     $id == 'spmetadatasign' . $postfix ||
                     $id == 'spentityid' . $postfix ||
                     $id == 'wantassertionssigned' . $postfix ||
-                    $id == 'assertionconsumerservices' . $postfix
+                    $id == 'assertionsconsumerservices' . $postfix
                 ) {
                     if ($iomadsaml2config->$id != $value) {
                         auth_iomadsaml2_update_sp_metadata();
