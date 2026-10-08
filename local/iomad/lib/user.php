@@ -198,19 +198,28 @@ class company_user {
             if ($createpassword) {
                 set_user_preference('create_password', 1, $user->id);
                 $user->newpassword = generate_password();
-                if (!empty($CFG->iomad_email_senderisreal)) {
-                    EmailTemplate::send('user_create', ['user' => $user, 'sender' => $USER, 'due' => $data->due]);
-                } else if (is_siteadmin($USER->id)) {
-                    EmailTemplate::send('user_create', ['user' => $user, 'due' => $data->due]);
-                } else {
-                    EmailTemplate::send(
-                        'user_create',
-                        [
-                            'user' => $user,
-                            'due' => $data->due,
-                            'headers' => $headers,
-                        ]
-                    );
+                if ($sendemail) {
+                    if (!empty($CFG->iomad_email_senderisreal)) {
+                        EmailTemplate::send(
+                            'user_create',
+                            [
+                                'user' => $user,
+                                'sender' => $USER,
+                                'due' => $data->due
+                            ]
+                        );
+                    } else if (is_siteadmin($USER->id)) {
+                        EmailTemplate::send('user_create', ['user' => $user, 'due' => $data->due]);
+                    } else {
+                        EmailTemplate::send(
+                            'user_create',
+                            [
+                                'user' => $user,
+                                'due' => $data->due,
+                                'headers' => $headers,
+                            ]
+                        );
+                    }
                 }
                 $sendemail = false;
             }

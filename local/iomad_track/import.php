@@ -219,6 +219,7 @@ if (!empty($fileimport)) {
                             $completionrec->coursename = $courserec->fullname;
                             $upt->track('course', $courserec->fullname);
                         } else if (strpos($key, 'time') !== false) {
+                            $value = str_replace('/', '-', $value);
                             $completionrec->$key = strtotime($value);
                             $upt->track($key, userdate($completionrec->$key, $CFG->iomad_date_format));
                         } else if (strpos($key, 'licenseallocated') !== false) {

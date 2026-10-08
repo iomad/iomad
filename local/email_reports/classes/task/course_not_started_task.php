@@ -76,7 +76,7 @@ class course_not_started_task extends \core\task\scheduled_task {
                                                            (NOT timestarted > 0
                                                            AND timeenrolled < :time1
                                                            AND licenseallocated IS NULL)
-                                                         ||
+                                                         OR
                                                            (timeenrolled IS NULL
                                                            AND licenseallocated < :time2
                                                            AND licenseallocated IS NOT NULL)
@@ -110,10 +110,10 @@ class course_not_started_task extends \core\task\scheduled_task {
                                          AND templatename = :templatename
                                          AND modifiedtime > :timeenrolled",
                                         [
-                                            'userid' => $compuser->userid,
-                                            'courseid' => $compuser->courseid,
+                                            'userid' => $notstarteduser->userid,
+                                            'courseid' => $notstarteduser->courseid,
                                             'templatename' => 'course_not_started_warning',
-                                            'timeenrolled' => $compuser->timeenrolled,
+                                            'timeenrolled' => $notstarteduser->timeenrolled,
                                         ]
                                     );
 
@@ -136,8 +136,8 @@ class course_not_started_task extends \core\task\scheduled_task {
                                     if ($DB->record_exists(
                                         'email',
                                         [
-                                            'userid' => $compuser->userid,
-                                            'courseid' => $compuser->courseid,
+                                            'userid' => $notstarteduser->userid,
+                                            'courseid' => $notstarteduser->courseid,
                                             'templatename' => 'course_not_started_warning',
                                         ]
                                     )) {

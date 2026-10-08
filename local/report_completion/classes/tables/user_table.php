@@ -679,6 +679,12 @@ class user_table extends table_sql {
                             return html_writer::start_tag(
                                 'div',
                                 [
+                                    'class' => 'row',
+                                ]
+                            ) .
+                            html_writer::start_tag(
+                                'div',
+                                [
                                     'class' => 'progress',
                                     'style' => 'height:20px',
                                     'data-html' => 'true',
@@ -693,6 +699,8 @@ class user_table extends table_sql {
                                     'style' => 'width:0%;height:20px',
                                 ]
                             ) .
+                            html_writer::end_tag('div') .
+                            "&nbsp" . get_string('percents', 'moodle', 0) .
                             html_writer::end_tag('div');
                         } else {
                             return get_string('completion-alt-auto-y', 'completion', "0%");
@@ -719,6 +727,12 @@ class user_table extends table_sql {
                 return html_writer::start_tag(
                                 'div',
                                 [
+                                    'class' => 'row',
+                                ]
+                            ) .
+                            html_writer::start_tag(
+                                'div',
+                                [
                                     'class' => 'progress',
                                     'style' => 'height:20px',
                                     'data-html' => 'true',
@@ -727,12 +741,14 @@ class user_table extends table_sql {
                             ) .
                             html_writer::tag(
                                 'div',
-                                $progress . '%',
+                                '',
                                 [
                                     'class' => 'progress-bar',
                                     'style' => 'width:' . $progress . '%;height:20px',
                                 ]
                             ) .
+                            html_writer::end_tag('div') .
+                            "&nbsp" . get_string('percents', 'moodle', $progress) .
                             html_writer::end_tag('div');
             } else {
                 return get_string('completion-alt-auto-y', 'completion', "$progress%");

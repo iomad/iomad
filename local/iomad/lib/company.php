@@ -787,19 +787,22 @@ class company {
 
         // Add the template.
         foreach ($templates as $template) {
-            $templatesetid = $template->id;
+            $newtemplatesetid = $template->id;
             unset($template->templateset);
             $template->companyid = $this->id;
             $templateid = $DB->insert_record('email_template', $template);
 
             // Get all of the lang strings too.
-            $langstrings = $DB->get_records('email_templateset_template_strings', ['templatesetid' => $templatesetid]);
+            $langstrings = $DB->get_records('email_templateset_template_strings', ['templatesetid' => $newtemplatesetid]);
             foreach ($langstrings as $langstring) {
                 $langstring->templateid = $templateid;
                 unset($langstring->templatesetid);
                 $DB->insert_record('email_template_strings', $langstring);
             }
         }
+
+        // Update the company to record this being set.
+        $DB->set_field('company', 'previousemailtemplateid', $templatesetid, ['id' => $this->id]);
 
         return true;
     }
@@ -1529,6 +1532,18 @@ class company {
             $companycourses[$sharedcourse->courseid] = $sharedcourse;
         }
 
+        // Store the last used data.
+        $lastusedinfo = $DB->get_record_sql(
+            "SELECT MAX(lastused) AS latest
+                FROM {company_users}
+                WHERE userid = :userid
+                AND companyid = :companyid",
+            [
+                'userid' => $userid,
+                'companyid' => $companyid,
+            ]
+        );
+
         // Does the user exist in the department?
         if (!$user = $DB->get_record('company_users', $assign)) {
             if (($managertype == 1 || $managertype == 2) && $CFG->iomad_autoenrol_managers) {
@@ -1963,6 +1978,18 @@ class company {
                 $success = $DB->update_record('company_users', array_merge($assign, $s));
             }
         }
+
+        // Fix any last used values.
+        $DB->set_field(
+            'company_users',
+            'lastused',
+            $lastusedinfo->latest,
+            [
+                'userid' => $userid,
+                'companyid' => $companyid,
+            ]
+        );
+
         if (!$success) {
             throw new moodle_exception(get_string('cantassignusersdb', 'block_iomad_company_admin'));
         }
@@ -4486,7 +4513,7 @@ class company {
                     // Its an optional profile field.
                     $profilefield = $DB->get_record(
                         'user_info_field',
-                        ['shortname' => str_replace('profile_field_', '', $extrafield)]
+                        ['shortname' => trim(str_replace('profile_field_', '', $extrafield))]
                     );
                     if ($profilefield->categoryid == $this->companyrecord->profileid ||
                         !$DB->get_record('company', ['profileid' => $profilefield->categoryid])) {

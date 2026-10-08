@@ -800,6 +800,7 @@ if (!$bycourse) {
     $table->attributes = ['class' => 'generaltable overviewbyuser'];
 }
 $table->head = $headers;
+$warningduration = iomad::get_config('local_report_completion_overview', 'warningduration');
 
 // Is the display by user or by course?
 if (!$bycourse) {
@@ -967,7 +968,6 @@ if (!$bycourse) {
             }
 
             // Set up the cell classes.
-            $warningduration = iomad::get_config('local_report_completion_overview', 'warningduration');
             if (empty($courses[$usercourse->courseid])) {
                 $rowclass = "ignored";
                 $statustext = "";

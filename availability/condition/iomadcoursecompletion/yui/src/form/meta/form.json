@@ -1,0 +1,10 @@
+{
+  "moodle-availability_iomadcoursecompletion-form": {
+    "requires": [
+        "base",
+        "node",
+        "event",
+        "moodle-core_availability-form"
+    ]
+  }
+}
