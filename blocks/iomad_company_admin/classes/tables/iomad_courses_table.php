@@ -121,16 +121,16 @@ class iomad_courses_table extends table_sql {
             $coursereturn = "";
         }
 
+        // Prefix course name with [shortname] to disambiguate courses sharing the same
+        // fullname across different companies (multi-company context).
+        $displayname = (!empty($row->courseshortname) ? '[' . $row->courseshortname . '] ' : '') . format_string($row->coursename, true, 1);
         $coursereturn .= html_writer::tag(
             'a',
-            format_string($row->coursename, true, 1),
+            $displayname,
             [
                 'href' => new moodle_url($courseurl, ['id' => $row->courseid]),
             ]
         );
-
-        $coursereturn .= html_writer::empty_tag('br') .
-                         format_string("(" . $row->shortname . ")", true, 1);
 
         if ($row->visible == 0) {
             $coursereturn .= html_writer::end_tag('span');
@@ -701,9 +701,8 @@ class iomad_courses_table extends table_sql {
                 }
 
                 // Handle course clone action.
-                if (iomad::has_capability('block/iomad_company_admin:company_add', $companycontext) ||
-                    ($companycreatedcourse &&
-                    iomad::has_capability('block/iomad_company_admin:createcourse', $companycontext))) {
+                if ($companycreatedcourse &&
+                    iomad::has_capability('block/iomad_company_admin:createcourse', $companycontext)) {
                     $linkurl = "/blocks/iomad_company_admin/iomad_courses_form.php";
                     $linkparams = $params;
                     if (!empty($params['coursesearchtext'])) {
@@ -732,7 +731,8 @@ class iomad_courses_table extends table_sql {
 
                 // Handle course delete action.
                 if ($row->shared == 0 &&
-                    iomad::has_capability('block/iomad_company_admin:deletecourses', $companycontext)) {
+                    (iomad::has_capability('block/iomad_company_admin:deletecourses', $companycontext) ||
+                     iomad::has_capability('block/iomad_company_admin:deletecourses', $companycontext))) {
                     $linkurl = "/blocks/iomad_company_admin/iomad_courses_form.php";
                     $linkparams = $params;
                     if (!empty($params['coursesearchtext'])) {
