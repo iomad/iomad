@@ -147,7 +147,7 @@ class restrict_email_template extends external_api {
                         ORDER BY cl.master";
             $sqlparams = ['id' => $id,
                           'lang' => $lang,
-                          'component' => 'local_email'];
+                          'component' => 'local_iomad'];
 
             // Get all of the records.
             $templatenames = $DB->get_records_sql_menu($findsql,
