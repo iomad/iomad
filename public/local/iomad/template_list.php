@@ -196,7 +196,7 @@ if ($ajaxtemplate) {
                     ORDER BY cl.master";
         $sqlparams = ['id' => $id,
                       'lang' => $lang,
-                      'component' => 'local_email'];
+                      'component' => 'local_iomad'];
 
         // Set up the headings.
         $templatenames = $DB->get_records_sql_menu($findsql,
@@ -417,7 +417,7 @@ if ($manage) {
         'templatesetid' => $templatesetid,
         'lang' => $lang,
         'prefix' => $prefix,
-        'component' => 'local_email',
+        'component' => 'local_iomad',
         'templatename' => "%" . $search . "%",
     ];
     $selectsql = "concat(et.id, concat('_', ets.id)) AS junk,
