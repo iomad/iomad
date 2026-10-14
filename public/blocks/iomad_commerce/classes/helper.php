@@ -1337,24 +1337,18 @@ class helper {
 
         // Otherwise - we do the thing.
         $call = 'updateUser';
-        if (empty($user->company)) {
-            $user->company = 'Registered';
-        }
-        if (empty($user->manager)) {
-            $user->manager = 0;
-        }
         $payload = [
             'userid' => $user->id,
             'username' => $user->username,
             'firstname' => $user->firstname,
             'lastname' => $user->lastname,
             'email' => $user->email,
-            'company' => $user->company,
-            'password' => $user->password,
-            'address' => $user->address,
-            'city' => $user->city,
-            'country' => $user->country,
-            'manager' => $user->manager,
+            'company' => !empty($user->company) ? $user->company : 'Registered',
+            'password' => !empty($user->password) ? $user->password : $user->passwordstash,
+            'address' => !empty($user->address) ? $user->address : '',
+            'city' => !empty($user->city) ? $user->city : '',
+            'country' => !empty($user->country) ? $user->country : '',
+            'manager' => !empty($user->manager) ? $user->manager : 0,,
         ];
 
         if (!empty($user->extragroup->name) && !empty($user->extragroup->action)) {
