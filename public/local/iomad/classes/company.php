@@ -5881,7 +5881,9 @@ class company {
             }
 
             // Fire off the payload to the external site.
-            iomad_commerce::update_user($user, $company->id);
+            if (!empty($company->id)) {
+                iomad_commerce::update_user($user, $company->id);
+            }
         }
 
         return true;
