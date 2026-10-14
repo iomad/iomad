@@ -1348,7 +1348,7 @@ class helper {
             'address' => !empty($user->address) ? $user->address : '',
             'city' => !empty($user->city) ? $user->city : '',
             'country' => !empty($user->country) ? $user->country : '',
-            'manager' => !empty($user->manager) ? $user->manager : 0,,
+            'manager' => !empty($user->manager) ? $user->manager : 0,
         ];
 
         if (!empty($user->extragroup->name) && !empty($user->extragroup->action)) {
