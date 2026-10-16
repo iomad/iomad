@@ -1389,7 +1389,7 @@ class helper {
             'lastname' => $user->lastname,
             'email' => $user->email,
             'company' => $companyname,
-            'password' => $user->password,
+            'password' => !empty($user->password) ? $user->password : $user->passwordstash,
             'address' => $user->address,
             'city' => $user->city,
             'country' => $user->country,
