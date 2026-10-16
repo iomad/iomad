@@ -5914,9 +5914,12 @@ class company {
         foreach ($usercompanies as $usercompany) {
             $company = new company($usercompany->id);
 
-            if ($DB->get_record(
-                'local_iomad_company_users',
-                ['userid' => $user->id, 'companyid' => $usercompany->id, 'managertype' => 1])) {
+            if ($DB->record_exists_sql(
+                "SELECT * FROM {local_iomad_company_users}
+                 WHERE userid = :userid
+                 AND companyid = :companyid
+                 AND managertype IN (1,2)",
+                ['userid' => $user->id, 'companyid' => $usercompany->id])) {
                 $user->manager = 'yes';
                 $user->country = $usercompany->country;
                 $user->city = $usercompany->city;
