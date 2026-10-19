@@ -295,17 +295,17 @@ if (!empty($idlist)) {
     $sqlsearch .= " id $idsearch AND ";
 }
 if (!empty($params['firstname'])) {
-    $sqlsearch .= $DB->sql_like('firstname', ':firstname') . " AND ";
+    $sqlsearch .= $DB->sql_like('firstname', ':firstname', false, false) . " AND ";
     $searchparams['firstname'] = '%' . $params['firstname'] . '%';
 }
 
 if (!empty($params['lastname'])) {
-    $sqlsearch .= $DB->sql_like('lastname', ':lastname') . " AND ";
+    $sqlsearch .= $DB->sql_like('lastname', ':lastname', false, false) . " AND ";
     $searchparams['lastname'] = '%' . $params['lastname'] . '%';
 }
 
 if (!empty($params['email'])) {
-    $sqlsearch .= $DB->sql_like('email', ':email') . " AND ";
+    $sqlsearch .= $DB->sql_like('email', ':email', false, false) . " AND ";
     $searchparams['email'] = '%' . $params['email'] . '%';
 }
 
