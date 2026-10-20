@@ -33,15 +33,41 @@ require_once($CFG->libdir.'/filelib.php');
  *
  */
 function local_iomad_track_pluginfile($course, $birecord_or_cm, $context, $filearea, $args, $forcedownload, array $options=[]) {
-    global $DB, $CFG, $USER;
+    global $USER;
 
+    // Need to be logged in.
+    require_login();
+
+    // Is the context passed a user context?
     if ($context->contextlevel != CONTEXT_USER) {
         send_file_not_found();
     }
 
-    require_login();
+    // File area has to be issue.
+    if ($filearea !== 'certificate_issue') {
+        send_file_not_found();
+    }
 
-    if ($filearea !== 'issue') {
+    // Is it my user context?
+    $canview = false;
+    if (is_siteadmin($USER->id)) {
+        $canview = true;
+    } else if ($context->instanceid == $USER->id) {
+        $canview = true;
+    } else {
+        // Can the current user manage the passed user?
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        if ($companyid > 0) {
+            $companycontext = \core\context\company::instance($companyid);
+            if (company::check_can_manage($context->instanceid) &&
+                iomad::has_capability('block/iomad_company_admin:downloadcertificates', $companycontext)) {
+                $canview = true;
+            }
+        }
+    }
+
+    // Can we see this?
+    if (!$canview) {
         send_file_not_found();
     }
 
