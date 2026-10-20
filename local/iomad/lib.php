@@ -23,7 +23,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use local_iomad\company;
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
 
 /**
  * Hook called by delete_course to remove iomad table references before course is deleted
@@ -78,17 +79,41 @@ function local_iomad_pre_course_delete($course) {
  * @return bool
  */
 function local_iomad_pluginfile($course, $birecordorcm, $context, $filearea, $args, $forcedownload, array $options = []) {
-
-    // Context will always be user context.
-    if ($context->contextlevel != CONTEXT_USER) {
-        send_file_not_found();
-    }
+    global $USER;
 
     // Need to be logged in.
     require_login();
 
+    // Is the context passed a user context?
+    if ($context->contextlevel != CONTEXT_USER) {
+        send_file_not_found();
+    }
+
     // File area has to be issue.
     if ($filearea !== 'certificate_issue') {
+        send_file_not_found();
+    }
+
+    // Is it my user context?
+    $canview = false;
+    if (is_siteadmin($USER->id)) {
+        $canview = true;
+    } else if ($context->instanceid == $USER->id) {
+        $canview = true;
+    } else {
+        // Can the current user manage the passed user?
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        if ($companyid > 0) {
+            $companycontext = context_company::instance($companyid);
+            if (company::check_can_manage($context->instanceid) &&
+                iomad::has_capability('block/iomad_company_admin:downloadcertificates', $companycontext)) {
+                $canview = true;
+            }
+        }
+    }
+
+    // Can we see this?
+    if (!$canview) {
         send_file_not_found();
     }
 
