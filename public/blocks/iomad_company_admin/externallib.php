@@ -736,7 +736,7 @@ It could very slow or timeout. The function is designed to search some specific 
      * block_iomad_company_admin_get_departments
      *
      * Implement get_departments
-     * @param $comapnyid
+     * @param array $criteria
      * @return array of department records.
      */
     public static function get_departments($criteria = []) {
@@ -1044,8 +1044,8 @@ It could very slow or timeout. The function is designed to search some specific 
      * block_iomad_company_admin_assign_users
      *
      * Implement assign_users
-     * @param $comapnyid
-     * @return array of department records.
+     * @param $users
+     * @return array of user records and warnings.
      */
     public static function assign_users($users) {
 
@@ -1175,8 +1175,8 @@ It could very slow or timeout. The function is designed to search some specific 
      * block_iomad_company_admin_move_users
      *
      * Implement move_users
-     * @param $comapnyid
-     * @return array of department records.
+     * @param $users
+     * @return boolean $succeeded.
      */
     public static function move_users($users) {
         global $CFG, $DB;
@@ -1260,8 +1260,8 @@ It could very slow or timeout. The function is designed to search some specific 
      * block_iomad_company_admin_unassign_users
      *
      * Implement unassign_users
-     * @param $comapnyid
-     * @return array of department records.
+     * @param $users
+     * @return boolean $succeeded.
      */
     public static function unassign_users($users) {
 
@@ -1366,7 +1366,7 @@ It could very slow or timeout. The function is designed to search some specific 
      * block_iomad_company_admin_get_department_users
      *
      * Implement get_departments
-     * @param $comapnyid
+     * @param array $departmentids
      * @return array of department records.
      */
     public static function get_department_users($departmentids = []) {
@@ -1446,8 +1446,8 @@ It could very slow or timeout. The function is designed to search some specific 
      * block_iomad_company_admin_assign_courses
      *
      * Implement assign_courses
-     * @param $comapnyid
-     * @return array of department records.
+     * @param $courses
+     * @return boolean $succeeded.
      */
     public static function assign_courses($courses) {
         global $CFG, $DB;
@@ -1514,8 +1514,8 @@ It could very slow or timeout. The function is designed to search some specific 
      * block_iomad_company_admin_unassign_courses
      *
      * Implement unassign_courses
-     * @param $comapnyid
-     * @return array of department records.
+     * @param $courses
+     * @return boolean $succeeded.
      */
     public static function unassign_courses($courses) {
         global $CFG, $DB;
@@ -1595,7 +1595,7 @@ It could very slow or timeout. The function is designed to search some specific 
      *
      * Implement update_courses
      * @param array courses
-     * @return bool
+     * @return bool $succeeded
      */
     public static function update_courses($courses) {
         global $CFG, $DB, $USER;
@@ -1753,8 +1753,8 @@ It could very slow or timeout. The function is designed to search some specific 
      * block_iomad_company_admin_get_license_info
      *
      * Implement get_departments
-     * @param $comapnyid
-     * @return array of department records.
+     * @param array $criteria
+     * @return array of license records and warnings.
      */
     public static function get_license_info($criteria = []) {
         global $CFG, $DB;
@@ -1938,8 +1938,8 @@ It could very slow or timeout. The function is designed to search some specific 
      * block_iomad_company_admin_create_license
      *
      * Implement get_departments
-     * @param $comapnyid
-     * @return array of department records.
+     * @param array $licenses
+     * @return array of license records.
      */
     public static function create_licenses($licenses = []) {
         global $DB, $USER;
@@ -2093,7 +2093,7 @@ It could very slow or timeout. The function is designed to search some specific 
      *
      * Implement create_company
      * @param $company
-     * @return boolean success
+     * @return bool success
      */
     public static function edit_licenses($licenses) {
         global $CFG, $DB, $USER;
@@ -2592,55 +2592,202 @@ It could very slow or timeout. The function is designed to search some specific 
         }
 
         foreach ($params['enrolments'] as $enrolment) {
+            debugging(
+                'Webservice enrolling user.',
+                DEBUG_DEVELOPER,
+            );
             $gotcompany = false;
+            $userid = $enrolment['userid'];
+            $courseid = $enrolment['courseid'];
 
             // Does the user exist?
-            if (!$user = $DB->get_record('user', ['id' => $enrolment['userid']])) {
+            if (!$user = $DB->get_record('user', ['id' => $userid])) {
+                debugging(
+                    'WARNING: Couldn\'t find user for external enrolment.
+                     Skipping external enrolment for user with ID ' . $userid
+                     . ' into course with ID ' . $courseid . '.',
+                    DEBUG_DEVELOPER,
+                );
                 continue;
             }
 
-            // Does the course belong to a company?
-            if (!$companycourses = $DB->get_records_sql(
-                "SELECT DISTINCT c.id AS companyid
-                 FROM {local_iomad_companies} c
-                 JOIN {local_iomad_company_courses} cc ON c.id = cc.companyid
-                 WHERE cc.courseid = :courseid",
-                ['courseid' => $enrolment['courseid']])) {
-                if (!$company = company::by_userid($enrolment['userid'])) {
-                    continue;
-                } else {
-                    $gotcompany = true;
+            // Get company ID directly from course.
+            if ($companycourses = $DB->get_records_sql(
+                    "SELECT DISTINCT c.id AS companyid
+                     FROM {local_iomad_companies} c
+                     JOIN {local_iomad_company_courses} cc ON c.id = cc.companyid
+                     WHERE cc.courseid = :courseid",
+                    ['courseid' => $courseid])) {
+
+                // Make sure the course is in just one company.
+                if (count($companycourses) == 1) {
+
+                    // Make sure the course isn't open (or closed) shared.
+                    if ($DB->record_exists('local_iomad_courses', ['courseid' => $courseid, 'shared' => 0])) {
+                        $companydetails = reset($companycourses);
+                        $company = new company($companydetails->companyid);
+                        $gotcompany = true;
+
+                        debugging(
+                            'CONFIRMED COMPANY FROM COURSE: ' . $company->id,
+                            DEBUG_DEVELOPER,
+                        );
+                    }
                 }
             }
 
-            // Is it more than one?
-            if (count($companycourses) > 1) {
-                [$insql, $inparams] = $DB->get_in_or_equal(array_keys($companycourses),
-                                                           SQL_PARAMS_NAMED,
-                                                           'cids');
-                $inparams['userid'] = $enrolment['userid'];
-                if (!$usercompanies = $DB->get_records_sql(
-                    "SELECT DISTINCT companyid, managertype
-                     FROM {local_iomad_company_users}
-                     WHERE userid = :userid
-                     AND companyid {$insql}
-                     ORDER BY id",
-                    $inparams)) {
-                    // We can't work out where to put them.
-                    continue;
-                } else {
-                    // Use the first of these as the company.
-                    $companydetails = reset($usercompanies);
-                    $company = new company($companydetails->companyid);
-                    $gotcompany = true;
-                }
-            }
-
+            // Else, get company ID by matching the company hostname
+            // to the URL that the WordPress site is sending the data to.
             if (!$gotcompany) {
-                // Company will be the company the course is allocated to.
-                $companydetails = reset($companycourses);
-                $company = new company($companydetails->companyid);
+
+                // Get the URL of the current request.
+                $sitehostname = $_SERVER['HTTP_HOST'];
+                $sitehostname = $DB->sql_compare_text($sitehostname);
+
+                // Find the company/ies that have the hostname.
+                if ($hostnamecompanies = $DB->get_records('local_iomad_companies', ['hostname' => $sitehostname])) {
+
+                    // Make sure the hostname belongs to just one company.
+                    if (count($hostnamecompanies) == 1) {
+                        $hostnamecompany = reset($hostnamecompanies);
+
+                        // Make sure course is assigned to this company.
+                        if ($DB->record_exists_sql(
+                            "SELECT companyid, courseid
+                             FROM {local_iomad_company_courses}
+                             WHERE courseid = :courseid
+                             AND companyid = :companyid",
+                            ['courseid' => $courseid,
+                             'companyid' => $hostnamecompany->id])) {
+
+                            // Get company.
+                            $company = new company($hostnamecompany->id);
+                            $gotcompany = true;
+
+                            debugging(
+                                'CONFIRMED COMPANY BY URL: ' . $company->id,
+                                DEBUG_DEVELOPER,
+                            );
+                        }
+                    }
+                }
             }
+
+            // Else, get company ID from user email domain.
+            if (!$gotcompany) {
+
+                // Get the email domain of the current user.
+                $userdomain = explode('@', $user->email)[1];
+                debugging(
+                    'USER EMAIL DOMAIN: ' . $userdomain,
+                    DEBUG_DEVELOPER,
+                );
+
+                $userdomain = $DB->sql_compare_text($userdomain);
+
+                // Find the company domains which match the user email.
+                $select = " domain = :domain ";
+                if ($companydomains = $DB->get_records_select('local_iomad_company_domains', $select, ['domain' => $userdomain])) {
+
+                    // Make sure domain is used by just one company.
+                    if (count($companydomains) == 1) {
+                        $companydomain = reset($companydomains);
+
+                        debugging(
+                            'COMPANY ID: ' . $companydomain->companyid,
+                            DEBUG_DEVELOPER,
+                        );
+
+                        // Make sure course is assigned to this company.
+                        if ($DB->record_exists_sql(
+                            "SELECT companyid, courseid
+                             FROM {local_iomad_company_courses}
+                             WHERE courseid = :courseid AND companyid = :companyid",
+                            ['courseid' => $courseid,
+                             'companyid' => $companydomain->companyid])) {
+
+                            // Get company.
+                            $company = new company($companydomain->companyid);
+                            $gotcompany = true;
+
+                            debugging(
+                                'CONFIRMED COMPANY BY USER EMAIL: ' . $company->id,
+                                DEBUG_DEVELOPER,
+                            );
+                        }
+                    }
+                }
+            }
+
+            // Else, get company ID from course category.
+            if (!$gotcompany) {
+
+                // Get the course's current category.
+                $coursecategoryid = $DB->get_field('course', 'category', ['id' => $courseid]);
+
+                // Get the ID of the site-level category (always going to be '0').
+                $topcategory = core_course_category::top();
+
+                // Get list of all company category IDs.
+                $companycategoryids = $DB->get_fieldset('local_iomad_companies', 'coursecategoryid');
+
+                // Get the top-level category of the course.
+                // We stop when we find our first comp.cat. ID
+                // (maybe a child company) *or* when the next
+                // ID would be the site 'pseudo-category'.
+                $nextcategoryid = $coursecategoryid;
+                while ($nextcategoryid != $topcategory->id
+                        && !in_array($coursecategoryid, $companycategoryids)) {
+                    $coursecategoryid = $nextcategoryid;
+                    $nextcategoryid = $DB->get_field('course_categories', 'parent', ['id' => $coursecategoryid]);
+                }
+                $coursetopcategoryid = $coursecategoryid;
+
+                // Find the company/ies whose company category id matches the course's top-level category.
+                if ($companycategories = $DB->get_records(
+                    'local_iomad_companies',
+                    ['coursecategoryid' => $coursetopcategoryid])) {
+
+                    // Make sure category is assigned by just one company.
+                    if (count($companycategories) == 1) {
+                        $companycategory = reset($companycategories);
+
+                        // Make sure course is assigned to this company.
+                        if ($DB->record_exists_sql(
+                            "SELECT companyid, courseid
+                             FROM {local_iomad_company_courses}
+                             WHERE courseid = :courseid AND companyid = :companyid",
+                            ['courseid' => $courseid,
+                             'companyid' => $companycategory->id])) {
+
+                            // Get company.
+                            $company = new company($companycategory->id);
+                            $gotcompany = true;
+
+                            debugging(
+                                'CONFIRMED COMPANY BY COURSE CATEGORY: ' . $companycategory->id,
+                                DEBUG_DEVELOPER,
+                            );
+                        }
+                    }
+                }
+            }
+
+            // Else, skip enrolment.
+            if (!$gotcompany) {
+                debugging(
+                    'WARNING: Could not determine which company to assign user to.
+                     Skipping external enrolment for user with ID ' . $userid
+                     . ' into course with ID ' . $courseid . '.',
+                    DEBUG_DEVELOPER,
+                );
+                continue;
+            }
+
+            debugging(
+                'CONFIRMED COMPANY: ' . $company->id,
+                DEBUG_DEVELOPER,
+            );
 
             // Set the $SESSION value for this company so it can be populated in events
             // as this may not be already set.
