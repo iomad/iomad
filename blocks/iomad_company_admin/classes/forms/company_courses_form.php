@@ -48,7 +48,7 @@ class company_courses_form extends moodleform {
     /** @var object context */
     protected $context = null;
 
-    /** @var object context */
+    /** @var int selected company id */
     protected $selectedcompany = 0;
 
     /** @var object potential company courses selector */
@@ -57,7 +57,7 @@ class company_courses_form extends moodleform {
     /** @var object current company courses selector */
     protected $currentcourses = null;
 
-    /** @var object context */
+    /** @var int selected department id */
     protected $departmentid = 0;
 
     /**
@@ -221,7 +221,8 @@ class company_courses_form extends moodleform {
                             $sharingrecord->courseid = $addcourse->id;
                             $sharingrecord->companyid = $company->id;
                             $DB->insert_record('company_shared_courses', $sharingrecord);
-                            if ($this->departmentid != $this->companydepartment ) {
+                            $companydepartment = company::get_company_parentnode($company->id);
+                            if ($this->departmentid != $companydepartment->id ) {
                                 $company->add_course($addcourse, $this->departmentid);
                             } else {
                                 $company->add_course($addcourse);
