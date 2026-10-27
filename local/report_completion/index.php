@@ -700,8 +700,7 @@ if (empty($courseid)) {
     }
 
     // Set up the SQL for the table.
-    $selectsql = "lit.id AS ignoredid,
-                  lit.courseid AS id,
+    $selectsql = "lit.courseid AS id,
                   lit.coursename AS coursename,
                   $departmentid AS departmentid,
                   $showsuspended AS showsuspended,
