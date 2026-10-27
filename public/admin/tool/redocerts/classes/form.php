@@ -23,6 +23,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\custom_context\context_company;
 use local_iomad\iomad;
 
 defined('MOODLE_INTERNAL') || die();
@@ -151,5 +152,53 @@ class tool_redocerts_form extends moodleform {
         $mform->setType('companyid', PARAM_INT);
 
         $this->add_action_buttons(false, get_string('doit', 'tool_redocerts'));
+    }
+
+    public function validation($data, $files) {
+        global $DB;
+
+        // Set some defaults.
+        $systemcontext = context_system::instance();
+        $companyid = iomad::get_my_companyid($systemcontext);
+        $companycontext = context_company::instance($companyid);
+
+        $errors = parent::validation($data, $files);
+
+        // Check the passed form field types.
+        if (!empty($data['userid'])) {
+            if (!is_int($data['userid'])) {
+                $errors['userid'] = get_string('invalidnum', 'error');
+            } else if (!DB->record_exists('user', ['id' => $data['userid']])) {
+                $errors['userid'] = get_string('invaliduserid', 'error');
+            }
+        }
+        if (!empty($data['companyid'])) {
+            if (!is_int($data['companyid'])) {
+                $errors['companyid'] = get_string('invalidnum', 'error');
+            } else if (!$companyrec = $DB->get_record('local_iomad_companies', ['id' => $data['companyid']])) {
+                $errors['companyid'] = get_string('statusunknown', 'moodle');
+            } else {
+                $companyid = $companyrec->id;
+                $companycontext = context_company::instance($companyid);
+                if (!iomad::has_capability('tool/redocerts:redocertificates', $companycontext)) {
+                    $errors['companyid'] = get_string('statusunknown', 'moodle');
+                }
+            }
+        }
+        if (!empty($data['courseid'])) {
+            if (!is_int($data['courseid'])) {
+                $errors['courseid'] = get_string('invalidnum', 'error');
+            } else if (!$courserec = $DB->get_record('course', ['id' => $data['courseid']])) {
+                $errors['courseid'] = get_string('invalidcourseid', 'error');
+            } else {
+                $courses = [$courserec->id => $courserec];
+                $courses = iomad::iomad_filter_courses($courses);
+                if (empty($courses)) {
+                    $errors['courseid'] = get_string('invalidcourseid', 'error');
+                }
+            }
+        }
+
+        return $errors;
     }
 }
