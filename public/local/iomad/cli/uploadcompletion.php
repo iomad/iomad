@@ -31,6 +31,7 @@ use local_iomad\track;
 require(__DIR__.'/../../../config.php');
 require_once($CFG->libdir.'/clilib.php');
 require_once($CFG->libdir.'/adminlib.php');
+require_once($CFG->libdir.'/csvlib.class.php');
 
 $help =
     "Upload historic user course completion information.
@@ -73,19 +74,8 @@ if ($options['help'] ||
     empty($options['file']) ||
     (empty($options['company']) &&
      empty($options['companyid']))) {
-    echo $help;
-    exit(0);
-}
-
-// Validate the params.
-if (!empty($options['companyid']) && !is_int($options['companyid'])) {
-    echo $help;
-    exit(0);
-}
-
-// Validate the params.
-if (!empty($options['company']) && !is_string($options['company'])) {
-    echo $help;
+    cli_writeln("MISSING REQUIRED PARAMETERS");
+    cli_writeln($help);
     exit(0);
 }
 
@@ -104,7 +94,8 @@ if (!empty($company)) {
 
 // Sanity check.
 if (empty($company->id) ||  $company->id < 1) {
-    echo $help;
+    cli_writeln("COMPANY DOES NOT EXIST");
+    cli_writeln($help);
     exit(0);
 }
 
@@ -147,8 +138,10 @@ $readcount = $cir->load_csv_content($content,
 // Check we got something.
 if ($readcount === false) {
     cli_error(get_string('csvfileerror', 'tool_uploadcourse', $cir->get_error()));
+    exit(0);
 } else if ($readcount == 0) {
     cli_error(get_string('csvemptyfile', 'error', $cir->get_error()));
+    exit(0);
 }
 
 // Clear down the raw file content as we no longer need it.
@@ -159,6 +152,9 @@ unset($content);
 $cir->init();
 $runtime = time();
 $linenum = 1; // Column header is first line.
+
+// Output the header.
+cli_heading("Starting upload at " . userdate(time()));
 
 // Init upload progress tracker.
 while ($line = $cir->next()) {
@@ -263,9 +259,11 @@ while ($line = $cir->next()) {
 
     // Write the info to the db.
     $trackid = $DB->insert_record('local_iomad_tracks', $completionrec);
-    track::record_certificates($courserec->id, $userrec->id, $trackid, false);
+    //track::record_certificates($courserec->id, $userrec->id, $trackid, false);
     cli_writeln("line $linenum: " . get_string('done', 'dbtransfer'));
 
+    // Bump the line number.
+    $linenum++;
 }
 
 // Clean up.
@@ -273,12 +271,16 @@ $cir->close();
 $cir->cleanup(true);
 
 // Display  a summary.
-cli_writeln(get_string('total', 'moodle') . ": " . $linenum - 1);
+cli_writeln(get_string('total', 'moodle') . ": " . $linenum);
 
 // Deal with any erroring users.
 if (!empty($errornum)) {
     cli_writeln(get_string('errors', 'errors') . ": " . $errornum);
 }
+
+// Output the footer.
+cli_writeln("");
+cli_heading("Upload of completion records completed at " . userdate(time()));
 
 /**
  * Validation callback function - verified the column line of csv file.
