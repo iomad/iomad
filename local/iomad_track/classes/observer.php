@@ -166,8 +166,20 @@ class observer {
             // Create the certificate content (always create new so it's up to date)
             $content = self::create_certificate($certificate, $user, $cm, $course, $certissue);
 
-            // Store certificate
-            self::store_certificate($context->id, $filename, $trackid, $certificate, $content);
+            // Store certificate - if it's not already there.
+            if (!$DB->record_exists(
+                'files',
+                [
+                    'component' => 'local_iomad_track',
+                    'filearea' => 'issue',
+                    'contextid' => $context->id,
+                    'itemid' => $trackid,
+                    'filepath' => '/',
+                    'filename' => $filename,
+                ]
+            )) {
+                self::store_certificate($context->id, $filename, $trackid, $certificate, $content);
+            }
 
             // Record all of above in local db table
             self::save_certificate($trackid, $filename);
