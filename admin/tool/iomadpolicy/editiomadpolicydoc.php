@@ -44,7 +44,7 @@ $companyonly = optional_param('companyonly', false, PARAM_BOOL);
 $companyid = iomad::get_my_companyid(context_system::instance(), false);
 if ($companyonly && !empty($companyid)) {
     $companycontext = context_company::instance($companyid);
-    $PAGE->set_url(new moodle_url($CFG->wwwroot . '/admin/tool/iomadpolicy/managedocs.php', ['companyonly' => $companyonly]));
+    $PAGE->set_url(new moodle_url($CFG->wwwroot . '/admin/tool/iomadpolicy/editiomadpolicydoc.php', ['companyonly' => $companyonly]));
     $PAGE->set_context($companycontext);
     $PAGE->set_heading(get_string('pluginname', 'tool_iomadpolicy'));
     $PAGE->set_title(get_string('pluginname', 'tool_iomadpolicy'));
