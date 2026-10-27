@@ -24,6 +24,7 @@
  */
 
 use local_iomad\track;
+use local_iomad\task\regeneratecertificatetask;
 
 /**
  * Gets whether database transactions are allowed.
@@ -39,7 +40,7 @@ function do_redocerts($user = 0,
                       $courseid = 0,
                       $companyid = 0,
                       $cli = false) {
-    global $DB, $CFG;
+    global $DB;
 
     // Build the SQL.
     $usersql = [];
@@ -81,23 +82,35 @@ function do_redocerts($user = 0,
 
     $total = count($oldrecords);
     $count = 1;
+    $doadhoc = false;
     $sumstring = new stdclass();
     $sumstring->total = $total;
-    foreach ($oldrecords as $track) {
-        $sumstring->count = $count;
-        $sumstring->id = $track->id;
-        echo html_writer::start_tag('p');
-        echo get_string('clearingcertificate', 'tool_redocerts', $sumstring);
-        echo html_writer::end_tag('br');
-        track::delete_entry($track->id);
-        echo (get_string('recreatingcertificate', 'tool_redocerts') . '&nbsp');
-        if (track::record_certificates($track->courseid, $track->userid, $track->id, true, false)) {
-            echo get_string('success');
-        } else {
-            echo get_string('failed', 'scorm');
-        }
-        echo html_writer::end_tag('p');
 
-        $count++;
+    // Are we doing this manually or setting up tasks for it?
+    if ($total > 100) {
+        $doadhoc = true;
+    }
+    foreach ($oldrecords as $track) {
+        if ($doadhoc) {
+            $task = new regeneratecertificatetask();
+            $task->queue_task($track->id);
+            echo html_writer::tag('p', get_string('startedregencerttask', 'local_iomad', $total));
+        } else {
+            $sumstring->count = $count;
+            $sumstring->id = $track->id;
+            echo html_writer::start_tag('p');
+            echo get_string('clearingcertificate', 'tool_redocerts', $sumstring);
+            echo html_writer::end_tag('br');
+            track::delete_entry($track->id);
+            echo (get_string('recreatingcertificate', 'tool_redocerts') . '&nbsp');
+            if (track::record_certificates($track->courseid, $track->userid, $track->id, true, false)) {
+                echo get_string('success');
+            } else {
+                echo get_string('failed', 'scorm');
+            }
+            echo html_writer::end_tag('p');
+
+            $count++;
+        }
     }
 }
