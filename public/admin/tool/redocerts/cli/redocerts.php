@@ -30,22 +30,25 @@ use local_iomad\track;
 require(__DIR__.'/../../../../config.php');
 require_once($CFG->libdir.'/clilib.php');
 require_once($CFG->libdir.'/adminlib.php');
-require($CFG->dirroot . '/local/iomad_track/db/install.php');
 
 $help =
     "Recreate stored certificates.
 
 Options:
---userid=INT                    String to search for.
---courseid=INT                  String to redocerts with.
---companyid=INT                 Shorten result if necessary.
---idnumber=INT                  Perform the redocertsment without confirming.
+--userid=INT                    Specific user ID.
+--courseid=INT                  Specific course ID.
+--companyid=INT                 Sepecific company ID.
+--idnumber=INT                  Specific track ID.
+--fromid=INT                    All track records from this ID.
+--toid=INT                      All track records to this ID.
 --fromtimestamp=unixtimestamp   Perform the redocertsment without confirming.
 --totimestamp=unixtimestamp     Perform the redocertsment without confirming.
+--run=true                      Actually do the task. Without this it the script will perform a dry run without actually doing anything.
 -h, --help                      Print out this help.
 
 Example:
-\$ sudo -u www-data /usr/bin/php admin/tool/redocerts/cli/redocerts.php --userid=5 --courseid=3 --fromtimestamp=1541077082
+\$ sudo -u www-data /usr/bin/php admin/tool/redocerts/cli/redocerts.php --companyid=1 --userid=5 --courseid=3 --run=true
+\$ sudo -u www-data /usr/bin/php admin/tool/redocerts/cli/redocerts.php --companyid=1 --userid=5 --courseid=3 --fromtimestamp=1541077082
 ";
 
 list($options, $unrecognized) = cli_get_params(
@@ -54,9 +57,12 @@ list($options, $unrecognized) = cli_get_params(
         'courseid' => 0,
         'companyid' => 0,
         'idnumber' => 0,
+        'fromid' => null,
+        'toid' => null,
         'fromtimestamp' => null,
         'totimestamp' => null,
-        'help'    => false,
+        'help' => false,
+        'run' => false,
     ],
     [
         'h' => 'help',
@@ -68,8 +74,21 @@ if ($options['help']) {
     exit(0);
 }
 
+// Set and sanitise the passed parameters.
 foreach ($options as $key => $value) {
-    $$key = $value;
+    if (!empty($value) &&
+        $key != 'help' &&
+        $key != 'run') {
+        $$key = (int) $value;
+        if (empty($$key)) {
+            echo $help;
+            exit(0);
+        }
+    } else if ($key == 'run') {
+        $$key = empty($value) ? false : (bool) $value;
+    } else {
+        $$key = null;
+    }
 }
 
 // Build the SQL.
@@ -84,60 +103,62 @@ if (!empty($companyid)) {
     $usersql[] = " lit.userid IN (SELECT userid FROM {local_iomad_company_users} WHERE companyid = $companyid) ";
 }
 if (!empty($idnumber)) {
-    $usersql[] = " lit.id > $idnumber ";
+    $usersql[] = " lit.id = $idnumber ";
+}
+if ($fromid != null) {
+    $usersql[] = " lit.id >= $fromid ";
+}
+if ($toid != null) {
+    $usersql[] = " lit.id <= $toid ";
 }
 if ($fromtimestamp != null) {
-    $usersql[] = " lit.timecompleted > $fromtimestamp ";
+    $usersql[] = " lit.timecompleted >= $fromtimestamp ";
 }
 if ($totimestamp != null) {
-    $usersql[] = " lit.timecompleted < $totimestamp ";
+    $usersql[] = " lit.timecompleted <= $totimestamp ";
 }
 if (!empty($usersql)) {
-    $extrasql = " WHERE " . implode("AND", $usersql);
+    $extrasql = "AND " . implode("AND", $usersql);
 } else {
     $extrasql = "";
 }
-// Delete the initial records.
+// Get the matching records.
 $oldrecords = $DB->get_records_sql("SELECT lit.*
                                     FROM {local_iomad_tracks} lit
                                     JOIN {course} c ON (c.id = lit.courseid)
                                     JOIN {user} u ON (lit.userid = u.id and u.deleted = 0 )
+                                    WHERE timecompleted > 0
                                     $extrasql
                                     ORDER BY lit.id ASC");
 
 $total = count($oldrecords);
 $count = 1;
+$runtime = time();
+
+// Output the header.
+cli_heading("Starting regenerating of certificates for $total completion records at " . userdate(time()));
+if (!$run) {
+    cli_heading("DRY RUN");
+}
+
+// Process the records.
 foreach ($oldrecords as $track) {
-    mtrace ("clearing id $track->id - " . $count . " of " . $total);
-
-    if ($cert = $DB->get_record('local_iomad_track_certs', ['trackid' => $track->id])) {
-        mtrace("deleting track record id $track->id");
-        $DB->delete_records('local_iomad_track_certs', ['id' => $cert->id]);
+    cli_writeln("Clearing id $track->id - " . $count . " of " . $total);
+    if (!empty($run)) {
+        track::delete_entry($track->id);
     }
 
-    if ($file = $DB->get_record_sql("SELECT *
-                                     FROM {files}
-                                     WHERE component= :component
-                                     AND itemid = :itemid
-                                     AND filename != '.'",
-                                    ['component' => 'local_iomad',
-                                     'filearea' => 'certificate_issue',
-                                     'itemid' => $track->id])) {
-        $filedir1 = substr($file->contenthash, 0, 2);
-        $filedir2 = substr($file->contenthash, 2, 2);
-        $filepath = $CFG->dataroot . '/filedir/' . $filedir1 . '/' . $filedir2 . '/' . $file->contenthash;
-
-        mtrace("removing filename $filepath");
-        unlink($filepath);
+    cli_writeln(get_string('recreatingcertificate', 'tool_redocerts'));
+    if (track::record_certificates($track->courseid, $track->userid, $track->id, true, false, !$run)) {
+        cli_writeln(get_string('success'));
+    } else {
+        cli_writeln(get_string('failed', 'scorm'));
     }
 
-    $DB->delete_records('files', ['itemid' => $track->id,
-                                  'filearea' => 'certificate_issue',
-                                  'component' => 'local_iomad']);
-
-    mtrace ("adding Certificate");
-    track::record_certificates($track->courseid, $track->userid, $track->id, true, false);
-
+    // Update the current count.
     $count++;
 }
 
+// All done.
+cli_writeln("");
+cli_heading("Certificate regeneration completed at " . userdate(time()));

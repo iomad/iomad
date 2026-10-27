@@ -138,10 +138,17 @@ class track {
      * @param int $courseid
      * @param int $userid
      * @param int $trackid
-     * @param boolean $showdebug
+     * @param bool $showdebug
      * @return void
      */
-    public static function record_certificates($courseid, $userid, $trackid, $showdebug = true, $onlyvisible = true) {
+    public static function record_certificates(
+        int $courseid,
+        int $userid,
+        int $trackid,
+        bool $showdebug = true,
+        bool $onlyvisible = true,
+        bool $dryrun = false,
+    ) {
         global $DB;
 
         // Set some variables.
@@ -183,57 +190,63 @@ class track {
                 continue;
             }
 
-            // Get the certificate record.
-            $certrec = $certclass::get_certrecord($certificate->instance);
+            // Only do the work if it's not a dry run.
+            if (!$dryrun) {
 
-            // Find certificate issue record or create it.
-            $certissue = $certclass::get_certissue($course, $user, $certrec, $cm);
+                // Get the certificate record.
+                $certrec = $certclass::get_certrecord($certificate->instance);
 
-            // Potentially fix the issue date.
-            if (!empty($trackinfo->timecompleted)) {
-                if ($certificate->modulename == 'coursecertificate') {
-                    $certissue->coursecompletiondate = userdate($trackinfo->timecompleted, get_string('strftimedatefullshort'));
+                // Find certificate issue record or create it.
+                $certissue = $certclass::get_certissue($course, $user, $certrec, $cm);
+
+                // Potentially fix the issue date.
+                if (!empty($trackinfo->timecompleted)) {
+                    if ($certificate->modulename == 'coursecertificate') {
+                        $certissue->coursecompletiondate = userdate($trackinfo->timecompleted, get_string('strftimedatefullshort'));
+                    }
+                    $certissue->timecreated = $trackinfo->timecompleted;
                 }
-                $certissue->timecreated = $trackinfo->timecompleted;
+
+                // Add the trackid.
+                $certissue->trackid = $trackid;
+
+                // Generate correct filename (same as certificate mod's view.php does).
+                $certname = rtrim($certrec->name, '.');
+                $filename = clean_filename(format_string($certname) . ".pdf");
+
+                // Work around for certificates which get their own dates rather than being passed.
+                if (method_exists($certclass, 'set_completion')) {
+                    $currentrecord = $certclass::set_completion($trackinfo);
+                }
+
+                // Create the certificate content (always create new so it's up to date).
+                $content = $certclass::create_certificate($certrec, $user, $cm, $course, $certissue);
+
+                // Work around for certificates which get their own dates rather than being passed.
+                if (method_exists($certclass, 'reset_completion')) {
+                    $certclass::reset_completion($currentrecord);
+                }
+
+                // Store the certificate - if it's not already there.
+                if (!$DB->record_exists(
+                    'files',
+                    [
+                        'component' => 'local_iomad',
+                        'filearea' => 'certificate_issue',
+                        'contextid' => $context->id,
+                        'itemid' => $trackid,
+                        'filepath' => '/',
+                        'filename' => $filename,
+                    ]
+                )) {
+                    self::store_certificate($context->id, $filename, $trackid, $certrec, $content);
+                }
+
+                // Record all of above in local_iomad_track db table.
+                self::save_certificate($trackid, $filename);
+            } else {
+                $filename = '';
             }
-
-            // Add the trackid.
-            $certissue->trackid = $trackid;
-
-            // Generate correct filename (same as certificate mod's view.php does).
-            $certname = rtrim($certrec->name, '.');
-            $filename = clean_filename(format_string($certname) . ".pdf");
-
-            // Work around for certificates which get their own dates rather than being passed.
-            if (method_exists($certclass, 'set_completion')) {
-                $currentrecord = $certclass::set_completion($trackinfo);
-            }
-
-            // Create the certificate content (always create new so it's up to date).
-            $content = $certclass::create_certificate($certrec, $user, $cm, $course, $certissue);
-
-            // Work around for certificates which get their own dates rather than being passed.
-            if (method_exists($certclass, 'reset_completion')) {
-                $certclass::reset_completion($currentrecord);
-            }
-
-            // Store the certificate - if it's not already there.
-            if (!$DB->record_exists(
-                'files',
-                [
-                    'component' => 'local_iomad',
-                    'filearea' => 'certificate_issue',
-                    'contextid' => $context->id,
-                    'itemid' => $trackid,
-                    'filepath' => '/',
-                    'filename' => $filename,
-                ]
-            )) {
-                self::store_certificate($context->id, $filename, $trackid, $certrec, $content);
-            }
-
-            // Record all of above in local_iomad_track db table.
-            self::save_certificate($trackid, $filename);
 
             // Debugging?
             if ($showdebug) {
