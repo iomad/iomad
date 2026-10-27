@@ -37,7 +37,8 @@ function do_redocerts($user = 0,
                       $todate = null,
                       $userid = 0,
                       $courseid = 0,
-                      $companyid = 0) {
+                      $companyid = 0,
+                      $cli = false) {
     global $DB, $CFG;
 
     // Build the SQL.
