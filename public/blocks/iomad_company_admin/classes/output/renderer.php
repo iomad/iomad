@@ -345,6 +345,13 @@ class renderer extends plugin_renderer_base {
         }
         $html .= html_writer::end_tag('select');
         $html .= html_writer::end_tag('span') . "&nbsp;";
+        $html .= html_writer::start_tag(
+            'label',
+            [
+                'for' => "id_" . $id . "_calendar",
+                'class' => 'fa fa-calendar-days',
+            ]
+        );
         $html .= html_writer::empty_tag(
             'input',
             [
@@ -352,9 +359,9 @@ class renderer extends plugin_renderer_base {
                 'name' => $name . "[calendar]",
                 'type' => "button",
                 'id' => "id_" . $id . "_calendar",
-                'value' => '&#xf073;',
             ]
         );
+        $html .= html_writer::end_tag('label');
         $html .= html_writer::end_tag('span');
         if (empty($timestamp)) {
             $html .= html_writer::start_tag('label', ['class' => 'form-check fitem']);
