@@ -395,7 +395,7 @@ if (!$showsummary) {
     // And final the rest of the form headers.
     $headers[] = get_string('created', 'block_iomad_company_admin');
     $headers[] = get_string('firstaccess');
-    $headers[] = get_string('lastaccess');
+    $headers[] = get_string('lastlogin');
     $headers[] = get_string('numlogins', 'block_iomad_company_admin');
 
     $columns[] = 'created';
