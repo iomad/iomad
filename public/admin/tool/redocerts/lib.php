@@ -44,10 +44,10 @@ function do_redocerts($user = 0,
 
     // Build the SQL.
     $usersql = [];
-    if (!empty($user)) {
+    if ($user > 0) {
         $usersql[] = " lit.userid = $user ";
     }
-    if (!empty($course)) {
+    if ($course > 0) {
         $usersql[] = " lit.courseid = $course ";
     }
     if (!empty($userid)) {
@@ -56,7 +56,7 @@ function do_redocerts($user = 0,
     if (!empty($courseid)) {
         $usersql[] = " lit.courseid = $courseid ";
     }
-    if (!empty($company)) {
+    if ($company > 0) {
         $usersql[] = " lit.userid IN (SELECT userid FROM {local_iomad_company_users} WHERE companyid = $company) ";
     }
     if (!empty($companyid)) {

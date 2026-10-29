@@ -76,6 +76,27 @@ $functions = [
         'ajax' => true,
         'capabilities' => 'local/report_users:deleteentries',
     ],
+
+    'local_iomad_get_companies_menu' => [
+        'classname' => local_iomad\external\get_companies_menu::class,
+        'description' => 'Get companies menu',
+        'type' => 'read',
+        'ajax' => true,
+    ],
+
+    'local_iomad_get_courses_menu' => [
+        'classname' => local_iomad\external\get_courses_menu::class,
+        'description' => 'Get company courses menu',
+        'type' => 'read',
+        'ajax' => true,
+    ],
+
+    'local_iomad_get_users_menu' => [
+        'classname' => local_iomad\external\get_users_menu::class,
+        'description' => 'Get users menu',
+        'type' => 'read',
+        'ajax' => true,
+    ],
 ];
 
 $services = [
