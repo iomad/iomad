@@ -24,13 +24,13 @@
  */
 
 use local_iomad\iomad;
-
-define('NO_OUTPUT_BUFFERING', true);
+use tool_redocerts\form\redocerts_form;
 
 require_once(__DIR__.'/../../../config.php');
-require_once($CFG->dirroot.'/course/lib.php');
-require_once($CFG->libdir.'/adminlib.php');
-require_once($CFG->dirroot.'/admin/tool/redocerts/lib.php');
+require_once($CFG->dirroot . '/course/lib.php');
+require_once($CFG->libdir . '/adminlib.php');
+require_once($CFG->dirroot . '/admin/tool/redocerts/lib.php');
+require_once($CFG->libdir . '/formslib.php');
 
 iomad::require_capability('tool/redocerts:redocertificates', context_system::instance());
 
@@ -52,12 +52,14 @@ if (has_capability('moodle/site:configview', $systemcontext)) {
 $PAGE->set_context($systemcontext);
 $PAGE->set_secondary_navigation(false);
 $PAGE->set_heading('');
+$PAGE->requires->js_call_amd('tool_redocerts/redocert_selects', 'init');
+
 
 echo $OUTPUT->header();
 
 echo $OUTPUT->heading(get_string('pageheader', 'tool_redocerts'));
 
-$form = new tool_redocerts_form();
+$form = new redocerts_form();
 
 if (!$data = $form->get_data()) {
     $form->display();
@@ -65,6 +67,7 @@ if (!$data = $form->get_data()) {
     die();
 }
 
+define('NO_OUTPUT_BUFFERING', true);
 
 // Scroll to the end when finished.
 $PAGE->requires->js_init_code("window.scrollTo(0, 5000000);");
