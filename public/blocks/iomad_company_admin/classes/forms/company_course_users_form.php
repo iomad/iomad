@@ -309,6 +309,7 @@ class company_course_users_form extends moodleform {
         // Handle enrolments.
         $addall = false;
         $add = false;
+        $companycourses = $this->company->get_menu_courses(true, true);
         if (optional_param('addall', false, PARAM_BOOL) && confirm_sesskey()) {
             $search = optional_param('potentialcourseusers_searchtext', '', PARAM_RAW);
             // Process incoming allocations.
@@ -323,10 +324,15 @@ class company_course_users_form extends moodleform {
 
         // Sort out which courses it's going to be for.
         if (in_array(0, $this->selectedcourses)) {
-            $courses = array_keys($this->company->get_menu_courses(true, true));
+            $courses = array_keys($companycourses);
             unset($courses[0]);
         } else {
-            $courses = array_values($this->selectedcourses);
+            $courses = [];
+            foreach ($this->selectedcourses as $checkid) {
+                if (!empty($companycourses[$checkid])) {
+                    $courses[] = $checkid;
+                }
+            }
         }
 
         // Process incoming enrolments.
