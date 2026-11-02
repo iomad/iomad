@@ -61,7 +61,7 @@ class revoke_expired_factors extends \core\task\scheduled_task {
         // IOMAD
         // Get all of the tenants
         $configuredtenants = [];
-        $alltenants = $DB->get_records("SELECT id FROM {company} WHERE suspended = 0");
+        $alltenants = $DB->get_fieldset_select('local_iomad_companies', 'id', 'suspended = 0');
         foreach ($alltenants as $tenantid) {
             // If config is not set, pull out.
             $duration = get_config('factor_grace', 'graceperiod_' . $tenantid);
@@ -91,18 +91,20 @@ class revoke_expired_factors extends \core\task\scheduled_task {
 
         // Single query implementation.
         $tenantsql = "";
+        $tenantparams = [];
         if (!empty($configuredtenants)) {
+            [$insql, $tenantparams] = $DB->get_in_or_equal(array_keys($configuredtenants), SQL_PARAMS_NAMED, 'tenant');
             $tenantsql = " AND userid NOT IN (
-                              SELECT userid FROM {company_users}
-                              WHERE companyid NOT IN (" . implode(',', array_keys($configuredtenants)) . "))";
-            $sql = "UPDATE {tool_mfa}
-                        SET revoked = 1,
-                            timemodified = :timemodified
-                        WHERE timecreated < :revoketime
-                        AND factor = :factor
-                        $tenantsql";
-            $DB->execute($sql, ['timemodified' => time(), 'revoketime' => $revoketime, 'factor' => 'grace']);
+                              SELECT userid FROM {local_iomad_company_users}
+                              WHERE companyid $insql)";
         }
+        $sql = "UPDATE {tool_mfa}
+                    SET revoked = 1,
+                        timemodified = :timemodified
+                    WHERE timecreated < :revoketime
+                    AND factor = :factor
+                    $tenantsql";
+        $DB->execute($sql, ['timemodified' => time(), 'revoketime' => $revoketime, 'factor' => 'grace'] + $tenantparams);
         mtrace('Finished revoking expired Grace factors');
     }
 }
