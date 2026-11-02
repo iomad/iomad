@@ -172,11 +172,19 @@ if ($mform->is_cancelled()) {
 
     // Enrol the user on any selected courses.
     if (!empty($data->currentcourses)) {
+        // Sanitise the list of passed courses.
+        $companycourses = $company->get_menu_courses(true, true);
+        $enrolcourses = [];
+        foreach ($data->currentcourses as $currentcourseid) {
+            if (!empty($companycourses[$currentcourseid])) {
+                $enrolcourses[$currentcourseid] = $currentcourseid;
+            }
+        }
         $userdata = $DB->get_record('user',  ['id' => $userid]);
-        company_user::enrol($userdata, $data->currentcourses, $companyid, 0, 0, $data->due);
+        company_user::enrol($userdata, $enrolcourses, $companyid, 0, 0, $data->due);
 
         // Send them the enrolment email template.
-        foreach ($data->currentcourses as $courseid) {
+        foreach ($enrolcourses as $courseid) {
             $course = $DB->get_record('course',  ['id' => $courseid]);
             EmailTemplate::send('user_added_to_course',
                                 ['course' => $course,
