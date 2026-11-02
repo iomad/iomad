@@ -32,13 +32,42 @@ require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
 require_once($CFG->libdir . '/formslib.php');
 
-$courses = optional_param_array('courses', [], PARAM_INTEGER);
-$departmentid = optional_param('deptid', 0, PARAM_INTEGER);
-$groupid = optional_param('groupid', 0, PARAM_INTEGER);
+$courses = optional_param_array('courses', [], PARAM_INT);
+$departmentid = optional_param('deptid', 0, PARAM_INT);
+$groupid = optional_param('groupid', 0, PARAM_INT);
+
+// Log in and set up $PAGE.
+require_login();
+
+// Set the companyid.
+$systemcontext = context_system::instance();
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
+$parentlevel = company::get_company_parentnode($companyid);
+$companydepartment = $parentlevel->id;
+
+// Can we even do anything?
+iomad::require_capability('block/iomad_company_admin:company_course_users', $companycontext);
+
+// Sanity check the courses being passed.
+$companycourses = $company->get_menu_courses(true, true);
+$companycourses[0] = get_string('all');
+foreach ($courses as $a => $b) {
+    if (empty($companycourses[$a])) {
+        unset($courses[$a]);
+    }
+}
 
 // Fudge for dealing with optional_param_array not taking default values.
 if (isset($_POST['selectedcourses']) && is_array($_POST['selectedcourses'])) {
-    $selectedcourses = optional_param_array('selectedcourses', null, PARAM_INTEGER);
+    $selectedcourses = optional_param_array('selectedcourses', null, PARAM_INT);
+    // Sanity check these too.
+    foreach ($selectedcourses as $a => $b) {
+        if (empty($companycourses[$b])) {
+            unset($selectedcourses[$a]);
+        }
+    }
 } else {
     if (!empty($courses)) {
         $selectedcourses = $courses;
@@ -71,20 +100,6 @@ if (!empty($selectedcourses)) {
         $urlparams["selectedcourses[$a]"] = $b;
     }
 }
-
-// Log in and set up $PAGE.
-require_login();
-
-// Set the companyid.
-$systemcontext = context_system::instance();
-$companyid = iomad::get_my_companyid($systemcontext);
-$companycontext = context_company::instance($companyid);
-$company = new company($companyid);
-$parentlevel = company::get_company_parentnode($companyid);
-$companydepartment = $parentlevel->id;
-
-// Can we even do anything?
-iomad::require_capability('block/iomad_company_admin:company_course_users', $companycontext);
 
 // Set the name for the page.
 $linktext = get_string('company_course_users_title', 'block_iomad_company_admin');
