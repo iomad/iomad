@@ -25,7 +25,7 @@
 $plugin->release  = '5.2.4 (Build: 20261005)';    // Human-friendly version name
 $plugin->component  = 'local_iomad';
 $plugin->requires = 2026042000;   // Requires this Moodle version.
-$plugin->version  = 2026102052;   // The (date) version of this plugin.
+$plugin->version  = 2026110252;   // The (date) version of this plugin.
 $plugin->dependencies = [
         'tool_checklearningrecords' => 2025041400,
         'tool_iomadmerge' => 2025041400,
