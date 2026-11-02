@@ -172,6 +172,7 @@ if ($mform->is_cancelled()) {
             break;
     }
     company::upsert_company_user($userid, $companyid, $departmentid, $managertype, $educator, false, true);
+    $userdata = $DB->get_record('user',  ['id' => $userid]);
 
     // Enrol the user on any selected courses.
     if (!empty($data->currentcourses)) {
@@ -183,7 +184,6 @@ if ($mform->is_cancelled()) {
                 $enrolcourses[$currentcourseid] = $currentcourseid;
             }
         }
-        $userdata = $DB->get_record('user',  ['id' => $userid]);
         company_user::enrol($userdata, $enrolcourses, $companyid, 0, 0, $data->due);
 
         // Send them the enrolment email template.
