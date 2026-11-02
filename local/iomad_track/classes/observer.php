@@ -141,6 +141,9 @@ class observer {
             return false;
         }
 
+        // Get the file storage - in case we need it.
+        $fs = get_file_storage();
+
         // Iterate over to find certs for given user
         foreach ($certificates as $certificate) {
 
@@ -166,8 +169,8 @@ class observer {
             // Create the certificate content (always create new so it's up to date)
             $content = self::create_certificate($certificate, $user, $cm, $course, $certissue);
 
-            // Store certificate - if it's not already there.
-            if (!$DB->record_exists(
+            // Do we already have a certificate stored?
+            if ($currentcert = $DB->get_record(
                 'files',
                 [
                     'component' => 'local_iomad_track',
@@ -178,8 +181,13 @@ class observer {
                     'filename' => $filename,
                 ]
             )) {
-                self::store_certificate($context->id, $filename, $trackid, $certificate, $content);
+                // Clear it down.
+                $fs->get_file_instance($currentcert)->delete();
+
             }
+
+            // Create the certificate file.
+            self::store_certificate($context->id, $filename, $trackid, $certificate, $content);
 
             // Record all of above in local db table
             self::save_certificate($trackid, $filename);
