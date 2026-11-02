@@ -168,6 +168,9 @@ class track {
             return false;
         }
 
+        // Get the file storage - in case we need it.
+        $fs = get_file_storage();
+
         // Is there a currently recorded certificate?
         $trackinfo = $DB->get_record_sql("SELECT * FROM {local_iomad_tracks}
                                           WHERE id = :id
@@ -227,8 +230,8 @@ class track {
                     $certclass::reset_completion($currentrecord);
                 }
 
-                // Store the certificate - if it's not already there.
-                if (!$DB->record_exists(
+                // Do we already have a certificate stored?
+                if ($currentcert = $DB->get_record(
                     'files',
                     [
                         'component' => 'local_iomad',
@@ -239,8 +242,12 @@ class track {
                         'filename' => $filename,
                     ]
                 )) {
-                    self::store_certificate($context->id, $filename, $trackid, $certrec, $content);
+                    // Clear it down.
+                    $fs->get_file_instance($currentcert)->delete();
                 }
+
+                // Create the certificate file.
+                self::store_certificate($context->id, $filename, $trackid, $certrec, $content);
 
                 // Record all of above in local_iomad_track db table.
                 self::save_certificate($trackid, $filename);
