@@ -61,7 +61,7 @@ class revoke_expired_factors extends \core\task\scheduled_task {
         // IOMAD
         // Get all of the tenants
         $configuredtenants = [];
-        $alltenants = $DB->get_fieldset_select('local_iomad_companies', 'id', 'suspended = 0');
+        $alltenants = $DB->get_fieldset_select('company', 'id', 'suspended = 0');
         foreach ($alltenants as $tenantid) {
             // If config is not set, pull out.
             $duration = get_config('factor_grace', 'graceperiod_' . $tenantid);
