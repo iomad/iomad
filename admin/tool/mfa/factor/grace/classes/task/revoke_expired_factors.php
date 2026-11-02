@@ -95,7 +95,7 @@ class revoke_expired_factors extends \core\task\scheduled_task {
         if (!empty($configuredtenants)) {
             [$insql, $tenantparams] = $DB->get_in_or_equal(array_keys($configuredtenants), SQL_PARAMS_NAMED, 'tenant');
             $tenantsql = " AND userid NOT IN (
-                              SELECT userid FROM {local_iomad_company_users}
+                              SELECT userid FROM {company_users}
                               WHERE companyid $insql)";
         }
         $sql = "UPDATE {tool_mfa}
