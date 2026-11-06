@@ -149,6 +149,11 @@ class application extends moodleform {
         $mform->addElement('static', 'tokenendpoint_help', '', get_string('tokenendpoint_help', 'auth_iomadoidc'));
         $mform->addRule('tokenendpoint', null, 'required', null, 'client');
 
+        // UserInfo endpoint.
+        $mform->addElement('text', 'userinfoendpoint', auth_iomadoidc_config_name_in_form('userinfoendpoint'), ['size' => 60]);
+        $mform->setType('userinfoendpoint', PARAM_URL);
+        $mform->addElement('static', 'userinfoendpoint_help', '', get_string('userinfoendpoint_help', 'auth_iomadoidc'));
+
         // "Other parameters" header.
         $mform->addElement('header', 'otherparams', get_string('settings_section_other_params', 'auth_iomadoidc'));
         $mform->setExpanded('otherparams');

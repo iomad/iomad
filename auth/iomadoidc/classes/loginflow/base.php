@@ -121,7 +121,7 @@ class base {
      * @param string $username username
      * @return mixed array with no magic quotes or false on error
      */
-    public function get_userinfo($username) {
+    public function get_userinfo($username, $additionalclaims = []) {
         global $DB;
 
         $tokenrec = $DB->get_record('auth_iomadoidc_token', ['username' => $username]);
@@ -190,6 +190,12 @@ class base {
                                 if (empty($upn)) {
                                     $upn = $token->claim('unique_name');
                                 }
+                                if (empty($upn)) {
+                                    $upn = $token->claim('preferred_username');
+                                }
+                                if (empty($upn)) {
+                                    $upn = $token->claim('email');
+                                }
                             }
                             if (!empty($upn)) {
                                 $userdata['userPrincipalName'] = $upn;
@@ -210,6 +216,20 @@ class base {
                             }
                         }
 
+                        if (!isset($userdata['givenName']) && !isset($userdata['surname'])) {
+                            $fullname = $token->claim('name');
+                            if (!empty($fullname)) {
+                                $nameparts = explode(' ', trim($fullname), 2);
+                                if (count($nameparts) == 2) {
+                                    $userdata['givenName'] = $nameparts[0];
+                                    $userdata['surname'] = $nameparts[1];
+                                } else if (count($nameparts) == 1) {
+                                    $userdata['givenName'] = $nameparts[0];
+                                    $userdata['surname'] = '';
+                                }
+                            }
+                        }
+
                         if (!isset($userdata['mail'])) {
                             $email = $token->claim('email');
                             if (!empty($email)) {
@@ -224,6 +244,10 @@ class base {
                             }
                         }
                     }
+                }
+
+                if (!empty($additionalclaims)) {
+                    $userdata = static::merge_userinfo_with_token_claims($userdata, $additionalclaims);
                 }
 
                 // Call the function in local_o365 to map fields.
@@ -269,6 +293,12 @@ class base {
                         if (empty($upn)) {
                             $upn = $token->claim('unique_name');
                         }
+                        if (empty($upn)) {
+                            $upn = $token->claim('preferred_username');
+                        }
+                        if (empty($upn)) {
+                            $upn = $token->claim('email');
+                        }
                     }
                     if (!empty($upn)) {
                         $userdata['userPrincipalName'] = $upn;
@@ -289,6 +319,20 @@ class base {
                     }
                 }
 
+                if (!isset($userdata['givenName']) && !isset($userdata['surname'])) {
+                    $fullname = $token->claim('name');
+                    if (!empty($fullname)) {
+                        $nameparts = explode(' ', trim($fullname), 2);
+                        if (count($nameparts) == 2) {
+                            $userdata['givenName'] = $nameparts[0];
+                            $userdata['surname'] = $nameparts[1];
+                        } else if (count($nameparts) == 1) {
+                            $userdata['givenName'] = $nameparts[0];
+                            $userdata['surname'] = '';
+                        }
+                    }
+                }
+
                 if (!isset($userdata['mail'])) {
                     $email = $token->claim('email');
                     if (!empty($email)) {
@@ -302,6 +346,10 @@ class base {
                         }
                     }
                 }
+            }
+
+            if (!empty($additionalclaims)) {
+                $userdata = static::merge_userinfo_with_token_claims($userdata, $additionalclaims);
             }
 
             $updateduser = static::apply_configured_fieldmap_from_token($userdata, $eventtype);
@@ -537,6 +585,7 @@ class base {
         $iomadoidcscopename = "iomadoidcscope" . $this->postfix;
         $authendpointname = "authendpoint" . $this->postfix;
         $tokenendpointname = "tokenendpoint" . $this->postfix;
+        $userinfoendpointname = "userinfoendpoint" . $this->postfix;
         $clientid = (isset($this->config->$clientidname)) ? $this->config->$clientidname : null;
         $clientsecret = (isset($this->config->$clientsecretname)) ? $this->config->$clientsecretname : null;
         $redirecturi = (!empty($CFG->loginhttps)) ? str_replace('http://', 'https://', $CFG->wwwroot) : $CFG->wwwroot;
@@ -547,7 +596,16 @@ class base {
         $client = new iomadoidcclient($this->httpclient);
         $client->setcreds($clientid, $clientsecret, $redirecturi, $tokenresource, $scope);
 
-        $client->setendpoints(['auth' => $this->config->$authendpointname, 'token' => $this->config->$tokenendpointname]);
+        $endpoints = [
+            'auth' => $this->config->$authendpointname,
+            'token' => $this->config->$tokenendpointname
+        ];
+
+        if (isset($this->config->$userinfoendpointname) && !empty($this->config->$userinfoendpointname)) {
+            $endpoints['userinfo'] = $this->config->$userinfoendpointname;
+        }
+
+        $client->setendpoints($endpoints);
 
         return $client;
     }
@@ -607,6 +665,12 @@ class base {
                 $tomatch = $idtoken->claim('upn');
                 if (empty($tomatch)) {
                     $tomatch = $idtoken->claim('unique_name');
+                }
+                if (empty($tomatch)) {
+                    $tomatch = $idtoken->claim('preferred_username');
+                }
+                if (empty($tomatch)) {
+                    $tomatch = $idtoken->claim('email');
                 }
             }
 
@@ -683,6 +747,12 @@ class base {
                 if (empty($iomadoidcusername)) {
                     $iomadoidcusername = $idtoken->claim('unique_name');
                 }
+                if (empty($iomadoidcusername)) {
+                    $iomadoidcusername = $idtoken->claim('preferred_username');
+                }
+                if (empty($iomadoidcusername)) {
+                    $iomadoidcusername = $idtoken->claim('email');
+                }
             }
 
             if (empty($iomadoidcusername)) {
@@ -754,5 +824,36 @@ class base {
         $tokenrec->refreshtoken = !empty($tokenparams['refresh_token']) ? $tokenparams['refresh_token'] : ''; // TBD?
         $tokenrec->idtoken = $tokenparams['id_token'];
         $DB->update_record('auth_iomadoidc_token', $tokenrec);
+    }
+
+    protected static function merge_userinfo_with_token_claims(array $userdata, array $userinfo) {
+        if (empty($userinfo)) {
+            return $userdata;
+        }
+
+        if (!isset($userdata['givenName']) && isset($userinfo['given_name'])) {
+            $userdata['givenName'] = $userinfo['given_name'];
+        }
+
+        if (!isset($userdata['surname']) && isset($userinfo['family_name'])) {
+            $userdata['surname'] = $userinfo['family_name'];
+        }
+
+        if (!isset($userdata['givenName']) && !isset($userdata['surname']) && isset($userinfo['name'])) {
+            $nameparts = explode(' ', $userinfo['name'], 2);
+            if (count($nameparts) == 2) {
+                $userdata['givenName'] = $nameparts[0];
+                $userdata['surname'] = $nameparts[1];
+            } else if (count($nameparts) == 1) {
+                $userdata['givenName'] = $nameparts[0];
+                $userdata['surname'] = '';
+            }
+        }
+
+        if (!isset($userdata['mail']) && isset($userinfo['email'])) {
+            $userdata['mail'] = $userinfo['email'];
+        }
+
+        return $userdata;
     }
 }

@@ -73,7 +73,7 @@ $form = new application(null, ['iomadoidcconfig' => $iomadoidcconfig]);
 $formdata = ['companyonly' => $companyonly];
 foreach (['idptype', 'clientid', 'clientauthmethod', 'clientsecret', 'clientprivatekey', 'clientcert',
     'clientcertsource', 'clientprivatekeyfile', 'clientcertfile', 'clientcertpassphrase',
-    'authendpoint', 'tokenendpoint', 'iomadoidcresource', 'iomadoidcscope', 'secretexpiryrecipients'] as $field) {
+    'authendpoint', 'tokenendpoint', 'userinfoendpoint', 'iomadoidcresource', 'iomadoidcscope', 'secretexpiryrecipients'] as $field) {
     $fieldname = $field . $postfix;
     if (isset($iomadoidcconfig->$fieldname)) {
         $formdata[$field] = $iomadoidcconfig->$fieldname;
@@ -92,7 +92,7 @@ if ($form->is_cancelled()) {
 
     // Prepare config settings to save.
     $configstosave = ['idptype', 'clientid', 'clientauthmethod', 'authendpoint', 'tokenendpoint',
-        'iomadoidcresource', 'iomadoidcscope'];
+        'userinfoendpoint', 'iomadoidcresource', 'iomadoidcscope'];
 
     // Depending on the value of clientauthmethod, save clientsecret or (clientprivatekey and clientcert).
     switch ($fromform->clientauthmethod) {
