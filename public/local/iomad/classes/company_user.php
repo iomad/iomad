@@ -1026,7 +1026,7 @@ class company_user {
                 $company = (object) [];
                 $headers = serialize(["Cc:" . $USER->email]);
             }
-            $user->newpassword = $temppassword;
+            $user->newpassword = htmlspecialchars($temppassword);
             if (!empty(get_config('local_iomad', 'email_senderisreal'))) {
                 if ($reset) {
                     emailtemplate::send('user_reset', [
