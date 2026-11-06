@@ -143,19 +143,37 @@ class user_edit_form extends moodleform {
         $mform->addElement('hidden', 'companyid', $this->selectedcompany);
         $mform->setType('companyid', PARAM_INT);
         $strrequired = get_string('required');
+        $stringman = get_string_manager();
 
         // Deal with the name order sorting and required fields.
-        $necessarynames = useredit_get_required_name_fields();
-        foreach ($necessarynames as $necessaryname) {
-            $mform->addElement('text', $necessaryname, get_string($necessaryname), 'maxlength="100" size="30"');
-            $mform->addRule($necessaryname, $strrequired, 'required', null, 'client');
+        foreach (useredit_get_required_name_fields() as $necessaryname) {
+            $purpose = user_edit_map_field_purpose(0, $necessaryname);
+            $mform->addElement(
+                'text',
+                $necessaryname,
+                get_string($necessaryname),
+                'maxlength="100" size="30"' . $purpose);
+            if ($stringman->string_exists('missing'.$necessaryname, 'core')) {
+                $strmissingfield = get_string('missing'.$necessaryname, 'core');
+            } else {
+                $strmissingfield = $strrequired;
+            }
+            $mform->addRule($necessaryname, $strmissingfield, 'required', null, 'client');
             $mform->setType($necessaryname, PARAM_NOTAGS);
         }
-        $mform->addElement('text', 'email', get_string('email'), 'maxlength="100" size="30"');
+
+        // Email address.
+        $purpose = user_edit_map_field_purpose(0, 'email');
+        $mform->addElement(
+            'text',
+            'email',
+            get_string('email'),
+            'maxlength="100" size="30"' . $purpose);
         $mform->addRule('email', $strrequired, 'required', null, 'client');
-        $mform->setType('email', PARAM_EMAIL);
+        $mform->setType('email', PARAM_RAW_TRIMMED);
         if (!empty(get_config('local_iomad', 'allow_username'))) {
-            $mform->addElement('text', 'username', get_string('username'), 'size="20"');
+            $purpose = user_edit_map_field_purpose(0, 'username');
+            $mform->addElement('text', 'username', get_string('username'), 'size="20"' . $purpose);
             $mform->addHelpButton('username', 'username', 'auth');
             $mform->setType('username', PARAM_RAW);
             $mform->disabledif('username', 'use_email_as_username', 'eq', 1);

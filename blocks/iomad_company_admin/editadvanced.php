@@ -59,6 +59,12 @@ $companycontext = context_company::instance($companyid);
 // Can we even do this?
 iomad::require_capability('block/iomad_company_admin:editusers', $companycontext);
 
+// Check we are not trying to view guest's profile.
+if (!company::check_can_manage($id)) {
+    // Can not edit users we are not responsible for.
+    throw new \moodle_exception('invaliduserid');
+}
+
 // Set the name for the page.
 $linktext = get_string('company_edit_advanced_title', 'block_iomad_company_admin');
 $listtext = get_string('edit_users_title', 'block_iomad_company_admin');
