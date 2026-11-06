@@ -32,6 +32,7 @@ use context_user;
 use core_user;
 use core_text;
 use core_component;
+use iomad;
 use webservice;
 
 /**
@@ -48,7 +49,7 @@ class user_editadvanced_form extends moodleform {
      * Define the form.
      */
     public function definition() {
-        global $CFG, $COURSE;
+        global $CFG, $COURSE, $companycontext;
 
         $mform = $this->_form;
         $editoroptions = null;
@@ -80,7 +81,7 @@ class user_editadvanced_form extends moodleform {
         $authoptions = [$enabled => [], $disabled => []];
         $cannotchangepass = [];
         $cannotchangeusername = [];
-        foreach ($auths as $auth => $unused) {
+        foreach (array_keys($auths) as $auth) {
             $authinst = get_auth_plugin($auth);
 
             if (!$authinst->is_internal()) {
@@ -100,7 +101,8 @@ class user_editadvanced_form extends moodleform {
             }
         }
 
-        $mform->addElement('text', 'username', get_string('username'), 'size="20"');
+        $purpose = user_edit_map_field_purpose(0, 'username');
+        $mform->addElement('text', 'username', get_string('username'), 'size="20"' . $purpose);
         $mform->addHelpButton('username', 'username', 'auth');
         $mform->setType('username', PARAM_RAW);
 
@@ -108,8 +110,14 @@ class user_editadvanced_form extends moodleform {
             $mform->disabledIf('username', 'auth', 'in', $cannotchangeusername);
         }
 
-        $mform->addElement('selectgroups', 'auth', get_string('chooseauthmethod', 'auth'), $authoptions);
-        $mform->addHelpButton('auth', 'chooseauthmethod', 'auth');
+        // Can only update auth setting if allowed.
+        if (iomad::has_capability('moodle/user:update', $companycontext)) {
+            $mform->addElement('selectgroups', 'auth', get_string('chooseauthmethod', 'auth'), $authoptions);
+            $mform->addHelpButton('auth', 'chooseauthmethod', 'auth');
+        } else {
+            $mform->addElement('hidden', 'auth');
+            $mform->setType('auth', PARAM_INT);
+        }
 
         $mform->addElement('advcheckbox', 'suspended', get_string('suspended', 'auth'));
         $mform->addHelpButton('suspended', 'suspended', 'auth');
