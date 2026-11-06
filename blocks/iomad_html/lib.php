@@ -39,6 +39,8 @@
 function block_iomad_html_pluginfile($course, $birecordorcm, $context, $filearea, $args, $forcedownload, array $options=[]) {
     global $DB, $CFG, $USER;
 
+    require_once("{$CFG->dirroot}/user/lib.php");
+
     if ($context->contextlevel != CONTEXT_BLOCK) {
         send_file_not_found();
     }
