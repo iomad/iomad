@@ -918,7 +918,7 @@ class company_user {
                 $company = new stdclass();
                 $headers = serialize(["Cc:" . $USER->email]);
             }
-            $user->newpassword = $temppassword;
+            $user->newpassword = htmlspecialchars($temppassword);
             if (!empty($CFG->iomad_email_senderisreal)) {
                 if ($reset) {
                     EmailTemplate::send('user_reset', [
