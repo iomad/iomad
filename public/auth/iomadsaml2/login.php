@@ -41,4 +41,27 @@ if ($wantsurl !== '') {
 }
 
 // Crap for hash anchor handling.
+// Preserve the Moodle session on the cross-site HTTP-POST SAML response.
+// Reissue only the existing session cookie; do not alter global session defaults.
+if (session_status() === PHP_SESSION_ACTIVE && is_moodle_cookie_secure()) {
+    if (headers_sent()) {
+        throw new \coding_exception('Cannot prepare the SAML session cookie after output.');
+    }
+
+    $samlcookieparams = session_get_cookie_params();
+    $samlcookielifetime = (int) $samlcookieparams['lifetime'];
+    $samlcookieoptions = [
+        'expires' => $samlcookielifetime > 0 ? time() + $samlcookielifetime : 0,
+        'path' => $samlcookieparams['path'],
+        'domain' => $samlcookieparams['domain'],
+        'secure' => true,
+        'httponly' => (bool) $samlcookieparams['httponly'],
+        'samesite' => 'None',
+    ];
+
+    if (!setcookie(session_name(), session_id(), $samlcookieoptions)) {
+        throw new \coding_exception('Unable to prepare the SAML session cookie.');
+    }
+}
+
 $iomadsaml2auth->saml_login();
