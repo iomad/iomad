@@ -254,10 +254,18 @@ class company_users_course_form extends moodleform {
 
         $this->create_course_selectors();
         $data = $this->get_data();
+        $company = new company($this->selectedcompany);
+        $companycourses = $company->get_menu_courses(true, true);
 
         // Process incoming enrolments.
         if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
             $coursestoassign = $this->potentialcourses->get_selected_courses();
+            // Sanity checking.
+            foreach (array_keys($coursestoassign) as $checkid) {
+                if (empty($companycourses[$checkid])) {
+                    unset($coursestoassign[$checkid]);
+                }
+            }
             if (!empty($coursestoassign)) {
 
                 foreach ($coursestoassign as $addcourse) {
@@ -288,6 +296,13 @@ class company_users_course_form extends moodleform {
         // Process incoming unenrolments.
         if (optional_param('remove', false, PARAM_BOOL) && confirm_sesskey()) {
             $coursestounassign = $this->currentcourses->get_selected_courses();
+
+            // Sanity checking.
+            foreach (array_keys($coursestounassign) as $checkid) {
+                if (empty($companycourses[$checkid])) {
+                    unset($coursestounassign[$checkid]);
+                }
+            }
             if (!empty($coursestounassign)) {
 
                 foreach ($coursestounassign as $removecourse) {

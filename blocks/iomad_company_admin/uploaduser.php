@@ -254,6 +254,22 @@ if (empty($iid)) {
 
             // Add fields to user object.
             foreach ($line as $key => $value) {
+                switch($key) {
+                    case 'email':
+                        $value = clean_param($value, PARAM_EMAIL);
+                        break;
+                    case 'password':
+                        $value = clean_param($value, PARAM_RAW);
+                        break;
+                    case 'username':
+                        $value = core_text::strtolower($value);
+                        $value = core_user::clean_field($value, 'username');
+                        break;
+                    default:
+                        $value = clean_param($value, PARAM_NOTAGS);
+                        break;
+                }
+
                 if ($value !== '') {
                     $key = $columns[$key];
                     $usercheck->$key = $value;
