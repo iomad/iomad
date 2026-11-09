@@ -92,7 +92,6 @@ class iomad {
         ) {
             return -1;
         }
-
         // Set the companyid to bypass the company select form if possible.
         $companyid = 0;
         if (!empty($SESSION->currenteditingcompany) &&
@@ -118,10 +117,14 @@ class iomad {
             // If the SESSION variable isn't set up when we initially find the company id
             // e.g. on hostname matching - we end up here.
             $companyid = $CFG->foundcompanyid;
-            $SESSION->currenteditingcompany = $CFG->foundcompanyid;
 
-            // Forget this from now on.
-            unset($CFG->foundcompanyid);
+            // Only update SESSION if it exists at this point.
+            if (!empty($SESSION)) {
+                $SESSION->currenteditingcompany = $CFG->foundcompanyid;
+
+                // Forget this from now on.
+                unset($CFG->foundcompanyid);
+            }
         }
 
         return $companyid;
@@ -2198,7 +2201,13 @@ return $categories;
     public static function has_capability(string $capability, bool|context $context, int $companyid = 0): bool {
         global $USER, $DB;
 
+        // If USER isn't set up, then it's a no.
+        if (empty($USER)) {
+            return false;
+        }
+
         // If original version says no then it's no.
+
         // (We also rely on this doing a bunch of sanity checks, so we don't have to).
         if (!has_capability($capability, $context)) {
             return false;
