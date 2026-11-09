@@ -69,7 +69,15 @@ class company_groups_form extends company_moodleform {
         $this->context = $context;
         $this->selectedcourse = $selectedcourse;
 
-        $this->courses = $this->company->get_menu_courses(true, false, true);
+        $rawcourses = $this->company->get_menu_courses(true, false, true);
+        // Prefix each course label with [shortname] to disambiguate identically-named courses.
+        if (!empty($rawcourses)) {
+            global $DB;
+            foreach ($rawcourses as $id => $fullname) {
+                $shortname = $DB->get_field('course', 'shortname', ['id' => $id]);
+                $this->courses[$id] = '[' . $shortname . '] ' . $fullname;
+            }
+        }
         parent::__construct($actionurl);
     }
 

@@ -68,12 +68,31 @@ class company_ccu_courses_form extends company_moodleform {
      * @param int $parentlevel
      */
     public function __construct($actionurl, $context, $companyid, $departmentid, $selectedcourses, $parentlevel) {
+        global $DB;
+
         $this->selectedcompany = $companyid;
         $this->company = new company($companyid);
         $this->context = $context;
         $this->departmentid = $departmentid;
         $this->selectedcourses = $selectedcourses;
-        $this->companycourses = $this->company->get_menu_courses(true, true);
+
+        // Build course list displaying [shortname] fullname to disambiguate courses
+        // sharing the same fullname across different companies (multi-company context).
+        $sql = "SELECT c.id, c.shortname, c.fullname
+                  FROM {course} c
+                  JOIN {company_course} cc ON cc.courseid = c.id
+                 WHERE cc.companyid = :companyid
+                   AND c.id != :siteid
+              ORDER BY c.fullname ASC, c.shortname ASC";
+        $records = $DB->get_records_sql($sql, [
+            'companyid' => $companyid,
+            'siteid'    => SITEID,
+        ]);
+        $this->companycourses = [];
+        foreach ($records as $course) {
+            $this->companycourses[$course->id] = '[' . $course->shortname . '] ' . $course->fullname;
+        }
+
         unset($this->companycourses[0]);
         if (!empty($this->companycourses) && count($this->companycourses) > 1) {
             $this->companycourses[0] = get_string('all');
