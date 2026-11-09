@@ -258,6 +258,7 @@ function auth_iomadoidc_get_remote_fields() {
             'displayName' => get_string('settings_fieldmap_field_displayName', 'auth_iomadoidc'),
             'givenName' => get_string('settings_fieldmap_field_givenName', 'auth_iomadoidc'),
             'surname' => get_string('settings_fieldmap_field_surname', 'auth_iomadoidc'),
+            'name' => get_string('settings_fieldmap_field_name', 'auth_iomadoidc'),
             'mail' => get_string('settings_fieldmap_field_mail', 'auth_iomadoidc'),
             'onPremisesSamAccountName' => get_string('settings_fieldmap_field_onPremisesSamAccountName', 'auth_iomadoidc'),
             'streetAddress' => get_string('settings_fieldmap_field_streetAddress', 'auth_iomadoidc'),
@@ -314,6 +315,7 @@ function auth_iomadoidc_get_remote_fields() {
             'userPrincipalName' => get_string('settings_fieldmap_field_userPrincipalName', 'auth_iomadoidc'),
             'givenName' => get_string('settings_fieldmap_field_givenName', 'auth_iomadoidc'),
             'surname' => get_string('settings_fieldmap_field_surname', 'auth_iomadoidc'),
+            'name' => get_string('settings_fieldmap_field_name', 'auth_iomadoidc'),
             'mail' => get_string('settings_fieldmap_field_mail', 'auth_iomadoidc'),
         ];
     }
