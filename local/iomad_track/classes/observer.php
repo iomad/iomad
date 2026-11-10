@@ -556,6 +556,11 @@ class observer {
         $modifiedtime = $event->timecreated;
         $companyid = $event->companyid;
 
+        // Does the course exist - it should.
+        if (!$courserec = $DB->get_record('course', ['id' => $courseid])) {
+            return true;
+        }
+
         // We only care about company users.
         if (empty($companyid)) {
             // Try and get a company id for the user - as it may not be set when the event is fired.
@@ -578,21 +583,25 @@ class observer {
         $timeenrolled = $enrolrec->timestart;
         if (empty($timeenrolled)) {
             $timeenrolled = $enrolrec->timecreated;
+            // Update the enrolment record.
+            $enrolrec->timestart = $enrolrec->timecreated;
+            $DB->update_record('user_enrolments', $enrolrec);
         }
 
         // If the enrolment method is enabled and isn't license then proceed with the rest of the method
-        if (!$DB->get_record_sql('SELECT * FROM {enrol} e
-                                  JOIN {course} c ON e.courseid = c.id
-                                  WHERE e.courseid = :courseid
-                                  AND e.status = 0
-                                  AND e.enrol = :enrol
-                                  AND e.enrol != :license',
-                                 ['courseid' => $event->courseid,
-                                  'enrol' => $event->other['enrol'],
-                                  'license' => 'license'])) {
+        if (!$DB->record_exists_sql(
+            "SELECT * FROM {enrol} e
+             JOIN {course} c ON e.courseid = c.id
+             WHERE e.courseid = :courseid
+             AND e.status = 0
+             AND e.enrol = :enrol
+             AND e.enrol != :license",
+            ['courseid' => $event->courseid,
+             'enrol' => $event->other['enrol'],
+             'license' => 'license'])) {
 
             // Is this course a license course?
-            if ($DB->get_record('iomad_courses', ['courseid' => $courseid, 'licensed' => 1])) {
+            if ($DB->record_exists('iomad_courses', ['courseid' => $courseid, 'licensed' => 1])) {
 
                 // Ignore it we capture a different event for those.
                 return true;
@@ -601,33 +610,44 @@ class observer {
 
         // Get the enrolment type.
         $enrol = $DB->get_record('enrol', ['id' => $enrolrec->enrolid]);
+
+        // Set the list of companies to this companyid.
         $companies = [$companyid];
+
+        // Process self enrolment callbacks.
         if ($enrol->enrol == 'self') {
             // If this is an unassigned course or an open shared course -
-            if ($DB->get_record('iomad_courses', ['courseid' => $courseid, 'shared' => 1]) ||
-                !$DB->get_record('iomad_courses', ['courseid' => $courseid])) {
+            if ($DB->record_exists('iomad_courses', ['courseid' => $courseid, 'shared' => 1]) ||
+                !$DB->record_exists('iomad_courses', ['courseid' => $courseid])) {
               // The it's evey company the user is assigned to.
-                $companies = array_keys(
-                    $DB->get_records_sql(
-                        "SELECT DISTINCT companyid
-                         FROM {company_users}
-                         WHERE userid = :userid",
+                $companies = $DB->get_records_sql(
+                        "SELECT DISTINCT c.id
+                         FROM {company} c
+                         JOIN {company_users} cu ON (c.id = cu.companyid)
+                         WHERE cu.userid = :userid",
                         ['userid' => $userid]
-                    )
                 );
             } else {
                 // we only want the companies which the course is assigned to and the user belongs to
-                $companies = $DB->get_records_sql("SELECT DISTINCT cu.companyid AS id
-                                                   FROM {company_users} cu
-                                                   JOIN {company_course} cc ON (cu.companyid = cc.companyid)
-                                                   WHERE cu.userid = :userid
-                                                   AND cc.courseid = :courseid",
-                                                  ['userid' => $userid,
-                                                   'courseid' => $courseid]);
-                // We just want an array of the returned keys (id).
-                $companies = array_keys($companies);
+                $companies = $DB->get_records_sql(
+                    "SELECT DISTINCT c.id
+                     FROM {company} c
+                     FROM {company_users} cu
+                     ON (
+                         c.id = cu.companyid
+                     )
+                     JOIN {company_course} cc
+                     ON (
+                         cu.companyid = cc.companyid
+                         AND c.id = cc.companyid
+                     )
+                     WHERE cu.userid = :userid
+                     AND cc.courseid = :courseid",
+                    ['userid' => $userid,
+                     'courseid' => $courseid]);
             }
-            // We need to get all of the companies which the user is assigned to that has this course available.
+            // We just want an array of the returned keys (id).
+            $companies = array_keys($companies);
         }
         foreach ($companies as $companyid) {
             // Check if there is already an entry for this.
@@ -648,12 +668,11 @@ class observer {
                     $entry->modifiedtime = $modifiedtime;
                     $DB->update_record('local_iomad_track', $entry);
                 }
-                if (!$DB->get_records('local_iomad_track', ['userid' => $userid,
+                if (!$DB->record_exists('local_iomad_track', ['userid' => $userid,
                                                             'courseid' => $courseid,
                                                             'companyid' => $companyid,
                                                             'coursecleared' => 0,
-                                                            'timecompleted' => null]) &&
-                    !empty($companyid)) {
+                                                            'timecompleted' => null])) {
                     $firstentry->companyid = $companyid;
                     $DB->insert_record('local_iomad_track', $firstentry);
                 }
