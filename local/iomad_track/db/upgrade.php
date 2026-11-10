@@ -362,7 +362,7 @@ mtrace("enrol end " . time());
     if ($oldversion < 2019022700) {
 
         $noscores = $DB->get_records_sql("SELECT * from {local_iomad_track}
-                                          WHERE finalscore = 0 
+                                          WHERE finalscore = 0
                                           AND timeenrolled IS NOT NULL");
         foreach ($noscores as $rec) {
             // Get the final grade for the course.
@@ -586,7 +586,7 @@ mtrace("enrol end " . time());
                 }
             }
             $DB->update_record('local_iomad_track', $record);
-            if ($complete) {
+            if ($completed) {
                 // Generate the certificates.
                 local_iomad_track_delete_entry($record->id, false);
                 xmldb_local_iomad_track_record_certificates($record->courseid, $record->userid, $record->id);
@@ -676,7 +676,7 @@ mtrace("enrol end " . time());
         // Fire off the adhoc task to ensure that the certificates contexts are changed and references to certificates that no longer exist are removed
         $task = new local_iomad_track\task\fixcertificatetask();
         \core\task\manager::queue_adhoc_task($task, true);
-        
+
         // Iomad_track savepoint reached.
         upgrade_plugin_savepoint(true, 2021030201, 'local', 'iomad_track');
     }
