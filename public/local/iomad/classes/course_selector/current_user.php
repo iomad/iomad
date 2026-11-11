@@ -65,7 +65,8 @@ class current_user extends company_base {
         // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'c');
         $params['userid'] = $this->user->id;
-        $params['companyid'] = $this->companyid;
+        $params['companyid1'] = $this->companyid;
+        $params['companyid2'] = $this->companyid;
 
         // Get the list of courses.
         $coursearray = $DB->get_records_sql("SELECT DISTINCT c.*
@@ -76,17 +77,27 @@ class current_user extends company_base {
                                                c.id = ic.courseid
                                                AND e.courseid = ic.courseid
                                              )
-                                             JOIN {local_iomad_tracks} lit ON (
-                                               e.courseid = lit.courseid
-                                               AND c.id = lit.courseid
-                                               AND ic.courseid = lit.courseid
-                                               AND ue.userid=lit.userid
-                                               AND ue.timestart = lit.timeenrolled
+                                             LEFT JOIN {local_iomad_tracks} lit1 ON (
+                                               e.courseid = lit1.courseid
+                                               AND c.id = lit1.courseid
+                                               AND ic.courseid = lit1.courseid
+                                               AND ue.userid = lit1.userid
+                                               AND ue.timestart = lit1.timeenrolled
                                              )
-                                             WHERE lit.userid = :userid
+                                             LEFT JOIN {local_iomad_tracks} lit2 ON (
+                                               e.courseid = lit2.courseid
+                                               AND c.id = lit2.courseid
+                                               AND ic.courseid = lit2.courseid
+                                               AND ue.userid = lit2.userid
+                                               AND ue.timecreated = lit2.timeenrolled
+                                             )
+                                             WHERE ue.userid = :userid
                                              AND ic.licensed = 0
                                              AND $wherecondition
-                                             AND lit.companyid = :companyid",
+                                             AND (
+                                                 lit1.companyid = :companyid1
+                                                 OR lit2.companyid = :companyid2
+                                             )",
                                             $params);
 
         // Deal with hidden courses.

@@ -84,7 +84,8 @@ class potential_course extends company_base {
             $coursesql = "e.courseid {$insql} ";
             $countsql = " HAVING count(ue.enrolid) = " . count($selectedcourses);
         }
-        $sqlparams['companyid'] = $this->companyid;
+        $sqlparams['companyid1'] = $this->companyid;
+        $sqlparams['companyid2'] = $this->companyid;
         $usersql = "SELECT ue.userid,
                            count(ue.enrolid) AS enrolcount
                     FROM {user_enrolments} ue
@@ -92,13 +93,21 @@ class potential_course extends company_base {
                         ue.enrolid = e.id
                         AND e.status = 0
                     )
-                    JOIN {local_iomad_tracks} lit ON (
-                        e.courseid = lit.courseid
-                        AND ue.userid=lit.userid
-                        AND ue.timestart = lit.timeenrolled
+                    LEFT JOIN {local_iomad_tracks} lit1 ON (
+                        e.courseid = lit1.courseid
+                        AND ue.userid = lit1.userid
+                        AND ue.timestart = lit1.timeenrolled
+                    )
+                    LEFT JOIN {local_iomad_tracks} lit2 ON (
+                        e.courseid = lit2.courseid
+                        AND ue.userid = lit2.userid
+                        AND ue.timecreated = lit2.timeenrolled
                     )
                     WHERE $coursesql
-                    AND lit.companyid = :companyid
+                    AND (
+                        lit1.companyid = :companyid1
+                        OR lit2.companyid = :companyid2
+                    )
                     GROUP BY ue.userid
                     $countsql";
 

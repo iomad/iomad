@@ -90,17 +90,32 @@ class potential_user extends company_base {
              FROM {course} c
              JOIN {enrol} e ON (c.id = e.courseid)
              JOIN {user_enrolments} ue ON (e.id = ue.enrolid AND e.status = 0)
-             JOIN {local_iomad_tracks} lit ON (
-                 e.courseid = lit.courseid
-                 AND c.id = lit.courseid
-                 AND ue.userid = lit.userid
-                 AND ue.timestart = lit.timeenrolled
+             LEFT JOIN {local_iomad_tracks} lit1 ON (
+                 e.courseid = lit1.courseid
+                 AND c.id = lit1.courseid
+                 AND ue.userid = lit1.userid
+                 AND ue.timestart = lit1.timeenrolled
              )
-             WHERE lit.userid = :userid
-             AND lit.companyid = :companyid
-             AND lit.coursecleared = 0",
+             LEFT JOIN {local_iomad_tracks} lit2 ON (
+                 e.courseid = lit2.courseid
+                 AND c.id = lit2.courseid
+                 AND ue.userid = lit2.userid
+                 AND ue.timecreated = lit2.timeenrolled
+             )
+             WHERE ue.userid = :userid
+             AND (
+                 (
+                     lit1.companyid = :companyid1
+                     AND lit1.coursecleared = 0
+                 ) OR (
+                     lit2.companyid = :companyid2
+                     AND lit2.coursecleared = 0
+                 )
+             )",
             ['userid' => $this->user->id,
-            'companyid' => $this->companyid])) {
+            'companyid1' => $this->companyid,
+            'companyid2' => $this->companyid,
+            ])) {
             [$notinsql, $notinparams] = $DB->get_in_or_equal(array_keys($currentcourses),
                                                              SQL_PARAMS_NAMED,
                                                              'curcids',
