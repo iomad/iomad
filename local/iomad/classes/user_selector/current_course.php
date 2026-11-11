@@ -123,19 +123,31 @@ class current_course extends company_base {
                      ue.enrolid = e.id
                  )
                  JOIN {course} c ON (e.courseid = c.id)
-                 JOIN {local_iomad_tracks} lit ON (
-                     c.id = lit.courseid
-                     AND e.courseid = lit.courseid
-                     AND cu.userid = lit.userid
-                     AND ue.userid = lit.userid
-                     AND cu.companyid = lit.companyid
-                     AND ue.timestart = lit.timeenrolled
+                 LEFT JOIN {local_iomad_tracks} lit1 ON (
+                     c.id = lit1.courseid
+                     AND e.courseid = lit1.courseid
+                     AND cu.userid = lit1.userid
+                     AND ue.userid = lit1.userid
+                     AND cu.companyid = lit1.companyid
+                     AND ue.timestart = lit1.timeenrolled
+                 )
+                 LEFT JOIN {local_iomad_tracks} lit2 ON (
+                     c.id = lit2.courseid
+                     AND e.courseid = lit2.courseid
+                     AND cu.userid = lit2.userid
+                     AND ue.userid = lit2.userid
+                     AND cu.companyid = lit2.companyid
+                     AND ue.timecreated = lit2.timeenrolled
                  )
                  WHERE $wherecondition
                  AND u.suspended = 0
                  AND cu.companyid = :companyid
                  AND cu.educator = 0
                  AND e.status = 0
+                 AND (
+                     lit1.id IS NOT NULL
+                     OR lit2.id IS NOT NULL
+                 )
                  $departmentsql
                  $coursesql";
 

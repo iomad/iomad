@@ -1271,17 +1271,24 @@ class company_user {
            !$DB->record_exists('course', ['id' => $courseid])) {
             $progress = null;
         } else {
-            if ($DB->get_record_sql(
+            if ($DB->record_exists_sql(
                 "SELECT ue.timestart
                  FROM {user_enrolments} ue
                  JOIN {enrol} e ON (ue.enrolid = e.id AND e.status = 0)
                  WHERE e.courseid = :courseid
                  AND ue.userid = :userid
-                 AND ue.timestart > :timeenrolled",
+                 AND (
+                      ue.timestart > :timeenrolled1
+                     OR (
+                          ue.timecreated < ue.timestart
+                          AND ue.timecreated > :timeenrolled2
+                      )
+                  )",
                 [
                     'courseid' => $courseid,
                     'userid' => $userid,
-                    'timeenrolled' => $timeenrolled,
+                    'timeenrolled1' => $timeenrolled,
+                    'timeenrolled2' => $timeenrolled,
                     ])) {
                 $progress = null;
             } else {
@@ -1293,15 +1300,19 @@ class company_user {
         if (is_null($progress)) {
             if (empty($timeenrolled)) {
                 return get_string('notenrolled', 'local_report_users');
-            } else if (empty($timestarted)) {
+            } else if (empty($timestarted) || $timestarted == $timeenrolled) {
                 return get_string('notstarted', 'local_report_users');
             } else {
                 if (!empty($licenseid)) {
-                    if ($DB->get_record('local_iomad_company_license_users',
-                                        ['licenseid' => $licenseid,
-                                         'userid' => $userid,
-                                         'courseid' => $courseid,
-                                         'issuedate' => $licenseallocated])) {
+                    if ($DB->record_exists(
+                        'local_iomad_company_license_users',
+                        [
+                            'licenseid' => $licenseid,
+                            'userid' => $userid,
+                            'courseid' => $courseid,
+                            'issuedate' => $licenseallocated,
+                        ]
+                    )) {
                         if (!$downloading) {
                             return html_writer::tag(
                                 'div',
@@ -1340,11 +1351,14 @@ class company_user {
         } else {
             if ($progress < 100 &&
                 !empty($licenseid) &&
-                !$DB->get_record('local_iomad_company_license_users',
-                                ['licenseid' => $licenseid,
-                                      'userid' => $userid,
-                                      'courseid' => $courseid,
-                                      'issuedate' => $licenseallocated])) {
+                !$DB->record_exists(
+                    'local_iomad_company_license_users',
+                    [
+                        'licenseid' => $licenseid,
+                        'userid' => $userid,
+                        'courseid' => $courseid,
+                        'issuedate' => $licenseallocated,
+                    ])) {
                 return get_string('suspended');
             }
 
