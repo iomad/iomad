@@ -647,11 +647,18 @@ class user_table extends table_sql {
                  JOIN {enrol} e ON (ue.enrolid = e.id AND e.status = 0)
                  WHERE e.courseid = :courseid
                  AND ue.userid = :userid
-                 AND ue.timestart > :timeenrolled",
+                 AND (
+                      ue.timestart > :timeenrolled1
+                     OR (
+                          ue.timecreated < ue.timestart
+                          AND ue.timecreated > :timeenrolled2
+                      )
+                  )",
                 [
                     'courseid' => $row->courseid,
                     'userid' => $row->userid,
-                    'timeenrolled' => $row->timeenrolled,
+                    'timeenrolled1' => $row->timeenrolled,
+                    'timeenrolled2' => $row->timeenrolled,
                     ])) {
                 $progress = -1;
             } else {
@@ -659,7 +666,7 @@ class user_table extends table_sql {
                 if ($total != 0 && !empty($row->timeenrolled)) {
                     $progress = round($completed * 100 / $totalcount, 0);
                 } else {
-                    $progress = -1;
+                    $progress = 0;
                 }
             }
         }

@@ -529,11 +529,18 @@ class completion_table extends table_sql {
                  JOIN {enrol} e ON (ue.enrolid = e.id AND e.status = 0)
                  WHERE e.courseid = :courseid
                  AND ue.userid = :userid
-                 AND ue.timestart > :timeenrolled",
+                 AND (
+                     ue.timestart > :timeenrolled1
+                     OR (
+                         ue.timecreated < ue.timestart
+                         AND ue.timecreated > :timeenrolled2
+                     )
+                 )",
                 [
                     'courseid' => $row->courseid,
                     'userid' => $row->userid,
-                    'timeenrolled' => $row->timeenrolled,
+                    'timeenrolled1' => $row->timeenrolled,
+                    'timeenrolled2' => $row->timeenrolled,
                     ])) {
                 $progress = -1;
             } else {

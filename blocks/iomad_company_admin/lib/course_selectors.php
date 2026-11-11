@@ -784,21 +784,31 @@ class current_user_course_selector extends company_course_selector_base {
             $groupname = get_string('usercourses', 'block_iomad_company_admin');
         }
         $params['userid'] = $this->user->id;
-        $params['companyid'] = $this->companyid;
+        $params['companyid1'] = $this->companyid;
+        $params['companyid1'] = $this->companyid;
 
         if ($coursearray = $DB->get_records_sql(
             "SELECT DISTINCT c.*
              FROM {course} c
              JOIN {enrol} e ON (c.id = e.courseid)
              JOIN {user_enrolments} ue ON (e.id = ue.enrolid)
-             JOIN {local_iomad_track} lit ON (
-                 e.courseid = lit.courseid
-                 AND c.id = lit.courseid
-                 AND ue.userid=lit.userid
-                 AND ue.timestart = lit.timeenrolled
+             LEFT JOIN {local_iomad_track} lit1 ON (
+                 e.courseid = lit1.courseid
+                 AND c.id = lit1.courseid
+                 AND ue.userid = lit1.userid
+                 AND ue.timestart = lit1.timeenrolled
              )
-             WHERE lit.userid = :userid
-             AND lit.companyid = :companyid
+             LEFT JOIN {local_iomad_track} lit2 ON (
+                 e.courseid = lit2.courseid
+                 AND c.id = lit2.courseid
+                 AND ue.userid = lit2.userid
+                 AND ue.timecreated = lit2.timeenrolled
+             )
+             WHERE ue.userid = :userid
+             AND (
+                 lit1.companyid = :companyid1
+                 OR lit2.companyid = :company2
+             )
              AND $wherecondition",
             $params)) {
 
@@ -892,12 +902,33 @@ class potential_user_course_selector extends company_course_selector_base {
                                                 FROM {course} c
                                                 JOIN {enrol} e ON (c.id = e.courseid)
                                                 JOIN {user_enrolments} ue ON (e.id = ue.enrolid)
-                                                JOIN {local_iomad_track} lit ON (e.courseid = lit.courseid AND c.id = lit.courseid AND ue.userid=lit.userid AND ue.timestart = lit.timeenrolled)
-                                                WHERE lit.userid = :userid
-                                                AND lit.companyid = :companyid
-                                                AND lit.coursecleared = 0",
+                                                LEFT JOIN {local_iomad_track} lit1
+                                                ON (
+                                                    e.courseid = lit1.courseid
+                                                    AND c.id = lit1.courseid
+                                                    AND ue.userid = lit1.userid
+                                                    AND ue.timestart = lit1.timeenrolled
+                                                )
+                                                LEFT JOIN {local_iomad_track} lit2
+                                                ON (
+                                                    e.courseid = lit2.courseid
+                                                    AND c.id = lit2.courseid
+                                                    AND ue.userid = lit2.userid
+                                                    AND ue.timecreated = lit2.timeenrolled
+                                                )
+                                                WHERE ue.userid = :userid
+                                                AND (
+                                                    (
+                                                        lit1.companyid = :companyid1
+                                                        AND lit1.coursecleared = 0
+                                                    ) OR (
+                                                        lit2.companyid = :companyid2
+                                                        AND lit2.coursecleared = 0
+                                                    )
+                                                )",
                                                ['userid' => $this->user->id ,
-                                                'companyid' => $this->companyid]);
+                                                'companyid1' => $this->companyid,
+                                                'companyid2' => $this->companyid]);
         if (!empty($currentcourses)) {
             $currentcoursesql = "AND c.id not in (".implode(',', array_keys($currentcourses)).")";
         } else {
