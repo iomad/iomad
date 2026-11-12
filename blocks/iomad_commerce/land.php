@@ -25,6 +25,7 @@
 
 use block_iomad_commerce\helper;
 use core\exception\moodle_exception;
+use local_iomad\company_user;
 
 require_once(__DIR__ . '/../../config.php' );
 
@@ -109,6 +110,17 @@ if ($exists) {
         }
     }
     $user->auth = $data->data->auth;
+
+    // Did we get a company id? Is there a default?
+    if (empty($companyid) &&
+        !empty(get_config('local_iomad', 'signup_company'))) {
+        $companyid = get_config('local_iomad', 'signup_company');
+    } else {
+        // Send them back whence they came.
+        redirect($returnurl);
+    }
+
+    // Create the user in the company.
     company_user::create($user, $companyid);
 }
 

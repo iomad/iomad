@@ -4343,7 +4343,10 @@ class company {
      * @return integer
      */
     public function get_auto_department(object $user): int {
-        global $DB;
+        global $CFG, $DB;
+
+        // Need to make sure user profile lib is loaded.
+        require_once($CFG->dirroot . '/user/profile/lib.php');
 
         $topdepartment = self::get_company_parentnode($this->id);
         $departmentid = $topdepartment->id;
@@ -4985,6 +4988,9 @@ class company {
      */
     public static function signup_user_created($user) {
         global $CFG, $DB;
+
+        // Need to make sure user profile lib is loaded.
+        require_once($CFG->dirroot . '/user/profile/lib.php');
 
         // Check if we already have the user object.
         if (is_int($user) || is_string($user)) {
