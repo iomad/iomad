@@ -283,6 +283,10 @@ class observer {
                         $DB->update_record('course_completions', $comprec);
                     }
                     // Update the track record.
+                    // If this record already holds this completion (repeated event), never lower its score.
+                    if (!empty($trackrec->timecompleted)) {
+                        $finalscore = max((float) $trackrec->finalscore, (float) $finalscore);
+                    }
                     $trackrec->timecompleted = $comprec->timecompleted;
                     $trackrec->finalscore = $finalscore;
                     $trackrec->modifiedtime = $timestamp;
@@ -777,7 +781,6 @@ class observer {
         $userid = $event->relateduserid;
         $courseid = $event->courseid;
         $itemid = $event->other['itemid'];
-        $finalgrade = $event->other['finalgrade'];
 
         // If this isn't a course, we don't care.
         if (!$DB->get_record('grade_items', array('id' => $itemid, 'itemtype' => 'course'))) {
@@ -789,33 +792,36 @@ class observer {
             return true;
         }
 
-        // In case we get a null.
-        if (empty($finalgrade)) {
-            $finalgrade = 0;
+        // Percentage of the current course grade (a cleared grade counts as 0).
+        $mygrade = 0;
+        if ($graderec->finalgrade !== null && $graderec->rawgrademax > 0) {
+            $mygrade = $graderec->finalgrade / $graderec->rawgrademax * 100;
         }
 
-        // Check if there is already an entry for this.
-        if ($entries = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
-                                            WHERE userid = :userid
-                                            AND courseid = :courseid
-                                            AND
-                                             (timecompleted IS NULL OR
-                                              timecompleted + 5 > :eventtime)",
-                                            ['userid' => $userid,
-                                             'courseid' => $courseid,
-                                             'eventtime' => $event->timecreated])) {
-            // We already have an entry.  Remove it.
-            // check for max grade = 0
-            $mygrade = 0;
-            if ($graderec->rawgrademax > 0) {
-                $mygrade = $graderec->finalgrade/$graderec->rawgrademax * 100;
-            }
+        // Track records to consider: those still in progress and those of the CURRENT course completion.
+        // No time window relative to the event: graded content (e.g. SCORM) often commits the final
+        // score seconds or minutes after course_completed has fired. Historical completions keep their snapshot.
+        $params = ['userid' => $userid, 'courseid' => $courseid];
+        $select = "userid = :userid AND courseid = :courseid AND coursecleared = 0 AND (timecompleted IS NULL";
+        $timecompleted = $DB->get_field('course_completions', 'timecompleted', ['userid' => $userid, 'course' => $courseid]);
+        if (!empty($timecompleted)) {
+            $select .= " OR (timecompleted > :tclow AND timecompleted < :tchigh)";
+            $params['tclow'] = $timecompleted - 10;
+            $params['tchigh'] = $timecompleted + 10;
+        }
+        $select .= ")";
 
-            // Record the grade.
-            foreach ($entries as $entry) {
-                $DB->set_field('local_iomad_track', 'finalscore', $mygrade, array('id' => $entry->id));
-                $DB->set_field('local_iomad_track', 'modifiedtime', $event->timecreated, array('id' => $entry->id));
+        foreach ($DB->get_records_select('local_iomad_track', $select, $params) as $entry) {
+            // Unchanged (finalscore is stored with 5 decimals).
+            if (abs($mygrade - (float) $entry->finalscore) < 0.00001) {
+                continue;
             }
+            // A completed record may only be improved, never lowered.
+            if (!empty($entry->timecompleted) && $mygrade < (float) $entry->finalscore) {
+                continue;
+            }
+            $DB->set_field('local_iomad_track', 'finalscore', $mygrade, ['id' => $entry->id]);
+            $DB->set_field('local_iomad_track', 'modifiedtime', $event->timecreated, ['id' => $entry->id]);
         }
 
         return true;
