@@ -19,23 +19,14 @@ Feature: Grade item validation
     And the following "grade categories" exist:
       | fullname   | course |
       | Category 1 | C1     |
-    And I log in as "admin"
-    And I navigate to "Grades > Scales" in site administration
-    And I press "Add a new scale"
-    And I set the following fields to these values:
-      | Name  | ABCDEF      |
-      | Scale | F,E,D,C,B,A |
-    And I press "Save changes"
-    And I press "Add a new scale"
-    And I set the following fields to these values:
-      | Name  | Letter scale                              |
-      | Scale | Disappointing, Good, Very good, Excellent |
-    And I press "Save changes"
-    And I am on the "Course 1" "grades > gradebook setup" page
-    And I choose the "Add grade item" item in the "Add" action menu
-    And I set the following fields to these values:
-      | Item name | MI 1 |
-    And I click on "Save" "button" in the "New grade item" "dialogue"
+    And the following "scales" exist:
+      | name         | scale                                     |
+      | ABCDEF       | F,E,D,C,B,A                               |
+      | Letter scale | Disappointing, Good, Very good, Excellent |
+    And the following "grade items" exist:
+      | itemname | course |
+      | MI 1     | C1     |
+    And I am on the "Course 1" "grades > gradebook setup" page logged in as "admin"
 
   Scenario: Being able to change the grade type, scale and maximum grade for a manual grade item when there are no grades
     Given I click on grade item menu "MI 1" of type "gradeitem" on "setup" page

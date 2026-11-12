@@ -965,7 +965,9 @@ final class rule_test extends \advanced_testcase {
             'seb_requiresafeexambrowser' => settings_provider::USE_SEB_CONFIG_MANUALLY,
         ], [], $form);
 
-        $this->assertContains(get_string('passwordnotset', 'quizaccess_seb'), $errors);
+        // The error must be keyed on quizpassword, so that the form shows it against the 'Require password' field.
+        $this->assertArrayHasKey('quizpassword', $errors);
+        $this->assertSame(get_string('passwordnotset', 'quizaccess_seb'), $errors['quizpassword']);
     }
 
     /**
@@ -989,7 +991,7 @@ final class rule_test extends \advanced_testcase {
             'quizpassword' => 'set',
             'seb_requiresafeexambrowser' => settings_provider::USE_SEB_CONFIG_MANUALLY,
         ], [], $form);
-        $this->assertNotContains(get_string('passwordnotset', 'quizaccess_seb'), $errors);
+        $this->assertArrayNotHasKey('quizpassword', $errors);
     }
 
     /**
@@ -1011,7 +1013,7 @@ final class rule_test extends \advanced_testcase {
             'seb_requiresafeexambrowser' => settings_provider::USE_SEB_NO,
         ], [], $form);
 
-        $this->assertNotContains(get_string('passwordnotset', 'quizaccess_seb'), $errors);
+        $this->assertArrayNotHasKey('quizpassword', $errors);
     }
 
     /**
