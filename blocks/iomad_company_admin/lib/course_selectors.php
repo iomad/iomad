@@ -807,7 +807,7 @@ class current_user_course_selector extends company_course_selector_base {
              WHERE ue.userid = :userid
              AND (
                  lit1.companyid = :companyid1
-                 OR lit2.companyid = :company2
+                 OR lit2.companyid = :companyid2
              )
              AND $wherecondition",
             $params)) {
