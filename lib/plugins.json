@@ -45,6 +45,7 @@
             "grade",
             "group",
             "grouping",
+            "iomadcoursecompletion",
             "profile",
             "trainingevent"
         ],
@@ -213,6 +214,7 @@
             "emailprotect",
             "emoticon",
             "glossary",
+            "iomad",
             "mathjaxloader",
             "mediaplugin",
             "multilang",
