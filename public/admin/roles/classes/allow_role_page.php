@@ -140,6 +140,7 @@ abstract class core_role_allow_role_page {
         $table->cellpadding = 5;
         $table->cellspacing = 0;
         $table->width = '90%';
+        $table->attributes['class'] = 'admintable table generaltable table-striped table-hover mb-3';
         $table->align = array('left');
         $table->head = array('&#xa0;');
         $table->colclasses = array('');

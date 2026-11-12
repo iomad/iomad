@@ -2953,4 +2953,95 @@ final class externallib_test extends \mod_assign\externallib_advanced_testcase {
         $completiondata = $completion->get_data($cm);
         $this->assertEquals(1, $completiondata->completionstate);
     }
+
+    /**
+     * Data provider for test_get_submission_status_without_grade_item.
+     *
+     * @return array
+     */
+    public static function get_submission_status_without_grade_item_provider(): array {
+        return [
+            'No previous attempt' => [false],
+            'Previous attempt with a grade record' => [true],
+        ];
+    }
+
+    /**
+     * Test get_submission_status for an assignment with no grade and no gradebook feedback plugin.
+     *
+     * @dataProvider get_submission_status_without_grade_item_provider
+     * @covers \mod_assign_external::get_submission_status
+     * @param bool $withpreviousattempt Whether the student has a previous attempt with a grade record.
+     */
+    public function test_get_submission_status_without_grade_item(bool $withpreviousattempt): void {
+        global $DB, $USER;
+
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $teacher = $this->getDataGenerator()->create_and_enrol($course, 'editingteacher');
+        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $instance = $this->getDataGenerator()->create_module('assign', [
+            'course' => $course->id,
+            'grade' => 0,
+            'assignsubmission_onlinetext_enabled' => 1,
+            'assignfeedback_comments_enabled' => 0,
+            'assignfeedback_editpdf_enabled' => 0,
+            'assignfeedback_file_enabled' => 0,
+            'attemptreopenmethod' => ASSIGN_ATTEMPT_REOPEN_METHOD_MANUAL,
+            'maxattempts' => ASSIGN_UNLIMITED_ATTEMPTS,
+        ]);
+        $cm = get_coursemodule_from_instance('assign', $instance->id);
+        $assign = new mod_assign_testable_assign(\context_module::instance($cm->id), $cm, $course);
+
+        // No grade and no gradebook feedback plugin means no grade item is created.
+        $this->assertFalse(\grade_item::fetch([
+            'itemtype' => 'mod',
+            'itemmodule' => 'assign',
+            'iteminstance' => $instance->id,
+            'courseid' => $course->id,
+            'itemnumber' => 0,
+        ]));
+
+        $assign->get_user_submission($student->id, true);
+
+        if ($withpreviousattempt) {
+            // The teacher saves feedback on the first attempt and allows another attempt.
+            $this->setUser($teacher);
+            $grade = $assign->get_user_grade($student->id, true);
+            $DB->set_field('assign_grades', 'grader', $teacher->id, ['id' => $grade->id]);
+            $USER->ignoresesskey = true;
+            $assign->testable_process_add_attempt($student->id);
+        }
+
+        $this->setUser($student);
+        $result = mod_assign_external::get_submission_status($instance->id);
+        // We expect debugging because of the $PAGE object, this won't happen in a normal WS request.
+        $this->assertDebuggingCalled();
+        $result = external_api::clean_returnvalue(mod_assign_external::get_submission_status_returns(), $result);
+
+        // The student gets their submission status, with no grade or feedback to show.
+        $this->assertCount(0, $result['warnings']);
+        $this->assertArrayNotHasKey('gradingsummary', $result);
+        $this->assertArrayNotHasKey('feedback', $result);
+        $this->assertTrue($result['lastattempt']['submissionsenabled']);
+        $this->assertFalse($result['lastattempt']['graded']);
+        $this->assertEquals(ASSIGN_GRADING_STATUS_NOT_GRADED, $result['lastattempt']['gradingstatus']);
+        $this->assertEquals($student->id, $result['lastattempt']['submission']['userid']);
+
+        if ($withpreviousattempt) {
+            // The reopened attempt is the current one, and the first attempt is listed in the history.
+            $this->assertEquals(1, $result['lastattempt']['submission']['attemptnumber']);
+            $this->assertEquals(ASSIGN_SUBMISSION_STATUS_REOPENED, $result['lastattempt']['submission']['status']);
+            $this->assertCount(1, $result['previousattempts']);
+            $this->assertEquals(0, $result['previousattempts'][0]['attemptnumber']);
+            $this->assertEquals(-1, $result['previousattempts'][0]['grade']['grade']);
+            $this->assertEquals($teacher->id, $result['previousattempts'][0]['grade']['grader']);
+        } else {
+            // A single attempt has no history to list.
+            $this->assertEquals(0, $result['lastattempt']['submission']['attemptnumber']);
+            $this->assertEquals(ASSIGN_SUBMISSION_STATUS_NEW, $result['lastattempt']['submission']['status']);
+            $this->assertArrayNotHasKey('previousattempts', $result);
+        }
+    }
 }

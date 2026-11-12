@@ -206,7 +206,7 @@ class cm implements named_templatable, renderable {
         $data->afterlink = $this->mod->afterlink;
 
         $activitybadgedata = $this->mod->get_activitybadge($output);
-        if (!empty($activitybadgedata)) {
+        if (!empty($activitybadgedata->badgecontent)) {
             $data->activitybadge = $activitybadgedata;
         }
 

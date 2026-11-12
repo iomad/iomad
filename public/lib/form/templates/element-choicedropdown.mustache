@@ -31,15 +31,18 @@
     * extraclasses - Extra classes assocaited,
     * type - Element type,
     * attributes - Element attributes,
-    * options - [
-        {
-            text - Option text,
-            value - Option value,
-            selected - Selected?,
-            disabled - Disabled?,
-            optionattributes - Option attributes
-        }
-    ]
+    * select - Choices exported by core\output\choicelist: {
+        options - [
+            {
+                name - Option text,
+                value - Option value,
+                selected - Selected?,
+                disabled - Disabled?,
+                optionuniqid - Unique option id
+            }
+        ]
+    },
+    * dropdown - Context for the core/local/dropdown/status choice dialog
 
     Example context (json):
     {
@@ -63,32 +66,31 @@
             "type": "select",
             "attributes": "",
             "fieldicon": "<a class='btn'><i class='icon fa fa-ellipsis-h'></i></a>",
-            "options": [
-                {
-                    "rawoptionid": "1",
-                    "text": "Hidden",
-                    "value": 0,
-                    "selected": false,
-                    "disabled": false,
-                    "optionattributes": ""
-                },
-                {
-                    "rawoptionid": "2",
-                    "text": "Visible to everyone",
-                    "value": 1,
-                    "selected": true,
-                    "disabled": false,
-                    "optionattributes": ""
-                },
-                {
-                    "rawoptionid": "3",
-                    "text": "Allow only other course members to see my email address",
-                    "value": 2,
-                    "selected": false,
-                    "disabled": false,
-                    "optionattributes": ""
-                }
-            ]
+            "select": {
+                "options": [
+                    {
+                        "optionuniqid": "choice_option_1",
+                        "name": "Hidden",
+                        "value": 0,
+                        "selected": false,
+                        "disabled": false
+                    },
+                    {
+                        "optionuniqid": "choice_option_2",
+                        "name": "Visible to everyone",
+                        "value": 1,
+                        "selected": true,
+                        "disabled": false
+                    },
+                    {
+                        "optionuniqid": "choice_option_3",
+                        "name": "Allow only other course members to see my email address",
+                        "value": 2,
+                        "selected": false,
+                        "disabled": false
+                    }
+                ]
+            }
         }
     }
 }}
@@ -126,19 +128,21 @@
         {{/element.dropdown}}
         {{/element.frozen}}
         {{#element.frozen}}
-            {{#element.options}}
-                {{#selected}}
-                    {{{text}}}
-                    {{^element.hardfrozen}}
-                    <input
-                        type="hidden"
-                        name="{{element.name}}"
-                        value="{{value}}"
-                        id="{{element.id}}"
-                    >
-                    {{/element.hardfrozen}}
-                {{/selected}}
-            {{/element.options}}
+            {{#element.select}}
+                {{#options}}
+                    {{#selected}}
+                        {{{name}}}
+                        {{^element.hardfrozen}}
+                        <input
+                            type="hidden"
+                            name="{{element.name}}"
+                            value="{{value}}"
+                            id="{{element.id}}"
+                        >
+                        {{/element.hardfrozen}}
+                    {{/selected}}
+                {{/options}}
+            {{/element.select}}
         {{/element.frozen}}
     {{/element}}
 {{/ core_form/element-template }}

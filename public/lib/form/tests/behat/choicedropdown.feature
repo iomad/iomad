@@ -40,3 +40,21 @@ Feature: Choice dropdown form behat test
     And I set the field "Control choice dropdown" to "Hide or disable subelements"
     And I should not see "Hide if element"
     And the "Disabled if element" "field" should be disabled
+
+  @javascript
+  Scenario: Choice dropdown buttons reflect their initial disabled state
+    Given I expand all fieldsets
+    Then the "#fitem_id_disabled button" "css_element" should be disabled
+    And the "#fitem_id_initialdisabled button" "css_element" should be disabled
+    And the "#fitem_id_initialenabled button" "css_element" should be enabled
+
+  Scenario: A frozen choice dropdown displays and submits its value
+    Given I should see "Text option 2" in the "#fitem_id_frozen" "css_element"
+    When I click on "Send form" "button"
+    Then I should see "frozen: option2" in the "submitted_data" "region"
+
+  @javascript
+  Scenario: Fields depending on a frozen choice dropdown use its value
+    When I expand all fieldsets
+    Then I should not see "Shown if frozen is option 1"
+    And I should see "Text option 2" in the "#fitem_id_frozen" "css_element"

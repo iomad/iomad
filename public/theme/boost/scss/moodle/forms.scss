@@ -204,6 +204,9 @@ input#id_externalurl {
     display: inline-block;
 }
 
+// The group selector wraps a single select in another inline block, which would otherwise
+// grow to fit the longest option and push the page wider than the viewport.
+.groupselector,
 .singleselect {
     max-width: 100%;
 }

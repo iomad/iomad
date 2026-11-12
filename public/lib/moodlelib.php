@@ -2741,11 +2741,14 @@ function require_logout() {
     // Clone of $USER object to be used by auth plugins.
     $user = fullclone($USER);
 
-    // Delete session record and drop $_SESSION content.
-    \core\session\manager::terminate_current();
-
-    // Trigger event AFTER action.
-    $event->trigger();
+    // Trigger before terminating so log writers can record login-as context.
+    // Always end the session, even if an event observer throws an Error.
+    try {
+        $event->trigger();
+    } finally {
+        // Delete session record and drop $_SESSION content.
+        \core\session\manager::terminate_current();
+    }
 
     // Hook to execute auth plugins redirection after event trigger.
     foreach ($authplugins as $authplugin) {
@@ -4435,6 +4438,9 @@ function hash_internal_user_password(#[\SensitiveParameter] string $password, $f
  * record to use the current hashing algorithm.
  * It will remove Web Services user tokens too.
  *
+ * If the password itself has actually changed (not just a rehash to the current algorithm),
+ * any outstanding forgot-password tokens for the user are also invalidated.
+ *
  * @param stdClass $user User object (password property may be updated).
  * @param string|null $password Plain text password.
  * @param bool $fasthash If true, use a low cost factor when generating the hash
@@ -4497,6 +4503,13 @@ function update_internal_user_password(
         if (!empty($CFG->passwordchangetokendeletion)) {
             require_once($CFG->dirroot.'/webservice/lib.php');
             webservice::delete_user_ws_tokens($user->id);
+        }
+
+        if ($passwordchanged) {
+            // Invalidate any outstanding forgot-password tokens, as the password has now changed.
+            // Note: this deliberately excludes a rehash-only update ($algorithmchanged), which can
+            // happen during a normal login and does not mean the password itself has changed.
+            $DB->delete_records('user_password_resets', ['userid' => $user->id]);
         }
     }
 

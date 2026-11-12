@@ -3521,7 +3521,8 @@ function glossary_get_entries_by_letter($glossary, $context, $letter, $from, $li
     if ($letter != 'ALL' && $letter != 'SPECIAL' && core_text::strlen($letter)) {
         // Build a new array with the filtered entries.
         foreach ($entries as $key => $entry) {
-            if (strtoupper(substr(format_string($entry->concept), 0, 1)) === strtoupper($letter)) {
+            $prefix = core_text::substr(format_string($entry->concept), 0, core_text::strlen($letter));
+            if (core_text::strtoupper($prefix) === core_text::strtoupper($letter)) {
                 // Add it when starting with the correct letter.
                 $filteredentries[$key] = $entry;
             }
@@ -3531,8 +3532,10 @@ function glossary_get_entries_by_letter($glossary, $context, $letter, $from, $li
 
     if ($letter == 'SPECIAL') {
         // Build a new array with the filtered entries.
+        $alphabet = explode(',', core_text::strtoupper(get_string('alphabet', 'langconfig')));
         foreach ($entries as $key => $entry) {
-            if (!ctype_alpha(substr(format_string($entry->concept), 0, 1))) {
+            $firstchar = core_text::strtoupper(core_text::substr(format_string($entry->concept), 0, 1));
+            if (!in_array($firstchar, $alphabet, true)) {
                 // Add it when starting with a non-letter character.
                 $filteredentries[$key] = $entry;
             }
@@ -4147,15 +4150,18 @@ function glossary_get_entries_to_approve($glossary, $context, $letter, $order, $
     if ($letter != 'ALL' && $letter != 'SPECIAL' && core_text::strlen($letter)) {
         // Build a new array with the filtered entries.
         foreach ($entries as $key => $entry) {
-            if (strtoupper(substr(format_string($entry->concept), 0, 1)) === strtoupper($letter)) {
+            $prefix = core_text::substr(format_string($entry->concept), 0, core_text::strlen($letter));
+            if (core_text::strtoupper($prefix) === core_text::strtoupper($letter)) {
                 // Add it when starting with the correct letter.
                 $filteredentries[$key] = $entry;
             }
         }
     } else if ($letter == 'SPECIAL') {
         // Build a new array with the filtered entries.
+        $alphabet = explode(',', core_text::strtoupper(get_string('alphabet', 'langconfig')));
         foreach ($entries as $key => $entry) {
-            if (!ctype_alpha(substr(format_string($entry->concept), 0, 1))) {
+            $firstchar = core_text::strtoupper(core_text::substr(format_string($entry->concept), 0, 1));
+            if (!in_array($firstchar, $alphabet, true)) {
                 // Add it when starting with a non-letter character.
                 $filteredentries[$key] = $entry;
             }

@@ -36,6 +36,8 @@ require_once($CFG->dirroot . '/mod/glossary/locallib.php');
  * @copyright  2015 Frédéric Massart - FMCorz.net
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('glossary_get_entries_by_letter')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('glossary_get_entries_to_approve')]
 final class lib_test extends \advanced_testcase {
 
     public function test_glossary_view(): void {
@@ -1000,5 +1002,133 @@ final class lib_test extends \advanced_testcase {
                 'commentcapability' => false,
             ],
         ];
+    }
+
+    /**
+     * Test browsing entries by letter with concepts starting with multibyte characters.
+     *
+     * Multibyte characters are those encoded with more than one byte in UTF-8, such as the Cyrillic
+     * letters used here (e.g. 'К' is the two bytes 0xD0 0x9A), so they must be compared as whole characters.
+     */
+    public function test_glossary_get_entries_by_letter_multibyte(): void {
+        $this->resetAfterTest();
+
+        $gg = $this->getDataGenerator()->get_plugin_generator('mod_glossary');
+        $course = $this->getDataGenerator()->create_course();
+        $glossary = $this->getDataGenerator()->create_module('glossary', ['course' => $course->id]);
+        $context = \context_module::instance($glossary->cmid);
+        $this->setAdminUser();
+
+        $e1 = $gg->create_content($glossary, ['approved' => 1, 'concept' => 'Коло']);
+        $e2 = $gg->create_content($glossary, ['approved' => 1, 'concept' => 'кит']);
+        $e3 = $gg->create_content($glossary, ['approved' => 1, 'concept' => 'Ёлка']);
+        $e4 = $gg->create_content($glossary, ['approved' => 1, 'concept' => 'Kilo']);
+        $e5 = $gg->create_content($glossary, ['approved' => 1, 'concept' => '1-day']);
+
+        // A Cyrillic letter matches both upper and lower case concepts, but not the Latin K.
+        [$entries, $count] = glossary_get_entries_by_letter($glossary, $context, 'К', 0, 0);
+        $this->assertEquals(2, $count);
+        $this->assertEqualsCanonicalizing([$e1->id, $e2->id], array_column($entries, 'id'));
+
+        // A lower case Cyrillic letter.
+        [$entries, $count] = glossary_get_entries_by_letter($glossary, $context, 'ё', 0, 0);
+        $this->assertEquals(1, $count);
+        $this->assertEquals([$e3->id], array_column($entries, 'id'));
+
+        // The Latin letter does not match the Cyrillic concepts.
+        [$entries, $count] = glossary_get_entries_by_letter($glossary, $context, 'K', 0, 0);
+        $this->assertEquals(1, $count);
+        $this->assertEquals([$e4->id], array_column($entries, 'id'));
+
+        // Special characters are those not in the language alphabet, which here is English.
+        [$entries, $count] = glossary_get_entries_by_letter($glossary, $context, 'SPECIAL', 0, 0);
+        $this->assertEquals(4, $count);
+        $this->assertEqualsCanonicalizing([$e1->id, $e2->id, $e3->id, $e5->id], array_column($entries, 'id'));
+    }
+
+    /**
+     * Test getting entries to approve by letter with concepts starting with multibyte characters.
+     *
+     * Multibyte characters are those encoded with more than one byte in UTF-8, such as the Cyrillic
+     * letters used here (e.g. 'К' is the two bytes 0xD0 0x9A), so they must be compared as whole characters.
+     */
+    public function test_glossary_get_entries_to_approve_multibyte(): void {
+        $this->resetAfterTest();
+
+        $gg = $this->getDataGenerator()->get_plugin_generator('mod_glossary');
+        $course = $this->getDataGenerator()->create_course();
+        $glossary = $this->getDataGenerator()->create_module('glossary', ['course' => $course->id]);
+        $context = \context_module::instance($glossary->cmid);
+        $this->setAdminUser();
+
+        $e1 = $gg->create_content($glossary, ['approved' => 0, 'concept' => 'Коло']);
+        $e2 = $gg->create_content($glossary, ['approved' => 0, 'concept' => 'Kilo']);
+        $e3 = $gg->create_content($glossary, ['approved' => 0, 'concept' => '1-day']);
+
+        // A Cyrillic letter matches the Cyrillic К, but not the Latin K.
+        [$entries, $count] = glossary_get_entries_to_approve($glossary, $context, 'к', 'CONCEPT', 'ASC', 0, 0);
+        $this->assertEquals(1, $count);
+        $this->assertEquals([$e1->id], array_column($entries, 'id'));
+
+        // The Latin letter does not match the Cyrillic concepts.
+        [$entries, $count] = glossary_get_entries_to_approve($glossary, $context, 'K', 'CONCEPT', 'ASC', 0, 0);
+        $this->assertEquals(1, $count);
+        $this->assertEquals([$e2->id], array_column($entries, 'id'));
+
+        // Special characters are those not in the language alphabet, which here is English.
+        [$entries, $count] = glossary_get_entries_to_approve($glossary, $context, 'SPECIAL', 'CONCEPT', 'ASC', 0, 0);
+        $this->assertEquals(2, $count);
+        $this->assertEqualsCanonicalizing([$e1->id, $e3->id], array_column($entries, 'id'));
+    }
+
+    /**
+     * Test browsing entries by letter when the language alphabet is Ukrainian Cyrillic.
+     *
+     * Multibyte characters are those encoded with more than one byte in UTF-8, such as the Cyrillic
+     * letters used here (e.g. 'Ї' is the two bytes 0xD0 0x87), so they must be compared as whole characters.
+     *
+     * It is not possible to directly change the result of get_string in a unit test. Instead, we create
+     * a language pack for language 'xx' in dataroot with a langconfig.php defining the Ukrainian alphabet.
+     */
+    public function test_glossary_get_entries_by_letter_ukrainian_alphabet(): void {
+        global $CFG, $SESSION;
+        $this->resetAfterTest();
+
+        $gg = $this->getDataGenerator()->get_plugin_generator('mod_glossary');
+        $course = $this->getDataGenerator()->create_course();
+        $glossary = $this->getDataGenerator()->create_module('glossary', ['course' => $course->id]);
+        $context = \context_module::instance($glossary->cmid);
+        $this->setAdminUser();
+
+        // Set the session language after setting the user, as setUser() empties the session.
+        $SESSION->lang = 'xx';
+        $langfolder = $CFG->dataroot . '/lang/xx';
+        check_dir_exists($langfolder);
+        file_put_contents($langfolder . '/langconfig.php', "<?php\n\$string['alphabet'] = " .
+            "'А,Б,В,Г,Ґ,Д,Е,Є,Ж,З,И,І,Ї,Й,К,Л,М,Н,О,П,Р,С,Т,У,Ф,Х,Ц,Ч,Ш,Щ,Ь,Ю,Я';");
+        get_string_manager()->reset_caches(true);
+
+        $e1 = $gg->create_content($glossary, ['approved' => 1, 'concept' => 'Їжак']);
+        $e2 = $gg->create_content($glossary, ['approved' => 1, 'concept' => 'їжа']);
+        $e3 = $gg->create_content($glossary, ['approved' => 1, 'concept' => 'Ґанок']);
+        $e4 = $gg->create_content($glossary, ['approved' => 1, 'concept' => 'Ёлка']);
+        $e5 = $gg->create_content($glossary, ['approved' => 1, 'concept' => 'Kilo']);
+        $e6 = $gg->create_content($glossary, ['approved' => 1, 'concept' => '1-day']);
+
+        // A Ukrainian letter matches both upper and lower case concepts.
+        [$entries, $count] = glossary_get_entries_by_letter($glossary, $context, 'Ї', 0, 0);
+        $this->assertEquals(2, $count);
+        $this->assertEqualsCanonicalizing([$e1->id, $e2->id], array_column($entries, 'id'));
+
+        // A lower case Ukrainian letter.
+        [$entries, $count] = glossary_get_entries_by_letter($glossary, $context, 'ґ', 0, 0);
+        $this->assertEquals(1, $count);
+        $this->assertEquals([$e3->id], array_column($entries, 'id'));
+
+        // Special characters are those not in the language alphabet, which here is Ukrainian. This includes
+        // Latin letters and Cyrillic letters that are not part of the Ukrainian alphabet, such as 'Ё'.
+        [$entries, $count] = glossary_get_entries_by_letter($glossary, $context, 'SPECIAL', 0, 0);
+        $this->assertEquals(3, $count);
+        $this->assertEqualsCanonicalizing([$e4->id, $e5->id, $e6->id], array_column($entries, 'id'));
     }
 }

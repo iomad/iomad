@@ -46,7 +46,7 @@ Feature: Teacher can specify different display options for the resource
     And I <seedate> see "Uploaded" in the ".resourcedetails" "css_element"
     And I am on "Course 1" course homepage
     And I <seesize> see "6 bytes" in the ".activity.resource .resourcelinkdetails" "css_element"
-    And I <seetype> see "TXT" in the ".activity.resource .activitybadge" "css_element"
+    And I <seetype> see "TXT" in the "Myfile" "activity"
     And I <seedate> see "Uploaded" in the ".activity.resource .resourcelinkdetails" "css_element"
     Examples:
       | showsize | showtype | showdate | seesize    | seetype    | seedate    |

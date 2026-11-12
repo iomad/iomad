@@ -74,3 +74,28 @@ Feature: Verify activity visibility interface.
     And I reload the page
     And I click on "Hidden from students" "button" in the "Activity sample 2" "core_courseformat > Activity visibility"
     Then I should see "Make available but don't show on course page" in the "Activity sample 2" "core_courseformat > Activity visibility"
+
+  Scenario: Hidden and stealth activities without badge content do not show an empty activity badge
+    Given the following config values are set as admin:
+      | allowstealth | 1 |
+    And the following "activities" exist:
+      | activity | name          | course | section | visible | visibleoncoursepage |
+      | forum    | Forum hidden  | C1     | 2       | 0       | 1                   |
+      | forum    | Forum stealth | C1     | 2       | 1       | 0                   |
+    And the following "activities" exist:
+      | activity | name           | course | section | visible | visibleoncoursepage | showtype |
+      | resource | File hidden    | C1     | 2       | 0       | 1                   | 0        |
+      | resource | File stealth   | C1     | 2       | 1       | 0                   | 0        |
+      | resource | File with type | C1     | 2       | 0       | 1                   | 1        |
+    When I am on "Course 1" course homepage
+    Then ".activitybadge" "css_element" should not exist in the "Forum hidden" "activity"
+    And ".activitybadge" "css_element" should not exist in the "Forum stealth" "activity"
+    And ".activitybadge" "css_element" should not exist in the "File hidden" "activity"
+    And ".activitybadge" "css_element" should not exist in the "File stealth" "activity"
+    And I should see "TXT" in the "File with type" "activity"
+    And I turn editing mode off
+    And ".activitybadge" "css_element" should not exist in the "Forum hidden" "activity"
+    And ".activitybadge" "css_element" should not exist in the "Forum stealth" "activity"
+    And ".activitybadge" "css_element" should not exist in the "File hidden" "activity"
+    And ".activitybadge" "css_element" should not exist in the "File stealth" "activity"
+    And I should see "TXT" in the "File with type" "activity"

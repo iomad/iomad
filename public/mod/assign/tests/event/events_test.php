@@ -546,7 +546,7 @@ final class events_test extends \advanced_testcase {
         $teacher->ignoresesskey = true;
         $this->setUser($teacher);
 
-        $assign = $this->create_instance($course);
+        $assign = $this->create_instance($course, ['markingworkflow' => 1]);
 
         // Test process_set_batch_marking_workflow_state.
         $sink = $this->redirectEvents();
@@ -581,7 +581,7 @@ final class events_test extends \advanced_testcase {
         $assign->testable_apply_grade_to_user($data, $student->id, 0);
 
         $events = $sink->get_events();
-        $this->assertCount(4, $events);
+        $this->assertCount(2, $events);
         $event = reset($events);
         $this->assertInstanceOf('\mod_assign\event\workflow_state_updated', $event);
         $this->assertEquals($assign->get_context(), $event->get_context());
@@ -603,7 +603,7 @@ final class events_test extends \advanced_testcase {
         $assign->testable_process_save_quick_grades($data);
 
         $events = $sink->get_events();
-        $this->assertCount(4, $events);
+        $this->assertCount(2, $events);
         $event = reset($events);
         $this->assertInstanceOf('\mod_assign\event\workflow_state_updated', $event);
         $this->assertEquals($assign->get_context(), $event->get_context());

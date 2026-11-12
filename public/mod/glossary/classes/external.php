@@ -441,7 +441,7 @@ class mod_glossary_external extends external_api {
     public static function get_entries_by_letter_parameters() {
         return new external_function_parameters(array(
             'id' => new external_value(PARAM_INT, 'Glossary entry ID'),
-            'letter' => new external_value(PARAM_ALPHA, 'A letter, or either keywords: \'ALL\' or \'SPECIAL\'.'),
+            'letter' => new external_value(PARAM_TEXT, 'A letter, or either keywords: \'ALL\' or \'SPECIAL\'.'),
             'from' => new external_value(PARAM_INT, 'Start returning records from here', VALUE_DEFAULT, 0),
             'limit' => new external_value(PARAM_INT, 'Number of records to return', VALUE_DEFAULT, 20),
             'options' => new external_single_structure(array(
@@ -1293,7 +1293,7 @@ class mod_glossary_external extends external_api {
     public static function get_entries_to_approve_parameters() {
         return new external_function_parameters(array(
             'id' => new external_value(PARAM_INT, 'Glossary entry ID'),
-            'letter' => new external_value(PARAM_ALPHA, 'A letter, or either keywords: \'ALL\' or \'SPECIAL\'.'),
+            'letter' => new external_value(PARAM_TEXT, 'A letter, or either keywords: \'ALL\' or \'SPECIAL\'.'),
             'order' => new external_value(PARAM_ALPHA, 'Order by: \'CONCEPT\', \'CREATION\' or \'UPDATE\'', VALUE_DEFAULT,
                 'CONCEPT'),
             'sort' => new external_value(PARAM_ALPHA, 'The direction of the order: \'ASC\' or \'DESC\'', VALUE_DEFAULT, 'ASC'),

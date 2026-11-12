@@ -61,6 +61,8 @@ class test_choice_dropdown extends moodleform {
             'icon' => new pix_icon('t/show', 'Eye icon 3'),
         ]);
 
+        $frozenoptions = $options;
+
         $mform->addElement('header', 'database', "Basic example");
         $mform->addElement('choicedropdown', 'example0', "Basic choice dropdown", $options);
 
@@ -73,6 +75,21 @@ class test_choice_dropdown extends moodleform {
         $mform->addElement('checkbox', 'hideme', 'Check to hide the first choice dropdown field.');
         $mform->addElement('choicedropdown', 'example2', "Hide if example", $options);
         $mform->hideIf('example2', 'hideme', 'checked');
+
+        $mform->addElement('header', 'initialstate', 'Initial choice dropdown state');
+        // Cover a disabled state applied before the JavaScript observer is registered, regardless of initialisation order.
+        $mform->addElement('choicedropdown', 'disabled', 'Disabled choice dropdown', $options, [
+            'data-force-dialog' => true,
+            'disabled' => 'disabled',
+        ]);
+        $mform->addElement('checkbox', 'enableinitial', 'Enable the initially disabled choice dropdown');
+        $mform->addElement('choicedropdown', 'initialdisabled', 'Initially disabled choice dropdown', $options, [
+            'data-force-dialog' => true,
+        ]);
+        $mform->disabledIf('initialdisabled', 'enableinitial', 'notchecked');
+        $mform->addElement('choicedropdown', 'initialenabled', 'Initially enabled choice dropdown', $options, [
+            'data-force-dialog' => true,
+        ]);
 
         $options = new choicelist();
         $options->set_allow_empty(false);
@@ -91,6 +108,14 @@ class test_choice_dropdown extends moodleform {
         $mform->disabledIf('disabledinput', 'example3', 'eq', 'hide');
         $mform->setDefault('disabledinput', 'Is this enabled?');
         $mform->setType('disabledinput', PARAM_TEXT);
+
+        $mform->addElement('header', 'frozenheader', 'Frozen choice dropdown');
+        $mform->addElement('choicedropdown', 'frozen', 'Frozen choice dropdown', $frozenoptions);
+        $mform->setDefault('frozen', 'option2');
+        $mform->freeze('frozen');
+        $mform->addElement('text', 'frozendependent', 'Shown if frozen is option 1', ['maxlength' => 80, 'size' => 50]);
+        $mform->hideIf('frozendependent', 'frozen', 'neq', 'option1');
+        $mform->setType('frozendependent', PARAM_TEXT);
 
         $this->add_action_buttons(false, 'Send form');
     }

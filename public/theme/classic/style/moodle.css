@@ -26809,6 +26809,7 @@ audio.mediaplugin_html5audio {
 
 .moodle-dialogue-exception .moodle-exception-message {
   margin: 1em;
+  overflow-wrap: anywhere;
 }
 
 .moodle-dialogue-exception .moodle-exception-param {
@@ -28261,15 +28262,6 @@ body.dragging .dragging {
   padding-left: calc(1rem * 3);
 }
 
-.page-mycourses .drawers .block_myoverview {
-  border: 0;
-}
-.page-mycourses .drawers .block_myoverview > .card-body {
-  padding-top: 0 !important; /* stylelint-disable-line declaration-no-important */
-  padding-left: 0 !important; /* stylelint-disable-line declaration-no-important */
-  padding-right: 0 !important; /* stylelint-disable-line declaration-no-important */
-}
-
 #page-my-index .my-action-buttons {
   display: flex;
   justify-content: center;
@@ -29635,7 +29627,7 @@ img.icon {
 @media (min-width: 576px) {
   .card-carousel .card {
     flex: 0 1 auto;
-    width: 240px;
+    width: 245px;
     max-width: 100%;
   }
 }
@@ -29649,7 +29641,6 @@ img.icon {
 
 .block_recentlyaccessedcourses .paging-bar-container {
   margin-top: -2.4rem;
-  padding-right: 0.5rem;
   justify-content: flex-end;
 }
 @media (max-width: 575.98px) {
@@ -33013,6 +33004,12 @@ a.ygtvspacer:hover {
   margin: 0 20px;
 }
 
+.file-picker.fp-dlg .fp-dlg-butrename {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .file-picker.fp-msg {
   text-align: center;
 }
@@ -35371,6 +35368,7 @@ input#id_externalurl {
   display: inline-block;
 }
 
+.groupselector,
 .singleselect {
   max-width: 100%;
 }
