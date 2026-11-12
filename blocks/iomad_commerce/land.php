@@ -109,6 +109,17 @@ if ($exists) {
         }
     }
     $user->auth = $data->data->auth;
+
+    // Did we get a company id? Is there a default?
+    if (empty($companyid) &&
+        !empty(get_config('local_iomad', 'signup_company'))) {
+        $companyid = get_config('local_iomad', 'signup_company');
+    } else {
+        // Send them back whence they came.
+        redirect($returnurl);
+    }
+
+    // Create the user in the company.
     company_user::create($user, $companyid);
 }
 
