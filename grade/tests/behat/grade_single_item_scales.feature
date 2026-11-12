@@ -5,19 +5,20 @@ Feature: View gradebook when single item scales are used
   I need to be able to view gradebook with single item scales
 
   Background:
-    Given I log in as "admin"
+    # The grade_aggregations_visible value lists every aggregation type, by id:
+    # 0 Mean of grades, 10 Weighted mean of grades, 11 Simple weighted mean of grades,
+    # 12 Mean of grades (with extra credits), 2 Median of grades, 4 Lowest grade,
+    # 6 Highest grade, 8 Mode of grades, 13 Natural.
+    Given the following config values are set as admin:
+      | grade_report_showranges                    | 1                     |
+      | grade_report_showweight                    | 1                     |
+      | grade_report_showcontributiontocoursetotal | 1                     |
+      | grade_aggregations_visible                 | 0,10,11,12,2,4,6,8,13 |
     And the "multilang" filter is "on"
     And the "multilang" filter applies to "content and headings"
-    And I set the following administration settings values:
-      | grade_report_showranges    | 1 |
-      | grade_aggregations_visible | Mean of grades,Weighted mean of grades,Simple weighted mean of grades,Mean of grades (with extra credits),Median of grades,Lowest grade,Highest grade,Mode of grades,Natural |
-    And I navigate to "Grades > Scales" in site administration
-    And I press "Add a new scale"
-    And I set the following fields to these values:
-      | Name  | <span lang="en" class="multilang">EN</span><span lang="fr" class="multilang">FR</span> Singleitem |
-      | Scale | Ace!                                                                                              |
-    And I press "Save changes"
-    And I log out
+    And the following "scales" exist:
+      | name                                                                                                | scale |
+      | <span lang="en" class="multilang">EN</span><span lang="fr" class="multilang">FR</span> Singleitem   | Ace!  |
     And the following "courses" exist:
       | fullname | shortname |
       | Course 1 | C1        |
@@ -35,23 +36,12 @@ Feature: View gradebook when single item scales are used
       | fullname       | course |
       | <span lang='en' class='multilang'>EN</span><span lang='fr' class='multilang'>FR</span> Sub category 1 | C1     |
     And the following "activities" exist:
-      | activity | course | idnumber | name                | intro             | gradecategory  |
-      | assign   | C1     | a1       | Test assignment one | Submit something! | <span lang='en' class='multilang'>EN</span><span lang='fr' class='multilang'>FR</span> Sub category 1 |
-    And the "multilang" filter is "on"
-    And the "multilang" filter applies to "content and headings"
-    And I am on the "Test assignment one" "assign activity editing" page logged in as teacher1
-    And I expand all fieldsets
-    And I set the field "grade[modgrade_type]" to "Scale"
-    And I set the field "grade[modgrade_scale]" to "EN Singleitem"
-    And I press "Save and display"
-    And I go to "Student 1" "Test assignment one" activity advanced grading page
-    And I set the field "Grade" to "A"
-    And I press "Save changes"
-    When I am on the "Course 1" "grades > course grade settings" page
-    And I set the field "Show weightings" to "Show"
-    And I set the field "Show contribution to course total" to "Show"
-    And I press "Save changes"
-    And I navigate to "View > Grader report" in the course gradebook
+      | activity | course | idnumber | name                | intro             | gradecategory  | grade |
+      | assign   | C1     | a1       | Test assignment one | Submit something! | <span lang='en' class='multilang'>EN</span><span lang='fr' class='multilang'>FR</span> Sub category 1 | <span lang="en" class="multilang">EN</span><span lang="fr" class="multilang">FR</span> Singleitem |
+    And the following "grade grades" exist:
+      | gradeitem           | user     | grade |
+      | Test assignment one | student1 | 1     |
+    And I am on the "Course 1" "grades > Grader report > View" page logged in as "teacher1"
     And I turn editing mode on
 
   Scenario: Test displaying single item scales in gradebook in aggregation method Natural
