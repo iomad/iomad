@@ -66,7 +66,7 @@ class company_user {
             $cshort = $company->get('shortname');
             $data->company = $cshort;
         } else {
-            $company = company::by_shortname($data->company);
+            return 0;
         }
 
         // Events work off of the SESSION->selectedcompanyid, and it may not be set
@@ -128,7 +128,8 @@ class company_user {
 
         // Only create the user if there is no clash.
         if (!$clashed) {
-            if ($user->sendnewpasswordemails && !$user->preference_auth_forcepasswordchange) {
+            if (!empty($user->sendnewpasswordemails) &&
+                empty($user->preference_auth_forcepasswordchange)) {
                 throw new Exception(get_string('cannotemailnontemporarypasswords', 'local_iomad'));
             }
 

@@ -4364,7 +4364,10 @@ class company {
      * @return integer
      */
     public function get_auto_department(object $user): int {
-        global $DB;
+        global $CFG, $DB;
+
+        // Need to make sure user profile lib is loaded.
+        require_once($CFG->dirroot . '/user/profile/lib.php');
 
         $topdepartment = self::get_company_parentnode($this->id);
         $departmentid = $topdepartment->id;
