@@ -785,7 +785,7 @@ class current_user_course_selector extends company_course_selector_base {
         }
         $params['userid'] = $this->user->id;
         $params['companyid1'] = $this->companyid;
-        $params['companyid1'] = $this->companyid;
+        $params['companyid2'] = $this->companyid;
 
         if ($coursearray = $DB->get_records_sql(
             "SELECT DISTINCT c.*
