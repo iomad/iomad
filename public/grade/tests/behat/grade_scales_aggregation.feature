@@ -16,32 +16,32 @@ Feature: Control the aggregation of the scales
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
       | student1 | C1     | student        |
-    And I log in as "admin"
-    And I set the following administration settings values:
-      | grade_aggregations_visible | Mean of grades,Weighted mean of grades,Simple weighted mean of grades,Mean of grades (with extra credits),Median of grades,Lowest grade,Highest grade,Mode of grades,Natural |
-      | grade_report_user_showcontributiontocoursetotal | 1 |
-    And I navigate to "Grades > Scales" in site administration
-    And I press "Add a new scale"
-    And I set the following fields to these values:
-      | Name  | Letterscale |
-      | Scale | F,D,C,B,A   |
-    And I press "Save changes"
+    # The grade_aggregations_visible value lists every aggregation type, by id:
+    # 0 Mean of grades, 10 Weighted mean of grades, 11 Simple weighted mean of grades,
+    # 12 Mean of grades (with extra credits), 2 Median of grades, 4 Lowest grade,
+    # 6 Highest grade, 8 Mode of grades, 13 Natural.
+    And the following config values are set as admin:
+      | grade_aggregations_visible                      | 0,10,11,12,2,4,6,8,13 |
+      | grade_report_user_showcontributiontocoursetotal | 1                     |
+      | grade_includescalesinaggregation                | 0                     |
+    And the following "scales" exist:
+      | name        | scale     |
+      | Letterscale | F,D,C,B,A |
     And the following "grade items" exist:
       | itemname | course |
       | Grade me | C1     |
     And the following "grade items" exist:
       | itemname | course | scale       |
       | Scale me | C1     | Letterscale |
-    And the following config values are set as admin:
-      | grade_includescalesinaggregation | 0 |
+    And the following "grade grades" exist:
+      | gradeitem | user     | grade |
+      | Grade me  | student1 | 10    |
+      | Scale me  | student1 | 4     |
 
   Scenario Outline: Scales can be excluded from aggregation
     Given I am on the "Course 1" "grades > Grader report > View" page logged in as "teacher1"
     And I turn editing mode on
-    When I give the grade "10" to the user "Student 1" for the grade item "Grade me"
-    And I give the grade "B" to the user "Student 1" for the grade item "Scale me"
-    And I press "Save changes"
-    And I set the following settings for grade item "Course 1" of type "course" on "grader" page:
+    When I set the following settings for grade item "Course 1" of type "course" on "grader" page:
       | Aggregation | <aggregation> |
     And I navigate to "View > User report" in the course gradebook
     And I click on "Student 1" in the "Search users" search combo box

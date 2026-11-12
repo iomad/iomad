@@ -5297,4 +5297,37 @@ Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
         $gradinginfo = grade_get_grades($course->id, 'mod', 'assign', $assign->get_instance()->id, $student->id);
         $this->assertEquals(50, (int)$gradinginfo->items[0]->grades[$student->id]->grade);
     }
+
+    /**
+     * An assignment with no grade and no gradebook feedback plugin has no grade item, and viewing
+     * it must not fail for users enrolled in the course.
+     */
+    public function test_view_assignment_without_grade_item(): void {
+        global $PAGE;
+
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course();
+        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+
+        $assign = $this->create_instance($course, [
+            'grade' => 0,
+            'assignfeedback_comments_enabled' => 0,
+            'assignfeedback_editpdf_enabled' => 0,
+            'assignfeedback_file_enabled' => 0,
+        ]);
+        $PAGE->set_url(new \moodle_url('/mod/assign/view.php', ['id' => $assign->get_course_module()->id]));
+
+        // No grade and no gradebook feedback plugin means no grade item is created.
+        $this->assertFalse(\grade_item::fetch([
+            'itemtype' => 'mod',
+            'itemmodule' => 'assign',
+            'iteminstance' => $assign->get_instance()->id,
+            'courseid' => $course->id,
+            'itemnumber' => 0,
+        ]));
+
+        $this->setUser($student);
+        $history = $assign->get_assign_attempt_history_renderable($student);
+        $this->assertEmpty($history->grades);
+    }
 }
