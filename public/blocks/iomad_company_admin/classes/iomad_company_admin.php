@@ -458,8 +458,6 @@ class iomad_company_admin {
         // Remove unwanted fields.
         unset($data->action);
         unset($data->submitbutton);
-        $idpmetadata = 'idpmetadata' . $postfix;
-        unset($data->$idpmetadata);
 
         // Are we resetting everything?
         if (!empty($data->resetbutton)) {

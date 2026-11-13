@@ -150,11 +150,22 @@ class auth extends \auth_plugin_base {
         $fullconfig = (array) get_config('auth_iomadsaml2');
         $myconfig = array_merge($this->defaults, $fullconfig );
 
-        // Do we have anything company specific?
+        // Apply company overrides, including explicit false, zero and empty values.
         if (!empty($this->postfix)) {
-            foreach (array_keys($this->defaults) as $defaultidentifier) {
-                if (!empty($fullconfig[$defaultidentifier . $this->postfix])) {
-                    $myconfig[$defaultidentifier] = $fullconfig[$defaultidentifier . $this->postfix];
+            $companyconfigfields = array_unique(array_merge(
+                array_keys($this->defaults),
+                [
+                    'nameidpolicy',
+                    'wantassertionssigned',
+                    'assertionsconsumerservices',
+                    'spentityid',
+                    'signaturealgorithm',
+                ]
+            ));
+            foreach ($companyconfigfields as $identifier) {
+                $companykey = $identifier . $this->postfix;
+                if (array_key_exists($companykey, $fullconfig)) {
+                    $myconfig[$identifier] = $fullconfig[$companykey];
                 }
             }
         }
@@ -1066,6 +1077,51 @@ class auth extends \auth_plugin_base {
     }
 
     /**
+     * Resolve supported attribute mappings for the current company.
+     *
+     * Explicit company values, including empty values, override site values.
+     * Only supported field names are exposed to the mapping loop.
+     *
+     * @return stdClass
+     */
+    private function get_attribute_mapping_config(): stdClass {
+        global $DB;
+
+        $fullconfig = (array) get_config('auth_iomadsaml2');
+        $resolved = new stdClass();
+        $fields = array_fill_keys(
+            array_merge($this->userfields, ['username']),
+            true
+        );
+
+        foreach ($DB->get_records('user_info_field', null, '', 'id,shortname') as $field) {
+            $fields['profile_field_' . $field->shortname] = true;
+        }
+
+        foreach (array_keys($fields) as $field) {
+            foreach (['field_map_', 'field_updatelocal_', 'field_lock_'] as $prefix) {
+                $key = $prefix . $field;
+                $companykey = $key . $this->postfix;
+
+                if ($this->postfix !== '' && array_key_exists($companykey, $fullconfig)) {
+                    $resolved->$key = $fullconfig[$companykey];
+                } else if (array_key_exists($key, $fullconfig)) {
+                    $resolved->$key = $fullconfig[$key];
+                }
+            }
+        }
+
+        $delimiterkey = 'fielddelimiter' . $this->postfix;
+        if ($this->postfix !== '' && array_key_exists($delimiterkey, $fullconfig)) {
+            $resolved->fielddelimiter = $fullconfig[$delimiterkey];
+        } else {
+            $resolved->fielddelimiter = $fullconfig['fielddelimiter'] ?? '';
+        }
+
+        return $resolved;
+    }
+
+    /**
      * Given a user record, updates the fields on that user as per the mappings in the
      * iomadsaml2 configuration. Uses the attributes array as the source of data for updating each field.
      *
@@ -1081,7 +1137,7 @@ class auth extends \auth_plugin_base {
     public function update_user_record_from_attribute_map(&$user, $attributes, $newuser = false) {
         global $CFG;
 
-        $mapconfig = get_config('auth_iomadsaml2');
+        $mapconfig = $this->get_attribute_mapping_config();
         $allkeys = array_keys(get_object_vars($mapconfig));
         $update = false;
 
@@ -1173,10 +1229,11 @@ class auth extends \auth_plugin_base {
      */
     public function get_email_from_attributes(array $attributes) {
         // IOMAD.
-        $field_map_email = 'field_map_email' . $postfix;
+        $mapconfig = $this->get_attribute_mapping_config();
+        $field_map_email = 'field_map_email';
 
-        if (!empty($this->config->$field_map_email) && !empty($attributes[$this->config->$field_map_email])) {
-            return $attributes[$this->config->$field_map_email][0];
+        if (!empty($mapconfig->$field_map_email) && !empty($attributes[$mapconfig->$field_map_email])) {
+            return $attributes[$mapconfig->$field_map_email][0];
         }
 
         return false;
@@ -1191,10 +1248,11 @@ class auth extends \auth_plugin_base {
      */
     private function get_username_from_attributes(array $attributes) {
         // IOMAD.
-        $field_map_username = 'field_map_username' . $postfix;
+        $mapconfig = $this->get_attribute_mapping_config();
+        $field_map_username = 'field_map_username';
 
-    if (!empty($this->config->$field_map_username) && !empty($attributes[$this->config->$field_map_username])) {
-            return strtolower($attributes[$this->config->$field_map_username][0]);
+        if (!empty($mapconfig->$field_map_username) && !empty($attributes[$mapconfig->$field_map_username])) {
+            return strtolower($attributes[$mapconfig->$field_map_username][0]);
         }
 
         return false;
